@@ -1,0 +1,24 @@
+package org.unlaxer.tinyexpression.parser;
+
+import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.elementary.NamedParenthesesParser;
+import org.unlaxer.parser.elementary.WordParser;
+
+public class ToLowerCaseParser extends NamedParenthesesParser implements StringExpression{
+
+	private static final long serialVersionUID = -8254948523741795502L;
+
+	public ToLowerCaseParser() {
+		super();
+	}
+
+	@Override
+	public Parser nameParser() {
+		return Parser.get(()-> new WordParser("toLowerCase"));
+	}
+
+	@Override
+	public Parser innerParser() {
+		return Parser.get(StringFactorParser.NESTED);
+	}
+}
