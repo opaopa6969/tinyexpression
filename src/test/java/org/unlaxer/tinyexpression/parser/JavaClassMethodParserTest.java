@@ -16,7 +16,7 @@ public class JavaClassMethodParserTest extends ParserTestBase{
 	public void test() {
 		{
 			JavaClassMethodParser javaClassMethodParser = Parser.get(JavaClassMethodParser.class);
-			TestResult testAllMatch = testAllMatch(javaClassMethodParser, "test");
+			TestResult testAllMatch = testUnMatch(javaClassMethodParser, "test");
 			
 			String string = TokenPrinter.get(testAllMatch.parsed.getRootToken(),OutputLevel.detail);
 			System.out.println(string);

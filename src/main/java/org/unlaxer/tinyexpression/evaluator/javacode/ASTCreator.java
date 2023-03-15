@@ -27,6 +27,7 @@ import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
 import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InMethodParser;
+import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
@@ -50,6 +51,7 @@ import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.TermParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
+import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
@@ -256,6 +258,12 @@ public class ASTCreator implements UnaryOperator<Token>{
 //				
 //				return choiceToken;
 			}
+		} else if (operator.parser instanceof ToNumParser) {
+			return operator.newCreatesOf(
+					apply(ToNumParser.getLeftExpression(operator)),
+					apply(ToNumParser.getRightExpression(operator))
+			);
+			
 		}else if(operator.parser instanceof SideEffectExpressionParser){
 			
 			return operator.newCreatesOf(
@@ -304,7 +312,13 @@ public class ASTCreator implements UnaryOperator<Token>{
 		}else if(parser instanceof IsPresentParser) {
 
 			return operator.newCreatesOf(IsPresentParser.getVariable(operator));
-			
+
+		} else if(parser instanceof InTimeRangeParser) {
+			return operator.newCreatesOf(
+					apply(InTimeRangeParser.getLeftExpression(operator)),
+					apply(InTimeRangeParser.getRightExpression(operator))
+			);
+
 		}else if(parser instanceof EqualEqualExpressionParser) {
 			
 			return operator.newCreatesOf(

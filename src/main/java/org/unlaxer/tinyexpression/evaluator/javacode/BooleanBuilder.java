@@ -4,10 +4,12 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
+import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
 import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
@@ -27,6 +29,8 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 public class BooleanBuilder implements CodeBuilder {
 	
 	public static final BooleanBuilder SINGLETON = new BooleanBuilder();
+	private ParserValuesValidator parserValuesValidator = new ParserValuesValidator();
+
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token) {
@@ -51,6 +55,14 @@ public class BooleanBuilder implements CodeBuilder {
 			String variableName = token.tokenString.get().substring(1);
 
 			builder.append("calculateContext.isExists(").w(variableName).append(")");
+
+		} else if (parser instanceof InTimeRangeParser) {
+			String fromHour = token.filteredChildren.get(0).tokenString.get();
+			String toHour= token.filteredChildren.get(1).tokenString.get();
+
+			parserValuesValidator.validateTimeRangeValues(fromHour, toHour);
+			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")
+					.append(toHour).append("f)");
 					
 		}else if(parser instanceof VariableParser) {
 			

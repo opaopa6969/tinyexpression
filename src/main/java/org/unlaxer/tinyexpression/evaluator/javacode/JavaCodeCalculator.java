@@ -125,4 +125,5 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	public interface CodeBuilder {
 		public void build(SimpleJavaCodeBuilder builder, Token token);
 	}
+
 }

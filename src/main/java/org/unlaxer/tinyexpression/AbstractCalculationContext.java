@@ -141,5 +141,5 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	}
 
 	public abstract <T> Map<String,T> newMap();
-	
+
 }

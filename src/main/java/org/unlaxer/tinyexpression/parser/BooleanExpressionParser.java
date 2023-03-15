@@ -37,6 +37,7 @@ public class BooleanExpressionParser extends LazyChoice implements BooleanExpres
 			new Parsers(
 				Parser.get(TrueTokenParser.class),
 				Parser.get(FalseTokenParser.class),
+				Parser.get(InTimeRangeParser.class),
 				Parser.get(SideEffectBooleanExpressionParser.class),
 				Parser.get(SideEffectStringToBooleanExpressionParser.class),
 				Parser.get(NotBooleanExpressionParser.class),

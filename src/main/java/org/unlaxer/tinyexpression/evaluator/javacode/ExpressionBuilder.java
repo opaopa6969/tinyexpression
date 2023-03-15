@@ -18,6 +18,7 @@ import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.TermParser;
+import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
@@ -195,6 +196,17 @@ public class ExpressionBuilder implements CodeBuilder {
 		} else if (parser instanceof RandomParser) {
 
 			builder.append("calculateContext.nextRandom()");
+
+		} else if (parser instanceof ToNumParser) {
+
+			Token leftString = token.filteredChildren.get(0);
+			Token rightFloatDefault = token.filteredChildren.get(1);
+
+			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.toNum(");
+			builder.append(StringClauseBuilder.SINGLETON.build(leftString).toString());
+			builder.append(",");
+			build(builder, rightFloatDefault);
+			builder.append("f)");
 
 		} else if (parser instanceof StringLengthParser) {
 

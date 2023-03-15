@@ -43,7 +43,8 @@ public class FactorParser extends NoneChildCollectingParser implements Expressio
 				Parser.get(MinParser.class),
 				Parser.get(MaxParser.class),
 				Parser.get(RandomParser.class),
-				Parser.get(FactorOfStringParser.class)
+				Parser.get(FactorOfStringParser.class),
+				Parser.get(ToNumParser.class)
 			);
 	}
 
