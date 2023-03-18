@@ -110,14 +110,9 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 			.decTab()
 			.line("}")
 			.decTab()
-			
 			.setKind(Kind.Main);
-	
-//			.line("}");
 
 		String code = builder.toString();
-		//FIXME!
-		System.out.println(code);
 		return code;
 
 	}
