@@ -28,7 +28,7 @@ public class IsPresentParser extends WhiteSpaceDelimitedLazyChain implements Boo
 			new Parsers(
 				Parser.get(IsPresentNameParser.class),
 				Parser.get(LeftParenthesisParser.class),
-				Parser.get(VariableParser.class),//2
+				Parser.get(NakedVariableParser.class),//2
 				Parser.get(RightParenthesisParser.class)
 			);
 	}

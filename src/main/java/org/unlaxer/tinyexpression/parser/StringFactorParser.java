@@ -33,7 +33,8 @@ public class StringFactorParser extends LazyChoice implements StringExpression{
 		parsers = 
 			new Parsers(
 				Parser.get(StringLiteralParser.class),
-				Parser.get(VariableParser.class),
+        Parser.get(StringVariableParser.class),
+				Parser.get(NakedVariableParser.class),
 				new ParenthesesParser(
 					Parser.get(NESTED)
 				),

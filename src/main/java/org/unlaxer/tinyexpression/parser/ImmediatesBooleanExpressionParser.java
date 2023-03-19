@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
-import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -21,7 +20,8 @@ public class ImmediatesBooleanExpressionParser extends LazyChoice{
 	public void initialize() {
 		parsers = 
 			new Parsers(
-				Parser.get(()->new VariableParser(Name.of("booleanVariable"))),
+				Parser.get(BooleanVariableParser.class),
+        Parser.get(NakedVariableParser.class),
 				Parser.get(TrueTokenParser.class),
 				Parser.get(FalseTokenParser.class)
 			);

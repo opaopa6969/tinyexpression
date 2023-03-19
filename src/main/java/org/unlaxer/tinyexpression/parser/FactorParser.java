@@ -33,7 +33,8 @@ public class FactorParser extends NoneChildCollectingParser implements Expressio
 				Parser.get(MatchExpressionParser.class),
 
 				Parser.get(NumberParser.class),
-				Parser.get(VariableParser.class),
+        Parser.get(NumberVariableParser.class),
+				Parser.get(NakedVariableParser.class),
 				
 				new ParenthesesParser(Parser.get(ExpressionParser.class)),
 				Parser.get(SinParser.class),

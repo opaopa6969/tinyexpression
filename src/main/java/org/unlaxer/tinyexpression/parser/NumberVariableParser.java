@@ -1,0 +1,44 @@
+package org.unlaxer.tinyexpression.parser;
+
+import java.util.List;
+
+import org.unlaxer.Token;
+import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.ChoiceInterface;
+import org.unlaxer.parser.combinator.LazyChoice;
+
+public class NumberVariableParser extends LazyChoice {
+
+  private static final long serialVersionUID = -6048451001170410L;
+
+  List<Parser> parsers;
+
+  public NumberVariableParser() {
+    super();
+  }
+
+  @Override
+  public void initialize() {
+    parsers = new Parsers(//
+        Parser.get(NumberPrefixedVariableParser.class), //
+        Parser.get(NumberSuffixedVariableParser.class)//
+    );
+  }
+
+  @Override
+  public List<Parser> getLazyParsers() {
+    return parsers;
+  }
+  
+  public static String getVariableName(Token thisParserParsed) {
+    Token choiced = ChoiceInterface.choiced(thisParserParsed);
+    if(choiced.parser instanceof NumberPrefixedVariableParser) {
+      return NumberPrefixedVariableParser.getVariableName(thisParserParsed);
+    }else if(choiced.parser instanceof NumberSuffixedVariableParser) {
+      return NumberSuffixedVariableParser.getVariableName(thisParserParsed);
+    }
+    throw new IllegalArgumentException();
+  }
+
+}

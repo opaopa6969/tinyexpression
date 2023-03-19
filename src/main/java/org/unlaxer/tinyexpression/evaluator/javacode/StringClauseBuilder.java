@@ -11,16 +11,17 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringPlusParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
+import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.util.FactoryBoundCache;
 
 public class StringClauseBuilder {
@@ -118,9 +119,11 @@ public class StringClauseBuilder {
 			String contents = stringByToken.get(literalChoiceToken);
 			return ExpressionOrLiteral.literalOf(contents == null ? "" : contents);
 
-		} else if (parser instanceof VariableParser) {
+		} else if (parser instanceof NakedVariableParser || parser instanceof StringVariableParser) {
 
-			String variableName = token.tokenString.get().substring(1);
+			String variableName = parser instanceof NakedVariableParser  ?
+			    NakedVariableParser.getVariableName(token):
+			    StringVariableParser.getVariableName(token);
 
 			return ExpressionOrLiteral.expressionOf(
 				new SimpleBuilder()

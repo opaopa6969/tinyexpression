@@ -5,6 +5,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
@@ -24,7 +25,6 @@ import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class BooleanBuilder implements CodeBuilder {
 	
@@ -64,7 +64,7 @@ public class BooleanBuilder implements CodeBuilder {
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")
 					.append(toHour).append("f)");
 					
-		}else if(parser instanceof VariableParser) {
+		}else if(parser instanceof BooleanVariableParser) {
 			
 			String variableName = token.tokenString.get().substring(1);
 

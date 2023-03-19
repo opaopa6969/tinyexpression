@@ -98,4 +98,20 @@ public interface CalculationContext {
 	public int scale();
 	
 	public RoundingMode roundingMode();
+	
+	public default Object getFromNumberOrStringOrBoolean(String name) {
+    Optional<Float> value = getValue(name);
+    if(value.isPresent()){
+      return value.get();
+    }
+    Optional<String> string = getString(name);
+    if(string.isPresent()) {
+      return string.get();
+    }
+    Optional<Boolean> boolean1 = getBoolean(name);
+    if(boolean1.isPresent()) {
+      return boolean1.get();
+    }
+    return null;
+	}
 }

@@ -152,7 +152,10 @@ public class SideEffectExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 			for (Token token : parameterTokens) {
 				Parser parser = token.parser;
 				parameterTypes[i] =
-				    parser instanceof VariableParser ? VariableParser.class :
+				    parser instanceof StringVariableParser ? String.class :
+            parser instanceof BooleanVariableParser ? boolean.class :
+            parser instanceof NumberVariableParser ? float.class :
+            parser instanceof NakedVariableParser ? float.class :
 						parser instanceof Expression ? float.class :
 						parser instanceof BooleanExpression ? boolean.class :
 						parser instanceof StringExpression ? String.class :
