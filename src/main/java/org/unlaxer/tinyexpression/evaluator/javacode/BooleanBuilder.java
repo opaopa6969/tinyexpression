@@ -14,6 +14,7 @@ import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;
@@ -65,11 +66,15 @@ public class BooleanBuilder implements CodeBuilder {
 					.append(toHour).append("f)");
 					
 		}else if(parser instanceof BooleanVariableParser) {
-			
-			String variableName = token.tokenString.get().substring(1);
-
+		  
+			String variableName = BooleanVariableParser.getVariableName(token);
 			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
 			
+    }else if(parser instanceof NakedVariableParser) {
+      
+      String variableName = NakedVariableParser.getVariableName(token);
+      builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
+      
 		}else if(parser instanceof TrueTokenParser){
 			
 			builder.append("true");

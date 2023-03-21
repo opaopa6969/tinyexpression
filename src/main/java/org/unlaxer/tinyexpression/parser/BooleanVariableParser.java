@@ -31,7 +31,7 @@ public class BooleanVariableParser extends LazyChoice {
     return parsers;
   }
   
-  public static String extractName(Token thisParserParsed) {
+  public static String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
     if(choiced.parser instanceof BooleanPrefixedVariableParser) {
       return BooleanPrefixedVariableParser.getVariableName(thisParserParsed);
