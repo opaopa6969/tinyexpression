@@ -15,6 +15,7 @@ import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionOfStringParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.CaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.CaseFactorParser;
 import org.unlaxer.tinyexpression.parser.DefaultCaseFactorParser;
@@ -32,9 +33,11 @@ import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
+import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
@@ -49,13 +52,13 @@ import org.unlaxer.tinyexpression.parser.StringMethodParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
+import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TermParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -157,7 +160,8 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 			return operator;
 			
-		}else if(operator.parser instanceof VariableParser){
+		}else if(operator.parser instanceof StringVariableParser|| 
+        operator.parser instanceof NakedVariableParser ){
 			
 			return operator;
 			
@@ -189,9 +193,13 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 			return clearChildren(operator);
 			
-		}else if(operator.parser instanceof VariableParser){
+		}else if(operator.parser instanceof NakedVariableParser ){
 			
 			return clearChildren(operator);
+			
+		}else if(operator.parser instanceof NumberVariableParser){
+		  
+		  return operator;
 			
 		}else if(operator.parser instanceof IfExpressionParser){
 			
@@ -300,7 +308,8 @@ public class ASTCreator implements UnaryOperator<Token>{
 			Token booleanClause = NotBooleanExpressionParser.getBooleanClause(operator);
 			return operator.newCreatesOf(apply(booleanClause));
 			
-		}else if(parser instanceof VariableParser) {
+		}else if(parser instanceof BooleanVariableParser || 
+		    parser instanceof NakedVariableParser) {
 			
 			return operator;
 			

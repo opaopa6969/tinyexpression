@@ -13,13 +13,14 @@ import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
+import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.TermParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -54,7 +55,6 @@ public class ExpressionBuilder implements CodeBuilder {
 		}
 	}
 	
-	
 	public static ExpressionBuilder SINGLETON = new ExpressionBuilder();
 
 	public void build(SimpleJavaCodeBuilder builder, Token token) {
@@ -76,9 +76,7 @@ public class ExpressionBuilder implements CodeBuilder {
 					parser = token.parser;
 					
 				}
-
-
-}
+			}
 		}
 		
 		if (parser instanceof PlusParser) {
@@ -101,9 +99,12 @@ public class ExpressionBuilder implements CodeBuilder {
 
 			builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
 
-		} else if (parser instanceof VariableParser) {
+		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-			String variableName = token.tokenString.get().substring(1);
+			String variableName = 
+			    parser instanceof NakedVariableParser ? 
+			      NakedVariableParser.getVariableName(token):
+			      NumberVariableParser.getVariableName(token);
 
 			builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
 

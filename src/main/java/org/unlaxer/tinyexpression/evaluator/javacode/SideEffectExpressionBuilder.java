@@ -10,6 +10,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuil
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.Expression;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
 import org.unlaxer.tinyexpression.parser.StringExpression;
@@ -81,7 +82,9 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 				Token token = iterator.next();
 				
 				Parser parser = token.parser;
-				if(parser instanceof Expression) {
+				if(parser instanceof NakedVariableParser) {
+				  NakedVariableBuilder.SINGLETON.build(builder, token);
+				}else if(parser instanceof Expression) {
 					ExpressionBuilder.SINGLETON.build(builder, token);
 				}else if(parser instanceof BooleanExpression) {
 					BooleanClauseBuilder.SINGLETON.build(builder, token);

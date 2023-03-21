@@ -5,7 +5,6 @@ import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
-import org.unlaxer.context.CreateMetaTokenSprcifier;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;

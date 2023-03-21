@@ -3,24 +3,22 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.Name;
+import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.OneOrMore;
-import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.AlphabetNumericUnderScoreParser;
 
-public class VariableParser extends LazyChain implements Expression , BooleanExpression , StringExpression{
+public class NakedVariableParser extends LazyChain {//implements Expression , BooleanExpression , StringExpression{
 
 	private static final long serialVersionUID = -8533685205048474333L;
 
-	public VariableParser() {
+	public NakedVariableParser() {
 		super();
 	}
 
-	public VariableParser(Name name) {
+	public NakedVariableParser(Name name) {
 		super(name);
 	}
 	
@@ -33,17 +31,6 @@ public class VariableParser extends LazyChain implements Expression , BooleanExp
 				Parser.get(DollarParser.class),
 				new OneOrMore(
 					Parser.get(AlphabetNumericUnderScoreParser.class)
-				),
-				new Optional(
-				    new WhiteSpaceDelimitedChain(
-				        Parser.get(LeftCurlyBraceParser.class),
-				        new org.unlaxer.parser.combinator.Choice(
-				            new WordParser("string"),
-                    new WordParser("boolean"),
-                    new WordParser("number")
-				        ),
-                Parser.get(RightCurlyBraceParser.class)
-				    )
 				)
 			);
 	}
@@ -52,4 +39,10 @@ public class VariableParser extends LazyChain implements Expression , BooleanExp
 	public List<Parser> getLazyParsers() {
 		return parsers; 
 	}
+	
+	public static String getVariableName(Token thisParserParsed) {
+    String variableName = thisParserParsed.tokenString.get().substring(1);
+    return variableName; 
+	}
+
 }

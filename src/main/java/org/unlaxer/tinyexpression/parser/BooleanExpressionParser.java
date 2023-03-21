@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
-import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -50,7 +49,8 @@ public class BooleanExpressionParser extends LazyChoice implements BooleanExpres
 				Parser.get(GreaterExpressionParser.class),
 				Parser.get(LessExpressionParser.class),
 				Parser.get(BooleanExpressionOfStringParser.class),
-				Parser.get(()->new VariableParser(Name.of("booleanVariable")))
+				Parser.get(BooleanVariableParser.class),
+        Parser.get(NakedVariableParser.class)
 			);
 	}
 

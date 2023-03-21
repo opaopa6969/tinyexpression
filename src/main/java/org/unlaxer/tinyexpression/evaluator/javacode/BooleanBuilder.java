@@ -5,6 +5,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
@@ -13,6 +14,7 @@ import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;
@@ -24,7 +26,6 @@ import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class BooleanBuilder implements CodeBuilder {
 	
@@ -64,12 +65,16 @@ public class BooleanBuilder implements CodeBuilder {
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")
 					.append(toHour).append("f)");
 					
-		}else if(parser instanceof VariableParser) {
-			
-			String variableName = token.tokenString.get().substring(1);
-
+		}else if(parser instanceof BooleanVariableParser) {
+		  
+			String variableName = BooleanVariableParser.getVariableName(token);
 			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
 			
+    }else if(parser instanceof NakedVariableParser) {
+      
+      String variableName = NakedVariableParser.getVariableName(token);
+      builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
+      
 		}else if(parser instanceof TrueTokenParser){
 			
 			builder.append("true");
