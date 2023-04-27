@@ -14,22 +14,15 @@ public class NotEqualExpressionParser extends WhiteSpaceDelimitedLazyChain imple
 	public NotEqualExpressionParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(ExpressionParser.class),
-				Parser.get(NotEqualParser.class),
-				Parser.get(ExpressionParser.class)
-			);
-	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      new Parsers(
+        Parser.get(ExpressionParser.class),
+        Parser.get(NotEqualParser.class),
+        Parser.get(ExpressionParser.class)
+      );
 	}
 	
 	public static Token getLeftExpression(Token thisParserParsed) {

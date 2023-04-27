@@ -17,29 +17,19 @@ public class StringExpressionParser extends WhiteSpaceDelimitedLazyChain impleme
 		super();
 	}
 
-
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		
-		// StringExpression:=StringTerm('+'StringTerm)*;
-		parsers = 
-			new Parsers(
-				Parser.get(StringTermParser.class),
-				new ZeroOrMore(
-					new Choice(
-						Parser.get(StringPlusParser.class),
-						Parser.get(StringTermParser.class)
-					)
-				)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+	      // StringExpression:=StringTerm('+'StringTerm)*;
+        new Parsers(
+          Parser.get(StringTermParser.class),
+          new ZeroOrMore(
+            new Choice(
+              Parser.get(StringPlusParser.class),
+              Parser.get(StringTermParser.class)
+            )
+          )
+        );
+
 	}
 }

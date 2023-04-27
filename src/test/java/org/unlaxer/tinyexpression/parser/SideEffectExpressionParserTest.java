@@ -25,6 +25,7 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 
 		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(10,$hour>0)"));
 		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
+    testAllMatch(sideEffectExpressionParser,("external:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
 		
 		{
 			String formula =
@@ -66,6 +67,23 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 //		String formula = "with side effect:jp.caulis.calc.Effects#foo(1,true | false ,'niku')";
 //	TestResult result = testAllMatch(sideEffectExpressionParser,formula,false);
 		
+	}
+	
+	@Test
+	public void testTypeHints() {
+	  
+	   SideEffectExpressionParser sideEffectExpressionParser = new SideEffectExpressionParser();
+	    
+	   testAllMatch(sideEffectExpressionParser,
+	       "external returning as float :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
+	   testAllMatch(sideEffectExpressionParser,
+	       "external returning as boolean :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
+     testAllMatch(sideEffectExpressionParser,
+         "external returning as String :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
+     testAllMatch(sideEffectExpressionParser,
+          "external returning String :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
+     testAllMatch(sideEffectExpressionParser,
+          "external returning Stringaa :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
 	}
 
 }

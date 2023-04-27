@@ -16,26 +16,16 @@ public class StringTermParser extends WhiteSpaceDelimitedLazyChain implements St
 		super();
 	}
 
-
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		
-//		.append("StringTerm:=StringFactor,Slice*;")
-		parsers = 
-			new Parsers(
-				Parser.get(StringFactorParser.class),
-				new ZeroOrMore(
-					Parser.get(SliceParser.class)
-				)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+//  .append("StringTerm:=StringFactor,Slice*;")
+   return  
+     new Parsers(
+       Parser.get(StringFactorParser.class),
+       new ZeroOrMore(
+         Parser.get(SliceParser.class)
+       )
+     );
+
 	}
 }

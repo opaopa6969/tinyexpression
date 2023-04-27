@@ -5,22 +5,21 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.WordParser;
 
-public class BooleanTypeHintParser extends LazyChoice {
+public class SideEffectNameParser extends LazyChoice{
 
-  private static final long serialVersionUID = 212851319466314194L;
-
-  public BooleanTypeHintParser() {
+  private static final long serialVersionUID = -5885382161035099103L;
+  
+  public SideEffectNameParser() {
     super();
   }
-
+  
   @Override
   public List<Parser> getLazyParsers() {
-    return
+    return 
       new Parsers(
-          new WordParser("Boolean"), //
-          new WordParser("boolean")
+        Parser.get(SideEffectName1Parser.class),
+        Parser.get(SideEffectName2Parser.class)
       );
   }
 }

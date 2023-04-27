@@ -9,25 +9,17 @@ public class StringStartsWithParser extends StringMethodExpressionParser impleme
 	
 	private static final long serialVersionUID = 4961342621488883708L;
 	
-	List<Parser> parsers;
-	
 	public StringStartsWithParser() {
 		super();
 	}
 
 	@Override
-	public void initialize() {
-		//  StringStartsWith:=StringExpression'.startsWith('StringExpression')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				Parser.get(StringStartsWithMethodParser.class)
-			);
-	}
-
-
-	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+    //  StringStartsWith:=StringExpression'.startsWith('StringExpression')';
+    return
+      new Parsers(
+        Parser.get(StringExpressionParser.class),
+        Parser.get(StringStartsWithMethodParser.class)
+      );
 	}
 }

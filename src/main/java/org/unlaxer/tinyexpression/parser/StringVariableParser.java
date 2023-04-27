@@ -12,23 +12,16 @@ public class StringVariableParser extends LazyChoice {
 
   private static final long serialVersionUID = -604853821610350410L;
 
-  List<Parser> parsers;
-
   public StringVariableParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
+  public List<Parser> getLazyParsers() {
+    return new Parsers(//
         Parser.get(StringPrefixedVariableParser.class), //
         Parser.get(StringSuffixedVariableParser.class)//
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
   
   public static String getVariableName(Token thisParserParsed) {

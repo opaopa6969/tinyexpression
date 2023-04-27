@@ -18,27 +18,21 @@ public class ExpressionParser extends NoneChildCollectingParser implements RootP
 	}
 
 	@Override
-	public void initialize() {
-		// <expression> ::= <term>[('+'|'-')<term>]*
-		parser = 
-			new WhiteSpaceDelimitedChain(
-					Parser.get(TermParser.class),
-					new ZeroOrMore(
-						new WhiteSpaceDelimitedChain(
-							new Choice(
-								Parser.get(PlusParser.class),
-								Parser.get(MinusParser.class)
-							),
-							Parser.get(TermParser.class)
-						)
-					)
-				);
-	}
-
-
-
-	@Override
 	public Parser createParser() {
-		return parser;
+	  return
+      // <expression> ::= <term>[('+'|'-')<term>]*
+        new WhiteSpaceDelimitedChain(
+            Parser.get(TermParser.class),
+            new ZeroOrMore(
+              new WhiteSpaceDelimitedChain(
+                new Choice(
+                  Parser.get(PlusParser.class),
+                  Parser.get(MinusParser.class)
+                ),
+                Parser.get(TermParser.class)
+              )
+            )
+          );
+
 	}
 }

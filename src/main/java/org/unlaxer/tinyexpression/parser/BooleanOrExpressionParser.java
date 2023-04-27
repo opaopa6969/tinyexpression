@@ -13,20 +13,14 @@ public class BooleanOrExpressionParser extends WhiteSpaceDelimitedLazyChain impl
 	public BooleanOrExpressionParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = new Parsers(
-			Parser.get(BooleanExpressionParser.class),
-			Parser.get(OrParser.class),
-			Parser.get(BooleanExpressionParser.class)
-		);
-	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+      new Parsers(
+        Parser.get(BooleanExpressionParser.class),
+        Parser.get(OrParser.class),
+        Parser.get(BooleanExpressionParser.class)
+      );
 	}
 }

@@ -29,23 +29,15 @@ public class RandomParser extends NoneChildCollectingParser implements Expressio
 			return "(".concat(matchedString).concat(")");
 		}
 	}
-	
-	Parser parser;
-	
-	@Override
-	public void initialize() {
-		parser =
-			new WhiteSpaceDelimitedChain(
-				Parser.get(RandomFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
-
 
 	@Override
 	public Parser createParser() {
-		return parser;
+	  return 
+      new WhiteSpaceDelimitedChain(
+        Parser.get(RandomFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(RightParenthesisParser.class)
+      );
+
 	}
 }

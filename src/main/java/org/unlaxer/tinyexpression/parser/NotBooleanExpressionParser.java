@@ -18,20 +18,6 @@ public class NotBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 		super();
 	}
 
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(NotFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(BooleanClauseParser.class),//2
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
-
 	public static class NotFuctionNameParser extends SuggestableParser{
 
 		private static final long serialVersionUID = -2967834676097977017L;
@@ -48,7 +34,13 @@ public class NotBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+      new Parsers(
+        Parser.get(NotFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(BooleanClauseParser.class),//2
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 	
 	public static Token getBooleanClause(Token thisParserParsed) {

@@ -10,22 +10,15 @@ public class StringTypeHintSuffixParser extends WhiteSpaceDelimitedLazyChain {
 
   private static final long serialVersionUID = -1244382161036541973L;
 
-  List<Parser> parsers;
-
   public StringTypeHintSuffixParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
+  public List<Parser> getLazyParsers() {
+    return new Parsers(//
         Parser.get(AsParser.class), //
         Parser.get(StringTypeHintParser.class)//
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
 }

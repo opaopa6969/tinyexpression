@@ -14,21 +14,15 @@ public class ImmediatesBooleanExpressionParser extends LazyChoice{
 		super();
 	}
 
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(BooleanVariableParser.class),
-        Parser.get(NakedVariableParser.class),
-				Parser.get(TrueTokenParser.class),
-				Parser.get(FalseTokenParser.class)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  
+	  return 
+      new Parsers(
+        Parser.get(BooleanVariableParser.class),
+        Parser.get(NakedVariableParser.class),
+        Parser.get(TrueTokenParser.class),
+        Parser.get(FalseTokenParser.class)
+      );
 	}
 }

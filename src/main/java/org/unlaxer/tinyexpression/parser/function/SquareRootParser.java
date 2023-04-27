@@ -36,24 +36,15 @@ public class SquareRootParser extends NoneChildCollectingParser implements Expre
 		
 	}
 
-	Parser parser;
-	
-	@Override
-	public void initialize() {
-		parser =
-			new WhiteSpaceDelimitedChain(
-				Parser.get(SqrtFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(ExpressionParser.class),//2
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
-
-
 	@Override
 	public Parser createParser() {
-		return parser;
+	  return
+      new WhiteSpaceDelimitedChain(
+        Parser.get(SqrtFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(ExpressionParser.class),//2
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 	
 	public static Token getExpression(Token thisParserParsed) {

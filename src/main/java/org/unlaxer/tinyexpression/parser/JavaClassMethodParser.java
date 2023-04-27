@@ -20,22 +20,16 @@ public class JavaClassMethodParser extends LazyChain{
 		super(name);
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-//				new Optional(
-					Parser.get(JavaClassAndHashParser.class),
-//				),
-				Parser.get(IdentifierParser.class)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+      new Parsers(
+//	        new Optional(
+          Parser.get(JavaClassAndHashParser.class),
+//	        ),
+        Parser.get(IdentifierParser.class)
+      );
+
 	}
 	
 	public ClassNameAndIdentifier extract(Token token) {

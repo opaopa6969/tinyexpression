@@ -32,27 +32,18 @@ public class MaxParser extends NoneChildCollectingParser implements Expression {
 			return "(".concat(matchedString).concat(")");
 		}
 	}
-	
-	Parser parser;
-	
-	@Override
-	public void initialize() {
-		parser =
-			new WhiteSpaceDelimitedChain(
-				Parser.get(MaxFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(ExpressionParser.class),//2
-				Parser.<WordParser>get(()->new WordParser(",")),
-				Parser.get(ExpressionParser.class),//4
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
-
 
 	@Override
 	public Parser createParser() {
-		return parser;
+	  return 
+      new WhiteSpaceDelimitedChain(
+        Parser.get(MaxFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(ExpressionParser.class),//2
+        Parser.<WordParser>get(()->new WordParser(",")),
+        Parser.get(ExpressionParser.class),//4
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 	
 	public static Token getLeftExpression(Token thisParserParsed) {

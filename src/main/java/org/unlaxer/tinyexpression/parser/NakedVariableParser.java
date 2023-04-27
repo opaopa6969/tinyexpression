@@ -22,22 +22,16 @@ public class NakedVariableParser extends LazyChain {//implements Expression , Bo
 		super(name);
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(DollarParser.class),
-				new OneOrMore(
-					Parser.get(AlphabetNumericUnderScoreParser.class)
-				)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  
+	  return 
+      new Parsers(
+        Parser.get(DollarParser.class),
+        new OneOrMore(
+          Parser.get(AlphabetNumericUnderScoreParser.class)
+        )
+      );
 	}
 	
 	public static String getVariableName(Token thisParserParsed) {

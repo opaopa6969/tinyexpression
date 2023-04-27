@@ -31,27 +31,18 @@ public class MatchExpressionParser extends WhiteSpaceDelimitedLazyChain implemen
 		}
 	}
 	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		//MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
-
-		parsers = 
-			new Parsers(
-				Parser.get(MatchFuctionNameParser.class),
-				Parser.get(LeftCurlyBraceParser.class),
-				Parser.get(CaseExpressionParser.class),//2
-				Parser.get(DefaultCaseFactorParser.class),//3
-				Parser.get(RightCurlyBraceParser.class)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
+      new Parsers(
+        Parser.get(MatchFuctionNameParser.class),
+        Parser.get(LeftCurlyBraceParser.class),
+        Parser.get(CaseExpressionParser.class),//2
+        Parser.get(DefaultCaseFactorParser.class),//3
+        Parser.get(RightCurlyBraceParser.class)
+      );
+
 	}
 	
 	public static Token getCaseExpression(Token thisParserParsed) {

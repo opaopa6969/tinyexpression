@@ -33,21 +33,15 @@ public class NotImmediatesBooleanExpressionParser extends WhiteSpaceDelimitedLaz
 		}
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(NotFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(ImmediatesBooleanExpressionParser.class),
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  
+	  return 
+      new Parsers(
+        Parser.get(NotFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(ImmediatesBooleanExpressionParser.class),
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 }

@@ -11,23 +11,16 @@ public class StringSuffixedVariableParser extends WhiteSpaceDelimitedLazyChain i
 
   private static final long serialVersionUID = -1065885382103097042L;
 
-  List<Parser> parsers;
-
   public StringSuffixedVariableParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
+  public List<Parser> getLazyParsers() {
+    return new Parsers(//
         Parser.get(NakedVariableParser.class), //0
         Parser.get(StringTypeHintSuffixParser.class)//1
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
 
   public static String getVariableName(Token thisParserParsed) {

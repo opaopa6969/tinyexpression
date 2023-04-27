@@ -15,22 +15,14 @@ private static final long serialVersionUID = -6949606984841006427L;
 		super();
 	}
 
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				Parser.get(NotEqualParser.class),
-				Parser.get(StringExpressionParser.class)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
-	}
+	  return 
+	      new Parsers(
+	        Parser.get(StringExpressionParser.class),
+	        Parser.get(NotEqualParser.class),
+	        Parser.get(StringExpressionParser.class)
+	      );	}
 	
 	public static Token getLeftExpression(Token thisParserParsed) {
 		return thisParserParsed.filteredChildren.get(0);

@@ -14,28 +14,21 @@ public class TermParser extends NoneChildCollectingParser implements Expression 
 		super();
 	}
 	
-	Parser parser;
-	
-	@Override
-	public void initialize() {
-		// <term>::= <factor>[('*'|'/')<factor>]*
-		parser = 
-			new WhiteSpaceDelimitedChain(
-				Parser.get(FactorParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						new Choice(
-							Parser.get(MultipleParser.class),
-							Parser.get(DivisionParser.class)
-						),
-						Parser.get(FactorParser.class)
-					)
-				)
-			);
-	}
-
 	@Override
 	public Parser createParser() {
-		return parser;
+    // <term>::= <factor>[('*'|'/')<factor>]*
+    return  
+      new WhiteSpaceDelimitedChain(
+        Parser.get(FactorParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            new Choice(
+              Parser.get(MultipleParser.class),
+              Parser.get(DivisionParser.class)
+            ),
+            Parser.get(FactorParser.class)
+          )
+        )
+      );
 	}
 }

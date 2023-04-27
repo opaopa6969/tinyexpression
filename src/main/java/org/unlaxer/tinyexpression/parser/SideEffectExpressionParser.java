@@ -7,7 +7,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -22,95 +21,18 @@ public class SideEffectExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 		super();
 	}
 	
-	public static class SideEffectNameParser extends LazyChoice{
-
-    private static final long serialVersionUID = -5885382161035099103L;
-    
-    List<Parser> parsers;
-
-
-    public SideEffectNameParser() {
-      super();
-    }
-    
-    @Override
-    public void initialize() {
-      parsers = 
-        new Parsers(
-          Parser.get(SideEffectName1Parser.class),
-          Parser.get(SideEffectName2Parser.class)
-        );
-    }
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return parsers;
-    }
-  }
-	
-	public static class SideEffectName1Parser extends WhiteSpaceDelimitedLazyChain{
-
-		private static final long serialVersionUID = -5885382161035099103L;
-		
-		List<Parser> parsers;
-
-
-		public SideEffectName1Parser() {
-			super();
-		}
-		
-		@Override
-		public void initialize() {
-			parsers = 
-				new Parsers(
-					Parser.get(()->new WordParser("with")),
-					Parser.get(()->new WordParser("side")),
-					Parser.get(()->new WordParser("effect"))
-				);
-		}
-
-		@Override
-		public List<Parser> getLazyParsers() {
-			return parsers;
-		}
-	}
-	
-	public static class SideEffectName2Parser extends WordParser{
-
-    private static final long serialVersionUID = -5885382161035099103L;
-    
-    List<Parser> parsers;
-
-
-    public SideEffectName2Parser() {
-      super("external");
-    }
-  }
-	
-	
-	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(SideEffectNameParser.class),
-				Parser.get(()->new WordParser(":")),
-				Parser.get(JavaClassMethodParser.class),//2
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(SideEffectExpressionParameterParser.class),//4
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-	
-	
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      new Parsers(
+        Parser.get(SideEffectNameParser.class),
+        Parser.get(()->new WordParser(":")),
+        Parser.get(JavaClassMethodParser.class),//2
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(SideEffectExpressionParameterParser.class),//4
+        Parser.get(RightParenthesisParser.class)
+      );
+
 	}
 	
 	public static Token getMethodClause(Token thisParserParsed) {

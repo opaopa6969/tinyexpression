@@ -16,44 +16,37 @@ public class FactorParser extends NoneChildCollectingParser implements Expressio
 	
 	private static final long serialVersionUID = 3521391436954908685L;
 	
-	Parser parser;
-	
 	public FactorParser() {
 		super();
 	}
 
 	@Override
-	public void initialize() {
-		// <factor>::= <Number>|'('<expression>')'
-		parser = 
-			new Choice(
-//					new TernaryOperatorParser(expressionParser),
-				Parser.get(SideEffectExpressionParser.class),
-				Parser.get(IfExpressionParser.class),
-				Parser.get(MatchExpressionParser.class),
-
-				Parser.get(NumberParser.class),
-        Parser.get(NumberVariableParser.class),
-				Parser.get(NakedVariableParser.class),
-				
-				new ParenthesesParser(Parser.get(ExpressionParser.class)),
-				Parser.get(SinParser.class),
-				Parser.get(CosParser.class),
-				Parser.get(TanParser.class),
-				Parser.get(SquareRootParser.class),
-				Parser.get(MinParser.class),
-				Parser.get(MaxParser.class),
-				Parser.get(RandomParser.class),
-				Parser.get(FactorOfStringParser.class),
-				Parser.get(ToNumParser.class)
-			);
-	}
-
-
-
-	@Override
 	public Parser createParser() {
-		return parser;
+	  
+	  return 
+	      // <factor>::= <Number>|'('<expression>')'
+        new Choice(
+//	            new TernaryOperatorParser(expressionParser),
+          Parser.get(SideEffectExpressionParser.class),
+          Parser.get(IfExpressionParser.class),
+          Parser.get(MatchExpressionParser.class),
+
+          Parser.get(NumberParser.class),
+          Parser.get(NumberVariableParser.class),
+          Parser.get(NakedVariableParser.class),
+          
+          new ParenthesesParser(Parser.get(ExpressionParser.class)),
+          Parser.get(SinParser.class),
+          Parser.get(CosParser.class),
+          Parser.get(TanParser.class),
+          Parser.get(SquareRootParser.class),
+          Parser.get(MinParser.class),
+          Parser.get(MaxParser.class),
+          Parser.get(RandomParser.class),
+          Parser.get(FactorOfStringParser.class),
+          Parser.get(ToNumParser.class)
+        );
+
 	}
 
 }

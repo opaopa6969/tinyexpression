@@ -11,23 +11,17 @@ public class BooleanPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain 
 
   private static final long serialVersionUID = -600588538210309122L;
 
-  List<Parser> parsers;
-
   public BooleanPrefixedVariableParser() {
     super();
   }
-
+  
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
+  public List<Parser> getLazyParsers() {
+    return 
+    new Parsers(//
         Parser.get(BooleanTypeHintPrefixParser.class), //0
         Parser.get(NakedVariableParser.class)//1
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
   
   public static String getVariableName(Token thisParserParsed) {

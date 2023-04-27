@@ -11,24 +11,18 @@ public class NumberTypeHintParser extends LazyChoice {
 
   private static final long serialVersionUID = 411285131946664894L;
 
-  List<Parser> parsers;
-
   public NumberTypeHintParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(
-        new WordParser("Number"), //
-        new WordParser("number"), //
-        new WordParser("Float"), //
-        new WordParser("float")
-    );
-  }
-
-  @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return
+      new Parsers(
+          new WordParser("Number"), //
+          new WordParser("number"), //
+          new WordParser("Float"), //
+          new WordParser("float")
+      );
   }
 }

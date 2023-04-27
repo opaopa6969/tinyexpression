@@ -13,32 +13,22 @@ public class CommaSeparatedStringExpressionParser extends WhiteSpaceDelimitedLaz
 
 	private static final long serialVersionUID = -145498364741083714L;
 	
-	List<Parser> parsers;
-	
 	public CommaSeparatedStringExpressionParser() {
 		super();
 	}
 
-
-	@Override
-	public void initialize() {
-		//  CommaSeparatedStringExpression:=StringExpression(','StringExpression)*')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						Parser.<WordParser>get(()->new WordParser(",")),
-						Parser.get(StringExpressionParser.class)
-					)
-				)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return 
+	      //  CommaSeparatedStringExpression:=StringExpression(','StringExpression)*')';
+      new Parsers(
+        Parser.get(StringExpressionParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            Parser.<WordParser>get(()->new WordParser(",")),
+            Parser.get(StringExpressionParser.class)
+          )
+        )
+      );
 	}
-	
 }

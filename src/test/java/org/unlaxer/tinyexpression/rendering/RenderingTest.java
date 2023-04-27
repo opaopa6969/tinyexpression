@@ -15,7 +15,7 @@ public class RenderingTest {
 	public static void main(String[] args) {
 		
 		Parser expressionParser = Parser.get(ExpressionParser.class);
-		expressionParser.initialize();
+//		expressionParser.initialize();
 		
 		Set<Class<? extends Parser>> parsers = new LinkedHashSet<>();
 		

@@ -12,23 +12,17 @@ public class BooleanVariableParser extends LazyChoice {
 
   private static final long serialVersionUID = -60484510350410L;
 
-  List<Parser> parsers;
-
   public BooleanVariableParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
-        Parser.get(BooleanPrefixedVariableParser.class), //
-        Parser.get(BooleanSuffixedVariableParser.class)//
-    );
-  }
-
-  @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return 
+      new Parsers(//
+          Parser.get(BooleanPrefixedVariableParser.class), //
+          Parser.get(BooleanSuffixedVariableParser.class)//
+      );
   }
   
   public static String getVariableName(Token thisParserParsed) {

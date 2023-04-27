@@ -17,26 +17,18 @@ public class IsPresentParser extends WhiteSpaceDelimitedLazyChain implements Boo
 	public IsPresentParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		// IsPresentExpression:='isPresent('Variable');
-		parsers = 
-			new Parsers(
-				Parser.get(IsPresentNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(NakedVariableParser.class),//2
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      // IsPresentExpression:='isPresent('Variable');
+        new Parsers(
+          Parser.get(IsPresentNameParser.class),
+          Parser.get(LeftParenthesisParser.class),
+          Parser.get(NakedVariableParser.class),//2
+          Parser.get(RightParenthesisParser.class)
+        );
+
 	}
 	
 	public static Token getVariable(Token thisParserParsed) {

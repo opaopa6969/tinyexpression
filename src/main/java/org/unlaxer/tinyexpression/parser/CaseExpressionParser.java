@@ -18,26 +18,19 @@ public class CaseExpressionParser extends WhiteSpaceDelimitedLazyChain{
 		super();
 	}
 	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(CaseFactorParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						new WordParser(","),
-						Parser.get(CaseFactorParser.class)
-					)
-				)
-			);
-	}
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+		return
+      new Parsers(
+        Parser.get(CaseFactorParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            new WordParser(","),
+            Parser.get(CaseFactorParser.class)
+          )
+        )
+      );
+
 	}
 }

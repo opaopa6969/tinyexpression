@@ -20,20 +20,14 @@ public class JavaClassAndHashParser extends LazyChain{
 		super(name);
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-					Parser.get(JavaClassNameParser.class),
-					Parser.get(HashParser.class)
-				);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return 
+      new Parsers(
+        Parser.get(JavaClassNameParser.class),
+        Parser.get(HashParser.class)
+      );
+
 	}
 	
 

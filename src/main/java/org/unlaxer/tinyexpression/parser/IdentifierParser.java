@@ -22,21 +22,15 @@ public class IdentifierParser extends LazyChain {
 		super(name);
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(AlphabetUnderScoreParser.class),
-				new ZeroOrMore(
-					Parser.get(AlphabetNumericUnderScoreParser.class)
-				)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+	      new Parsers(
+	        Parser.get(AlphabetUnderScoreParser.class),
+	        new ZeroOrMore(
+	          Parser.get(AlphabetNumericUnderScoreParser.class)
+	        )
+	      );
 	}
+
 }

@@ -24,30 +24,23 @@ public class SideEffectStringExpressionParameterParser extends WhiteSpaceDelimit
 	public SideEffectStringExpressionParameterParser(Name name) {
 		super(name);
 	}
-	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						Parser.get(CommaParser.class),
-						new Choice(
-					    Parser.get(BooleanClauseParser.class),
-					    Parser.get(StringExpressionParser.class),
-							Parser.get(ExpressionParser.class)
-						)
-					)	
-				)
-			);
-	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+      new Parsers(
+        Parser.get(StringExpressionParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            Parser.get(CommaParser.class),
+            new Choice(
+              Parser.get(BooleanClauseParser.class),
+              Parser.get(StringExpressionParser.class),
+              Parser.get(ExpressionParser.class)
+            )
+          ) 
+        )
+      );
 	}
 	
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){

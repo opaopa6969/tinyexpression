@@ -11,23 +11,17 @@ public class NumberPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain i
 
   private static final long serialVersionUID = -600501238210309122L;
 
-  List<Parser> parsers;
-
   public NumberPrefixedVariableParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
-        Parser.get(NumberTypeHintPrefixParser.class), //0
-        Parser.get(NakedVariableParser.class)//1
-    );
-  }
-
-  @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return 
+      new Parsers(//
+          Parser.get(NumberTypeHintPrefixParser.class), //0
+          Parser.get(NakedVariableParser.class)//1
+      );
   }
 
   public static String getVariableName(Token thisParserParsed) {
