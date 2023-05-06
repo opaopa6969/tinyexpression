@@ -22,13 +22,11 @@ import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
 public class ContextCalculatorFactory{
   
   @SuppressWarnings("unchecked")
-  public static ExtendedContextCalculator create(String formula , String className , String javaCode ,  byte[] byteCode) {
+  public static ExtendedContextCalculator create(String formula , String className , String javaCode ,  byte[] byteCode , ClassLoader classLoader) {
     
     Class<ContextCalculator> calculatorClass = null;
     
     try {
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      
         try {
           calculatorClass = (Class<ContextCalculator>) classLoader.loadClass(className);
           
@@ -48,7 +46,7 @@ public class ContextCalculatorFactory{
     }
   }
   
-  public static ExtendedContextCalculator create(String formula , String className) {
+  public static ExtendedContextCalculator create(String formula , String className , ClassLoader classLoader) {
     
     try(ParseContext parseContext = new ParseContext(new StringSource(formula));){
       Parsed parsed = getParser().parse(parseContext);
@@ -58,7 +56,7 @@ public class ContextCalculatorFactory{
       Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
       String javaCode = createJavaClass(className, rootToken);
       
-      CalculatorAndByteCode calculator = compile(javaCode, className);
+      CalculatorAndByteCode calculator = compile(javaCode, className , classLoader);
       byte[] byteCode = calculator.bytes;
       return new SimpleContextCalculator(formula, javaCode , byteCode ,  calculator.contextCalculator);
     }catch (Exception e) {
@@ -79,22 +77,22 @@ public class ContextCalculatorFactory{
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
     
-    String CalculationContextName = CalculationContext.class.getName();
-    
-    String ContextCalculatorName = ContextCalculator.class.getName();
+//    String CalculationContextName = CalculationContext.class.getName();
+//    
+//    String ContextCalculatorName = ContextCalculator.class.getName();
     builder
-    .line("import org.unlaxer.Token;")
-    .line("import "+CalculationContextName+";")
-    .line("import "+ContextCalculatorName+";")
+//    .line("import org.unlaxer.Token;")
+//    .line("import "+CalculationContextName+";")
+//    .line("import "+ContextCalculatorName+";")
     .n()
     .append("public class ")
     .append(className)
-    .append(" implements ContextCalculator{")
+    .append(" implements org.unlaxer.tinyexpression.factory.ContextCalculator{")
     .n()
     .n()
     .incTab()
     .line("@Override")
-    .line("public Float apply(CalculationContext calculateContext){")
+    .line("public Float apply(org.unlaxer.tinyexpression.CalculationContext calculateContext){")
     .incTab()
     .line("float answer = (float) ")
     .n();
@@ -113,11 +111,10 @@ public class ContextCalculatorFactory{
   }
   
   @SuppressWarnings("unchecked")
-  static CalculatorAndByteCode compile(String javaCode , String className){
+  static CalculatorAndByteCode compile(String javaCode , String className , ClassLoader classLoader){
     
     try {
       
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
       if(loaded(classLoader , className)) {
         
         var calculatorClass = (Class<ContextCalculator>) classLoader.loadClass(className);

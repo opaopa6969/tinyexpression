@@ -25,21 +25,19 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
   TokenBaseOperator<CalculationContext, Float> instance;
 
-  public JavaCodeCalculatorV2(String formula) {
-    this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()));
+  public JavaCodeCalculatorV2(String formula , ClassLoader classLoader) {
+    this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()) , classLoader);
   }
 
 
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula , String className) {
+  public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
     super(formula , className);
     this.className = className;
     javaCode = createJavaClass(className, rootToken);
     
     CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
     try {
-      
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
       
       if(loaded(classLoader , className)) {
         
@@ -55,7 +53,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
         synchronized (CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER) {
           loadFromJava =
               (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-              CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaCode);
+              CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaCode , classLoader);
           instance = (TokenBaseOperator<CalculationContext, Float>) loadFromJava.loadedClass.getDeclaredConstructor().newInstance();
         }
       }
@@ -69,7 +67,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
   }
   
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode) {
+  public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode , ClassLoader classLoader) {
     super(formula , className);
     this.className = className;
     this.javaCode = javaCode;
@@ -78,8 +76,6 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
     Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
     
     try {
-      ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-      
         try {
           calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader.loadClass(className);
           

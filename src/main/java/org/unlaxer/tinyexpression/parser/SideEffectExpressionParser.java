@@ -13,8 +13,8 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
 
 public class SideEffectExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
-	
-	private static final long serialVersionUID = 8228933717392969866L;
+  
+  private static final long serialVersionUID = 8228933717392969866L;
 	
 	
 	public SideEffectExpressionParser() {
