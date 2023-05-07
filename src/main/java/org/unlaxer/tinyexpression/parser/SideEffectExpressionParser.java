@@ -7,6 +7,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
+import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -26,6 +27,7 @@ public class SideEffectExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
+        Parser.get(()->new Optional(Parser.get(ReturningParser.class))),
         Parser.get(()->new WordParser(":")),
         Parser.get(JavaClassMethodParser.class),//2
         Parser.get(LeftParenthesisParser.class),

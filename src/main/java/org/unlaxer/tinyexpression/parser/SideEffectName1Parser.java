@@ -27,7 +27,6 @@ public class SideEffectName1Parser extends WhiteSpaceDelimitedLazyChain{
 
 	}
 	
-	
 //	public static class ReturningParser extends WhiteSpaceDelimitedLazyChain{
 //	  
 //	}
