@@ -9,8 +9,6 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.tinyexpression.parser.AbstractTermParser.StrictTypedTermParser;
-import org.unlaxer.tinyexpression.parser.AbstractTermParser.TermParser;
 
 public abstract class AbstractExpressionParser extends WhiteSpaceDelimitedLazyChain implements RootParserIndicator , Expression , VariableTypeSelectable{
 	
@@ -48,34 +46,5 @@ public abstract class AbstractExpressionParser extends WhiteSpaceDelimitedLazyCh
 	public AbstractExpressionParser() {
 		super();
 	}
-	
-	
-	public static class ExpressionParser extends AbstractExpressionParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return true;
-    }
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(true);
-    }
-	  
-	}
-	
-	public static class StrictTypedExpressionParser extends AbstractExpressionParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return false;
-    }
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(false);
-    }
-    
-  }
 
 }

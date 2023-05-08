@@ -56,32 +56,5 @@ public abstract class AbstractBooleanExpressionParser extends LazyChoice impleme
     return parsers;
   }
   
-  
-  public static class BooleanExpressionParser extends AbstractBooleanExpressionParser{
-
-     @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(true);
-    }
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return true;
-    }
-  }
-  
-  public static class StrictTypedBooleanExpressionParser extends AbstractBooleanExpressionParser{
-
-    @Override
-   public List<Parser> getLazyParsers() {
-     return getLazyParsers(false);
-   }
-
-   @Override
-   public boolean hasNakedVariableParser() {
-     return false;
-   }
- }
-  
 
 }

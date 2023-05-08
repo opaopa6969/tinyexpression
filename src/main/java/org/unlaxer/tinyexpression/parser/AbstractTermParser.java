@@ -8,8 +8,6 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.tinyexpression.parser.AbstractFactorParser.FactorParser;
-import org.unlaxer.tinyexpression.parser.AbstractFactorParser.StrictTypedFactorParser;
 
 public abstract class AbstractTermParser extends WhiteSpaceDelimitedLazyChain implements Expression , VariableTypeSelectable{
 	
@@ -50,32 +48,6 @@ public abstract class AbstractTermParser extends WhiteSpaceDelimitedLazyChain im
     
     
     return parsers;
-  }
-  
-  public static class TermParser extends AbstractTermParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return true;
-    }
-    
-    @Override
-    public List<Parser> getLazyParsers(){
-      return getLazyParsers(true);
-    }
-  }
-  
-  public static class StrictTypedTermParser extends AbstractTermParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return false;
-    }
-    
-    @Override
-    public List<Parser> getLazyParsers(){
-      return getLazyParsers(false);
-    }
   }
 
 }

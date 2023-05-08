@@ -6,8 +6,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.ParenthesesParser;
-import org.unlaxer.tinyexpression.parser.AbstractExpressionParser.ExpressionParser;
-import org.unlaxer.tinyexpression.parser.AbstractExpressionParser.StrictTypedExpressionParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -65,33 +63,6 @@ public abstract class AbstractFactorParser extends LazyChoice implements Express
     parsers.add(Parser.get(ToNumParser.class));
     return parsers;
     
-  }
-  
-  
-  public static class FactorParser extends AbstractFactorParser{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(true);
-    }
-    
-    @Override
-    public boolean hasNakedVariableParser() {
-      return true;
-    }
-  }
-  
-  public static class StrictTypedFactorParser extends AbstractFactorParser{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(false);
-    }
-    
-    @Override
-    public boolean hasNakedVariableParser() {
-      return false;
-    }
   }
 
 }

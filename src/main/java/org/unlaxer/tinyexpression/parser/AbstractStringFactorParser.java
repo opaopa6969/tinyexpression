@@ -33,31 +33,4 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
     parsers.add(Parser.get(ToLowerCaseParser.class));
     return parsers;
   }
-
-  public static class StringFactorParser extends AbstractStringFactorParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return true;
-    }
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(true);
-    }
-	  
-	}
-  
-  public static class StrictTypedStringFactorParser extends AbstractStringFactorParser{
-
-    @Override
-    public boolean hasNakedVariableParser() {
-      return false;
-    }
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return getLazyParsers(false);
-    }
-  }
 }
