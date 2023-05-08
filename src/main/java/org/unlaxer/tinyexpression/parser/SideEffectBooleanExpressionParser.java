@@ -12,6 +12,7 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
 
+@Deprecated
 public class SideEffectBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
 	
 	private static final long serialVersionUID = 8228933717392969866L;

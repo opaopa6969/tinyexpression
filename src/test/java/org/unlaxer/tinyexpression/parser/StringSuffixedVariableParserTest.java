@@ -18,6 +18,6 @@ public class StringSuffixedVariableParserTest extends ParserTestBase{
     testAllMatch(stringExpressionParser, "$hoge as string");
     testAllMatch(stringExpressionParser, "$hoge as String");
     testAllMatch(stringExpressionParser, "$hoge");
-}
+  }
 
 }

@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
@@ -8,7 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class BooleanVariableParser extends LazyChoice {
+public class BooleanVariableParser extends LazyChoice implements VariableParser{
 
   private static final long serialVersionUID = -60484510350410L;
 
@@ -33,5 +34,10 @@ public class BooleanVariableParser extends LazyChoice {
       return BooleanSuffixedVariableParser.getVariableName(thisParserParsed);
     }
     throw new IllegalArgumentException();
+  }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.of(VariableType.bool);
   }
 }

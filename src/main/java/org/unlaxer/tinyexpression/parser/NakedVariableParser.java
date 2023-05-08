@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Name;
 import org.unlaxer.Token;
@@ -10,7 +11,7 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.OneOrMore;
 import org.unlaxer.parser.posix.AlphabetNumericUnderScoreParser;
 
-public class NakedVariableParser extends LazyChain {//implements Expression , BooleanExpression , StringExpression{
+public class NakedVariableParser extends LazyChain implements VariableParser{//implements Expression , BooleanExpression , StringExpression{
 
 	private static final long serialVersionUID = -8533685205048474333L;
 
@@ -38,5 +39,10 @@ public class NakedVariableParser extends LazyChain {//implements Expression , Bo
     String variableName = thisParserParsed.tokenString.get().substring(1);
     return variableName; 
 	}
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.empty();
+  }
 
 }
