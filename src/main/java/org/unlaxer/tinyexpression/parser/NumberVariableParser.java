@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
@@ -8,27 +9,21 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class NumberVariableParser extends LazyChoice {
+public class NumberVariableParser extends LazyChoice implements VariableParser{
 
   private static final long serialVersionUID = -6048451001170410L;
-
-  List<Parser> parsers;
 
   public NumberVariableParser() {
     super();
   }
-
-  @Override
-  public void initialize() {
-    parsers = new Parsers(//
-        Parser.get(NumberPrefixedVariableParser.class), //
-        Parser.get(NumberSuffixedVariableParser.class)//
-    );
-  }
-
+  
   @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return 
+      new Parsers(//
+          Parser.get(NumberPrefixedVariableParser.class), //
+          Parser.get(NumberSuffixedVariableParser.class)//
+      );
   }
   
   public static String getVariableName(Token thisParserParsed) {
@@ -39,6 +34,11 @@ public class NumberVariableParser extends LazyChoice {
       return NumberSuffixedVariableParser.getVariableName(thisParserParsed);
     }
     throw new IllegalArgumentException();
+  }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.of(VariableType.number);
   }
 
 }

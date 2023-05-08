@@ -24,30 +24,23 @@ public class SideEffectBooleanExpressionParameterParser extends WhiteSpaceDelimi
 	public SideEffectBooleanExpressionParameterParser(Name name) {
 		super(name);
 	}
-	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(BooleanExpressionParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						Parser.get(CommaParser.class),
-						new Choice(
-					    Parser.get(BooleanExpressionParser.class),
-					    Parser.get(StringExpressionParser.class),
-							Parser.get(ExpressionParser.class)
-						)
-					)	
-				)
-			);
-	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return
+      new Parsers(
+        Parser.get(BooleanExpressionParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            Parser.get(CommaParser.class),
+            new Choice(
+              Parser.get(BooleanExpressionParser.class),
+              Parser.get(StringExpressionParser.class),
+              Parser.get(ExpressionParser.class)
+            )
+          ) 
+        )
+      );
 	}
 	
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){

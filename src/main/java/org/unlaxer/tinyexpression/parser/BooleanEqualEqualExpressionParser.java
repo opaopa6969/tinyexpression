@@ -13,20 +13,14 @@ public class BooleanEqualEqualExpressionParser extends WhiteSpaceDelimitedLazyCh
 	public BooleanEqualEqualExpressionParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = new Parsers(
-			Parser.get(BooleanExpressionParser.class),
-			Parser.get(EqualEqualParser.class),
-			Parser.get(BooleanExpressionParser.class)
-		);
-	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+		return
+	    new Parsers(
+        Parser.get(BooleanExpressionParser.class),
+        Parser.get(EqualEqualParser.class),
+        Parser.get(BooleanExpressionParser.class)
+      );
 	}
 }

@@ -2,8 +2,8 @@ package org.unlaxer.tinyexpression.parser;
 
 
 import org.unlaxer.Parsed;
-import org.unlaxer.TokenKind;
 import org.unlaxer.Parsed.Status;
+import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.NoneChildParser;
@@ -18,16 +18,8 @@ public class FormulaParser extends NoneChildParser implements Parser{
 
 	public FormulaParser() {
 		super();
+    expressionParser = Parser.get(ExpressionParser.class);
 	}
-	
-	
-
-	@Override
-	public void initialize() {
-		expressionParser = Parser.get(ExpressionParser.class);
-	}
-
-
 
 	@Override
 	public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {

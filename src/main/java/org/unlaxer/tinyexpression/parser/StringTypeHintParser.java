@@ -11,22 +11,15 @@ public class StringTypeHintParser extends LazyChoice {
 
   private static final long serialVersionUID = 1652285131946632894L;
 
-  List<Parser> parsers;
-
   public StringTypeHintParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(
+  public List<Parser> getLazyParsers() {
+    return new Parsers(
         new WordParser("String"), //
         new WordParser("string")
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
 }

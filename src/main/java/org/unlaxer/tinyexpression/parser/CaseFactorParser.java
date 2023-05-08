@@ -16,24 +16,15 @@ public class CaseFactorParser extends WhiteSpaceDelimitedLazyChain{
 	public CaseFactorParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(BooleanClauseParser.class),//0
-				new WordParser("->"),
-				Parser.get(ExpressionParser.class)//2
-			);
-	}
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return 
+      new Parsers(
+        Parser.get(BooleanClauseParser.class),//0
+        new WordParser("->"),
+        Parser.get(ExpressionParser.class)//2
+      );
 	}
 
 	public static Token getBooleanClause(Token thisParserParsed) {

@@ -167,7 +167,7 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 		}else if(operator.parser instanceof ParenthesesParser){
 			
-			return apply(ParenthesesParser.getInnerParserParsed(operator));
+			return apply(((ParenthesesParser)operator.parser).getInnerParserParsed(operator));
 
 		}else if(operator.parser instanceof TrimParser){
 			
@@ -218,7 +218,7 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 		}else if(operator.parser instanceof ParenthesesParser){
 			
-			return apply(ParenthesesParser.getInnerParserParsed(operator));
+			return apply(((ParenthesesParser)operator.parser).getInnerParserParsed(operator));
 			
 		}else if(operator.parser instanceof SinParser){
 			
@@ -316,7 +316,7 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 		}else if(parser instanceof ParenthesesParser) {
 
-			return apply(ParenthesesParser.getInnerParserParsed(operator));
+			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
 			
 		}else if(parser instanceof IsPresentParser) {
 

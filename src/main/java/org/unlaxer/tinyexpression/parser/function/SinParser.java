@@ -34,25 +34,16 @@ public class SinParser extends NoneChildCollectingParser implements Expression {
 			return "(".concat(matchedString).concat(")");
 		}
 	}
-	
-	Parser parser;
-	
-	@Override
-	public void initialize() {
-		parser =
-			new WhiteSpaceDelimitedChain(
-				Parser.get(SinFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(ExpressionParser.class),//2
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-
-
 
 	@Override
 	public Parser createParser() {
-		return parser;
+	  return
+      new WhiteSpaceDelimitedChain(
+        Parser.get(SinFuctionNameParser.class),
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(ExpressionParser.class),//2
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 	
 	public static Token getExpression(Token thisParserParsed) {

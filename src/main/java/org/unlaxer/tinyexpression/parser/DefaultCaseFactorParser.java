@@ -16,25 +16,16 @@ public class DefaultCaseFactorParser extends WhiteSpaceDelimitedLazyChain{
 	public DefaultCaseFactorParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				new WordParser(","),
-				new WordParser("default"),
-				new WordParser("->"),
-				Parser.get(ExpressionParser.class)//3
-			);
-	}
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+		return
+	    new Parsers(
+        new WordParser(","),
+        new WordParser("default"),
+        new WordParser("->"),
+        Parser.get(ExpressionParser.class)//3
+      );
 	}
 	
 	public static Token getExpression(Token thisParserParsed) {

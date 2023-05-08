@@ -10,23 +10,16 @@ public class TypeHintPrefixParser extends LazyChoice {
 
   private static final long serialVersionUID = 4114418513194666489L;
 
-  List<Parser> parsers;
-
   public TypeHintPrefixParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(
+  public List<Parser> getLazyParsers() {
+    return  new Parsers(
         Parser.get(StringTypeHintPrefixParser.class),//
         Parser.get(NumberTypeHintPrefixParser.class),//
         Parser.get(BooleanTypeHintPrefixParser.class)//
     );
-  }
-
-  @Override
-  public List<Parser> getLazyParsers() {
-    return parsers;
   }
 }

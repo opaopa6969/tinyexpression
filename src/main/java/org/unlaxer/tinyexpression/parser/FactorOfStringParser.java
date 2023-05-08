@@ -15,24 +15,16 @@ public class FactorOfStringParser extends LazyChoice implements Expression{
 		super();
 	}
 
-
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		
-		// FactorOfString:=StringLength|StringIndexOf;
-		parsers = 
-			new Parsers(
-				Parser.get(StringLengthParser.class)
-//				Parser.get(StringIndexOfParser.class)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  
+	  return 
+	      
+	    // FactorOfString:=StringLength|StringIndexOf;
+      new Parsers(
+        Parser.get(StringLengthParser.class)
+//	          Parser.get(StringIndexOfParser.class)
+      );
+
 	}
 }

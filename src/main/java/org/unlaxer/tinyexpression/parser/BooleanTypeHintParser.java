@@ -11,22 +11,16 @@ public class BooleanTypeHintParser extends LazyChoice {
 
   private static final long serialVersionUID = 212851319466314194L;
 
-  List<Parser> parsers;
-
   public BooleanTypeHintParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(
-        new WordParser("Boolean"), //
-        new WordParser("boolean")
-    );
-  }
-
-  @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return
+      new Parsers(
+          new WordParser("Boolean"), //
+          new WordParser("boolean")
+      );
   }
 }

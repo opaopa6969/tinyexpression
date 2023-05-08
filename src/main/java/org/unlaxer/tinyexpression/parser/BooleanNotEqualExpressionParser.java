@@ -15,23 +15,13 @@ public class BooleanNotEqualExpressionParser extends WhiteSpaceDelimitedLazyChai
 		super();
 	}
 	
-	List<Parser> parsers;
-
-	@Override
-	public void initialize() {
-		parsers =
-			new Parsers(
-				Parser.get(BooleanExpressionParser.class),
-				Parser.get(NotEqualParser.class),
-				Parser.get(BooleanExpressionParser.class)
-			);
-	}
-
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
-			
+    return 
+      new Parsers(
+        Parser.get(BooleanExpressionParser.class),
+        Parser.get(NotEqualParser.class),
+        Parser.get(BooleanExpressionParser.class)
+      );
 	}
 }

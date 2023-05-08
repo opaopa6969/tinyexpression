@@ -16,21 +16,15 @@ public class EqualEqualExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 		super();
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(ExpressionParser.class),//0
-				Parser.get(EqualEqualParser.class),
-				Parser.get(ExpressionParser.class)//2
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return 
+      new Parsers(
+        Parser.get(ExpressionParser.class),//0
+        Parser.get(EqualEqualParser.class),
+        Parser.get(ExpressionParser.class)//2
+      );
+
 	}
 	
 	public static Token getLeftExpression(Token thisParserParsed) {

@@ -14,33 +14,24 @@ public class BooleanExpressionOfStringParser extends LazyChoice implements Boole
 	public BooleanExpressionOfStringParser() {
 		super();
 	}
-	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		// BooleanExpressionOfString:=
-		//  (StringExpression'=='StringExpression)|
-		//  (StringExpression'!='StringExpression)|
-		//  StringExpression'.in('StringExpression(','StringExpression)*')'|
-		//  StringStartsWith:=StringExpression'.startsWith('StringExpression')'|
-		//  StringEndsWith:=StringExpression'.endsWith('StringExpression')'|
-		//  StringContains:=StringExpression'.contains('StringExpression')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringEqualsExpressionParser.class),
-				Parser.get(StringNotEqualsExpressionParser.class),
-				Parser.get(StringInParser.class),
-				Parser.get(StringStartsWithParser.class),
-				Parser.get(StringEndsWithParser.class),
-				Parser.get(StringContainsParser.class)
-			);
-	}
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+    // BooleanExpressionOfString:=
+    //  (StringExpression'=='StringExpression)|
+    //  (StringExpression'!='StringExpression)|
+    //  StringExpression'.in('StringExpression(','StringExpression)*')'|
+    //  StringStartsWith:=StringExpression'.startsWith('StringExpression')'|
+    //  StringEndsWith:=StringExpression'.endsWith('StringExpression')'|
+    //  StringContains:=StringExpression'.contains('StringExpression')';
+    return  
+      new Parsers(
+        Parser.get(StringEqualsExpressionParser.class),
+        Parser.get(StringNotEqualsExpressionParser.class),
+        Parser.get(StringInParser.class),
+        Parser.get(StringStartsWithParser.class),
+        Parser.get(StringEndsWithParser.class),
+        Parser.get(StringContainsParser.class)
+      );
 	}
 }

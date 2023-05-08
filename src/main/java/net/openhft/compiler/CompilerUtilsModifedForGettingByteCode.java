@@ -103,8 +103,8 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @throws IOException            the resource could not be loaded.
      * @throws ClassNotFoundException the class name didn't match or failed to initialise.
      */
-    public static CompileResult loadFromResource(@NotNull String className, @NotNull String resourceName) throws IOException, ClassNotFoundException {
-        return loadFromJava(className, readText(resourceName));
+    public static CompileResult loadFromResource(@NotNull String className, @NotNull String resourceName , ClassLoader classLoader) throws IOException, ClassNotFoundException {
+        return loadFromJava(className, readText(resourceName,classLoader) , classLoader);
     }
 
     /**
@@ -115,8 +115,8 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @return the outer class loaded.
      * @throws ClassNotFoundException the class name didn't match or failed to initialise.
      */
-    private static CompileResult loadFromJava(@NotNull String className, @NotNull String javaCode) throws ClassNotFoundException {
-        return CACHED_COMPILER.loadFromJava(Thread.currentThread().getContextClassLoader(), className, javaCode);
+    private static CompileResult loadFromJava(@NotNull String className, @NotNull String javaCode , ClassLoader classLoader) throws ClassNotFoundException {
+        return CACHED_COMPILER.loadFromJava(classLoader, className, javaCode);
     }
 
     /**
@@ -150,8 +150,8 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @param className expected to load.
      * @param bytes     of the byte code.
      */
-    public static void defineClass(@NotNull String className, @NotNull byte[] bytes) {
-        defineClass(Thread.currentThread().getContextClassLoader(), className, bytes);
+    public static void defineClass(@NotNull String className, @NotNull byte[] bytes , ClassLoader classLoader) {
+        defineClass(classLoader, className, bytes);
     }
 
     /**
@@ -172,11 +172,11 @@ public enum CompilerUtilsModifedForGettingByteCode {
         }
     }
 
-    private static String readText(@NotNull String resourceName) throws IOException {
+    private static String readText(@NotNull String resourceName , ClassLoader classLoader) throws IOException {
         if (resourceName.startsWith("="))
             return resourceName.substring(1);
         StringWriter sw = new StringWriter();
-        Reader isr = new InputStreamReader(getInputStream(resourceName), UTF_8);
+        Reader isr = new InputStreamReader(getInputStream(resourceName,classLoader), UTF_8);
         try {
             char[] chars = new char[8 * 1024];
             int len;
@@ -270,13 +270,12 @@ public enum CompilerUtilsModifedForGettingByteCode {
     }
 
     @NotNull
-    private static InputStream getInputStream(@NotNull String filename) throws FileNotFoundException {
+    private static InputStream getInputStream(@NotNull String filename , ClassLoader classLoader) throws FileNotFoundException {
         if (filename.isEmpty()) throw new IllegalArgumentException("The file name cannot be empty.");
         if (filename.charAt(0) == '=') return new ByteArrayInputStream(encodeUTF8(filename.substring(1)));
-        ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-        InputStream is = contextClassLoader.getResourceAsStream(filename);
+        InputStream is = classLoader.getResourceAsStream(filename);
         if (is != null) return is;
-        InputStream is2 = contextClassLoader.getResourceAsStream('/' + filename);
+        InputStream is2 = classLoader.getResourceAsStream('/' + filename);
         if (is2 != null) return is2;
         return new FileInputStream(filename);
     }

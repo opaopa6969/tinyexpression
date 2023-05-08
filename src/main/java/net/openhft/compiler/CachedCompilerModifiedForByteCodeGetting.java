@@ -82,8 +82,8 @@ public class CachedCompilerModifiedForByteCodeGetting implements Closeable {
 		}
     }
 
-    public CompileResult<?> loadFromJava(@NotNull String className, @NotNull String javaCode) throws ClassNotFoundException {
-        return loadFromJava(getClass().getClassLoader(), className, javaCode, DEFAULT_WRITER);
+    public CompileResult<?> loadFromJava(@NotNull String className, @NotNull String javaCode , ClassLoader classLoader) throws ClassNotFoundException {
+        return loadFromJava(classLoader, className, javaCode, DEFAULT_WRITER);
     }
 
     public CompileResult<?> loadFromJava(@NotNull ClassLoader classLoader,

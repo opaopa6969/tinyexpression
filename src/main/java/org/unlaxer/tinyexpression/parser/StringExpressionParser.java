@@ -3,43 +3,17 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.parser.Parser;
-import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
-import org.unlaxer.parser.combinator.ZeroOrMore;
 
-public class StringExpressionParser extends WhiteSpaceDelimitedLazyChain implements StringExpression{
+public class StringExpressionParser extends AbstractStringExpressionParser{
 
-	private static final long serialVersionUID = 3057326703009847594L;
-	
-	
-	public StringExpressionParser() {
-		super();
-	}
+  @Override
+  public boolean hasNakedVariableParser() {
+    return true;
+  }
 
-
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		
-		// StringExpression:=StringTerm('+'StringTerm)*;
-		parsers = 
-			new Parsers(
-				Parser.get(StringTermParser.class),
-				new ZeroOrMore(
-					new Choice(
-						Parser.get(StringPlusParser.class),
-						Parser.get(StringTermParser.class)
-					)
-				)
-			);
-	}
-
-
-	@Override
-	public List<Parser> getLazyParsers() {
-		return parsers;
-	}
+  @Override
+  public List<Parser> getLazyParsers() {
+    return getLazyParsers(true);
+  }
+  
 }

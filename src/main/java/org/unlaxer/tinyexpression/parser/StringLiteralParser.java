@@ -12,28 +12,19 @@ public class StringLiteralParser extends LazyChoice implements StringExpression{
 
 	private static final long serialVersionUID = 3503116045698010940L;
 
-	List<Parser> parsers;
-
 	public StringLiteralParser() {
 		super();
 	}
 	
 	@Override
-	public void initialize() {
-		
-		// StringLiteral:="CharactersWithoutDoubleQuote*"|'CharactersWithoutSingleQuote*';			
-		parsers =
-			new Parsers(
-				new DoubleQuotedParser(),
-				new SingleQuotedParser()
-			);
-	}
-
-
-
-	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return 
+	      // StringLiteral:="CharactersWithoutDoubleQuote*"|'CharactersWithoutSingleQuote*';      
+        new Parsers(
+          new DoubleQuotedParser(),
+          new SingleQuotedParser()
+        );
+
 	}
 	
 }

@@ -7,13 +7,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
-import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.SideEffectNameParser;
 
+@Deprecated
 public class SideEffectBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
 	
 	private static final long serialVersionUID = 8228933717392969866L;
@@ -23,28 +22,17 @@ public class SideEffectBooleanExpressionParser extends WhiteSpaceDelimitedLazyCh
 		super();
 	}
 	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(SideEffectNameParser.class),
-				Parser.get(()->new WordParser(":")),
-				Parser.get(JavaClassMethodParser.class),//2
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(SideEffectBooleanExpressionParameterParser.class),//4
-				Parser.get(RightParenthesisParser.class)
-			);
-	}
-	
-	
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      new Parsers(
+        Parser.get(SideEffectNameParser.class),
+        Parser.get(()->new WordParser(":")),
+        Parser.get(JavaClassMethodParser.class),//2
+        Parser.get(LeftParenthesisParser.class),
+        Parser.get(SideEffectBooleanExpressionParameterParser.class),//4
+        Parser.get(RightParenthesisParser.class)
+      );
 	}
 	
 	public static Token getMethodClause(Token thisParserParsed) {

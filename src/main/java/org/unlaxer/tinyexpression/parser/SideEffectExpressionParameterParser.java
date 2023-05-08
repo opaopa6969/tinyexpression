@@ -25,29 +25,25 @@ public class SideEffectExpressionParameterParser extends WhiteSpaceDelimitedLazy
 		super(name);
 	}
 	
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(ExpressionParser.class),
-				new ZeroOrMore(
-					new WhiteSpaceDelimitedChain(
-						Parser.get(CommaParser.class),
-						new Choice(
-					    Parser.get(BooleanClauseParser.class),
-					    Parser.get(StringExpressionParser.class),
-							Parser.get(ExpressionParser.class)
-						)
-					)	
-				)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
+	  return 
+      new Parsers(
+        Parser.get(ExpressionParser.class),
+        new ZeroOrMore(
+          new WhiteSpaceDelimitedChain(
+            Parser.get(CommaParser.class),
+            new Choice(
+                Parser.get(StrictTypedBooleanClauseParser.class),
+                Parser.get(StrictTypedStringExpressionParser.class),
+                Parser.get(StrictTypedExpressionParser.class),
+                Parser.get(BooleanClauseParser.class),
+                Parser.get(StringExpressionParser.class),
+                Parser.get(ExpressionParser.class)
+            )
+          ) 
+        )
+      );
 	}
 	
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){

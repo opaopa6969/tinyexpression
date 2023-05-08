@@ -14,23 +14,16 @@ public class TernaryOperatorParser extends WhiteSpaceDelimitedLazyChain{
 		super();
 	}
 
-	List<Parser> parsers;
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(BooleanExpressionParser.class),
-				Parser.get(QuestionParser.class),
-				Parser.get(ExpressionParser.class),
-				Parser.get(ColonParser.class),
-				Parser.get(ExpressionParser.class)
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers; 
-	}
+	  return  
+	      new Parsers(
+	        Parser.get(BooleanExpressionParser.class),
+	        Parser.get(QuestionParser.class),
+	        Parser.get(ExpressionParser.class),
+	        Parser.get(ColonParser.class),
+	        Parser.get(ExpressionParser.class)
+	      );
+	  }
 
 }

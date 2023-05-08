@@ -11,7 +11,6 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
-import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.SideEffectNameParser;
 
 public class SideEffectStringExpressionParser extends WhiteSpaceDelimitedLazyChain
     implements Expression {
@@ -23,25 +22,15 @@ public class SideEffectStringExpressionParser extends WhiteSpaceDelimitedLazyCha
     super();
   }
 
-
-
-  List<Parser> parsers;
-
-
-  @Override
-  public void initialize() {
-    parsers = new Parsers(Parser.get(SideEffectNameParser.class),
-        Parser.get(() -> new WordParser(":")), Parser.get(JavaClassMethodParser.class), // 2
-        Parser.get(LeftParenthesisParser.class),
-        Parser.get(SideEffectStringExpressionParameterParser.class), // 4
-        Parser.get(RightParenthesisParser.class));
-  }
-
-
-
   @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return
+        new Parsers(Parser.get(SideEffectNameParser.class),
+            Parser.get(() -> new WordParser(":")), Parser.get(JavaClassMethodParser.class), // 2
+            Parser.get(LeftParenthesisParser.class),
+            Parser.get(SideEffectStringExpressionParameterParser.class), // 4
+            Parser.get(RightParenthesisParser.class)
+        );
   }
 
   public static Token getMethodClause(Token thisParserParsed) {

@@ -13,23 +13,17 @@ public class InTimeRangeParser extends WhiteSpaceDelimitedLazyChain {
 
 	private static final long serialVersionUID = -4619955945031421138L;
 
-	private List<Parser> parsers;
-
-	@Override
-	public void initialize() {
-		parsers = new Parsers(
-				Parser.get(InTimeRangeNameParser.class), // 0
-				Parser.get(LeftParenthesisParser.class), // 1
-				Parser.get(ExpressionParser.class),	// 2
-				Parser.<WordParser>get(()->new WordParser(",")), // 3
-				Parser.get(ExpressionParser.class), // 4
-				Parser.get(RightParenthesisParser.class) // 5
-			);
-	}
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      new Parsers(
+        Parser.get(InTimeRangeNameParser.class), // 0
+        Parser.get(LeftParenthesisParser.class), // 1
+        Parser.get(ExpressionParser.class), // 2
+        Parser.<WordParser>get(()->new WordParser(",")), // 3
+        Parser.get(ExpressionParser.class), // 4
+        Parser.get(RightParenthesisParser.class) // 5
+      );
 	}
 
 	public static Token getLeftExpression(Token thisParserParsed) {

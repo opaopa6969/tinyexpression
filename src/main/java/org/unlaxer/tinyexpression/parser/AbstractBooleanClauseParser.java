@@ -1,0 +1,48 @@
+package org.unlaxer.tinyexpression.parser;
+
+import java.util.List;
+
+import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.Choice;
+import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
+import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.parser.elementary.WordParser;
+
+public abstract class AbstractBooleanClauseParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{
+
+	private static final long serialVersionUID = 1362501275934237988L;
+
+	public AbstractBooleanClauseParser() {
+		super();
+	}
+
+
+
+  @Override
+  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+    
+    Class<? extends Parser> booleanExpressionParserClazz = 
+        withNakedVariable ? BooleanExpressionParser.class : StrictTypedBooleanExpressionParser.class;
+    
+    // <BooleanClause> ::= <BooleanExpression>[('=='|'!='|'&'|'|'|'^')<BooleanExpression>]*
+    return
+      new Parsers(
+          Parser.get(booleanExpressionParserClazz),
+          new ZeroOrMore(
+            new WhiteSpaceDelimitedChain(
+              new Choice(
+                Parser.<WordParser>get(()->new EqualEqualParser()),
+                Parser.<WordParser>get(()->new NotEqualParser()),
+                Parser.<WordParser>get(()->new AndParser()),
+                Parser.<WordParser>get(()->new OrParser()),
+                Parser.<WordParser>get(()->new XorParser())
+              ),
+              Parser.get(booleanExpressionParserClazz)
+            )
+          )
+        );
+  }
+  
+}

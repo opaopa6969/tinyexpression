@@ -18,35 +18,27 @@ public class SliceParser extends WhiteSpaceDelimitedLazyChain implements StringE
 		super();
 	}
 	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		// Slice:='['Expression?':'Expression?(':'Expression)?']';
-		parsers = 
-			new Parsers(
-				Parser.<WordParser>get(()->new WordParser("[")),
-				new ZeroOrOne(
-					Parser.get(ExpressionParser.class)
-				),
-				Parser.<WordParser>get(()->new WordParser(":")),
-				new ZeroOrOne(
-					Parser.get(ExpressionParser.class)
-				),
-				new ZeroOrOne(
-					new Chain(
-						Parser.<WordParser>get(()->new WordParser(":")),
-						Parser.get(ExpressionParser.class)
-					)
-				),
-				Parser.<WordParser>get(()->new WordParser("]"))
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+	      // Slice:='['Expression?':'Expression?(':'Expression)?']';
+        new Parsers(
+          Parser.<WordParser>get(()->new WordParser("[")),
+          new ZeroOrOne(
+            Parser.get(ExpressionParser.class)
+          ),
+          Parser.<WordParser>get(()->new WordParser(":")),
+          new ZeroOrOne(
+            Parser.get(ExpressionParser.class)
+          ),
+          new ZeroOrOne(
+            new Chain(
+              Parser.<WordParser>get(()->new WordParser(":")),
+              Parser.get(ExpressionParser.class)
+            )
+          ),
+          Parser.<WordParser>get(()->new WordParser("]"))
+        );
+
 	}
 }

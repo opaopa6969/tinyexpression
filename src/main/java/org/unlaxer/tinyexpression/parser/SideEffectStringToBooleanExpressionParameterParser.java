@@ -23,33 +23,27 @@ public class SideEffectStringToBooleanExpressionParameterParser extends WhiteSpa
 		super(name);
 	}
 	
-	List<Parser> parsers;
-
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
 	
 	@Override
-	public void initialize() {
-		parsers = new Parsers(
-			Parser.get(StringExpressionParser.class),
-			new ZeroOrMore(
-				new WhiteSpaceDelimitedChain(
-					Parser.get(CommaParser.class),
-					new Choice(
-						Parser.get(StringExpressionParser.class),
-						Parser.get(BooleanExpressionParser.class),
-						Parser.get(ExpressionParser.class)
-					)		
-				)
-			)	
-		);
-	}
-
-	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      new Parsers(
+          Parser.get(StringExpressionParser.class),
+          new ZeroOrMore(
+            new WhiteSpaceDelimitedChain(
+              Parser.get(CommaParser.class),
+              new Choice(
+                Parser.get(StringExpressionParser.class),
+                Parser.get(BooleanExpressionParser.class),
+                Parser.get(ExpressionParser.class)
+              )   
+            )
+          ) 
+        );
 	}
 	
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken) {

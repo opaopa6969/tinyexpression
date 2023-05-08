@@ -18,19 +18,14 @@ public class StringInParser extends WhiteSpaceDelimitedLazyChain implements Bool
 	}
 
 	@Override
-	public void initialize() {
-		//  StringIn:=StringExpression'.in('StringExpression(','StringExpression)*')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				Parser.get(InMethodParser.class)
-			);
-	}
-
-
-	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+	      //  StringIn:=StringExpression'.in('StringExpression(','StringExpression)*')';
+        new Parsers(
+          Parser.get(StringExpressionParser.class),
+          Parser.get(InMethodParser.class)
+        );
+
 	}
 	
 	public static Token getLeftExpression(Token thisParserParsed) {

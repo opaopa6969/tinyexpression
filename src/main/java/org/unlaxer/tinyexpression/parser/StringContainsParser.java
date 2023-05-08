@@ -9,25 +9,18 @@ public class StringContainsParser extends StringMethodExpressionParser implement
 	
 	private static final long serialVersionUID = 6896630990248605254L;
 	
-	List<Parser> parsers;
-	
 	public StringContainsParser() {
 		super();
 	}
 
 	@Override
-	public void initialize() {
-		//  StringContains:=StringExpression'.contains('StringExpression')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				Parser.get(StringContainsMethodParser.class)
-			);
-	}
-
-
-	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return
+      //  StringContains:=StringExpression'.contains('StringExpression')';
+      new Parsers(
+        Parser.get(StringExpressionParser.class),
+        Parser.get(StringContainsMethodParser.class)
+      );
+
 	}
 }

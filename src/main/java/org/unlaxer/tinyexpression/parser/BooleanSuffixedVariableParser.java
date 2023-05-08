@@ -11,23 +11,17 @@ public class BooleanSuffixedVariableParser extends WhiteSpaceDelimitedLazyChain 
 
   private static final long serialVersionUID = -1060485382103097042L;
 
-  List<Parser> parsers;
-
   public BooleanSuffixedVariableParser() {
     super();
   }
 
   @Override
-  public void initialize() {
-    parsers = new Parsers(//
-        Parser.get(NakedVariableParser.class), //
-        Parser.get(BooleanTypeHintSuffixParser.class)//
-    );
-  }
-
-  @Override
   public List<Parser> getLazyParsers() {
-    return parsers;
+    return 
+      new Parsers(//
+          Parser.get(NakedVariableParser.class), //
+          Parser.get(BooleanTypeHintSuffixParser.class)//
+      );
   }
   
   public static String getVariableName(Token thisParserParsed) {

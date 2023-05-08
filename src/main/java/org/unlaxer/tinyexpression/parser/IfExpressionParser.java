@@ -34,31 +34,22 @@ public class IfExpressionParser extends WhiteSpaceDelimitedLazyChain implements 
 		}
 	}
 	
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		parsers = 
-			new Parsers(
-				Parser.get(IfFuctionNameParser.class),
-				Parser.get(LeftParenthesisParser.class),
-				Parser.get(BooleanClauseParser.class),//2
-				Parser.get(RightParenthesisParser.class),
-				Parser.get(LeftCurlyBraceParser.class),
-				Parser.get(ExpressionParser.class),//5
-				Parser.get(RightCurlyBraceParser.class),
-				Parser.get(()->new WordParser("else")),
-				Parser.get(LeftCurlyBraceParser.class),
-				Parser.get(ExpressionParser.class),//9
-				Parser.get(RightCurlyBraceParser.class)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	  return 
+	      new Parsers(
+	        Parser.get(IfFuctionNameParser.class),
+	        Parser.get(LeftParenthesisParser.class),
+	        Parser.get(BooleanClauseParser.class),//2
+	        Parser.get(RightParenthesisParser.class),
+	        Parser.get(LeftCurlyBraceParser.class),
+	        Parser.get(ExpressionParser.class),//5
+	        Parser.get(RightCurlyBraceParser.class),
+	        Parser.get(()->new WordParser("else")),
+	        Parser.get(LeftCurlyBraceParser.class),
+	        Parser.get(ExpressionParser.class),//9
+	        Parser.get(RightCurlyBraceParser.class)
+	      );
 	}
 	
 	public static Token getBooleanClause(Token thisParserParsed) {

@@ -15,24 +15,14 @@ public class StringIndexOfParser extends WhiteSpaceDelimitedLazyChain{
 		super();
 	}
 
-
-	List<Parser> parsers;
-
-	
-	@Override
-	public void initialize() {
-		
-		// StringIndexOf:=StringExpression'.indexOf('StringExpression')';
-		parsers = 
-			new Parsers(
-				Parser.get(StringExpressionParser.class),
-				Parser.get(IndexOfMethodParser.class)
-			);
-	}
-
-
 	@Override
 	public List<Parser> getLazyParsers() {
-		return parsers;
+	   // StringIndexOf:=StringExpression'.indexOf('StringExpression')';
+    return  
+      new Parsers(
+        Parser.get(StringExpressionParser.class),
+        Parser.get(IndexOfMethodParser.class)
+      );
+
 	}
 }
