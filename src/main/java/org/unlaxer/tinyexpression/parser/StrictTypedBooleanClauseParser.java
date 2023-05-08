@@ -4,16 +4,16 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 
-public class BooleanClauseParser extends AbstractBooleanClauseParser{
+public class StrictTypedBooleanClauseParser extends AbstractBooleanClauseParser{
 
   @Override
   public boolean hasNakedVariableParser() {
-    return true;
+    return false;
   }
   
   @Override
   public List<Parser> getLazyParsers() {
-    return getLazyParsers(true);
+    return getLazyParsers(false);
   }
   
 }

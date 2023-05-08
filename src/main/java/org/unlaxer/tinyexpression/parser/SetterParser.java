@@ -17,6 +17,9 @@ public class SetterParser extends WhiteSpaceDelimitedLazyChain implements NoExpr
         Parser.get(()->new WordParser("set")),
         Parser.get(()->new Optional(new WordParser("if not exists"))),
         Parser.get(()->new Choice(
+            Parser.get(StrictTypedBooleanClauseParser.class),
+            Parser.get(StrictTypedStringExpressionParser.class),
+            Parser.get(StrictTypedExpressionParser.class),
             Parser.get(BooleanClauseParser.class),
             Parser.get(StringExpressionParser.class),
             Parser.get(ExpressionParser.class)

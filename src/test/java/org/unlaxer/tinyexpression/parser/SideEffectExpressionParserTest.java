@@ -80,9 +80,11 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 	       "external returning as boolean :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      testAllMatch(sideEffectExpressionParser,
          "external returning as String :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
-     testAllMatch(sideEffectExpressionParser,
+     //nothing as after returning
+     testUnMatch(sideEffectExpressionParser,
           "external returning String :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
-     testAllMatch(sideEffectExpressionParser,
+     //Stringaa is invalid
+     testUnMatch(sideEffectExpressionParser,
           "external returning Stringaa :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
 	}
 

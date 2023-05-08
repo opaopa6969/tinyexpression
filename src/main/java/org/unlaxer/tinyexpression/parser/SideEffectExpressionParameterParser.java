@@ -34,9 +34,12 @@ public class SideEffectExpressionParameterParser extends WhiteSpaceDelimitedLazy
           new WhiteSpaceDelimitedChain(
             Parser.get(CommaParser.class),
             new Choice(
-              Parser.get(BooleanClauseParser.class),
-              Parser.get(StringExpressionParser.class),
-              Parser.get(ExpressionParser.class)
+                Parser.get(StrictTypedBooleanClauseParser.class),
+                Parser.get(StrictTypedStringExpressionParser.class),
+                Parser.get(StrictTypedExpressionParser.class),
+                Parser.get(BooleanClauseParser.class),
+                Parser.get(StringExpressionParser.class),
+                Parser.get(ExpressionParser.class)
             )
           ) 
         )
