@@ -9,6 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.EqualParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
@@ -17,7 +18,6 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
-import org.unlaxer.tinyexpression.parser.IdentifierParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 
 public class AnnotaionParser extends LazyChain{

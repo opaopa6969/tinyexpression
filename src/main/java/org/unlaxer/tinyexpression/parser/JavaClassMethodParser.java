@@ -6,6 +6,7 @@ import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.LazyChain;
 
 public class JavaClassMethodParser extends LazyChain{
