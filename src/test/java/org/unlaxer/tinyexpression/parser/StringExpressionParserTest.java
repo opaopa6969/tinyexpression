@@ -18,12 +18,14 @@ public class StringExpressionParserTest extends StringContentsTest{
 	@Test
 	public void testAllConsumedString() {
 		
-		StringExpressionParser stringLiteralParser = new StringExpressionParser();
+		StringExpressionParser parser = new StringExpressionParser();
 		
-		assertAllConsumed("", stringLiteralParser);
-		assertAllConsumed("opa", stringLiteralParser);
-		assertAllConsumed("\\\"opa\\\"", stringLiteralParser);
-		assertAllConsumed("'opa'", stringLiteralParser);
+		assertAllConsumed("", parser);
+		assertAllConsumed("opa", parser);
+		assertAllConsumed("\\\"opa\\\"", parser);
+		assertAllConsumed("'opa'", parser);
+		
+		testAllMatch(parser, "'niku'");
 	}
 	
 	@Test
