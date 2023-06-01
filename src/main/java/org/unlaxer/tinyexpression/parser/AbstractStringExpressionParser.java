@@ -5,10 +5,10 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractStringExpressionParser extends WhiteSpaceDelimitedLazyChain implements StringExpression , VariableTypeSelectable{
+public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedLazyChain implements StringExpression , VariableTypeSelectable{
 
 	private static final long serialVersionUID = 3057326703009847594L;
 	

@@ -6,11 +6,11 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractBooleanClauseParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{
+public abstract class AbstractBooleanClauseParser extends JavaStyleDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{
 
 	private static final long serialVersionUID = 1362501275934237988L;
 

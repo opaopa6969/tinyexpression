@@ -7,9 +7,9 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class NotImmediatesBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain{
+public class NotImmediatesBooleanExpressionParser extends JavaStyleDelimitedLazyChain{
 
 
 	private static final long serialVersionUID = -2338119726686825460L;

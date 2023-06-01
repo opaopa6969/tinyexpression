@@ -5,11 +5,11 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class CommaSeparatedStringExpressionParser extends WhiteSpaceDelimitedLazyChain{
+public class CommaSeparatedStringExpressionParser extends JavaStyleDelimitedLazyChain{
 
 	private static final long serialVersionUID = -145498364741083714L;
 	

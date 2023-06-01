@@ -6,10 +6,10 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractTermParser extends WhiteSpaceDelimitedLazyChain implements Expression , VariableTypeSelectable{
+public abstract class AbstractTermParser extends JavaStyleDelimitedLazyChain implements Expression , VariableTypeSelectable{
 	
 	private static final long serialVersionUID = 1430560948407993197L;
 	

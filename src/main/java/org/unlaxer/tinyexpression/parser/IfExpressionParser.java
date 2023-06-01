@@ -8,10 +8,10 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class IfExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
+public class IfExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
 	
 	private static final long serialVersionUID = 8228933717392969866L;
 	
@@ -53,14 +53,14 @@ public class IfExpressionParser extends WhiteSpaceDelimitedLazyChain implements 
 	}
 	
 	public static Token getBooleanClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(BooleanClauseParser.class);//2
 	}
 	
 	public static Token getThenExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(5);
+		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0);//5
 	}
 	
 	public static Token getElseExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(9);
+		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1);//9
 	}
 }

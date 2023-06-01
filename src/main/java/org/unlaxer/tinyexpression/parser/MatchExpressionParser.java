@@ -6,9 +6,10 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class MatchExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
+public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
 	
 	private static final long serialVersionUID = -9078041069929701034L;
 
@@ -45,11 +46,13 @@ public class MatchExpressionParser extends WhiteSpaceDelimitedLazyChain implemen
 
 	}
 	
+	@TokenExtractor
 	public static Token getCaseExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(CaseExpressionParser.class); //2
 	}
 	
+  @TokenExtractor
 	public static Token getDefaultExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(3);
+		return thisParserParsed.getChildWithParser(DefaultCaseFactorParser.class); //3
 	}
 }

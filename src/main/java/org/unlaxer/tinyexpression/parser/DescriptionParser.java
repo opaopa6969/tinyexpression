@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class DescriptionParser extends WhiteSpaceDelimitedLazyChain implements NoExpression{
+public class DescriptionParser extends JavaStyleDelimitedLazyChain implements NoExpression{
 
   @Override
   public List<Parser> getLazyParsers() {

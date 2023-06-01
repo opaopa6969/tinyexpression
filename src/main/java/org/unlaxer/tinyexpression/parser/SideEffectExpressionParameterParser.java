@@ -9,11 +9,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.posix.CommaParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectExpressionParameterParser extends WhiteSpaceDelimitedLazyChain {
+public class SideEffectExpressionParameterParser extends JavaStyleDelimitedLazyChain {
 
 	private static final long serialVersionUID = -1540940685498628668L;
 
@@ -45,7 +46,8 @@ public class SideEffectExpressionParameterParser extends WhiteSpaceDelimitedLazy
         )
       );
 	}
-	
+
+	@TokenExtractor
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){
 		
 		if(false == sideEffectExpressionParameterParserToken.parser instanceof SideEffectExpressionParameterParser) {

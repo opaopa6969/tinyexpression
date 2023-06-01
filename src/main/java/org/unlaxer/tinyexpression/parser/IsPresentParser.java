@@ -7,9 +7,9 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class IsPresentParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression{
+public class IsPresentParser extends JavaStyleDelimitedLazyChain implements BooleanExpression{
 	
 	private static final long serialVersionUID = -4619955945031421138L;
 
@@ -32,6 +32,6 @@ public class IsPresentParser extends WhiteSpaceDelimitedLazyChain implements Boo
 	}
 	
 	public static Token getVariable(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(NakedVariableParser.class); //2
 	}
 }

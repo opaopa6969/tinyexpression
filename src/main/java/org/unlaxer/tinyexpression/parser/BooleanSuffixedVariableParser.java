@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 
-public class BooleanSuffixedVariableParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression {
+public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain implements BooleanExpression {
 
   private static final long serialVersionUID = -1060485382103097042L;
 

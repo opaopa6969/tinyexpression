@@ -7,13 +7,14 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 @Deprecated
-public class SideEffectBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression{
+public class SideEffectBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
 	
 	private static final long serialVersionUID = 8228933717392969866L;
 	
@@ -34,13 +35,15 @@ public class SideEffectBooleanExpressionParser extends WhiteSpaceDelimitedLazyCh
         Parser.get(RightParenthesisParser.class)
       );
 	}
-	
+
+	@TokenExtractor
 	public static Token getMethodClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2
 	}
 	
+  @TokenExtractor
 	public static Token getParametersClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(4);
+		return thisParserParsed.getChildWithParser(SideEffectBooleanExpressionParameterParser.class); //4
 	}
 	
 	public static MethodAndParameters extract(Token token) {

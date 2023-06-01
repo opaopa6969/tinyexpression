@@ -1,15 +1,16 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class InTimeRangeParser extends WhiteSpaceDelimitedLazyChain {
+public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {
 
 	private static final long serialVersionUID = -4619955945031421138L;
 
@@ -27,10 +28,10 @@ public class InTimeRangeParser extends WhiteSpaceDelimitedLazyChain {
 	}
 
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0); //2
 	}
 
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(4);
+		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1);//4
 	}
 }

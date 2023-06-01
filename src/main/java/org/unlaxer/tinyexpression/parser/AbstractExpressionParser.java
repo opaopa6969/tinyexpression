@@ -7,10 +7,10 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.RootParserIndicator;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractExpressionParser extends WhiteSpaceDelimitedLazyChain implements RootParserIndicator , Expression , VariableTypeSelectable{
+public abstract class AbstractExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , Expression , VariableTypeSelectable{
 	
   @Override
   public List<Parser> getLazyParsers(boolean withNakedVariable) {

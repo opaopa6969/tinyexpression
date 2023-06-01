@@ -5,9 +5,10 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberSuffixedVariableParser extends WhiteSpaceDelimitedLazyChain implements Expression {
+public class NumberSuffixedVariableParser extends JavaStyleDelimitedLazyChain implements Expression {
 
   private static final long serialVersionUID = -1060485506213097042L;
 
@@ -24,8 +25,9 @@ public class NumberSuffixedVariableParser extends WhiteSpaceDelimitedLazyChain i
       );
   }
 
+  @TokenExtractor
   public static String getVariableName(Token thisParserParsed) {
-    Token token = thisParserParsed.filteredChildren.get(0);
+    Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
     return NakedVariableParser.getVariableName(token);
   }
 }

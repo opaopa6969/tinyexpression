@@ -5,9 +5,9 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class BooleanPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression {
+public class BooleanPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements BooleanExpression {
 
   private static final long serialVersionUID = -600588538210309122L;
 

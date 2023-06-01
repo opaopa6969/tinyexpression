@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class BooleanTypeHintSuffixParser extends WhiteSpaceDelimitedLazyChain {
+public class BooleanTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
 
   private static final long serialVersionUID = -13382161034141973L;
 

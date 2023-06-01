@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class TernaryOperatorParser extends WhiteSpaceDelimitedLazyChain{
+public class TernaryOperatorParser extends JavaStyleDelimitedLazyChain{
 
 	private static final long serialVersionUID = -6559995208538992563L;
 

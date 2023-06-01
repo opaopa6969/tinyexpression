@@ -8,12 +8,13 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression {
+public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements Expression {
 
 	/**
 	 * 
@@ -38,13 +39,15 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 		List<Token> parameterTokens = sideEffectStringToBooleanExpressionParameterParser.parameterTokens(parameter);
 		return new MethodAndParameters(extract, parameterTokens);
 	}
-	
+
+  @TokenExtractor
 	private static Token getParametersClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(4);
+		return thisParserParsed.getChildWithParser(SideEffectStringToBooleanExpressionParameterParser.class); //4
 	}
 
+  @TokenExtractor
 	private static Token getMethodClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2
 	}
 
 	public static class MethodAndParameters {
@@ -85,9 +88,9 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 	    new Parsers(
         Parser.get(SideEffectNameParser.class),
         Parser.get(()->new WordParser(":")),
-        Parser.get(JavaClassMethodParser.class),
+        Parser.get(JavaClassMethodParser.class),//2
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(SideEffectStringToBooleanExpressionParameterParser.class),
+        Parser.get(SideEffectStringToBooleanExpressionParameterParser.class),//4
         Parser.get(RightParenthesisParser.class)
       );    
 

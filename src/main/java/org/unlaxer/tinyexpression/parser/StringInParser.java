@@ -5,9 +5,10 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class StringInParser extends WhiteSpaceDelimitedLazyChain implements BooleanExpression{
+public class StringInParser extends JavaStyleDelimitedLazyChain implements BooleanExpression{
 
 	private static final long serialVersionUID = -6734066553844884039L;
 	
@@ -27,12 +28,14 @@ public class StringInParser extends WhiteSpaceDelimitedLazyChain implements Bool
         );
 
 	}
-	
+
+	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(0);
+		return thisParserParsed.getChildWithParser(StringExpressionParser.class);
 	}
 	
+  @TokenExtractor
 	public static Token getInMethod(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(1);
+    return thisParserParsed.getChildWithParser(InMethodParser.class);
 	}
 }

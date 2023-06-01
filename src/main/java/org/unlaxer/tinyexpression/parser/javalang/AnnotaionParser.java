@@ -13,7 +13,6 @@ import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
@@ -34,7 +33,7 @@ public class AnnotaionParser extends LazyChain{
     );
   }
   
-  public static class AnnotationParametersParser extends WhiteSpaceDelimitedLazyChain{
+  public static class AnnotationParametersParser extends JavaStyleDelimitedLazyChain{
 
     @Override
     public List<Parser> getLazyParsers() {
@@ -91,7 +90,7 @@ public class AnnotaionParser extends LazyChain{
 
   
   
-  public static class AnnotationParameterParser extends WhiteSpaceDelimitedLazyChain{
+  public static class AnnotationParameterParser extends JavaStyleDelimitedLazyChain{
 
     @Override
     public List<Parser> getLazyParsers() {

@@ -5,9 +5,9 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class StringPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain implements StringExpression {
+public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements StringExpression {
 
   private static final long serialVersionUID = -663588538210309122L;
 
