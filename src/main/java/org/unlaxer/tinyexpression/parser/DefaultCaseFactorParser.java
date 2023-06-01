@@ -7,6 +7,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class DefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
@@ -28,8 +29,9 @@ public class DefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
       );
 	}
 	
+  @TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(3);
+		return thisParserParsed.getChildWithParser(ExpressionParser.class); //3
 	}
 
 }

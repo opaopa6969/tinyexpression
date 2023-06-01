@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.Name;
+import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
@@ -27,8 +28,10 @@ public class JavaClassAndHashParser extends LazyChain{
         Parser.get(JavaClassNameParser.class),
         Parser.get(HashParser.class)
       );
-
 	}
 	
-
+	public static Token getJavaClass(Token thisParserParsed) {
+	  
+	  return thisParserParsed.getChildWithParser(JavaClassNameParser.class);
+	}
 }

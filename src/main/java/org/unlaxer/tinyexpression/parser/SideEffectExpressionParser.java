@@ -49,17 +49,19 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 	}
 	
 	public static MethodAndParameters extract(Token token) {
-		
-		Token classMethod = token.filteredChildren.get(0);//TODO token.getChild(JavaClassMethodParser.class);
+	  
+//		Token classMethod = token.filteredChildren.get(0);//TODO token.getChild(JavaClassMethodParser.class);
+	  Token classMethod = token.getChildWithParser(JavaClassMethodParser.class);
 		
 		ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
 		
-		Token parameter = token.filteredChildren.get(1);
+//		Token parameter = token.filteredChildren.get(1);
+		Token parametersClause = getParametersClause(token);
 		
 		SideEffectExpressionParameterParser sideEffectExpressionParameterParser = 
 				Parser.get(SideEffectExpressionParameterParser.class);
 		
-		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parameter);
+		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause);
 		
 		return new MethodAndParameters(extract, parameterTokens);
 	}

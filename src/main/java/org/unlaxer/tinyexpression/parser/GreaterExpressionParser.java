@@ -6,6 +6,7 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class GreaterExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
 
@@ -26,12 +27,14 @@ public class GreaterExpressionParser extends JavaStyleDelimitedLazyChain impleme
       );
 	}
 
+	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(0);
+		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0); //0
 	}
 	
+  @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+    return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1); //2
 	}
 
 }

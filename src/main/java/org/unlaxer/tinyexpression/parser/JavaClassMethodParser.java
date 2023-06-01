@@ -8,6 +8,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.LazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class JavaClassMethodParser extends LazyChain{
 
@@ -33,17 +34,30 @@ public class JavaClassMethodParser extends LazyChain{
 
 	}
 	
+	@TokenExtractor
+	static Token javaClassAndHash(Token thisParserParsed) {
+	  return thisParserParsed.getChildWithParser(JavaClassAndHashParser.class);
+	}
+	
+  @TokenExtractor
+  static Token identifier(Token thisParserParsed) {
+    return thisParserParsed.getChildWithParser(IdentifierParser.class);
+  }
+
+   @TokenExtractor
+   static Token javaClassName(Token javaClassAndHashToken) {
+     return JavaClassAndHashParser.getJavaClass(javaClassAndHashToken);
+   }
+	
 	public ClassNameAndIdentifier extract(Token token) {
 		
 		if(false == token.parser instanceof JavaClassMethodParser) {
 			throw new IllegalArgumentException();
 		}
 		
-		List<Token> filteredChildren = token.filteredChildren;
-		
-		Token javaClassAndHash = filteredChildren.get(0);
-		String identifier = filteredChildren.get(1).getToken().orElse("");
-		String javaClass = javaClassAndHash.filteredChildren.get(0).getToken().orElse("");
+		Token javaClassAndHash = javaClassAndHash(token);
+		String identifier = identifier(token).getToken().orElse("");
+		String javaClass = javaClassName(javaClassAndHash).getToken().orElse("");
 		
 		return new ClassNameAndIdentifier(javaClass, identifier);
 	}

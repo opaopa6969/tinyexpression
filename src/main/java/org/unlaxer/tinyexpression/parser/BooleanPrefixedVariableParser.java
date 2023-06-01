@@ -25,7 +25,7 @@ public class BooleanPrefixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
   
   public static String getVariableName(Token thisParserParsed) {
-    Token token = thisParserParsed.filteredChildren.get(1);
+    Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);//1
     return NakedVariableParser.getVariableName(token);
   }
 

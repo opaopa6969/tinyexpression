@@ -5,14 +5,15 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.NoneChildCollectingParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.tinyexpression.parser.Expression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 
 
-public class CosParser extends NoneChildCollectingParser implements Expression{
+public class CosParser extends JavaStyleNamedParenthesesParser implements Expression{
 
 	private static final long serialVersionUID = -7555523412735694127L;
 
@@ -45,8 +46,19 @@ public class CosParser extends NoneChildCollectingParser implements Expression{
         Parser.get(RightParenthesisParser.class)
       );
 	}
-	
+
+	@TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(ExpressionParser.class); //2
 	}
+
+  @Override
+  public Parser nameParser() {
+    return Parser.get(CosFuctionNameParser.class);
+  }
+
+  @Override
+  public Parser innerParser() {
+    return Parser.get(ExpressionParser.class);
+  }
 }

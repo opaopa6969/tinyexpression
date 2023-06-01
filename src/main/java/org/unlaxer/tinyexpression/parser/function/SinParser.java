@@ -1,18 +1,20 @@
 package org.unlaxer.tinyexpression.parser.function;
 
+import java.util.List;
+
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.NoneChildCollectingParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.tinyexpression.parser.Expression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 
 
-public class SinParser extends NoneChildCollectingParser implements Expression {
+public class SinParser extends JavaStyleDelimitedLazyChain implements Expression {
 
 	private static final long serialVersionUID = -3850642715787195734L;
 
@@ -35,19 +37,18 @@ public class SinParser extends NoneChildCollectingParser implements Expression {
 		}
 	}
 
-	@Override
-	public Parser createParser() {
-	  return
-      new WhiteSpaceDelimitedChain(
+	public static Token getExpression(Token thisParserParsed) {
+		return thisParserParsed.getChildWithParser(ExpressionParser.class);
+	}
+
+  @Override
+  public List<Parser> getLazyParsers() {
+    return new Parsers(
         Parser.get(SinFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),
         Parser.get(ExpressionParser.class),//2
         Parser.get(RightParenthesisParser.class)
-      );
-	}
-	
-	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
-	}
+    );
+  }
 
 }
