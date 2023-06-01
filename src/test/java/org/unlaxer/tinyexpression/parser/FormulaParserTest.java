@@ -14,8 +14,6 @@ import org.unlaxer.TransactionElement;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 
-import org.unlaxer.tinyexpression.parser.FormulaParser;
-
 public class FormulaParserTest {
 
 	@Test

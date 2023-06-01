@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;

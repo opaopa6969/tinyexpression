@@ -9,6 +9,7 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;
 
+@SuppressWarnings("deprecation")
 public class SideEffectBooleanExpressionBuilderTest extends ParserTestBase {
 
   @Test

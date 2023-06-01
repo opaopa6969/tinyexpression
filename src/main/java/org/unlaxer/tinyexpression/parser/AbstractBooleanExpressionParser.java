@@ -15,7 +15,8 @@ public abstract class AbstractBooleanExpressionParser extends LazyChoice impleme
 		super();
 	}
 	
-	@Override
+	@SuppressWarnings("deprecation")
+  @Override
   public List<Parser> getLazyParsers(boolean withNakedVariable) {
     
     // BooleanExpression ::= 

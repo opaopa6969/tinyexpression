@@ -1,7 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.junit.Test;
-import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
 import org.unlaxer.Token;
@@ -16,7 +15,8 @@ public class SideEffectBooleanExpressionParserTest extends ParserTestBase{
 		
 		setLevel(OutputLevel.detail);
 		
-		SideEffectBooleanExpressionParser sideEffectBooleanExpressionParser = new SideEffectBooleanExpressionParser();
+		@SuppressWarnings("deprecation")
+    SideEffectBooleanExpressionParser sideEffectBooleanExpressionParser = new SideEffectBooleanExpressionParser();
 		
 		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true)"));
 		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(1==1)"));

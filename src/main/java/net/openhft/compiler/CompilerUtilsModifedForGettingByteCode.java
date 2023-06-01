@@ -103,7 +103,7 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @throws IOException            the resource could not be loaded.
      * @throws ClassNotFoundException the class name didn't match or failed to initialise.
      */
-    public static CompileResult loadFromResource(@NotNull String className, @NotNull String resourceName , ClassLoader classLoader) throws IOException, ClassNotFoundException {
+    public static CompileResult<?> loadFromResource(@NotNull String className, @NotNull String resourceName , ClassLoader classLoader) throws IOException, ClassNotFoundException {
         return loadFromJava(className, readText(resourceName,classLoader) , classLoader);
     }
 
@@ -115,7 +115,7 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @return the outer class loaded.
      * @throws ClassNotFoundException the class name didn't match or failed to initialise.
      */
-    private static CompileResult loadFromJava(@NotNull String className, @NotNull String javaCode , ClassLoader classLoader) throws ClassNotFoundException {
+    private static CompileResult<?> loadFromJava(@NotNull String className, @NotNull String javaCode , ClassLoader classLoader) throws ClassNotFoundException {
         return CACHED_COMPILER.loadFromJava(classLoader, className, javaCode);
     }
 
@@ -161,9 +161,9 @@ public enum CompilerUtilsModifedForGettingByteCode {
      * @param className   expected to load.
      * @param bytes       of the byte code.
      */
-    public static Class defineClass(@Nullable ClassLoader classLoader, @NotNull String className, @NotNull byte[] bytes) {
+    public static Class<?> defineClass(@Nullable ClassLoader classLoader, @NotNull String className, @NotNull byte[] bytes) {
         try {
-            return (Class) DEFINE_CLASS_METHOD.invoke(classLoader, className, bytes, 0, bytes.length);
+            return (Class<?>) DEFINE_CLASS_METHOD.invoke(classLoader, className, bytes, 0, bytes.length);
         } catch (IllegalAccessException e) {
             throw new AssertionError(e);
         } catch (InvocationTargetException e) {
@@ -205,12 +205,9 @@ public enum CompilerUtilsModifedForGettingByteCode {
         if (len > Runtime.getRuntime().totalMemory() / 10)
             throw new IllegalStateException("Attempted to read large file " + file + " was " + len + " bytes.");
         byte[] bytes = new byte[(int) len];
-        DataInputStream dis = null;
-        try {
-            dis = new DataInputStream(new FileInputStream(file));
+        try (DataInputStream dis = new DataInputStream(new FileInputStream(file))){
             dis.readFully(bytes);
         } catch (IOException e) {
-            close(dis);
             LOGGER.warn("Unable to read {}", file, e);
             throw new IllegalStateException("Unable to read file " + file, e);
         }
@@ -254,19 +251,16 @@ public enum CompilerUtilsModifedForGettingByteCode {
             file.renameTo(bak);
         }
 
-        FileOutputStream fos = null;
-        try {
-            fos = new FileOutputStream(file);
+        try(FileOutputStream fos  = new FileOutputStream(file)) {
             fos.write(bytes);
+            return true;
         } catch (IOException e) {
-            close(fos);
             LOGGER.warn("Unable to write {} as {}", file, decodeUTF8(bytes), e);
             file.delete();
             if (bak != null)
                 bak.renameTo(file);
             throw new IllegalStateException("Unable to write " + file, e);
         }
-        return true;
     }
 
     @NotNull

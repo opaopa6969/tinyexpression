@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 
 public class _CalculatorClass201896882657134757 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext, Float>{

@@ -8,7 +8,7 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.NoneChildParser;
 
-public class FormulaParser extends NoneChildParser implements Parser{
+public class FormulaParser extends NoneChildParser {
 	
 	private static final long serialVersionUID = -7049405933791251671L;
 

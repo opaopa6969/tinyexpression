@@ -10,10 +10,13 @@ import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuil
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.Expression;
+
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser.MethodAndParameters;
 import org.unlaxer.tinyexpression.parser.StringExpression;
 
+
+@SuppressWarnings("deprecation")
 public class SideEffectBooleanExpressionBuilder implements CodeBuilder {
 
 	

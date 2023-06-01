@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.NoneChildParser;
 /**
  * this is ephemeral token marker for rendering
  */
-public class EphemeralMarked extends NoneChildParser implements Parser{
+public class EphemeralMarked extends NoneChildParser {
 
 	private static final long serialVersionUID = 194977899173382981L;
 

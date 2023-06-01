@@ -27,6 +27,7 @@ import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
 
+@SuppressWarnings("deprecation")
 public class BooleanBuilder implements CodeBuilder {
 	
 	public static final BooleanBuilder SINGLETON = new BooleanBuilder();
