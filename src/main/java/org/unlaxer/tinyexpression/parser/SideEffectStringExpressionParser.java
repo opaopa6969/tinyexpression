@@ -34,7 +34,6 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
         );
   }
 
-  
   @TokenExtractor 
   public static Token getMethodClause(Token thisParserParsed) {
     return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2;
@@ -45,6 +44,7 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
     return thisParserParsed.getChildWithParser(SideEffectStringExpressionParameterParser.class); //4
   }
 
+  @TokenExtractor
   public static MethodAndParameters extract(Token token) {
 
     Token classMethod = getMethodClause(token);// TODO
