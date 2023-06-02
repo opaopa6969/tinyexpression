@@ -31,6 +31,7 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 			}
 			rootToken = tokenReduer().apply(parsed.getRootToken(true));
 		}catch (Exception e) {
+		  e.printStackTrace();
 			throw new IllegalArgumentException("failed to parse:"+formula,e);
 		}
 	}

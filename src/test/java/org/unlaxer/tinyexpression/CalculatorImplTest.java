@@ -24,7 +24,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		assertTrue(calc(context,"0",new BigDecimal("0")));
 		assertTrue(calc(context,"1+1",new BigDecimal("2")));
@@ -43,7 +43,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		assertTrue(calc(context,"sqrt(4)",new BigDecimal("2")));
 		
 		//test recurring decimal
-		context = new NormalCalculationContext(10,RoundingMode.HALF_UP,Angle.DEGREE); 
+		context = new ConcurrentCalculationContext(10,RoundingMode.HALF_UP,Angle.DEGREE); 
 
 		assertTrue(calc(context,"1/0.11",new BigDecimal("9.0909090909")));
 		assertTrue(calc(context,"1/7",new BigDecimal("0.1428571429")));
@@ -53,7 +53,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testVariable() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("count", 12);
 		assertTrue(calc(context,"$count+10",new BigDecimal("22")));
 	}
@@ -62,7 +62,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testTernary() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("isExists", true);
 //		assertTrue(calc(context,"true?10:0",new BigDecimal("10")));
 //		assertTrue(calc(context,"false?10:0",new BigDecimal("0")));
@@ -73,7 +73,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testTrueOrFalse() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		assertTrue(calc(context,"if(true){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(false){10}else{0}",new BigDecimal("0")));
 		
@@ -86,7 +86,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testGreaterOrLessOrEqual() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		assertTrue(calc(context,"if(10==20){10}else{0}",new BigDecimal("0")));
 		assertTrue(calc(context,"if(10==10){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(10!=10){10}else{0}",new BigDecimal("0")));
@@ -110,7 +110,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testAndOrOrOrXor() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		assertTrue(calc(context,"if(true|true){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(false|true){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(false|false){10}else{0}",new BigDecimal("0")));
@@ -165,7 +165,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testCalculatorSpeed() {
 		String formula = "if(($number_accessCountByIPAddressInShortPeriod>=15.0)|($number_accessCountByCaulisCookieInShortPeriod>=10.0)|($number_accessCountByIPAddressInMiddlePeriod>=60.0)|($number_accessCountByCaulisCookieInMiddlePeriod>=30.0)){1}else{0}";
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		context.set("number_accessCountByIPAddressInShortPeriod", 0);
 		context.set("number_accessCountByCaulisCookieInShortPeriod", 0);
@@ -188,7 +188,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testMultipleVariableCondition() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("float_test_random", 0.2f);
 		context.set("boolean_test_random", false);
 		assertTrue(calc(context,"if($float_test_random<0.3&($boolean_test_random==false)){1}else{0}",new BigDecimal("1")));
@@ -208,7 +208,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	public void testOr() {
 		setLevel(OutputLevel.detail);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		String formula ="if(($number_accessPeakCountByIPAddressInLongPeriod>=10.0)|($number_accessPeakCountByCaulisCookieInLongPeriod>=5.0)){1}else{0}";
 		context.set("number_accessPeakCountByIPAddressInLongPeriod", 0);
@@ -277,7 +277,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context, formula);
 		BigDecimal answer = result.answer.get();
 		assertEquals(new BigDecimal("2"), answer);
@@ -293,7 +293,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context, formula);
 		assertFalse(result.answer.isPresent());
 		assertFalse(result.success);
@@ -311,7 +311,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context, formula);
 		assertTrue(result.answer.isPresent());
 		assertTrue(result.success);
@@ -326,7 +326,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	@Test
 	public void testVariableIsNotPresent() {
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		assertTrue(calc(context,"if($isExists){1}else{0}",new BigDecimal("0")));
 		context.set("isExists", true);
@@ -340,7 +340,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	@Test
 	public void testVariableIsPresentOperator() {
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		assertTrue(calc(context,"if(isPresent($isExists)){5}else{10}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(not(isPresent($isExists))){5}else{10}",new BigDecimal("5")));
@@ -370,7 +370,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 //		assertTrue(calc(context,"if($name==''){1}else{0}",new BigDecimal("1")));
 		context.set("name", "opa");
 		//                                  12345678901234567890123456 
@@ -386,7 +386,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 //		assertTrue(calc(context,"if($name==''){1}else{0}",new BigDecimal("1")));
 		context.set("name", "opa");
 		//                                  12345678901234567890123456 
@@ -406,7 +406,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		assertTrue(calc(context,"if((\"opa\"+'opa'+\"6969\")=='opaopa6969'){1}else{0}",new BigDecimal("1")));
 	}
 	
@@ -415,7 +415,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		assertTrue(calc(context,"if('deadbeaf'[1:3]=='ea'){1}else{0}",new BigDecimal("1")));
 		assertTrue(calc(context,"if('gateman'[::-1]=='nametag'){1}else{0}",new BigDecimal("1")));
 		assertTrue(calc(context,"if('1a2b3'[::2]=='123'){1}else{0}",new BigDecimal("1")));
@@ -429,7 +429,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("name", "  opa 133\t");
 		
 		assertTrue(calc(context,"if(trim($name)=='opa 133'){1}else{0}",new BigDecimal("1")));
@@ -440,7 +440,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("name", "AlmondChocolate");
 		
 		assertTrue(calc(context,"if(toUpperCase($name)=='ALMONDCHOCOLATE'){1}else{0}",new BigDecimal("1")));
@@ -459,7 +459,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("name", "AlmondChocolate");
 		
 		assertTrue(calc(context,"if(len($name)==15){1}else{0}",new BigDecimal("1")));
@@ -472,7 +472,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("country", "jp");
 		
 		{
@@ -513,7 +513,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("message", "I even lost my cat.");
 		
 		assertTrue(calc(context,"if($message.startsWith('I even')){1}else{0}",new BigDecimal("1")));
@@ -532,7 +532,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		
 		String formula="match { $country == 'en' -> 1 , $country == 'jp' -> 2 , $country == 'cn' -> 3 , \n default -> 0}";
 		assertTrue(calc(context,formula ,new BigDecimal("0")));
@@ -571,7 +571,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("count", 10);
 		
 		assertTrue(calc(context,"if(min(0,0)==0){1}else{0}",new BigDecimal("1")));
@@ -588,7 +588,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("count", 10);
 
 		assertTrue(calc(context,"if(max(0,0)==0){1}else{0}",new BigDecimal("1")));
@@ -605,7 +605,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		setLevel(OutputLevel.detail);
 
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("count", 10);
 
 		assertTrue(calc(context,"if(random()<=1.0){1}else{0}",new BigDecimal("1")));
@@ -646,7 +646,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 			{"japanese","if(isPresent($splanguage)&not($splanguage.in('ja','ja-JP','日本語'))){5}else{0}"}			
 		};
 		
-		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		setLevel(OutputLevel.detail);
 		for (String[] tuple : functions) {
 			String title = tuple[0];
@@ -670,7 +670,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       {"POST_PROCESS_OriginalSpec_OneUserAccessToMultiAccount", "if((isPresent($userCountGroupedByCookieOnThisSite)&$userCountGroupedByCookieOnThisSite>=2)&((isPresent($os)&(not(toLowerCase($os).contains(\"linux\"))|not(toLowerCase($os).contains(\"Fire OS\"))))|(isPresent($number_accountCreationCountByIpAddress)&isPresent($userCountGroupedByCookieOnThisSite)&not($number_accountCreationCountByIpAddress - $userCountGroupedByCookieOnThisSite>=1))|(isPresent($userCountGroupedByCookieOnAllSite)&isPresent($userCountGroupedByCookieOnThisSite)&isPresent($userCountGroupedByCookieOnThisSiteOn12H)&(not($userCountGroupedByCookieOnAllSite - $userCountGroupedByCookieOnThisSite>=1)&not($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H==0))))){1}else{0}"},
       {"POST_PROCESS_RELATIVE_SUSPICIOUS", "if(not(isPresent($calculated_FirstAccessUserHash))){1}else{if($ForcedRelativeSuspiciousValue1){1}else{if($ForcedRelativeSuspiciousValue5){5}else{if($default_RelativeSuspiciousValue==5){5}else{if(($POST_PROCESS_OriginalSpec_CountryIsNotJapan>0.0)|($POST_PROCESS_OriginalSpec_BlackListOnOtherSites>0.0)|($POST_PROCESS_OriginalSpec_SuspiciousProvider>0.0)|($POST_PROCESS_OriginalSpec_OneUserAccessToMultiAccount>0.0)){5}else{$default_RelativeSuspiciousValue}}}}}"}
     };
-    CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     setLevel(OutputLevel.detail);
     for (String[] tuple : functions) {
       String title = tuple[0];
@@ -685,7 +685,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
     setLevel(OutputLevel.detail);
 
-    CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     context.set("userCountGroupedByCookieOnThisSite", 10);
     context.set("userCountGroupedByCookieOnThisSite", 10);
 
