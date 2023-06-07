@@ -692,4 +692,28 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     assertTrue(calc(context,"if(not(($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H)==0)){1}else{0}",new BigDecimal("1")));
 //    assertTrue(calc(context,"if(not(0==($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H))){1}else{0}",new BigDecimal("1")));
   }
+  
+  @Test
+  public void testSideEffectWithSpecifiedArgumnent() {
+
+    /* 以下のメソッドをよびだす
+     * 
+    public float booleanToFloatMethod(CalculationContext calculationContext, boolean inputValue) {
+      
+      return inputValue ? 69f:6969f;
+    }
+     */
+
+
+    setLevel(OutputLevel.detail);
+
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set("isMale", true);
+    
+    assertTrue(calc(context,"if(not(($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H)==0)){1}else{0}",new BigDecimal("1")));
+////    assertTrue(calc(context,"if(not(0==($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H))){1}else{0}",new BigDecimal("1")));
+  }
+
+  
+  
 }
