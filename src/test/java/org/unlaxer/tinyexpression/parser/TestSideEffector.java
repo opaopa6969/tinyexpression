@@ -45,6 +45,13 @@ public class TestSideEffector {
     // modify value if you needed.
     return originalReturning + ": hoge";
   }
+  
+  public float booleanToFloatMethod(CalculationContext calculationContext, boolean inputValue) {
+    
+    return inputValue ? 69f:6969f;
+  }
+  
+  
 
 
 }

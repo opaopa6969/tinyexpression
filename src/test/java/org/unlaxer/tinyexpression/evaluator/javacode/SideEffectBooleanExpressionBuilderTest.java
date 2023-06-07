@@ -34,4 +34,36 @@ public class SideEffectBooleanExpressionBuilderTest extends ParserTestBase {
     System.out.println(builder2.toString());
 
   }
+  
+  @Test
+  public void testTypeHit() {
+    
+    /*
+    public float booleanToFloatMethod(CalculationContext calculationContext, boolean inputValue) {
+      
+      return inputValue ? 69f:6969f;
+    }
+    */
+    
+
+    setLevel(OutputLevel.detail);
+    String formula =
+        "external returning number default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)";
+    var parser = new SideEffectBooleanExpressionParser();
+
+    testAllMatch(parser, formula);
+
+    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    Parsed parsed = parser.parse(parseContext);
+    Token rootToken = parsed.getRootToken();
+    Token sideEffectToken = rootToken.flatten().stream()
+        .filter(token -> token.parser.getClass().equals(SideEffectBooleanExpressionParser.class))
+        .findFirst().orElseThrow();
+
+    var builder = new SideEffectBooleanExpressionBuilder();//
+    SimpleJavaCodeBuilder builder2 = new SimpleJavaCodeBuilder();
+    builder.build(builder2, sideEffectToken);
+    System.out.println(builder2.toString());
+
+  }
 }
