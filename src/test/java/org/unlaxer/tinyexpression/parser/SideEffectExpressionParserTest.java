@@ -86,7 +86,15 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
      
      testAllMatch(sideEffectExpressionParser,
          "external returning as float default 1 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
-
+     
+     testUnMatch(sideEffectExpressionParser,
+         "external returning as float default false :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
+     
+     testAllMatch(sideEffectExpressionParser,
+         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
+     
+     
+     
      
      //nothing as after returning
      testUnMatch(sideEffectExpressionParser,
