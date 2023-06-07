@@ -7,10 +7,7 @@ import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -30,23 +27,13 @@ public class SideEffectExpressionParameterParser extends JavaStyleDelimitedLazyC
 	public List<Parser> getLazyParsers() {
 	  return 
       new Parsers(
-        Parser.get(ExpressionParser.class),
+        Parser.get(SideEffectExpressionParameterChoice.class),
         new ZeroOrMore(
-          new WhiteSpaceDelimitedChain(
-            Parser.get(CommaParser.class),
-            new Choice(
-                Parser.get(StrictTypedBooleanClauseParser.class),
-                Parser.get(StrictTypedStringExpressionParser.class),
-                Parser.get(StrictTypedExpressionParser.class),
-                Parser.get(BooleanClauseParser.class),
-                Parser.get(StringExpressionParser.class),
-                Parser.get(ExpressionParser.class)
-            )
-          ) 
+            Parser.get(SideEffectExpressionParameterSuccessor.class)
         )
       );
 	}
-
+	
 	@TokenExtractor
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){
 		

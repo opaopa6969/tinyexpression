@@ -28,7 +28,7 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
-        Parser.get(()->new Optional(Parser.get(ReturningParser.class))),
+        new Optional(Parser.get(ReturningParser.class)),
         Parser.get(()->new WordParser(":")),
         Parser.get(JavaClassMethodParser.class),//2
         Parser.get(LeftParenthesisParser.class),
