@@ -9,7 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class BooleanVariableParser extends LazyChoice implements VariableParser{
+public class BooleanVariableParser extends LazyChoice implements VariableParser , BooleanExpression{
 
   private static final long serialVersionUID = -60484510350410L;
 
@@ -29,9 +29,9 @@ public class BooleanVariableParser extends LazyChoice implements VariableParser{
   public static String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
     if(choiced.parser instanceof BooleanPrefixedVariableParser) {
-      return BooleanPrefixedVariableParser.getVariableName(thisParserParsed);
+      return BooleanPrefixedVariableParser.getVariableName(choiced);
     }else if(choiced.parser instanceof BooleanSuffixedVariableParser) {
-      return BooleanSuffixedVariableParser.getVariableName(thisParserParsed);
+      return BooleanSuffixedVariableParser.getVariableName(choiced);
     }
     throw new IllegalArgumentException();
   }

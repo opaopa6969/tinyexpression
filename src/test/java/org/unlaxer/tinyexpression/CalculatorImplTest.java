@@ -710,8 +710,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     context.set("isMale", true);
     
-    assertTrue(calc(context,"if(not(($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H)==0)){1}else{0}",new BigDecimal("1")));
-////    assertTrue(calc(context,"if(not(0==($userCountGroupedByCookieOnThisSite - $userCountGroupedByCookieOnThisSiteOn12H))){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)",
+        new BigDecimal("69")));
   }
 
   

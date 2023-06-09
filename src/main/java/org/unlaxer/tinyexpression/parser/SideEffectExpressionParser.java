@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -39,6 +40,11 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 	}
 
 	@TokenExtractor
+  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {
+    return thisParserParsed.getChildWithParserAsOptional(ReturningParser.class);
+  }
+
+	@TokenExtractor
 	public static Token getMethodClause(Token thisParserParsed) {
 		return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2
 	}
@@ -48,6 +54,11 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
     return thisParserParsed.getChildWithParser(SideEffectExpressionParameterParser.class); //4
 	}
 	
+  public static Token getReturningClauseWhenNotSpecified() {
+    new Token(TokenKind.consumed, null, Parser.get(ReturningParser.class));
+  }
+  
+  @TokenExtractor
 	public static MethodAndParameters extract(Token token) {
 	  
 //		Token classMethod = token.filteredChildren.get(0);//TODO token.getChild(JavaClassMethodParser.class);
