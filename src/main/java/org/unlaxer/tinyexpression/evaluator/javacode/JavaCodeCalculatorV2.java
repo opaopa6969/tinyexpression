@@ -32,23 +32,8 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
   TokenBaseOperator<CalculationContext, Float> instance;
 
-  static Path defaultTempDirectory;
-
-  static synchronized Path createDefaultTemp() {
-    try {
-      if (defaultTempDirectory == null) {
-        String temp = System.getProperty("java.io.tmpdir");
-        defaultTempDirectory = Files.createTempDirectory(temp+ "/JavaCodeCalculator").getFileName();
-        Files.createDirectories(defaultTempDirectory);
-      }
-      return defaultTempDirectory;
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-  
   public JavaCodeCalculatorV2(Name name , String formula) {
-    this(name,formula,createDefaultTemp());
+    this(name,formula,(Path)null);
   }
   
   public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
@@ -56,7 +41,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
   }
   
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
-    this(name,formula,classLoader,createDefaultTemp());
+    this(name,formula,classLoader,null);
   }
 
 
@@ -66,7 +51,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
   }
 
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
-    this(formula,className,classLoader,createDefaultTemp());
+    this(formula,className,classLoader,null);
   }
 
   @SuppressWarnings("unchecked")
@@ -74,10 +59,12 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
     super(formula , className);
     this.className = className;
     javaCode = createJavaClass(className, rootToken);
-    try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
-      newBufferedWriter.write(javaCode);
-    } catch (IOException e1) {
-      e1.printStackTrace();
+    if(outputRootDirectory != null) {
+      try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+        newBufferedWriter.write(javaCode);
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
     }
     
     CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;

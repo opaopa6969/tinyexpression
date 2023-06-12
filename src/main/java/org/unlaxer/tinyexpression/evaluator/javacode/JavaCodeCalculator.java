@@ -29,23 +29,8 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	Class<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
 	TokenBaseOperator<CalculationContext, Float> instance;
 
-  static Path defaultTempDirectory;
-
-  static synchronized Path createDefaultTemp() {
-    try {
-      if (defaultTempDirectory == null) {
-
-        defaultTempDirectory = Files.createTempDirectory("JavaCodeCalculator").getFileName();
-        Files.createDirectories(defaultTempDirectory);
-      }
-      return defaultTempDirectory;
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-  
   public JavaCodeCalculator(Name name, String formula) {
-    this(name,formula,createDefaultTemp());
+    this(name,formula,null);
   }
 
   public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory) {
@@ -53,7 +38,7 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
   }
 
   public JavaCodeCalculator(String formula , String className) {
-    this(formula,className,createDefaultTemp());
+    this(formula,className,null);
   }
 
 	@SuppressWarnings("unchecked")
@@ -61,11 +46,13 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 		super(formula , className);
 		this.className = className;
 		javaCode = createJavaClass(className, rootToken);
-    try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
-      newBufferedWriter.write(javaCode);
-    } catch (IOException e1) {
-      e1.printStackTrace();
-    }
+		if(outputRootDirectory != null) {
+		  try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+		    newBufferedWriter.write(javaCode);
+		  } catch (IOException e1) {
+		    e1.printStackTrace();
+		  }
+		}
 
 		try {
 			synchronized (CompilerUtils.CACHED_COMPILER) {
