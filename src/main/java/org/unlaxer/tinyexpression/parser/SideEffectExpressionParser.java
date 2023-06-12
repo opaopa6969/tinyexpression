@@ -14,6 +14,7 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.VirtualTokenCreator;
 
 public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
   
@@ -39,9 +40,21 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 
 	}
 
-	@TokenExtractor
-  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {
-    return thisParserParsed.getChildWithParserAsOptional(ReturningParser.class);
+//	@TokenExtractor
+//  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {
+//    return thisParserParsed.getChildWithParserAsOptional(ReturningParser.class);
+//  }
+  @TokenExtractor
+  @VirtualTokenCreator
+  public static Token getReturningClause(Token thisParserParsed, java.util.Optional<Token> firstParameter) {
+    return thisParserParsed.getChildWithParserAsOptional(ReturningParser.class)
+        .orElseGet(()->ReturningParser.getReturningParserWhenNotSpecifiedReturingClause(
+            getReturningPosition(thisParserParsed),firstParameter));
+  }
+  
+  static int getReturningPosition(Token thisParserParsed) {
+    Token childWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
+    return childWithParser.tokenRange.endIndexExclusive;
   }
 
 	@TokenExtractor
@@ -53,13 +66,19 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 	public static Token getParametersClause(Token thisParserParsed) {
     return thisParserParsed.getChildWithParser(SideEffectExpressionParameterParser.class); //4
 	}
-	
-  public static Token getReturningClauseWhenNotSpecified() {
-    new Token(TokenKind.consumed, null, Parser.get(ReturningParser.class));
-  }
   
   @TokenExtractor
 	public static MethodAndParameters extract(Token token) {
+    
+    Token returning = token.getChildFromAstNodes(0);
+    Parser parser = returning.getParser();
+    Class<?> returningType = 
+        parser instanceof Expression ?
+            float.class : 
+            parser instanceof StringExpression ?
+                String.class :
+                boolean.class;
+        
 	  
 //		Token classMethod = token.filteredChildren.get(0);//TODO token.getChild(JavaClassMethodParser.class);
 	  Token classMethod = token.getChildWithParser(JavaClassMethodParser.class);
@@ -74,15 +93,22 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 		
 		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause);
 		
-		return new MethodAndParameters(extract, parameterTokens);
+		return new MethodAndParameters(returning , returningType, extract, parameterTokens);
 	}
 	
 	public static class MethodAndParameters{
+	  public final Token returningToken;
+	  public final Class<?> returningType;
+	  
 		public final ClassNameAndIdentifier classNameAndIdentifier;
 		public final List<Token> parameterTokens;
 		public final Class<?>[] parameterTypes;
-		public MethodAndParameters(ClassNameAndIdentifier classNameAndIdentifier, List<Token> parameterTokens) {
+		public MethodAndParameters(
+		    Token returningToken, Class<?> returningType,
+		    ClassNameAndIdentifier classNameAndIdentifier, List<Token> parameterTokens) {
 			super();
+			this.returningToken = returningToken;
+			this.returningType = returningType;
 			this.classNameAndIdentifier = classNameAndIdentifier;
 			this.parameterTokens = parameterTokens;
 			parameterTypes = new Class<?>[parameterTokens.size()+2];

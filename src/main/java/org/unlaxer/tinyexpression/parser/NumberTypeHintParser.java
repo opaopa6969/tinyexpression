@@ -2,6 +2,9 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.RangedString;
+import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -14,15 +17,25 @@ public class NumberTypeHintParser extends LazyChoice {
   public NumberTypeHintParser() {
     super();
   }
+  static final WordParser numberWordParser = new WordParser("number");
 
   @Override
   public List<Parser> getLazyParsers() {
     return
       new Parsers(
           new WordParser("Number"), //
-          new WordParser("number"), //
+          numberWordParser, //
           new WordParser("Float"), //
           new WordParser("float")
       );
   }
+  
+  public static Token createToken(int position,TokenKind tokenKind) {
+    
+    Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
+    List<Token> children = List.of(token);
+    return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
+  }
+    
+
 }

@@ -1,10 +1,16 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -23,17 +29,44 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	Class<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
 	TokenBaseOperator<CalculationContext, Float> instance;
 
-	public JavaCodeCalculator(String formula) {
-		this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()));
-	}
+  static Path defaultTempDirectory;
 
+  static synchronized Path createDefaultTemp() {
+    try {
+      if (defaultTempDirectory == null) {
+
+        defaultTempDirectory = Files.createTempDirectory("JavaCodeCalculator").getFileName();
+        Files.createDirectories(defaultTempDirectory);
+      }
+      return defaultTempDirectory;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+  
+  public JavaCodeCalculator(Name name, String formula) {
+    this(name,formula,createDefaultTemp());
+  }
+
+  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory) {
+    this(formula , name.getName()+"_CalculatorClass"  + Math.abs(new Random().nextLong()) , outputRootDirectory);
+  }
+
+  public JavaCodeCalculator(String formula , String className) {
+    this(formula,className,createDefaultTemp());
+  }
 
 	@SuppressWarnings("unchecked")
-	public JavaCodeCalculator(String formula , String className) {
+	public JavaCodeCalculator(String formula , String className, Path outputRootDirectory) {
 		super(formula , className);
 		this.className = className;
 		javaCode = createJavaClass(className, rootToken);
-		
+    try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+      newBufferedWriter.write(javaCode);
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
+
 		try {
 			synchronized (CompilerUtils.CACHED_COMPILER) {
 				loadFromJava =

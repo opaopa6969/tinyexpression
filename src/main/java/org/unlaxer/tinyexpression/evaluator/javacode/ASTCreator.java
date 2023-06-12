@@ -8,13 +8,14 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
-import org.unlaxer.TokenKind;
+import org.unlaxer.Token.SearchFirst;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.PseudoRootParser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
+import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionOfStringParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
@@ -22,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.CaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.CaseFactorParser;
 import org.unlaxer.tinyexpression.parser.DefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.Expression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FactorParser;
@@ -49,6 +51,7 @@ import org.unlaxer.tinyexpression.parser.StrictTypedStringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
+import org.unlaxer.tinyexpression.parser.StringExpression;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringInParser;
@@ -294,21 +297,46 @@ public class ASTCreator implements UnaryOperator<Token>{
 			);
 			
 		}else if(operator.parser instanceof SideEffectExpressionParser){
+		  
+		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
+		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
+		  Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      Token returning = extractReturning(returningClause);
 			
 			return operator.newCreatesOf(
 //			    returning causeをtoken化する。
-//			    ただし、optionalなのでemptyの場合はreturn as number default １stParameter　 にする
-			    extractReturning(SideEffectExpressionParser.getReturningClause(operator)),
+//			    ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
+			    returning,
 			    SideEffectExpressionParser.getMethodClause(operator),
-			    extractParameters(SideEffectExpressionParser.getParametersClause(operator))
+			    extractParameters
+			    
 			);
 		}
 		throw new IllegalArgumentException();
 	}
 	
-	private Token extractReturning(Optional<Token> returningClause) {
-	  returningClause.orElseGet(()->new Token(TokenKind.consumed, null, null))
-    return null;
+	private Optional<Token> extractFirstParmeter(Token extractParameters) {
+	  List<Token> filteredChildren = extractParameters.filteredChildren;
+	  return filteredChildren.isEmpty() ?
+	      Optional.empty():
+	      Optional.of(filteredChildren.get(0));
+  }
+
+  private Token extractReturning(Token returningClause) {
+//    ExpressionParserかBooleanClauseParserかStringExpressionParserを探す。
+//    ただし幅優先で探さなければならないのでTokenにdepth/breadthのどちらでlistを作るかを指定するものを追加する。
+    
+    List<Token> flatten = returningClause.flatten(SearchFirst.Breadth);
+    Token expressionToken = flatten.stream()
+      .filter(token->{
+        return (token.parser instanceof Expression ||
+            token.parser instanceof BooleanExpression ||
+            token.parser instanceof StringExpression
+            );
+      })
+      .findFirst().orElseThrow();
+
+    return expressionToken;
   }
 
   Token extractParameters(Token sideEffectExpressionParameterToken) {
@@ -318,9 +346,7 @@ public class ASTCreator implements UnaryOperator<Token>{
 	      .map(this::apply)
 	      .collect(Collectors.toList());
 	  
-	  return sideEffectExpressionParameterToken.newCreatesOf(
-	      appliedChildren
-	      );
+	  return sideEffectExpressionParameterToken.newCreatesOf(appliedChildren);
 	}
 
 	private Token booleanExpression(Token token) {

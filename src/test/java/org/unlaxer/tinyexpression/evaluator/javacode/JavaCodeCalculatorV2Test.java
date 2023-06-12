@@ -4,12 +4,12 @@ import org.unlaxer.Name;
 import org.unlaxer.tinyexpression.CalculatorImplTest;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 
-public class JavaCodeCalculatorTest extends CalculatorImplTest<Float>{
+public class JavaCodeCalculatorV2Test extends CalculatorImplTest<Float>{
 	
 
 	@Override
 	public PreConstructedCalculator<Float> preConstructedCalculator(String formula) {
-		return new JavaCodeCalculator(Name.of("V1Test"), formula);
+		return new JavaCodeCalculatorV2(Name.of("V2Test") , formula);
 	}
 
 }

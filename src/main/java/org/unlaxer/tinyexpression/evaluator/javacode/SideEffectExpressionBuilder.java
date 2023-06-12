@@ -57,8 +57,18 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 			.append(")).orElse(");
 		// old implementation : first parameter is default returning value
     // new implementation : "returning as type default xxx". xxx is default returning value
-		//　　　　　　　　　　　　　　　　 : if returning clause is not exists , then first parameter is default returning value 
-		ExpressionBuilder.SINGLETON.build(builder, methodAndParameters.parameterTokens.get(0));
+		//　　　　　　　　　　　　　　　　 : if returning clause is not exists , then first parameter is default returning value
+		
+		
+		Token returningToken = methodAndParameters.returningToken;
+		Parser parser = returningToken.parser;
+		if(parser instanceof Expression) {
+		  ExpressionBuilder.SINGLETON.build(builder, returningToken);
+		}else if(parser instanceof StringExpression){
+      StringExpressionBuilder.SINGLETON.build(builder, returningToken);
+		}else {
+		  BooleanClauseBuilder.SINGLETON.build(builder, returningToken);
+		}
 		
 		builder
 			.append(")");

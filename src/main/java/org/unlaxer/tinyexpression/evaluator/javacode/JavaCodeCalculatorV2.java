@@ -1,15 +1,22 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
@@ -25,16 +32,53 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
   TokenBaseOperator<CalculationContext, Float> instance;
 
-  public JavaCodeCalculatorV2(String formula , ClassLoader classLoader) {
-    this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()) , classLoader);
+  static Path defaultTempDirectory;
+
+  static synchronized Path createDefaultTemp() {
+    try {
+      if (defaultTempDirectory == null) {
+        String temp = System.getProperty("java.io.tmpdir");
+        defaultTempDirectory = Files.createTempDirectory(temp+ "/JavaCodeCalculator").getFileName();
+        Files.createDirectories(defaultTempDirectory);
+      }
+      return defaultTempDirectory;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+  
+  public JavaCodeCalculatorV2(Name name , String formula) {
+    this(name,formula,createDefaultTemp());
+  }
+  
+  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
+    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory);
+  }
+  
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
+    this(name,formula,classLoader,createDefaultTemp());
   }
 
 
-  @SuppressWarnings("unchecked")
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
+      Path outputRootDirectory) {
+    this(formula , name.getName()+"_CalculatorClass"  + Math.abs(new Random().nextLong()) , classLoader , outputRootDirectory);
+  }
+
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
+    this(formula,className,classLoader,createDefaultTemp());
+  }
+
+  @SuppressWarnings("unchecked")
+  public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, Path outputRootDirectory) {
     super(formula , className);
     this.className = className;
     javaCode = createJavaClass(className, rootToken);
+    try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+      newBufferedWriter.write(javaCode);
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
     
     CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
     try {
@@ -133,6 +177,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
     String CalculationContextName = CalculationContext.class.getName();
     builder
+      .setKind(Kind.Main)
       .line("import org.unlaxer.Token;")
       .line("import "+CalculationContextName+";")
       .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
@@ -142,9 +187,11 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
       .append(" implements TokenBaseOperator<"+CalculationContextName+", Float>{")
       .n()
       .n()
+      .setKind(Kind.Function)
       .incTab()
       .line("@Override")
       .line("public Float evaluate("+CalculationContextName+" calculateContext , Token token) {")
+      .setKind(Kind.Calculation)
       .incTab()
       .line("float answer = (float) ")
       .n();
@@ -152,11 +199,15 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
     ExpressionBuilder.SINGLETON.build(builder, rootToken);
 
     builder
+      .setKind(Kind.Calculation)
       .n()
       .line(";")
       .line("return answer;")
       .decTab()
-      .line("}");
+      .line("}")
+      .decTab()
+      .setKind(Kind.Main);
+
 
     String code = builder.toString();
     return code;

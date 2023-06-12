@@ -14,6 +14,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.parser.TestSideEffector;
 
 import net.arnx.jsonic.JSON;
 
@@ -709,10 +710,25 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
     CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     context.set("isMale", true);
+
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        new BigDecimal("0")));
+    
+    context.set(new TestSideEffector());
+    
     
     assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)",
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("69")));
+    
+    context.set("isMale", false);
+    
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        new BigDecimal("6969")));
+
+
   }
 
   

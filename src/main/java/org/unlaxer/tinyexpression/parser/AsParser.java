@@ -2,6 +2,9 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.RangedString;
+import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.WordParser;
 
@@ -14,5 +17,9 @@ public class AsParser extends WordParser{
 
   public AsParser() {
     super("as");
+  }
+  
+  public static Token createToken(int position,TokenKind tokenKind) {
+    return new Token(tokenKind, new RangedString(position, " as "), Parser.get(AsParser.class));
   }
 }
