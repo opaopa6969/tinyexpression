@@ -761,6 +761,13 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
   @Test
   public void testSideEffectWithSpecifiedArgumnent2() {
     
+    /* 以下のメソッドをよびだす
+     * 
+  public float salary(CalculationContext calculationContext, float averageSalary , String name) {
+    
+    return name.contains("Dr.") ? averageSalary * 2 : averageSalary;
+  }
+     */
     setLevel(OutputLevel.detail);
 
     CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);

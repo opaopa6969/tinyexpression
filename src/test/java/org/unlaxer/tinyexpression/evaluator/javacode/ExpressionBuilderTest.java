@@ -5,20 +5,17 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.unlaxer.Parsed;
-import org.unlaxer.ParserTestBase;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 
-public class ExpressionBuilderTest extends ParserTestBase{
+public class ExpressionBuilderTest {
 
   @Test
   public void test() {
     
-    setLevel(OutputLevel.detail);
     ExpressionParser expressionParser = new ExpressionParser();
     ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
     Parsed parsed= expressionParser.parse(parseContext);
