@@ -75,6 +75,9 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 	   SideEffectExpressionParser sideEffectExpressionParser = new SideEffectExpressionParser();
 	    
 	   testAllMatch(sideEffectExpressionParser,
+	       "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)");
+	   
+	   testAllMatch(sideEffectExpressionParser,
 	       "external returning as float default 0 :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
 	   testAllMatch(sideEffectExpressionParser,
 	       "external returning as boolean default false :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");

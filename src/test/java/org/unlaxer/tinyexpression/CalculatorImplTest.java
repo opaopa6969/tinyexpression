@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
@@ -714,9 +715,36 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     assertTrue(calc(context,
         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("0")));
+
+    assertTrue(
+        calc(context,
+        "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        new BigDecimal("11")));
+
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(1==0)",
+        new BigDecimal("0")));
+
+    // parse時にはTestSIでEffector＃booleanToFloatMethodの戻り値の型が何であるかは特定できないためreturningを指定する必要がある
+    // しかし後方互換性の為にreturningを無くした場合にreturnの型はfloatになるようにしている。
+    // なのでRuntimeExceptionの動きは正しい
+//    /V1Test_CalculatorClass8968366204185308402.java:13: エラー: 不適合な型: java.lang.Booleanをjava.lang.Floatに変換できません:
+//      function0.map(_function->_function.booleanToFloatMethod(calculateContext , (calculateContext.getBoolean("isMale").orElse(false)))).orElse((calculateContext.getBoolean("isMale").orElse(false)))
+    assertThrows(RuntimeException.class, ()->
+      calc(context,
+          "external : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+          new BigDecimal("0"))
+    );
     
     context.set(new TestSideEffector());
     
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'=='a')",
+        new BigDecimal("69")));
+    
+    assertTrue(calc(context,
+        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'!='a')",
+        new BigDecimal("6969")));
     
     assertTrue(calc(context,
         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
@@ -728,9 +756,22 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("6969")));
 
-
   }
+  
+  @Test
+  public void testSideEffectWithSpecifiedArgumnent2() {
+    
+    setLevel(OutputLevel.detail);
 
-  
-  
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set(new TestSideEffector());
+
+    assertTrue(calc(context,
+        "external /*comment */ returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Mr.robot')",
+        new BigDecimal(12*300000)));
+    
+    assertTrue(calc(context,
+        "external /*comment */ returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Dr.house')",
+        new BigDecimal(12*300000*2)));
+  }
 }

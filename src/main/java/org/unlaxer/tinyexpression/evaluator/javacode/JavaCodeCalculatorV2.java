@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;

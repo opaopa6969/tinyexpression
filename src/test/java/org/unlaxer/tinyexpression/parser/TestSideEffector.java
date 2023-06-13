@@ -51,6 +51,10 @@ public class TestSideEffector {
     return inputValue ? 69f:6969f;
   }
   
+  public float salary(CalculationContext calculationContext, float averageSalary , String name) {
+    
+    return name.contains("Dr.") ? averageSalary * 2 : averageSalary;
+  }
   
 
 

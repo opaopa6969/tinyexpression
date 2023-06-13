@@ -43,11 +43,16 @@ import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterChoice;
+import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterSuccessor;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanClauseParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedExpressionParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedFactorParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringExpressionParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedStringFactorParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedStringTermParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedTermParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -86,16 +91,22 @@ public class ASTCreator implements UnaryOperator<Token>{
 		
 		Parser parser = token.parser;
 		
+		if(parser instanceof SideEffectExpressionParameterSuccessor) {
+		  token = SideEffectExpressionParameterSuccessor.extractParameter(token);
+      return apply(token);
+		}
+		
 		if(parser instanceof SideEffectExpressionParameterChoice) {
 		  token = ChoiceInterface.choiced(token);
-		  parser = token.parser;
+		  return apply(token);
     }
 		
 		
 		if(
       parser instanceof StrictTypedExpressionParser || 
 		  parser instanceof ExpressionParser || 
-			parser instanceof TermParser ||
+      parser instanceof StrictTypedTermParser ||
+      parser instanceof TermParser ||
 			parser instanceof StrictTypedBooleanClauseParser ||
 			parser instanceof BooleanClauseParser ||
       parser instanceof StrictTypedStringExpressionParser || 
@@ -118,7 +129,10 @@ public class ASTCreator implements UnaryOperator<Token>{
 			return lastOpearatorAndOperands;
 			
 
-		}else if(parser instanceof FactorParser) {
+		}else if(
+		    parser instanceof StrictTypedFactorParser ||
+		    parser instanceof FactorParser
+		    ) {
 			
 			return factor(token);
 			
@@ -146,7 +160,10 @@ public class ASTCreator implements UnaryOperator<Token>{
 			
 			return booleanExpression(token);
 			
-		}else if(parser instanceof StringTermParser) {
+		}else if(
+		    parser instanceof StrictTypedStringTermParser||
+		    parser instanceof StringTermParser
+		    ) {
 
 			List<Token> originalTokens = token.filteredChildren;
 			Iterator<Token> iterator = originalTokens.iterator();
@@ -162,7 +179,10 @@ public class ASTCreator implements UnaryOperator<Token>{
 			}
 			return lastOpearatorAndOperands;
 			
-		}else if(parser instanceof StringFactorParser) {
+		}else if(
+        parser instanceof StrictTypedStringFactorParser||
+        parser instanceof StringFactorParser
+		    ) {
 			
 			return stringFactor(token);
 		
@@ -301,7 +321,7 @@ public class ASTCreator implements UnaryOperator<Token>{
 		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
 		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
 		  Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
-      Token returning = extractReturning(returningClause);
+      Token returning = apply(extractReturning(returningClause));
 			
 			return operator.newCreatesOf(
 //			    returning causeをtoken化する。

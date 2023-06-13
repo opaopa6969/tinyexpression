@@ -5,6 +5,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPrinter;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
@@ -62,6 +63,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		
 		Token returningToken = methodAndParameters.returningToken;
 		Parser parser = returningToken.parser;
+		TokenPrinter.output(returningToken, System.out);
 		if(parser instanceof Expression) {
 		  ExpressionBuilder.SINGLETON.build(builder, returningToken);
 		}else if(parser instanceof StringExpression){
