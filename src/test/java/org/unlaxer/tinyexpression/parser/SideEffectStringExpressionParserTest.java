@@ -37,7 +37,7 @@ public class SideEffectStringExpressionParserTest extends ParserTestBase{
   @Test
   public void testFormula() {
     
-    SideEffectExpressionParser sideEffectExpressionParser = new SideEffectExpressionParser();
+    NumberSideEffectExpressionParser sideEffectExpressionParser = new  NumberSideEffectExpressionParser();
     
     String[] formulas= {
         "with side effect:jp.caulis.calc.Effects#foo('niku')",
@@ -61,7 +61,7 @@ public class SideEffectStringExpressionParserTest extends ParserTestBase{
   
   @Test
   public void testFormula2() {
-    SideEffectExpressionParser sideEffectExpressionParser = new SideEffectExpressionParser();
+    NumberSideEffectExpressionParser sideEffectExpressionParser = new NumberSideEffectExpressionParser();
     
     String[] formulas= {
         "with side effect:jp.caulis.calc.Effects#foo(1+3*4+len('foo'),1==3,'niku')",

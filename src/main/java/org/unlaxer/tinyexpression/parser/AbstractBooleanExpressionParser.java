@@ -35,24 +35,23 @@ public abstract class AbstractBooleanExpressionParser extends LazyChoice impleme
     
     Parsers parsers = new Parsers();
     
-    parsers.add(Parser.get(TrueTokenParser.class));
-    parsers.add(Parser.get(FalseTokenParser.class));
-    parsers.add(Parser.get(InTimeRangeParser.class));
-    parsers.add(Parser.get(SideEffectBooleanExpressionParser.class));
-    parsers.add(Parser.get(SideEffectStringToBooleanExpressionParser.class));
-    parsers.add(Parser.get(NotBooleanExpressionParser.class));
+    parsers.add(TrueTokenParser.class);
+    parsers.add(FalseTokenParser.class);
+    parsers.add(InTimeRangeParser.class);
+    parsers.add(BooleanSideEffectExpressionParser.class);
+    parsers.add(NotBooleanExpressionParser.class);
     parsers.add(new ParenthesesParser(Parser.get(BooleanClauseParser.class)));
-    parsers.add(Parser.get(IsPresentParser.class));
-    parsers.add(Parser.get(EqualEqualExpressionParser.class));
-    parsers.add(Parser.get(NotEqualExpressionParser.class));
-    parsers.add(Parser.get(GreaterOrEqualExpressionParser.class));
-    parsers.add(Parser.get(LessOrEqualExpressionParser.class));
-    parsers.add(Parser.get(GreaterExpressionParser.class));
-    parsers.add(Parser.get(LessExpressionParser.class));
-    parsers.add(Parser.get(BooleanExpressionOfStringParser.class));
-    parsers.add(Parser.get(BooleanVariableParser.class));
+    parsers.add(IsPresentParser.class);
+    parsers.add(EqualEqualExpressionParser.class);
+    parsers.add(NotEqualExpressionParser.class);
+    parsers.add(GreaterOrEqualExpressionParser.class);
+    parsers.add(LessOrEqualExpressionParser.class);
+    parsers.add(GreaterExpressionParser.class);
+    parsers.add(LessExpressionParser.class);
+    parsers.add(BooleanExpressionOfStringParser.class);
+    parsers.add(BooleanVariableParser.class);
     if(withNakedVariable) {
-      parsers.add(Parser.get(NakedVariableParser.class));
+      parsers.add(NakedVariableParser.class);
     }
     return parsers;
   }

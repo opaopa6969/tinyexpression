@@ -33,14 +33,14 @@ public abstract class AbstractFactorParser extends LazyChoice implements Express
   public List<Parser> getLazyParsers(boolean withNakedVariable) {
     Parsers parsers = new Parsers();
     
-    parsers.add(Parser.get(SideEffectExpressionParser.class));
-    parsers.add(Parser.get(IfExpressionParser.class));
-    parsers.add(Parser.get(MatchExpressionParser.class));
+    parsers.add(NumberSideEffectExpressionParser.class);
+    parsers.add(IfExpressionParser.class);
+    parsers.add(MatchExpressionParser.class);
 
-    parsers.add(Parser.get(NumberParser.class));
-    parsers.add(Parser.get(NumberVariableParser.class));
+    parsers.add(NumberParser.class);
+    parsers.add(NumberVariableParser.class);
     if(withNakedVariable) {
-      parsers.add(Parser.get(NakedVariableParser.class));
+      parsers.add(NakedVariableParser.class);
     }
     
     Class<? extends Parser> expresionParserClazz = withNakedVariable ? 
@@ -52,15 +52,15 @@ public abstract class AbstractFactorParser extends LazyChoice implements Express
             expresionParserClazz))
         
     );
-    parsers.add(Parser.get(SinParser.class));
-    parsers.add(Parser.get(CosParser.class));
-    parsers.add(Parser.get(TanParser.class));
-    parsers.add(Parser.get(SquareRootParser.class));
-    parsers.add(Parser.get(MinParser.class));
-    parsers.add(Parser.get(MaxParser.class));
-    parsers.add(Parser.get(RandomParser.class));
-    parsers.add(Parser.get(FactorOfStringParser.class));
-    parsers.add(Parser.get(ToNumParser.class));
+    parsers.add(SinParser.class);
+    parsers.add(CosParser.class);
+    parsers.add(TanParser.class);
+    parsers.add(SquareRootParser.class);
+    parsers.add(MinParser.class);
+    parsers.add(MaxParser.class);
+    parsers.add(RandomParser.class);
+    parsers.add(FactorOfStringParser.class);
+    parsers.add(ToNumParser.class);
     return parsers;
     
   }

@@ -22,8 +22,7 @@ public abstract class AbstractExpressionParser extends JavaStyleDelimitedLazyCha
       TermParser.class:
       StrictTypedTermParser.class;
     
-    parsers.add(Parser.get(
-        termParserClazz));
+    parsers.add(termParserClazz);
     
     parsers.add(new ZeroOrMore(
         new WhiteSpaceDelimitedChain(

@@ -3,12 +3,10 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.Token;
-import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
@@ -16,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
-public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
+public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
   
   private static final long serialVersionUID = 8228933717392969866L;
 	
@@ -30,15 +28,17 @@ public class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain impl
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
-        new Optional(Parser.get(ReturningParser.class)),
+//        new Optional(Parser.get(ReturningParser.class)),
+        typedReturningParser(),
         Parser.get(()->new WordParser(":")),
         Parser.get(JavaClassMethodParser.class),//2
         Parser.get(LeftParenthesisParser.class),
         Parser.get(SideEffectExpressionParameterParser.class),//4
         Parser.get(RightParenthesisParser.class)
       );
-
 	}
+	
+	abstract Parser typedReturningParser();
 
 //	@TokenExtractor
 //  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {
