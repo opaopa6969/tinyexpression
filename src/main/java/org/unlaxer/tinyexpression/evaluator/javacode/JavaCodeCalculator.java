@@ -90,7 +90,7 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 
 	@Override
 	public UnaryOperator<Token> tokenReduer() {
-		return ASTCreator.SINGLETON;
+		return OperatorOperandTreeCreator.SINGLETON;
 	}
 
 	String createJavaClass(String className, Token rootToken) {

@@ -5,6 +5,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
@@ -17,8 +18,6 @@ import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.SideEffectBooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.SideEffectStringToBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -114,13 +113,9 @@ public class BooleanBuilder implements CodeBuilder {
 
 			StringInBooleanClauseBuilder.SINGLETON.build(builder, token);
 
-		} else if (token.parser instanceof SideEffectBooleanExpressionParser) {
+		} else if (token.parser instanceof BooleanSideEffectExpressionParser) {
 			
-			SideEffectBooleanExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0));
-			
-		} else if (token.parser instanceof SideEffectStringToBooleanExpressionParser) {
-			
-			SideEffectStringToBooleanExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0));
+			SideEffectExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0));
 			
 		}else {
 			throw new IllegalArgumentException();

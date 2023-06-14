@@ -32,7 +32,7 @@ public class ExpressionBuilderTest {
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
 
-      rootToken = ASTCreator.SINGLETON.apply(rootToken);
+      rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
       
       ExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken);

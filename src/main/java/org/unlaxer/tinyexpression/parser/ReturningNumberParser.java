@@ -8,10 +8,11 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
-public class ReturningNumberParser extends JavaStyleDelimitedLazyChain {
+public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implements Returning {
 
   static final String word = "returning";
   static final WordParser wordParser = new WordParser(word);

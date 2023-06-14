@@ -10,6 +10,7 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
@@ -47,7 +48,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
   @TokenExtractor
   @VirtualTokenCreator
   public static Token getReturningClause(Token thisParserParsed, java.util.Optional<Token> firstParameter) {
-    return thisParserParsed.getChildWithParserAsOptional(ReturningParser.class)
+    return thisParserParsed.getChildAsOptional(token->token.parser instanceof Returning)
         .orElseGet(()->ReturningParser.getReturningParserWhenNotSpecifiedReturingClause(
             getReturningPosition(thisParserParsed),firstParameter));
   }

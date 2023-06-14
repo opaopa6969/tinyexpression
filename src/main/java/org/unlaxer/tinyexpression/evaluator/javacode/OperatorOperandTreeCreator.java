@@ -82,9 +82,9 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 
-public class ASTCreator implements UnaryOperator<Token>{
+public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 	
-	public static ASTCreator SINGLETON = new ASTCreator();
+	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
 
 	@Override
 	public Token apply(Token token) {
@@ -156,7 +156,9 @@ public class ASTCreator implements UnaryOperator<Token>{
 			return apply(DefaultCaseFactorParser.getExpression(token));
 
 		}else if(parser instanceof BooleanExpressionParser || 
-		    parser instanceof StrictTypedBooleanExpressionParser) {
+		    parser instanceof StrictTypedBooleanExpressionParser ||
+		    parser instanceof BooleanExpression
+		    ) {
 			
 			return booleanExpression(token);
 			

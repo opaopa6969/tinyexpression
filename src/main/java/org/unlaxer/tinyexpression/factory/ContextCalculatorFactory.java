@@ -10,7 +10,7 @@ import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.evaluator.javacode.ASTCreator;
+import org.unlaxer.tinyexpression.evaluator.javacode.OperatorOperandTreeCreator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ExpressionBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
@@ -70,7 +70,7 @@ public class ContextCalculatorFactory{
   
   
   static UnaryOperator<Token> tokenReduer(){
-    return ASTCreator.SINGLETON;
+    return OperatorOperandTreeCreator.SINGLETON;
   }
   
   static String createJavaClass(String className, Token rootToken) {

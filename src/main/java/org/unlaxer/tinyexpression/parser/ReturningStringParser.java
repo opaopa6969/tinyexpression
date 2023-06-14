@@ -5,9 +5,10 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class ReturningStringParser extends JavaStyleDelimitedLazyChain{
+public class ReturningStringParser extends JavaStyleDelimitedLazyChain implements Returning{
 
   @Override
   public List<Parser> getLazyParsers() {

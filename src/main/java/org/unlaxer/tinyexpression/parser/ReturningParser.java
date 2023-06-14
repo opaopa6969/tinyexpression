@@ -36,4 +36,6 @@ public class ReturningParser extends LazyChoice{
         .getReturningNumberParserWhenNotSpecifiedReturingClause(position,_sideEffectFirstParameter));
     return new Token(TokenKind.virtualTokenConsumed, children, Parser.get(ReturningParser.class),position);
   }
+  
+  public interface Returning{}
 }
