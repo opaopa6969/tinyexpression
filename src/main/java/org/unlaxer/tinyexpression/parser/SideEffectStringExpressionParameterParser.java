@@ -54,7 +54,7 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
 		return sideEffectExpressionParameterParserToken.filteredChildren.stream()
 			.filter(token->{
 				Parser parser = token.parser;
-				return parser instanceof Expression ||
+				return parser instanceof NumberExpression ||
 						parser instanceof BooleanExpression ||
 						parser instanceof StringExpression;
 			}).collect(Collectors.toList());

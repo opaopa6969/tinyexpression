@@ -11,10 +11,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
+import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringPlusParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
@@ -156,6 +158,40 @@ public class StringClauseBuilder {
 			Token parenthesesed = token.filteredChildren.get(0);
 			ExpressionOrLiteral evaluate = build(parenthesesed);
 			return ExpressionOrLiteral.expressionOf(evaluate.toString()+".toLowerCase()");
+		} else if(parser instanceof StringIfExpressionParser) {
+		  
+      Token booleanClause = token.filteredChildren.get(0);
+      Token factor1 = token.filteredChildren.get(1);
+      Token factor2 = token.filteredChildren.get(2);
+      
+      ExpressionOrLiteral factor1EOL = build(factor1);
+      ExpressionOrLiteral factor2EOL = build(factor2);
+
+      SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+      builder.setKind(Kind.Main);
+      
+      /*
+       * BooleanClauseOperator.SINGLETON.evaluate(calculateContext, booleanClause)?
+       * factor1: factor2
+       */
+
+      builder.append("(");
+
+      BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
+
+      builder.append(" ? ").n().incTab();
+      
+      builder.append(factor1EOL.toString());
+
+      builder.append(":").n();
+
+      builder.append(factor2EOL.toString());
+
+      builder.decTab();
+
+      builder.append(")");
+
+      return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
 		}
 		throw new IllegalArgumentException();
 	}

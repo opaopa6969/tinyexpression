@@ -9,7 +9,7 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implements Expression{
+public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
 	
 	private static final long serialVersionUID = -9078041069929701034L;
 

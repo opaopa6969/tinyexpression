@@ -14,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdent
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements Expression {
+public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression {
 
 	/**
 	 * 
@@ -69,7 +69,7 @@ public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimite
 			for (Token token : parameterTokens) {
 				Parser parser = token.parser;
 				parameterTypes[i] = 
-						parser instanceof Expression ? float.class :
+						parser instanceof NumberExpression ? float.class :
 						parser instanceof BooleanExpression ? boolean.class :
 						parser instanceof StringExpression ? String.class :
 						null;

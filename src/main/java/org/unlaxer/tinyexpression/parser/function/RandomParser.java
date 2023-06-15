@@ -6,9 +6,9 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.NoneChildCollectingParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.tinyexpression.parser.Expression;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 
-public class RandomParser extends NoneChildCollectingParser implements Expression{
+public class RandomParser extends NoneChildCollectingParser implements NumberExpression{
 
 	private static final long serialVersionUID = 7928239004297872018L;
 

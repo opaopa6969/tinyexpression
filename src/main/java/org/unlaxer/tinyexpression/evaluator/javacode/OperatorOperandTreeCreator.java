@@ -18,12 +18,12 @@ import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionOfStringParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.CaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.CaseFactorParser;
 import org.unlaxer.tinyexpression.parser.DefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.Expression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FactorParser;
@@ -40,6 +40,8 @@ import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterChoice;
@@ -59,6 +61,7 @@ import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
+import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
@@ -202,30 +205,39 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 	private Token stringFactor(Token token) {
 		Token operator = ChoiceInterface.choiced(token);
 		
-		if(operator.parser instanceof StringLiteralParser){
+		Parser parser = operator.parser;
+		
+		if(parser instanceof StringLiteralParser){
 			
 			return operator;
 			
-		}else if(operator.parser instanceof StringVariableParser|| 
-        operator.parser instanceof NakedVariableParser ){
+		}else if(parser instanceof StringVariableParser|| 
+        parser instanceof NakedVariableParser ){
 			
 			return operator;
 			
-		}else if(operator.parser instanceof ParenthesesParser){
+		}else if(parser instanceof ParenthesesParser){
 			
-			return apply(((ParenthesesParser)operator.parser).getInnerParserParsed(operator));
+			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
 
-		}else if(operator.parser instanceof TrimParser){
+		}else if(parser instanceof TrimParser){
 			
 			return operator.newCreatesOf(apply(TrimParser.getInnerParserParsed(operator)));
 
-		}else if(operator.parser instanceof ToUpperCaseParser){
+		}else if(parser instanceof ToUpperCaseParser){
 			
 			return operator.newCreatesOf(apply(ToUpperCaseParser.getInnerParserParsed(operator)));
 
-		}else if(operator.parser instanceof ToLowerCaseParser){
+		}else if(parser instanceof ToLowerCaseParser){
 			
 			return operator.newCreatesOf(apply(ToLowerCaseParser.getInnerParserParsed(operator)));
+
+		}else if(parser instanceof StringIfExpressionParser) {
+      return operator.newCreatesOf(
+          apply(IfExpressionParser.getBooleanClause(operator)),
+          apply(IfExpressionParser.getThenExpression(operator , StringExpression.class)),
+          apply(IfExpressionParser.getElseExpression(operator , StringExpression.class))
+        );
 
 		}
 		throw new IllegalArgumentException();
@@ -234,73 +246,74 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 	private Token factor(Token token) {
 		
 		Token operator = ChoiceInterface.choiced(token);
+		Parser parser = operator.parser;
 		
-		if(operator.parser instanceof NumberParser){
+		if(parser instanceof NumberParser){
 			
 			return clearChildren(operator);
 			
-		}else if(operator.parser instanceof NakedVariableParser ){
+		}else if(parser instanceof NakedVariableParser ){
 			
 			return clearChildren(operator);
 			
-		}else if(operator.parser instanceof NumberVariableParser){
+		}else if(parser instanceof NumberVariableParser){
 		  
 		  return operator;
 			
-		}else if(operator.parser instanceof IfExpressionParser){
+		}else if(parser instanceof NumberIfExpressionParser){
 			
 			return operator.newCreatesOf(
 				apply(IfExpressionParser.getBooleanClause(operator)),
-				apply(IfExpressionParser.getThenExpression(operator)),
-				apply(IfExpressionParser.getElseExpression(operator))
+				apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class)),
+				apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class))
 			);
 			
-		}else if(operator.parser instanceof MatchExpressionParser){
+		}else if(parser instanceof MatchExpressionParser){
 			
 			return operator.newCreatesOf(
 				apply(MatchExpressionParser.getCaseExpression(operator)),
 				apply(MatchExpressionParser.getDefaultExpression(operator))
 			);
 			
-		}else if(operator.parser instanceof ParenthesesParser){
+		}else if(parser instanceof ParenthesesParser){
 			
-			return apply(((ParenthesesParser)operator.parser).getInnerParserParsed(operator));
+			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
 			
-		}else if(operator.parser instanceof SinParser){
+		}else if(parser instanceof SinParser){
 			
 			return operator.newCreatesOf(apply(SinParser.getExpression(operator)));
 			
-		}else if(operator.parser instanceof CosParser){
+		}else if(parser instanceof CosParser){
 			
 			return operator.newCreatesOf(apply(CosParser.getExpression(operator)));
 			
-		}else if(operator.parser instanceof TanParser){
+		}else if(parser instanceof TanParser){
 			
 			return operator.newCreatesOf(apply(TanParser.getExpression(operator)));
 			
-		}else if(operator.parser instanceof SquareRootParser){
+		}else if(parser instanceof SquareRootParser){
 			
 			return operator.newCreatesOf(apply(SquareRootParser.getExpression(operator)));
 			
-		}else if(operator.parser instanceof MinParser){
+		}else if(parser instanceof MinParser){
 			
 			return operator.newCreatesOf(
 				apply(MinParser.getLeftExpression(operator)),
 				apply(MinParser.getRightExpression(operator))
 			);
 
-		}else if(operator.parser instanceof MaxParser){
+		}else if(parser instanceof MaxParser){
 			
 			return operator.newCreatesOf(
 				apply(MaxParser.getLeftExpression(operator)),
 				apply(MaxParser.getRightExpression(operator))
 			);
 
-		}else if(operator.parser instanceof RandomParser){
+		}else if(parser instanceof RandomParser){
 			
 			return operator;
 
-		}else if(operator.parser instanceof FactorOfStringParser){
+		}else if(parser instanceof FactorOfStringParser){
 			
 			Token choiceToken = operator.filteredChildren.get(0);
 			
@@ -312,13 +325,13 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 //				
 //				return choiceToken;
 			}
-		} else if (operator.parser instanceof ToNumParser) {
+		} else if (parser instanceof ToNumParser) {
 			return operator.newCreatesOf(
 					apply(ToNumParser.getLeftExpression(operator)),
 					apply(ToNumParser.getRightExpression(operator))
 			);
 			
-		}else if(operator.parser instanceof SideEffectExpressionParser){
+		}else if(parser instanceof SideEffectExpressionParser){
 		  
 		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
 		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
@@ -351,7 +364,7 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
     List<Token> flatten = returningClause.flatten(SearchFirst.Breadth);
     Token expressionToken = flatten.stream()
       .filter(token->{
-        return (token.parser instanceof Expression ||
+        return (token.parser instanceof NumberExpression ||
             token.parser instanceof BooleanExpression ||
             token.parser instanceof StringExpression
             );
@@ -447,7 +460,12 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 				apply(LessExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof BooleanExpressionOfStringParser) {
+    }else if(parser instanceof BooleanIfExpressionParser) {
+      
+ asdsa
+      
+      
+    }else if(parser instanceof BooleanExpressionOfStringParser) {
 			
 			Token operatorWithString = ChoiceInterface.choiced(operator);
 			

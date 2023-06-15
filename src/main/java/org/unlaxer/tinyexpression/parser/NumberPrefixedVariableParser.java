@@ -8,7 +8,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements Expression {
+public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements NumberExpression {
 
   private static final long serialVersionUID = -600501238210309122L;
 

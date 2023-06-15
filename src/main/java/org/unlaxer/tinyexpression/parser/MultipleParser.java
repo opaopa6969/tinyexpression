@@ -3,7 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.StaticParser;
 import org.unlaxer.parser.elementary.SingleCharacterParser;
 
-public class MultipleParser extends SingleCharacterParser implements StaticParser , Expression{
+public class MultipleParser extends SingleCharacterParser implements StaticParser , NumberExpression{
 
 	private static final long serialVersionUID = -5558359079298083248L;
 	

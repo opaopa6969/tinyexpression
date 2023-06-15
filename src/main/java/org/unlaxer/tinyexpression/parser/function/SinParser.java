@@ -8,13 +8,13 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.tinyexpression.parser.Expression;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 
 
-public class SinParser extends JavaStyleDelimitedLazyChain implements Expression {
+public class SinParser extends JavaStyleDelimitedLazyChain implements NumberExpression {
 
 	private static final long serialVersionUID = -3850642715787195734L;
 

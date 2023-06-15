@@ -32,12 +32,17 @@ public class SimpleJavaCodeBuilder {
 	
 	public SimpleJavaCodeBuilder setKind(Kind kind) {
 		this.kind = kind;
-		builder = kind == Kind.Main ?
-				mainBuilder : kind == Kind.Function ?
-				functionBuilder : kind == Kind.Calculation ?
-						calcBuilder : fieldBuilder;
+		builder = getBuilder(kind);
 		return this;
 	}
+
+	public StringBuilder getBuilder(Kind kind) {
+	  return kind == Kind.Main ?
+	      mainBuilder : kind == Kind.Function ?
+	          functionBuilder : kind == Kind.Calculation ?
+	              calcBuilder : fieldBuilder;
+	}
+
 	
 	public SimpleJavaCodeBuilder incTab() {
 		++index;

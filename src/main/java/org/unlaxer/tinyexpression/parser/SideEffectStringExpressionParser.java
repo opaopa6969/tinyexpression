@@ -14,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChain
-    implements Expression {
+    implements NumberExpression {
 
   private static final long serialVersionUID = 6172097671148475538L;
 
@@ -78,7 +78,7 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
       int i = 2;
       for (Token token : parameterTokens) {
         Parser parser = token.parser;
-        parameterTypes[i] = parser instanceof Expression ? float.class
+        parameterTypes[i] = parser instanceof NumberExpression ? float.class
             : parser instanceof BooleanExpression ? boolean.class
                 : parser instanceof StringExpression ? String.class : null;
         i++;

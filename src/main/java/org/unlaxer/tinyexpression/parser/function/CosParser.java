@@ -6,14 +6,14 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.tinyexpression.parser.Expression;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 
 
-public class CosParser extends JavaStyleNamedParenthesesParser implements Expression{
+public class CosParser extends JavaStyleNamedParenthesesParser implements NumberExpression{
 
 	private static final long serialVersionUID = -7555523412735694127L;
 

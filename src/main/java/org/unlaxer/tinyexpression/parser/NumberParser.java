@@ -16,7 +16,7 @@ import org.unlaxer.parser.elementary.ExponentParser;
 import org.unlaxer.parser.elementary.SignParser;
 import org.unlaxer.parser.posix.DigitParser;
 
-public class NumberParser extends LazyChain implements StaticParser , Expression{
+public class NumberParser extends LazyChain implements StaticParser , NumberExpression{
 	
 	private static final long serialVersionUID = -7768486767795358533L;
 	

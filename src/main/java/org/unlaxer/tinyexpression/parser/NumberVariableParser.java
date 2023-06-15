@@ -9,7 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class NumberVariableParser extends LazyChoice implements VariableParser , Expression{
+public class NumberVariableParser extends LazyChoice implements VariableParser , NumberExpression{
 
   private static final long serialVersionUID = -6048451001170410L;
 

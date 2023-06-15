@@ -14,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 
-public abstract class AbstractFactorParser extends LazyChoice implements Expression  , VariableTypeSelectable{
+public abstract class AbstractFactorParser extends LazyChoice implements NumberExpression  , VariableTypeSelectable{
 	
 	private static final long serialVersionUID = 3521391436954908685L;
 	
@@ -34,7 +34,7 @@ public abstract class AbstractFactorParser extends LazyChoice implements Express
     Parsers parsers = new Parsers();
     
     parsers.add(NumberSideEffectExpressionParser.class);
-    parsers.add(IfExpressionParser.class);
+    parsers.add(NumberIfExpressionParser.class);
     parsers.add(MatchExpressionParser.class);
 
     parsers.add(NumberParser.class);

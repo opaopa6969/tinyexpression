@@ -9,12 +9,12 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.Expression;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.ExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class MinParser extends JavaStyleDelimitedLazyChain implements Expression{
+public class MinParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
 
 	private static final long serialVersionUID = 3309794696125275646L;
 

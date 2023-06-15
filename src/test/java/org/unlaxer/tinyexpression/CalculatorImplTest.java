@@ -781,4 +781,45 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         "external /*comment */ returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Dr.house')",
         new BigDecimal(12*300000*2)));
   }
+  
+  @Test
+  public void testStringIfExpression() {
+    setLevel(OutputLevel.detail);
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    assertTrue(calc(context,
+        "if('niku' == if(1==1){'niku'}else{'sushi'}){100}else{0}",
+        new BigDecimal(100)));
+    
+    assertTrue(calc(context,
+        "if('niku' == if(1==1){'nikuniku'[0:4]}else{'sushi'}){100}else{0}",
+        new BigDecimal(100)));
+
+    assertTrue(calc(context,
+        "if('niku' == if(1==1){'nikuniku'[0:3]}else{'sushi'}){100}else{0}",
+        new BigDecimal(0)));
+    
+    assertTrue(calc(context,
+        "if('niku' == if(1==0){'niku'}else{'sushi'}){100}else{0}",
+        new BigDecimal(0)));
+
+  }
+  
+  @Test
+  public void testBooleanIfExpression() {
+    setLevel(OutputLevel.detail);
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    assertTrue(calc(context,
+        "if((1==1) == if(1==1){'niku'=='niku'}else{'niku'=='sushi'}){100}else{0}",
+        new BigDecimal(100)));
+    
+    assertTrue(calc(context,
+        "if((1==1) == if(1==1){'nikuniku'[0:4]=='niku'}else{1*3==4}){100}else{0}",
+        new BigDecimal(100)));
+
+    assertTrue(calc(context,
+        "if((10==10) == if(1==1){false}else{true}){100}else{0}",
+        new BigDecimal(0)));
+  }
 }

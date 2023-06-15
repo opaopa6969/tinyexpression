@@ -15,7 +15,6 @@ public abstract class AbstractBooleanExpressionParser extends LazyChoice impleme
 		super();
 	}
 	
-	@SuppressWarnings("deprecation")
   @Override
   public List<Parser> getLazyParsers(boolean withNakedVariable) {
     
@@ -39,6 +38,7 @@ public abstract class AbstractBooleanExpressionParser extends LazyChoice impleme
     parsers.add(FalseTokenParser.class);
     parsers.add(InTimeRangeParser.class);
     parsers.add(BooleanSideEffectExpressionParser.class);
+    parsers.add(BooleanIfExpressionParser.class);
     parsers.add(NotBooleanExpressionParser.class);
     parsers.add(new ParenthesesParser(Parser.get(BooleanClauseParser.class)));
     parsers.add(IsPresentParser.class);
