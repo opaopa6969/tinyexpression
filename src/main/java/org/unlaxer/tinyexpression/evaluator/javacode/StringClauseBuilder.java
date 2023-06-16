@@ -12,8 +12,10 @@ import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
+import org.unlaxer.tinyexpression.parser.StringExpression;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
@@ -160,9 +162,9 @@ public class StringClauseBuilder {
 			return ExpressionOrLiteral.expressionOf(evaluate.toString()+".toLowerCase()");
 		} else if(parser instanceof StringIfExpressionParser) {
 		  
-      Token booleanClause = token.filteredChildren.get(0);
-      Token factor1 = token.filteredChildren.get(1);
-      Token factor2 = token.filteredChildren.get(2);
+      Token booleanClause = IfExpressionParser.getBooleanClause(token);
+      Token factor1 = IfExpressionParser.getThenExpression(token , StringExpression.class , booleanClause);
+      Token factor2 = IfExpressionParser.getElseExpression(token , StringExpression.class , booleanClause);
       
       ExpressionOrLiteral factor1EOL = build(factor1);
       ExpressionOrLiteral factor2EOL = build(factor2);

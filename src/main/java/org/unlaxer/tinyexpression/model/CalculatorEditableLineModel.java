@@ -217,7 +217,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	@Override
 	public Optional<Token> selectEnclosure(EnclosureDirection enclosureDirection) {
-		Optional<Token> rootToken = getCurrent().calculateResult.token;
+		Optional<Token> rootToken = getCurrent().calculateResult.tokenAst;
 		if(false == rootToken.isPresent()){
 			return Optional.empty();
 		}

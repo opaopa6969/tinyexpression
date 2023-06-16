@@ -19,11 +19,11 @@ public interface Calculator<T> {
 			Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
 			T answer = getCalculatorOperator().evaluate(calculateContext,rootToken);
 				
-			return new CalculateResult(parseContext , parsed, Optional.of(toBigDecimal(answer)));
+			return new CalculateResult(parseContext , parsed, Optional.of(toBigDecimal(answer)),rootToken);
 			
 		}catch (Exception e) {
 			Errors errors = new Errors(e);
-			return new CalculateResult(parseContext , parsed, Optional.empty() , errors);
+			return new CalculateResult(parseContext , parsed, Optional.empty() , errors,null);
 		}finally{
 			parseContext.close();
 		}
@@ -41,5 +41,5 @@ public interface Calculator<T> {
 		return UnaryOperator.identity();
 	}
 
-	
+	public String javaCode();	
 }

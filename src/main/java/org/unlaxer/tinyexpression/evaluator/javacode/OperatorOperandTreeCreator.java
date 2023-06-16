@@ -84,8 +84,11 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.util.annotation.TokenReConstructor;
+import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterface;
 
-public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
+@TokenReConstructor
+public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	
 	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
 
@@ -233,10 +236,11 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 			return operator.newCreatesOf(apply(ToLowerCaseParser.getInnerParserParsed(operator)));
 
 		}else if(parser instanceof StringIfExpressionParser) {
+      Token booleanClause = IfExpressionParser.getBooleanClause(operator);
       return operator.newCreatesOf(
-          apply(IfExpressionParser.getBooleanClause(operator)),
-          apply(IfExpressionParser.getThenExpression(operator , StringExpression.class)),
-          apply(IfExpressionParser.getElseExpression(operator , StringExpression.class))
+          apply(booleanClause),
+          apply(IfExpressionParser.getThenExpression(operator , StringExpression.class , booleanClause)),
+          apply(IfExpressionParser.getElseExpression(operator , StringExpression.class , booleanClause))
         );
 
 		}
@@ -262,10 +266,11 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 			
 		}else if(parser instanceof NumberIfExpressionParser){
 			
-			return operator.newCreatesOf(
-				apply(IfExpressionParser.getBooleanClause(operator)),
-				apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class)),
-				apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class))
+			Token booleanClause = IfExpressionParser.getBooleanClause(operator);
+      return operator.newCreatesOf(
+				apply(booleanClause),
+				apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanClause)),
+				apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanClause))
 			);
 			
 		}else if(parser instanceof MatchExpressionParser){
@@ -462,8 +467,12 @@ public class OperatorOperandTreeCreator implements UnaryOperator<Token>{
 
     }else if(parser instanceof BooleanIfExpressionParser) {
       
- asdsa
-      
+      Token booleanClause = IfExpressionParser.getBooleanClause(operator);
+      return operator.newCreatesOf(
+          apply(booleanClause),
+          apply(IfExpressionParser.getThenExpression(operator , BooleanExpression.class , booleanClause)),
+          apply(IfExpressionParser.getElseExpression(operator , BooleanExpression.class , booleanClause))
+        );
       
     }else if(parser instanceof BooleanExpressionOfStringParser) {
 			

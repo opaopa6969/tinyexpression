@@ -65,7 +65,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		Parser parser = returningToken.parser;
 		TokenPrinter.output(returningToken, System.out);
 		if(parser instanceof NumberExpression) {
-		  ExpressionBuilder.SINGLETON.build(builder, returningToken);
+		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken);
 		}else if(parser instanceof StringExpression){
       StringExpressionBuilder.SINGLETON.build(builder, returningToken);
 		}else {
@@ -99,7 +99,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 				if(parser instanceof NakedVariableParser) {
 				  NakedVariableBuilder.SINGLETON.build(builder, token);
 				}else if(parser instanceof NumberExpression) {
-					ExpressionBuilder.SINGLETON.build(builder, token);
+					NumberExpressionBuilder.SINGLETON.build(builder, token);
 				}else if(parser instanceof BooleanExpression) {
 					BooleanClauseBuilder.SINGLETON.build(builder, token);
 				}else if (parser instanceof StringExpression) {

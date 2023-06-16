@@ -82,7 +82,7 @@ public class SideEffectStringExpressionBuilder implements CodeBuilder {
 				
 				Parser parser = token.parser;
 				if(parser instanceof NumberExpression) {
-					ExpressionBuilder.SINGLETON.build(builder, token);
+					NumberExpressionBuilder.SINGLETON.build(builder, token);
 				}else if(parser instanceof BooleanExpression) {
 					BooleanClauseBuilder.SINGLETON.build(builder, token);
 				}else if (parser instanceof StringExpression) {

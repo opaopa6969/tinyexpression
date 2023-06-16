@@ -20,7 +20,7 @@ public class BinaryConditionBuilder implements CodeBuilder{
 		Token factor1 = token.filteredChildren.get(0);
 		Token factor2 = token.filteredChildren.get(1);
 		
-		ExpressionBuilder.SINGLETON.build(builder, factor1);
+		NumberExpressionBuilder.SINGLETON.build(builder, factor1);
 		
 		if(token.parser instanceof EqualEqualExpressionParser) {
 			
@@ -48,7 +48,7 @@ public class BinaryConditionBuilder implements CodeBuilder{
 		}else {
 			throw new IllegalArgumentException();
 		}
-		ExpressionBuilder.SINGLETON.build(builder, factor2);
+		NumberExpressionBuilder.SINGLETON.build(builder, factor2);
 
 	}
 	

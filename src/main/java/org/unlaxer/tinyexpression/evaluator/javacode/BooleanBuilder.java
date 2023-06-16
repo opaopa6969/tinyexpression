@@ -5,12 +5,15 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
 import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
@@ -26,7 +29,6 @@ import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
 
-@SuppressWarnings("deprecation")
 public class BooleanBuilder implements CodeBuilder {
 	
 	public static final BooleanBuilder SINGLETON = new BooleanBuilder();
@@ -97,7 +99,7 @@ public class BooleanBuilder implements CodeBuilder {
 
 			StringBooleanEqualClauseBuilder.SINGLETON.build(builder, token);
 
-		} else if (token.parser instanceof StringNotEqualsExpressionParser) {
+		} else if (parser instanceof StringNotEqualsExpressionParser) {
 
 			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token);
 
@@ -109,16 +111,40 @@ public class BooleanBuilder implements CodeBuilder {
 			
 			StringMethodClauseBuilder.SINGLETON.build(builder, token);
 			
-		} else if (token.parser instanceof StringInParser) {
+		} else if (parser instanceof StringInParser) {
 
 			StringInBooleanClauseBuilder.SINGLETON.build(builder, token);
 
-		} else if (token.parser instanceof BooleanSideEffectExpressionParser) {
+		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
 			SideEffectExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0));
 			
+		}else if (parser instanceof BooleanIfExpressionParser) {
+		  
+      Token booleanClause = IfExpressionParser.getBooleanClause(token);
+      Token factor1 = IfExpressionParser.getThenExpression(token , BooleanExpression.class , booleanClause);
+      Token factor2 = IfExpressionParser.getElseExpression(token , BooleanExpression.class , booleanClause);
+
+      /*
+       * BooleanClauseOperator.SINGLETON.evaluate(calculateContext, booleanClause)?
+       * factor1: factor2
+       */
+
+      builder.append("(");
+
+      BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
+
+      builder.append(" ? ").n().incTab();
+      build(builder, factor1);
+
+      builder.append(":").n();
+      build(builder, factor2);
+
+      builder.decTab();
+
+      builder.append(")");
 		}else {
-			throw new IllegalArgumentException();
+		  throw new IllegalArgumentException();
 		}
 	}
 }

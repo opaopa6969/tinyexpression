@@ -10,11 +10,14 @@ import java.math.RoundingMode;
 
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
+import org.unlaxer.TestResult;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.formatter.Formatter;
+import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
 
 import net.arnx.jsonic.JSON;
@@ -227,6 +230,41 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	}
 
 	
+	ResultAndMatch calcWithResult(CalculationContext calculateContext , String formula , BigDecimal expected){
+	    
+	    Calculator<T> calculator = preConstructedCalculator(formula);
+	    testAllMatch(calculator.getParser(), formula);
+	    CalculateResult calculateResult = calculator.calculate(calculateContext , formula);
+	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
+	    BigDecimal x = calculateResult.answer.get();
+	    System.out.format(" %s = %s \n" , formula , x.toString());
+	    boolean match = 
+	      expected.compareTo(x) ==0 ||
+	      // this is work around for rounding error on float calculation
+	      expected.subtract(x).abs().floatValue() < 0.01;
+
+	    if(false == match) {
+	      System.err.println("answer = " + x);
+	      System.err.format("formatted error formula:\n  %s \n" , Formatter.format(formula));
+	      System.err.println(JSON.encode(calculateContext,true));
+	      System.err.println(calculator.javaCode());
+	    }
+	    
+	    return new ResultAndMatch(match, calculateResult,x);
+	  }
+	 
+	public static class ResultAndMatch{
+	  public final boolean match;
+	  public final CalculateResult calculateResult;
+	  public final BigDecimal answer;
+    public ResultAndMatch(boolean match, CalculateResult calculateResult, BigDecimal answer) {
+      super();
+      this.match = match;
+      this.calculateResult = calculateResult;
+      this.answer = answer;
+    }
+	}
+
 	
 	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected){
 		
@@ -236,10 +274,18 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 		BigDecimal x = calculateResult.answer.get();
 		System.out.format(" %s = %s \n" , formula , x.toString());
-		return 
+		boolean match = 
 			expected.compareTo(x) ==0 ||
 			// this is work around for rounding error on float calculation
 			expected.subtract(x).abs().floatValue() < 0.01;
+
+		if(false == match) {
+		  System.err.println("answer = " + x);
+		  System.err.format("formatted error formula:\n  %s \n" , Formatter.format(formula));
+		  System.err.println(JSON.encode(calculateContext,true));
+      System.err.println(calculator.javaCode());
+		}
+		return match;
 	}
 	
 	void compileOnly(CalculationContext calculateContext , String formula){
@@ -319,8 +365,8 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		assertTrue(result.success);
 		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed));
 		assertEquals("", result.parseContext.getRemain(TokenKind.consumed));
-		assertTrue(result.token.isPresent());
-		Token token = result.token.get();
+		assertTrue(result.tokenAst.isPresent());
+		Token token = result.tokenAst.get();
 		TokenPrinter.output(token,System.out);
 		
 	}
@@ -628,7 +674,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 			{"POST_PROCESS_OriginalSpec_totalScore", "$calculated_OriginalSpec_AnyBlackList+$calculated_OriginalSpec_SuspiciousProvider+$calculated_OriginalSpec_OtherProvider+if(isPresent($calculated_UnknownUsingEmulator)){$calculated_UnknownUsingEmulator}else{0}+if(isPresent($calculated_Jailbreak)){$calculated_Jailbreak}else{0}+$calculated_OriginalSpec_OverseaAccess+$calculated_OriginalSpec_NotJapaneseLanguage+$calculated_OriginalSpec_MultipleAccess"},
 			{"POST_PROCESS_OriginalSpec_ChineseLanguageOrNotJapanTimezone", "if((isPresent($priorityLanguage)&$priorityLanguage==\"zh-CN\")|(isPresent($timezone)&$timezone!=\"+9\")){1}else{0}"},
 			{"POST_PROCESS_OriginalSpec_RiskyCountry", "if(isPresent($country)&$country.in(\"korea-democratic-peoples-republic-of\",\"iran\",\"iran-islamic-republic-of\",\"cuba\",\"syria\",\"syrian-arab-republic\",\"sudan\")){1}else{0}"},
-			{"POST_PROCESS_RELATIVE_SUSPICIOUS", "if($ForcedRelativeSuspiciousValue1){1}else{if($ForcedRelativeSuspiciousValue5){5}else{if(($POST_PROCESS_OriginalSpec_RiskyCountry>0.0)|(isPresent($calculated_TorNode)&$calculated_TorNode>0.0)|(isPresent($calculated_BrowserTypeIsTool)&$calculated_BrowserTypeIsTool>0.0)){5}else{if(($POST_PROCESS_OriginalSpec_ChineseLanguageOrNotJapanTimezone>0.0)){4}else{if($default_RelativeSuspiciousValue==5){4}else{$default_RelativeSuspiciousValue}}}}}"},
+			{"POST_PROCESS_RELATIVE_SUSPICIOUS", "if($ForcedRelativeSuspiciousValue1){1919}else{if($ForcedRelativeSuspiciousValue5){5}else{if(($POST_PROCESS_OriginalSpec_RiskyCountry>0.0)|(isPresent($calculated_TorNode)&$calculated_TorNode>0.0)|(isPresent($calculated_BrowserTypeIsTool)&$calculated_BrowserTypeIsTool>0.0)){5}else{if(($POST_PROCESS_OriginalSpec_ChineseLanguageOrNotJapanTimezone>0.0)){4}else{if($default_RelativeSuspiciousValue==5){4}else{$default_RelativeSuspiciousValue}}}}}"},
 			{"POST_PROCESS_OriginalSpec_OverseaAccess", "if(isPresent($country)&$country!=\"japan\"){1}else{0}"},
 			{"POST_PROCESS_OriginalSpec_MultiUserAccessToOneAccount", "if(isPresent($cookieCountGroupedByUser)&$cookieCountGroupedByUser>=10.0){1}else{0}"},
 			{"POST_PROCESS_OriginalSpec_OneUserAccessToMultiAccount", "if(isPresent($userCountGroupedByCookieOnThisSite)&$userCountGroupedByCookieOnThisSite>=5){1}else{0}"},
@@ -821,5 +867,28 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     assertTrue(calc(context,
         "if((10==10) == if(1==1){false}else{true}){100}else{0}",
         new BigDecimal(0)));
+  }
+  
+  @Test
+  public void testIfExpression() {
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    String formula = "if($ForcedRelativeSuspiciousValue1){1919}else{if($ForcedRelativeSuspiciousValue5){5}else{if(($POST_PROCESS_OriginalSpec_RiskyCountry>0.0)|(isPresent($calculated_TorNode)&$calculated_TorNode>0.0)|(isPresent($calculated_BrowserTypeIsTool)&$calculated_BrowserTypeIsTool>0.0)){5}else{if(($POST_PROCESS_OriginalSpec_ChineseLanguageOrNotJapanTimezone>0.0)){4}else{if($default_RelativeSuspiciousValue==5){4}else{$default_RelativeSuspiciousValue}}}}}";
+
+    NumberIfExpressionParser numberIfExpressionParser = new NumberIfExpressionParser();
+    TestResult testAllMatch = testAllMatch(numberIfExpressionParser, formula);
+    String string = TokenPrinter.get(testAllMatch.parsed.getRootToken(true));
+    System.out.println(string);
+    
+    ResultAndMatch calcWithResult = calcWithResult(context, formula, new BigDecimal("0"));
+    
+    calcWithResult.calculateResult.operatorOperandTreeToken
+      .map(TokenPrinter::get)
+      .ifPresent(System.out::println);;
+    
+    assertTrue(calc(context,
+        formula,
+        new BigDecimal("0")));
+    
   }
 }

@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -30,11 +29,13 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	TokenBaseOperator<CalculationContext, Float> instance;
 
   public JavaCodeCalculator(Name name, String formula) {
-    this(name,formula,null);
+    this(name,formula,null,true);
   }
 
-  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory) {
-    this(formula , name.getName()+"_CalculatorClass"  + Math.abs(new Random().nextLong()) , outputRootDirectory);
+  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize) {
+    this(formula , 
+        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
+        outputRootDirectory);
   }
 
   public JavaCodeCalculator(String formula , String className) {
@@ -120,7 +121,7 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 			.line("float answer = (float) ")
 			.n();
 
-		ExpressionBuilder.SINGLETON.build(builder, rootToken);
+		NumberExpressionBuilder.SINGLETON.build(builder, rootToken);
 
 		builder
 			.setKind(Kind.Calculation)
@@ -140,5 +141,10 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	public interface CodeBuilder {
 		public void build(SimpleJavaCodeBuilder builder, Token token);
 	}
+
+  @Override
+  public String javaCode() {
+    return javaCode;
+  }
 
 }

@@ -66,7 +66,7 @@ public abstract class TokenTest {
 		
 		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator().calculate(context, formula);
-		Token token = result.token.get();
+		Token token = result.tokenAst.get();
 		EnclosureDirection outer = EnclosureDirection.Outer;
 		EnclosureDirection inner = EnclosureDirection.Inner;
 		
@@ -127,7 +127,7 @@ public abstract class TokenTest {
 		
 		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator().calculate(context, formula);
-		Token token = result.token.get();
+		Token token = result.tokenAst.get();
 		EnclosureDirection outer = EnclosureDirection.Outer;
 		
 		//expand

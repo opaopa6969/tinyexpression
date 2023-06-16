@@ -182,7 +182,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
       .line("float answer = (float) ")
       .n();
 
-    ExpressionBuilder.SINGLETON.build(builder, rootToken);
+    NumberExpressionBuilder.SINGLETON.build(builder, rootToken);
 
     builder
       .setKind(Kind.Calculation)
@@ -203,4 +203,10 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
   public interface CodeBuilder {
     public void build(SimpleBuilder builder, Token token);
   }
+  
+  @Override
+  public String javaCode() {
+    return javaCode;
+  }
+
 }

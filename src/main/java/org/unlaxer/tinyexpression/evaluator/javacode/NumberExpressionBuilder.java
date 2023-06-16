@@ -14,6 +14,8 @@ import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
@@ -29,7 +31,7 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 
-public class ExpressionBuilder implements CodeBuilder {
+public class NumberExpressionBuilder implements CodeBuilder {
 
 	public static class CaseExpressionBuilder implements CodeBuilder{
 
@@ -47,7 +49,7 @@ public class ExpressionBuilder implements CodeBuilder {
 				Token expression = caseFactor.filteredChildren.get(1);
 				BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
 				builder.append(" ? ");
-				ExpressionBuilder.SINGLETON.build(builder, expression);
+				NumberExpressionBuilder.SINGLETON.build(builder, expression);
 				builder
 					.append(":")
 					.n();
@@ -55,7 +57,7 @@ public class ExpressionBuilder implements CodeBuilder {
 		}
 	}
 	
-	public static ExpressionBuilder SINGLETON = new ExpressionBuilder();
+	public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
 
 	public void build(SimpleJavaCodeBuilder builder, Token token) {
 
@@ -108,11 +110,11 @@ public class ExpressionBuilder implements CodeBuilder {
 
 			builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
 
-		} else if (parser instanceof IfExpressionParser) {
+		} else if (parser instanceof NumberIfExpressionParser) {
 
-			Token booleanClause = token.filteredChildren.get(0);
-			Token factor1 = token.filteredChildren.get(1);
-			Token factor2 = token.filteredChildren.get(2);
+			Token booleanClause = IfExpressionParser.getBooleanClause(token);
+			Token factor1 = IfExpressionParser.getThenExpression(token , NumberExpression.class , booleanClause);
+			Token factor2 = IfExpressionParser.getElseExpression(token , NumberExpression.class , booleanClause);
 
 			/*
 			 * BooleanClauseOperator.SINGLETON.evaluate(calculateContext, booleanClause)?

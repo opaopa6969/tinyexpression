@@ -13,6 +13,8 @@ import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	
@@ -74,19 +76,28 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	public abstract Class<? extends Parser> strictTypedReturning(); 
   public abstract Class<? extends Parser> nonStrictTypedReturning(); 
 	
+  @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
 	public static Token getBooleanClause(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(BooleanClauseParser.class);//2
+		return thisParserParsed.getChild(
+		    Token.parserImplements(BooleanExpression.class , VariableParser.class)
+		);
 	}
 	
+  @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
 	public static Token getThenExpression(Token thisParserParsed , 
-      Class<? extends ExpressionInterface> expressionInterfaceClass) {
-    Predicate<Token> expressionFilter = Token.parserImplements(expressionInterfaceClass);
+      Class<? extends ExpressionInterface> expressionInterfaceClass , Token conditionToken) {
+    Predicate<Token> expressionFilter = 
+        Token.parserImplements(expressionInterfaceClass, VariableParser.class)
+          .and(Token.afterToken(conditionToken));
     return thisParserParsed.getChildrenAsList(expressionFilter).get(0);
 	}
 	
+  @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
 	public static Token getElseExpression(Token thisParserParsed , 
-	    Class<? extends ExpressionInterface> expressionInterfaceClass) {
-	  Predicate<Token> expressionFilter = Token.parserImplements(expressionInterfaceClass);
+	    Class<? extends ExpressionInterface> expressionInterfaceClass, Token conditionToken) {
+	  Predicate<Token> expressionFilter = 
+	      Token.parserImplements(expressionInterfaceClass, VariableParser.class)
+  	      .and(Token.afterToken(conditionToken));
 		return thisParserParsed.getChildrenAsList(expressionFilter).get(1);
 	}
 	

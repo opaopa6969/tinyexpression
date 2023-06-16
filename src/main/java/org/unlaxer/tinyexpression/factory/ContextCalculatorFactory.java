@@ -11,7 +11,7 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.OperatorOperandTreeCreator;
-import org.unlaxer.tinyexpression.evaluator.javacode.ExpressionBuilder;
+import org.unlaxer.tinyexpression.evaluator.javacode.NumberExpressionBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
@@ -97,7 +97,7 @@ public class ContextCalculatorFactory{
     .line("float answer = (float) ")
     .n();
     
-    ExpressionBuilder.SINGLETON.build(builder, rootToken);
+    NumberExpressionBuilder.SINGLETON.build(builder, rootToken);
     
     builder
     .n()
