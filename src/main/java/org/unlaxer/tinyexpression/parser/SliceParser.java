@@ -25,16 +25,16 @@ public class SliceParser extends JavaStyleDelimitedLazyChain implements StringEx
         new Parsers(
           Parser.<WordParser>get(()->new WordParser("[")),
           new ZeroOrOne(
-            Parser.get(ExpressionParser.class)
+            Parser.get(NumberExpressionParser.class)
           ),
           Parser.<WordParser>get(()->new WordParser(":")),
           new ZeroOrOne(
-            Parser.get(ExpressionParser.class)
+            Parser.get(NumberExpressionParser.class)
           ),
           new ZeroOrOne(
             new Chain(
               Parser.<WordParser>get(()->new WordParser(":")),
-              Parser.get(ExpressionParser.class)
+              Parser.get(NumberExpressionParser.class)
             )
           ),
           Parser.<WordParser>get(()->new WordParser("]"))

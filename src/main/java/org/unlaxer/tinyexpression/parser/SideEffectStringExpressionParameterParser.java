@@ -37,7 +37,7 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
             new Choice(
               Parser.get(BooleanClauseParser.class),
               Parser.get(StringExpressionParser.class),
-              Parser.get(ExpressionParser.class)
+              Parser.get(NumberExpressionParser.class)
             )
           ) 
         )

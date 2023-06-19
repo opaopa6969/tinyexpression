@@ -20,9 +20,9 @@ public class TernaryOperatorParser extends JavaStyleDelimitedLazyChain{
 	      new Parsers(
 	        Parser.get(BooleanExpressionParser.class),
 	        Parser.get(QuestionParser.class),
-	        Parser.get(ExpressionParser.class),
+	        Parser.get(NumberExpressionParser.class),
 	        Parser.get(ColonParser.class),
-	        Parser.get(ExpressionParser.class)
+	        Parser.get(NumberExpressionParser.class)
 	      );
 	  }
 

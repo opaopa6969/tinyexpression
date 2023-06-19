@@ -40,7 +40,7 @@ public class SideEffectStringToBooleanExpressionParameterParser extends JavaStyl
               new Choice(
                 Parser.get(StringExpressionParser.class),
                 Parser.get(BooleanExpressionParser.class),
-                Parser.get(ExpressionParser.class)
+                Parser.get(NumberExpressionParser.class)
               )   
             )
           ) 

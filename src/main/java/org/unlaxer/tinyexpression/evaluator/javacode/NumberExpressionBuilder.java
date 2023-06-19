@@ -7,10 +7,10 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
-import org.unlaxer.tinyexpression.parser.FactorParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -21,7 +21,7 @@ import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
-import org.unlaxer.tinyexpression.parser.TermParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
@@ -63,17 +63,17 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 		Parser parser = token.parser;
 		
-		if(parser instanceof ExpressionParser) {
+		if(parser instanceof NumberExpressionParser) {
 			
 			token = token.filteredChildren.get(0);
 			parser = token.parser;
 			
-			if (parser instanceof TermParser) {
+			if (parser instanceof NumberTermParser) {
 				
 				token = token.filteredChildren.get(0);
 				parser = token.parser;
 				
-				if(parser instanceof FactorParser) {
+				if(parser instanceof NumberFactorParser) {
 					token = token.filteredChildren.get(0);
 					parser = token.parser;
 					
@@ -135,7 +135,7 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 			builder.append(")");
 
-		} else if (parser instanceof MatchExpressionParser) {
+		} else if (parser instanceof NumberMatchExpressionParser) {
 
 			Token caseExpression = token.filteredChildren.get(0);
 			Token defaultCaseFactor = token.filteredChildren.get(1);

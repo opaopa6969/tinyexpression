@@ -10,7 +10,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -38,12 +38,12 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 
 	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0); //2
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //2
 	}
 	
   @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-    return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1); //4
+    return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1); //4
 	}
 
   @Override
@@ -51,9 +51,9 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
     return new Parsers(
         Parser.get(MaxFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(ExpressionParser.class),//2
+        Parser.get(NumberExpressionParser.class),//2
         Parser.<WordParser>get(()->new WordParser(",")),
-        Parser.get(ExpressionParser.class),//4
+        Parser.get(NumberExpressionParser.class),//4
         Parser.get(RightParenthesisParser.class)
     );
   }

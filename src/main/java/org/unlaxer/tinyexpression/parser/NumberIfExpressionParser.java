@@ -11,6 +11,6 @@ public class NumberIfExpressionParser extends IfExpressionParser implements Numb
 
   @Override
   public Class<? extends Parser> nonStrictTypedReturning() {
-    return ExpressionParser.class;
+    return NumberExpressionParser.class;
   }
 }

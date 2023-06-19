@@ -21,20 +21,20 @@ public class EqualEqualExpressionParser extends JavaStyleDelimitedLazyChain impl
 	public List<Parser> getLazyParsers() {
 	  return 
       new Parsers(
-        Parser.get(ExpressionParser.class),//0
+        Parser.get(NumberExpressionParser.class),//0
         Parser.get(EqualEqualParser.class),
-        Parser.get(ExpressionParser.class)//2
+        Parser.get(NumberExpressionParser.class)//2
       );
 
 	}
 	
   @TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0); //0
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //0
 	}
 	
   @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-	  return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1); //2
+	  return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1); //2
 	}
 }

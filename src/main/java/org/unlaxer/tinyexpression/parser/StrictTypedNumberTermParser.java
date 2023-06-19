@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 
-public class StrictTypedTermParser extends AbstractTermParser{
+public class StrictTypedNumberTermParser extends AbstractNumberTermParser{
 
   @Override
   public boolean hasNakedVariableParser() {

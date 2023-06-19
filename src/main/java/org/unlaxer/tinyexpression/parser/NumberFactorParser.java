@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 
-public class FactorParser extends AbstractFactorParser{
+public class NumberFactorParser extends AbstractFactorParser{
 
   @Override
   public List<Parser> getLazyParsers() {

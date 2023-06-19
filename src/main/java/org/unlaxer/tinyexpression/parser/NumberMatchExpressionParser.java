@@ -9,12 +9,12 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
+public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
 	
 	private static final long serialVersionUID = -9078041069929701034L;
 
 
-	public MatchExpressionParser() {
+	public NumberMatchExpressionParser() {
 		super();
 	}
 	
@@ -39,8 +39,8 @@ public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implement
       new Parsers(
         Parser.get(MatchFuctionNameParser.class),
         Parser.get(LeftCurlyBraceParser.class),
-        Parser.get(CaseExpressionParser.class),//2
-        Parser.get(DefaultCaseFactorParser.class),//3
+        Parser.get(NumberCaseExpressionParser.class),//2
+        Parser.get(NumberDefaultCaseFactorParser.class),//3
         Parser.get(RightCurlyBraceParser.class)
       );
 
@@ -48,11 +48,11 @@ public class MatchExpressionParser extends JavaStyleDelimitedLazyChain implement
 	
 	@TokenExtractor
 	public static Token getCaseExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(CaseExpressionParser.class); //2
+		return thisParserParsed.getChildWithParser(NumberCaseExpressionParser.class); //2
 	}
 	
   @TokenExtractor
 	public static Token getDefaultExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(DefaultCaseFactorParser.class); //3
+		return thisParserParsed.getChildWithParser(NumberDefaultCaseFactorParser.class); //3
 	}
 }

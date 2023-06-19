@@ -12,18 +12,18 @@ import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
-import org.unlaxer.tinyexpression.parser.FactorParser;
-import org.unlaxer.tinyexpression.parser.TermParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.util.StringUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	public static final ParsersSpecifier enclosureMatchers=
 		new ParsersSpecifier(
-			ExpressionParser.class,
-			TermParser.class,
-			FactorParser.class
+			NumberExpressionParser.class,
+			NumberTermParser.class,
+			NumberFactorParser.class
 		);
 	
 	final Calculator<?> calculator;

@@ -9,7 +9,7 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 
@@ -39,7 +39,7 @@ public class SquareRootParser extends JavaStyleDelimitedLazyChain implements Num
 	}
 	
 	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(ExpressionParser.class);
+		return thisParserParsed.getChildWithParser(NumberExpressionParser.class);
 	}
 
   @Override
@@ -47,7 +47,7 @@ public class SquareRootParser extends JavaStyleDelimitedLazyChain implements Num
     return new Parsers(
       Parser.get(SqrtFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),
-      Parser.get(ExpressionParser.class),//2
+      Parser.get(NumberExpressionParser.class),//2
       Parser.get(RightParenthesisParser.class)
     );
   }

@@ -10,7 +10,7 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , NumberExpression , VariableTypeSelectable{
+public abstract class AbstractNumberExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , NumberExpression , VariableTypeSelectable{
 	
   @Override
   public List<Parser> getLazyParsers(boolean withNakedVariable) {
@@ -19,8 +19,8 @@ public abstract class AbstractExpressionParser extends JavaStyleDelimitedLazyCha
     Parsers parsers = new Parsers();
     
     Class<? extends Parser> termParserClazz = withNakedVariable ?
-      TermParser.class:
-      StrictTypedTermParser.class;
+      NumberTermParser.class:
+      StrictTypedNumberTermParser.class;
     
     parsers.add(termParserClazz);
     
@@ -42,7 +42,7 @@ public abstract class AbstractExpressionParser extends JavaStyleDelimitedLazyCha
 	
 	Parser parser;
 
-	public AbstractExpressionParser() {
+	public AbstractNumberExpressionParser() {
 		super();
 	}
 

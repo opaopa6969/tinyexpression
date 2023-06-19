@@ -22,7 +22,7 @@ public class ToNumParser extends JavaStyleDelimitedLazyChain {
 	
   @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(ExpressionParser.class);// 4
+		return thisParserParsed.getChildWithParser(NumberExpressionParser.class);// 4
   }
 
 	@Override
@@ -32,7 +32,7 @@ public class ToNumParser extends JavaStyleDelimitedLazyChain {
         Parser.get(LeftParenthesisParser.class), // 1
         Parser.get(StringExpressionParser.class), // 2
         Parser.<WordParser>get(()->new WordParser(",")), // 3
-        Parser.get(ExpressionParser.class), // 4
+        Parser.get(NumberExpressionParser.class), // 4
         Parser.get(RightParenthesisParser.class) // 5
     );
 	}

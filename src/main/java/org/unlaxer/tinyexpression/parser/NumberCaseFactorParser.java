@@ -9,29 +9,33 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class DefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
+public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
-	private static final long serialVersionUID = -955174558962757636L;
+	private static final long serialVersionUID = -475039384168549876L;
 
 
-	public DefaultCaseFactorParser() {
+	public NumberCaseFactorParser() {
 		super();
 	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return
-	    new Parsers(
-        new WordParser(","),
-        new WordParser("default"),
+	  return 
+      new Parsers(
+        Parser.get(BooleanClauseParser.class),//0
         new WordParser("->"),
-        Parser.get(ExpressionParser.class)//3
+        Parser.get(NumberExpressionParser.class)//2
       );
 	}
-	
+
+  @TokenExtractor
+	public static Token getBooleanClause(Token thisParserParsed) {
+		return thisParserParsed.getChildWithParser(BooleanClauseParser.class); //0
+	}
+
   @TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(ExpressionParser.class); //3
+		return thisParserParsed.getChildWithParser(NumberExpressionParser.class);//2
 	}
 
 }

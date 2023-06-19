@@ -20,18 +20,18 @@ public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {
       new Parsers(
         Parser.get(InTimeRangeNameParser.class), // 0
         Parser.get(LeftParenthesisParser.class), // 1
-        Parser.get(ExpressionParser.class), // 2
+        Parser.get(NumberExpressionParser.class), // 2
         Parser.<WordParser>get(()->new WordParser(",")), // 3
-        Parser.get(ExpressionParser.class), // 4
+        Parser.get(NumberExpressionParser.class), // 4
         Parser.get(RightParenthesisParser.class) // 5
       );
 	}
 
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0); //2
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //2
 	}
 
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1);//4
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1);//4
 	}
 }

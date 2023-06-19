@@ -9,14 +9,14 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 
 public class ExpressionBuilderTest {
 
   @Test
   public void test() {
     
-    ExpressionParser expressionParser = new ExpressionParser();
+    NumberExpressionParser expressionParser = new NumberExpressionParser();
     ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
     Parsed parsed= expressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとASTCreatorがうまく動かない

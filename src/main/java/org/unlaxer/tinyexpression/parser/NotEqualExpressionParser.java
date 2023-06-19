@@ -20,19 +20,19 @@ public class NotEqualExpressionParser extends JavaStyleDelimitedLazyChain implem
 	public List<Parser> getLazyParsers() {
 	  return
       new Parsers(
-        Parser.get(ExpressionParser.class),
+        Parser.get(NumberExpressionParser.class),
         Parser.get(NotEqualParser.class),
-        Parser.get(ExpressionParser.class)
+        Parser.get(NumberExpressionParser.class)
       );
 	}
 
 	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(0);//0
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0);//0
 	}
 
 	 @TokenExtractor
 	 public static Token getRightExpression(Token thisParserParsed) {
-    return thisParserParsed.getChildrenWithParserAsList(ExpressionParser.class).get(1);//2
+    return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1);//2
 	}
 }

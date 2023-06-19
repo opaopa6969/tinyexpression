@@ -9,11 +9,11 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractTermParser extends JavaStyleDelimitedLazyChain implements NumberExpression , VariableTypeSelectable{
+public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyChain implements NumberExpression , VariableTypeSelectable{
 	
 	private static final long serialVersionUID = 1430560948407993197L;
 	
-	public AbstractTermParser() {
+	public AbstractNumberTermParser() {
 		super();
 	}
 	
@@ -24,11 +24,11 @@ public abstract class AbstractTermParser extends JavaStyleDelimitedLazyChain imp
     // <term>::= <factor>[('*'|'/')<factor>]*
     Parsers parsers = new Parsers();
     
-    Parser.get(StrictTypedFactorParser.class);
+    Parser.get(StrictTypedNumberFactorParser.class);
     
     Class<? extends Parser> factorParserClazz = withNakedVariable ?
-       FactorParser.class:
-       StrictTypedFactorParser.class;
+       NumberFactorParser.class:
+       StrictTypedNumberFactorParser.class;
     
     parsers.add(
         Parser.get(

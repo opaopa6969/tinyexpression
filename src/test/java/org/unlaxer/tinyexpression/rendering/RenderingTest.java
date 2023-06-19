@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.NoneChildParser;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 
 
 public class RenderingTest {
@@ -14,7 +14,7 @@ public class RenderingTest {
 	
 	public static void main(String[] args) {
 		
-		Parser expressionParser = Parser.get(ExpressionParser.class);
+		Parser expressionParser = Parser.get(NumberExpressionParser.class);
 //		expressionParser.initialize();
 		
 		Set<Class<? extends Parser>> parsers = new LinkedHashSet<>();

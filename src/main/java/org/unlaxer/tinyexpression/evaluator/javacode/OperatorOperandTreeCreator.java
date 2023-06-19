@@ -20,13 +20,13 @@ import org.unlaxer.tinyexpression.parser.BooleanExpressionOfStringParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.CaseExpressionParser;
-import org.unlaxer.tinyexpression.parser.CaseFactorParser;
-import org.unlaxer.tinyexpression.parser.DefaultCaseFactorParser;
+import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberCaseFactorParser;
+import org.unlaxer.tinyexpression.parser.NumberDefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
-import org.unlaxer.tinyexpression.parser.FactorParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
 import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
@@ -36,7 +36,7 @@ import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.MatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
@@ -50,11 +50,11 @@ import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanClauseParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedExpressionParser;
-import org.unlaxer.tinyexpression.parser.StrictTypedFactorParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedNumberFactorParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringFactorParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringTermParser;
-import org.unlaxer.tinyexpression.parser.StrictTypedTermParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedNumberTermParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -71,7 +71,7 @@ import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
-import org.unlaxer.tinyexpression.parser.TermParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
@@ -110,9 +110,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		
 		if(
       parser instanceof StrictTypedExpressionParser || 
-		  parser instanceof ExpressionParser || 
-      parser instanceof StrictTypedTermParser ||
-      parser instanceof TermParser ||
+		  parser instanceof NumberExpressionParser || 
+      parser instanceof StrictTypedNumberTermParser ||
+      parser instanceof NumberTermParser ||
 			parser instanceof StrictTypedBooleanClauseParser ||
 			parser instanceof BooleanClauseParser ||
       parser instanceof StrictTypedStringExpressionParser || 
@@ -136,30 +136,30 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			
 
 		}else if(
-		    parser instanceof StrictTypedFactorParser ||
-		    parser instanceof FactorParser
+		    parser instanceof StrictTypedNumberFactorParser ||
+		    parser instanceof NumberFactorParser
 		    ) {
 			
 			return factor(token);
 			
-		}else if(parser instanceof CaseExpressionParser){
+		}else if(parser instanceof NumberCaseExpressionParser){
 			
 			List<Token> casefactors = token.filteredChildren.stream()
-				.filter(child-> child.parser instanceof CaseFactorParser)
+				.filter(child-> child.parser instanceof NumberCaseFactorParser)
 				.map(this::apply)
 				.collect(Collectors.toList());
 			return token.newCreatesOf(casefactors);
 			
-		}else if(parser instanceof CaseFactorParser){
+		}else if(parser instanceof NumberCaseFactorParser){
 			
 			return token.newCreatesOf(
-				apply(CaseFactorParser.getBooleanClause(token)),
-				apply(CaseFactorParser.getExpression(token))
+				apply(NumberCaseFactorParser.getBooleanClause(token)),
+				apply(NumberCaseFactorParser.getExpression(token))
 			);
 			
-		}else if(parser instanceof DefaultCaseFactorParser){
+		}else if(parser instanceof NumberDefaultCaseFactorParser){
 			
-			return apply(DefaultCaseFactorParser.getExpression(token));
+			return apply(NumberDefaultCaseFactorParser.getExpression(token));
 
 		}else if(parser instanceof BooleanExpressionParser || 
 		    parser instanceof StrictTypedBooleanExpressionParser ||
@@ -273,11 +273,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 				apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanClause))
 			);
 			
-		}else if(parser instanceof MatchExpressionParser){
+		}else if(parser instanceof NumberMatchExpressionParser){
 			
 			return operator.newCreatesOf(
-				apply(MatchExpressionParser.getCaseExpression(operator)),
-				apply(MatchExpressionParser.getDefaultExpression(operator))
+				apply(NumberMatchExpressionParser.getCaseExpression(operator)),
+				apply(NumberMatchExpressionParser.getDefaultExpression(operator))
 			);
 			
 		}else if(parser instanceof ParenthesesParser){

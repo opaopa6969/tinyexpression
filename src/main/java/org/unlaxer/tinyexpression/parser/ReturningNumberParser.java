@@ -22,7 +22,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
         wordParser,
         Parser.get(NumberTypeHintSuffixParser.class),
         Parser.get(DefaultClauseParser.class),
-        Parser.get(ExpressionParser.class)
+        Parser.get(NumberExpressionParser.class)
     );
   }
   

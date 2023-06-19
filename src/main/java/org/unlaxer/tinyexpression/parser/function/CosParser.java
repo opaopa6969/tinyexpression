@@ -7,7 +7,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -42,14 +42,14 @@ public class CosParser extends JavaStyleNamedParenthesesParser implements Number
       new WhiteSpaceDelimitedChain(
         Parser.get(CosFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(ExpressionParser.class),//2
+        Parser.get(NumberExpressionParser.class),//2
         Parser.get(RightParenthesisParser.class)
       );
 	}
 
 	@TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(ExpressionParser.class); //2
+		return thisParserParsed.getChildWithParser(NumberExpressionParser.class); //2
 	}
 
   @Override
@@ -59,6 +59,6 @@ public class CosParser extends JavaStyleNamedParenthesesParser implements Number
 
   @Override
   public Parser innerParser() {
-    return Parser.get(ExpressionParser.class);
+    return Parser.get(NumberExpressionParser.class);
   }
 }
