@@ -10,12 +10,11 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
-public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
+public class BooleanCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
-	private static final long serialVersionUID = -475039384168549876L;
-
-	public NumberCaseFactorParser() {
+	public BooleanCaseFactorParser() {
 		super();
 	}
 
@@ -26,21 +25,21 @@ public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
         Parser.get(BooleanExpressionParser.class),//0
         new WordParser("->"),
         new Choice(
-            Parser.newInstance(StrictTypedNumberExpressionParser.class),
-            Parser.get(NumberExpressionParser.class)
-        ).addTag(NumberMatchExpressionParser.choiceTag)
+            Parser.newInstance(StrictTypedBooleanExpressionParser.class),
+            Parser.get(BooleanExpressionParser.class)
+        ).addTag(BooleanMatchExpressionParser.choiceTag)
       );
 	}
 
-  @TokenExtractor
+  @TokenExtractor(timings = {Timing.UseOperatorOperandTree})
 	public static Token getBooleanExpression(Token thisParserParsed) {
 		return thisParserParsed.getChildWithParser(BooleanExpressionParser.class); //0
 	}
 
-  @TokenExtractor
+  @TokenExtractor(timings = {Timing.UseOperatorOperandTree})
 	public static Token getExpression(Token thisParserParsed) {
 		return thisParserParsed.getChild(
-		    TokenPredicators.parserImplements(NumberExpression.class, VariableParser.class));
+		    TokenPredicators.parserImplements(BooleanExpression.class, VariableParser.class));
 	}
 
 }

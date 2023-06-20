@@ -891,4 +891,49 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         new BigDecimal("0")));
     
   }
+  
+  
+  @Test
+  public void testNumberMatch() {
+    
+    setLevel(OutputLevel.detail);
+
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set("count", 10);
+    context.set("defaultValue", 0);
+
+    assertTrue(calc(context,"match{1==1->1,default->0}",new BigDecimal("1")));
+    assertTrue(calc(context,"match{1==1->$count as number ,default->$defaultValue}",new BigDecimal("10")));
+//    assertFalse(calc(context,"match{1==1->$count,default->$defaultValue}",new BigDecimal("10")));
+  }
+  
+  @Test
+  public void testBooleanMatch() {
+    
+    setLevel(OutputLevel.detail);
+
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set("isMale", true);
+    context.set("defaultValue", false);
+
+    assertTrue(calc(context,"if(match{1==1->1==1,default->1==0}){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if(match{1==1->$isMale as boolean ,default->$defaultValue}){10}else{0}",new BigDecimal("10")));
+//    assertFalse(calc(context,"match{1==1->$count,default->$defaultValue}",new BigDecimal("10")));
+  }
+  
+  @Test
+  public void testStringMatch() {
+    
+    setLevel(OutputLevel.detail);
+
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set("lunch", "yakiniku");
+    context.set("defaultValue", "gyuudon");
+
+    assertTrue(calc(context,"if('niku'== match{1==1->'niku',default->'sushi'}){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if('yakiniku'==match{1==1->$lunch as string,default->$defaultValue}){10}else{0}",new BigDecimal("10")));
+//    assertFalse(calc(context,"match{1==1->$count,default->$defaultValue}",new BigDecimal("10")));
+  }
+
+
 }

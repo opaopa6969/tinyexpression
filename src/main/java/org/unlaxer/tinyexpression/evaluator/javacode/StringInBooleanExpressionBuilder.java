@@ -6,9 +6,9 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 
-public class StringInBooleanClauseBuilder implements CodeBuilder {
+public class StringInBooleanExpressionBuilder implements CodeBuilder {
 
-	public static final StringInBooleanClauseBuilder SINGLETON = new StringInBooleanClauseBuilder();
+	public static final StringInBooleanExpressionBuilder SINGLETON = new StringInBooleanExpressionBuilder();
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token) {

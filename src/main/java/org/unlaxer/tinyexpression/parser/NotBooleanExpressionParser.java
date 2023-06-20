@@ -39,13 +39,13 @@ public class NotBooleanExpressionParser extends JavaStyleDelimitedLazyChain impl
       new Parsers(
         Parser.get(NotFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(BooleanClauseParser.class),//2
+        Parser.get(BooleanExpressionParser.class),//2
         Parser.get(RightParenthesisParser.class)
       );
 	}
 	
 	@TokenExtractor
-	public static Token getBooleanClause(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(BooleanClauseParser.class); //2
+	public static Token getBooleanExpression(Token thisParserParsed) {
+		return thisParserParsed.getChildWithParser(BooleanExpressionParser.class); //2
 	}
 }

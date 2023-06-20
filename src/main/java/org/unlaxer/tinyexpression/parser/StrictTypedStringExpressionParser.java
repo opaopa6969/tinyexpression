@@ -6,6 +6,12 @@ import org.unlaxer.parser.Parser;
 
 public class StrictTypedStringExpressionParser extends AbstractStringExpressionParser{
 
+  
+  public StrictTypedStringExpressionParser() {
+    super();
+    addTag(StrictTyped.get());
+  }
+
   @Override
   public boolean hasNakedVariableParser() {
     return false;

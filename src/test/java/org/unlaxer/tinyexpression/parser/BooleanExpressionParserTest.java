@@ -4,13 +4,13 @@ import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
 
-public class BooleanClauseParserTest extends ParserTestBase{
+public class BooleanExpressionParserTest extends ParserTestBase{
 
   @Test
   public void test() {
     
     setLevel(OutputLevel.detail);
-    BooleanClauseParser parser = new BooleanClauseParser();
+    BooleanExpressionParser parser = new BooleanExpressionParser();
     
     testAllMatch(parser, "true");
     testAllMatch(parser, "true | false ");

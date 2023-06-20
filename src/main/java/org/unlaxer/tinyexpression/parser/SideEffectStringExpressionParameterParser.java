@@ -35,7 +35,7 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
           new WhiteSpaceDelimitedChain(
             Parser.get(CommaParser.class),
             new Choice(
-              Parser.get(BooleanClauseParser.class),
+              Parser.get(BooleanExpressionParser.class),
               Parser.get(StringExpressionParser.class),
               Parser.get(NumberExpressionParser.class)
             )

@@ -11,12 +11,9 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
+public class StringDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
-	private static final long serialVersionUID = -955174558962757636L;
-
-
-	public NumberDefaultCaseFactorParser() {
+	public StringDefaultCaseFactorParser() {
 		super();
 	}
 
@@ -28,16 +25,16 @@ public class NumberDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
         new WordParser("default"),
         new WordParser("->"),
         new Choice(
-            Parser.newInstance(StrictTypedNumberExpressionParser.class),
-            Parser.get(NumberExpressionParser.class)
-        ).addTag(NumberMatchExpressionParser.choiceTag)
+            Parser.newInstance(StrictTypedStringExpressionParser.class),
+            Parser.get(StringExpressionParser.class)
+        ).addTag(StringMatchExpressionParser.choiceTag)
       );
 	}
 	
   @TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
 		return thisParserParsed.getChild(
-		    TokenPredicators.parserImplements(NumberExpression.class , VariableParser.class)); //3
+		    TokenPredicators.parserImplements(StringExpression.class , VariableParser.class)); //3
 	}
 
 }

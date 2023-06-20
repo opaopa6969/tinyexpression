@@ -19,9 +19,9 @@ public class BooleanNotEqualExpressionParser extends JavaStyleDelimitedLazyChain
 	public List<Parser> getLazyParsers() {
     return 
       new Parsers(
-        Parser.get(BooleanExpressionParser.class),
+        Parser.get(BooleanFactorParser.class),
         Parser.get(NotEqualParser.class),
-        Parser.get(BooleanExpressionParser.class)
+        Parser.get(BooleanFactorParser.class)
       );
 	}
 }

@@ -6,7 +6,7 @@ public class NumberIfExpressionParser extends IfExpressionParser implements Numb
 
   @Override
   public Class<? extends Parser> strictTypedReturning() {
-    return StrictTypedExpressionParser.class;
+    return StrictTypedNumberExpressionParser.class;
   }
 
   @Override

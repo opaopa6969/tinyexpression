@@ -7,22 +7,22 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
-import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
+import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -33,9 +33,9 @@ import org.unlaxer.tinyexpression.parser.function.TanParser;
 
 public class NumberExpressionBuilder implements CodeBuilder {
 
-	public static class CaseExpressionBuilder implements CodeBuilder{
+	public static class NumberCaseExpressionBuilder implements CodeBuilder{
 
-		public static CaseExpressionBuilder SINGLETON = new CaseExpressionBuilder();
+		public static NumberCaseExpressionBuilder SINGLETON = new NumberCaseExpressionBuilder();
 
 		public void build(SimpleJavaCodeBuilder builder, Token token) {
 
@@ -45,9 +45,9 @@ public class NumberExpressionBuilder implements CodeBuilder {
 			while(iterator.hasNext()){
 				Token caseFactor = iterator.next();
 
-				Token booleanClause = caseFactor.filteredChildren.get(0);
+				Token booleanExpression = caseFactor.filteredChildren.get(0);
 				Token expression = caseFactor.filteredChildren.get(1);
-				BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
+				BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
 				builder.append(" ? ");
 				NumberExpressionBuilder.SINGLETON.build(builder, expression);
 				builder
@@ -112,18 +112,18 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 		} else if (parser instanceof NumberIfExpressionParser) {
 
-			Token booleanClause = IfExpressionParser.getBooleanClause(token);
-			Token factor1 = IfExpressionParser.getThenExpression(token , NumberExpression.class , booleanClause);
-			Token factor2 = IfExpressionParser.getElseExpression(token , NumberExpression.class , booleanClause);
+			Token booleanExpression = IfExpressionParser.getBooleanExpression(token);
+			Token factor1 = IfExpressionParser.getThenExpression(token , NumberExpression.class , booleanExpression);
+			Token factor2 = IfExpressionParser.getElseExpression(token , NumberExpression.class , booleanExpression);
 
 			/*
-			 * BooleanClauseOperator.SINGLETON.evaluate(calculateContext, booleanClause)?
+			 * BooleanExpressionOperator.SINGLETON.evaluate(calculateContext, booleanExpression)?
 			 * factor1: factor2
 			 */
 
 			builder.append("(");
 
-			BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
+			BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
 
 			builder.append(" ? ").n().incTab();
 			build(builder, factor1);
@@ -145,7 +145,7 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 			builder.append("(");
 
-			CaseExpressionBuilder.SINGLETON.build(builder, caseExpression);
+			NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression);
 			builder.n();
 			build(builder, defaultCaseFactor);
 

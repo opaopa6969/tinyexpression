@@ -11,10 +11,11 @@ public class SideEffectExpressionParameterChoice extends LazyChoice{
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
-        Parser.get(StrictTypedBooleanClauseParser.class),
-        Parser.get(StrictTypedStringExpressionParser.class),
-        Parser.get(StrictTypedExpressionParser.class),
-        Parser.get(BooleanClauseParser.class),
+        Parser.newInstance(StrictTypedBooleanExpressionParser.class),
+        Parser.newInstance(StrictTypedStringExpressionParser.class),
+        Parser.newInstance
+        (StrictTypedNumberExpressionParser.class),
+        Parser.get(BooleanExpressionParser.class),
         Parser.get(StringExpressionParser.class),
         Parser.get(NumberExpressionParser.class)
     );

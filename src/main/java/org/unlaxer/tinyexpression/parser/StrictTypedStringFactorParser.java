@@ -6,6 +6,12 @@ import org.unlaxer.parser.Parser;
 
 public class StrictTypedStringFactorParser extends AbstractStringFactorParser{
 
+
+  public StrictTypedStringFactorParser() {
+    super();
+    addTag(StrictTyped.get());
+  }
+
   @Override
   public boolean hasNakedVariableParser() {
     return false;

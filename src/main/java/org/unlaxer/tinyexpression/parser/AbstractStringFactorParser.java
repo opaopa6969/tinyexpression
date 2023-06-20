@@ -24,6 +24,7 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
     
     parsers.add(StringSideEffectExpressionParser.class);
     parsers.add(StringIfExpressionParser.class);
+    parsers.add(StrictTypedStringMatchExpressionParser.class);
     parsers.add(StringLiteralParser.class);
     parsers.add(StringVariableParser.class);
     if(withNakedVariable) {

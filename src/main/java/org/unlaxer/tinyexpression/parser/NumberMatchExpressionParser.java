@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -13,7 +14,8 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	
 	private static final long serialVersionUID = -9078041069929701034L;
 
-
+	public static Tag choiceTag= Tag.of("numberChoice");
+	
 	public NumberMatchExpressionParser() {
 		super();
 	}
@@ -55,4 +57,5 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	public static Token getDefaultExpression(Token thisParserParsed) {
 		return thisParserParsed.getChildWithParser(NumberDefaultCaseFactorParser.class); //3
 	}
+  
 }

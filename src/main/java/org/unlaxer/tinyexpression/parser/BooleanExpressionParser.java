@@ -6,13 +6,14 @@ import org.unlaxer.parser.Parser;
 
 public class BooleanExpressionParser extends AbstractBooleanExpressionParser{
 
-   @Override
-  public List<Parser> getLazyParsers() {
-    return getLazyParsers(true);
-  }
-
   @Override
   public boolean hasNakedVariableParser() {
     return true;
   }
+  
+  @Override
+  public List<Parser> getLazyParsers() {
+    return getLazyParsers(true);
+  }
+  
 }

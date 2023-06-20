@@ -18,9 +18,9 @@ public class BooleanEqualEqualExpressionParser extends JavaStyleDelimitedLazyCha
 	public List<Parser> getLazyParsers() {
 		return
 	    new Parsers(
-        Parser.get(BooleanExpressionParser.class),
+        Parser.get(BooleanFactorParser.class),
         Parser.get(EqualEqualParser.class),
-        Parser.get(BooleanExpressionParser.class)
+        Parser.get(BooleanFactorParser.class)
       );
 	}
 }

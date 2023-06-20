@@ -1,12 +1,17 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.BooleanCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
@@ -31,6 +36,34 @@ import org.unlaxer.tinyexpression.parser.TrueTokenParser;
 
 public class BooleanBuilder implements CodeBuilder {
 	
+  public static class BooleanCaseExpressionBuilder implements CodeBuilder{
+
+    public static BooleanCaseExpressionBuilder SINGLETON = new BooleanCaseExpressionBuilder();
+
+    public void build(SimpleJavaCodeBuilder builder, Token token) {
+
+      List<Token> originalTokens = token.filteredChildren;
+      Iterator<Token> iterator = originalTokens.iterator();
+
+      while(iterator.hasNext()){
+        Token caseFactor = iterator.next();
+
+        Token booleanExpression = caseFactor.filteredChildren.get(0);
+        Token expression = caseFactor.filteredChildren.get(1);
+        
+//        Token booleanExpression = BooleanCaseFactorParser.getBooleanExpression(caseFactor);
+//        Token expression = BooleanCaseFactorParser.getExpression(caseFactor);
+        
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
+        builder.append(" ? ");
+        BooleanExpressionBuilder.SINGLETON.build(builder, expression);
+        builder
+          .append(":")
+          .n();
+      }
+    }
+  }
+  
 	public static final BooleanBuilder SINGLETON = new BooleanBuilder();
 	private ParserValuesValidator parserValuesValidator = new ParserValuesValidator();
 
@@ -113,7 +146,7 @@ public class BooleanBuilder implements CodeBuilder {
 			
 		} else if (parser instanceof StringInParser) {
 
-			StringInBooleanClauseBuilder.SINGLETON.build(builder, token);
+			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
@@ -121,18 +154,18 @@ public class BooleanBuilder implements CodeBuilder {
 			
 		}else if (parser instanceof BooleanIfExpressionParser) {
 		  
-      Token booleanClause = IfExpressionParser.getBooleanClause(token);
-      Token factor1 = IfExpressionParser.getThenExpression(token , BooleanExpression.class , booleanClause);
-      Token factor2 = IfExpressionParser.getElseExpression(token , BooleanExpression.class , booleanClause);
+      Token booleanExpression = IfExpressionParser.getBooleanExpression(token);
+      Token factor1 = IfExpressionParser.getThenExpression(token , BooleanExpression.class , booleanExpression);
+      Token factor2 = IfExpressionParser.getElseExpression(token , BooleanExpression.class , booleanExpression);
 
       /*
-       * BooleanClauseOperator.SINGLETON.evaluate(calculateContext, booleanClause)?
+       * BooleanExpressionOperator.SINGLETON.evaluate(calculateContext, booleanExpression)?
        * factor1: factor2
        */
 
       builder.append("(");
 
-      BooleanClauseBuilder.SINGLETON.build(builder, booleanClause);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
 
       builder.append(" ? ").n().incTab();
       build(builder, factor1);
@@ -143,6 +176,24 @@ public class BooleanBuilder implements CodeBuilder {
       builder.decTab();
 
       builder.append(")");
+      
+    } else if (parser instanceof BooleanMatchExpressionParser) {
+
+      Token caseExpression = token.filteredChildren.get(0);
+      Token defaultCaseFactor = token.filteredChildren.get(1);
+
+      builder.n();
+      builder.incTab();
+
+      builder.append("(");
+
+      BooleanCaseExpressionBuilder.SINGLETON.build(builder, caseExpression);
+      builder.n();
+      build(builder, defaultCaseFactor);
+
+      builder.append(")");
+      builder.decTab();
+
 		}else {
 		  throw new IllegalArgumentException();
 		}

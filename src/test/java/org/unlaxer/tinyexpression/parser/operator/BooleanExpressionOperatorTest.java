@@ -9,17 +9,17 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
+import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 
-public class BooleanClauseOperatorTest {
+public class BooleanExpressionOperatorTest {
 
 	@Test
 	public void test() {
-		BooleanClauseParser booleanClauseParser = Parser.get(BooleanClauseParser.class);
+		BooleanExpressionParser booleanExpressionParser = Parser.get(BooleanExpressionParser.class);
 		StringSource source = new StringSource("not(false)");
 		ParseContext parseContext = new ParseContext(source);
 		
-		Parsed parsed = booleanClauseParser.parse(parseContext);
+		Parsed parsed = booleanExpressionParser.parse(parseContext);
 		assertTrue(parsed.isSucceeded());
 	}
 	
@@ -39,7 +39,7 @@ public class BooleanClauseOperatorTest {
 		};
 		
 		
-		BooleanClauseParser booleanClauseParser = Parser.get(BooleanClauseParser.class);
+		BooleanExpressionParser booleanExpressionParser = Parser.get(BooleanExpressionParser.class);
 		
 		for (String condition: trueConditions) {
 			
@@ -48,7 +48,7 @@ public class BooleanClauseOperatorTest {
 			StringSource source = new StringSource(condition);
 			ParseContext parseContext = new ParseContext(source);
 			
-			Parsed parsed = booleanClauseParser.parse(parseContext);
+			Parsed parsed = booleanExpressionParser.parse(parseContext);
 			assertTrue(parsed.isSucceeded());
 			
 			Token rootToken = parsed.getRootToken();

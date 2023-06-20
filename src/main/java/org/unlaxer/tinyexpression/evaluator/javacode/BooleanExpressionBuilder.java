@@ -11,9 +11,9 @@ import org.unlaxer.tinyexpression.parser.NotEqualParser;
 import org.unlaxer.tinyexpression.parser.OrParser;
 import org.unlaxer.tinyexpression.parser.XorParser;
 
-public class BooleanClauseBuilder implements CodeBuilder {
+public class BooleanExpressionBuilder implements CodeBuilder {
 
-	static final BooleanClauseBuilder SINGLETON = new BooleanClauseBuilder();
+	static final BooleanExpressionBuilder SINGLETON = new BooleanExpressionBuilder();
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token) {

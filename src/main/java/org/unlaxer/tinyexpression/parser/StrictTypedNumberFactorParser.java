@@ -6,6 +6,12 @@ import org.unlaxer.parser.Parser;
 
 public class StrictTypedNumberFactorParser extends AbstractFactorParser{
 
+  
+  public StrictTypedNumberFactorParser() {
+    super();
+    addTag(StrictTyped.get());
+  }
+
   @Override
   public List<Parser> getLazyParsers() {
     return getLazyParsers(false);

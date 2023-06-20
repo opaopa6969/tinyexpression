@@ -11,33 +11,34 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
+public class StringCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
-	private static final long serialVersionUID = -955174558962757636L;
-
-
-	public NumberDefaultCaseFactorParser() {
+	public StringCaseFactorParser() {
 		super();
 	}
 
 	@Override
 	public List<Parser> getLazyParsers() {
-		return
-	    new Parsers(
-        new WordParser(","),
-        new WordParser("default"),
+	  return 
+      new Parsers(
+        Parser.get(BooleanExpressionParser.class),//0
         new WordParser("->"),
         new Choice(
-            Parser.newInstance(StrictTypedNumberExpressionParser.class),
-            Parser.get(NumberExpressionParser.class)
-        ).addTag(NumberMatchExpressionParser.choiceTag)
+            Parser.newInstance(StrictTypedStringExpressionParser.class),
+            Parser.get(StringExpressionParser.class)
+        ).addTag(StringMatchExpressionParser.choiceTag)
       );
 	}
-	
+
+  @TokenExtractor
+	public static Token getBooleanExpression(Token thisParserParsed) {
+		return thisParserParsed.getChildWithParser(BooleanExpressionParser.class); //0
+	}
+
   @TokenExtractor
 	public static Token getExpression(Token thisParserParsed) {
 		return thisParserParsed.getChild(
-		    TokenPredicators.parserImplements(NumberExpression.class , VariableParser.class)); //3
+		    TokenPredicators.parserImplements(StringExpression.class, VariableParser.class));
 	}
 
 }

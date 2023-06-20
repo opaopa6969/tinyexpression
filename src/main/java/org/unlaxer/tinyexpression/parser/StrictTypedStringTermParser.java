@@ -6,6 +6,12 @@ import org.unlaxer.parser.Parser;
 
 public class StrictTypedStringTermParser extends AbstractStringTermParser{
 
+  
+  public StrictTypedStringTermParser() {
+    super();
+    addTag(StrictTyped.get());
+  }
+
   @Override
   public boolean hasNakedVariableParser() {
     return false;

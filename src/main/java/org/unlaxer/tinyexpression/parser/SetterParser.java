@@ -17,10 +17,10 @@ public class SetterParser extends JavaStyleDelimitedLazyChain implements NoExpre
         Parser.get(()->new WordParser("set")),
         Parser.get(()->new Optional(new WordParser("if not exists"))),
         Parser.get(()->new Choice(
-            Parser.get(StrictTypedBooleanClauseParser.class),
-            Parser.get(StrictTypedStringExpressionParser.class),
-            Parser.get(StrictTypedExpressionParser.class),
-            Parser.get(BooleanClauseParser.class),
+            Parser.newInstance(StrictTypedBooleanExpressionParser.class),
+            Parser.newInstance(StrictTypedStringExpressionParser.class),
+            Parser.newInstance(StrictTypedNumberExpressionParser.class),
+            Parser.get(BooleanExpressionParser.class),
             Parser.get(StringExpressionParser.class),
             Parser.get(NumberExpressionParser.class)
           )

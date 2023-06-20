@@ -69,7 +69,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		}else if(parser instanceof StringExpression){
       StringExpressionBuilder.SINGLETON.build(builder, returningToken);
 		}else {
-		  BooleanClauseBuilder.SINGLETON.build(builder, returningToken);
+		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken);
 		}
 		
 		builder
@@ -101,7 +101,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 				}else if(parser instanceof NumberExpression) {
 					NumberExpressionBuilder.SINGLETON.build(builder, token);
 				}else if(parser instanceof BooleanExpression) {
-					BooleanClauseBuilder.SINGLETON.build(builder, token);
+					BooleanExpressionBuilder.SINGLETON.build(builder, token);
 				}else if (parser instanceof StringExpression) {
 					builder.append(StringClauseBuilder.SINGLETON.build(token).toString());
 				}else {

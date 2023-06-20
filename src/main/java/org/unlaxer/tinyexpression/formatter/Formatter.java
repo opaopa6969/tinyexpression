@@ -19,7 +19,7 @@ import org.unlaxer.tinyexpression.parser.NumberDefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedNumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.RightCurlyBraceParser;
 
 public class Formatter {
@@ -112,7 +112,7 @@ public class Formatter {
       return;
     }
     
-    if(token.getParser() instanceof NumberMatchExpressionParser) {
+    if(token.getParser() instanceof StrictTypedNumberMatchExpressionParser) {
       renderMatch(context, token);
       return;
     }

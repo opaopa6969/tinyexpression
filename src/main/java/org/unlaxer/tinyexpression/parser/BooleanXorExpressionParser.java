@@ -18,9 +18,9 @@ public class BooleanXorExpressionParser extends JavaStyleDelimitedLazyChain impl
 	public List<Parser> getLazyParsers() {
 	  return 
       new Parsers(
-        Parser.get(BooleanExpressionParser.class),
+        Parser.get(BooleanFactorParser.class),
         Parser.get(XorParser.class),
-        Parser.get(BooleanExpressionParser.class)
+        Parser.get(BooleanFactorParser.class)
       );
 	}
 }

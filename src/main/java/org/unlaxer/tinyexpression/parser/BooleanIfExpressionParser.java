@@ -6,11 +6,11 @@ public class BooleanIfExpressionParser extends IfExpressionParser implements Num
 
   @Override
   public Class<? extends Parser> strictTypedReturning() {
-    return StrictTypedBooleanClauseParser.class;
+    return StrictTypedBooleanExpressionParser.class;
   }
 
   @Override
   public Class<? extends Parser> nonStrictTypedReturning() {
-    return BooleanClauseParser.class;
+    return BooleanExpressionParser.class;
   }
 }

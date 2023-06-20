@@ -18,9 +18,9 @@ public class BooleanOrExpressionParser extends JavaStyleDelimitedLazyChain imple
 	public List<Parser> getLazyParsers() {
 	  return
       new Parsers(
-        Parser.get(BooleanExpressionParser.class),
+        Parser.get(BooleanFactorParser.class),
         Parser.get(OrParser.class),
-        Parser.get(BooleanExpressionParser.class)
+        Parser.get(BooleanFactorParser.class)
       );
 	}
 }

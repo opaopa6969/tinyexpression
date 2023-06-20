@@ -15,7 +15,7 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.CommaParser;
-import org.unlaxer.tinyexpression.parser.BooleanClauseParser;
+import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 
@@ -99,7 +99,7 @@ public class AnnotaionParser extends LazyChain{
           Parser.get(EqualParser.class),
           new Choice(
             Parser.get(StringExpressionParser.class),
-            Parser.get(BooleanClauseParser.class),
+            Parser.get(BooleanExpressionParser.class),
             Parser.get(NumberExpressionParser.class)
           )
       );

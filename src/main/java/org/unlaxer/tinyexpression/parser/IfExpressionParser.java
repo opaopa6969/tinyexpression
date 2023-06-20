@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -45,13 +46,13 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     Parsers parsers = new Parsers(
       Parser.get(IfFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),
-      Parser.get(BooleanClauseParser.class),//2
+      Parser.get(BooleanExpressionParser.class),//2
       Parser.get(RightParenthesisParser.class),
       Parser.get(LeftCurlyBraceParser.class),
    // if(condition){$variable}else{$variable}だった時にどちらかの変数が型指定をする事を求める
       new Choice(
           new Chain(
-              Parser.get(strictTypedReturning()),
+              Parser.newInstance(strictTypedReturning()),
               Parser.get(RightCurlyBraceParser.class),
               Parser.get(()->new WordParser("else")),
               Parser.get(LeftCurlyBraceParser.class),
@@ -62,7 +63,7 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
               Parser.get(RightCurlyBraceParser.class),
               Parser.get(()->new WordParser("else")),
               Parser.get(LeftCurlyBraceParser.class),
-              Parser.get(strictTypedReturning())
+              Parser.newInstance(strictTypedReturning())
           )
       ),
       Parser.get(RightCurlyBraceParser.class)
@@ -77,9 +78,9 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
   public abstract Class<? extends Parser> nonStrictTypedReturning(); 
 	
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
-	public static Token getBooleanClause(Token thisParserParsed) {
+	public static Token getBooleanExpression(Token thisParserParsed) {
 		return thisParserParsed.getChild(
-		    Token.parserImplements(BooleanExpression.class , VariableParser.class)
+		    TokenPredicators.parserImplements(BooleanExpression.class , VariableParser.class)
 		);
 	}
 	
@@ -87,8 +88,8 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	public static Token getThenExpression(Token thisParserParsed , 
       Class<? extends ExpressionInterface> expressionInterfaceClass , Token conditionToken) {
     Predicate<Token> expressionFilter = 
-        Token.parserImplements(expressionInterfaceClass, VariableParser.class)
-          .and(Token.afterToken(conditionToken));
+        TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
+          .and(TokenPredicators.afterToken(conditionToken));
     return thisParserParsed.getChildrenAsList(expressionFilter).get(0);
 	}
 	
@@ -96,8 +97,8 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	public static Token getElseExpression(Token thisParserParsed , 
 	    Class<? extends ExpressionInterface> expressionInterfaceClass, Token conditionToken) {
 	  Predicate<Token> expressionFilter = 
-	      Token.parserImplements(expressionInterfaceClass, VariableParser.class)
-  	      .and(Token.afterToken(conditionToken));
+	      TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
+  	      .and(TokenPredicators.afterToken(conditionToken));
 		return thisParserParsed.getChildrenAsList(expressionFilter).get(1);
 	}
 	
