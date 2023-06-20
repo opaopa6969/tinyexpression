@@ -6,10 +6,10 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Optional;
+import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class SetterParser extends JavaStyleDelimitedLazyChain implements NoExpression{
+public class SetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements NoExpression{
 
   @Override
   public List<Parser> getLazyParsers() {

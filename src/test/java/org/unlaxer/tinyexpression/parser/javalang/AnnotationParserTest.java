@@ -4,14 +4,14 @@ import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
 
-public class AnnotaionParserTest extends ParserTestBase{
+public class AnnotationParserTest extends ParserTestBase{
 
   @Test
   public void test() {
     
     setLevel(OutputLevel.detail);
     
-    AnnotaionParser parser = new AnnotaionParser();
+    AnnotationParser parser = new AnnotationParser();
    
     testAllMatch(parser,"@annotation()");
     testAllMatch(parser,"@annotation(niku='beaf')");

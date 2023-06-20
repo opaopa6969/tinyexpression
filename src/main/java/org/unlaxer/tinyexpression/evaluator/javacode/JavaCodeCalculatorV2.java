@@ -36,17 +36,17 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
   }
   
   public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
-    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory);
+    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
   }
   
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
-    this(name,formula,classLoader,null);
+    this(name,formula,classLoader,null , true);
   }
 
 
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
-      Path outputRootDirectory) {
-    this(formula , name.getName()+"_CalculatorClass"  + Math.abs(new Random().nextLong()) , classLoader , outputRootDirectory);
+      Path outputRootDirectory ,boolean randomize) {
+    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
   }
 
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
