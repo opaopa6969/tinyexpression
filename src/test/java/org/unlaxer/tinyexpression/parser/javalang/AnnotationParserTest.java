@@ -22,7 +22,9 @@ public class AnnotationParserTest extends ParserTestBase{
     testAllMatch(parser,"@annotation(niku='meat' , age = 63 , isDead=1==1)");
     testUnMatch(parser,"@annotation(niku='meat' , age = 63 , isDead=1=1)");
     testUnMatch(parser,"@annotation(niku='meat' , age = 63 , isDead=(1===1))");
+    testUnMatch(parser,"@document(niku='meat' , age = 63 , isDead=(1===1))");
     testUnMatch(parser,"@annotation");
+    testAllMatch(parser, "@document(author='opa' , description='年齢を入力して金額を返します', since='2023/06/01')");
   }
 
 }

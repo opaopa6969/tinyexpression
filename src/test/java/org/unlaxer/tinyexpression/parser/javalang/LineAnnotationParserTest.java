@@ -16,6 +16,7 @@ public class LineAnnotationParserTest extends ParserTestBase{
     
     testAllMatch(lineAnnotationParser, "@test niku");
     testAllMatch(lineAnnotationParser, "@test");
+    testAllMatch(lineAnnotationParser, "@Version1.0 初期バージョン");
     
     
     WordParser mae = new WordParser("前文");

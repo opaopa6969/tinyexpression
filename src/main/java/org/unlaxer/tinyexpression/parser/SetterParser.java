@@ -15,7 +15,7 @@ public class SetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimit
   public List<Parser> getLazyParsers() {
     return new Parsers(
         Parser.get(()->new WordParser("set")),
-        Parser.get(()->new Optional(new WordParser("if not exists"))),
+        Parser.get(()->new Optional(Parser.get(IfNotExistsParser.class))),
         Parser.get(()->new Choice(
             Parser.newInstance(StrictTypedBooleanExpressionParser.class),
             Parser.newInstance(StrictTypedStringExpressionParser.class),
@@ -26,6 +26,19 @@ public class SetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimit
           )
         )
     );
+  }
+  
+  public static class IfNotExistsParser extends WhiteSpaceDelimitedLazyChain{
+
+    @Override
+    public List<Parser> getLazyParsers() {
+      return new Parsers(
+          new WordParser("if"),
+          new WordParser("not"),
+          new WordParser("exists")
+      );
+    }
+    
   }
   
 }

@@ -4,16 +4,12 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.LazyChoice;
 
-public class AnnotationChoice extends LazyChoice{
+public class AnnotationChoice extends JavaStyleDelimitedLazyChain{
 
   @Override
   public List<Parser> getLazyParsers() {
-    return new Parsers(
-        Parser.get(LineAnnotationParser.class),
-        Parser.get(AnnotationParser.class)
-    );
+    return new Parsers(Parser.get(AnnotationChoiceElement.class));
   }
   
 }

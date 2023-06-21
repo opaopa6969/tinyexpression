@@ -14,41 +14,41 @@ import org.unlaxer.reducer.TagBasedReducer.NodeKind;
 
 public abstract class JavaStyleDelimitedLazyChain extends LazyChain {
 
-    private static final long serialVersionUID = -324234946352474224L;
+  private static final long serialVersionUID = -324234946352474224L;
 
-    public JavaStyleDelimitedLazyChain() {
-      super();
-    }
+  public JavaStyleDelimitedLazyChain() {
+    super();
+  }
 
-    public JavaStyleDelimitedLazyChain(Name name) {
-      super(name);
-    }
+  public JavaStyleDelimitedLazyChain(Name name) {
+    super(name);
+  }
 
-    @Override
-    public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
-      return super.parse(parseContext, tokenKind, invertMatch);
-    }
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+  
+  @Override
+  public Optional<RecursiveMode> getNotAstNodeSpecifier() {
+    return Optional.empty();
+  }
+
+  static final JavaStyleDelimitor delimitor = new JavaStyleDelimitor();
+  static {
+    delimitor.addTag(NodeKind.notNode.getTag());
+  }
+
+  @Override
+  public void prepareChildren(List<Parser> childrenContainer) {
     
-    @Override
-    public Optional<RecursiveMode> getNotAstNodeSpecifier() {
-      return Optional.empty();
-    }
-
-    static final JavaStyleDelimitor delimitor = new JavaStyleDelimitor();
-    static {
-      delimitor.addTag(NodeKind.notNode.getTag());
-    }
-
-    @Override
-    public void prepareChildren(List<Parser> childrenContainer) {
-      
-      if(childrenContainer.isEmpty()){
-        List<Parser> lazyParsers = getLazyParsers();
+    if(childrenContainer.isEmpty()){
+      List<Parser> lazyParsers = getLazyParsers();
+      childrenContainer.add(delimitor);
+      for (Parser parser : lazyParsers) {
+        childrenContainer.add(parser);
         childrenContainer.add(delimitor);
-        for (Parser parser : lazyParsers) {
-          childrenContainer.add(parser);
-          childrenContainer.add(delimitor);
-        }
       }
     }
   }
+}

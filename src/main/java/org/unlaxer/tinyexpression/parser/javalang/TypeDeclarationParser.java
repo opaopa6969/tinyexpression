@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.ascii.EqualParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
@@ -17,8 +16,7 @@ public class TypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
-        new WordParser("type"),
-        Parser.get(EqualParser.class),
+        new WordParser("as"),
         new Choice(
             Parser.get(NumberTypeHintParser.class),
             Parser.get(BooleanTypeHintParser.class),

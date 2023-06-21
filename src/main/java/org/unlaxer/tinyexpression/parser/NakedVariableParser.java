@@ -7,9 +7,8 @@ import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.LazyChain;
-import org.unlaxer.parser.combinator.OneOrMore;
-import org.unlaxer.parser.posix.AlphabetNumericUnderScoreParser;
 
 public class NakedVariableParser extends LazyChain implements VariableParser{//implements Expression , BooleanExpression , StringExpression{
 
@@ -29,9 +28,10 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	  return 
       new Parsers(
         Parser.get(DollarParser.class),
-        new OneOrMore(
-          Parser.get(AlphabetNumericUnderScoreParser.class)
-        )
+        Parser.get(IdentifierParser.class)
+//        new OneOrMore(
+//          Parser.get(AlphabetNumericUnderScoreParser.class)
+//        )
       );
 	}
 	

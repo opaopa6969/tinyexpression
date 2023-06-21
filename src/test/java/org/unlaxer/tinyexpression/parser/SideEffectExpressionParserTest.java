@@ -27,6 +27,9 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
     testAllMatch(sideEffectExpressionParser,("external:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
 		
+    testAllMatch(sideEffectExpressionParser,("external returning as number default 0 : Fee#calculate($age,$taxRate)"));
+    
+    
 		{
 			String formula =
 					"with side effect:jp.caulis.calc.Effects#foo(0,true,'niku')";
