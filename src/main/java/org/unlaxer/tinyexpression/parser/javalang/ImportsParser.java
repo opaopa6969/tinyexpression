@@ -9,6 +9,7 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class ImportsParser extends LazyZeroOrMore{
 
@@ -22,7 +23,7 @@ public class ImportsParser extends LazyZeroOrMore{
     return Optional.empty();
   }
   
-  @TokenExtractor
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static List<Token> extractImports(Token thisParserParsed){
     return thisParserParsed.getAstNodeChildren().stream()
       .map(ImportParser::extractImport)

@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression;
 
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -8,16 +7,17 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 
 public abstract class PreConstructedCalculator<T> implements Function<CalculationContext, Float> , Calculator<T>{
 	
 	public final String name;
 	public final String formula;
-	public final Token rootToken;
+	public final TinyExpressionTokens rootToken;
 	
-	public PreConstructedCalculator(String formula ) {
-		this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()));
-	}
+//	public PreConstructedCalculator(String formula , boolean randomize) {
+//		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
+//	}
 	
 	public PreConstructedCalculator(String formula ,String name) {
 		super();
@@ -29,7 +29,7 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 			if(false == parsed.isSucceeded()) {
 				throw new IllegalArgumentException("failed to parse:"+formula);
 			}
-			rootToken = tokenReduer().apply(parsed.getRootToken(true));
+			rootToken = new TinyExpressionTokens(tokenReduer().apply(parsed.getRootToken(true)));
 		}catch (Exception e) {
 		  e.printStackTrace();
 			throw new IllegalArgumentException("failed to parse:"+formula,e);

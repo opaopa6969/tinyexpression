@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class BooleanTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
@@ -18,7 +19,9 @@ public class BooleanTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   public List<Parser> getLazyParsers() {
     return 
       new Parsers(//
-          Parser.get(AsParser.class), //
+          new Optional(
+              Parser.get(AsParser.class) //
+          ), 
           Parser.get(BooleanTypeHintParser.class)//
       );
   }

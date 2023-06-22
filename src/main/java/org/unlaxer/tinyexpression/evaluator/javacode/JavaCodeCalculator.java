@@ -15,12 +15,11 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
 import net.openhft.compiler.CompilerUtils;
 
-public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
+public class JavaCodeCalculator extends PreConstructedCalculator<Float> implements JavaClassCreator{
 
 	String className;
 	public final String javaCode;
@@ -94,55 +93,7 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 		return OperatorOperandTreeCreator.SINGLETON;
 	}
 
-	String createJavaClass(String className, Token rootToken) {
-
-		SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
-
-		String CalculationContextName = CalculationContext.class.getName();
-		builder
-			.setKind(Kind.Main)
-			.line("import org.unlaxer.Token;")
-			.line("import "+CalculationContextName+";")
-			.line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
-			.n()
-			.append("public class ")
-			.append(className)
-			.append(" implements TokenBaseOperator<"+CalculationContextName+", Float>{")
-			.n()
-			.n()
-			
-			.setKind(Kind.Function)
-			.incTab()
-			.line("@Override")
-			.line("public Float evaluate("+CalculationContextName+" calculateContext , Token token) {")
-			.incTab()
-			.setKind(Kind.Calculation)
-			.incTab()
-			.line("float answer = (float) ")
-			.n();
-
-		NumberExpressionBuilder.SINGLETON.build(builder, rootToken);
-
-		builder
-			.setKind(Kind.Calculation)
-			.n()
-			.line(";")
-			.line("return answer;")
-			.decTab()
-			.line("}")
-			.decTab()
-			.setKind(Kind.Main);
-
-		String code = builder.toString();
-		return code;
-
-	}
-
-	public interface CodeBuilder {
-		public void build(SimpleJavaCodeBuilder builder, Token token);
-	}
-
-  @Override
+	@Override
   public String javaCode() {
     return javaCode;
   }

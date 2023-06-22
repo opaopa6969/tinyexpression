@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.time.zone.ZoneOffsetTransitionRule.TimeDefinition;
 import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.RootParserIndicator;
@@ -27,13 +27,45 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     );
   }
   
+  /**
+   * @param thisParserParsed
+   * @return token of restructure ImportsParser
+   */
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public static List<Token> extractImports(Token thisParserParsed){
+  public static Token extractImports(Token thisParserParsed){
     
     Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(ImportsParser.class);
     
-    return childWithParserAsOptional
+    List<Token> importChildren = childWithParserAsOptional
       .map(ImportsParser::extractImports)
       .orElseGet(List::of);
+    
+    Token imports = new Token(TokenKind.consumed, importChildren, Parser.get(ImportsParser.class),0);
+    return imports;
+  }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractNumberExpression(Token thisParserParsed){
+    
+    Token childWithParser = thisParserParsed.getChildWithParser(NumberExpressionParser.class);
+    return childWithParser;
+    
+  }
+
+  public static Token extractVariables(Token tinyExpressionToken) {
+    Optional<Token> childWithParserAsOptional = tinyExpressionToken.getChildWithParserAsOptional(VariableDeclarationsParser.class);
+    
+    List<Token> variableChildren = childWithParserAsOptional
+      .map(VariableDeclarationsParser::extractVariables)
+      .orElseGet(List::of);
+    
+    Token variables = new Token(TokenKind.consumed, variableChildren, Parser.get(VariableDeclarationsParser.class),0);
+    return variables;
+  }
+
+  public static Token extractAnnotaions(Token tinyExpressionToken) {
+    // TODO Auto-generated methasdsasadod stub
+    asddsa
+    return null;
   }
 }

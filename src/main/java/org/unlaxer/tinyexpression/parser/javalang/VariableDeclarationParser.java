@@ -2,6 +2,8 @@ package org.unlaxer.tinyexpression.parser.javalang;
 
 import java.util.List;
 
+import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -10,6 +12,8 @@ import org.unlaxer.parser.posix.SemiColonParser;
 import org.unlaxer.tinyexpression.parser.DescriptionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
+import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class VariableDeclarationParser extends JavaStyleDelimitedLazyChain{
 
@@ -27,4 +31,18 @@ public class VariableDeclarationParser extends JavaStyleDelimitedLazyChain{
         Parser.get(SemiColonParser.class)
     );
   }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractVariable(Token thisParserParsed){
+    
+    return thisParserParsed.newCreatesOf(
+      TokenPredicators.parsers(
+          NakedVariableParser.class,
+          TypeDeclarationParser.class,
+          SetterParser.class,
+          DescriptionParser.class
+      )
+    );
+  }
+
 }

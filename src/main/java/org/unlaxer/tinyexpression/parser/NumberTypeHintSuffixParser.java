@@ -6,6 +6,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
@@ -20,7 +21,9 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   public List<Parser> getLazyParsers() {
     return
       new Parsers(//
-          Parser.get(AsParser.class), //
+          new Optional(
+              Parser.get(AsParser.class) //
+          ),
           Parser.get(NumberTypeHintParser.class)//
       );
   }

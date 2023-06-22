@@ -10,16 +10,16 @@ import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaClassCreator;
 import org.unlaxer.tinyexpression.evaluator.javacode.OperatorOperandTreeCreator;
-import org.unlaxer.tinyexpression.evaluator.javacode.NumberExpressionBuilder;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
 import net.openhft.compiler.CompilerUtils;
 import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
 
-public class ContextCalculatorFactory{
+public class ContextCalculatorFactory implements JavaClassCreator{
   
   @SuppressWarnings("unchecked")
   public static ExtendedContextCalculator create(String formula , String className , String javaCode ,  byte[] byteCode , ClassLoader classLoader) {
@@ -46,14 +46,15 @@ public class ContextCalculatorFactory{
     }
   }
   
-  public static ExtendedContextCalculator create(String formula , String className , ClassLoader classLoader) {
+  public ExtendedContextCalculator create(String formula , String className , ClassLoader classLoader) {
     
     try(ParseContext parseContext = new ParseContext(new StringSource(formula));){
       Parsed parsed = getParser().parse(parseContext);
       if(false == parsed.isSucceeded()) {
         throw new IllegalArgumentException("failed to parse:"+formula);
       }
-      Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
+      TinyExpressionTokens rootToken = new TinyExpressionTokens(tokenReduer().apply(parsed.getRootToken(true)));
+      
       String javaCode = createJavaClass(className, rootToken);
       
       CalculatorAndByteCode calculator = compile(javaCode, className , classLoader);
@@ -73,42 +74,6 @@ public class ContextCalculatorFactory{
     return OperatorOperandTreeCreator.SINGLETON;
   }
   
-  static String createJavaClass(String className, Token rootToken) {
-    
-    SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
-    
-//    String CalculationContextName = CalculationContext.class.getName();
-//    
-//    String ContextCalculatorName = ContextCalculator.class.getName();
-    builder
-//    .line("import org.unlaxer.Token;")
-//    .line("import "+CalculationContextName+";")
-//    .line("import "+ContextCalculatorName+";")
-    .n()
-    .append("public class ")
-    .append(className)
-    .append(" implements org.unlaxer.tinyexpression.factory.ContextCalculator{")
-    .n()
-    .n()
-    .incTab()
-    .line("@Override")
-    .line("public Float apply(org.unlaxer.tinyexpression.CalculationContext calculateContext){")
-    .incTab()
-    .line("float answer = (float) ")
-    .n();
-    
-    NumberExpressionBuilder.SINGLETON.build(builder, rootToken);
-    
-    builder
-    .n()
-    .line(";")
-    .line("return answer;")
-    .decTab()
-    .line("}");
-    
-    String code = builder.toString();
-    return code;
-  }
   
   @SuppressWarnings("unchecked")
   static CalculatorAndByteCode compile(String javaCode , String className , ClassLoader classLoader){

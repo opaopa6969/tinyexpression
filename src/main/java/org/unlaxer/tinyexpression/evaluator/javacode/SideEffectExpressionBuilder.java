@@ -7,7 +7,6 @@ import java.util.function.Supplier;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
@@ -16,13 +15,14 @@ import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
 import org.unlaxer.tinyexpression.parser.StringExpression;
 
-public class SideEffectExpressionBuilder implements CodeBuilder {
+public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
 	
 	public static SideEffectExpressionBuilder SINGLETON = new SideEffectExpressionBuilder();
 
 	@Override
-	public void build(SimpleJavaCodeBuilder builder, Token token) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , 
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		MethodAndParameters methodAndParameters = SideEffectExpressionParser.extract(token);
 		
@@ -52,7 +52,7 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 			.append(methodName)
 			.append("(calculateContext , ");
 		
-		ParametersBuilder.buildParameter(builder, methodAndParameters);
+		ParametersBuilder.buildParameter(builder, methodAndParameters , tinyExpressionTokens);
 		
 		builder
 			.append(")).orElse(");
@@ -65,11 +65,11 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		Parser parser = returningToken.parser;
 		TokenPrinter.output(returningToken, System.out);
 		if(parser instanceof NumberExpression) {
-		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken);
+		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
 		}else if(parser instanceof StringExpression){
-      StringExpressionBuilder.SINGLETON.build(builder, returningToken);
+      StringExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
 		}else {
-		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken);
+		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
 		}
 		
 		builder
@@ -87,8 +87,8 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		
 		public static ParametersBuilder SINGLETON = new ParametersBuilder();
 
-		public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters) {
-			
+		public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters , 
+		    TinyExpressionTokens tinyExpressionTokens) {
 			
 			Iterator<Token> iterator = methodAndParameters.parameterTokens.iterator();
 			
@@ -97,13 +97,13 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 				
 				Parser parser = token.parser;
 				if(parser instanceof NakedVariableParser) {
-				  NakedVariableBuilder.SINGLETON.build(builder, token);
+				  NakedVariableBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if(parser instanceof NumberExpression) {
-					NumberExpressionBuilder.SINGLETON.build(builder, token);
+					NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if(parser instanceof BooleanExpression) {
-					BooleanExpressionBuilder.SINGLETON.build(builder, token);
+					BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if (parser instanceof StringExpression) {
-					builder.append(StringClauseBuilder.SINGLETON.build(token).toString());
+					builder.append(StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens).toString());
 				}else {
 					throw new IllegalArgumentException();
 				}

@@ -11,7 +11,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -32,11 +31,12 @@ import org.unlaxer.util.FactoryBoundCache;
 
 public class StringClauseBuilder {
   
-  public static class StringCaseExpressionBuilder implements CodeBuilder{
+  public static class StringCaseExpressionBuilder implements TokenCodeBuilder{
 
     public static StringCaseExpressionBuilder SINGLETON = new StringCaseExpressionBuilder();
 
-    public void build(SimpleJavaCodeBuilder builder, Token token) {
+    public void build(SimpleJavaCodeBuilder builder, Token token ,
+        TinyExpressionTokens tinyExpressionTokens) {
 
       List<Token> originalTokens = token.filteredChildren;
       Iterator<Token> iterator = originalTokens.iterator();
@@ -50,9 +50,9 @@ public class StringClauseBuilder {
 //        Token booleanExpression = BooleanCaseFactorParser.getBooleanExpression(caseFactor);
 //        Token expression = BooleanCaseFactorParser.getExpression(caseFactor);
         
-        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
         builder.append(" ? ");
-        StringExpressionBuilder.SINGLETON.build(builder, expression);
+        StringExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
         builder
           .append(":")
           .n();
@@ -62,7 +62,7 @@ public class StringClauseBuilder {
 
 	public static final StringClauseBuilder SINGLETON = new StringClauseBuilder();
 
-	public ExpressionOrLiteral build(Token token) {
+	public ExpressionOrLiteral build(Token token , TinyExpressionTokens tinyExpressionTokens) {
 
 		Parser parser = token.parser;
 		
@@ -87,7 +87,7 @@ public class StringClauseBuilder {
 
         while (iterator.hasNext()) {
           Token term = iterator.next();
-          ExpressionOrLiteral build = build(term);
+          ExpressionOrLiteral build = build(term , tinyExpressionTokens);
           builder.append(build.toString());
           if(iterator.hasNext()) {
             builder.append("+");
@@ -122,7 +122,7 @@ public class StringClauseBuilder {
 
 			while (iterator.hasNext()) {
 				Token successor = iterator.next();
-				ExpressionOrLiteral build = build(successor);
+				ExpressionOrLiteral build = build(successor , tinyExpressionTokens);
 				builder.append(build.toString());
 				if(iterator.hasNext()) {
 					builder.append("+");
@@ -135,7 +135,7 @@ public class StringClauseBuilder {
 			Token stringFactorToken = token.filteredChildren.get(1);
 			Token slicerToken = token.filteredChildren.get(0);
 
-			ExpressionOrLiteral inner = build(stringFactorToken);
+			ExpressionOrLiteral inner = build(stringFactorToken , tinyExpressionTokens);
 
 			Optional<String> specifier = slicerToken.getToken()
 					.map(wrapped -> wrapped.substring(1, wrapped.length() - 1));
@@ -171,24 +171,24 @@ public class StringClauseBuilder {
 
 			Token parenthesesed = token.filteredChildren.get(0);
 
-			return build(parenthesesed);
+			return build(parenthesesed , tinyExpressionTokens);
 
 		} else if (parser instanceof TrimParser) {
 
 			Token parenthesesed = token.filteredChildren.get(0);
-			ExpressionOrLiteral evaluate = build(parenthesesed);
+			ExpressionOrLiteral evaluate = build(parenthesesed , tinyExpressionTokens);
 			return ExpressionOrLiteral.expressionOf(evaluate.toString()+".trim()");
 
 		} else if (parser instanceof ToUpperCaseParser) {
 
 			Token parenthesesed = token.filteredChildren.get(0);
-			ExpressionOrLiteral evaluate = build(parenthesesed);
+			ExpressionOrLiteral evaluate = build(parenthesesed , tinyExpressionTokens);
 			return ExpressionOrLiteral.expressionOf(evaluate.toString()+".toUpperCase()");
 
 		} else if (parser instanceof ToLowerCaseParser) {
 
 			Token parenthesesed = token.filteredChildren.get(0);
-			ExpressionOrLiteral evaluate = build(parenthesesed);
+			ExpressionOrLiteral evaluate = build(parenthesesed , tinyExpressionTokens);
 			return ExpressionOrLiteral.expressionOf(evaluate.toString()+".toLowerCase()");
 		} else if(parser instanceof StringIfExpressionParser) {
 		  
@@ -196,8 +196,8 @@ public class StringClauseBuilder {
       Token factor1 = IfExpressionParser.getThenExpression(token , StringExpression.class , booleanExpression);
       Token factor2 = IfExpressionParser.getElseExpression(token , StringExpression.class , booleanExpression);
       
-      ExpressionOrLiteral factor1EOL = build(factor1);
-      ExpressionOrLiteral factor2EOL = build(factor2);
+      ExpressionOrLiteral factor1EOL = build(factor1 , tinyExpressionTokens);
+      ExpressionOrLiteral factor2EOL = build(factor2 , tinyExpressionTokens);
 
       SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
       builder.setKind(Kind.Main);
@@ -209,7 +209,7 @@ public class StringClauseBuilder {
 
       builder.append("(");
 
-      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
 
       builder.append(" ? ").n().incTab();
       
@@ -232,7 +232,7 @@ public class StringClauseBuilder {
       
       SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
-      ExpressionOrLiteral defaultFactor = build(defaultCaseFactor);
+      ExpressionOrLiteral defaultFactor = build(defaultCaseFactor , tinyExpressionTokens);
 
       builder.setKind(Kind.Main);
 
@@ -242,7 +242,7 @@ public class StringClauseBuilder {
 
       builder.append("(");
 
-      StringCaseExpressionBuilder.SINGLETON.build(builder, caseExpression);
+      StringCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
       builder.n();
       builder.append(defaultFactor.toString());
 

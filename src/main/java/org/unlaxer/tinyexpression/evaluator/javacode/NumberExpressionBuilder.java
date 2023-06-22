@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
@@ -15,6 +14,7 @@ import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
@@ -22,7 +22,6 @@ import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
-import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -31,13 +30,14 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 
-public class NumberExpressionBuilder implements CodeBuilder {
+public class NumberExpressionBuilder implements TokenCodeBuilder {
 
-	public static class NumberCaseExpressionBuilder implements CodeBuilder{
+	public static class NumberCaseExpressionBuilder implements TokenCodeBuilder{
 
 		public static NumberCaseExpressionBuilder SINGLETON = new NumberCaseExpressionBuilder();
 
-		public void build(SimpleJavaCodeBuilder builder, Token token) {
+		public void build(SimpleJavaCodeBuilder builder, Token token ,
+		    TinyExpressionTokens tinyExpressionTokens) {
 
 			List<Token> originalTokens = token.filteredChildren;
 			Iterator<Token> iterator = originalTokens.iterator();
@@ -47,9 +47,9 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 				Token booleanExpression = caseFactor.filteredChildren.get(0);
 				Token expression = caseFactor.filteredChildren.get(1);
-				BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
+				BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
 				builder.append(" ? ");
-				NumberExpressionBuilder.SINGLETON.build(builder, expression);
+				NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
 				builder
 					.append(":")
 					.n();
@@ -59,7 +59,7 @@ public class NumberExpressionBuilder implements CodeBuilder {
 	
 	public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
 
-	public void build(SimpleJavaCodeBuilder builder, Token token) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
 
 		Parser parser = token.parser;
 		
@@ -83,19 +83,19 @@ public class NumberExpressionBuilder implements CodeBuilder {
 		
 		if (parser instanceof PlusParser) {
 
-			binaryOperate(builder, token, "+");
+			binaryOperate(builder, token, "+" , tinyExpressionTokens);
 
 		} else if (parser instanceof MinusParser) {
 
-			binaryOperate(builder, token, "-");
+			binaryOperate(builder, token, "-" , tinyExpressionTokens);
 
 		} else if (parser instanceof MultipleParser) {
 
-			binaryOperate(builder, token, "*");
+			binaryOperate(builder, token, "*" , tinyExpressionTokens);
 
 		} else if (parser instanceof DivisionParser) {
 
-			binaryOperate(builder, token, "/");
+			binaryOperate(builder, token, "/" , tinyExpressionTokens);
 
 		} else if (parser instanceof NumberParser) {
 
@@ -123,13 +123,13 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 			builder.append("(");
 
-			BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression);
+			BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
 
 			builder.append(" ? ").n().incTab();
-			build(builder, factor1);
+			build(builder, factor1 , tinyExpressionTokens);
 
 			builder.append(":").n();
-			build(builder, factor2);
+			build(builder, factor2 , tinyExpressionTokens);
 
 			builder.decTab();
 
@@ -145,9 +145,9 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 			builder.append("(");
 
-			NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression);
+			NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
 			builder.n();
-			build(builder, defaultCaseFactor);
+			build(builder, defaultCaseFactor , tinyExpressionTokens);
 
 			builder.append(")");
 			builder.decTab();
@@ -156,44 +156,44 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 			Token value = token.filteredChildren.get(0);
 			builder.append("(float) Math.sin(calculateContext.radianAngle(");
-			build(builder, value);
+			build(builder, value , tinyExpressionTokens);
 			builder.append("))");
 
 		} else if (parser instanceof CosParser) {
 
 			Token value = token.filteredChildren.get(0);
 			builder.append("(float) Math.cos(calculateContext.radianAngle(");
-			build(builder, value);
+			build(builder, value , tinyExpressionTokens);
 			builder.append("))");
 
 		} else if (parser instanceof TanParser) {
 
 			Token value = token.filteredChildren.get(0);
 			builder.append("(float) Math.tan(calculateContext.radianAngle(");
-			build(builder, value);
+			build(builder, value , tinyExpressionTokens);
 			builder.append("))");
 
 		} else if (parser instanceof SquareRootParser) {
 
 			Token value = token.filteredChildren.get(0);
 			builder.append("(float) Math.sqrt(");
-			build(builder, value);
+			build(builder, value , tinyExpressionTokens);
 			builder.append(")");
 
 		} else if (parser instanceof MinParser) {
 
 			builder.append("Math.min(");
-			build(builder, token.filteredChildren.get(0));
+			build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
 			builder.append(",");
-			build(builder, token.filteredChildren.get(1));
+			build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
 			builder.append(")");
 
 		} else if (parser instanceof MaxParser) {
 
 			builder.append("Math.max(");
-			build(builder, token.filteredChildren.get(0));
+			build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
 			builder.append(",");
-			build(builder, token.filteredChildren.get(1));
+			build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
 			builder.append(")");
 
 		} else if (parser instanceof RandomParser) {
@@ -206,15 +206,15 @@ public class NumberExpressionBuilder implements CodeBuilder {
 			Token rightFloatDefault = token.filteredChildren.get(1);
 
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.toNum(");
-			builder.append(StringClauseBuilder.SINGLETON.build(leftString).toString());
+			builder.append(StringClauseBuilder.SINGLETON.build(leftString , tinyExpressionTokens).toString());
 			builder.append(",");
-			build(builder, rightFloatDefault);
+			build(builder, rightFloatDefault , tinyExpressionTokens);
 			builder.append("f)");
 
 		} else if (parser instanceof StringLengthParser) {
 
 			Token stringExpressionToken = token.filteredChildren.get(0);//3rd children is inner
-			String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken).toString();
+			String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken , tinyExpressionTokens).toString();
 			if(string == null || string.isEmpty()) {
 				string ="\"\"";
 			}
@@ -224,7 +224,7 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 		}else if (parser instanceof SideEffectExpressionParser) {
 			
-			SideEffectExpressionBuilder.SINGLETON.build(builder, token);
+			SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			
 //		} else if (parser instanceof StringIndexOfParser) {
 //
@@ -235,13 +235,14 @@ public class NumberExpressionBuilder implements CodeBuilder {
 
 	}
 
-	void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator) {
+	void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
+	    TinyExpressionTokens tinyExpressionTokens) {
 
 		builder.append("(");
 
-		build(builder, token.filteredChildren.get(1));
+		build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
 		builder.append(operator);
-		build(builder, token.filteredChildren.get(2));
+		build(builder, token.filteredChildren.get(2) , tinyExpressionTokens);
 
 		builder.append(")");
 	}

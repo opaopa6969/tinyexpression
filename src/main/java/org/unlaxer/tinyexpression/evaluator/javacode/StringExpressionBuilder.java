@@ -1,16 +1,15 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 
-public class StringExpressionBuilder implements CodeBuilder {
+public class StringExpressionBuilder implements TokenCodeBuilder {
 
   public static final StringExpressionBuilder SINGLETON = new StringExpressionBuilder();
 
   @Override
-  public void build(SimpleJavaCodeBuilder builder , Token token) {
+  public void build(SimpleJavaCodeBuilder builder , Token token , TinyExpressionTokens tinyExpressionTokens) {
     
-    ExpressionOrLiteral one = StringClauseBuilder.SINGLETON.build(token);
+    ExpressionOrLiteral one = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
     
     builder.append(one.toString());
   }

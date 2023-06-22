@@ -4,20 +4,20 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 
-public class StringInBooleanExpressionBuilder implements CodeBuilder {
+public class StringInBooleanExpressionBuilder implements TokenCodeBuilder {
 
 	public static final StringInBooleanExpressionBuilder SINGLETON = new StringInBooleanExpressionBuilder();
 
 	@Override
-	public void build(SimpleJavaCodeBuilder builder, Token token) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , 
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		builder.append("org.unlaxer.util.StringIn.match(");
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		Iterator<ExpressionOrLiteral> iterator = filteredChildren.stream()
-			.map(StringClauseBuilder.SINGLETON::build)
+			.map(_token-> StringClauseBuilder.SINGLETON.build(_token, tinyExpressionTokens))
 			.iterator();
 		
 		while (iterator.hasNext()) {

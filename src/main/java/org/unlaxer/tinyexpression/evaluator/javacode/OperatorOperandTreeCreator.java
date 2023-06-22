@@ -79,6 +79,7 @@ import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
@@ -103,6 +104,8 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	public Token apply(Token token) {
 		
 		Parser parser = token.parser;
+		
+		if(parser instanceof TinyExpressionParser)
 		
 		if(parser instanceof SideEffectExpressionParameterSuccessor) {
 		  token = SideEffectExpressionParameterSuccessor.extractParameter(token);

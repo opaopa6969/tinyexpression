@@ -9,6 +9,7 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 
 public interface Calculator<T> {
 	
@@ -17,9 +18,10 @@ public interface Calculator<T> {
 		Parsed parsed = getParser().parse(parseContext);
 		try{
 			Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
-			T answer = getCalculatorOperator().evaluate(calculateContext,rootToken);
+			TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+			T answer = getCalculatorOperator().evaluate(calculateContext,tinyExpressionTokens);
 				
-			return new CalculateResult(parseContext , parsed, Optional.of(toBigDecimal(answer)),rootToken);
+			return new CalculateResult(parseContext , parsed, Optional.of(toBigDecimal(answer)),tinyExpressionTokens);
 			
 		}catch (Exception e) {
 			Errors errors = new Errors(e);
