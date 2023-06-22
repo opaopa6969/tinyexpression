@@ -2,11 +2,15 @@ package org.unlaxer.tinyexpression.parser.javalang;
 
 import java.util.List;
 
+import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class AnnotationParser extends LazyChain{
   
@@ -21,4 +25,16 @@ public class AnnotationParser extends LazyChain{
         Parser.get(AnnotationParametersParser.class)
     );
   }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractAnnotation(Token thisParserParsed){
+    
+    return thisParserParsed.newCreatesOf(
+      TokenPredicators.parsers(
+          IdentifierParser.class,
+          AnnotationParametersParser.class
+      )
+    );
+  }
+
 }

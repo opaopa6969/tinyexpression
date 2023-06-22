@@ -21,6 +21,22 @@ public class TinyExpressionTokens{
     
     variableDeclarationsToken = TinyExpressionParser.extractVariables(tinyExpressionToken);
     annotationsToken = TinyExpressionParser.extractAnnotaions(tinyExpressionToken);
-
   }
+  public Token getTinyExpressionToken() {
+    return tinyExpressionToken;
+  }
+  public Token getImportsToken() {
+    return importsToken;
+  }
+  public Token getVariableDeclarationsToken() {
+    return variableDeclarationsToken;
+  }
+  public Token getAnnotationsToken() {
+    return annotationsToken;
+  }
+  public Token getExpressionToken() {
+    return expressionToken;
+  }
+  
+  
 }

@@ -64,8 +64,13 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   }
 
   public static Token extractAnnotaions(Token tinyExpressionToken) {
-    // TODO Auto-generated methasdsasadod stub
-    asddsa
-    return null;
+    Optional<Token> childWithParserAsOptional = tinyExpressionToken.getChildWithParserAsOptional(AnnotationsParser.class);
+    
+    List<Token> AnnotationChildren = childWithParserAsOptional
+      .map(AnnotationsParser::extractAnnotationss)
+      .orElseGet(List::of);
+    
+    Token variables = new Token(TokenKind.consumed, AnnotationChildren, Parser.get(AnnotationsParser.class),0);
+    return variables;
   }
 }

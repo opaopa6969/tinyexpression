@@ -14,11 +14,12 @@ public class FormulaParser extends NoneChildParser {
 
 //	public static final FormulaParser SINGLETON = new FormulaParser();
 	
-	public NumberExpressionParser expressionParser;
+//  public NumberExpressionParser expressionParser;
+  public TinyExpressionParser expressionParser;
 
 	public FormulaParser() {
 		super();
-    expressionParser = Parser.get(NumberExpressionParser.class);
+    expressionParser = Parser.get(TinyExpressionParser.class);
 	}
 
 	@Override

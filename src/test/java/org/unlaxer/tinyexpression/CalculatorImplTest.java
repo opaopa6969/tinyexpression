@@ -16,6 +16,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
@@ -883,6 +884,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     ResultAndMatch calcWithResult = calcWithResult(context, formula, new BigDecimal("0"));
     
     calcWithResult.calculateResult.operatorOperandTreeToken
+      .map(TinyExpressionTokens::getTinyExpressionToken)
       .map(TokenPrinter::get)
       .ifPresent(System.out::println);;
     

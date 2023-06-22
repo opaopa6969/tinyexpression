@@ -11,7 +11,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 public class TinyExpressionParserTest extends ParserTestBase{
 
   @Test
-  public void test() {
+  public void testMaximum() {
     
     setLevel(OutputLevel.detail);
     
@@ -52,5 +52,52 @@ public class TinyExpressionParserTest extends ParserTestBase{
     System.out.println(string);
     
   }
+  
+  @Test
+  public void testMinimum() {
+    
+    setLevel(OutputLevel.detail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
 
+    simpleBuilder
+      .line("if($sex=='woman'){")
+      .line("  0 //女性無料")
+      .line("}else{")
+      .line("  external returning as number default 0 : Fee#calculate($age,$taxRate)")
+      .line("}");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+
+  @Test
+  public void testMinimum2() {
+    
+    setLevel(OutputLevel.detail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("1+(8/4)");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
 }
