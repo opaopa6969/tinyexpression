@@ -35,9 +35,10 @@ public class ExpressionBuilderTest {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
 
       rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
+//      tinyExpressionTokens = new TinyExpressionTokens(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
       
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken , tinyExpressionTokens);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, tinyExpressionTokens.expressionToken , tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
