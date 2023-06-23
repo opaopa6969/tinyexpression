@@ -107,7 +107,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		
 		if(parser instanceof TinyExpressionParser) {
 		  Token extractImports = TinyExpressionParser.extractImports(token);
-		  Token extractNumberExpression = apply(TinyExpressionParser.extractNumberExpression(token));
+		  Token extractNumberExpression = TinyExpressionParser.extractNumberExpression(token);
+		  Token appliedNumberExpression = apply(extractNumberExpression);
+		  extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
+		  Token extractAnnotaions = TinyExpressionParser.extractAnnotaions(token);
+		  Token extractVariables = TinyExpressionParser.extractVariables(token);
 		  return token.newCreatesOf(extractImports,extractNumberExpression);
 		}
 		

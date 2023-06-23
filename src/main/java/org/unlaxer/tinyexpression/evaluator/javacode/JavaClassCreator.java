@@ -11,9 +11,9 @@ public interface JavaClassCreator{
     String CalculationContextName = CalculationContext.class.getName();
     builder
       .setKind(Kind.Main)
-      .line("import org.unlaxer.Token;")
       .line("import "+CalculationContextName+";")
       .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
+      .line("import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;")
       .n()
       .append("public class ")
       .append(className)
@@ -23,7 +23,7 @@ public interface JavaClassCreator{
       .setKind(Kind.Function)
       .incTab()
       .line("@Override")
-      .line("public Float evaluate("+CalculationContextName+" calculateContext , Token token) {")
+      .line("public Float evaluate("+CalculationContextName+" calculateContext , TinyExpressionTokens token) {")
       .setKind(Kind.Calculation)
       .incTab()
       .line("float answer = (float) ")
