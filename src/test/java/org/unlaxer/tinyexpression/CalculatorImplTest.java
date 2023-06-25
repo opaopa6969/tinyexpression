@@ -8,6 +8,8 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import javax.swing.text.AbstractDocument.Content;
+
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
@@ -16,6 +18,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
@@ -937,5 +940,50 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 //    assertFalse(calc(context,"match{1==1->$count,default->$defaultValue}",new BigDecimal("10")));
   }
 
+  
+  @Test
+  public void testImportClass() {
+    
+    setLevel(OutputLevel.detail);
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set(new Fee());
+    context.set("age", 18);
+    context.set("taxRate", 0.1f);
+
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+//      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
+      .n()
+      .line("  external returning number default 0 : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
+      .n()
+      .line("  external returning number default 0 : Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .n()
+      .line("  external returning number default 0 : calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+
+  }
 
 }

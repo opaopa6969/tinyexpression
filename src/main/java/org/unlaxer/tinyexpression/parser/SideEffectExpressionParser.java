@@ -81,12 +81,10 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
                 boolean.class;
         
 	  
-//		Token classMethod = token.filteredChildren.get(0);//TODO token.getChild(JavaClassMethodParser.class);
 	  Token classMethod = token.getChildWithParser(JavaClassMethodParser.class);
 		
 		ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
 		
-//		Token parameter = token.filteredChildren.get(1);
 		Token parametersClause = getParametersClause(token);
 		
 		SideEffectExpressionParameterParser sideEffectExpressionParameterParser = 

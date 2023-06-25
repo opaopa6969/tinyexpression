@@ -9,7 +9,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
 import org.unlaxer.tinyexpression.parser.JavaClassMethodParser;
@@ -19,27 +18,33 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class ImportParser extends JavaStyleDelimitedLazyChain{
   
-  static Tag choiceTag = Tag.of("javaClassMethodOrClassName");
+  static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
 
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
         new WordParser("import"),
         new Choice(
-            Parser.get(JavaClassMethodParser.class),
-            Parser.get(JavaClassNameParser.class)
-        ).addTag(choiceTag),
+            Parser.get(JavaClassMethodParser.class).addTag(javaClassMethodOrClassNameTag),
+            Parser.get(JavaClassNameParser.class).addTag(javaClassMethodOrClassNameTag)
+        ),//.addTag(choiceTag),
         new WordParser("as"),
         Parser.get(IdentifierParser.class),
         Parser.get(SemiColonParser.class)
     );
   }
   
-  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  @TokenExtractor
   public static Token extractImport(Token thisParserParsed){
     
-    Token choice = thisParserParsed.getChild(TokenPredicators.hasTag(choiceTag));
-    Token javaClassMethodOrClassName = ChoiceInterface.choiced(choice);
+    //choiceを選択するにはこの方法が良いがTiming.UseOperatorOperandTreeの時に面倒
+//    Token choice = thisParserParsed.getChild(
+//        TokenPredicators.hasTag(choiceTag),
+//        // Choice等はoriginalにしかか含まれない
+//        ChildrenKind.original);
+//    Token javaClassMethodOrClassName = ChoiceInterface.choiced(choice);
+    Token javaClassMethodOrClassName = thisParserParsed.getChild(
+        TokenPredicators.hasTag(javaClassMethodOrClassNameTag));
     Token identifier = thisParserParsed.getChildWithParser(IdentifierParser.class);
     
     return thisParserParsed.newCreatesOf(javaClassMethodOrClassName,identifier);
