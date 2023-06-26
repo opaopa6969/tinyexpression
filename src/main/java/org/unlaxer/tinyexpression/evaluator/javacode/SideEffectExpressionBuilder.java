@@ -58,26 +58,26 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 		ParametersBuilder.buildParameter(builder, methodAndParameters , tinyExpressionTokens);
 		
 		builder
-			.append(")).orElse(");
-		// old implementation : first parameter is default returning value
-    // new implementation : "returning as type default xxx". xxx is default returning value
+			.append(")).orElseThrow(()->new org.unlaxer.tinyexpression.Calculator.CalculationException(\"class not found in CalculationContext. please set :"+className+"\"))");
+		// 1st implementation : first parameter is default returning value
+    // 2nd implementation : "returning as type default xxx". xxx is default returning value
 		//　　　　　　　　　　　　　　　　 : if returning clause is not exists , then first parameter is default returning value
+		// 3rd implementation : orElseThrow! comment out returning default
 		
-		
-		Token returningToken = methodAndParameters.returningToken;
-		Parser parser = returningToken.parser;
-		TokenPrinter.output(returningToken, System.out);
-		if(parser instanceof NumberExpression) {
-		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
-		}else if(parser instanceof StringExpression){
-      StringExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
-		}else {
-		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
-		}
-		
-		builder
-			.append(")");
-			;
+//		Token returningToken = methodAndParameters.returningToken;
+//		Parser parser = returningToken.parser;
+////		TokenPrinter.output(returningToken, System.out);
+//		if(parser instanceof NumberExpression) {
+//		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}else if(parser instanceof StringExpression){
+//      StringExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}else {
+//		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}
+//		
+//		builder
+//			.append(")");
+//			;
 		
 	}
 

@@ -27,7 +27,7 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
     testAllMatch(sideEffectExpressionParser,("external:jp.caulis.calc.Effects#foo(10,$hour>0 & $hour<5)"));
 		
-    testAllMatch(sideEffectExpressionParser,("external returning as number default 0 : Fee#calculate($age,$taxRate)"));
+    testAllMatch(sideEffectExpressionParser,("external returning as number : Fee#calculate($age,$taxRate)"));
     
     
 		{
@@ -81,23 +81,23 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
 	       "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)");
 	   
 	   testAllMatch(sideEffectExpressionParser,
-	       "external returning as float default 0 :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
+	       "external returning as float :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
 	   testUnMatch(sideEffectExpressionParser,
 	       "external returning as boolean default false :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
 	   testUnMatch(sideEffectExpressionParser,
          "external returning as String default '' :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      
      testAllMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
      
      testAllMatch(sideEffectExpressionParser,
          "external returning as float default 1 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testAllMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testAllMatch(sideEffectExpressionParser,
-         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
+         "external returning as number: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
      
      testUnMatch(sideEffectExpressionParser,
          "external returning as float default false :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
@@ -119,23 +119,23 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
          "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
+         "external returning as float :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
      testAllMatch(sideEffectExpressionParser,
          "external returning as boolean default false :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      testUnMatch(sideEffectExpressionParser,
          "external returning as String default '' :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
      
      testUnMatch(sideEffectExpressionParser,
          "external returning as float default 1 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
+         "external returning as number: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
      
      testUnMatch(sideEffectExpressionParser,
          "external returning as float default false :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
@@ -157,23 +157,23 @@ public class SideEffectExpressionParserTest extends ParserTestBase{
          "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
+         "external returning as float :jp.caulis.calc.Effects#foo($foo as float , $bar as String , $hoge as boolean)");
      testUnMatch(sideEffectExpressionParser,
          "external returning as boolean default false :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      testAllMatch(sideEffectExpressionParser,
          "external returning as String default '' :jp.caulis.calc.Effects#foo($foo as Number , $bar as string , $hoge as Boolean)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#floatToFloatMethod(1)");
      
      testUnMatch(sideEffectExpressionParser,
          "external returning as float default 1 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as float default 0 :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
+         "external returning as float :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");
      
      testUnMatch(sideEffectExpressionParser,
-         "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
+         "external returning as number: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($Male as boolean)");
      
      testUnMatch(sideEffectExpressionParser,
          "external returning as float default false :org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(true)");

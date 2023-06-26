@@ -14,9 +14,7 @@ public class ReturningBooleanParser extends JavaStyleDelimitedLazyChain implemen
   public List<Parser> getLazyParsers() {
     return new Parsers(
         Parser.get(()->new WordParser("returning")),
-        Parser.get(BooleanTypeHintSuffixParser.class),
-        Parser.get(DefaultClauseParser.class),
-        Parser.get(BooleanExpressionParser.class)
+        Parser.get(BooleanTypeHintSuffixParser.class)
     );
   }
 }

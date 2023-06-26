@@ -14,9 +14,7 @@ public class ReturningStringParser extends JavaStyleDelimitedLazyChain implement
   public List<Parser> getLazyParsers() {
     return new Parsers(
         Parser.get(()->new WordParser("returning")),
-        Parser.get(StringTypeHintSuffixParser.class),
-        Parser.get(DefaultClauseParser.class),
-        Parser.get(StringExpressionParser.class)
+        Parser.get(StringTypeHintSuffixParser.class)
     );
   }
 }

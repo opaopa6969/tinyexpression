@@ -402,12 +402,14 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
 		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
 		  Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
-      Token returning = apply(extractReturning(returningClause));
+		  
+		  // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
+//      Token returning = apply(extractReturning(returningClause));
 			
 			return operator.newCreatesOf(
 //			    returning causeをtoken化する。
 //			    ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
-			    returning,
+			    returningClause,
 			    SideEffectExpressionParser.getMethodClause(operator),
 			    extractParameters
 			    
@@ -423,9 +425,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	      Optional.of(filteredChildren.get(0));
   }
 
-  private Token extractReturning(Token returningClause) {
+  Token extractReturning(Token returningClause) {
 //    ExpressionParserかBooleanExpressionParserかStringExpressionParserを探す。
 //    ただし幅優先で探さなければならないのでTokenにdepth/breadthのどちらでlistを作るかを指定するものを追加する。
+//
+//    その後、defaultを無くしたのでこの処理はいらなくなるけどSearchFirstの例として実装のヒントとして残しておく
     
     List<Token> flatten = returningClause.flatten(SearchFirst.Breadth);
     Token expressionToken = flatten.stream()

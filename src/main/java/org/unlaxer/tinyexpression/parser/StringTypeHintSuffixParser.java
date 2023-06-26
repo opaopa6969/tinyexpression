@@ -24,4 +24,5 @@ public class StringTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
         Parser.get(StringTypeHintParser.class)//
     );
   }
+  
 }

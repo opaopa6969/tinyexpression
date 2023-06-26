@@ -12,7 +12,7 @@ public class ReturningNumberParserTest extends ParserTestBase{
     setLevel(OutputLevel.detail);
     ReturningNumberParser returningNumberParser = new ReturningNumberParser();
     
-    testAllMatch(returningNumberParser, "returning as number default 0");
+    testAllMatch(returningNumberParser, "returning as number");
     
     
   }

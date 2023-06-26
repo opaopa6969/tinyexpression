@@ -20,9 +20,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
   public List<Parser> getLazyParsers() {
     return new Parsers(
         wordParser,
-        Parser.get(NumberTypeHintSuffixParser.class),
-        Parser.get(DefaultClauseParser.class),
-        Parser.get(NumberExpressionParser.class)
+        Parser.get(NumberTypeHintSuffixParser.class)
     );
   }
   

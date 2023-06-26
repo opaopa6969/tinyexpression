@@ -20,7 +20,7 @@ public class NumberExpressionParserTest extends ParserTestBase{
       .line("if($sex=='woman'){")
       .line("  0 ")
       .line("}else{")
-      .line("  external returning as number default 0 : Fee#calculate($age,$taxRate)")
+      .line("  external returning as number : Fee#calculate($age,$taxRate)")
       .line("}");
     
     String formula = simpleBuilder.toString();

@@ -8,8 +8,6 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
-import javax.swing.text.AbstractDocument.Content;
-
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
@@ -18,6 +16,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.formatter.Formatter;
@@ -276,6 +275,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		testAllMatch(calculator.getParser(), formula);
 		CalculateResult calculateResult = calculator.calculate(calculateContext , formula);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
+		if(calculateResult.errors.raisedException.isPresent()) {
+		  throw new CalculationException(calculateResult.errors.raisedException.get());
+		}
 		BigDecimal x = calculateResult.answer.get();
 		System.out.format(" %s = %s \n" , formula , x.toString());
 		boolean match = 
@@ -762,17 +764,21 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     context.set("isMale", true);
 
-    assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+    //以下のテストではエラーが出るようにした。Contextにorg.unlaxer.tinyexpression.parser.TestSideEffectorをセットしていないので
+    assertThrows(CalculationException.class, ()->
+      calc(context,
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("0")));
 
-    assertTrue(
-        calc(context,
+    // defaultは廃止
+    assertThrows(IllegalArgumentException.class, ()->
+      calc(context,
         "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("11")));
 
-    assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(1==0)",
+    assertThrows(CalculationException.class, ()->
+      calc(context,
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod(1==0)",
         new BigDecimal("0")));
 
     // parse時にはTestSIでEffector＃booleanToFloatMethodの戻り値の型が何であるかは特定できないためreturningを指定する必要がある
@@ -789,21 +795,21 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     context.set(new TestSideEffector());
     
     assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'=='a')",
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'=='a')",
         new BigDecimal("69")));
     
     assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'!='a')",
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod('a'!='a')",
         new BigDecimal("6969")));
     
     assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("69")));
     
     context.set("isMale", false);
     
     assertTrue(calc(context,
-        "external returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("6969")));
 
   }
@@ -824,11 +830,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     context.set(new TestSideEffector());
 
     assertTrue(calc(context,
-        "external /*comment */ returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Mr.robot')",
+        "external /*comment */ returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Mr.robot')",
         new BigDecimal(12*300000)));
     
     assertTrue(calc(context,
-        "external /*comment */ returning as number default 0: org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Dr.house')",
+        "external /*comment */ returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#salary(12*300000,'Dr.house')",
         new BigDecimal(12*300000*2)));
   }
   
@@ -957,7 +963,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       simpleBuilder
 //      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
       .n()
-      .line("  external returning number default 0 : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
+      .line("  external returning number : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
@@ -968,7 +974,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       simpleBuilder
       .line("import org.unlaxer.tinyexpression.Fee as Fee;")
       .n()
-      .line("  external returning number default 0 : Fee#calculate($age as number ,1000,$taxRate as number)");
+      .line("  external returning number : Fee#calculate($age as number ,1000,$taxRate as number)");
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
@@ -979,7 +985,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       simpleBuilder
       .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
       .n()
-      .line("  external returning number default 0 : calculate($age as number ,1000,$taxRate as number)");
+      .line("  external returning number : calculate($age as number ,1000,$taxRate as number)");
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
