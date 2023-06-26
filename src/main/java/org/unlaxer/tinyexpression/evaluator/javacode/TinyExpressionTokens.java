@@ -52,9 +52,9 @@ public class TinyExpressionTokens{
     return expressionToken;
   }
   
-  public String resolveJavaClass(String className) {
-    String string = classNameByIdentifier.get(className);
-    return string == null ? className : string;
+  public String resolveJavaClass(String classNameOrMethod) {
+    String string = classNameByIdentifier.get(classNameOrMethod);
+    return string == null ? classNameOrMethod : string;
   }
   
   

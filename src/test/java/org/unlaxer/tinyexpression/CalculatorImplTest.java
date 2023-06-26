@@ -15,6 +15,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
@@ -324,7 +325,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		return json.format(object);
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected=ParseException.class)
 	public void testUnfinishedFormula() {
 
 		String formula = "1+1/s";
@@ -340,7 +341,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		assertEquals("/s", result.parseContext.getRemain(TokenKind.consumed));
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
+	@Test(expected=ParseException.class)
 	public void testNotStartedFormula() {
 
 		String formula = "s/1+1";
@@ -771,7 +772,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         new BigDecimal("0")));
 
     // defaultは廃止
-    assertThrows(IllegalArgumentException.class, ()->
+    assertThrows(ParseException.class, ()->
       calc(context,
         "external returning as number default 9+(8/4): org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("11")));
@@ -961,6 +962,17 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       SimpleBuilder simpleBuilder = new SimpleBuilder();
       
       simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .n()
+      .line("  external returning number : calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
 //      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
       .n()
       .line("  external returning number : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
@@ -978,18 +990,6 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
-    
-    {
-      SimpleBuilder simpleBuilder = new SimpleBuilder();
-      
-      simpleBuilder
-      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
-      .n()
-      .line("  external returning number : calculate($age as number ,1000,$taxRate as number)");
-      
-      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
-    }
-
   }
 
 }

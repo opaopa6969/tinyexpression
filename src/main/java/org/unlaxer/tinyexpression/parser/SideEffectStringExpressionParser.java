@@ -9,7 +9,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -45,12 +45,12 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
   }
 
   @TokenExtractor
-  public static MethodAndParameters extract(Token token) {
+  public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
 
-    Token classMethod = getMethodClause(token);// TODO
-                                                      // token.getChild(JavaClassMethodParser.class);
+    Token classMethodToken = getMethodClause(token);// TODO
 
-    ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
+    ClassNameAndIdentifier extract = ((ClassNameAndIdentifierExtractor)classMethodToken.parser)
+        .extractClassNameAndIdentifier(classMethodToken, tinyExpressionTokens);
 
     Token parameter = getParametersClause(token);
 

@@ -10,7 +10,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -29,11 +29,13 @@ public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimite
 		super(name);
 	}
 		
-	public static MethodAndParameters extract(Token token) {
-		Token classMethod = getMethodClause(token);
+	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
+		Token classMethodToken = getMethodClause(token);
 		Token parameter = getParametersClause(token);
 		
-		ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
+    ClassNameAndIdentifier extract = ((ClassNameAndIdentifierExtractor)classMethodToken.parser)
+        .extractClassNameAndIdentifier(classMethodToken, tinyExpressionTokens);
+
 		SideEffectStringToBooleanExpressionParameterParser sideEffectStringToBooleanExpressionParameterParser = 
 				Parser.get(SideEffectStringToBooleanExpressionParameterParser.class);
 		List<Token> parameterTokens = sideEffectStringToBooleanExpressionParameterParser.parameterTokens(parameter);

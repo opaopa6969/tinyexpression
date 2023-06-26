@@ -7,6 +7,7 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 
 public abstract class PreConstructedCalculator<T> implements Function<CalculationContext, Float> , Calculator<T>{
@@ -27,12 +28,12 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 		try(ParseContext parseContext = new ParseContext(new StringSource(formula));){
 			Parsed parsed = getParser().parse(parseContext);
 			if(false == parsed.isSucceeded()) {
-				throw new IllegalArgumentException("failed to parse:"+formula);
+				throw new ParseException("failed to parse:"+formula);
 			}
 			rootToken = new TinyExpressionTokens(tokenReduer().apply(parsed.getRootToken(true)));
 		}catch (Exception e) {
 		  e.printStackTrace();
-			throw new IllegalArgumentException("failed to parse:"+formula,e);
+			throw new ParseException("failed to parse:"+formula,e);
 		}
 	}
 	

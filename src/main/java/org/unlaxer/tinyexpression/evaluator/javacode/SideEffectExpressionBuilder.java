@@ -24,7 +24,8 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 	public void build(SimpleJavaCodeBuilder builder, Token token , 
 	    TinyExpressionTokens tinyExpressionTokens) {
 		
-		MethodAndParameters methodAndParameters = SideEffectExpressionParser.extract(token);
+		MethodAndParameters methodAndParameters = 
+		    SideEffectExpressionParser.extract(token , tinyExpressionTokens);
 		
 		String methodName = methodAndParameters.classNameAndIdentifier.getIdentifier();
 		String className = 
