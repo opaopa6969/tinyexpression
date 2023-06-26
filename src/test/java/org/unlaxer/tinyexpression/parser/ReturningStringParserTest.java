@@ -11,7 +11,11 @@ public class ReturningStringParserTest extends ParserTestBase{
     setLevel(OutputLevel.detail);
     ReturningStringParser returningStringParser = new ReturningStringParser();
     
-    testAllMatch(returningStringParser, "returning as string default \"niku\"");
+    testAllMatch(returningStringParser, "returning as string// default \"niku\"");
+    testAllMatch(returningStringParser, "returning string// default \"niku\"");
+    testAllMatch(returningStringParser, "as string// default \"niku\"");
+    testAllMatch(returningStringParser, "string");
+    testAllMatch(returningStringParser, "String");
   }
 
 }

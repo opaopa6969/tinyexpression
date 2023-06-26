@@ -13,6 +13,11 @@ public class ReturningNumberParserTest extends ParserTestBase{
     ReturningNumberParser returningNumberParser = new ReturningNumberParser();
     
     testAllMatch(returningNumberParser, "returning as number");
+    testAllMatch(returningNumberParser, "returning number");
+    testAllMatch(returningNumberParser, "as number");
+    testAllMatch(returningNumberParser, "number");
+    testAllMatch(returningNumberParser, "Float");
+    testAllMatch(returningNumberParser, "Number");
     
     
   }

@@ -15,9 +15,15 @@ public class ReturningBooleanParserTest extends ParserTestBase{
       setLevel(OutputLevel.detail);
       ReturningBooleanParser returningStringParser = new ReturningBooleanParser();
       
-      testAllMatch(returningStringParser, "returning as boolean default true");
-      testAllMatch(returningStringParser, "returning as boolean default 1==0");
-      TestResult testAllMatch = testAllMatch(returningStringParser, "returning as boolean default (1==0)");
+      testPartialMatch(returningStringParser, "returning as boolean default true","returning as boolean ");
+      testPartialMatch(returningStringParser, "returning as boolean default 1==0","returning as boolean ");
+      testAllMatch(returningStringParser, "returning as boolean /*default true*/");
+      testAllMatch(returningStringParser, "returning as boolean /*default 1==0*/");
+      testAllMatch(returningStringParser, "returning boolean");
+      testAllMatch(returningStringParser, "as boolean");
+      testAllMatch(returningStringParser, "boolean");
+      testAllMatch(returningStringParser, "Boolean");
+      TestResult testAllMatch = testAllMatch(returningStringParser, "returning as boolean //default (1==0)");
       Token rootToken = testAllMatch.parsed.getRootToken();
       
       TokenPrinter.output(rootToken, System.out);
