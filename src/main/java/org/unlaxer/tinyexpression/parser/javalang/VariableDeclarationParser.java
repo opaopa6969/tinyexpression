@@ -16,7 +16,7 @@ import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class VariableDeclarationParser extends JavaStyleDelimitedLazyChain{
-
+  
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
