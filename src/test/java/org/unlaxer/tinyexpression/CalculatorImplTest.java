@@ -1011,6 +1011,10 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       .n()
       .line("external number calculate($age as number ,1000,$taxRate as number)");
       
+      
+      
+    TODO  ReferenceParserというものがあって、それを使ってimportとのマッチングをするとよいかな
+      
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
     

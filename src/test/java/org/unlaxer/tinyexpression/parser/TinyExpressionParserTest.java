@@ -136,7 +136,7 @@ public class TinyExpressionParserTest extends ParserTestBase{
 
     simpleBuilder
       .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
-      .line("var $age as number set if not exists 18;")
+      .line("var $age as number set if not exists 18 description='年齢';")
       .n()
       .line("external number calculate($age as number ,1000,$taxRate as number)");
     

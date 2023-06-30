@@ -26,7 +26,7 @@ public class VariableDeclarationsParser extends LazyZeroOrMore{
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static List<Token> extractVariables(Token thisParserParsed){
     return thisParserParsed.getAstNodeChildren().stream()
-      .map(VariableDeclarationParser::extractVariable)
+      .map(AbstractVariableDeclarationParser::extractVariable)
       .collect(Collectors.toList());
   }
 }
