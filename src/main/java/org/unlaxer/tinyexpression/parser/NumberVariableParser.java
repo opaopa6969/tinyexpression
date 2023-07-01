@@ -7,7 +7,9 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
+import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class NumberVariableParser extends LazyChoice implements VariableParser , NumberExpression{
 
@@ -21,8 +23,9 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
   public List<Parser> getLazyParsers() {
     return 
       new Parsers(//
-          Parser.get(NumberPrefixedVariableParser.class), //
-          Parser.get(NumberSuffixedVariableParser.class)//
+          Parser.get(NumberPrefixedVariableParser.class), 
+          Parser.get(NumberSuffixedVariableParser.class),
+          Parser.get(NumberVariableMatchedWithVariableDeclarationParser.class)
       );
   }
   
@@ -40,5 +43,31 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
   public Optional<VariableType> type() {
     return Optional.of(VariableType.number);
   }
+  
+  public static class NumberVariableMatchedWithVariableDeclarationParser extends LazyChain implements NumberExpression {
+
+    public NumberVariableMatchedWithVariableDeclarationParser() {
+      super();
+    }
+
+    @Override
+    public List<Parser> getLazyParsers() {
+      return new Parsers(//
+          Parser.get(DollarParser.class), //0
+          Parser.get(NumberVariableDeclarationMatchedTokenParser.class)//1
+      );
+    }
+    
+    @TokenExtractor
+    static Token getVariableNameToken(Token thisParserParsed) {
+      Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
+      return token;
+    }
+
+    public static String getVariableName(Token thisParserParsed) {
+      return NakedVariableParser.getVariableName(getVariableNameToken(thisParserParsed));
+    }
+  }
+
 
 }

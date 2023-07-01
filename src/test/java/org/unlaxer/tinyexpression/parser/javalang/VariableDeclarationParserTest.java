@@ -7,10 +7,10 @@ import org.unlaxer.listener.OutputLevel;
 public class VariableDeclarationParserTest extends ParserTestBase{
 
   @Test
-  public void test() {
+  public void testString() {
     setLevel(OutputLevel.detail);
     
-    VariableDeclarationParser variableDeclarationParser = new VariableDeclarationParser();
+    StringVariableDeclarationParser variableDeclarationParser = new StringVariableDeclarationParser();
     
     testAllMatch(variableDeclarationParser, "variable $sex as string set if not exists 'man' description='性別をセットします。(man/woman)。';");
     testAllMatch(variableDeclarationParser, "variable $age as number set if not exists 18 description='年齢をセットします。';");
