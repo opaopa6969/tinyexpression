@@ -29,9 +29,6 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
       new Parsers(
         Parser.get(DollarParser.class),
         Parser.get(IdentifierParser.class)
-//        new OneOrMore(
-//          Parser.get(AlphabetNumericUnderScoreParser.class)
-//        )
       );
 	}
 	

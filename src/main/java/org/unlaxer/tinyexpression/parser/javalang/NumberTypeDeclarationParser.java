@@ -17,7 +17,7 @@ public class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
         new Optional(
             new WordParser("as")
         ),
-           Parser.get(NumberTypeHintParser.class)
+        Parser.get(NumberTypeHintParser.class)
     );
   }
 }

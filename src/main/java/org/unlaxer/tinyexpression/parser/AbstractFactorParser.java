@@ -40,7 +40,7 @@ public abstract class AbstractFactorParser extends LazyChoice implements NumberE
     parsers.add(NumberParser.class);
     parsers.add(NumberVariableParser.class);
     if(withNakedVariable) {
-      parsers.add(NakedVariableParser.class);
+      parsers.add(ExclusiveNakedVariableParser.class);
     }
     
     Class<? extends Parser> expresionParserClazz = withNakedVariable ? 
