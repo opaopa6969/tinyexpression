@@ -17,7 +17,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 	@Test
 	public void testCalculate() {
 		
-		Calculator<?> calculator = calculator();
 		
 		setLevel(OutputLevel.detail);
 		
@@ -31,6 +30,7 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
+			Calculator<?> calculator = calculator(formula.toString());
 			assertTrue(calc(calculator,context,formula.toString(),new BigDecimal("1")));
 		}
 		
@@ -39,7 +39,7 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
 		long start = System.nanoTime();
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculate(calculationContext , formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculationContext);
 		BigDecimal x = calculateResult.answer.get();
 //		System.out.println(formula+":" + (System.nanoTime()-start)+"nsec");
 		System.out.println((System.nanoTime()-start));
@@ -50,7 +50,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 	@Test
 	public void testParse() {
 		
-		Calculator<?> calculator = calculator();
 		
 		setLevel(OutputLevel.none);
 		
@@ -63,6 +62,7 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
+			Calculator<?> calculator = calculator(formula.toString());
 			parse(calculator,formula.toString());
 		}
 		System.out.println();
@@ -79,6 +79,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 		System.out.println((System.nanoTime()-start));
 	}
 	
-	public abstract Calculator<?> calculator();
+	public abstract Calculator<?> calculator(String formula);
 
 }

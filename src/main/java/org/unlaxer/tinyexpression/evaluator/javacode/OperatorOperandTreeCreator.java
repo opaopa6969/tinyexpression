@@ -8,8 +8,11 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.Token.SearchFirst;
+import org.unlaxer.TokenEffecterWithMatcher;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.PseudoRootParser;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.posix.CommaParser;
@@ -22,8 +25,11 @@ import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanFactorParser;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
@@ -46,6 +52,7 @@ import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
+import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterChoice;
@@ -76,6 +83,7 @@ import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringMethodParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
+import org.unlaxer.tinyexpression.parser.StringSetterParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
@@ -92,6 +100,15 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.parser.javalang.AnnotationParameterParser;
+import org.unlaxer.tinyexpression.parser.javalang.AnnotationParametersParser;
+import org.unlaxer.tinyexpression.parser.javalang.AnnotationParser;
+import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
+import org.unlaxer.tinyexpression.parser.javalang.BooleanVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.NumberVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 import org.unlaxer.util.annotation.TokenReConstructor;
 import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterface;
 
@@ -106,14 +123,77 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Parser parser = token.parser;
 		
 		if(parser instanceof TinyExpressionParser) {
-		  Token extractImports = TinyExpressionParser.extractImports(token);
+		  
+		  Token extractImports = TinyExpressionParser.extractImportsToken(token);
+		  
 		  Token extractNumberExpression = TinyExpressionParser.extractNumberExpression(token);
 		  Token appliedNumberExpression = apply(extractNumberExpression);
 		  extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
-		  Token extractAnnotaions = TinyExpressionParser.extractAnnotaions(token);
-		  Token extractVariables = TinyExpressionParser.extractVariables(token);
-		  return token.newCreatesOf(extractImports,extractNumberExpression);
+		  
+		  Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
+		  Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
+		  return token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression);
 		}
+		
+		if(parser instanceof VariableDeclarationsParser || 
+		    parser instanceof AnnotationsParser) {
+      return token.newCreatesOf(
+          new TokenEffecterWithMatcher(
+              TokenPredicators.allMatch(),
+              this::apply
+          )
+      );
+		}
+		
+    if(parser instanceof NumberVariableDeclarationParser ||
+        parser instanceof BooleanVariableDeclarationParser ||
+        parser instanceof StringVariableDeclarationParser) {
+
+      return token.newCreatesOf(
+          new TokenEffecterWithMatcher(
+            TokenPredicators.parserImplements(VariableDeclaration.class),
+            this::apply
+      ));
+    }
+    
+    if(parser instanceof BooleanSetterParser||
+        parser instanceof StringSetterParser||
+        parser instanceof NumberSetterParser) {
+      
+      return token.newCreatesOf(
+          new TokenEffecterWithMatcher(
+            TokenPredicators.parserImplements(ExpressionInterface.class),
+            this::apply
+      ));
+    }
+    
+    if(parser instanceof AnnotationsParser) {
+      return token.newCreatesOf(
+          new TokenEffecterWithMatcher(
+              TokenPredicators.parsers(AnnotationParametersParser.class),
+              this::apply
+          )
+      );
+    }
+    
+    if(parser instanceof AnnotationParser) {
+        List<Token> collect = token.flatten().stream()
+          .filter(TokenPredicators.parsers(AnnotationParameterParser.class))
+          .map(this::apply)
+          .collect(Collectors.toList());
+        
+        return token.newCreatesOf(collect);
+    }
+    
+    if(parser instanceof AnnotationParameterParser) {
+      
+      return token.newCreatesOf(
+          token.getChild(TokenPredicators.parsers(IdentifierParser.class)),
+          apply(token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class)))
+      );
+    }
+
+
 		
 		if(parser instanceof SideEffectExpressionParameterSuccessor) {
 		  token = SideEffectExpressionParameterSuccessor.extractParameter(token);
@@ -124,7 +204,6 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		  token = ChoiceInterface.choiced(token);
 		  return apply(token);
     }
-		
 		
 		if(
       parser instanceof StrictTypedNumberExpressionParser || 
@@ -271,7 +350,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			return operator;
 			
 		}else if(parser instanceof StringVariableParser|| 
-        parser instanceof NakedVariableParser ){
+        parser instanceof NakedVariableParser || parser instanceof ExclusiveNakedVariableParser){
 			
 			return operator;
 			
@@ -322,7 +401,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			return clearChildren(operator);
 			
 		}else if(parser instanceof NumberVariableParser){
-		  
+//		  Token choiced = ChoiceInterface.choiced(operator);
 		  return operator;
 			
 		}else if(parser instanceof NumberIfExpressionParser){

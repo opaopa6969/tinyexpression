@@ -103,6 +103,10 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
+		  List<Token> variableDeclarationsToken = tinyExpressionTokens.getVariableDeclarationsToken();
+		  
+		  上のリストが入っているのでこれを利用してsetをする
+		  
 			String variableName = 
 			    parser instanceof NakedVariableParser ? 
 			      NakedVariableParser.getVariableName(token):

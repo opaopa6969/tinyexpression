@@ -238,7 +238,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	    
 	    Calculator<T> calculator = preConstructedCalculator(formula);
 	    testAllMatch(calculator.getParser(), formula);
-	    CalculateResult calculateResult = calculator.calculate(calculateContext , formula);
+	    CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 	    BigDecimal x = calculateResult.answer.get();
 	    System.out.format(" %s = %s \n" , formula , x.toString());
@@ -274,7 +274,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		
 		Calculator<T> calculator = preConstructedCalculator(formula);
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculate(calculateContext , formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 		if(calculateResult.errors.raisedException.isPresent()) {
 		  throw new CalculationException(calculateResult.errors.raisedException.get());
@@ -299,7 +299,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     
     Calculator<T> calculator = preConstructedCalculator(formula);
     testAllMatch(calculator.getParser(), formula);
-    CalculateResult calculateResult = calculator.calculate(calculateContext , formula);
+    CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
     calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
     BigDecimal x = calculateResult.answer.get();
     System.out.format(" %s = %s \n" , formula , x.toString());
@@ -333,7 +333,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context, formula);
+		CalculateResult result = calculator.calculateReturningDetails(context);
 		BigDecimal answer = result.answer.get();
 		assertEquals(new BigDecimal("2"), answer);
 		assertFalse(result.success);
@@ -349,7 +349,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context, formula);
+		CalculateResult result = calculator.calculateReturningDetails(context);
 		assertFalse(result.answer.isPresent());
 		assertFalse(result.success);
 		assertEquals("", result.parseContext.getConsumed(TokenKind.consumed));
@@ -367,7 +367,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context, formula);
+		CalculateResult result = calculator.calculateReturningDetails(context);
 		assertTrue(result.answer.isPresent());
 		assertTrue(result.success);
 		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed));
@@ -1007,13 +1007,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       
       simpleBuilder
       .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
-      .line("var $age as number set if not exists 18 description='年齢';")
+      .line("var $age as number set if not exists 10+8 description='年齢';")
       .n()
       .line("external number calculate($age as number ,1000,$taxRate as number)");
-      
-      
-      
-    TODO  ReferenceParserというものがあって、それを使ってimportとのマッチングをするとよいかな
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }

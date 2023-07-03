@@ -1,9 +1,12 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
+import java.util.Optional;
+
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 
-public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser {
+public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser implements VariableDeclaration{
 
   @Override
   public java.util.Optional<Parser> typeDeclaration() {
@@ -14,5 +17,12 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
   @Override
   public Tag typeTag() {
     return Tag.of(NumberVariableDeclarationParser.class);
+  }
+
+  @Override
+  public Optional<Parser> setter() {
+    return Optional.of(
+        Parser.get(NumberSetterParser.class)
+    );
   }
 }

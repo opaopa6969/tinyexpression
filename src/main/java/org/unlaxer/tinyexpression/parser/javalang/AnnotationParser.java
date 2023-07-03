@@ -26,6 +26,7 @@ public class AnnotationParser extends LazyChain{
     );
   }
   
+  @SuppressWarnings("unchecked")
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static Token extractAnnotation(Token thisParserParsed){
     

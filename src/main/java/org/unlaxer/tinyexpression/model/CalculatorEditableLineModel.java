@@ -41,7 +41,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		super();
 		this.calculateContext = calculateContext;
 		this.calculator = calculator;
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		EditHistory editHistory = 
 				new EditHistory(EditAction.of(ActionType.initialized), 0 , calculateContext, calculateResult);
 
@@ -134,7 +134,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	EditHistory createEditHistory(ActionType actionType , String formula ,Range range ,int  position){
 		
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		EditHistory editHistory = 
 				new EditHistory(new EditAction(actionType , range), position , calculateContext, calculateResult);
 		
@@ -143,7 +143,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	EditHistory createInsertEditHistory(String formula ,Range range ,int  position , String insertion){
 		
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		
 		EditHistory editHistory = 
 				new EditHistory(new EditAction(insertion,range), position , calculateContext, calculateResult);

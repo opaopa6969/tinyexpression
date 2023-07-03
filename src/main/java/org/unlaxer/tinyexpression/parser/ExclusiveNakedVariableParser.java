@@ -9,13 +9,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.Not;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.NumberTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringTypeDeclarationParser;
 
-public class ExclusiveNakedVariableParser extends LazyChain implements VariableParser{//implements Expression , BooleanExpression , StringExpression{
+public class ExclusiveNakedVariableParser extends NakedVariableParser {//implements Expression , BooleanExpression , StringExpression{
 
     public ExclusiveNakedVariableParser() {
       super();

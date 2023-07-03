@@ -15,6 +15,8 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 	public final String name;
 	public final String formula;
 	public final TinyExpressionTokens rootToken;
+	final ParseContext parseContext;
+	final Parsed parsed ;
 	
 //	public PreConstructedCalculator(String formula , boolean randomize) {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
@@ -25,8 +27,9 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 		this.formula = formula;
 		this.name = name;
 		
-		try(ParseContext parseContext = new ParseContext(new StringSource(formula));){
-			Parsed parsed = getParser().parse(parseContext);
+		parseContext = new ParseContext(new StringSource(formula));
+		try(parseContext){
+			parsed = getParser().parse(parseContext);
 			if(false == parsed.isSucceeded()) {
 				throw new ParseException("failed to parse:"+formula);
 			}
@@ -62,4 +65,19 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 //		String tokenPresentation = TokenPrinter.get(rootToken);
 		return formula;
 	}
+
+  @Override
+  public TinyExpressionTokens tinyExpressionTokens() {
+    return rootToken;
+  }
+
+  @Override
+  public ParseContext parseContext() {
+    return parseContext;
+  }
+
+  @Override
+  public Parsed parsed() {
+    return parsed;
+  }
 }

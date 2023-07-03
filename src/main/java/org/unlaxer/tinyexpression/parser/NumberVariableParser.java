@@ -23,9 +23,9 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
   public List<Parser> getLazyParsers() {
     return 
       new Parsers(//
+          Parser.get(NumberVariableMatchedWithVariableDeclarationParser.class),
           Parser.get(NumberPrefixedVariableParser.class), 
-          Parser.get(NumberSuffixedVariableParser.class),
-          Parser.get(NumberVariableMatchedWithVariableDeclarationParser.class)
+          Parser.get(NumberSuffixedVariableParser.class)
       );
   }
   

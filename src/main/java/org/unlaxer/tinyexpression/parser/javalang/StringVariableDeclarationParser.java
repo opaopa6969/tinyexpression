@@ -4,8 +4,9 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.StringSetterParser;
 
-public class StringVariableDeclarationParser extends AbstractVariableDeclarationParser {
+public class StringVariableDeclarationParser extends AbstractVariableDeclarationParser implements VariableDeclaration{
   
   @Override
   public java.util.Optional<Parser> typeDeclaration() {
@@ -21,9 +22,7 @@ public class StringVariableDeclarationParser extends AbstractVariableDeclaration
   @Override
   public Optional<Parser> setter() {
     return Optional.of(
-        new org.unlaxer.parser.combinator.Optional(
-            
-        )
+        Parser.get(StringSetterParser.class)
     );
   }
 }

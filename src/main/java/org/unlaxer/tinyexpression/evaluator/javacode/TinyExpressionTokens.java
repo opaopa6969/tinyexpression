@@ -11,24 +11,25 @@ import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
 public class TinyExpressionTokens{
   
   final Token tinyExpressionToken;
-  final Token importsToken;
-  final Token variableDeclarationsToken;
-  final Token annotationsToken;
+  final List<Token> importTokens;
+  final List<Token> variableDeclarationTokens;
+  final List<Token> annotationTokens;
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
+  
   public TinyExpressionTokens(Token tinyExpressionToken) {
     super();
     if(false ==tinyExpressionToken.parser instanceof TinyExpressionParser) {
       throw new IllegalArgumentException();
     }
     this.tinyExpressionToken = tinyExpressionToken;
-    importsToken = TinyExpressionParser.extractImports(tinyExpressionToken);
+    importTokens = TinyExpressionParser.extractImports(tinyExpressionToken);
     expressionToken = TinyExpressionParser.extractNumberExpression(tinyExpressionToken);
     
-    variableDeclarationsToken = TinyExpressionParser.extractVariables(tinyExpressionToken);
-    annotationsToken = TinyExpressionParser.extractAnnotaions(tinyExpressionToken);
+    variableDeclarationTokens = TinyExpressionParser.extractVariables(tinyExpressionToken);
+    annotationTokens = TinyExpressionParser.extractAnnotaions(tinyExpressionToken);
     
-    classNameByIdentifier = importsToken.getAstNodeChildren().stream()
+    classNameByIdentifier = importTokens.stream()
       .collect(
         Collectors.toMap(
           importToken->(String)(ImportParser.extractIdentifier(importToken).getToken().orElse("")),
@@ -36,17 +37,18 @@ public class TinyExpressionTokens{
         )
       );
   }
+  
   public Token getTinyExpressionToken() {
     return tinyExpressionToken;
   }
-  public Token getImportsToken() {
-    return importsToken;
+  public List<Token> getImportTokens() {
+    return importTokens;
   }
-  public Token getVariableDeclarationsToken() {
-    return variableDeclarationsToken;
+  public List<Token> getVariableDeclarationsToken() {
+    return variableDeclarationTokens;
   }
-  public Token getAnnotationsToken() {
-    return annotationsToken;
+  public List<Token> getAnnotationsToken() {
+    return annotationTokens;
   }
   public Token getExpressionToken() {
     return expressionToken;

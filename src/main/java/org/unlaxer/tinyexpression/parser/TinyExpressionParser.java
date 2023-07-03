@@ -32,7 +32,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
    * @return token of restructure ImportsParser
    */
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public static Token extractImports(Token thisParserParsed){
+  public static List<Token> extractImports(Token thisParserParsed){
     
     Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(ImportsParser.class);
     
@@ -40,6 +40,14 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
       .map(ImportsParser::extractImports)
       .orElseGet(List::of);
     
+    return importChildren;
+  }
+  
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractImportsToken(Token thisParserParsed){
+    
+    List<Token> importChildren = extractImports(thisParserParsed);
     Token imports = new Token(TokenKind.consumed, importChildren, Parser.get(ImportsParser.class),0);
     return imports;
   }
@@ -52,25 +60,45 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     
   }
 
-  public static Token extractVariables(Token tinyExpressionToken) {
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List<Token> extractVariables(Token tinyExpressionToken) {
+    if(false == tinyExpressionToken.parser instanceof TinyExpressionParser) {
+      throw new IllegalArgumentException();
+    }
     Optional<Token> childWithParserAsOptional = tinyExpressionToken.getChildWithParserAsOptional(VariableDeclarationsParser.class);
     
     List<Token> variableChildren = childWithParserAsOptional
       .map(VariableDeclarationsParser::extractVariables)
       .orElseGet(List::of);
-    
+
+    return variableChildren;
+  }
+  
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractVariablesToken(Token tinyExpressionToken) {
+    if(false == tinyExpressionToken.parser instanceof TinyExpressionParser) {
+      throw new IllegalArgumentException();
+    }
+    List<Token> variableChildren = extractVariables(tinyExpressionToken);
     Token variables = new Token(TokenKind.consumed, variableChildren, Parser.get(VariableDeclarationsParser.class),0);
     return variables;
   }
 
-  public static Token extractAnnotaions(Token tinyExpressionToken) {
+  public static List<Token> extractAnnotaions(Token tinyExpressionToken) {
     Optional<Token> childWithParserAsOptional = tinyExpressionToken.getChildWithParserAsOptional(AnnotationsParser.class);
     
-    List<Token> AnnotationChildren = childWithParserAsOptional
+    List<Token> annotationChildren = childWithParserAsOptional
       .map(AnnotationsParser::extractAnnotationss)
       .orElseGet(List::of);
     
-    Token variables = new Token(TokenKind.consumed, AnnotationChildren, Parser.get(AnnotationsParser.class),0);
+    return annotationChildren;
+  }
+  
+  public static Token extractAnnotaionsToken(Token tinyExpressionToken) {
+    List<Token> extractAnnotaions = extractAnnotaions(tinyExpressionToken);
+    Token variables = new Token(TokenKind.consumed, extractAnnotaions, Parser.get(AnnotationsParser.class),0);
     return variables;
   }
+
 }

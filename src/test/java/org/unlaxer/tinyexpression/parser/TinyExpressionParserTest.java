@@ -128,7 +128,7 @@ public class TinyExpressionParserTest extends ParserTestBase{
   @Test
   public void testVariableDeclarations() {
     
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
     
@@ -138,11 +138,37 @@ public class TinyExpressionParserTest extends ParserTestBase{
       .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
       .line("var $age as number set if not exists 18 description='年齢';")
       .n()
-      .line("external number calculate($age as number ,1000,$taxRate as number)");
+      .line("external number calculate($age/* as number */,1000,$taxRate as number)");
     
     String formula = simpleBuilder.toString();
     System.out.println(formula);
     
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+  
+  @Test
+  public void testWithoutVariableDeclarations() {
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+//      .line("var $age as number set if not exists 18 description='年齢';")
+      .n()
+      .line("external number calculate($age/* as number */,1000,$taxRate as number)");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    // $ageに型はついていないが、型なしの場合はnumberになるようにしている。互換性のため。
     TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
     Token rootToken = testAllMatch.parsed.getRootToken();
     
