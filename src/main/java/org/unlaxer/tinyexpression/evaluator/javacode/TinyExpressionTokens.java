@@ -44,7 +44,7 @@ public class TinyExpressionTokens{
   public List<Token> getImportTokens() {
     return importTokens;
   }
-  public List<Token> getVariableDeclarationsToken() {
+  public List<Token> getVariableDeclarationTokens() {
     return variableDeclarationTokens;
   }
   public List<Token> getAnnotationsToken() {

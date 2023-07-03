@@ -2,11 +2,15 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -16,6 +20,7 @@ import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
+import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
@@ -103,16 +108,49 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-		  List<Token> variableDeclarationsToken = tinyExpressionTokens.getVariableDeclarationsToken();
+		  List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 		  
-		  上のリストが入っているのでこれを利用してsetをする
+		  
+//		  上のリストが入っているのでこれを利用してsetをする
 		  
 			String variableName = 
 			    parser instanceof NakedVariableParser ? 
 			      NakedVariableParser.getVariableName(token):
 			      NumberVariableParser.getVariableName(token);
+			
+			boolean isMatch =false;
+      for (Token declarationTtoken : variableDeclarationsTokens) {
+        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+        String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
+        
+        if(_variableName.equals(variableName)) {
+          Optional<Token> numberSetterToken = declarationTtoken.getChildWithParserAsOptional(NumberSetterParser.class);
+          if(numberSetterToken.isEmpty()) {
+            continue;
+          }
+          Token _numberSetterToken = numberSetterToken.get();
+          Token expression = _numberSetterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
+          Optional<Token> ifNotExists = _numberSetterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
+          
+          SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
+          build(simpleJavaCodeBuilder, expression, tinyExpressionTokens);
+          String expseeionString = simpleJavaCodeBuilder.builder.toString();
+//          String expseeionString = expression.getToken().orElseThrow();
+          
+          if(ifNotExists.isPresent()) {
+            
+            builder.append("calculateContext.getValue(").w(variableName).append(").orElse("+expseeionString+")");
+          }else {
+            builder.append("calculateContext.setAndGet(").w(variableName).append(","+expseeionString+")");
+          }
+          isMatch = true;
+          break;
+        }
+      }
+      if(false == isMatch) {
+        builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
+      }
 
-			builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
 
 		} else if (parser instanceof NumberIfExpressionParser) {
 

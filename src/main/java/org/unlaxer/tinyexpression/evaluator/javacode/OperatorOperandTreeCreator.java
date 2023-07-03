@@ -135,6 +135,17 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		  return token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression);
 		}
 		
+		if(parser instanceof NumberVariableDeclarationParser ||
+		    parser instanceof BooleanVariableDeclarationParser ||
+		    parser instanceof StringVariableDeclarationParser) {
+		  
+		  return token.newCreatesOf(
+		      new TokenEffecterWithMatcher(
+		          TokenPredicators.parserImplements(NumberExpression.class),
+		          this::apply
+		          ));
+		}
+		
 		if(parser instanceof VariableDeclarationsParser || 
 		    parser instanceof AnnotationsParser) {
       return token.newCreatesOf(
@@ -144,17 +155,6 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           )
       );
 		}
-		
-    if(parser instanceof NumberVariableDeclarationParser ||
-        parser instanceof BooleanVariableDeclarationParser ||
-        parser instanceof StringVariableDeclarationParser) {
-
-      return token.newCreatesOf(
-          new TokenEffecterWithMatcher(
-            TokenPredicators.parserImplements(VariableDeclaration.class),
-            this::apply
-      ));
-    }
     
     if(parser instanceof BooleanSetterParser||
         parser instanceof StringSetterParser||
