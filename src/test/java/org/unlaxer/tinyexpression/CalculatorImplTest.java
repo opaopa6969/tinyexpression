@@ -1061,6 +1061,18 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("0")));
     }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .line("var $free as boolean set if not exists true description='タダかどうか';")
+      .n()
+      .line("external number calculate($age as number ,if($free){0}else{1000},$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("0")));
+    }
 
   }
 

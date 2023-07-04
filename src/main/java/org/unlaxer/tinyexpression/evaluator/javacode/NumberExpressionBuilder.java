@@ -108,49 +108,50 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-		  List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
-		  
-		  
-//		  上のリストが入っているのでこれを利用してsetをする
-		  
-			String variableName = 
-			    parser instanceof NakedVariableParser ? 
-			      NakedVariableParser.getVariableName(token):
-			      NumberVariableParser.getVariableName(token);
-			
-			boolean isMatch =false;
-      for (Token declarationTtoken : variableDeclarationsTokens) {
-        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
-        String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
-        
-        if(_variableName.equals(variableName)) {
-          Optional<Token> numberSetterToken = declarationTtoken.getChildWithParserAsOptional(NumberSetterParser.class);
-          if(numberSetterToken.isEmpty()) {
-            continue;
-          }
-          Token _numberSetterToken = numberSetterToken.get();
-          Token expression = _numberSetterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
-          Optional<Token> ifNotExists = _numberSetterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
-          
-          SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
-          build(simpleJavaCodeBuilder, expression, tinyExpressionTokens);
-          String expseeionString = simpleJavaCodeBuilder.builder.toString();
-//          String expseeionString = expression.getToken().orElseThrow();
-          
-          if(ifNotExists.isPresent()) {
-            
-            builder.append("calculateContext.getValue(").w(variableName).append(").orElse("+expseeionString+")");
-          }else {
-            builder.append("calculateContext.setAndGet(").w(variableName).append(","+expseeionString+")");
-          }
-          isMatch = true;
-          break;
-        }
-      }
-      if(false == isMatch) {
-        builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
-      }
-
+		  VariableBuilder.build(this, builder, token, tinyExpressionTokens, NumberSetterParser.class,
+		      "0f","getValue","setAndGet");
+//		  List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
+//		  
+//		  
+////		  上のリストが入っているのでこれを利用してsetをする
+//		  
+//			String variableName = 
+//			    parser instanceof NakedVariableParser ? 
+//			      NakedVariableParser.getVariableName(token):
+//			      NumberVariableParser.getVariableName(token);
+//			
+//			boolean isMatch =false;
+//      for (Token declarationTtoken : variableDeclarationsTokens) {
+//        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+//        String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
+//        
+//        if(_variableName.equals(variableName)) {
+//          Optional<Token> numberSetterToken = declarationTtoken.getChildWithParserAsOptional(NumberSetterParser.class);
+//          if(numberSetterToken.isEmpty()) {
+//            continue;
+//          }
+//          Token _numberSetterToken = numberSetterToken.get();
+//          Token expression = _numberSetterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
+//          Optional<Token> ifNotExists = _numberSetterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
+//          
+//          SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
+//          build(simpleJavaCodeBuilder, expression, tinyExpressionTokens);
+//          String expseeionString = simpleJavaCodeBuilder.builder.toString();
+////          String expseeionString = expression.getToken().orElseThrow();
+//          
+//          if(ifNotExists.isPresent()) {
+//            
+//            builder.append("calculateContext.getValue(").w(variableName).append(").orElse("+expseeionString+")");
+//          }else {
+//            builder.append("calculateContext.setAndGet(").w(variableName).append(","+expseeionString+")");
+//          }
+//          isMatch = true;
+//          break;
+//        }
+//      }
+//      if(false == isMatch) {
+//        builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
+//      }
 
 		} else if (parser instanceof NumberIfExpressionParser) {
 

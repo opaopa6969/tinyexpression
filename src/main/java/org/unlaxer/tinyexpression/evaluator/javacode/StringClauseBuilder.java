@@ -7,12 +7,15 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
@@ -22,6 +25,7 @@ import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringPlusParser;
+import org.unlaxer.tinyexpression.parser.StringSetterParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
@@ -154,18 +158,55 @@ public class StringClauseBuilder {
 			return ExpressionOrLiteral.literalOf(contents == null ? "" : contents);
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof StringVariableParser) {
-
+		  
+      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
+      
 			String variableName = parser instanceof NakedVariableParser  ?
 			    NakedVariableParser.getVariableName(token):
 			    StringVariableParser.getVariableName(token);
-
-			return ExpressionOrLiteral.expressionOf(
-				new SimpleBuilder()
-					.append("calculateContext.getString(")
-					.w(variableName)
-					.append(").orElse(\"\")")
-					.toString()
-			);
+			SimpleBuilder builder = new SimpleBuilder();
+			
+	     boolean isMatch =false;
+	     for (Token declarationTtoken : variableDeclarationsTokens) {
+	       Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+	       String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
+	       
+	       if(_variableName.equals(variableName)) {
+	         Optional<Token> setterToken = declarationTtoken.getChildWithParserAsOptional(StringSetterParser.class);
+	         if(setterToken.isEmpty()) {
+	           continue;
+	         }
+	         Token _setterToken = setterToken.get();
+	         Token expression = _setterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
+	         Optional<Token> ifNotExists = _setterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
+	         
+	         ExpressionOrLiteral build = build( expression, tinyExpressionTokens);
+	         String expseeionString = build.toString();
+//	     String expseeionString = expression.getToken().orElseThrow();
+	         
+	         if(ifNotExists.isPresent()) {
+	           
+	           builder.append("calculateContext.getString(").w(variableName).append(").orElse("+expseeionString+")");
+	         }else {
+	           builder.append("calculateContext.setAndGet(").w(variableName).append(","+expseeionString+")");
+	         }
+	         isMatch = true;
+	         break;
+	       }
+	     }
+	     if(false == isMatch) {
+	       builder.append("calculateContext.getString(").w(variableName).append(").orElse(\"\")");
+	     }
+	     
+	     return ExpressionOrLiteral.expressionOf(builder.toString());
+			
+//			return ExpressionOrLiteral.expressionOf(
+//				simpleBuilder
+//					.append("calculateContext.getString(")
+//					.w(variableName)
+//					.append(").orElse(\"\")")
+//					.toString()
+//			);
 
 		} else if (parser instanceof ParenthesesParser) {
 

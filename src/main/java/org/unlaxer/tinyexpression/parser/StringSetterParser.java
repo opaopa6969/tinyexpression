@@ -8,7 +8,7 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 
-public class StringSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements StringExpression{
+public class StringSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements StringExpression, SetterParser{
 
   @Override
   public List<Parser> getLazyParsers() {

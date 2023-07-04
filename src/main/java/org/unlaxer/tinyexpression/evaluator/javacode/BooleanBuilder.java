@@ -7,10 +7,11 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
-import org.unlaxer.tinyexpression.parser.BooleanCaseFactorParser;
+import org.unlaxer.tinyexpression.parser.AbstractBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
@@ -73,6 +74,10 @@ public class BooleanBuilder implements TokenCodeBuilder {
 	    TinyExpressionTokens tinyExpressionTokens) {
 		Parser parser = token.parser;
 		
+		if(parser instanceof AbstractBooleanExpressionParser) {
+		  System.out.println(parser);
+		}
+		
 		if(parser instanceof NotBooleanExpressionParser) {
 			
 			builder.append("(false ==(");
@@ -101,15 +106,17 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")
 					.append(toHour).append("f)");
 					
-		}else if(parser instanceof BooleanVariableParser) {
+		}else if(parser instanceof BooleanVariableParser || parser instanceof NakedVariableParser) {
 		  
-			String variableName = BooleanVariableParser.getVariableName(token);
-			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
-			
-    }else if(parser instanceof NakedVariableParser) {
-      
-      String variableName = NakedVariableParser.getVariableName(token);
-      builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
+      VariableBuilder.build(this, builder, token, tinyExpressionTokens, BooleanSetterParser.class,
+          "false","getBoolean","setAndGet");
+//			String variableName = BooleanVariableParser.getVariableName(token);
+//			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
+//			
+//    }else if(parser instanceof NakedVariableParser) {
+//      
+//      String variableName = NakedVariableParser.getVariableName(token);
+//      builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
       
 		}else if(parser instanceof TrueTokenParser){
 			
