@@ -141,7 +141,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		  
 		  return token.newCreatesOf(
 		      new TokenEffecterWithMatcher(
-		          TokenPredicators.parserImplements(NumberExpression.class),
+		          TokenPredicators.parserImplements(ExpressionInterface.class),
 		          this::apply
 		          ));
 		}
