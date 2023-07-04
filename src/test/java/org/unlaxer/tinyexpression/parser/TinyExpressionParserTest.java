@@ -200,5 +200,30 @@ public class TinyExpressionParserTest extends ParserTestBase{
     String string = TokenPrinter.get(rootToken);
     System.out.println(string);
   }
+  
+  @Test
+  public void testStringVariableDeclarations() {
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .line("var $name as string set if not exists '渡辺' description='苗字を設定します';")
+      .n()
+      .line("external number calculate($age as number ,if($name=='渡辺'){0}else{1000},$taxRate as number)");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
 
 }
