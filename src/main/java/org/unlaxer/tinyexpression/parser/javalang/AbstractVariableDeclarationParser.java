@@ -50,7 +50,9 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
     Token newCreatesOf = thisParserParsed.newCreatesOf(
       TokenPredicators.parsers(NakedVariableParser.class),
       TokenPredicators.hasTag(typed),
-      setter().map(TokenPredicators::parsersMatchWithClass)
+      setter()
+        .map(Parser::getChild/*this parser is optional,so get inner*/)
+        .map(TokenPredicators::parsersMatchWithClass)
         .orElseGet(()->TokenPredicators.noMatch()),
       TokenPredicators.parsers(DescriptionParser.class)
     );

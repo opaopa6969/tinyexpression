@@ -22,7 +22,9 @@ public class BooleanVariableDeclarationParser extends AbstractVariableDeclaratio
   @Override
   public Optional<Parser> setter() {
     return Optional.of(
-        Parser.get(BooleanSetterParser.class)
+        new org.unlaxer.parser.combinator.Optional(
+            Parser.get(BooleanSetterParser.class)
+        )
     );
   }
 }

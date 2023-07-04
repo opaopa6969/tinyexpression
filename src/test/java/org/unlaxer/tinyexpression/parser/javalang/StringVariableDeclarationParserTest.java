@@ -8,7 +8,7 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
 
   @Test
   public void test() {
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     var variableDeclarationParser = new StringVariableDeclarationParser();
     

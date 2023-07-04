@@ -1002,6 +1002,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 //    context.set("age", 18);
     context.set("taxRate", 0.1f);
 
+    //18才未満はタダ。18才以上は定価*税金
     {
       SimpleBuilder simpleBuilder = new SimpleBuilder();
       
@@ -1014,27 +1015,53 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
     
-//    {
-//      SimpleBuilder simpleBuilder = new SimpleBuilder();
-//      
-//      simpleBuilder
-////      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
-//      .n()
-//      .line("  external returning number : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
-//      
-//      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
-//    }
-//    
-//    {
-//      SimpleBuilder simpleBuilder = new SimpleBuilder();
-//      
-//      simpleBuilder
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
 //      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
-//      .n()
-//      .line("  external returning number : Fee#calculate($age as number ,1000,$taxRate as number)");
-//      
-//      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
-//    }
+      .n()
+      .line("  external returning number : org.unlaxer.tinyexpression.Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("0")));
+    }
+    
+    context.set("age", 18);
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
+      .n()
+      .line("  external returning number : Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
+      .line("var $age as number set if not exists 5 description='年齢';")
+      .n()
+      .line("  external returning number : Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee as Fee;")
+      .line("var $age as number set 3+5 description='年齢';")
+      .n()
+      .line("  external returning number : Fee#calculate($age as number ,1000,$taxRate as number)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("0")));
+    }
+
   }
 
 
