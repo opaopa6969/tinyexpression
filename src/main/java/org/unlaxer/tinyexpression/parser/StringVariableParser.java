@@ -7,9 +7,11 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
+import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class StringVariableParser extends LazyChoice implements VariableParser{
+public class StringVariableParser extends LazyChoice implements VariableParser , StringExpression{
 
   private static final long serialVersionUID = -604853821610350410L;
 
@@ -20,24 +22,42 @@ public class StringVariableParser extends LazyChoice implements VariableParser{
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(//
-        Parser.get(StringPrefixedVariableParser.class), //
-        Parser.get(StringSuffixedVariableParser.class)//
+        Parser.get(StringPrefixedVariableParser.class),//
+        Parser.get(StringSuffixedVariableParser.class),//
+        Parser.get(StringVariableMatchedWithVariableDeclarationParser.class)
     );
   }
   
-  public static String getVariableName(Token thisParserParsed) {
+  public String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    if(choiced.parser instanceof StringPrefixedVariableParser) {
-      return StringPrefixedVariableParser.getVariableName(thisParserParsed);
-    }else if(choiced.parser instanceof StringSuffixedVariableParser) {
-      return StringSuffixedVariableParser.getVariableName(thisParserParsed);
-    }
-    throw new IllegalArgumentException();
+    VariableParser parser = choiced.getParser(VariableParser.class);
+    return parser.getVariableName(choiced);
   }
 
   @Override
   public Optional<VariableType> type() {
     return Optional.of(VariableType.string);
   }
+  
+  public static class StringVariableMatchedWithVariableDeclarationParser extends LazyChain implements StringExpression {
 
+    public StringVariableMatchedWithVariableDeclarationParser() {
+      super();
+    }
+
+    @Override
+    public List<Parser> getLazyParsers() {
+      return new Parsers(//
+          Parser.get(DollarParser.class), //0
+          Parser.get(StringVariableDeclarationMatchedTokenParser.class)//1
+      );
+    }
+
+    
+    @TokenExtractor
+    static Token getVariableNameToken(Token thisParserParsed) {
+      Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
+      return token;
+    }
+  }
 }

@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
-import org.unlaxer.parser.elementary.NamedParenthesesParser;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
 
-public class StringLengthParser extends NamedParenthesesParser{
+public class StringLengthParser extends JavaStyleNamedParenthesesParser{
 
 	private static final long serialVersionUID = 6395080815876299422L;
 

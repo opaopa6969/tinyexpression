@@ -1,7 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.junit.Test;
-import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
 import org.unlaxer.Token;
@@ -16,13 +15,18 @@ public class SideEffectBooleanExpressionParserTest extends ParserTestBase{
 		
 		setLevel(OutputLevel.detail);
 		
-		SideEffectBooleanExpressionParser sideEffectBooleanExpressionParser = new SideEffectBooleanExpressionParser();
+		BooleanSideEffectExpressionParser sideEffectBooleanExpressionParser = new BooleanSideEffectExpressionParser();
 		
-		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true)"));
-		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(1==1)"));
-		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(not(true))"));
-		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true))"));
-		testAllMatch(sideEffectBooleanExpressionParser,("with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
+		testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning as boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true)"));
+		testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning as boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(1==1)"));
+		testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning as boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(not(true))"));
+		testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning as boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true))"));
+    testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning as boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
+    
+    testAllMatch(sideEffectBooleanExpressionParser,("with side effect boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
+    testAllMatch(sideEffectBooleanExpressionParser,("with side effect returning boolean :org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
+    testAllMatch(sideEffectBooleanExpressionParser,("with side effect boolean org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
+    testAllMatch(sideEffectBooleanExpressionParser,("external boolean org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true,'niku',0,true)"));
 //		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(1+3*4+len('foo'),true|1==3,'niku')"));
 //		testAllMatch(sideEffectExpressionParser,("with side effect:jp.caulis.calc.Effects#foo(0,true,'niku')"));
 //		testUnMatch(sideEffectExpressionParser,("with side effect::jp.caulis.calc.Effects#foo(0,true,'niku')"));
@@ -33,7 +37,7 @@ public class SideEffectBooleanExpressionParserTest extends ParserTestBase{
 		{
 			String formula =
 //					"with side effect:jp.caulis.calc.Effects#foo(true,0,'niku')";
-					"with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true))";
+					"with side effect returning as boolean org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(with side effect:org.unlaxer.tinyexpression.parser.TestSideEffector#setWhiteList(true))";
 			
 			TestResult testAllMatch = testAllMatch(sideEffectBooleanExpressionParser, formula,false);
 			

@@ -6,9 +6,6 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-import org.unlaxer.tinyexpression.model.CharacterAttribute;
-import org.unlaxer.tinyexpression.model.CharacterAttributes;
-
 public class CharacterAttributeTest {
 
 	@Test

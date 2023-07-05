@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class BooleanAndExpressionParser extends WhiteSpaceDelimitedLazyChain implements BinaryOperatorParser{
+public class BooleanAndExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser{
 
 	private static final long serialVersionUID = -7028954465842938523L;
 
@@ -18,9 +18,9 @@ public class BooleanAndExpressionParser extends WhiteSpaceDelimitedLazyChain imp
 	  public List<Parser> getLazyParsers() {
 	    return
         new Parsers(
-          Parser.get(BooleanExpressionParser.class),
+          Parser.get(BooleanFactorParser.class),
           Parser.get(AndParser.class),
-          Parser.get(BooleanExpressionParser.class)
+          Parser.get(BooleanFactorParser.class)
         );
 	  }
 }

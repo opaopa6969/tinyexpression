@@ -1,10 +1,15 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -16,7 +21,7 @@ import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResu
 import net.openhft.compiler.CompilerUtils;
 import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
 
-public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
+public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implements JavaClassCreator{
 
   public final String className;
   public final String javaCode;
@@ -25,16 +30,40 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
   TokenBaseOperator<CalculationContext, Float> instance;
 
-  public JavaCodeCalculatorV2(String formula , ClassLoader classLoader) {
-    this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()) , classLoader);
+  public JavaCodeCalculatorV2(Name name , String formula) {
+    this(name,formula,(Path)null);
+  }
+  
+  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
+    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
+  }
+  
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
+    this(name,formula,classLoader,null , true);
   }
 
 
-  @SuppressWarnings("unchecked")
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
+      Path outputRootDirectory ,boolean randomize) {
+    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
+  }
+
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
+    this(formula,className,classLoader,null);
+  }
+
+  @SuppressWarnings("unchecked")
+  public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, Path outputRootDirectory) {
     super(formula , className);
     this.className = className;
     javaCode = createJavaClass(className, rootToken);
+    if(outputRootDirectory != null) {
+      try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+        newBufferedWriter.write(javaCode);
+      } catch (IOException e1) {
+        e1.printStackTrace();
+      }
+    }
     
     CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
     try {
@@ -124,46 +153,12 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> {
 
   @Override
   public UnaryOperator<Token> tokenReduer() {
-    return ASTCreator.SINGLETON;
+    return OperatorOperandTreeCreator.SINGLETON;
+  }
+  
+  @Override
+  public String javaCode() {
+    return javaCode;
   }
 
-  String createJavaClass(String className, Token rootToken) {
-
-    SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
-
-    String CalculationContextName = CalculationContext.class.getName();
-    builder
-      .line("import org.unlaxer.Token;")
-      .line("import "+CalculationContextName+";")
-      .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
-      .n()
-      .append("public class ")
-      .append(className)
-      .append(" implements TokenBaseOperator<"+CalculationContextName+", Float>{")
-      .n()
-      .n()
-      .incTab()
-      .line("@Override")
-      .line("public Float evaluate("+CalculationContextName+" calculateContext , Token token) {")
-      .incTab()
-      .line("float answer = (float) ")
-      .n();
-
-    ExpressionBuilder.SINGLETON.build(builder, rootToken);
-
-    builder
-      .n()
-      .line(";")
-      .line("return answer;")
-      .decTab()
-      .line("}");
-
-    String code = builder.toString();
-    return code;
-
-  }
-
-  public interface CodeBuilder {
-    public void build(SimpleBuilder builder, Token token);
-  }
 }

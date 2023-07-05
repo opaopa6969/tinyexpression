@@ -4,57 +4,45 @@ import java.util.List;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.parser.combinator.Choice;
+import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
+import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractBooleanExpressionParser extends LazyChoice implements BooleanExpression , VariableTypeSelectable{
+public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{
 
-	private static final long serialVersionUID = -3195226739862127225L;
-	
+	private static final long serialVersionUID = 1362501275934237988L;
+
 	public AbstractBooleanExpressionParser() {
 		super();
 	}
-	
-	@Override
+
+
+
+  @Override
   public List<Parser> getLazyParsers(boolean withNakedVariable) {
     
-    // BooleanExpression ::= 
-    //    | 'true'
-    //    | 'false'
-    //    | 'not(' BooleanClause ')'
-    //    | '(' BooleanClause ')'
-    //    | Expression '==' Expression 
-    //    | Expression '!=' Expression 
-    //    | Expression '>=' Expression 
-    //    | Expression '<=' Expression 
-    //    | Expression '>' Expression 
-    //    | Expression '<' Expression 
-    //    | BooleanExpressionOfString
-    //    | Variable
+    Class<? extends Parser> booleanExpressionParserClazz = 
+        withNakedVariable ? BooleanFactorParser.class : StrictTypedBooleanFactorParser.class;
     
-    Parsers parsers = new Parsers();
-    
-    parsers.add(Parser.get(TrueTokenParser.class));
-    parsers.add(Parser.get(FalseTokenParser.class));
-    parsers.add(Parser.get(InTimeRangeParser.class));
-    parsers.add(Parser.get(SideEffectBooleanExpressionParser.class));
-    parsers.add(Parser.get(SideEffectStringToBooleanExpressionParser.class));
-    parsers.add(Parser.get(NotBooleanExpressionParser.class));
-    parsers.add(new ParenthesesParser(Parser.get(BooleanClauseParser.class)));
-    parsers.add(Parser.get(IsPresentParser.class));
-    parsers.add(Parser.get(EqualEqualExpressionParser.class));
-    parsers.add(Parser.get(NotEqualExpressionParser.class));
-    parsers.add(Parser.get(GreaterOrEqualExpressionParser.class));
-    parsers.add(Parser.get(LessOrEqualExpressionParser.class));
-    parsers.add(Parser.get(GreaterExpressionParser.class));
-    parsers.add(Parser.get(LessExpressionParser.class));
-    parsers.add(Parser.get(BooleanExpressionOfStringParser.class));
-    parsers.add(Parser.get(BooleanVariableParser.class));
-    if(withNakedVariable) {
-      parsers.add(Parser.get(NakedVariableParser.class));
-    }
-    return parsers;
+    // <BooleanExpression> ::= <BooleanExpression>[('=='|'!='|'&'|'|'|'^')<BooleanExpression>]*
+    return
+      new Parsers(
+          Parser.get(booleanExpressionParserClazz),
+          new ZeroOrMore(
+            new WhiteSpaceDelimitedChain(
+              new Choice(
+                Parser.<WordParser>get(()->new EqualEqualParser()),
+                Parser.<WordParser>get(()->new NotEqualParser()),
+                Parser.<WordParser>get(()->new AndParser()),
+                Parser.<WordParser>get(()->new OrParser()),
+                Parser.<WordParser>get(()->new XorParser())
+              ),
+              Parser.get(booleanExpressionParserClazz)
+            )
+          )
+        );
   }
   
-
 }

@@ -9,11 +9,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.posix.CommaParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringToBooleanExpressionParameterParser extends WhiteSpaceDelimitedLazyChain {
+public class SideEffectStringToBooleanExpressionParameterParser extends JavaStyleDelimitedLazyChain {
 
 	public SideEffectStringToBooleanExpressionParameterParser() {
 		super();
@@ -38,14 +39,15 @@ public class SideEffectStringToBooleanExpressionParameterParser extends WhiteSpa
               Parser.get(CommaParser.class),
               new Choice(
                 Parser.get(StringExpressionParser.class),
-                Parser.get(BooleanExpressionParser.class),
-                Parser.get(ExpressionParser.class)
+                Parser.get(BooleanFactorParser.class),
+                Parser.get(NumberExpressionParser.class)
               )   
             )
           ) 
         );
 	}
-	
+
+	@TokenExtractor
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken) {
 		if (false == sideEffectExpressionParameterParserToken.parser instanceof SideEffectStringToBooleanExpressionParameterParser) {
 			throw new IllegalArgumentException("token is invalid");
@@ -54,7 +56,7 @@ public class SideEffectStringToBooleanExpressionParameterParser extends WhiteSpa
 		return sideEffectExpressionParameterParserToken.filteredChildren.stream()
 			.filter(token -> {
 				Parser parser = token.parser;
-				return parser instanceof Expression ||
+				return parser instanceof NumberExpression ||
 						parser instanceof BooleanExpression ||
 						parser instanceof StringExpression;
 			}).collect(Collectors.toList());

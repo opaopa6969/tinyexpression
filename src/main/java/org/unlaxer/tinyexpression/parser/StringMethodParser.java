@@ -2,10 +2,11 @@ package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.parser.elementary.NamedParenthesesParser;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class StringMethodParser extends NamedParenthesesParser{
+public class StringMethodParser extends JavaStyleNamedParenthesesParser{
 
 	private static final long serialVersionUID = 7921036779259818380L;
 	
@@ -25,9 +26,9 @@ public class StringMethodParser extends NamedParenthesesParser{
 	public Parser innerParser() {
 		return Parser.get(StringExpressionParser.class);
 	}
-	
+
+	@TokenExtractor
 	public static Token getStringExpressions(Token thisParserParsed) {
-		
 		return getInnerParserParsed(thisParserParsed);
 	}
 }

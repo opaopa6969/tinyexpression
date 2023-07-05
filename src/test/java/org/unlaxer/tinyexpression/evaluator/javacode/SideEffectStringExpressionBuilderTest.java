@@ -29,7 +29,7 @@ public class SideEffectStringExpressionBuilderTest extends ParserTestBase {
 
     var builder = new SideEffectStringExpressionBuilder();//
     SimpleJavaCodeBuilder builder2 = new SimpleJavaCodeBuilder();
-    builder.build(builder2, sideEffectToken);
+    builder.build(builder2, sideEffectToken , null/**/);
     System.out.println(builder2.toString());
 
   }

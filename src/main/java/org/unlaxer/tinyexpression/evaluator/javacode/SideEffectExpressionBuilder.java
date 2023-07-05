@@ -6,27 +6,31 @@ import java.util.function.Supplier;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculator.CodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.Expression;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
 import org.unlaxer.tinyexpression.parser.StringExpression;
 
-public class SideEffectExpressionBuilder implements CodeBuilder {
+public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
 	
 	public static SideEffectExpressionBuilder SINGLETON = new SideEffectExpressionBuilder();
 
 	@Override
-	public void build(SimpleJavaCodeBuilder builder, Token token) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , 
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
-		MethodAndParameters methodAndParameters = SideEffectExpressionParser.extract(token);
+		MethodAndParameters methodAndParameters = 
+		    SideEffectExpressionParser.extract(token , tinyExpressionTokens);
 		
 		String methodName = methodAndParameters.classNameAndIdentifier.getIdentifier();
-		String className = methodAndParameters.classNameAndIdentifier.getClassName();
+		String className = 
+		    tinyExpressionTokens.resolveJavaClass(
+		        methodAndParameters.classNameAndIdentifier.getClassName()
+		    );
 		
 				
 		builder
@@ -51,16 +55,29 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 			.append(methodName)
 			.append("(calculateContext , ");
 		
-		ParametersBuilder.buildParameter(builder, methodAndParameters);
+		ParametersBuilder.buildParameter(builder, methodAndParameters , tinyExpressionTokens);
 		
 		builder
-			.append(")).orElse(");
-		// first parameter is default returning value
-		ExpressionBuilder.SINGLETON.build(builder, methodAndParameters.parameterTokens.get(0));
+			.append(")).orElseThrow(()->new org.unlaxer.tinyexpression.Calculator.CalculationException(\"class not found in CalculationContext. please set :"+className+"\"))");
+		// 1st implementation : first parameter is default returning value
+    // 2nd implementation : "returning as type default xxx". xxx is default returning value
+		//　　　　　　　　　　　　　　　　 : if returning clause is not exists , then first parameter is default returning value
+		// 3rd implementation : orElseThrow! comment out returning default
 		
-		builder
-			.append(")");
-			;
+//		Token returningToken = methodAndParameters.returningToken;
+//		Parser parser = returningToken.parser;
+////		TokenPrinter.output(returningToken, System.out);
+//		if(parser instanceof NumberExpression) {
+//		  NumberExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}else if(parser instanceof StringExpression){
+//      StringExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}else {
+//		  BooleanExpressionBuilder.SINGLETON.build(builder, returningToken , tinyExpressionTokens);
+//		}
+//		
+//		builder
+//			.append(")");
+//			;
 		
 	}
 
@@ -73,8 +90,8 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 		
 		public static ParametersBuilder SINGLETON = new ParametersBuilder();
 
-		public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters) {
-			
+		public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters , 
+		    TinyExpressionTokens tinyExpressionTokens) {
 			
 			Iterator<Token> iterator = methodAndParameters.parameterTokens.iterator();
 			
@@ -83,13 +100,14 @@ public class SideEffectExpressionBuilder implements CodeBuilder {
 				
 				Parser parser = token.parser;
 				if(parser instanceof NakedVariableParser) {
-				  NakedVariableBuilder.SINGLETON.build(builder, token);
-				}else if(parser instanceof Expression) {
-					ExpressionBuilder.SINGLETON.build(builder, token);
+//				  NakedVariableBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+          NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);//デフォルトでnumberとする
+				}else if(parser instanceof NumberExpression) {
+					NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if(parser instanceof BooleanExpression) {
-					BooleanClauseBuilder.SINGLETON.build(builder, token);
+					BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if (parser instanceof StringExpression) {
-					builder.append(StringClauseBuilder.SINGLETON.build(token).toString());
+					builder.append(StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens).toString());
 				}else {
 					throw new IllegalArgumentException();
 				}

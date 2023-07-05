@@ -9,11 +9,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.posix.CommaParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringExpressionParameterParser extends WhiteSpaceDelimitedLazyChain {
+public class SideEffectStringExpressionParameterParser extends JavaStyleDelimitedLazyChain {
 
 	private static final long serialVersionUID = -1540940685498628668L;
 
@@ -34,15 +35,16 @@ public class SideEffectStringExpressionParameterParser extends WhiteSpaceDelimit
           new WhiteSpaceDelimitedChain(
             Parser.get(CommaParser.class),
             new Choice(
-              Parser.get(BooleanClauseParser.class),
+              Parser.get(BooleanExpressionParser.class),
               Parser.get(StringExpressionParser.class),
-              Parser.get(ExpressionParser.class)
+              Parser.get(NumberExpressionParser.class)
             )
           ) 
         )
       );
 	}
-	
+
+	@TokenExtractor
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken){
 		
 		if(false == sideEffectExpressionParameterParserToken.parser instanceof SideEffectStringExpressionParameterParser) {
@@ -52,7 +54,7 @@ public class SideEffectStringExpressionParameterParser extends WhiteSpaceDelimit
 		return sideEffectExpressionParameterParserToken.filteredChildren.stream()
 			.filter(token->{
 				Parser parser = token.parser;
-				return parser instanceof Expression ||
+				return parser instanceof NumberExpression ||
 						parser instanceof BooleanExpression ||
 						parser instanceof StringExpression;
 			}).collect(Collectors.toList());

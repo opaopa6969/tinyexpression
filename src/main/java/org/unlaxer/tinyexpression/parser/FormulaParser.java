@@ -8,17 +8,18 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.NoneChildParser;
 
-public class FormulaParser extends NoneChildParser implements Parser{
+public class FormulaParser extends NoneChildParser {
 	
 	private static final long serialVersionUID = -7049405933791251671L;
 
 //	public static final FormulaParser SINGLETON = new FormulaParser();
 	
-	public ExpressionParser expressionParser;
+//  public NumberExpressionParser expressionParser;
+  public TinyExpressionParser expressionParser;
 
 	public FormulaParser() {
 		super();
-    expressionParser = Parser.get(ExpressionParser.class);
+    expressionParser = Parser.get(TinyExpressionParser.class);
 	}
 
 	@Override

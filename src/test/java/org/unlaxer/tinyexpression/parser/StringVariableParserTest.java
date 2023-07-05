@@ -17,6 +17,7 @@ public class StringVariableParserTest extends ParserTestBase{
     testAllMatch(parser, "(string)$foo");
     testAllMatch(parser, "(String)$foo");
     testUnMatch(parser, "$foo as boolean");
+    testUnMatch(parser, "(boolean)$foo");
   }
 
 }

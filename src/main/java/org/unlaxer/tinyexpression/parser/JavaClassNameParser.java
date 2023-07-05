@@ -5,6 +5,7 @@ import java.util.List;
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;

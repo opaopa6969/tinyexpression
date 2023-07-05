@@ -8,12 +8,13 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimitedLazyChain implements Expression {
+public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression {
 
 	/**
 	 * 
@@ -28,23 +29,27 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 		super(name);
 	}
 		
-	public static MethodAndParameters extract(Token token) {
-		Token classMethod = getMethodClause(token);
+	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
+		Token classMethodToken = getMethodClause(token);
 		Token parameter = getParametersClause(token);
 		
-		ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
+    ClassNameAndIdentifier extract = ((ClassNameAndIdentifierExtractor)classMethodToken.parser)
+        .extractClassNameAndIdentifier(classMethodToken, tinyExpressionTokens);
+
 		SideEffectStringToBooleanExpressionParameterParser sideEffectStringToBooleanExpressionParameterParser = 
 				Parser.get(SideEffectStringToBooleanExpressionParameterParser.class);
 		List<Token> parameterTokens = sideEffectStringToBooleanExpressionParameterParser.parameterTokens(parameter);
 		return new MethodAndParameters(extract, parameterTokens);
 	}
-	
+
+  @TokenExtractor
 	private static Token getParametersClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(4);
+		return thisParserParsed.getChildWithParser(SideEffectStringToBooleanExpressionParameterParser.class); //4
 	}
 
+  @TokenExtractor
 	private static Token getMethodClause(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2
 	}
 
 	public static class MethodAndParameters {
@@ -66,7 +71,7 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 			for (Token token : parameterTokens) {
 				Parser parser = token.parser;
 				parameterTypes[i] = 
-						parser instanceof Expression ? float.class :
+						parser instanceof NumberExpression ? float.class :
 						parser instanceof BooleanExpression ? boolean.class :
 						parser instanceof StringExpression ? String.class :
 						null;
@@ -74,10 +79,6 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 			}
 		}
 	}
-	
-	
-
-
 
 	@Override
 	public List<Parser> getLazyParsers() {
@@ -85,9 +86,9 @@ public class SideEffectStringToBooleanExpressionParser extends WhiteSpaceDelimit
 	    new Parsers(
         Parser.get(SideEffectNameParser.class),
         Parser.get(()->new WordParser(":")),
-        Parser.get(JavaClassMethodParser.class),
+        Parser.get(JavaClassMethodParser.class),//2
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(SideEffectStringToBooleanExpressionParameterParser.class),
+        Parser.get(SideEffectStringToBooleanExpressionParameterParser.class),//4
         Parser.get(RightParenthesisParser.class)
       );    
 

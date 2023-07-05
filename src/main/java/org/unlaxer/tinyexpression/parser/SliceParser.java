@@ -5,11 +5,11 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Chain;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrOne;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class SliceParser extends WhiteSpaceDelimitedLazyChain implements StringExpression{
+public class SliceParser extends JavaStyleDelimitedLazyChain implements StringExpression{
 	
 	private static final long serialVersionUID = 5398027501329177390L;
 
@@ -25,16 +25,16 @@ public class SliceParser extends WhiteSpaceDelimitedLazyChain implements StringE
         new Parsers(
           Parser.<WordParser>get(()->new WordParser("[")),
           new ZeroOrOne(
-            Parser.get(ExpressionParser.class)
+            Parser.get(NumberExpressionParser.class)
           ),
           Parser.<WordParser>get(()->new WordParser(":")),
           new ZeroOrOne(
-            Parser.get(ExpressionParser.class)
+            Parser.get(NumberExpressionParser.class)
           ),
           new ZeroOrOne(
             new Chain(
               Parser.<WordParser>get(()->new WordParser(":")),
-              Parser.get(ExpressionParser.class)
+              Parser.get(NumberExpressionParser.class)
             )
           ),
           Parser.<WordParser>get(()->new WordParser("]"))

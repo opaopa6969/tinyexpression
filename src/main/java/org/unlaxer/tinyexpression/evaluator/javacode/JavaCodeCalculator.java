@@ -1,21 +1,25 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Random;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
 import net.openhft.compiler.CompilerUtils;
 
-public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
+public class JavaCodeCalculator extends PreConstructedCalculator<Float> implements JavaClassCreator{
 
 	String className;
 	public final String javaCode;
@@ -23,17 +27,33 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 	Class<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
 	TokenBaseOperator<CalculationContext, Float> instance;
 
-	public JavaCodeCalculator(String formula) {
-		this(formula , "_CalculatorClass"  + Math.abs(new Random().nextLong()));
-	}
+  public JavaCodeCalculator(Name name, String formula) {
+    this(name,formula,null,true);
+  }
 
+  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize) {
+    this(formula , 
+        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
+        outputRootDirectory);
+  }
+
+  public JavaCodeCalculator(String formula , String className) {
+    this(formula,className,null);
+  }
 
 	@SuppressWarnings("unchecked")
-	public JavaCodeCalculator(String formula , String className) {
+	public JavaCodeCalculator(String formula , String className, Path outputRootDirectory) {
 		super(formula , className);
 		this.className = className;
 		javaCode = createJavaClass(className, rootToken);
-		
+		if(outputRootDirectory != null) {
+		  try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+		    newBufferedWriter.write(javaCode);
+		  } catch (IOException e1) {
+		    e1.printStackTrace();
+		  }
+		}
+
 		try {
 			synchronized (CompilerUtils.CACHED_COMPILER) {
 				loadFromJava =
@@ -70,55 +90,12 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> {
 
 	@Override
 	public UnaryOperator<Token> tokenReduer() {
-		return ASTCreator.SINGLETON;
+		return OperatorOperandTreeCreator.SINGLETON;
 	}
 
-	String createJavaClass(String className, Token rootToken) {
-
-		SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
-
-		String CalculationContextName = CalculationContext.class.getName();
-		builder
-			.setKind(Kind.Main)
-			.line("import org.unlaxer.Token;")
-			.line("import "+CalculationContextName+";")
-			.line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
-			.n()
-			.append("public class ")
-			.append(className)
-			.append(" implements TokenBaseOperator<"+CalculationContextName+", Float>{")
-			.n()
-			.n()
-			
-			.setKind(Kind.Function)
-			.incTab()
-			.line("@Override")
-			.line("public Float evaluate("+CalculationContextName+" calculateContext , Token token) {")
-			.incTab()
-			.setKind(Kind.Calculation)
-			.incTab()
-			.line("float answer = (float) ")
-			.n();
-
-		ExpressionBuilder.SINGLETON.build(builder, rootToken);
-
-		builder
-			.setKind(Kind.Calculation)
-			.n()
-			.line(";")
-			.line("return answer;")
-			.decTab()
-			.line("}")
-			.decTab()
-			.setKind(Kind.Main);
-
-		String code = builder.toString();
-		return code;
-
-	}
-
-	public interface CodeBuilder {
-		public void build(SimpleJavaCodeBuilder builder, Token token);
-	}
+	@Override
+  public String javaCode() {
+    return javaCode;
+  }
 
 }

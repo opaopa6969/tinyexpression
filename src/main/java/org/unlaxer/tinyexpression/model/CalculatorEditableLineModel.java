@@ -12,18 +12,18 @@ import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.ExpressionParser;
-import org.unlaxer.tinyexpression.parser.FactorParser;
-import org.unlaxer.tinyexpression.parser.TermParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.util.StringUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	public static final ParsersSpecifier enclosureMatchers=
 		new ParsersSpecifier(
-			ExpressionParser.class,
-			TermParser.class,
-			FactorParser.class
+			NumberExpressionParser.class,
+			NumberTermParser.class,
+			NumberFactorParser.class
 		);
 	
 	final Calculator<?> calculator;
@@ -41,7 +41,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		super();
 		this.calculateContext = calculateContext;
 		this.calculator = calculator;
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		EditHistory editHistory = 
 				new EditHistory(EditAction.of(ActionType.initialized), 0 , calculateContext, calculateResult);
 
@@ -134,7 +134,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	EditHistory createEditHistory(ActionType actionType , String formula ,Range range ,int  position){
 		
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		EditHistory editHistory = 
 				new EditHistory(new EditAction(actionType , range), position , calculateContext, calculateResult);
 		
@@ -143,7 +143,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	EditHistory createInsertEditHistory(String formula ,Range range ,int  position , String insertion){
 		
-		CalculateResult calculateResult = calculator.calculate(calculateContext, formula);
+		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
 		
 		EditHistory editHistory = 
 				new EditHistory(new EditAction(insertion,range), position , calculateContext, calculateResult);
@@ -217,7 +217,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	@Override
 	public Optional<Token> selectEnclosure(EnclosureDirection enclosureDirection) {
-		Optional<Token> rootToken = getCurrent().calculateResult.token;
+		Optional<Token> rootToken = getCurrent().calculateResult.tokenAst;
 		if(false == rootToken.isPresent()){
 			return Optional.empty();
 		}

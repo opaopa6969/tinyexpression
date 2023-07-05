@@ -7,13 +7,14 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.ClassNameAndIdentifier;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectStringExpressionParser extends WhiteSpaceDelimitedLazyChain
-    implements Expression {
+public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChain
+    implements NumberExpression {
 
   private static final long serialVersionUID = 6172097671148475538L;
 
@@ -33,20 +34,23 @@ public class SideEffectStringExpressionParser extends WhiteSpaceDelimitedLazyCha
         );
   }
 
+  @TokenExtractor 
   public static Token getMethodClause(Token thisParserParsed) {
-    return thisParserParsed.filteredChildren.get(2);
+    return thisParserParsed.getChildWithParser(JavaClassMethodParser.class); //2;
   }
 
+  @TokenExtractor 
   public static Token getParametersClause(Token thisParserParsed) {
-    return thisParserParsed.filteredChildren.get(4);
+    return thisParserParsed.getChildWithParser(SideEffectStringExpressionParameterParser.class); //4
   }
 
-  public static MethodAndParameters extract(Token token) {
+  @TokenExtractor
+  public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
 
-    Token classMethod = getMethodClause(token);// TODO
-                                                      // token.getChild(JavaClassMethodParser.class);
+    Token classMethodToken = getMethodClause(token);// TODO
 
-    ClassNameAndIdentifier extract = Parser.get(JavaClassMethodParser.class).extract(classMethod);
+    ClassNameAndIdentifier extract = ((ClassNameAndIdentifierExtractor)classMethodToken.parser)
+        .extractClassNameAndIdentifier(classMethodToken, tinyExpressionTokens);
 
     Token parameter = getParametersClause(token);
 
@@ -74,7 +78,7 @@ public class SideEffectStringExpressionParser extends WhiteSpaceDelimitedLazyCha
       int i = 2;
       for (Token token : parameterTokens) {
         Parser parser = token.parser;
-        parameterTypes[i] = parser instanceof Expression ? float.class
+        parameterTypes[i] = parser instanceof NumberExpression ? float.class
             : parser instanceof BooleanExpression ? boolean.class
                 : parser instanceof StringExpression ? String.class : null;
         i++;

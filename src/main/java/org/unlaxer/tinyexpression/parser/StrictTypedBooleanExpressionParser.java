@@ -6,13 +6,20 @@ import org.unlaxer.parser.Parser;
 
 public class StrictTypedBooleanExpressionParser extends AbstractBooleanExpressionParser{
 
-    @Override
-   public List<Parser> getLazyParsers() {
-     return getLazyParsers(false);
-   }
+  
+  public StrictTypedBooleanExpressionParser() {
+    super();
+    addTag(StrictTyped.get());
+  }
 
-   @Override
-   public boolean hasNakedVariableParser() {
-     return false;
-   }
- }
+  @Override
+  public boolean hasNakedVariableParser() {
+    return false;
+  }
+  
+  @Override
+  public List<Parser> getLazyParsers() {
+    return getLazyParsers(false);
+  }
+  
+}

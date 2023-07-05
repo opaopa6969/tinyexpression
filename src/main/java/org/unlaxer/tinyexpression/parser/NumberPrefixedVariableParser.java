@@ -1,13 +1,15 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain implements Expression {
+public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements NumberExpression  , VariableParser{
 
   private static final long serialVersionUID = -600501238210309122L;
 
@@ -24,8 +26,15 @@ public class NumberPrefixedVariableParser extends WhiteSpaceDelimitedLazyChain i
       );
   }
 
-  public static String getVariableName(Token thisParserParsed) {
-    Token token = thisParserParsed.filteredChildren.get(1);
-    return NakedVariableParser.getVariableName(token);
+  @TokenExtractor
+  public String getVariableName(Token thisParserParsed) {
+    Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
+    return NakedVariableParser.getVariableNameFromNaked(token);
   }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.of(VariableType.number);
+  }
+
 }

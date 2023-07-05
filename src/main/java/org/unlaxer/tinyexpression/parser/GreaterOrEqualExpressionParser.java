@@ -5,9 +5,10 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class GreaterOrEqualExpressionParser extends WhiteSpaceDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
+public class GreaterOrEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
 
 	private static final long serialVersionUID = -7757393839244596676L;
 	
@@ -19,18 +20,20 @@ public class GreaterOrEqualExpressionParser extends WhiteSpaceDelimitedLazyChain
 	public List<Parser> getLazyParsers() {
 	  return
       new Parsers(
-          Parser.get(ExpressionParser.class),
+          Parser.get(NumberExpressionParser.class),
           Parser.get(GreaterOrEqualParser.class),
-          Parser.get(ExpressionParser.class)
+          Parser.get(NumberExpressionParser.class)
         );
 
 	}
 	
-	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(0);
+  @TokenExtractor
+  public static Token getLeftExpression(Token thisParserParsed) {
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //0
 	}
 	
+  @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+    return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1); //2
 	}
 }

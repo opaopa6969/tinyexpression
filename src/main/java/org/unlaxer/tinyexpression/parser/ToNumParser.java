@@ -1,25 +1,29 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
-public class ToNumParser extends WhiteSpaceDelimitedLazyChain {
+public class ToNumParser extends JavaStyleDelimitedLazyChain {
 
 	private static final long serialVersionUID = -4619955945031421138L;
 
+	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(2);
+		return thisParserParsed.getChildWithParser(StringExpressionParser.class); //2
 	}
-
+	
+  @TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
-		return thisParserParsed.filteredChildren.get(4);
-	}
+		return thisParserParsed.getChildWithParser(NumberExpressionParser.class);// 4
+  }
 
 	@Override
 	public List<Parser> getLazyParsers() {
@@ -28,7 +32,7 @@ public class ToNumParser extends WhiteSpaceDelimitedLazyChain {
         Parser.get(LeftParenthesisParser.class), // 1
         Parser.get(StringExpressionParser.class), // 2
         Parser.<WordParser>get(()->new WordParser(",")), // 3
-        Parser.get(ExpressionParser.class), // 4
+        Parser.get(NumberExpressionParser.class), // 4
         Parser.get(RightParenthesisParser.class) // 5
     );
 	}

@@ -12,8 +12,19 @@ public interface CalculationContext {
   default void set(Enum<?> name, String value) {
     set(name.name(),value);
   }
+  
+  default String setAndGet(Enum<?> name, String value) {
+    set(name,value);
+    return getString(name).get();
+  }
 
-	void set(String name, String value);
+
+  void set(String name, String value);
+  
+  default String setAndGet(String name, String value) {
+    set(name,value);
+    return getString(name).get();
+  }
 
 
 	default Optional<String> getString(Enum<?>name){
@@ -26,7 +37,17 @@ public interface CalculationContext {
 	  set(name.name(),value);
 	}
 
-	void set(String name, float value);
+  default float setAndGet(Enum<?> name, float value) {
+    set(name, value);
+    return getValue(name).get();
+  }
+
+  void set(String name, float value);
+
+  default Float setAndGet(String name, float value) {
+    set(name, value);
+    return getValue(name).get();
+  }
 	
 
   default Optional<Float> getValue(Enum<?> name){
@@ -38,8 +59,18 @@ public interface CalculationContext {
 	default void set(Enum<?> name, boolean value) {
 	  set(name.name(),value);
 	}
+	
+  default Boolean setAndGet(Enum<?> name, boolean value) {
+    set(name,value);
+    return getBoolean(name).get();
+  }
 
 	void set(String name, boolean value);
+	
+  default Boolean setAndGet(String name, boolean value) {
+    set(name, value);
+    return getBoolean(name).get();
+  }
 	
 	default Optional<Boolean> getBoolean(Enum<?> name){
 	  return getBoolean(name.name());
@@ -56,8 +87,18 @@ public interface CalculationContext {
 	default void setObject(Enum<?> name , Object object) {
 	  setObject(name.name() ,object);
 	}
+	
+  default <T> T setAndGetObject(Enum<?> name , Object object , Class<T> clazz) {
+	  setObject(name,object);
+	  return getObject(name,clazz).get();
+	}
 
 	void setObject(String name , Object object);
+	
+  default <T> T setAndGetObject(String name , Object object , Class<T> clazz) {
+    setObject(name,object);
+    return getObject(name,clazz).get();
+  }
 
 	default <T> Optional<T> getObject(Class<T> clazz){
 		return getObject(clazz.getName() ,clazz);
@@ -65,6 +106,11 @@ public interface CalculationContext {
 	
 	default void set(Object object) {
 		setObject(object.getClass().getName(), object);
+	}
+	
+  default <T> T setAndGetObject(Object object , Class<T> clazz) {
+	  setObject(object.getClass().getName(), object);
+	  return getObject(clazz).get();
 	}
 	
   default boolean isExists(Enum<?> name) {
