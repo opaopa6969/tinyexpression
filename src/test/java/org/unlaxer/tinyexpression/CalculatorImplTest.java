@@ -231,6 +231,14 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		context.set("number_accessPeakCountByIPAddressInLongPeriod", 0);
 		context.set("number_accessPeakCountByCaulisCookieInLongPeriod", 5);
 		assertTrue(calc(context,formula,new BigDecimal("1")));
+		
+    assertTrue(calc(context,"if(true|true){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if(true|false){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if(false|true){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if(false|false){1}else{0}",new BigDecimal("0")));
+    assertTrue(calc(context,"if(false|false|true){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if(false|false|false|(false&true)){1}else{0}",new BigDecimal("0")));
+    assertTrue(calc(context,"if(false|false|false|(true&true)){1}else{0}",new BigDecimal("1")));
 	}
 
 	
@@ -1100,7 +1108,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
   @Test
   public void testStringVariableDeclarations() {
     
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
     context.set(new Fee());
@@ -1129,5 +1137,66 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("1100")));
     }
+  }
+  
+  @Test
+  public void testUnMatchVariableDeclarationTypeAndParameterType() {
+    
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set(new Fee());
+    context.set("age", 18);
+    context.set("taxRate", 0.1f);
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+        .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+        .line("var $name as string set if not exists '猫沢' description='苗字を設定します';")
+        .n()
+        .line("external number calculate(23 , 1000 ,$taxRate as number , $free as boolean , $name /* as string を指定しないがvar定義でstringがあるので型解決されるはず！*/)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("-1000")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+        .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+        .line("var $name as string set if not exists '猫沢' description='苗字を設定します';")
+        .n()
+        .line("external number calculate(23 , 1000 ,$taxRate /* as numberがないが型指定がない場合numberとする仕様。互換性の為*/, $free as boolean , $name as String)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("-1000")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+        .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+        .line("var $name as string set if not exists '猫沢' description='苗字を設定します';")
+        .n()
+        .line("external number calculate($age , 1000 ,$taxRate as number , $free as boolean , $name as String)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("-1000")));
+    }
+    
+    {
+      SimpleBuilder simpleBuilder = new SimpleBuilder();
+      
+      simpleBuilder
+        .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+        .line("var $name as string set if not exists '猫沢' description='苗字を設定します';")
+        .n()
+        .line("external number calculate($age as number, 1000 ,$taxRate as number , $free as boolean , $name as String)");
+      
+      assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("-1000")));
+    }
+    
   }
 }

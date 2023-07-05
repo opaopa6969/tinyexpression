@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
@@ -8,7 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements StringExpression {
+public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements StringExpression , VariableParser {
 
   private static final long serialVersionUID = -663588538210309122L;
 
@@ -30,7 +31,13 @@ public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
     return token;
   }
 
-  public static String getVariableName(Token thisParserParsed) {
-    return NakedVariableParser.getVariableName(getVariableNameToken(thisParserParsed));
+  public String getVariableName(Token thisParserParsed) {
+    return NakedVariableParser.getVariableNameFromNaked(getVariableNameToken(thisParserParsed));
   }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.of(VariableType.string);
+  }
+
 }

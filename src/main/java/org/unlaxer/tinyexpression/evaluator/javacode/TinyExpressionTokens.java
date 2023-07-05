@@ -2,11 +2,14 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 
 public class TinyExpressionTokens{
   
@@ -16,6 +19,8 @@ public class TinyExpressionTokens{
   final List<Token> annotationTokens;
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
+  final Map<String,Token> variableDeclarationByVariableName;
+
   
   public TinyExpressionTokens(Token tinyExpressionToken) {
     super();
@@ -36,6 +41,17 @@ public class TinyExpressionTokens{
           importToken->(String)(ImportParser.extractJavaClassMethodOrClassName(importToken).getToken().orElse(""))
         )
       );
+    
+    variableDeclarationByVariableName = variableDeclarationTokens.stream()
+      .collect(Collectors.toMap(
+        token->{
+            Token extractVariableParserToOken = VariableDeclarationParser.extractVariableParserToken(token);
+            VariableParser parser = extractVariableParserToOken.getParser(VariableParser.class);
+            String variableName = parser.getVariableName(extractVariableParserToOken);
+            return variableName;
+        
+        },
+        Function.identity()));
   }
   
   public Token getTinyExpressionToken() {
@@ -57,6 +73,12 @@ public class TinyExpressionTokens{
   public String resolveJavaClass(String classNameOrMethod) {
     String string = classNameByIdentifier.get(classNameOrMethod);
     return string == null ? classNameOrMethod : string;
+  }
+  
+  public java.util.Optional<Token> matchedVariableDeclaration(String VariableName){
+    
+    Token token = variableDeclarationByVariableName.get(VariableName);
+    return java.util.Optional.ofNullable(token);
   }
   
   

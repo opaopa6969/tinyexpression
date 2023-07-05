@@ -1,16 +1,20 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.cache.SupplierBoundCache;
 
-public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain implements BooleanExpression {
+public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain implements BooleanExpression , VariableParser {
 
   private static final long serialVersionUID = -1060485382103097042L;
+  
+  static final SupplierBoundCache<BooleanSuffixedVariableParser> SINGLETON = new SupplierBoundCache<>(BooleanSuffixedVariableParser::new);
 
   public BooleanSuffixedVariableParser() {
     super();
@@ -31,8 +35,19 @@ public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain i
     return token;
   }
   
-  public static String getVariableName(Token thisParserParsed) {
-    return NakedVariableParser.getVariableName(getVariableNameAsToken(thisParserParsed));
+  public String getVariableName(Token thisParserParsed) {
+    return NakedVariableParser.getVariableNameFromNaked(getVariableNameAsToken(thisParserParsed));
+  }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.of(VariableType.bool);
+  }
+  
+  
+  public static BooleanSuffixedVariableParser get() {
+
+    return SINGLETON.get();
   }
 
 }

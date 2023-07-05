@@ -37,5 +37,8 @@ public class ReturningParser extends LazyChoice{
     return new Token(TokenKind.virtualTokenConsumed, children, Parser.get(ReturningParser.class),position);
   }
   
-  public interface Returning{}
+  public interface Returning{
+    
+    public Class<?> returningType();
+  }
 }

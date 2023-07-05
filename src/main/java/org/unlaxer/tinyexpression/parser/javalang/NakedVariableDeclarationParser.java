@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.VariableType;
 
 public class NakedVariableDeclarationParser extends AbstractVariableDeclarationParser {
 
@@ -19,6 +20,11 @@ public class NakedVariableDeclarationParser extends AbstractVariableDeclarationP
 
   @Override
   public Optional<Parser> setter() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<VariableType> type() {
     return Optional.empty();
   }
   

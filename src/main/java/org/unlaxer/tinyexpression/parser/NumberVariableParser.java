@@ -29,12 +29,12 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
       );
   }
   
-  public static String getVariableName(Token thisParserParsed) {
+  public String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    if(choiced.parser instanceof NumberPrefixedVariableParser) {
-      return NumberPrefixedVariableParser.getVariableName(choiced);
-    }else if(choiced.parser instanceof NumberSuffixedVariableParser) {
-      return NumberSuffixedVariableParser.getVariableName(choiced);
+    
+    if(choiced.parser instanceof VariableParser) {
+      VariableParser variableParser=  (VariableParser) choiced.parser;;
+      return variableParser.getVariableName(choiced);
     }
     throw new IllegalArgumentException();
   }
@@ -63,11 +63,5 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
       Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
       return token;
     }
-
-    public static String getVariableName(Token thisParserParsed) {
-      return NakedVariableParser.getVariableName(getVariableNameToken(thisParserParsed));
-    }
   }
-
-
 }

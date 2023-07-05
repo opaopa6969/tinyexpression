@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.formatter;
 
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
 public class FormatterTest {

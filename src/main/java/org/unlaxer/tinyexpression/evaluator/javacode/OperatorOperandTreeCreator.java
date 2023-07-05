@@ -107,7 +107,6 @@ import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.NumberVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
-import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 import org.unlaxer.util.annotation.TokenReConstructor;
 import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterface;

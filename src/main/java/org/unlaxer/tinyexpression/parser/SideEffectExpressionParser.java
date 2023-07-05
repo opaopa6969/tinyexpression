@@ -10,6 +10,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.Choice;
+import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -83,13 +84,9 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
     
     Token returning = token.getChildFromAstNodes(0);
-    Parser parser = returning.getParser();
-    Class<?> returningType = 
-        parser instanceof NumberExpression ?
-            float.class : 
-            parser instanceof StringExpression ?
-                String.class :
-                boolean.class;
+    Returning returnParser = (Returning) ChoiceInterface.choiced(token).parser;
+    
+    Class<?> returningType = returnParser.returningType(); 
         
 	  
 	  Token classMethodToken = getMethodClause(token);
@@ -101,7 +98,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 		SideEffectExpressionParameterParser sideEffectExpressionParameterParser = 
 				Parser.get(SideEffectExpressionParameterParser.class);
 		
-		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause);
+		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause , tinyExpressionTokens);
 		
 		return new MethodAndParameters(returning , returningType, extract, parameterTokens);
 	}
@@ -132,6 +129,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
             parser instanceof BooleanVariableParser ? boolean.class :
             parser instanceof NumberVariableParser ? float.class :
             parser instanceof NakedVariableParser ? float.class :
+            parser instanceof ExclusiveNakedVariableParser ? float.class :
 						parser instanceof NumberExpression ? float.class :
 						parser instanceof BooleanExpression ? boolean.class :
 						parser instanceof StringExpression ? String.class :

@@ -2,15 +2,11 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import org.unlaxer.Token;
-import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
-import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;

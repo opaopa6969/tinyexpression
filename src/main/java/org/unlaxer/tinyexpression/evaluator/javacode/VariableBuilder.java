@@ -6,13 +6,11 @@ import java.util.Optional;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class VariableBuilder {
  
@@ -24,19 +22,22 @@ public class VariableBuilder {
      
      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
      
-     String variableName =
-         parser instanceof NakedVariableParser ? 
-             NakedVariableParser.getVariableName(token):
-             parser instanceof NumberVariableParser ? 
-               NumberVariableParser.getVariableName(token):
-               parser instanceof BooleanVariableParser ?
-                   BooleanVariableParser.getVariableName(token):
-                   StringVariableParser.getVariableName(token);
+     if(false == parser instanceof VariableParser) {
+       throw new IllegalArgumentException("parser must be VariableParser");
+     }
+     
+     VariableParser variableParser = (VariableParser) parser;
+     
+     
+     
+     String variableName = variableParser.getVariableName(token);
      
      boolean isMatch =false;
      for (Token declarationTtoken : variableDeclarationsTokens) {
        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
-       String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
+       VariableParser variabvleParser = nakedVariableToken.getParser(VariableParser.class);
+       
+       String _variableName = variabvleParser.getVariableName(nakedVariableToken);
        
        if(_variableName.equals(variableName)) {
          Optional<Token> setterToken = declarationTtoken.getChildWithParserAsOptional(setterParserClass);

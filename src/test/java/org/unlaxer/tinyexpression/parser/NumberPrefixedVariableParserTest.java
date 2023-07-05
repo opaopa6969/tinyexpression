@@ -18,7 +18,7 @@ public class NumberPrefixedVariableParserTest extends ParserTestBase{
     TestResult testAllMatch = testAllMatch(parser, "(number) $hoge ");
     
     Token rootToken = testAllMatch.parsed.getRootToken();
-    String variableName = NumberPrefixedVariableParser.getVariableName(rootToken);
+    String variableName = parser.getVariableName(rootToken);
     
     System.out.println(variableName);
     

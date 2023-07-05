@@ -13,44 +13,50 @@ import org.unlaxer.parser.combinator.Not;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.NumberTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringTypeDeclarationParser;
+import org.unlaxer.util.cache.SupplierBoundCache;
 
 public class ExclusiveNakedVariableParser extends NakedVariableParser {//implements Expression , BooleanExpression , StringExpression{
+  
+  static final SupplierBoundCache<ExclusiveNakedVariableParser> SINGLETON = new SupplierBoundCache<>(ExclusiveNakedVariableParser::new);
 
-    public ExclusiveNakedVariableParser() {
-      super();
-    }
-
-    public ExclusiveNakedVariableParser(Name name) {
-      super(name);
-    }
-    
-    @Override
-    public List<Parser> getLazyParsers() {
-      
-      return 
-        new Parsers(
-          Parser.get(DollarParser.class),
-          Parser.get(IdentifierParser.class),
-          new Not(
-//              new MatchOnly(
-                  new Choice(
-                      Parser.get(NumberTypeDeclarationParser.class),
-                      Parser.get(StringTypeDeclarationParser.class),
-                      Parser.get(BooleanTypeDeclarationParser.class)
-                  )
-//              )
-          )
-        );
-    }
-    
-    public static String getVariableName(Token thisParserParsed) {
-      String variableName = thisParserParsed.tokenString.get().substring(1);
-      return variableName; 
-    }
-
-    @Override
-    public Optional<VariableType> type() {
-      return Optional.empty();
-    }
-
+  public ExclusiveNakedVariableParser() {
+    super();
   }
+
+  public ExclusiveNakedVariableParser(Name name) {
+    super(name);
+  }
+  
+  @Override
+  public List<Parser> getLazyParsers() {
+    
+    return 
+      new Parsers(
+        Parser.get(DollarParser.class),
+        Parser.get(IdentifierParser.class),
+        new Not(
+//              new MatchOnly(
+                new Choice(
+                    Parser.get(NumberTypeDeclarationParser.class),
+                    Parser.get(StringTypeDeclarationParser.class),
+                    Parser.get(BooleanTypeDeclarationParser.class)
+                )
+//              )
+        )
+      );
+  }
+  
+  public String getVariableName(Token thisParserParsed) {
+    return NakedVariableParser.getVariableNameFromNaked(thisParserParsed);
+  }
+
+  @Override
+  public Optional<VariableType> type() {
+    return Optional.empty();
+  }
+  
+  public static ExclusiveNakedVariableParser get() {
+    
+    return SINGLETON.get();
+  }
+}

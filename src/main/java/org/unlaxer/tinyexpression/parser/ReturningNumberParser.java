@@ -46,4 +46,9 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
     return new Token(TokenKind.virtualTokenConsumed, children, 
         Parser.get(ReturningNumberParser.class), position);
   }
+
+  @Override
+  public Class<?> returningType() {
+    return float.class;
+  }
 }

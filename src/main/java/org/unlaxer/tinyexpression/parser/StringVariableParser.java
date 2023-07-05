@@ -28,14 +28,10 @@ public class StringVariableParser extends LazyChoice implements VariableParser ,
     );
   }
   
-  public static String getVariableName(Token thisParserParsed) {
+  public String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    if(choiced.parser instanceof StringPrefixedVariableParser) {
-      return StringPrefixedVariableParser.getVariableName(choiced);
-    }else if(choiced.parser instanceof StringSuffixedVariableParser) {
-      return StringSuffixedVariableParser.getVariableName(choiced);
-    }
-    throw new IllegalArgumentException();
+    VariableParser parser = choiced.getParser(VariableParser.class);
+    return parser.getVariableName(choiced);
   }
 
   @Override
@@ -62,10 +58,6 @@ public class StringVariableParser extends LazyChoice implements VariableParser ,
     static Token getVariableNameToken(Token thisParserParsed) {
       Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
       return token;
-    }
-
-    public static String getVariableName(Token thisParserParsed) {
-      return NakedVariableParser.getVariableName(getVariableNameToken(thisParserParsed));
     }
   }
 }

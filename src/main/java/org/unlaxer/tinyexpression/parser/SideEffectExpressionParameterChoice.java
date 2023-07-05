@@ -15,9 +15,9 @@ public class SideEffectExpressionParameterChoice extends LazyChoice{
         Parser.newInstance(StrictTypedStringExpressionParser.class),
         Parser.newInstance
         (StrictTypedNumberExpressionParser.class),
+        Parser.get(NumberExpressionParser.class),
         Parser.get(BooleanExpressionParser.class),
-        Parser.get(StringExpressionParser.class),
-        Parser.get(NumberExpressionParser.class)
+        Parser.get(StringExpressionParser.class)
     );
   }
   

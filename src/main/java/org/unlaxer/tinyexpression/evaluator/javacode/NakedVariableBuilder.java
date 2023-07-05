@@ -11,9 +11,9 @@ public class NakedVariableBuilder implements TokenCodeBuilder{
   public void build(SimpleJavaCodeBuilder builder, Token token ,
       TinyExpressionTokens tinyExpressionTokens) {
     
-    String variableName = NakedVariableParser.getVariableName(token);
+    String variableName = NakedVariableParser.get().getVariableName(token);
     builder.append("calculateContext.getFromNumberOrStringOrBoolean(").w(variableName).append(")");
     
+    
   }
-  
 }

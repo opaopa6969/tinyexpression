@@ -20,4 +20,9 @@ public class ReturningBooleanParser extends JavaStyleDelimitedLazyChain implemen
         Parser.get(BooleanTypeHintSuffixParser.class)
     );
   }
+
+  @Override
+  public Class<?> returningType() {
+    return boolean.class;
+  }
 }

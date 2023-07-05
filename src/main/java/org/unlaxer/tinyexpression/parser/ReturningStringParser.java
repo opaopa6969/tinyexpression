@@ -20,4 +20,9 @@ public class ReturningStringParser extends JavaStyleDelimitedLazyChain implement
        Parser.get(StringTypeHintSuffixParser.class)
     );
   }
+
+  @Override
+  public Class<?> returningType() {
+    return String.class;
+  }
 }

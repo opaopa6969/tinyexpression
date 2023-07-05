@@ -31,6 +31,7 @@ import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.util.FactoryBoundCache;
 
 public class StringClauseBuilder {
@@ -161,15 +162,17 @@ public class StringClauseBuilder {
 		  
       List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
       
-			String variableName = parser instanceof NakedVariableParser  ?
-			    NakedVariableParser.getVariableName(token):
-			    StringVariableParser.getVariableName(token);
+			String variableName = ((VariableParser)parser).getVariableName(token);
+			
 			SimpleBuilder builder = new SimpleBuilder();
 			
 	     boolean isMatch =false;
 	     for (Token declarationTtoken : variableDeclarationsTokens) {
+	       
 	       Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
-	       String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
+	       
+	       VariableParser variabvleParser = nakedVariableToken.getParser(VariableParser.class);
+	       String _variableName = variabvleParser.getVariableName(nakedVariableToken);
 	       
 	       if(_variableName.equals(variableName)) {
 	         Optional<Token> setterToken = declarationTtoken.getChildWithParserAsOptional(StringSetterParser.class);

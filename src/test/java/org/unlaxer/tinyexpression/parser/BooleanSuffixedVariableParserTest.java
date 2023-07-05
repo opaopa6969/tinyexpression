@@ -18,7 +18,7 @@ public class BooleanSuffixedVariableParserTest extends ParserTestBase{
     TestResult testAllMatch = testAllMatch(booleanSuffixedVariableParser, "$hoge as boolean");
     
     Token rootToken = testAllMatch.parsed.getRootToken();
-    String variableName = BooleanSuffixedVariableParser.getVariableName(rootToken);
+    String variableName = BooleanSuffixedVariableParser.get().getVariableName(rootToken);
     
     System.out.println(variableName);
     

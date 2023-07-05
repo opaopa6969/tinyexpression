@@ -18,7 +18,7 @@ public class NumberSuffixedVariableParserTest extends ParserTestBase{
     TestResult testAllMatch = testAllMatch(parser, "$hoge as number");
     
     Token rootToken = testAllMatch.parsed.getRootToken();
-    String variableName = NumberSuffixedVariableParser.getVariableName(rootToken);
+    String variableName = parser.getVariableName(rootToken);
     
     System.out.println(variableName);
     
