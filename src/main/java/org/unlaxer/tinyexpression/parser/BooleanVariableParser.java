@@ -27,9 +27,9 @@ public class BooleanVariableParser extends LazyChoice implements VariableParser 
   public List<Parser> getLazyParsers() {
     return 
       new Parsers(//
+          Parser.get(BooleanVariableMatchedWithVariableDeclarationParser.class),
           Parser.get(BooleanPrefixedVariableParser.class), 
-          Parser.get(BooleanSuffixedVariableParser.class),
-          Parser.get(BooleanVariableMatchedWithVariableDeclarationParser.class)
+          Parser.get(BooleanSuffixedVariableParser.class)
       );
   }
   

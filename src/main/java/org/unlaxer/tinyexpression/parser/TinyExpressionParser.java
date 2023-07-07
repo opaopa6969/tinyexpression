@@ -23,7 +23,10 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
         Parser.get(ImportsParser.class),
         Parser.get(VariableDeclarationsParser.class),
         Parser.get(AnnotationsParser.class),
-        Parser.get(NumberExpressionParser.class)
+        new org.unlaxer.parser.combinator.Optional(
+            Parser.get(NumberExpressionParser.class)
+        ),
+        Parser.get(MethodsParser.class)
     );
   }
   

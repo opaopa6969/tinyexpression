@@ -1199,4 +1199,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     }
     
   }
+  
+  @Test
+  public void testMultiMethod() {
+    
+  }
 }

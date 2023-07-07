@@ -7,7 +7,6 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
-import org.unlaxer.tinyexpression.parser.AbstractBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
@@ -73,10 +72,6 @@ public class BooleanBuilder implements TokenCodeBuilder {
 	public void build(SimpleJavaCodeBuilder builder, Token token, 
 	    TinyExpressionTokens tinyExpressionTokens) {
 		Parser parser = token.parser;
-		
-		if(parser instanceof AbstractBooleanExpressionParser) {
-		  System.out.println(parser);
-		}
 		
 		if(parser instanceof NotBooleanExpressionParser) {
 			

@@ -81,7 +81,7 @@ import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringMethodParser;
+import org.unlaxer.tinyexpression.parser.StringExpressionMethodParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
@@ -649,7 +649,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			) {
 
 				Token leftExpression = StringMethodExpressionParser.getLeftExpression(operatorWithString);
-				Token argument = StringMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
+				Token argument = StringExpressionMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
 				return operatorWithString.newCreatesOf(
 					apply(leftExpression),
 					apply(argument)

@@ -22,9 +22,9 @@ public class StringVariableParser extends LazyChoice implements VariableParser ,
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(//
+        Parser.get(StringVariableMatchedWithVariableDeclarationParser.class),
         Parser.get(StringPrefixedVariableParser.class),//
-        Parser.get(StringSuffixedVariableParser.class),//
-        Parser.get(StringVariableMatchedWithVariableDeclarationParser.class)
+        Parser.get(StringSuffixedVariableParser.class)//
     );
   }
   
