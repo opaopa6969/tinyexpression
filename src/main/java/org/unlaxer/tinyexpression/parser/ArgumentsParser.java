@@ -16,15 +16,15 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectExpressionParameterParser extends JavaStyleDelimitedLazyChain {
+public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 
 	private static final long serialVersionUID = -1540940685498628668L;
 
-	public SideEffectExpressionParameterParser() {
+	public ArgumentsParser() {
 		super();
 	}
 
-	public SideEffectExpressionParameterParser(Name name) {
+	public ArgumentsParser(Name name) {
 		super(name);
 	}
 	
@@ -32,9 +32,9 @@ public class SideEffectExpressionParameterParser extends JavaStyleDelimitedLazyC
 	public List<Parser> getLazyParsers() {
 	  return 
       new Parsers(
-        Parser.get(SideEffectExpressionParameterChoice.class),
+        Parser.get(ArgumentChoiceParser.class),
         new ZeroOrMore(
-            Parser.get(SideEffectExpressionParameterSuccessor.class)
+            Parser.get(ArgumentSuccessorParser.class)
         )
       );
 	}
@@ -42,7 +42,7 @@ public class SideEffectExpressionParameterParser extends JavaStyleDelimitedLazyC
 	@TokenExtractor
 	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken,TinyExpressionTokens tinyExpressionTokens){
 		
-		if(false == sideEffectExpressionParameterParserToken.parser instanceof SideEffectExpressionParameterParser) {
+		if(false == sideEffectExpressionParameterParserToken.parser instanceof ArgumentsParser) {
 			throw new IllegalArgumentException("token is invalid");
 		}
 		

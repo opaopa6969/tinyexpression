@@ -287,5 +287,31 @@ public class TinyExpressionParserTest extends ParserTestBase{
     String string = TokenPrinter.get(rootToken);
     System.out.println(string);
   }
+  
+  @Test
+  public void testNoParameterSideEffect() {
+    
+    setLevel(OutputLevel.detail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("if($sex=='woman'){")
+      .line("  0 //女性無料")
+      .line("}else{")
+      .line("  external returning as number : Fee#calculate()")
+      .line("}");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
 
 }

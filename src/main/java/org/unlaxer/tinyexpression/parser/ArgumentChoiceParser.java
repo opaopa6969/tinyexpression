@@ -6,7 +6,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class SideEffectExpressionParameterChoice extends LazyChoice{
+public class ArgumentChoiceParser extends LazyChoice{
 
   @Override
   public List<Parser> getLazyParsers() {

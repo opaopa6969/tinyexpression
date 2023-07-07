@@ -55,8 +55,8 @@ import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterChoice;
-import org.unlaxer.tinyexpression.parser.SideEffectExpressionParameterSuccessor;
+import org.unlaxer.tinyexpression.parser.ArgumentChoiceParser;
+import org.unlaxer.tinyexpression.parser.ArgumentSuccessorParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanFactorParser;
@@ -194,12 +194,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 
 
 		
-		if(parser instanceof SideEffectExpressionParameterSuccessor) {
-		  token = SideEffectExpressionParameterSuccessor.extractParameter(token);
+		if(parser instanceof ArgumentSuccessorParser) {
+		  token = ArgumentSuccessorParser.extractParameter(token);
       return apply(token);
 		}
 		
-		if(parser instanceof SideEffectExpressionParameterChoice) {
+		if(parser instanceof ArgumentChoiceParser) {
 		  token = ChoiceInterface.choiced(token);
 		  return apply(token);
     }

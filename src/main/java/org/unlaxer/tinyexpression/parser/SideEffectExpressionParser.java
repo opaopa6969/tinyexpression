@@ -46,7 +46,9 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
             Parser.get(JavaMethodParser.class).addTag(classMethodOrMethod)
         ),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(SideEffectExpressionParameterParser.class),//4
+        new Optional(
+            Parser.get(ArgumentsParser.class)
+        ),
         Parser.get(RightParenthesisParser.class)
       );
 	}
@@ -77,7 +79,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	
   @TokenExtractor
 	public static Token getParametersClause(Token thisParserParsed) {
-    return thisParserParsed.getChildWithParser(SideEffectExpressionParameterParser.class); //4
+    return thisParserParsed.getChildWithParser(ArgumentsParser.class); //4
 	}
   
   @TokenExtractor
@@ -95,8 +97,8 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 		
 		Token parametersClause = getParametersClause(token);
 		
-		SideEffectExpressionParameterParser sideEffectExpressionParameterParser = 
-				Parser.get(SideEffectExpressionParameterParser.class);
+		ArgumentsParser sideEffectExpressionParameterParser = 
+				Parser.get(ArgumentsParser.class);
 		
 		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause , tinyExpressionTokens);
 		
