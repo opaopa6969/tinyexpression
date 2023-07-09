@@ -54,7 +54,9 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     if(withNakedVariable) {
       parsers.add(ExclusiveNakedVariableParser.class);
     }
-    parsers.add(MethodInvocationParser.class);
+    if(MethodInvocationParser.enabled1) {
+      parsers.add(MethodInvocationParser.class);
+    }
     return parsers;
   }
   

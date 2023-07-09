@@ -43,23 +43,23 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     return afterParse(parseContext, parsed, tokenKind, invertMatch);
   }
 
-  @Override
-  public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
-    return parsed;
-  }
-
 //  @Override
 //  public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
-//    if(parsed.isSucceeded()) {
-//     Token rootToken = parsed.getRootToken(true);
-//     Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(NumberExpressionParser.class));
-//     Optional<Token> child2 = rootToken.getChildAsOptional(TokenPredicators.parsers(MethodsParser.class));
-//     if(child1.isEmpty() && child2.isEmpty()) {
-//       parsed = parsed.negate();
-//     }
-//    }
 //    return parsed;
 //  }
+
+  @Override
+  public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
+    if(parsed.isSucceeded()) {
+     Token rootToken = parsed.getRootToken(true);
+     Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(NumberExpressionParser.class));
+     Optional<Token> child2 = rootToken.getChildAsOptional(TokenPredicators.parsers(MethodsParser.class));
+     if(child1.isEmpty() && child2.isEmpty()) {
+       parsed = parsed.negate();
+     }
+    }
+    return parsed;
+  }
   
   /**
    * @param thisParserParsed
