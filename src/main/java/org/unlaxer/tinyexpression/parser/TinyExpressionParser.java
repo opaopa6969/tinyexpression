@@ -55,7 +55,8 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
      Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(NumberExpressionParser.class));
      Optional<Token> child2 = rootToken.getChildAsOptional(TokenPredicators.parsers(MethodsParser.class));
      if(child1.isEmpty() && child2.isEmpty()) {
-       parsed = parsed.negate();
+       parsed = parsed.negate().setMessage("specify method or expression");
+       
      }
     }
     return parsed;
