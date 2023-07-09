@@ -43,7 +43,7 @@ public class MethodInvocationParserTest extends ParserTestBase{
     SimpleBuilder simpleBuilder = new SimpleBuilder();
 
     simpleBuilder
-      .line("test($fee,true,'niku')")
+      .line("internal test($fee,true,'niku')")
       ;
     
     String formula = simpleBuilder.toString();
