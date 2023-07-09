@@ -34,7 +34,6 @@ public abstract class AbstractFactorParser extends LazyChoice implements NumberE
     Parsers parsers = new Parsers();
     
     parsers.add(NumberSideEffectExpressionParser.class);
-    parsers.add(MethodInvocationParser.class);
     parsers.add(NumberIfExpressionParser.class);
     parsers.add(StrictTypedNumberMatchExpressionParser.class);
 
@@ -62,6 +61,7 @@ public abstract class AbstractFactorParser extends LazyChoice implements NumberE
     parsers.add(RandomParser.class);
     parsers.add(FactorOfStringParser.class);
     parsers.add(ToNumParser.class);
+    parsers.add(MethodInvocationParser.class);
     return parsers;
     
   }

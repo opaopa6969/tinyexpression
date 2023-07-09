@@ -35,5 +35,4 @@ public class FormulaParser extends NoneChildParser {
 	public Parser createParser() {
 		return this;
 	}
-	
 }

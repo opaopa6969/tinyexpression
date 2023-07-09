@@ -56,7 +56,7 @@ public class TinyExpressionParserTest extends ParserTestBase{
   @Test
   public void testMinimum() {
     
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
     
@@ -291,7 +291,7 @@ public class TinyExpressionParserTest extends ParserTestBase{
   @Test
   public void testNoParameterSideEffect() {
     
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
     

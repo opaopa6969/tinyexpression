@@ -8,13 +8,8 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyZeroOrMo
 public class MethodsParser extends JavaStyleDelimitedLazyZeroOrMore{
 
   @Override
-  public Supplier<Parser> getLazyParser() {
+  public Supplier<Parser> targetParser() {
     return MethodChoiceParser::new;
-  }
-
-  @Override
-  public java.util.Optional<Parser> getLazyTerminatorParser() {
-    return java.util.Optional.empty();
   }
   
 }
