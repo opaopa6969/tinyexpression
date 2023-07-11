@@ -52,7 +52,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   
   public static String getMethodNameAsString(Token thisParserParsed) {
     
-    return getMethodName(thisParserParsed).toString();
+    return getMethodName(thisParserParsed).getToken().get();
     
   }
 

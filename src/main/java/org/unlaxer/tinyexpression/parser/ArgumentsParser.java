@@ -53,16 +53,28 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		        _token->{
 		          String variableName = ExclusiveNakedVariableParser.get().getVariableName(_token);
 		          Optional<Token> matchedVariableDeclaration = tinyExpressionTokens.matchedVariableDeclaration(variableName);
-		          if(matchedVariableDeclaration.isEmpty()) {
-		            return _token;
+		          Optional<ExpressionType> type = Optional.empty();
+		          if(matchedVariableDeclaration.isPresent()) {
+		            
+		            Token token = matchedVariableDeclaration.get();
+		            
+		            VariableDeclaration parser = token.getParser(VariableDeclaration.class);
+		            type = parser.type();
 		          }
-		          Token token = matchedVariableDeclaration.get();
-		          
-		          VariableDeclaration parser = token.getParser(VariableDeclaration.class);
-		          Optional<ExpressionType> type = parser.type();
-		          
 		          if(type.isEmpty()) {
-		            return token;
+		            
+		            List<Token> methodTokens = tinyExpressionTokens.getMethodTokens();
+		            
+		            System.out.println(methodTokens);
+		            
+		            
+		            
+		          }
+		            
+		            
+		            
+		          if(type.isEmpty()) {
+		            return _token;
 		          }
 		         
 		          
@@ -74,7 +86,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		                    Parser.get(StringVariableParser.class):
 	                      Parser.get(BooleanVariableParser.class);
 		          
-		          Token newWithReplacedParser = token.newWithReplace(typeParser);
+		          Token newWithReplacedParser = _token.newWithReplace(typeParser);
 		          
 		          return newWithReplacedParser;
 		        }));

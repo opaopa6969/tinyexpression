@@ -64,6 +64,8 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> implemen
 		} catch (ClassNotFoundException | InstantiationException |IllegalAccessException | IllegalArgumentException |
 				InvocationTargetException | NoSuchMethodException | SecurityException e) {
 
+		  System.err.print(javaCode);
+
 			throw new RuntimeException(e);
 		}
 	}

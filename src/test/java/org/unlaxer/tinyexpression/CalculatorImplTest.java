@@ -1235,6 +1235,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       .line(" true")
       .line("}")
       ;
-    assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("18000")));
+    
+    
+    String string = simpleBuilder.toString();
+    
+    System.out.println(string);
+    assertTrue(calc(context,string,new BigDecimal("1800")));
   }
 }

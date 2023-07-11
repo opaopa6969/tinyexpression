@@ -22,22 +22,22 @@ public interface JavaClassCreator{
 
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
-    String CalculationContextName = CalculationContext.class.getName();
+    String calculationContextName = CalculationContext.class.getName();
     builder
       .setKind(Kind.Main)
-      .line("import "+CalculationContextName+";")
+      .line("import "+calculationContextName+";")
       .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
       .line("import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;")
       .n()
       .append("public class ")
       .append(className)
-      .append(" implements TokenBaseOperator<"+CalculationContextName+", Float>{")
+      .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
       .n()
       .n()
       .setKind(Kind.Function)
       .incTab()
       .line("@Override")
-      .line("public Float evaluate("+CalculationContextName+" calculateContext , TinyExpressionTokens token) {")
+      .line("public Float evaluate("+calculationContextName+" calculateContext , TinyExpressionTokens token) {")
       .setKind(Kind.Calculation)
       .incTab()
       .line("float answer = (float) ")
@@ -55,7 +55,7 @@ public interface JavaClassCreator{
       .decTab()
       .n();
 
-    createMethods(builder, tinyExpressionToken);
+    createMethods(builder, tinyExpressionToken , calculationContextName);
     
     builder
       .setKind(Kind.Main);
@@ -65,7 +65,7 @@ public interface JavaClassCreator{
     return code;
   }
   
-  default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens) {
+  default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens , String calculationContextName) {
     List<Token> methodTokens = tinyExpressionTokens.getMethodTokens();
     for (Token token : methodTokens) {
       
@@ -90,7 +90,12 @@ public interface JavaClassCreator{
         .append(javaType)
         .append(" ")
         .append(methodName)
-        .append("(");
+        .append("("+calculationContextName+" calculateContext ");
+      
+      if(false == parameters.isEmpty()) {
+        builder
+          .append(",");
+      }
       
       FormalParametersBuilder.buildParameter(builder, parameters);
       

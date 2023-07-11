@@ -6,6 +6,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.tinyexpression.parser.MethodParameterParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
@@ -20,6 +21,7 @@ public class TinyExpressionTokens{
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
+  final Map<String,Token> methodDeclarationByVariableName;
   final List<Token> methodTokens;
 
   
@@ -52,9 +54,21 @@ public class TinyExpressionTokens{
             return variableName;
         
         },
-        Function.identity()));
+        Function.identity())
+      );
     
     methodTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
+    
+    methodDeclarationByVariableName = methodTokens.stream()
+       .collect(Collectors.toMap(
+           token->{}, 
+           
+           null
+           
+           
+           
+           )
+       );
   }
   
   public Token getTinyExpressionToken() {
@@ -86,6 +100,13 @@ public class TinyExpressionTokens{
     Token token = variableDeclarationByVariableName.get(VariableName);
     return java.util.Optional.ofNullable(token);
   }
+  
+  public java.util.Optional<Token> matchedMethod(String VariableName){
+    
+    Token token = variableDeclarationByVariableName.get(VariableName);
+    return java.util.Optional.ofNullable(token);
+  }
+
   
   
 }

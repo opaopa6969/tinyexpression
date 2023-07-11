@@ -1,0 +1,42 @@
+import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.TokenBaseOperator;
+import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+
+public class V1Test_CalculatorClass4618600887499287469 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext, Float>{
+
+  @Override
+  public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , TinyExpressionTokens token) {
+    float answer = (float) 
+
+
+((calculateContext.getValue("age").orElse(0f)<18.0f) ? 500.0f:
+(calculateContext.getValue("age").orElse(0f)>=60.0f) ? 700.0f:
+
+feeBySex(calculateContext,calculateContext.getString("sex").orElse("")))
+    ;
+    return answer;
+  }
+
+
+float feeBySex(org.unlaxer.tinyexpression.CalculationContext calculateContext ,String sex){
+ return 
+(((calculateContext.getString(sex).orElse("")==discountSexString(calculateContext))&&(doDiscountBySex(calculateContext))) ? 1000.0f:
+
+1800.0f);
+}
+
+
+
+String discountSexString(org.unlaxer.tinyexpression.CalculationContext calculateContext){
+ return "woman";
+}
+
+
+
+boolean doDiscountBySex(org.unlaxer.tinyexpression.CalculationContext calculateContext){
+ return (true);
+}
+
+
+
+}
