@@ -40,8 +40,8 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.number);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.number);
   }
   
   public static class NumberVariableMatchedWithVariableDeclarationParser extends LazyChain implements NumberExpression {

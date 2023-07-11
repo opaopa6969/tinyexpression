@@ -1,18 +1,12 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
-import java.util.Iterator;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.unlaxer.Token;
-import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
-import org.unlaxer.tinyexpression.parser.StringExpression;
 
 public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
@@ -83,47 +77,6 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
 	static Supplier<Float> sampleSupplier = ()->{System.out.println("");return 10.0f;};
 	static Function<Float,Float> sampleFunction= (x)->{x++;return x;};
-	
-	
-	public static class ParametersBuilder  {
-
-		
-		public static ParametersBuilder SINGLETON = new ParametersBuilder();
-
-		public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters , 
-		    TinyExpressionTokens tinyExpressionTokens) {
-			
-			Iterator<Token> iterator = methodAndParameters.parameterTokens.iterator();
-			
-			while(iterator.hasNext()) {
-				Token token = iterator.next();
-				
-				Parser parser = token.parser;
-				if(parser instanceof NakedVariableParser) {
-//				  NakedVariableBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-          NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);//デフォルトでnumberとする
-				}else if(parser instanceof NumberExpression) {
-					NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-				}else if(parser instanceof BooleanExpression) {
-					BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-				}else if (parser instanceof StringExpression) {
-					builder.append(StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens).toString());
-				}else {
-					throw new IllegalArgumentException();
-				}
-				if(iterator.hasNext()) {
-					builder.append(" , ");
-				}
-			}
-		}
-
-		static Supplier<Float> sampleSupplier = ()->{System.out.println("");return 10.0f;};
-		static Function<Float,Float> sampleFunction= (x)->{x++;return x;};
-		
-		
-		
-	}
-	
 	
 	
 }

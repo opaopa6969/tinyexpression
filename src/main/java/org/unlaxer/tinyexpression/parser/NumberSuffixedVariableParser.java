@@ -33,7 +33,7 @@ public class NumberSuffixedVariableParser extends JavaStyleDelimitedLazyChain im
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.number);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.number);
   }
 }

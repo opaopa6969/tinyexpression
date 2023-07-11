@@ -47,7 +47,7 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
   }
 
   @Override
-  public Optional<VariableType> type() {
+  public Optional<ExpressionType> type() {
     return Optional.empty();
   }
   

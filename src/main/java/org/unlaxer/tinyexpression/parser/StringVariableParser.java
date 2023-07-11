@@ -35,8 +35,8 @@ public class StringVariableParser extends LazyChoice implements VariableParser ,
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.string);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.string);
   }
   
   public static class StringVariableMatchedWithVariableDeclarationParser extends LazyChain implements StringExpression {

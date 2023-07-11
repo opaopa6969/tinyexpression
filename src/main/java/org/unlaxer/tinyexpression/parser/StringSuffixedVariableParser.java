@@ -37,8 +37,8 @@ public class StringSuffixedVariableParser extends JavaStyleDelimitedLazyChain im
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.string);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.string);
   }
 
 }

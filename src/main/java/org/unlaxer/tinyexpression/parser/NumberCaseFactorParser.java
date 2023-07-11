@@ -42,5 +42,4 @@ public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
 		return thisParserParsed.getChild(
 		    TokenPredicators.parserImplements(NumberExpression.class, VariableParser.class));
 	}
-
 }

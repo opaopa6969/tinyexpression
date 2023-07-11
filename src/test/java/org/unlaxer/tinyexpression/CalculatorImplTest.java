@@ -1202,6 +1202,39 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
   
   @Test
   public void testMultiMethod() {
+    setLevel(OutputLevel.mostDetail);
     
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set(new Fee());
+    context.set("age", 18);
+    context.set("sex", "man");
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+//      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 500,")
+      .line("  $age>=60 -> 700,")
+      .line("  default  -> call feeBySex($sex)")
+      .line(" }")
+//      .line("}")
+      .n()
+      .line("float feeBySex($sex as string){")
+      .line(" match{")
+      .line("  $sex==call discountSexString() & call doDiscountBySex() -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+      .line("}")
+      .n()
+      .line("String discountSexString(){")
+      .line(" 'woman'")
+      .line("}")
+      .n()
+      .line("boolean doDiscountBySex(){")
+      .line(" true")
+      .line("}")
+      ;
+    assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("18000")));
   }
 }

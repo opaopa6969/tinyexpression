@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
 
-public class StringTypeHintParser extends LazyChoice {
+public class StringTypeHintParser extends LazyChoice implements TypeHint{
 
   private static final long serialVersionUID = 1652285131946632894L;
 
@@ -21,5 +21,10 @@ public class StringTypeHintParser extends LazyChoice {
         new WordParser("String"), //
         new WordParser("string")
     );
+  }
+
+  @Override
+  public ExpressionType type() {
+    return ExpressionType.string;
   }
 }

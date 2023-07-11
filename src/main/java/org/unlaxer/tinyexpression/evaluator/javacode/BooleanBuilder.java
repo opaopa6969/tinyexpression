@@ -6,6 +6,7 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.tinyexpression.evaluator.javacode.NumberExpressionBuilder.MethodInvocationBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
@@ -22,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
@@ -196,8 +198,13 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
       builder.append(")");
       builder.decTab();
+      
+    }else if (parser instanceof MethodInvocationParser) {
+      
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
 
 		}else {
+		  //ここでBooleanExpressionParserでエラーが発生するのはOperatorOperandTreeCreatorできちんとapplyされてない時
 		  throw new IllegalArgumentException();
 		}
 	}

@@ -20,6 +20,7 @@ public class TinyExpressionTokens{
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
+  final List<Token> methodTokens;
 
   
   public TinyExpressionTokens(Token tinyExpressionToken) {
@@ -52,6 +53,8 @@ public class TinyExpressionTokens{
         
         },
         Function.identity()));
+    
+    methodTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
   }
   
   public Token getTinyExpressionToken() {
@@ -69,7 +72,10 @@ public class TinyExpressionTokens{
   public Token getExpressionToken() {
     return expressionToken;
   }
-  
+  public List<Token> getMethodTokens() {
+    return methodTokens;
+  }
+
   public String resolveJavaClass(String classNameOrMethod) {
     String string = classNameByIdentifier.get(classNameOrMethod);
     return string == null ? classNameOrMethod : string;

@@ -1,15 +1,21 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.ArgumentsParser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
@@ -176,8 +182,8 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof NumberMatchExpressionParser) {
 
-			Token caseExpression = token.filteredChildren.get(0);
-			Token defaultCaseFactor = token.filteredChildren.get(1);
+			Token caseExpression = token.getChild(TokenPredicators.parsers(NumberCaseExpressionParser.class));
+			Token defaultCaseFactor = token.getChildFromAstNodes(1);
 
 			builder.n();
 			builder.incTab();
@@ -268,12 +274,40 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 //		} else if (parser instanceof StringIndexOfParser) {
 //
 //			return StringIndexOfOperator.SINGLETON.evaluate(calculateContext, token);
-		}else {
+    }else if (parser instanceof MethodInvocationParser) {
+      
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+    }else {
 			throw new IllegalArgumentException();
 		}
-
 	}
 
+	public static class MethodInvocationBuilder implements TokenCodeBuilder{
+	  
+	  public static final MethodInvocationBuilder SINGLETON = new MethodInvocationBuilder();
+
+    @Override
+    public void build(SimpleJavaCodeBuilder builder, Token token, TinyExpressionTokens tinyExpressionTokens) {
+      
+      String methodNameAsString = MethodInvocationParser.getMethodNameAsString(token);
+      Optional<Token> parametersClause = MethodInvocationParser.getParametersClause(token);
+      List<Token> parameterTokens =
+          parametersClause.isEmpty() ? 
+          Collections.emptyList():
+          ArgumentsParser.parameterTokens(parametersClause.get(), tinyExpressionTokens);
+      
+      builder
+        .append(methodNameAsString)
+        .append("(");
+      ParametersBuilder.buildParameter(builder, parameterTokens, tinyExpressionTokens);
+      builder
+        .append(")");
+       return ;
+    }
+	  
+	}
+	
+	
 	void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
 	    TinyExpressionTokens tinyExpressionTokens) {
 

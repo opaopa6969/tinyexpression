@@ -40,15 +40,15 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 	}
 	
 	@TokenExtractor
-	public List<Token> parameterTokens(Token sideEffectExpressionParameterParserToken,TinyExpressionTokens tinyExpressionTokens){
+	public static List<Token> parameterTokens(Token argumentsToken,TinyExpressionTokens tinyExpressionTokens){
 		
-		if(false == sideEffectExpressionParameterParserToken.parser instanceof ArgumentsParser) {
+		if(false == argumentsToken.parser instanceof ArgumentsParser) {
 			throw new IllegalArgumentException("token is invalid");
 		}
 		
 		//ExclusiveNakedVariableParserのtokenをVariableDeclarationで定義されいていて型定義があれば型解決を行う
-		sideEffectExpressionParameterParserToken = 
-		    sideEffectExpressionParameterParserToken.newCreatesOf(
+		argumentsToken = 
+		    argumentsToken.newCreatesOf(
 		        new TokenEffecterWithMatcher(TokenPredicators.parsers(ExclusiveNakedVariableParser.class),
 		        _token->{
 		          String variableName = ExclusiveNakedVariableParser.get().getVariableName(_token);
@@ -59,14 +59,14 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		          Token token = matchedVariableDeclaration.get();
 		          
 		          VariableDeclaration parser = token.getParser(VariableDeclaration.class);
-		          Optional<VariableType> type = parser.type();
+		          Optional<ExpressionType> type = parser.type();
 		          
 		          if(type.isEmpty()) {
 		            return token;
 		          }
 		         
 		          
-		          VariableType variableType = type.get();
+		          ExpressionType variableType = type.get();
 		          
 		          Parser typeParser = variableType.isNumber() ?
 		              Parser.get(NumberVariableParser.class):
@@ -80,7 +80,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		        }));
 		
 		
-		return sideEffectExpressionParameterParserToken.filteredChildren.stream()
+		return argumentsToken.filteredChildren.stream()
 			.filter(token->{
 			  
 			  

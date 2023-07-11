@@ -1,7 +1,21 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
+import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.TypeHint;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface JavaClassCreator{
   default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken) {
@@ -39,11 +53,96 @@ public interface JavaClassCreator{
       .decTab()
       .line("}")
       .decTab()
+      .n();
+
+    createMethods(builder, tinyExpressionToken);
+    
+    builder
       .setKind(Kind.Main);
 
 
     String code = builder.toString();
     return code;
   }
+  
+  default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens) {
+    List<Token> methodTokens = tinyExpressionTokens.getMethodTokens();
+    for (Token token : methodTokens) {
+      
+      Token typeHintToken = token.getChild(TokenPredicators.parserImplements(TypeHint.class));
+      TypeHint typeHintParser = typeHintToken.getParser(TypeHint.class);
+      String javaType = typeHintParser.type().javaType();
+      
+      Token methodNameToken = token.getChild(TokenPredicators.parsers(IdentifierParser.class));
+      String methodName = methodNameToken.tokenString.get();
+      
+      List<Token> parameters = token.flatten().stream()
+          .filter(TokenPredicators.parsers(
+              StringVariableParser.class,NumberVariableParser.class,BooleanVariableParser.class))
+          .collect(Collectors.toList());
+      
+      Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
+      ExpressionInterface expressionParser = expression.getParser(ExpressionInterface.class);
+      ExpressionType expressionType = expressionParser.expressionType();
+      
+      builder
+        .n()
+        .append(javaType)
+        .append(" ")
+        .append(methodName)
+        .append("(");
+      
+      FormalParametersBuilder.buildParameter(builder, parameters);
+      
+      builder
+        .append("){")
+        .n()
+        .incTab()
+        .append(" return ");
+        
+//        型に沿ったbuilderでappend
+      if(expressionType.isNumber()) {
+        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+      }else if(expressionType.isBoolean()) {
+        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+      }else {
+        builder.append(StringClauseBuilder.SINGLETON.build(expression , tinyExpressionTokens).toString());
+      }
+          
+      builder
+        .append(";")
+        .n()
+        .decTab()
+        .line("}")
+        .n()
+        .n();
+    }
+  }
+  
+  public static class FormalParametersBuilder  {
+    
+
+    public static void buildParameter(SimpleJavaCodeBuilder builder, List<Token> Parameters) {
+      
+      Iterator<Token> iterator = Parameters.iterator();
+      
+      while(iterator.hasNext()) {
+        Token token = iterator.next();
+        
+        VariableParser parser = token.getParser(VariableParser.class);
+        ExpressionType variableType = parser.type().get();
+        String variableName = parser.getVariableName(token);
+        builder
+          .append(variableType.javaType())
+          .append(" ")
+          .append(variableName);
+        
+        if(iterator.hasNext()) {
+          builder.append(" , ");
+        }
+      }
+    }
+  }
+
   
 }

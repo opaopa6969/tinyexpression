@@ -25,6 +25,7 @@ public class NumberVariableMethodParameterParser extends LazyChoice implements V
       );
   }
   
+  @Override
   public String getVariableName(Token thisParserParsed) {
     Token choiced = ChoiceInterface.choiced(thisParserParsed);
     
@@ -36,8 +37,8 @@ public class NumberVariableMethodParameterParser extends LazyChoice implements V
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.number);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.number);
   }
   
 }

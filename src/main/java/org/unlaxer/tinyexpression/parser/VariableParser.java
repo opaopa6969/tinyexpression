@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parser;
 
 public interface VariableParser extends Parser{
   
-  public Optional<VariableType> type();
+  public Optional<ExpressionType> type();
   public default boolean hasType() {
     return type().isPresent();
   }

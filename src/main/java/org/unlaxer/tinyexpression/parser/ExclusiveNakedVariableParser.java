@@ -51,7 +51,7 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
   }
 
   @Override
-  public Optional<VariableType> type() {
+  public Optional<ExpressionType> type() {
     return Optional.empty();
   }
   

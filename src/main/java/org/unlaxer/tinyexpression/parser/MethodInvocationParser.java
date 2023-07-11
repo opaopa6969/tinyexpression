@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -9,6 +10,7 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
 
@@ -19,6 +21,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
+        //ここをoptionalにするとparseが意図しない結果となる。
 //        new Optional(
             Parser.get(MethodInvocationHeaderParser.class),
 //        ),
@@ -31,4 +34,26 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
     );
   }
   
+  @TokenExtractor
+  public static java.util.Optional<Token> getParametersClause(Token thisParserParsed) {
+    
+    Parser.checkTokenParsedBySpecifiedParser(thisParserParsed, MethodInvocationParser.class);
+    
+    return thisParserParsed.getChildWithParserAsOptional(ArgumentsParser.class); //4
+  }
+  
+  @TokenExtractor
+  public static Token getMethodName(Token thisParserParsed) {
+    
+    Parser.checkTokenParsedBySpecifiedParser(thisParserParsed, MethodInvocationParser.class);
+    
+    return thisParserParsed.getChildWithParser(IdentifierParser.class); //4
+  }
+  
+  public static String getMethodNameAsString(Token thisParserParsed) {
+    
+    return getMethodName(thisParserParsed).toString();
+    
+  }
+
 }

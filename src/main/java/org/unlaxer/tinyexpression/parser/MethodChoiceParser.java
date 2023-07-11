@@ -16,4 +16,12 @@ public class MethodChoiceParser extends LazyChoice{
         Parser.get(BooleanMethodParser.class)
     );
   }
+  
+//  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+//  public List<Token> extractMethods(Token thisParserParsed) {
+//    
+//    checkTokenParsedByThisParser(thisParserParsed);
+//    Token choiced = ChoiceInterface.choiced(thisParserParsed);
+//  }
+
 }

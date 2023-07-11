@@ -1,3 +1,9 @@
 package org.unlaxer.tinyexpression.parser;
 
-public interface ExpressionInterface{}
+import org.unlaxer.parser.Parser;
+
+public interface ExpressionInterface extends Parser{
+  
+  public ExpressionType expressionType();
+  
+}

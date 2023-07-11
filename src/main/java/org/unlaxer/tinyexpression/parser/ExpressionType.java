@@ -2,15 +2,17 @@ package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Tag;
 
-public enum VariableType{
-  number,
-  string,
-  bool
+public enum ExpressionType{
+  number("float"),
+  string("String"),
+  bool("boolean")
   ;
   final Tag tag;
+  final String javaType;
   
-  private VariableType() {
+  private ExpressionType(String javaType) {
     this.tag = Tag.of(this);
+    this.javaType = javaType;
   }
 
   public Tag asTag() {
@@ -28,5 +30,9 @@ public enum VariableType{
   
   public boolean isString() {
     return this == string;
+  }
+  
+  public String javaType() {
+    return javaType;
   }
 }

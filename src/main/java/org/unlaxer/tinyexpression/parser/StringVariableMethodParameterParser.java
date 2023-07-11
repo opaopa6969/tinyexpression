@@ -31,7 +31,7 @@ public class StringVariableMethodParameterParser extends LazyChoice implements V
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.string);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.string);
   }
 }
