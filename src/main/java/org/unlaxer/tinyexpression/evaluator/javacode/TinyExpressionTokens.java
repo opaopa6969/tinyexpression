@@ -2,11 +2,12 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.MethodParameterParser;
+import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
@@ -21,7 +22,7 @@ public class TinyExpressionTokens{
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
-  final Map<String,Token> methodDeclarationByVariableName;
+  final Map<String,Token> methodDeclarationBymethodName;
   final List<Token> methodTokens;
 
   
@@ -59,14 +60,14 @@ public class TinyExpressionTokens{
     
     methodTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
     
-    methodDeclarationByVariableName = methodTokens.stream()
+    methodDeclarationBymethodName = methodTokens.stream()
        .collect(Collectors.toMap(
-           token->{}, 
-           
-           null
-           
-           
-           
+           _token->{
+             MethodParser parser = _token.getParser(MethodParser.class);
+             
+             return parser.methodName(_token).getToken().get();
+           }, 
+           Function.identity()
            )
        );
   }
@@ -105,6 +106,11 @@ public class TinyExpressionTokens{
     
     Token token = variableDeclarationByVariableName.get(VariableName);
     return java.util.Optional.ofNullable(token);
+  }
+  
+  public Optional<Token> getMethodToken(String methodName){
+    Token token = methodDeclarationBymethodName.get(methodName);
+    return Optional.ofNullable(token);
   }
 
   
