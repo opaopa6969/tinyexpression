@@ -20,7 +20,7 @@ public class MethodInvocationBuilder implements TokenCodeBuilder{
     List<Token> parameterTokens =
         parametersClause.isEmpty() ? 
         Collections.emptyList():
-        ArgumentsParser.parameterTokens(parametersClause.get(), tinyExpressionTokens);
+        ArgumentsParser.parameterTokens(methodNameAsString, parametersClause.get(), tinyExpressionTokens);
     
     builder
       .append(methodNameAsString)

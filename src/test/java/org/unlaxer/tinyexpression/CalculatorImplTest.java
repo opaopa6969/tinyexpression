@@ -1222,6 +1222,8 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       .n()
       .line("float feeBySex($sex as string){")
       .line(" match{")
+      // $sexはformalParameterで型指定がされているので型解決ができる。
+      // またcall discountingSttringの戻り値でも型推論ができる
       .line("  $sex==call discountSexString() & call doDiscountBySex() -> 1000,")
       .line("  default  -> 1800")
       .line(" }")

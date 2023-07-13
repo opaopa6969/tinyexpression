@@ -9,11 +9,11 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.BooleanVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.StringVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
@@ -78,7 +78,9 @@ public interface JavaClassCreator{
       
       List<Token> parameters = token.flatten().stream()
           .filter(TokenPredicators.parsers(
-              StringVariableParser.class,NumberVariableParser.class,BooleanVariableParser.class))
+              StringVariableMethodParameterParser.class,
+              NumberVariableMethodParameterParser.class,
+              BooleanVariableMethodParameterParser.class))
           .collect(Collectors.toList());
       
       Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
@@ -87,6 +89,7 @@ public interface JavaClassCreator{
       
       builder
         .n()
+        .incTab()
         .append(javaType)
         .append(" ")
         .append(methodName)
@@ -120,7 +123,8 @@ public interface JavaClassCreator{
         .decTab()
         .line("}")
         .n()
-        .n();
+        .n()
+        .decTab();
     }
   }
   

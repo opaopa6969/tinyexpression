@@ -18,6 +18,8 @@ import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.posix.CommaParser;
+import org.unlaxer.tinyexpression.parser.ArgumentChoiceParser;
+import org.unlaxer.tinyexpression.parser.ArgumentSuccessorParser;
 import org.unlaxer.tinyexpression.parser.BooleanCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.BooleanDefaultCaseFactorParser;
@@ -32,6 +34,7 @@ import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
@@ -43,6 +46,7 @@ import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.LessExpressionParser;
 import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
+import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.MethodsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
@@ -59,8 +63,6 @@ import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.ArgumentChoiceParser;
-import org.unlaxer.tinyexpression.parser.ArgumentSuccessorParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanFactorParser;
@@ -77,6 +79,7 @@ import org.unlaxer.tinyexpression.parser.StringDefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
+import org.unlaxer.tinyexpression.parser.StringExpressionMethodParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
@@ -85,7 +88,6 @@ import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringExpressionMethodParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
@@ -119,11 +121,44 @@ import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterfac
 public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	
 	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
+	
+	public static class TypeResolver{
+	  
+	  public Optional<ExpressionType> resolveNakedVariable(Token token) {
+	    
+	    if(false == token.parser instanceof ExclusiveNakedVariableParser) {
+	      throw new IllegalArgumentException();
+	    }
+	    ExclusiveNakedVariableParser parser = token.getParser(ExclusiveNakedVariableParser.class);
+	    
+	    
+	    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
+	    if(ancestorAsOptional.isPresent()) {
+	      
+	      Token methodParserToken = ancestorAsOptional.get();
+	    }
+	    
+	    
+	    return Optional.empty();
+	    
+	  }
+	  
+	}
 
 	@Override
 	public Token apply(Token token) {
 		
 		Parser parser = token.parser;
+		
+		if(parser instanceof ExclusiveNakedVariableParser) {
+		  // 型推論/型解決を行う
+		  //1. 親にMethodParserがあればMethodParameterから解決をする
+		  //2. 比較演算の他方の型から解決する。method callや == や -1等
+		  //3. methodの実パラメータの場合仮引数の型から解決する
+      //4. not等のunary operatorの型から解決する
+		  //5. VariableDeclarationの型から解決する
+		  System.out.println(token);
+		}
 		
 		if(parser instanceof TinyExpressionParser) {
 		  
@@ -368,6 +403,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		
 		Parser parser = operator.parser;
 		
+    if(parser instanceof ExclusiveNakedVariableParser) {
+      System.out.println(token);
+    }
+
+		
 		if(parser instanceof StringLiteralParser){
 			
 			return operator;
@@ -406,6 +446,10 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
         apply(StringMatchExpressionParser.getCaseExpression(operator)),
         apply(StringMatchExpressionParser.getDefaultExpression(operator))
       );
+		}else if(parser instanceof MethodInvocationParser) {
+		  
+      return extracteMethodInvocation(operator);
+
 		}
 		throw new IllegalArgumentException();
 	}
@@ -415,7 +459,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Token operator = ChoiceInterface.choiced(token);
 		Parser parser = operator.parser;
 		
-		if(parser instanceof NumberParser){
+    if(parser instanceof ExclusiveNakedVariableParser) {
+      System.out.println(token);
+    }
+
+    if(parser instanceof NumberParser){
 			
 			return clearChildren(operator);
 			
@@ -596,6 +644,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		
 		Token operator = ChoiceInterface.choiced(token);
 		Parser parser = operator.parser;
+		
+    if(parser instanceof ExclusiveNakedVariableParser) {
+      System.out.println(token);
+    }
+
 		
 		if(parser instanceof TrueTokenParser ||
 			parser instanceof FalseTokenParser) {

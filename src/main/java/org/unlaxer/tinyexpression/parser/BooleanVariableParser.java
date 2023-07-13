@@ -12,7 +12,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
-public class BooleanVariableParser extends LazyChoice implements VariableParser , BooleanExpression{
+public class BooleanVariableParser extends LazyChoice implements RootVariableParser , BooleanExpression{
 
   private static final long serialVersionUID = -60484510350410L;
   
@@ -75,5 +75,20 @@ public class BooleanVariableParser extends LazyChoice implements VariableParser 
   
   public static BooleanVariableParser get() {
     return SINGLETON.get();
+  }
+
+  @Override
+  public Class<? extends RootVariableParser> rootOfTypedVariableParser() {
+    return BooleanVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends VariableParser> oneOfTypedVariableParser() {
+    return BooleanPrefixedVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends TypeHintVariableParser> typeHintVariableParser() {
+    return BooleanTypeHintPrefixParser.class;
   }
 }

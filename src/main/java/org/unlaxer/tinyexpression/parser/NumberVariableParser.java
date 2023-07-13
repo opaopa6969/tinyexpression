@@ -11,7 +11,7 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NumberVariableParser extends LazyChoice implements VariableParser , NumberExpression{
+public class NumberVariableParser extends LazyChoice implements RootVariableParser , NumberExpression{
 
   private static final long serialVersionUID = -6048451001170410L;
 
@@ -63,5 +63,20 @@ public class NumberVariableParser extends LazyChoice implements VariableParser ,
       Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
       return token;
     }
+  }
+
+  @Override
+  public Class<? extends RootVariableParser> rootOfTypedVariableParser() {
+    return NumberVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends VariableParser> oneOfTypedVariableParser() {
+    return NumberPrefixedVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends TypeHintVariableParser> typeHintVariableParser() {
+    return NumberTypeHintPrefixParser.class;
   }
 }

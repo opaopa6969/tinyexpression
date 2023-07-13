@@ -26,6 +26,13 @@ public interface MethodParser extends Parser{
     
     return thisParserParsed.getChild(TokenPredicators.parsers(IdentifierParser.class));
   }
-
+  
+  @TokenExtractor
+  public default Token methodParameters(Token thisParserParsed) {
+    
+    checkTokenParsedByThisParser(thisParserParsed);
+    
+    return thisParserParsed.getChild(TokenPredicators.parsers(MethodParametersParser.class));
+  }
   
 }

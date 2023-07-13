@@ -40,7 +40,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 	}
 	
 	@TokenExtractor
-	public static List<Token> parameterTokens(Token argumentsToken,TinyExpressionTokens tinyExpressionTokens){
+	public static List<Token> parameterTokens(String methodName, Token argumentsToken,TinyExpressionTokens tinyExpressionTokens){
 		
 		if(false == argumentsToken.parser instanceof ArgumentsParser) {
 			throw new IllegalArgumentException("token is invalid");
@@ -63,7 +63,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		          }
 		          if(type.isEmpty()) {
 		            
-		            Optional<Token> methodToken = tinyExpressionTokens.getMethodToken(variableName);
+		            Optional<Token> methodToken = tinyExpressionTokens.getMethodToken(methodName);
 		            if(methodToken.isPresent()) {
 		              Token _methodToken = methodToken.get();
 		              
@@ -90,15 +90,14 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		         
 		          ExpressionType variableType = type.get();
 		          
-		          Parser typeParser = variableType.isNumber() ?
+		          RootVariableParser typeParser = variableType.isNumber() ?
 		              Parser.get(NumberVariableParser.class):
 		                variableType.isString() ?
 		                    Parser.get(StringVariableParser.class):
 	                      Parser.get(BooleanVariableParser.class);
 		          
-		          Token newWithReplacedParser = _token.newWithReplace(typeParser);
-		          
-		          return newWithReplacedParser;
+		          Token newWithTypedParser = typeParser.newWithTypedParser(_token);
+		          return newWithTypedParser;
 		        }));
 		
 		

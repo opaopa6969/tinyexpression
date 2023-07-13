@@ -16,6 +16,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
@@ -294,6 +295,13 @@ public class StringClauseBuilder {
       builder.decTab();
       return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
 
+		}else if(parser instanceof MethodInvocationParser) {
+		  
+      SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+		  
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+
+      return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
 		}
 
 		throw new IllegalArgumentException();
