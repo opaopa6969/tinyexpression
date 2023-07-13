@@ -126,6 +126,13 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	  
 	  public Optional<ExpressionType> resolveNakedVariable(Token token) {
 	    
+      // 型推論/型解決を行う
+      //1. 親にMethodParserがあればMethodParameterから解決をする
+      //2. 比較演算の他方の型から解決する。method callや == や -1等
+      //3. methodの実パラメータの場合仮引数の型から解決する
+      //4. not等のunary operatorの型から解決する
+      //5. VariableDeclarationの型から解決する
+
 	    if(false == token.parser instanceof ExclusiveNakedVariableParser) {
 	      throw new IllegalArgumentException();
 	    }
@@ -136,6 +143,8 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	    if(ancestorAsOptional.isPresent()) {
 	      
 	      Token methodParserToken = ancestorAsOptional.get();
+	      MethodParser parser2 = methodParserToken.getParser(MethodParser.class);
+	      methodParserToken.
 	    }
 	    
 	    
