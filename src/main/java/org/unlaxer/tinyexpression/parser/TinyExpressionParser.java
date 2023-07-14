@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.unlaxer.Parsed;
 import org.unlaxer.Token;
 import org.unlaxer.Token.ChildrenKind;
-import org.unlaxer.Token.SearchFirst;
+import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
@@ -170,7 +170,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
 
     Token child = tinyExpressionToken.getChild(TokenPredicators.parsers(MethodsParser.class));
-    List<Token> methods = child.flatten(SearchFirst.Breadth, ChildrenKind.astNodes).stream()
+    List<Token> methods = child.flatten(ScanDirection.Breadth, ChildrenKind.astNodes).stream()
       .filter(TokenPredicators.parserImplements(MethodParser.class))
       .collect(Collectors.toList());
     for (Token token : methods) {

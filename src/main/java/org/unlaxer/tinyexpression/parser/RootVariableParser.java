@@ -5,23 +5,25 @@ import java.util.List;
 import org.unlaxer.RangedString;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 
 public interface RootVariableParser extends TypedVariableParser{
   
-  public default Token newWithTypedParser(Token tokenOfNakedVariable) {
+  public default TypedToken<RootVariableParser> newWithTypedParser(
+      TypedToken<ExclusiveNakedVariableParser> tokenOfNakedVariable) {
     
     RootVariableParser typedVariable = Parser.get(rootOfTypedVariableParser());
-    Token root = tokenOfNakedVariable.newWithReplace(typedVariable);
-    Token child = tokenOfNakedVariable.newWithReplace(Parser.get(oneOfTypedVariableParser()));
+    TypedToken<RootVariableParser> root = tokenOfNakedVariable.newWithReplaceTyped(typedVariable);
+    TypedToken<? extends VariableParser> child = tokenOfNakedVariable.newWithReplaceTyped(Parser.get(oneOfTypedVariableParser()));
     
     ExpressionType expressionType = typedVariable.typeAsOptional().get();
 
     Token typePrefix = new Token(TokenKind.consumed, new RangedString(0, expressionType.javaType()), Parser.get(typeHintVariableParser()));
     
-    child = child.newCreatesOf(typePrefix ,
-        tokenOfNakedVariable.newWithReplace(Parser.get(NakedVariableParser.class)));
-    root = root.newCreatesOf(List.of(child));
+    TypedToken<? extends VariableParser> newCreatesOfTyped = child.newCreatesOfTyped(typePrefix ,
+        tokenOfNakedVariable.newWithReplaceTyped(Parser.get(NakedVariableParser.class)));
+    root = root.newCreatesOfTyped(List.of(child));
     return root;
   }
   

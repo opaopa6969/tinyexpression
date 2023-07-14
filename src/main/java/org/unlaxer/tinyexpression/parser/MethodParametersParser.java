@@ -10,6 +10,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
 
@@ -24,6 +25,7 @@ public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
     );
   }
   
+  @TokenExtractor
   public java.util.Optional<TypedToken<MethodParametersElementParser>> 
     extractParameterElementss(TypedToken<MethodParametersParser> thisParserParsed){
     

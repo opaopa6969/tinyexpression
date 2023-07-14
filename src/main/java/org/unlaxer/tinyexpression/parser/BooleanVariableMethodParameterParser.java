@@ -10,7 +10,7 @@ import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
-public class BooleanVariableMethodParameterParser extends LazyChoice implements VariableParser , BooleanExpression{
+public class BooleanVariableMethodParameterParser extends LazyChoice implements TypedVariableParser , BooleanExpression{
 
   static final SupplierBoundCache<BooleanVariableMethodParameterParser> SINGLETON = new SupplierBoundCache<>(BooleanVariableMethodParameterParser::new);
 

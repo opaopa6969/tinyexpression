@@ -1,7 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.unlaxer.Token.ScanDirection;
+import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -33,8 +36,15 @@ public class MethodParametersElementParser extends LazyChain{
   }
   
   @TokenExtractor
-  public List<TypedToken<ExpressionType>> typedVariableParsers(TypedToken<MethodParametersElementParser> thisParserParsed){
+  public List<TypedToken<TypedVariableParser>> typedVariableParsers(TypedToken<MethodParametersElementParser> thisParserParsed){
    
-    ここで
+    //最終的にExpressionTypeを得てOperatorOperandTreeCreatorで型解決を行う
+    List<TypedToken<TypedVariableParser>> collect = 
+        thisParserParsed.flatten(ScanDirection.Breadth).stream()
+          .filter(TokenPredicators.parserImplements(TypedVariableParser.class))
+          .map(token->token.typed(TypedVariableParser.class))
+          .collect(Collectors.toList());
+    
+    return collect;
   }
 }

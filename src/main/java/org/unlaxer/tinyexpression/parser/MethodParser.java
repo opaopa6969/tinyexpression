@@ -40,7 +40,7 @@ public interface MethodParser extends Parser{
   }
   
   @TokenExtractor
-  public default ExpressionType expressionType(TypedToken<MethodParser> thisParserParsed) {
+  public default TypedVariableParser expressionType(TypedToken<MethodParser> thisParserParsed) {
     
     TypedToken<MethodParametersParser> methodParameters = methodParameters(thisParserParsed);
     

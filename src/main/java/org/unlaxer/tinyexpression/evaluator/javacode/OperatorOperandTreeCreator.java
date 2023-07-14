@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
-import org.unlaxer.Token.SearchFirst;
+import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenEffecterWithMatcher;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
@@ -125,7 +125,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	
 	public static class TypeResolver{
 	  
-	  public Optional<ExpressionType> resolveNakedVariable(Token token) {
+	  public Optional<ExpressionType> resolveNakedVariable(TypedToken<ExclusiveNakedVariableParser> token) {
 	    
       // 型推論/型解決を行う
       //1. 親にMethodParserがあればMethodParameterから解決をする
@@ -145,8 +145,10 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
 	    if(ancestorAsOptional.isPresent()) {
 	      
-	      Token methodParserToken = ancestorAsOptional.get();
-	      MethodParser methodPrser = methodParserToken.getParser(MethodParser.class);
+	      TypedToken<MethodParser> methodParserToken = ancestorAsOptional.get().typed(MethodParser.class);
+	      MethodParser methodParser = methodParserToken.getParser();
+	      methodParser.
+	      
 	      
 	    }
 	    
@@ -629,7 +631,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //
 //    その後、defaultを無くしたのでこの処理はいらなくなるけどSearchFirstの例として実装のヒントとして残しておく
     
-    List<Token> flatten = returningClause.flatten(SearchFirst.Breadth);
+    List<Token> flatten = returningClause.flatten(ScanDirection.Breadth);
     Token expressionToken = flatten.stream()
       .filter(token->{
         return (token.parser instanceof NumberExpression ||

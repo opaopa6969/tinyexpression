@@ -9,7 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 
-public class StringVariableMethodParameterParser extends LazyChoice implements VariableParser , StringExpression{
+public class StringVariableMethodParameterParser extends LazyChoice implements TypedVariableParser , StringExpression{
 
 
   public StringVariableMethodParameterParser() {
