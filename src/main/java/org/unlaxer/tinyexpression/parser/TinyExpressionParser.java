@@ -10,6 +10,7 @@ import org.unlaxer.Token.ChildrenKind;
 import org.unlaxer.Token.SearchFirst;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.AfterParse;
 import org.unlaxer.parser.Parser;
@@ -173,8 +174,9 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
       .filter(TokenPredicators.parserImplements(MethodParser.class))
       .collect(Collectors.toList());
     for (Token token : methods) {
-      MethodParser parser = (MethodParser) token.parser;
-      String methodNameOfChild = parser.methodName(token).getToken().get();
+      TypedToken<MethodParser> methodParserToken = token.typed(MethodParser.class);
+      MethodParser parser = methodParserToken.getParser();
+      String methodNameOfChild = parser.methodName(methodParserToken).getToken().get();
       if(methodName.equals(methodNameOfChild)) {
         return Optional.of( token.getChildWithParser(parser.returningParser()));
       }

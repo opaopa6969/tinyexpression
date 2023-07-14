@@ -2,6 +2,8 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -20,5 +22,12 @@ public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
         ),
         Parser.get(RightParenthesisParser.class)
     );
+  }
+  
+  public java.util.Optional<TypedToken<MethodParametersElementParser>> 
+    extractParameterElementss(TypedToken<MethodParametersParser> thisParserParsed){
+    
+    return thisParserParsed.getChildAsOptional(TokenPredicators.parsers(MethodParametersElementParser.class))
+      .map(token->token.typed(MethodParametersElementParser.class));
   }
 }

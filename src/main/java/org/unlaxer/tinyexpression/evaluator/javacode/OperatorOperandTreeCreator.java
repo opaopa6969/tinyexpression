@@ -11,6 +11,7 @@ import org.unlaxer.Token.SearchFirst;
 import org.unlaxer.TokenEffecterWithMatcher;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.PseudoRootParser;
@@ -136,15 +137,17 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	    if(false == token.parser instanceof ExclusiveNakedVariableParser) {
 	      throw new IllegalArgumentException();
 	    }
-	    ExclusiveNakedVariableParser parser = token.getParser(ExclusiveNakedVariableParser.class);
+
+	    TypedToken<ExclusiveNakedVariableParser> typedToken = token.typed(ExclusiveNakedVariableParser.class);
+	    String variableName = typedToken.getParser().getVariableName(token);
 	    
-	    
+      //1. 親にMethodParserがあればMethodParameterから解決をする
 	    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
 	    if(ancestorAsOptional.isPresent()) {
 	      
 	      Token methodParserToken = ancestorAsOptional.get();
-	      MethodParser parser2 = methodParserToken.getParser(MethodParser.class);
-	      methodParserToken.
+	      MethodParser methodPrser = methodParserToken.getParser(MethodParser.class);
+	      
 	    }
 	    
 	    

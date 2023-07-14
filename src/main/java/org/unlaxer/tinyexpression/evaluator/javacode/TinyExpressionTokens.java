@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
@@ -22,7 +23,7 @@ public class TinyExpressionTokens{
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
-  final Map<String,Token> methodDeclarationBymethodName;
+  final Map<String,TypedToken<MethodParser>> methodDeclarationBymethodName;
   final List<Token> methodTokens;
 
   
@@ -61,12 +62,13 @@ public class TinyExpressionTokens{
     methodTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
     
     methodDeclarationBymethodName = methodTokens.stream()
+       .map(_token->_token.typedWithInterface(MethodParser.class))
        .collect(Collectors.toMap(
            _token->{
              MethodParser parser = _token.getParser(MethodParser.class);
              
-             return parser.methodName(_token).getToken().get();
-           }, 
+             return (parser.methodName(_token).getToken().get());
+           },
            Function.identity()
            )
        );

@@ -37,7 +37,7 @@ public class StringVariableParser extends LazyChoice implements RootVariablePars
   }
 
   @Override
-  public Optional<ExpressionType> type() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionType.string);
   }
   

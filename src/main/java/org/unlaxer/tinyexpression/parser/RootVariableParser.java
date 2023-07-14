@@ -7,7 +7,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
 
-public interface RootVariableParser extends VariableParser{
+public interface RootVariableParser extends TypedVariableParser{
   
   public default Token newWithTypedParser(Token tokenOfNakedVariable) {
     
@@ -15,7 +15,7 @@ public interface RootVariableParser extends VariableParser{
     Token root = tokenOfNakedVariable.newWithReplace(typedVariable);
     Token child = tokenOfNakedVariable.newWithReplace(Parser.get(oneOfTypedVariableParser()));
     
-    ExpressionType expressionType = typedVariable.type().get();
+    ExpressionType expressionType = typedVariable.typeAsOptional().get();
 
     Token typePrefix = new Token(TokenKind.consumed, new RangedString(0, expressionType.javaType()), Parser.get(typeHintVariableParser()));
     

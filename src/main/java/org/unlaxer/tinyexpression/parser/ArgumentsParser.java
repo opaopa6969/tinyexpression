@@ -78,7 +78,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		              
 		              type = variableParserToken.flatMap(token->{
                     VariableParser parser = token.getParser(VariableParser.class);
-                    Optional<ExpressionType> _type = parser.type();
+                    Optional<ExpressionType> _type = parser.typeAsOptional();
 		                return _type;
 		              });
 		            }

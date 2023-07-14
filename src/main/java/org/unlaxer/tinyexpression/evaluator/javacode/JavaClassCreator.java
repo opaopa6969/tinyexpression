@@ -139,7 +139,7 @@ public interface JavaClassCreator{
         Token token = iterator.next();
         
         VariableParser parser = token.getParser(VariableParser.class);
-        ExpressionType variableType = parser.type().get();
+        ExpressionType variableType = parser.typeAsOptional().get();
         String variableName = parser.getVariableName(token);
         builder
           .append(variableType.javaType())
