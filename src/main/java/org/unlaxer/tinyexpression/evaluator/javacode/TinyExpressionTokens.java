@@ -50,7 +50,7 @@ public class TinyExpressionTokens{
     variableDeclarationByVariableName = variableDeclarationTokens.stream()
       .collect(Collectors.toMap(
         token->{
-            Token extractVariableParserToOken = VariableDeclarationParser.extractVariableParserToken(token);
+            TypedToken<VariableParser> extractVariableParserToOken = VariableDeclarationParser.extractVariableParserToken(token);
             VariableParser parser = extractVariableParserToOken.getParser(VariableParser.class);
             String variableName = parser.getVariableName(extractVariableParserToOken);
             return variableName;

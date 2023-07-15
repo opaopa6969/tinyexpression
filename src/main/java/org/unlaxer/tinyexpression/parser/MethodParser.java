@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
+import java.util.Optional;
+
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
@@ -40,10 +42,15 @@ public interface MethodParser extends Parser{
   }
   
   @TokenExtractor
-  public default TypedVariableParser expressionType(TypedToken<MethodParser> thisParserParsed) {
+  public default Optional<TypedToken<TypedVariableParser>> typedVariableParser(
+      TypedToken<MethodParser> thisParserParsed , String parameterName) {
     
     TypedToken<MethodParametersParser> methodParameters = methodParameters(thisParserParsed);
+    MethodParametersParser parser = methodParameters.getParser();
     
+    Optional<TypedToken<TypedVariableParser>> extractTypedVariableParser = 
+        parser.extractTypedVariableParser(methodParameters, parameterName);
+    return extractTypedVariableParser;
   }
   
 }

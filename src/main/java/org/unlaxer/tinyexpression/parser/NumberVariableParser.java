@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ChoiceInterface;
@@ -30,13 +31,9 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
   }
   
   public String getVariableName(Token thisParserParsed) {
-    Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    
-    if(choiced.parser instanceof VariableParser) {
-      VariableParser variableParser=  (VariableParser) choiced.parser;;
-      return variableParser.getVariableName(choiced);
-    }
-    throw new IllegalArgumentException();
+    TypedToken<VariableParser> typed = thisParserParsed.typed(VariableParser.class);
+    VariableParser parser = typed.getParser();
+    return parser.getVariableName(typed);
   }
 
   @Override

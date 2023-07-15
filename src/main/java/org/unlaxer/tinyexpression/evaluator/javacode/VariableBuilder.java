@@ -5,7 +5,7 @@ import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
-import org.unlaxer.parser.Parser;
+import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -14,27 +14,22 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class VariableBuilder {
  
-   public static void build(TokenCodeBuilder parentBuilder , SimpleJavaCodeBuilder builder, Token token ,
+   public static void build(TokenCodeBuilder parentBuilder , SimpleJavaCodeBuilder builder,
+       TypedToken<VariableParser> token ,
        TinyExpressionTokens tinyExpressionTokens , Class<? extends SetterParser> setterParserClass,
        String defaultValue , String getMethod , String setAndGetMethod) {
      
-     Parser parser = token.getParser();
+     VariableParser variableParser = token.getParser();
      
      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
      
-     if(false == parser instanceof VariableParser) {
-       throw new IllegalArgumentException("parser must be VariableParser");
-     }
-     
-     VariableParser variableParser = (VariableParser) parser;
-     
-     
-     
+
      String variableName = variableParser.getVariableName(token);
      
      boolean isMatch =false;
      for (Token declarationTtoken : variableDeclarationsTokens) {
-       Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+       TypedToken<? extends VariableParser> nakedVariableToken = 
+           declarationTtoken.getChildWithParserTyped(NakedVariableParser.class);
        VariableParser variabvleParser = nakedVariableToken.getParser(VariableParser.class);
        
        String _variableName = variabvleParser.getVariableName(nakedVariableToken);

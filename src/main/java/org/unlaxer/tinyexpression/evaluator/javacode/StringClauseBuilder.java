@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
@@ -163,16 +164,20 @@ public class StringClauseBuilder {
 		  
       List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
       
-			String variableName = ((VariableParser)parser).getVariableName(token);
+      TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+      VariableParser variableParser = typed.getParser();
+      
+      
+			String variableName = variableParser.getVariableName(typed);
 			
 			SimpleBuilder builder = new SimpleBuilder();
 			
 	     boolean isMatch =false;
 	     for (Token declarationTtoken : variableDeclarationsTokens) {
 	       
-	       Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+	       TypedToken<?  extends VariableParser> nakedVariableToken = declarationTtoken.getChildWithParserTyped(NakedVariableParser.class);
 	       
-	       VariableParser variabvleParser = nakedVariableToken.getParser(VariableParser.class);
+	       VariableParser variabvleParser = nakedVariableToken.getParser();
 	       String _variableName = variabvleParser.getVariableName(nakedVariableToken);
 	       
 	       if(_variableName.equals(variableName)) {

@@ -35,10 +35,6 @@ public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain i
     return token;
   }
   
-  public String getVariableName(Token thisParserParsed) {
-    return NakedVariableParser.getVariableNameFromNaked(getVariableNameAsToken(thisParserParsed));
-  }
-
   @Override
   public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionType.bool);

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -22,7 +23,7 @@ public class VariableDeclarationParser extends LazyChoice{
     );
   }
   
-  public static Token extractVariableParserToken(Token thisParserParsed) {
+  public static TypedToken<VariableParser> extractVariableParserToken(Token thisParserParsed) {
     
     Token choiced = thisParserParsed;
     Parser parser = thisParserParsed.getParser();
@@ -35,7 +36,8 @@ public class VariableDeclarationParser extends LazyChoice{
       
     if(parser instanceof AbstractVariableDeclarationParser) {
       
-      return choiced.getChild(TokenPredicators.parserImplements(VariableParser.class));
+      return choiced.getChild(TokenPredicators.parserImplements(VariableParser.class))
+          .typed(VariableParser.class);
     }
     throw new IllegalArgumentException();
     

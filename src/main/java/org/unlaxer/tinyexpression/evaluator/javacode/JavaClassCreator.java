@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
@@ -138,9 +139,10 @@ public interface JavaClassCreator{
       while(iterator.hasNext()) {
         Token token = iterator.next();
         
-        VariableParser parser = token.getParser(VariableParser.class);
+        TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+        VariableParser parser = typed.getParser();
         ExpressionType variableType = parser.typeAsOptional().get();
-        String variableName = parser.getVariableName(token);
+        String variableName = parser.getVariableName(typed);
         builder
           .append(variableType.javaType())
           .append(" ")

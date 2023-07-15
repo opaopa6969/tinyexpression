@@ -6,11 +6,9 @@ import java.util.Optional;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
-import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class StringVariableParser extends LazyChoice implements RootVariableParser , StringExpression{
 
@@ -29,13 +27,6 @@ public class StringVariableParser extends LazyChoice implements RootVariablePars
     );
   }
  
-  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public String getVariableName(Token thisParserParsed) {
-    Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    VariableParser parser = choiced.getParser(VariableParser.class);
-    return parser.getVariableName(choiced);
-  }
-
   @Override
   public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionType.string);

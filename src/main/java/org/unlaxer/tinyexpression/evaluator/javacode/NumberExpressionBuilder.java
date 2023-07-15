@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
@@ -26,6 +27,7 @@ import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -107,7 +109,9 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-		  VariableBuilder.build(this, builder, token, tinyExpressionTokens, NumberSetterParser.class,
+		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+		  
+		  VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
 		      "0f","getValue","setAndGet");
 //		  List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //		  

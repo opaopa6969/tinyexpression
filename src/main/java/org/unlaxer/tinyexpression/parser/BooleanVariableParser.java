@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -33,16 +32,6 @@ public class BooleanVariableParser extends LazyChoice implements RootVariablePar
       );
   }
   
-  public String getVariableName(Token thisParserParsed) {
-    Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    if(choiced.parser instanceof BooleanPrefixedVariableParser) {
-      return BooleanPrefixedVariableParser.get().getVariableName(choiced);
-    }else if(choiced.parser instanceof BooleanSuffixedVariableParser) {
-      return BooleanSuffixedVariableParser.get(). getVariableName(choiced);
-    }
-    throw new IllegalArgumentException();
-  }
-
   @Override
   public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionType.bool);
@@ -68,9 +57,6 @@ public class BooleanVariableParser extends LazyChoice implements RootVariablePar
       return token;
     }
 
-    public String getVariableName(Token thisParserParsed) {
-      return NakedVariableParser.getVariableNameFromNaked(getVariableNameToken(thisParserParsed));
-    }
   }
   
   public static BooleanVariableParser get() {

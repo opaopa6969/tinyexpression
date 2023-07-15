@@ -35,7 +35,6 @@ import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
@@ -100,6 +99,8 @@ import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
+import org.unlaxer.tinyexpression.parser.TypedVariableParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -123,9 +124,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	
 	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
 	
-	public static class TypeResolver{
+	public static class VariableTypeResolver{
 	  
-	  public Optional<ExpressionType> resolveNakedVariable(TypedToken<ExclusiveNakedVariableParser> token) {
+	  public static TypedToken<? extends VariableParser> resolveTypedVariable(TypedToken<ExclusiveNakedVariableParser> token) {
 	    
       // 型推論/型解決を行う
       //1. 親にMethodParserがあればMethodParameterから解決をする
@@ -134,12 +135,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       //4. not等のunary operatorの型から解決する
       //5. VariableDeclarationの型から解決する
 
-	    if(false == token.parser instanceof ExclusiveNakedVariableParser) {
-	      throw new IllegalArgumentException();
-	    }
-
-	    TypedToken<ExclusiveNakedVariableParser> typedToken = token.typed(ExclusiveNakedVariableParser.class);
-	    String variableName = typedToken.getParser().getVariableName(token);
+	    String variableName = token.getParser().getVariableName(token);
 	    
       //1. 親にMethodParserがあればMethodParameterから解決をする
 	    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
@@ -147,16 +143,18 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	      
 	      TypedToken<MethodParser> methodParserToken = ancestorAsOptional.get().typed(MethodParser.class);
 	      MethodParser methodParser = methodParserToken.getParser();
-	      methodParser.
-	      
-	      
+	      Optional<TypedToken<TypedVariableParser>> typedVariableParser = methodParser.typedVariableParser(methodParserToken, variableName);
+	      if(typedVariableParser.isPresent()) {
+	        return typedVariableParser.get();
+	      }
 	    }
+      //2. 比較演算の他方の型から解決する。method callや == や -1等
+      //3. methodの実パラメータの場合仮引数の型から解決する
+      //4. not等のunary operatorの型から解決する
+      //5. VariableDeclarationの型から解決する
 	    
-	    
-	    return Optional.empty();
-	    
+	    return token;
 	  }
-	  
 	}
 
 	@Override
@@ -165,13 +163,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Parser parser = token.parser;
 		
 		if(parser instanceof ExclusiveNakedVariableParser) {
-		  // 型推論/型解決を行う
-		  //1. 親にMethodParserがあればMethodParameterから解決をする
-		  //2. 比較演算の他方の型から解決する。method callや == や -1等
-		  //3. methodの実パラメータの場合仮引数の型から解決する
-      //4. not等のunary operatorの型から解決する
-		  //5. VariableDeclarationの型から解決する
-		  System.out.println(token);
+		  
+		  TypedToken<? extends VariableParser> resolveTypedVariable = 
+		      VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+		  
+		  parser = resolveTypedVariable.getParser();
 		}
 		
 		if(parser instanceof TinyExpressionParser) {
@@ -418,7 +414,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Parser parser = operator.parser;
 		
     if(parser instanceof ExclusiveNakedVariableParser) {
-      System.out.println(token);
+      
+      TypedToken<? extends VariableParser> resolveTypedVariable = 
+          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+      
+      parser = resolveTypedVariable.getParser();
     }
 
 		
@@ -474,7 +474,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Parser parser = operator.parser;
 		
     if(parser instanceof ExclusiveNakedVariableParser) {
-      System.out.println(token);
+      
+      TypedToken<? extends VariableParser> resolveTypedVariable = 
+          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+      
+      parser = resolveTypedVariable.getParser();
     }
 
     if(parser instanceof NumberParser){
@@ -660,7 +664,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Parser parser = operator.parser;
 		
     if(parser instanceof ExclusiveNakedVariableParser) {
-      System.out.println(token);
+      
+      TypedToken<? extends VariableParser> resolveTypedVariable = 
+          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+      
+      parser = resolveTypedVariable.getParser();
     }
 
 		

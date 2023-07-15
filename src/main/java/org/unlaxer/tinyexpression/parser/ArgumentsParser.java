@@ -8,6 +8,7 @@ import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEffecterWithMatcher;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ZeroOrMore;
@@ -51,7 +52,10 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		    argumentsToken.newCreatesOf(
 		        new TokenEffecterWithMatcher(TokenPredicators.parsers(ExclusiveNakedVariableParser.class),
 		        _token->{
-		          String variableName = ExclusiveNakedVariableParser.get().getVariableName(_token);
+		          TypedToken<ExclusiveNakedVariableParser> typedToken = 
+		              _token.typed(ExclusiveNakedVariableParser.class);
+		          
+		          String variableName = ExclusiveNakedVariableParser.get().getVariableName(typedToken);
 		          Optional<Token> matchedVariableDeclaration = tinyExpressionTokens.matchedVariableDeclaration(variableName);
 		          Optional<ExpressionType> type = Optional.empty();
 		          if(matchedVariableDeclaration.isPresent()) {
@@ -70,8 +74,9 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		              Optional<Token> variableParserToken = _methodToken.flatten().stream()
 		                .filter(TokenPredicators.parserImplements(VariableParser.class))
 		                .filter(token->{
-		                  VariableParser parser = token.getParser(VariableParser.class);
-		                  String _variableName = parser.getVariableName(token);
+		                  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+		                  VariableParser parser = typed.getParser();
+		                  String _variableName = parser.getVariableName(typed);
 		                  
 		                  return variableName.equals(_variableName);
 		                }).findFirst();
@@ -96,7 +101,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		                    Parser.get(StringVariableParser.class):
 	                      Parser.get(BooleanVariableParser.class);
 		          
-		          Token newWithTypedParser = typeParser.newWithTypedParser(_token);
+		          Token newWithTypedParser = typeParser.newWithTypedParser(typedToken);
 		          return newWithTypedParser;
 		        }));
 		

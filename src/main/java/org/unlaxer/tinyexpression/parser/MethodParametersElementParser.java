@@ -1,7 +1,8 @@
 package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenPredicators;
@@ -36,15 +37,25 @@ public class MethodParametersElementParser extends LazyChain{
   }
   
   @TokenExtractor
-  public List<TypedToken<TypedVariableParser>> typedVariableParsers(TypedToken<MethodParametersElementParser> thisParserParsed){
+  public Stream<TypedToken<TypedVariableParser>> typedVariableParsersAsStream(TypedToken<MethodParametersElementParser> thisParserParsed){
    
     //最終的にExpressionTypeを得てOperatorOperandTreeCreatorで型解決を行う
-    List<TypedToken<TypedVariableParser>> collect = 
-        thisParserParsed.flatten(ScanDirection.Breadth).stream()
+    return thisParserParsed.flatten(ScanDirection.Breadth).stream()
           .filter(TokenPredicators.parserImplements(TypedVariableParser.class))
-          .map(token->token.typed(TypedVariableParser.class))
-          .collect(Collectors.toList());
+          .map(token->token.typed(TypedVariableParser.class));
+  }
+  
+  @TokenExtractor
+  public Optional<TypedToken<TypedVariableParser>> typedVariableParsers(
+      TypedToken<MethodParametersElementParser> thisParserParsed, String parameterName){
+   
+    //最終的にExpressionTypeを得てOperatorOperandTreeCreatorで型解決を行う
+    Optional<TypedToken<TypedVariableParser>> collect = 
+        typedVariableParsersAsStream(thisParserParsed)
+          .filter(token->parameterName.equals(token.getParser().getVariableName(token)))
+          .findFirst();
     
     return collect;
   }
+
 }
