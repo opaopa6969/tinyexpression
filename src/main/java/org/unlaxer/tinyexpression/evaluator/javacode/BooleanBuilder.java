@@ -14,19 +14,19 @@ import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
-import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
-import org.unlaxer.tinyexpression.parser.LessExpressionParser;
-import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -125,12 +125,12 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			builder.append("false");
 			
 		}else if(
-			parser instanceof EqualEqualExpressionParser ||
-			parser instanceof NotEqualExpressionParser ||
-			parser instanceof GreaterOrEqualExpressionParser ||
-			parser instanceof LessOrEqualExpressionParser ||
-			parser instanceof GreaterExpressionParser ||
-			parser instanceof LessExpressionParser
+			parser instanceof NumberEqualEqualExpressionParser ||
+			parser instanceof NumberNotEqualExpressionParser ||
+			parser instanceof NumberGreaterOrEqualExpressionParser ||
+			parser instanceof NumberLessOrEqualExpressionParser ||
+			parser instanceof NumberGreaterExpressionParser ||
+			parser instanceof NumberLessExpressionParser
 		){
 			BinaryConditionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			

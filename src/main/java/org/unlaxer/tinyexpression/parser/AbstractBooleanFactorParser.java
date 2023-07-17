@@ -43,12 +43,12 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     parsers.add(NotBooleanExpressionParser.class);
     parsers.add(new ParenthesesParser(Parser.get(BooleanExpressionParser.class)));
     parsers.add(IsPresentParser.class);
-    parsers.add(EqualEqualExpressionParser.class);
-    parsers.add(NotEqualExpressionParser.class);
-    parsers.add(GreaterOrEqualExpressionParser.class);
-    parsers.add(LessOrEqualExpressionParser.class);
-    parsers.add(GreaterExpressionParser.class);
-    parsers.add(LessExpressionParser.class);
+    parsers.add(NumberEqualEqualExpressionParser.class);
+    parsers.add(NumberNotEqualExpressionParser.class);
+    parsers.add(NumberGreaterOrEqualExpressionParser.class);
+    parsers.add(NumberLessOrEqualExpressionParser.class);
+    parsers.add(NumberGreaterExpressionParser.class);
+    parsers.add(NumberLessExpressionParser.class);
     parsers.add(BooleanExpressionOfStringParser.class);
     parsers.add(BooleanVariableParser.class);
     if(withNakedVariable) {

@@ -7,6 +7,7 @@ import java.util.function.UnaryOperator;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
+import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -53,7 +54,10 @@ public class ContextCalculatorFactory implements JavaClassCreator{
       if(false == parsed.isSucceeded()) {
         throw new IllegalArgumentException("failed to parse:"+formula);
       }
-      TinyExpressionTokens rootToken = new TinyExpressionTokens(tokenReduer().apply(parsed.getRootToken(true)));
+      Token parsedToken = parsed.getRootToken(true);
+      String parsedTokenOutput = TokenPrinter.get(parsedToken);
+      TinyExpressionTokens rootToken = new TinyExpressionTokens(tokenReduer().apply(parsedToken));
+      String rootTokenOutput = TokenPrinter.get(parsedToken);
       
       String javaCode = createJavaClass(className, rootToken);
       

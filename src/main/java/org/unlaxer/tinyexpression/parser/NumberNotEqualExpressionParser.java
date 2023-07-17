@@ -8,11 +8,11 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class NotEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
+public class NumberNotEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
 
 	private static final long serialVersionUID = -6741015597671479922L;
 	
-	public NotEqualExpressionParser() {
+	public NumberNotEqualExpressionParser() {
 		super();
 	}
 

@@ -19,12 +19,13 @@ public class MethodsParser extends JavaStyleDelimitedLazyZeroOrMore{
   }
   
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public static List<Token> extractMethods(Token thisParserParsed) {
+  public static List</*Typed*/Token/*<MethodParser>*/> extractMethods(/*Typed*/Token/*<MethodsParser>*/ thisParserParsed) {
     
     Parser.checkTokenParsedBySpecifiedParser(thisParserParsed , MethodsParser.class);
     
-    List<Token> methods = thisParserParsed.flatten().stream()
+    List</*Typed*/Token/*<MethodParser>*/> methods = thisParserParsed.flatten().stream()
         .filter(TokenPredicators.parserImplements(MethodParser.class))
+//        .map(token->token.typed(MethodParser.class))
         .collect(Collectors.toList());
     return methods;
   }

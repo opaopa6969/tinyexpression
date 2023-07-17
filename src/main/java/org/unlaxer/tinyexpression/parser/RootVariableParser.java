@@ -23,7 +23,7 @@ public interface RootVariableParser extends TypedVariableParser{
     
     TypedToken<? extends VariableParser> newCreatesOfTyped = child.newCreatesOfTyped(typePrefix ,
         tokenOfNakedVariable.newWithReplaceTyped(Parser.get(NakedVariableParser.class)));
-    root = root.newCreatesOfTyped(List.of(child));
+    root = root.newCreatesOfTyped(List.of(newCreatesOfTyped));
     return root;
   }
   

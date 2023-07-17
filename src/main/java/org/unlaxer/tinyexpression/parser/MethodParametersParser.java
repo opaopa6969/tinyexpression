@@ -26,19 +26,19 @@ public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
   }
   
   @TokenExtractor
-  public java.util.Optional<TypedToken<MethodParametersElementParser>> 
-    extractParameterElementss(TypedToken<MethodParametersParser> thisParserParsed){
-    
-    return thisParserParsed.getChildAsOptional(TokenPredicators.parsers(MethodParametersElementParser.class))
-      .map(token->token.typed(MethodParametersElementParser.class));
-  }
-  
-  @TokenExtractor
   public java.util.Optional<TypedToken<TypedVariableParser>> 
     extractTypedVariableParser(TypedToken<MethodParametersParser> thisParserParsed , String parameterName){
 
-    return  extractParameterElementss(thisParserParsed)
-        .flatMap(token->token.getParser().typedVariableParsers(token,parameterName));
+    return thisParserParsed.flatten().stream()
+      .filter(TokenPredicators.parserImplements(TypedVariableParser.class))
+      .map(token->token.typed(TypedVariableParser.class))
+      .filter(typeToken->{
+        TypedVariableParser parser = typeToken.getParser();
+        String variableName = parser.getVariableName(typeToken);
+        return variableName.equals(parameterName);
+      })
+      .map(typedToken->
+        typedToken.newWithReplace(typedToken.getParser().getRootVariableParer()).typed(TypedVariableParser.class))
+      .findFirst();
   }
-
 }

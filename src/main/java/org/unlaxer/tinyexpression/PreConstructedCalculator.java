@@ -6,9 +6,11 @@ import java.util.function.UnaryOperator;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
+import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 
 public abstract class PreConstructedCalculator<T> implements Function<CalculationContext, Float> , Calculator<T>{
 	
@@ -33,7 +35,18 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 			if(false == parsed.isSucceeded()) {
 				throw new ParseException("failed to parse:"+formula);
 			}
-			rootToken = new TinyExpressionTokens(tokenReduer().apply(parsed.getRootToken(true)));
+			Token parsedToken = parsed.getRootToken(true);
+			
+			String parsedTokenOutput = TokenPrinter.get(parsedToken);
+			System.out.println(parsedTokenOutput);
+			//FIXME!
+			
+			parsedToken = VariableTypeResolver.resolveVariableType(parsedToken);
+			
+      rootToken = new TinyExpressionTokens(tokenReduer().apply(parsedToken));
+//      String rootTokenOutput = TokenPrinter.get(parsedToken);
+//      System.out.println(rootTokenOutput);
+
 		}catch (Exception e) {
 		  e.printStackTrace();
 			throw new ParseException("failed to parse:"+formula,e);

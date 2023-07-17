@@ -32,25 +32,25 @@ import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
-import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InMethodParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
-import org.unlaxer.tinyexpression.parser.LessExpressionParser;
-import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.MethodsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberDefaultCaseFactorParser;
@@ -99,7 +99,6 @@ import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
-import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
@@ -124,53 +123,22 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 	
 	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
 	
-	public static class VariableTypeResolver{
-	  
-	  public static TypedToken<? extends VariableParser> resolveTypedVariable(TypedToken<ExclusiveNakedVariableParser> token) {
-	    
-      // 型推論/型解決を行う
-      //1. 親にMethodParserがあればMethodParameterから解決をする
-      //2. 比較演算の他方の型から解決する。method callや == や -1等
-      //3. methodの実パラメータの場合仮引数の型から解決する
-      //4. not等のunary operatorの型から解決する
-      //5. VariableDeclarationの型から解決する
-
-	    String variableName = token.getParser().getVariableName(token);
-	    
-      //1. 親にMethodParserがあればMethodParameterから解決をする
-	    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
-	    if(ancestorAsOptional.isPresent()) {
-	      
-	      TypedToken<MethodParser> methodParserToken = ancestorAsOptional.get().typed(MethodParser.class);
-	      MethodParser methodParser = methodParserToken.getParser();
-	      Optional<TypedToken<TypedVariableParser>> typedVariableParser = methodParser.typedVariableParser(methodParserToken, variableName);
-	      if(typedVariableParser.isPresent()) {
-	        return typedVariableParser.get();
-	      }
-	    }
-      //2. 比較演算の他方の型から解決する。method callや == や -1等
-      //3. methodの実パラメータの場合仮引数の型から解決する
-      //4. not等のunary operatorの型から解決する
-      //5. VariableDeclarationの型から解決する
-	    
-	    return token;
-	  }
-	}
-
 	@Override
 	public Token apply(Token token) {
 		
 		Parser parser = token.parser;
 		
-		if(parser instanceof ExclusiveNakedVariableParser) {
-		  
-		  TypedToken<? extends VariableParser> resolveTypedVariable = 
-		      VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-		  
-		  parser = resolveTypedVariable.getParser();
-		}
+//		if(parser instanceof ExclusiveNakedVariableParser) {
+//		  
+//		  TypedToken<? extends VariableParser> resolveTypedVariable = 
+//		      VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+//		  
+//		  parser = resolveTypedVariable.getParser();
+//		}
 		
 		if(parser instanceof TinyExpressionParser) {
+		  
+		  TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
 		  
 		  Token extractImports = TinyExpressionParser.extractImportsToken(token);
 		  
@@ -180,7 +148,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		  
 		  Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
 		  Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
-		  List<Token> extractMethodsTokens = TinyExpressionParser.extractMethods(token);
+		  List</*Typed*/Token/*<MethodParser>*/> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
 		  
 		  extractMethodsTokens = extractMethodsTokens.stream()
 		    .map(methodToken->{
@@ -199,7 +167,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //        )
 //		  );
 		  
-		  return token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
+		  
+		  System.out.println(extractMethodsToken.getPath()); 
+		  Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
+		  String path = newCreatesOf.getPath();
+		  System.out.println(path);
+		  return newCreatesOf;
 		}
 		
 		if(parser instanceof NumberVariableDeclarationParser ||
@@ -413,13 +386,13 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		
 		Parser parser = operator.parser;
 		
-    if(parser instanceof ExclusiveNakedVariableParser) {
-      
-      TypedToken<? extends VariableParser> resolveTypedVariable = 
-          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-      
-      parser = resolveTypedVariable.getParser();
-    }
+//    if(parser instanceof ExclusiveNakedVariableParser) {
+//      
+//      TypedToken<? extends VariableParser> resolveTypedVariable = 
+//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+//      
+//      parser = resolveTypedVariable.getParser();
+//    }
 
 		
 		if(parser instanceof StringLiteralParser){
@@ -473,13 +446,13 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		Token operator = ChoiceInterface.choiced(token);
 		Parser parser = operator.parser;
 		
-    if(parser instanceof ExclusiveNakedVariableParser) {
-      
-      TypedToken<? extends VariableParser> resolveTypedVariable = 
-          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-      
-      parser = resolveTypedVariable.getParser();
-    }
+//    if(parser instanceof ExclusiveNakedVariableParser) {
+//      
+//      TypedToken<? extends VariableParser> resolveTypedVariable = 
+//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+//      
+//      parser = resolveTypedVariable.getParser();
+//    }
 
     if(parser instanceof NumberParser){
 			
@@ -584,7 +557,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			);
 
     }else if(parser instanceof MethodInvocationParser){
-      
+      String path = token.getPath();
       return extracteMethodInvocation(operator);
 
     }
@@ -701,46 +674,46 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 					apply(InTimeRangeParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof EqualEqualExpressionParser) {
+		}else if(parser instanceof NumberEqualEqualExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(EqualEqualExpressionParser.getLeftExpression(operator)),
-				apply(EqualEqualExpressionParser.getRightExpression(operator))
+				apply(NumberEqualEqualExpressionParser.getLeftExpression(operator)),
+				apply(NumberEqualEqualExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof NotEqualExpressionParser) {
+		}else if(parser instanceof NumberNotEqualExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(NotEqualExpressionParser.getLeftExpression(operator)),
-				apply(NotEqualExpressionParser.getRightExpression(operator))
+				apply(NumberNotEqualExpressionParser.getLeftExpression(operator)),
+				apply(NumberNotEqualExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof GreaterOrEqualExpressionParser) {
+		}else if(parser instanceof NumberGreaterOrEqualExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(GreaterOrEqualExpressionParser.getLeftExpression(operator)),
-				apply(GreaterOrEqualExpressionParser.getRightExpression(operator))
+				apply(NumberGreaterOrEqualExpressionParser.getLeftExpression(operator)),
+				apply(NumberGreaterOrEqualExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof LessOrEqualExpressionParser) {
+		}else if(parser instanceof NumberLessOrEqualExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(LessOrEqualExpressionParser.getLeftExpression(operator)),
-				apply(LessOrEqualExpressionParser.getRightExpression(operator))
+				apply(NumberLessOrEqualExpressionParser.getLeftExpression(operator)),
+				apply(NumberLessOrEqualExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof GreaterExpressionParser) {
+		}else if(parser instanceof NumberGreaterExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(GreaterExpressionParser.getLeftExpression(operator)),
-				apply(GreaterExpressionParser.getRightExpression(operator))
+				apply(NumberGreaterExpressionParser.getLeftExpression(operator)),
+				apply(NumberGreaterExpressionParser.getRightExpression(operator))
 			);
 
-		}else if(parser instanceof LessExpressionParser) {
+		}else if(parser instanceof NumberLessExpressionParser) {
 			
 			return operator.newCreatesOf(
-				apply(LessExpressionParser.getLeftExpression(operator)),
-				apply(LessExpressionParser.getRightExpression(operator))
+				apply(NumberLessExpressionParser.getLeftExpression(operator)),
+				apply(NumberLessExpressionParser.getRightExpression(operator))
 			);
 
     }else if(parser instanceof BooleanIfExpressionParser) {

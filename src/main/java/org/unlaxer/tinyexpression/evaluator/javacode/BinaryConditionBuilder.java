@@ -1,12 +1,12 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.LessExpressionParser;
-import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
 
 public class BinaryConditionBuilder implements TokenCodeBuilder{
 	
@@ -22,27 +22,27 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 		
 		NumberExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
 		
-		if(token.parser instanceof EqualEqualExpressionParser) {
+		if(token.parser instanceof NumberEqualEqualExpressionParser) {
 			
 			builder.append("==");
 			
-		}else if(token.parser instanceof NotEqualExpressionParser) {
+		}else if(token.parser instanceof NumberNotEqualExpressionParser) {
 			
 			builder.append("!=");
 			
-		}else if(token.parser instanceof GreaterOrEqualExpressionParser) {
+		}else if(token.parser instanceof NumberGreaterOrEqualExpressionParser) {
 			
 			builder.append(">=");
 			
-		}else if(token.parser instanceof LessOrEqualExpressionParser) {
+		}else if(token.parser instanceof NumberLessOrEqualExpressionParser) {
 			
 			builder.append("<=");
 
-		}else if(token.parser instanceof GreaterExpressionParser) {
+		}else if(token.parser instanceof NumberGreaterExpressionParser) {
 			
 			builder.append(">");
 			
-		}else if(token.parser instanceof LessExpressionParser) {
+		}else if(token.parser instanceof NumberLessExpressionParser) {
 			
 			builder.append("<");
 		}else {
