@@ -164,4 +164,9 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
     return javaCode;
   }
 
+  @Override
+  public byte[] byteCode() {
+    return byteCode;
+  }
+
 }

@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.factory;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 
+@Deprecated
 public class SimpleContextCalculator implements ExtendedContextCalculator{
   
   public final String formula;
