@@ -167,10 +167,10 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //		  );
 		  
 		  
-		  System.out.println(extractMethodsToken.getPath()); 
+//		  System.out.println(extractMethodsToken.getPath()); 
 		  Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
 		  String path = newCreatesOf.getPath();
-		  System.out.println(path);
+//		  System.out.println(path);
 		  return newCreatesOf;
 		}
 		

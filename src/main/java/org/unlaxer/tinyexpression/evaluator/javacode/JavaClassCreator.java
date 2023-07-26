@@ -27,13 +27,13 @@ public interface JavaClassCreator{
     builder
       .setKind(Kind.Main)
       .line("import "+calculationContextName+";")
-      .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
+//      .line("import org.unlaxer.tinyexpression.TokenBaseOperator;")
 //      .line("import org.unlaxer.tinyexpression.factory.ContextCalculator;")
       .line("import org.unlaxer.Token;")
       .n()
       .append("public class ")
       .append(className)
-    .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
+    .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
 //      .append(" implements ContextCalculator {")
       
       .n()
