@@ -19,4 +19,10 @@ public class DummyCalculator implements TokenBaseOperator<CalculationContext, Fl
 								.orElse(0f) >= 30.0)) ? 1.0 : 0.0);
 		return answer;
 	}
+
+  @Override
+  public Token getRootToken() {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

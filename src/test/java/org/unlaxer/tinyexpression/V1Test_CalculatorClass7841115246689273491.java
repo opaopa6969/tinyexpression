@@ -27,4 +27,10 @@ calculateContext.getValue("ForcedRelativeSuspiciousValue1").orElse(0f):
 			return answer;
 		}
 
+  @Override
+  public Token getRootToken() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
 }
