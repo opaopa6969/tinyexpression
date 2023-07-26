@@ -6,17 +6,15 @@ import java.util.function.UnaryOperator;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
-import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.ParseException;
-import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 
 public abstract class PreConstructedCalculator<T> implements Function<CalculationContext, Float> , Calculator<T>{
 	
 	public final String name;
 	public final String formula;
-	public final TinyExpressionTokens rootToken;
+	public final Token rootToken;
 	final ParseContext parseContext;
 	final Parsed parsed ;
 	
@@ -37,13 +35,12 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 			}
 			Token parsedToken = parsed.getRootToken(true);
 			
-			String parsedTokenOutput = TokenPrinter.get(parsedToken);
-			System.out.println(parsedTokenOutput);
-			//FIXME!
+//			String parsedTokenOutput = TokenPrinter.get(parsedToken);
+//			System.out.println(parsedTokenOutput);
 			
 			parsedToken = VariableTypeResolver.resolveVariableType(parsedToken);
 			
-      rootToken = new TinyExpressionTokens(tokenReduer().apply(parsedToken));
+      rootToken = tokenReduer().apply(parsedToken);
 //      String rootTokenOutput = TokenPrinter.get(parsedToken);
 //      System.out.println(rootTokenOutput);
 
@@ -78,19 +75,4 @@ public abstract class PreConstructedCalculator<T> implements Function<Calculatio
 //		String tokenPresentation = TokenPrinter.get(rootToken);
 		return formula;
 	}
-
-  @Override
-  public TinyExpressionTokens tinyExpressionTokens() {
-    return rootToken;
-  }
-
-  @Override
-  public ParseContext parseContext() {
-    return parseContext;
-  }
-
-  @Override
-  public Parsed parsed() {
-    return parsed;
-  }
 }

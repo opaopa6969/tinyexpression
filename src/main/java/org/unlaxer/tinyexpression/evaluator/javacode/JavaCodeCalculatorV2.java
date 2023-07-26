@@ -56,7 +56,10 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, Path outputRootDirectory) {
     super(formula , className);
     this.className = className;
-    javaCode = createJavaClass(className, rootToken);
+    
+    TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+
+    javaCode = createJavaClass(className, tinyExpressionTokens);
     if(outputRootDirectory != null) {
       try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
         newBufferedWriter.write(javaCode);

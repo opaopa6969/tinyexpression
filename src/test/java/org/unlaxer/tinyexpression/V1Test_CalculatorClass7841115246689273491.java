@@ -1,5 +1,5 @@
 package org.unlaxer.tinyexpression;
-import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.Token;
 
 /*
 if($ForcedRelativeSuspiciousValue1){1919}else{
@@ -17,7 +17,7 @@ if($ForcedRelativeSuspiciousValue1){1919}else{
 public class V1Test_CalculatorClass7841115246689273491 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext, Float>{
 
 	@Override
-	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , TinyExpressionTokens token) {
+	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
 			float answer = (float) 
 
 ((calculateContext.getBoolean("ForcedRelativeSuspiciousValue1").orElse(false)) ? 

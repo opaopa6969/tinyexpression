@@ -39,7 +39,7 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
 		long start = System.nanoTime();
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculateReturningDetails(calculationContext);
+		CalculateResult calculateResult = calculator.calculate(calculationContext,formula);
 		BigDecimal x = calculateResult.answer.get();
 //		System.out.println(formula+":" + (System.nanoTime()-start)+"nsec");
 		System.out.println((System.nanoTime()-start));

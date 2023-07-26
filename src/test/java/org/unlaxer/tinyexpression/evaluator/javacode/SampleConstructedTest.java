@@ -23,7 +23,7 @@ public class SampleConstructedTest {
 		
 		CalculationContext calculateContext = new NormalCalculationContext();
 		
-		System.out.println(sampleConstructed.evaluate(calculateContext, null));
+		System.out.println(sampleConstructed.evaluate(calculateContext,null));
 	}
 	
 	public static void main(String[] args) throws ClassNotFoundException, IOException, InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {

@@ -45,7 +45,10 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> implemen
 	public JavaCodeCalculator(String formula , String className, Path outputRootDirectory) {
 		super(formula , className);
 		this.className = className;
-		javaCode = createJavaClass(className, rootToken);
+		
+		TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+		
+		javaCode = createJavaClass(className, tinyExpressionTokens);
 		if(outputRootDirectory != null) {
 		  try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
 		    newBufferedWriter.write(javaCode);
