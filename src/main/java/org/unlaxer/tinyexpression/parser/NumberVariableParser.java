@@ -7,7 +7,6 @@ import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;

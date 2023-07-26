@@ -97,10 +97,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 		
 		Token parametersClause = getParametersClause(token);
 		
-		ArgumentsParser argumentParser = 
-				Parser.get(ArgumentsParser.class);
-		
-		List<Token> parameterTokens = argumentParser.parameterTokens(extract.getIdentifier(), parametersClause , tinyExpressionTokens);
+		List<Token> parameterTokens = ArgumentsParser.parameterTokens(extract.getIdentifier(), parametersClause , tinyExpressionTokens);
 		
 		return new MethodAndParameters(returning , returningType, extract, parameterTokens);
 	}

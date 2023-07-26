@@ -20,7 +20,6 @@ import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
-import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
