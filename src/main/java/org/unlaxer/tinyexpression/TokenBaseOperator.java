@@ -18,6 +18,12 @@ public interface TokenBaseOperator<C,T>  extends CalculatorOperator<C, Token, T>
     return evaluate(context, getRootToken());
   }
   
-  public Token getRootToken();
+  /**
+   * @return token if you need
+   */
+  public default Token getRootToken() {
+    
+    return null;
+  }
   
 }
