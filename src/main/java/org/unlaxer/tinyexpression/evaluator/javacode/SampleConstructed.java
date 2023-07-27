@@ -38,10 +38,4 @@ public class SampleConstructed implements TokenBaseOperator<CalculationContext, 
 		
 	}
 
-  @Override
-  public Token getRootToken() {
-    // TODO Auto-generated method stub
-    return null;
-  }
-
 }

@@ -37,12 +37,4 @@ boolean doDiscountBySex(org.unlaxer.tinyexpression.CalculationContext calculateC
 }
 
 
-@Override
-public Token getRootToken() {
-  // TODO Auto-generated method stub
-  return null;
-}
-
-
-
 }

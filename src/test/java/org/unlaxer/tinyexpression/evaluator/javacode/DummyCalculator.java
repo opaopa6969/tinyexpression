@@ -20,9 +20,4 @@ public class DummyCalculator implements TokenBaseOperator<CalculationContext, Fl
 		return answer;
 	}
 
-  @Override
-  public Token getRootToken() {
-    // TODO Auto-generated method stub
-    return null;
-  }
 }
