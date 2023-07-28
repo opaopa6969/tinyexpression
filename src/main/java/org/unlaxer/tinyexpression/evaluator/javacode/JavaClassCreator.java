@@ -34,6 +34,7 @@ public interface JavaClassCreator{
       .append("public class ")
       .append(className)
     .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
+//    .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
 //      .append(" implements ContextCalculator {")
       
       .n()

@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression;
 
 import java.math.BigDecimal;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 import org.unlaxer.Parsed;
@@ -11,7 +10,7 @@ import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 
-public interface Calculator<T> extends Function<CalculationContext, Float> {
+public interface Calculator<T> {
   
   public default CalculateResult calculate(CalculationContext calculateContext, String formula) {
     ParseContext parseContext = new ParseContext(new StringSource(formula));
@@ -47,6 +46,8 @@ public interface Calculator<T> extends Function<CalculationContext, Float> {
   public String formula();
 
   public byte[] byteCode();
+  
+  public Float apply(CalculationContext calculationContext);
 
   
   public static class CalculationException extends RuntimeException{

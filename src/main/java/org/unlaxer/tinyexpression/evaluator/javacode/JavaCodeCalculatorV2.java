@@ -14,6 +14,7 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
+import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 
@@ -21,7 +22,7 @@ import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResu
 import net.openhft.compiler.CompilerUtils;
 import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
 
-public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implements JavaClassCreator{
+public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implements JavaClassCreator , TokenBaseCalculator{
 
   public final String className;
   public final String javaCode;
@@ -167,6 +168,11 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   @Override
   public byte[] byteCode() {
     return byteCode;
+  }
+
+  @Override
+  public Float evaluate(CalculationContext context, Token token) {
+    return getCalculatorOperator().evaluate(context, token);
   }
 
 }
