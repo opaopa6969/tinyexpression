@@ -47,6 +47,10 @@ public interface Calculator<T> {
 
   public byte[] byteCode();
   
+  public String formulaHash();
+  
+  public String byteCodeHash();
+  
   public Float apply(CalculationContext calculationContext);
 
   

@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Random;
 import java.util.function.UnaryOperator;
 
 import org.unlaxer.Name;
@@ -17,6 +16,7 @@ import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.util.digest.MD5;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
 import net.openhft.compiler.CompilerUtils;
@@ -28,39 +28,42 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   public final String javaCode;
   
   public final byte[] byteCode;
+  final String formulaHash;
+  final String byteCodeHash;
 
   TokenBaseOperator<CalculationContext, Float> instance;
 
-  public JavaCodeCalculatorV2(Name name , String formula) {
-    this(name,formula,(Path)null);
-  }
+//  public JavaCodeCalculatorV2(Name name , String formula) {
+//    this(name,formula,(Path)null);
+//  }
   
-  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
-    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
-  }
+//  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
+//    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
+//  }
   
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
-    this(name,formula,classLoader,null , true);
+    this(name.getName(),formula,classLoader,null);
   }
 
 
-  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
-      Path outputRootDirectory ,boolean randomize) {
-    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
-  }
+//  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
+//      Path outputRootDirectory ,boolean randomize) {
+//    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
+//  }
 
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
     this(formula,className,classLoader,null);
   }
 
-  @SuppressWarnings("unchecked")
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, Path outputRootDirectory) {
-    super(formula , className);
+    super(formula , className , true);
     this.className = className;
+    formulaHash = MD5.toHex(formula);
     
     TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
 
-    javaCode = createJavaClass(className, tinyExpressionTokens);
+    String classNameWithHash = className+"_"+formulaHash;
+    javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
     if(outputRootDirectory != null) {
       try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
         newBufferedWriter.write(javaCode);
@@ -69,6 +72,20 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
       }
     }
     
+    CompileResult<TokenBaseOperator<CalculationContext, Float>> compile1 = compile(classNameWithHash, javaCode , classLoader);
+    byteCode = compile1.byteCode;
+    
+    
+    String javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
+    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
+    CompileResult<TokenBaseOperator<CalculationContext, Float>> compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
+    byteCodeHash = MD5.toHex(compile2.byteCode);
+  }
+
+
+  @SuppressWarnings("unchecked")
+  private CompileResult<TokenBaseOperator<CalculationContext, Float>> compile(String className, String javaSourceCode , 
+      ClassLoader classLoader) {
     CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
     try {
       
@@ -80,13 +97,13 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
         loadFromJava =
             (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
 //            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
-            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaCode);
+            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaSourceCode);
       }else {
         
         synchronized (CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER) {
           loadFromJava =
               (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-              CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaCode , classLoader);
+              CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , classLoader);
           instance = (TokenBaseOperator<CalculationContext, Float>) loadFromJava.loadedClass.getDeclaredConstructor().newInstance();
         }
       }
@@ -96,15 +113,19 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
 
       throw new RuntimeException(e);
     }
-    byteCode = loadFromJava.byteCode;
+    return loadFromJava;
   }
   
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode , ClassLoader classLoader) {
-    super(formula , className);
+  public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode , 
+      String byteCodeHash,ClassLoader classLoader) {
+    super(formula , className , false);
     this.className = className;
     this.javaCode = javaCode;
     this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    
+    formulaHash = MD5.toHex(formula);
     
     Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
     
@@ -173,6 +194,18 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   @Override
   public Float evaluate(CalculationContext context, Token token) {
     return getCalculatorOperator().evaluate(context, token);
+  }
+
+
+  @Override
+  public String formulaHash() {
+    return formulaHash;
+  }
+
+
+  @Override
+  public String byteCodeHash() {
+    return byteCodeHash;
   }
 
 }

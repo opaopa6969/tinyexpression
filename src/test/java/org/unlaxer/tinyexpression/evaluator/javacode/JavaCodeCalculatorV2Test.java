@@ -9,7 +9,8 @@ public class JavaCodeCalculatorV2Test extends CalculatorImplTest<Float>{
 
 	@Override
 	public PreConstructedCalculator<Float> preConstructedCalculator(String formula) {
-		return new JavaCodeCalculatorV2(Name.of("V2Test") , formula);
+		return new JavaCodeCalculatorV2(Name.of("V2Test") , formula , 
+		    Thread.currentThread().getContextClassLoader());
 	}
 
 }

@@ -10,7 +10,7 @@ import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 
 public abstract class PreConstructedCalculator<T> implements Calculator<T> {
-
+  
   public final String name;
   public final String formula;
   public final Token rootToken;
@@ -21,31 +21,41 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
 //	}
 
-  public PreConstructedCalculator(String formula, String name) {
+  public PreConstructedCalculator(String formula, String name , boolean createToken) {
     super();
     this.formula = formula;
     this.name = name;
+    
 
-    parseContext = new ParseContext(new StringSource(formula));
-    try (parseContext) {
-      parsed = getParser().parse(parseContext);
-      if (false == parsed.isSucceeded()) {
-        throw new ParseException("failed to parse:" + formula);
-      }
-      Token parsedToken = parsed.getRootToken(true);
-
+    // tokenを作成するのはtokenを捜査して計算する実装もあったため。現在はその実装を無くしたのでparseする意味がない
+    // 言語の拡張されてparse時間も無視できなくなったのでparseしないようにした。
+    //　互換性のためTokenBaseCalculatorがあるが、ContextCalculatorにした方が良い（現在消してしまったので後で復活させる）
+    if(createToken) {
+      
+      parseContext = new ParseContext(new StringSource(formula));
+      try (parseContext) {
+        parsed = getParser().parse(parseContext);
+        if (false == parsed.isSucceeded()) {
+          throw new ParseException("failed to parse:" + formula);
+        }
+        Token parsedToken = parsed.getRootToken(true);
+        
 //			String parsedTokenOutput = TokenPrinter.get(parsedToken);
 //			System.out.println(parsedTokenOutput);
-
-      parsedToken = VariableTypeResolver.resolveVariableType(parsedToken);
-
-      rootToken = tokenReduer().apply(parsedToken);
+        
+        parsedToken = VariableTypeResolver.resolveVariableType(parsedToken);
+        
+        rootToken = tokenReduer().apply(parsedToken);
 //      String rootTokenOutput = TokenPrinter.get(parsedToken);
 //      System.out.println(rootTokenOutput);
-
-    } catch (Exception e) {
-      e.printStackTrace();
-      throw new ParseException("failed to parse:" + formula, e);
+      } catch (Exception e) {
+        e.printStackTrace();
+        throw new ParseException("failed to parse:" + formula, e);
+      }
+    }else {
+      parseContext = null;
+      parsed = null;
+      rootToken = null;
     }
   }
 

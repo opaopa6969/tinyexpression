@@ -6,7 +6,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -17,6 +16,7 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.util.digest.MD5;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
 import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
@@ -31,21 +31,21 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> implemen
 	TokenBaseCalculator instance;
 
   public JavaCodeCalculator(Name name, String formula, ClassLoader classLoader) {
-    this(name,formula,null,true , classLoader);
+    this(name.getName(),formula,null,classLoader);
   }
 
-  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize , ClassLoader classLoader) {
-    this(formula , 
-        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
-        outputRootDirectory ,classLoader);
-  }
+//  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize , ClassLoader classLoader) {
+//    this(formula , 
+//        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
+//        outputRootDirectory ,classLoader);
+//  }
 
   public JavaCodeCalculator(String formula , String className, ClassLoader classLoader) {
     this(formula,className,null, classLoader);
   }
 
 	public JavaCodeCalculator(String formula , String className, Path outputRootDirectory , ClassLoader classLoader) {
-		super(formula , className);
+		super(formula , className , true);
 		this.className = className;
 		
 		TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
@@ -172,6 +172,16 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> implemen
       this.instance = contextCalculator;
       this.bytes = bytes;
     }
+  }
+
+  @Override
+  public String formulaHash() {
+    return MD5.toHex(formula);
+  }
+
+  @Override
+  public String byteCodeHash() {
+    return null;
   }
 
 
