@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
@@ -31,14 +32,14 @@ public class JavaCodeCalculator extends PreConstructedCalculator<Float> implemen
 	TokenBaseCalculator instance;
 
   public JavaCodeCalculator(Name name, String formula, ClassLoader classLoader) {
-    this(name.getName(),formula,null,classLoader);
+    this(name , formula, null, true ,classLoader);
   }
 
-//  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize , ClassLoader classLoader) {
-//    this(formula , 
-//        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
-//        outputRootDirectory ,classLoader);
-//  }
+  public JavaCodeCalculator(Name name, String formula , Path outputRootDirectory ,boolean randomize , ClassLoader classLoader) {
+    this(formula , 
+        name.getName()+"_CalculatorClass"  +(randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ), 
+        outputRootDirectory ,classLoader);
+  }
 
   public JavaCodeCalculator(String formula , String className, ClassLoader classLoader) {
     this(formula,className,null, classLoader);

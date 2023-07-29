@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
 import java.util.function.UnaryOperator;
 
 import org.unlaxer.Name;
@@ -31,25 +32,24 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   final String formulaHash;
   final String byteCodeHash;
 
-  TokenBaseOperator<CalculationContext, Float> instance;
+  TokenBaseOperator<CalculationContext, Float> operator;
 
-//  public JavaCodeCalculatorV2(Name name , String formula) {
-//    this(name,formula,(Path)null);
-//  }
+  public JavaCodeCalculatorV2(Name name , String formula) {
+    this(name,formula,(Path)null);
+  }
   
-//  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
-//    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
-//  }
+  public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
+    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
+  }
   
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
-    this(name.getName(),formula,classLoader,null);
+    this(name , formula,classLoader,null , true);
   }
 
-
-//  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
-//      Path outputRootDirectory ,boolean randomize) {
-//    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
-//  }
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
+      Path outputRootDirectory ,boolean randomize) {
+    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
+  }
 
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
     this(formula,className,classLoader,null);
@@ -65,46 +65,58 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
     String classNameWithHash = className+"_"+formulaHash;
     javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
     if(outputRootDirectory != null) {
-      try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(className+".java"))){
+      try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(classNameWithHash+".java"))){
         newBufferedWriter.write(javaCode);
       } catch (IOException e1) {
         e1.printStackTrace();
       }
     }
     
-    CompileResult<TokenBaseOperator<CalculationContext, Float>> compile1 = compile(classNameWithHash, javaCode , classLoader);
-    byteCode = compile1.byteCode;
+    CompileResultAndOperator compile1 = compile(classNameWithHash, javaCode , classLoader);
+    byteCode = compile1.compileResult.byteCode;
+    operator = compile1.operator;
     
-    
-    String javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
-    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
-    CompileResult<TokenBaseOperator<CalculationContext, Float>> compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
-    byteCodeHash = MD5.toHex(compile2.byteCode);
+//    String javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
+//    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
+//    CompileResultAndOperator compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
+//    byteCodeHash = MD5.toHex(compile2.compileResult.byteCode);
+    byteCodeHash =null;
   }
 
-
+  static class CompileResultAndOperator{
+    public final CompileResult<TokenBaseOperator<CalculationContext, Float>> compileResult;
+    public final TokenBaseOperator<CalculationContext, Float> operator;
+    public CompileResultAndOperator(CompileResult<TokenBaseOperator<CalculationContext, Float>> compileResult,
+        TokenBaseOperator<CalculationContext, Float> operator) {
+      super();
+      this.compileResult = compileResult;
+      this.operator = operator;
+    }
+  }
+  
   @SuppressWarnings("unchecked")
-  private CompileResult<TokenBaseOperator<CalculationContext, Float>> compile(String className, String javaSourceCode , 
+  private CompileResultAndOperator compile(String className, String javaSourceCode , 
       ClassLoader classLoader) {
-    CompileResult<TokenBaseOperator<CalculationContext, Float>> loadFromJava;
+    CompileResult<TokenBaseOperator<CalculationContext, Float>> compileResult;
+    TokenBaseOperator<CalculationContext, Float> tokenBaseOperator;
     try {
       
       if(loaded(classLoader , className)) {
         
         var calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader.loadClass(className);
-        instance = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
+        tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
         
-        loadFromJava =
+        compileResult =
             (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
 //            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
             CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaSourceCode);
       }else {
         
         synchronized (CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER) {
-          loadFromJava =
+          compileResult =
               (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
               CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , classLoader);
-          instance = (TokenBaseOperator<CalculationContext, Float>) loadFromJava.loadedClass.getDeclaredConstructor().newInstance();
+          tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
         }
       }
       
@@ -113,7 +125,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
 
       throw new RuntimeException(e);
     }
-    return loadFromJava;
+    return  new CompileResultAndOperator(compileResult, tokenBaseOperator);
   }
   
   @SuppressWarnings("unchecked")
@@ -137,7 +149,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
           
           calculatorClass = CompilerUtils.defineClass(classLoader , className, byteCode);
         } 
-        instance = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
+        operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
         
     } catch (InstantiationException |IllegalAccessException | IllegalArgumentException |
         InvocationTargetException | NoSuchMethodException | SecurityException e) {
@@ -163,7 +175,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
 
   @Override
   public TokenBaseOperator<CalculationContext, Float> getCalculatorOperator() {
-    return instance;
+    return operator;
   }
 
   @Override
