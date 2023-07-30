@@ -18,6 +18,7 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	
 	public NumberMatchExpressionParser() {
 		super();
+		addTag(ExpressionTags.matchExpression.tag());
 	}
 	
 	public static class MatchFuctionNameParser extends SuggestableParser{

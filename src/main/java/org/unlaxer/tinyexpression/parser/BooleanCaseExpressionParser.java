@@ -13,6 +13,7 @@ public class BooleanCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 	
 	public BooleanCaseExpressionParser() {
 		super();
+    addTag(ExpressionTags.matchCase.tag());
 	}
 
 	@Override

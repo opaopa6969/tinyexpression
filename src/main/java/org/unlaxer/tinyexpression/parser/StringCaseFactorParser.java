@@ -15,7 +15,8 @@ public class StringCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
 	public StringCaseFactorParser() {
 		super();
-	}
+		addTag(ExpressionTags.matchCaseFactor.tag());
+  }
 
 	@Override
 	public List<Parser> getLazyParsers() {

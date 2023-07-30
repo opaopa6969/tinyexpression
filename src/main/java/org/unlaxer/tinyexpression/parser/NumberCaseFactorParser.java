@@ -17,6 +17,7 @@ public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
 
 	public NumberCaseFactorParser() {
 		super();
+		addTag(ExpressionTags.matchCaseFactor.tag());
 	}
 
 	@Override

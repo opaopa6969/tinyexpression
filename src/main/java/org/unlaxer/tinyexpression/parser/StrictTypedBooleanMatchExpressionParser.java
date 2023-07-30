@@ -11,5 +11,6 @@ public class StrictTypedBooleanMatchExpressionParser extends PredicateAnyMatchFo
         TokenPredicators.hasTagInParent(BooleanMatchExpressionParser.choiceTag)
           .and(TokenPredicators.hasTag(StrictTyped.get()))         
     );
+    addTag(ExpressionTags.matchExpression.tag());
   }
 }

@@ -15,6 +15,7 @@ public class NumberDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 
 	public NumberDefaultCaseFactorParser() {
 		super();
+    addTag(ExpressionTags.matchDefaultFactor.tag());
 	}
 
 	@Override
