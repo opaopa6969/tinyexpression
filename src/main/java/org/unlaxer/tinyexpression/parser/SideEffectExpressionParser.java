@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-
 import java.util.List;
 
 import org.unlaxer.Tag;
