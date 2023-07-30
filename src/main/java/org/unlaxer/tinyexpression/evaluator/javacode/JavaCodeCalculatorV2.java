@@ -27,6 +27,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
 
   public final String className;
   public final String javaCode;
+  public final String javaCodeWithoutHash;
   
   public final byte[] byteCode;
   final String formulaHash;
@@ -76,11 +77,10 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
     byteCode = compile1.compileResult.byteCode;
     operator = compile1.operator;
     
-//    String javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
-//    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
-//    CompileResultAndOperator compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
-//    byteCodeHash = MD5.toHex(compile2.compileResult.byteCode);
-    byteCodeHash =null;
+    javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
+    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
+    CompileResultAndOperator compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
+    byteCodeHash = MD5.toHex(compile2.compileResult.byteCode);
   }
 
   static class CompileResultAndOperator{
@@ -197,6 +197,11 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   public String javaCode() {
     return javaCode;
   }
+  
+  public String javaCodeWithoutHash() {
+    return javaCodeWithoutHash;
+  }
+
 
   @Override
   public byte[] byteCode() {
