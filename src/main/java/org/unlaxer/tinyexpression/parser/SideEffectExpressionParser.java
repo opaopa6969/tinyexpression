@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
+
 import java.util.List;
 
 import org.unlaxer.Tag;
@@ -86,7 +88,12 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
     
     Token returning = token.getChildFromAstNodes(0);
-    Returning returnParser = (Returning) ChoiceInterface.choiced(token).parser;
+    Parser parser = ChoiceInterface.choiced(token).parser;
+    if(parser instanceof ReturningParser) {
+      parser = ChoiceInterface.choiced(returning).parser;
+    }
+    
+    Returning returnParser =  (Returning) parser;
     
     Class<?> returningType = returnParser.returningType(); 
         

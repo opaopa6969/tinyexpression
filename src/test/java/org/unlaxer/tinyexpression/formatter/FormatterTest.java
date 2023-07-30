@@ -55,5 +55,13 @@ public class FormatterTest {
     assertEquals(12, format.split("\n").length);
   }
 
+  @Test
+  public void testSideEffect() {
+    String string = "if(isPresent($sourceFinancialInstituionCode)&$sourceFinancialInstituionCode=='0035'&$sourceStoreNumber=='001'){if(external:jp.caulis.external.MoneyTransfer#getUniqueTransferAccountNumberOfCurrentDestinationAccountWithinSpecifiedPeriod(86400)>=10){1}else{0}}else{0}";
+    String format = Formatter.format(string);
+    System.out.println(format);
+//    assertEquals(12, format.split("\n").length);
+  }
+  
   
 }

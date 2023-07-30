@@ -16,8 +16,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionTags;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberDefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.RightCurlyBraceParser;
 
 public class Formatter {

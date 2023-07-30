@@ -23,5 +23,22 @@ public class NumberSideEffectExpressionParserTest extends ParserTestBase{
     
     testAllMatch(parser, formula);
   }
+  
+  @Test
+  public void testSideEffectWithoutType() {
+    
+    setLevel(OutputLevel.mostDetail);
+
+    var parser = new NumberSideEffectExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("external calculate($age as number ,if($name=='渡辺'){0}else{1000},$taxRate as number)");
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    testAllMatch(parser, formula);
+  }
 
 }

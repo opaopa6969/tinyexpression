@@ -821,6 +821,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("6969")));
 
+    assertTrue(calc(context,
+        "external org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        new BigDecimal("6969")));
   }
   
   @Test
