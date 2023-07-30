@@ -136,6 +136,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
     this.javaCode = javaCode;
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
+    this.javaCodeWithoutHash = "";
     
     formulaHash = MD5.toHex(formula);
     
