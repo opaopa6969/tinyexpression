@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.UnaryOperator;
 
 import org.unlaxer.Parsed;
@@ -16,6 +18,7 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   public final Token rootToken;
   final ParseContext parseContext;
   final Parsed parsed;
+  Map<String,Object> objectByKey;
 
 //	public PreConstructedCalculator(String formula , boolean randomize) {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
@@ -25,6 +28,7 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
     super();
     this.formula = formula;
     this.name = name;
+    objectByKey = new HashMap<>();
     
 
     // tokenを作成するのはtokenを捜査して計算する実装もあったため。現在はその実装を無くしたのでparseする意味がない
@@ -88,5 +92,18 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   public String formula() {
     return formula;
   }
+
+  @Override
+  public void setObject(String key, Object object) {
+    objectByKey.put(key, object);
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  public <X> X getObject(String key, Class<X> objectClass) {
+    return (X) objectByKey.get(key);
+  }
+  
+  
 
 }

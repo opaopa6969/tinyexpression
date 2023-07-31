@@ -52,7 +52,14 @@ public interface Calculator<T> {
   public String byteCodeHash();
   
   public Float apply(CalculationContext calculationContext);
-
+  
+  public void setObject(String key , Object object);
+  
+  public <X> X getObject(String key , Class<X> objectClass);
+  
+  public default <X> Optional<X> getObjectAsOptional(String key , Class<X> objectClass){
+    return Optional.ofNullable(getObject(key, objectClass));
+  }
   
   public static class CalculationException extends RuntimeException{
 
