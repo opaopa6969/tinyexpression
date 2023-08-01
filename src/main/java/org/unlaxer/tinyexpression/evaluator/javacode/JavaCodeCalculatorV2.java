@@ -148,16 +148,47 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
           
         } catch (ClassNotFoundException e) {
           
-          calculatorClass = CompilerUtils.defineClass(classLoader , className, byteCode);
+          try {
+            calculatorClass = CompilerUtils.defineClass(classLoader , className, byteCode);
+          }catch (Throwable e2) {
+            e2.printStackTrace();
+            try {
+              calculatorClass = CompilerUtils.defineClass(null , className, byteCode);
+            }catch (Throwable e3) {
+              e3.printStackTrace();
+              calculatorClass = CompilerUtils.defineClass(null , null, byteCode);
+            }
+          }
         } 
         operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
         
     } catch (InstantiationException |IllegalAccessException | IllegalArgumentException |
-        InvocationTargetException | NoSuchMethodException | SecurityException e) {
+        InvocationTargetException | NoSuchMethodException | SecurityException | NoClassDefFoundError e) {
 
       throw new RuntimeException(e);
     }
   }
+  
+  public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode , 
+      String byteCodeHash, Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass , ClassLoader classLoader) {
+    super(formula , className , false);
+    this.className = className;
+    this.javaCode = javaCode;
+    this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    this.javaCodeWithoutHash = "";
+    
+    formulaHash = MD5.toHex(formula);
+    
+    try {
+      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | NoSuchMethodException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+        
+  }
+
   
   static boolean loaded(ClassLoader classLoader , String className) {
     try {
