@@ -47,7 +47,8 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
       .appendCurrentFunctionName()
       .append(".map(_function->_function.")
       .append(methodName)
-      .append("(calculateContext , ");
+      .append("(calculateContext , ")
+      .incrementFunction();
     
     ParametersBuilder.buildParameter(builder, methodAndParameters , tinyExpressionTokens);
     
