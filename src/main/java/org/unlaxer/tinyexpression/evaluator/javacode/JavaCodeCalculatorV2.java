@@ -27,6 +27,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
 
   public final String className;
   public final String javaCode;
+  public final String classNameWithHash;
   public final String javaCodeWithoutHash;
   
   public final byte[] byteCode;
@@ -63,7 +64,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
     
     TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
 
-    String classNameWithHash = className+"_"+formulaHash;
+    classNameWithHash = className+"_"+formulaHash;
     javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
     if(outputRootDirectory != null) {
       try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(classNameWithHash+".java"))){
@@ -133,6 +134,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
       String byteCodeHash,ClassLoader classLoader) {
     super(formula , className , false);
     this.className = className;
+    this.classNameWithHash = null;
     this.javaCode = javaCode;
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
