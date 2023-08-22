@@ -6,20 +6,26 @@ import java.security.NoSuchAlgorithmException;
 
 public class MD5 {
   
-  static ThreadLocal<MessageDigest> messageDigest = new ThreadLocal<>() {
-    @Override
-    public MessageDigest initialValue() {
-      try {
-        return MessageDigest.getInstance("MD5");
-      } catch (NoSuchAlgorithmException e) {
-        throw new RuntimeException(e);
-      }
-    }
-  };
+//  static ThreadLocal<MessageDigest> messageDigest = new ThreadLocal<>() {
+//    @Override
+//    public MessageDigest initialValue() {
+//      try {
+//        return MessageDigest.getInstance("MD5");
+//      } catch (NoSuchAlgorithmException e) {
+//        throw new RuntimeException(e);
+//      }
+//    }
+//  };
   
   public static byte[] toBytes(byte[] bytes) {
-    messageDigest.get().update(bytes);
-    return messageDigest.get().digest();
+    MessageDigest instance;
+    try {
+      instance = MessageDigest.getInstance("MD5");
+      instance.update(bytes);
+      return instance.digest();
+    } catch (NoSuchAlgorithmException e) {
+      throw new RuntimeException(e);
+    }
   }
   
   public static byte[] toBytes(String utf8String) {

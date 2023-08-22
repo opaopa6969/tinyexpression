@@ -1250,4 +1250,40 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     System.out.println(string);
     assertTrue(calc(context,string,new BigDecimal("1800")));
   }
+  
+  
+  public static void main(String[] args) {
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+//      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 500,")
+      .line("  $age>=60 -> 700,")
+      .line("  default  -> call feeBySex($sex)")
+      .line(" }")
+//      .line("}")
+      .n()
+      .line("float feeBySex($sex as string){")
+      .line(" match{")
+      // $sexはformalParameterで型指定がされているので型解決ができる。
+      // またcall discountingSttringの戻り値でも型推論ができる
+//       testケースを 'man' == call とか $sex stringとか(String)$sexとか作る。
+      .line("  $sex==call discountSexString() & call doDiscountBySex() -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+      .line("}")
+      .n()
+      .line("String discountSexString(){")
+      .line(" 'woman'")
+      .line("}")
+      .n()
+      .line("boolean doDiscountBySex(){")
+      .line(" true")
+      .line("}")
+      ;
+    
+    System.out.println(simpleBuilder.toString());
+
+  }
 }
