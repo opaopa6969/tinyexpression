@@ -2,8 +2,10 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
@@ -17,6 +19,7 @@ import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.util.CloseableClassLoader;
 import org.unlaxer.util.digest.MD5;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
@@ -41,47 +44,77 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   }
   
   public JavaCodeCalculatorV2(Name name , String formula ,Path outputRootDirectory) {
-    this(name , formula, Thread.currentThread().getContextClassLoader(),outputRootDirectory , true);
+    this(name , formula, Thread.currentThread().getContextClassLoader(), new CloseableClassLoader(), outputRootDirectory , true);
+  }
+  
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, URLClassLoader oneTimeClassLoader ) {
+    this(name , formula,classLoader, oneTimeClassLoader ,  null , true);
   }
   
   public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader) {
-    this(name , formula,classLoader,null , true);
+    this(name , formula,classLoader, new CloseableClassLoader() ,  null , true);
   }
 
-  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, 
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader, URLClassLoader oneTimeClassLoader,
       Path outputRootDirectory ,boolean randomize) {
-    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , classLoader , outputRootDirectory);
+    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , 
+        classLoader , oneTimeClassLoader ,  outputRootDirectory);
+  }
+  
+  public JavaCodeCalculatorV2(Name name,String formula , ClassLoader classLoader,
+      Path outputRootDirectory ,boolean randomize) {
+    this(formula , name.getName()+"_CalculatorClass"  + (randomize ?  Math.abs(new Random().nextLong()) :"") , 
+        classLoader , new CloseableClassLoader() ,  outputRootDirectory);
   }
 
+
+  public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader , URLClassLoader oneTimeClassLoader ) {
+    this(formula,className,classLoader, oneTimeClassLoader ,null);
+  }
+  
+  
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader) {
-    this(formula,className,classLoader,null);
+    this(formula,className,classLoader, new CloseableClassLoader() ,null);
   }
 
+  
   public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, Path outputRootDirectory) {
-    super(formula , className , true);
-    this.className = className;
-    formulaHash = MD5.toHex(formula);
-    
-    TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+    this(formula , className , classLoader , new CloseableClassLoader() , outputRootDirectory);
+  }
 
-    classNameWithHash = className+"_"+formulaHash;
-    javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
-    if(outputRootDirectory != null) {
-      try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(classNameWithHash+".java"))){
-        newBufferedWriter.write(javaCode);
-      } catch (IOException e1) {
-        e1.printStackTrace();
+  public JavaCodeCalculatorV2(String formula , String className , ClassLoader classLoader, URLClassLoader oneTimeClassLoader , Path outputRootDirectory) {
+    super(formula , className , true);
+    
+    try {
+      try (oneTimeClassLoader){
+        
+        this.className = className;
+        formulaHash = MD5.toHex(formula);
+        
+        TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+        
+        classNameWithHash = className+"_"+formulaHash;
+        javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
+        if(outputRootDirectory != null) {
+          try(BufferedWriter newBufferedWriter = Files.newBufferedWriter(outputRootDirectory.resolve(classNameWithHash+".java"))){
+            newBufferedWriter.write(javaCode);
+          } catch (IOException e1) {
+            e1.printStackTrace();
+          }
+        }
+        
+        CompileResultAndOperator compile1 = compile(classNameWithHash, javaCode , classLoader);
+        byteCode = compile1.compileResult.byteCode;
+        operator = compile1.operator;
+        
+        javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
+        CompileResultAndOperator compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
+        byteCodeHash = MD5.toHex(compile2.compileResult.byteCode);
       }
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
     
-    CompileResultAndOperator compile1 = compile(classNameWithHash, javaCode , classLoader);
-    byteCode = compile1.compileResult.byteCode;
-    operator = compile1.operator;
-    
-    javaCodeWithoutHash = createJavaClass(className, tinyExpressionTokens);
-    ClassLoader oneTimeClassLoader = new ClassLoader(classLoader) {};
-    CompileResultAndOperator compile2 = compile(className, javaCodeWithoutHash , oneTimeClassLoader);
-    byteCodeHash = MD5.toHex(compile2.compileResult.byteCode);
   }
 
   static class CompileResultAndOperator{
