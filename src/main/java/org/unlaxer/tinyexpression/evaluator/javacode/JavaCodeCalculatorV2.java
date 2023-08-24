@@ -17,6 +17,7 @@ import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.util.CloseableClassLoader;
 import org.unlaxer.util.digest.MD5;
 
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
@@ -114,15 +115,18 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
           var calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader.loadClass(className);
           tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
           
-              try {
+          compileResult = CompileResultCache.get(className);
+              try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader()){
                 compileResult =
                     (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
   //            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
-                    CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaSourceCode);
+                    
+                    CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(closeableClassLoader , className, javaSourceCode);
                 
                 CompileResultCache.set(className, compileResult);
                 
               }catch (Throwable e) {
+                e.printStackTrace();
                 compileResult = CompileResultCache.get(className);
               }
         }else {
@@ -137,6 +141,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
             CompileResultCache.set(className, compileResult);
   
             }catch (Throwable e) {
+              e.printStackTrace();
               compileResult = CompileResultCache.get(className);
             }
             tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
