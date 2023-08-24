@@ -105,41 +105,42 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
       ClassLoader classLoader) {
     CompileResult<TokenBaseOperator<CalculationContext, Float>> compileResult;
     TokenBaseOperator<CalculationContext, Float> tokenBaseOperator;
+    
     try {
-      
-      if(loaded(classLoader , className)) {
-        
-        var calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader.loadClass(className);
-        tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
-        
+      synchronized (CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER) {
+  
+        if(loaded(classLoader , className)) {
+          
+          var calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader.loadClass(className);
+          tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
+          
+              try {
+                compileResult =
+                    (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
+  //            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
+                    CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaSourceCode);
+                
+                CompileResultCache.set(className, compileResult);
+                
+              }catch (Throwable e) {
+                compileResult = CompileResultCache.get(className);
+              }
+        }else {
+          
+            
             try {
-              compileResult =
-                  (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-//            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
-                  CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(classLoader , className, javaSourceCode);
-              
-              CompileResultCache.set(className, compileResult);
-              
+  
+            compileResult =
+                (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
+                CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , classLoader);
+            
+            CompileResultCache.set(className, compileResult);
+  
             }catch (Throwable e) {
               compileResult = CompileResultCache.get(className);
             }
-      }else {
-        
-        synchronized (CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER) {
-          
-          try {
-
-          compileResult =
-              (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-              CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , classLoader);
-          
-          CompileResultCache.set(className, compileResult);
-
-          }catch (Throwable e) {
-            compileResult = CompileResultCache.get(className);
+            tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
           }
-          tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
-        }
       }
       
     } catch (ClassNotFoundException | InstantiationException |IllegalAccessException | IllegalArgumentException |
