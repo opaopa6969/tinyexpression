@@ -20,6 +20,7 @@ import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.util.CloseableClassLoader;
 import org.unlaxer.util.digest.MD5;
 
+import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting;
 import net.openhft.compiler.CachedCompilerModifiedForByteCodeGetting.CompileResult;
 import net.openhft.compiler.CompilerUtils;
 import net.openhft.compiler.CompilerUtilsModifedForGettingByteCode;
@@ -116,12 +117,13 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
           tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor().newInstance();
           
           compileResult = CompileResultCache.get(className);
-              try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader()){
+          try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader() ; 
+              CachedCompilerModifiedForByteCodeGetting compiler = compiler()){
                 compileResult =
                     (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
   //            CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(new ClassLoader() {} , className, javaCode);
                     
-                    CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(closeableClassLoader , className, javaSourceCode);
+                    compiler.loadFromJava(closeableClassLoader , className, javaSourceCode);
                 
                 CompileResultCache.set(className, compileResult);
                 
@@ -132,11 +134,12 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
         }else {
           
             
-          try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader()){
+          try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader() ; 
+              CachedCompilerModifiedForByteCodeGetting compiler = compiler()){
   
             compileResult =
                 (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-                CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , closeableClassLoader);
+                compiler.loadFromJava(className, javaSourceCode , closeableClassLoader);
             
             CompileResultCache.set(className, compileResult);
   
@@ -280,6 +283,11 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
   @Override
   public String byteCodeHash() {
     return byteCodeHash;
+  }
+  
+  static CachedCompilerModifiedForByteCodeGetting compiler() {
+    CachedCompilerModifiedForByteCodeGetting compiler = new CachedCompilerModifiedForByteCodeGetting(null,null);
+    return compiler;
   }
 
 }
