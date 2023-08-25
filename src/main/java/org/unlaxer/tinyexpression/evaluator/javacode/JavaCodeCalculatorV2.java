@@ -144,6 +144,8 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
               e.printStackTrace();
               compileResult = CompileResultCache.get(className);
             }
+            System.out.println("c:" + compileResult);
+            System.out.println("l:" + compileResult.loadedClass);
             tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
           }
       }
