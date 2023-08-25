@@ -132,11 +132,11 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
         }else {
           
             
-            try {
+          try (CloseableClassLoader closeableClassLoader = new CloseableClassLoader()){
   
             compileResult =
                 (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
-                CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , classLoader);
+                CompilerUtilsModifedForGettingByteCode.CACHED_COMPILER.loadFromJava(className, javaSourceCode , closeableClassLoader);
             
             CompileResultCache.set(className, compileResult);
   
