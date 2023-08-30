@@ -45,7 +45,9 @@
     <dependency>
       <groupId>org.unlaxer</groupId>
       <artifactId>unlaxer-common</artifactId>
-      <version>1.2.55555ttps://mvnrepository.com/artifact/net.openhft/compiler -->
+      <version>1.2.5</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/net.openhft/compiler -->
     <dependency>
       <groupId>net.openhft</groupId>
       <artifactId>compiler</artifactId>
