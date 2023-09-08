@@ -2,10 +2,13 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
+import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
@@ -20,6 +23,8 @@ public class TinyExpressionTokens{
   final Token expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
+  final Map<String,TypedToken<MethodParser>> methodDeclarationBymethodName;
+  final List<Token> methodTokens;
 
   
   public TinyExpressionTokens(Token tinyExpressionToken) {
@@ -45,13 +50,28 @@ public class TinyExpressionTokens{
     variableDeclarationByVariableName = variableDeclarationTokens.stream()
       .collect(Collectors.toMap(
         token->{
-            Token extractVariableParserToOken = VariableDeclarationParser.extractVariableParserToken(token);
+            TypedToken<VariableParser> extractVariableParserToOken = VariableDeclarationParser.extractVariableParserToken(token);
             VariableParser parser = extractVariableParserToOken.getParser(VariableParser.class);
             String variableName = parser.getVariableName(extractVariableParserToOken);
             return variableName;
         
         },
-        Function.identity()));
+        Function.identity())
+      );
+    
+    methodTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
+    
+    methodDeclarationBymethodName = methodTokens.stream()
+       .map(_token->_token.typedWithInterface(MethodParser.class))
+       .collect(Collectors.toMap(
+           _token->{
+             MethodParser parser = _token.getParser(MethodParser.class);
+             
+             return (parser.methodName(_token).getToken().get());
+           },
+           Function.identity()
+           )
+       );
   }
   
   public Token getTinyExpressionToken() {
@@ -69,7 +89,10 @@ public class TinyExpressionTokens{
   public Token getExpressionToken() {
     return expressionToken;
   }
-  
+  public List<Token> getMethodTokens() {
+    return methodTokens;
+  }
+
   public String resolveJavaClass(String classNameOrMethod) {
     String string = classNameByIdentifier.get(classNameOrMethod);
     return string == null ? classNameOrMethod : string;
@@ -80,6 +103,18 @@ public class TinyExpressionTokens{
     Token token = variableDeclarationByVariableName.get(VariableName);
     return java.util.Optional.ofNullable(token);
   }
+  
+  public java.util.Optional<Token> matchedMethod(String VariableName){
+    
+    Token token = variableDeclarationByVariableName.get(VariableName);
+    return java.util.Optional.ofNullable(token);
+  }
+  
+  public Optional<Token> getMethodToken(String methodName){
+    Token token = methodDeclarationBymethodName.get(methodName);
+    return Optional.ofNullable(token);
+  }
+
   
   
 }

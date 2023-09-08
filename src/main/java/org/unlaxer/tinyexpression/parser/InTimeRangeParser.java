@@ -9,6 +9,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.util.annotation.TokenExtractor;
 
 public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {
 
@@ -27,10 +28,12 @@ public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {
       );
 	}
 
+	@TokenExtractor
 	public static Token getLeftExpression(Token thisParserParsed) {
 		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //2
 	}
 
+	@TokenExtractor
 	public static Token getRightExpression(Token thisParserParsed) {
 		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1);//4
 	}

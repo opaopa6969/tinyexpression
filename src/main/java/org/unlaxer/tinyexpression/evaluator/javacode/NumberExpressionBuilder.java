@@ -4,12 +4,16 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.unlaxer.Token;
+import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
@@ -23,6 +27,7 @@ import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -33,90 +38,92 @@ import org.unlaxer.tinyexpression.parser.function.TanParser;
 
 public class NumberExpressionBuilder implements TokenCodeBuilder {
 
-	public static class NumberCaseExpressionBuilder implements TokenCodeBuilder{
+  public static class NumberCaseExpressionBuilder implements TokenCodeBuilder{
 
-		public static NumberCaseExpressionBuilder SINGLETON = new NumberCaseExpressionBuilder();
+    public static NumberCaseExpressionBuilder SINGLETON = new NumberCaseExpressionBuilder();
 
-		public void build(SimpleJavaCodeBuilder builder, Token token ,
-		    TinyExpressionTokens tinyExpressionTokens) {
+    public void build(SimpleJavaCodeBuilder builder, Token token ,
+        TinyExpressionTokens tinyExpressionTokens) {
 
-			List<Token> originalTokens = token.filteredChildren;
-			Iterator<Token> iterator = originalTokens.iterator();
+      List<Token> originalTokens = token.filteredChildren;
+      Iterator<Token> iterator = originalTokens.iterator();
 
-			while(iterator.hasNext()){
-				Token caseFactor = iterator.next();
+      while(iterator.hasNext()){
+        Token caseFactor = iterator.next();
 
-				Token booleanExpression = caseFactor.filteredChildren.get(0);
-				Token expression = caseFactor.filteredChildren.get(1);
-				BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
-				builder.append(" ? ");
-				NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
-				builder
-					.append(":")
-					.n();
-			}
-		}
-	}
-	
-	public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
+        Token booleanExpression = caseFactor.filteredChildren.get(0);
+        Token expression = caseFactor.filteredChildren.get(1);
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+        builder.append(" ? ");
+        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+        builder
+          .append(":")
+          .n();
+      }
+    }
+  }
+  
+  public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
 
-	public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
+  public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
 
-		Parser parser = token.parser;
-		
-		if(parser instanceof NumberExpressionParser) {
-			
-			token = token.filteredChildren.get(0);
-			parser = token.parser;
-			
-			if (parser instanceof NumberTermParser) {
-				
-				token = token.filteredChildren.get(0);
-				parser = token.parser;
-				
-				if(parser instanceof NumberFactorParser) {
-					token = token.filteredChildren.get(0);
-					parser = token.parser;
-					
-				}
-			}
-		}
-		
-		if (parser instanceof PlusParser) {
+    Parser parser = token.parser;
+    
+    if(parser instanceof NumberExpressionParser) {
+      
+      token = token.filteredChildren.get(0);
+      parser = token.parser;
+      
+      if (parser instanceof NumberTermParser) {
+        
+        token = token.filteredChildren.get(0);
+        parser = token.parser;
+        
+        if(parser instanceof NumberFactorParser) {
+          token = token.filteredChildren.get(0);
+          parser = token.parser;
+          
+        }
+      }
+    }
+    
+    if (parser instanceof PlusParser) {
 
-			binaryOperate(builder, token, "+" , tinyExpressionTokens);
+      binaryOperate(builder, token, "+" , tinyExpressionTokens);
 
-		} else if (parser instanceof MinusParser) {
+    } else if (parser instanceof MinusParser) {
 
-			binaryOperate(builder, token, "-" , tinyExpressionTokens);
+      binaryOperate(builder, token, "-" , tinyExpressionTokens);
 
-		} else if (parser instanceof MultipleParser) {
+    } else if (parser instanceof MultipleParser) {
 
-			binaryOperate(builder, token, "*" , tinyExpressionTokens);
+      binaryOperate(builder, token, "*" , tinyExpressionTokens);
 
-		} else if (parser instanceof DivisionParser) {
+    } else if (parser instanceof DivisionParser) {
 
-			binaryOperate(builder, token, "/" , tinyExpressionTokens);
+      binaryOperate(builder, token, "/" , tinyExpressionTokens);
 
-		} else if (parser instanceof NumberParser) {
+    } else if (parser instanceof NumberParser) {
 
-			builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
+      builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
 
-		} else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
+    } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-		  VariableBuilder.build(this, builder, token, tinyExpressionTokens, NumberSetterParser.class,
-		      "0f","getValue","setAndGet");
-//		  List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
-//		  
-//		  
-////		  上のリストが入っているのでこれを利用してsetをする
-//		  
-//			String variableName = 
-//			    parser instanceof NakedVariableParser ? 
-//			      NakedVariableParser.getVariableName(token):
-//			      NumberVariableParser.getVariableName(token);
-//			
-//			boolean isMatch =false;
+      TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+      
+      VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
+          "0f","getValue","setAndGet");
+//      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
+//      
+//      
+////      上のリストが入っているのでこれを利用してsetをする
+//      
+//      String variableName = 
+//          parser instanceof NakedVariableParser ? 
+//            NakedVariableParser.getVariableName(token):
+//            NumberVariableParser.getVariableName(token);
+//      
+//      boolean isMatch =false;
 //      for (Token declarationTtoken : variableDeclarationsTokens) {
 //        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
 //        String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
@@ -149,140 +156,142 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 //        builder.append("calculateContext.getValue(").w(variableName).append(").orElse(0f)");
 //      }
 
-		} else if (parser instanceof NumberIfExpressionParser) {
+    } else if (parser instanceof NumberIfExpressionParser) {
 
-			Token booleanExpression = IfExpressionParser.getBooleanExpression(token);
-			Token factor1 = IfExpressionParser.getThenExpression(token , NumberExpression.class , booleanExpression);
-			Token factor2 = IfExpressionParser.getElseExpression(token , NumberExpression.class , booleanExpression);
+      Token booleanExpression = IfExpressionParser.getBooleanExpression(token);
+      Token factor1 = IfExpressionParser.getThenExpression(token , NumberExpression.class , booleanExpression);
+      Token factor2 = IfExpressionParser.getElseExpression(token , NumberExpression.class , booleanExpression);
 
-			/*
-			 * BooleanExpressionOperator.SINGLETON.evaluate(calculateContext, booleanExpression)?
-			 * factor1: factor2
-			 */
+      /*
+       * BooleanExpressionOperator.SINGLETON.evaluate(calculateContext, booleanExpression)?
+       * factor1: factor2
+       */
 
-			builder.append("(");
+      builder.append("(");
 
-			BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
 
-			builder.append(" ? ").n().incTab();
-			build(builder, factor1 , tinyExpressionTokens);
+      builder.append(" ? ").n().incTab();
+      build(builder, factor1 , tinyExpressionTokens);
 
-			builder.append(":").n();
-			build(builder, factor2 , tinyExpressionTokens);
+      builder.append(":").n();
+      build(builder, factor2 , tinyExpressionTokens);
 
-			builder.decTab();
+      builder.decTab();
 
-			builder.append(")");
+      builder.append(")");
 
-		} else if (parser instanceof NumberMatchExpressionParser) {
+    } else if (parser instanceof NumberMatchExpressionParser) {
 
-			Token caseExpression = token.filteredChildren.get(0);
-			Token defaultCaseFactor = token.filteredChildren.get(1);
+      Token caseExpression = token.getChild(TokenPredicators.parsers(NumberCaseExpressionParser.class));
+      Token defaultCaseFactor = token.getChildFromAstNodes(1);
 
-			builder.n();
-			builder.incTab();
+      builder.n();
+      builder.incTab();
 
-			builder.append("(");
+      builder.append("(");
 
-			NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
-			builder.n();
-			build(builder, defaultCaseFactor , tinyExpressionTokens);
+      NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
+      builder.n();
+      build(builder, defaultCaseFactor , tinyExpressionTokens);
 
-			builder.append(")");
-			builder.decTab();
+      builder.append(")");
+      builder.decTab();
 
-		} else if (parser instanceof SinParser) {
+    } else if (parser instanceof SinParser) {
 
-			Token value = token.filteredChildren.get(0);
-			builder.append("(float) Math.sin(calculateContext.radianAngle(");
-			build(builder, value , tinyExpressionTokens);
-			builder.append("))");
+      Token value = token.filteredChildren.get(0);
+      builder.append("(float) Math.sin(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens);
+      builder.append("))");
 
-		} else if (parser instanceof CosParser) {
+    } else if (parser instanceof CosParser) {
 
-			Token value = token.filteredChildren.get(0);
-			builder.append("(float) Math.cos(calculateContext.radianAngle(");
-			build(builder, value , tinyExpressionTokens);
-			builder.append("))");
+      Token value = token.filteredChildren.get(0);
+      builder.append("(float) Math.cos(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens);
+      builder.append("))");
 
-		} else if (parser instanceof TanParser) {
+    } else if (parser instanceof TanParser) {
 
-			Token value = token.filteredChildren.get(0);
-			builder.append("(float) Math.tan(calculateContext.radianAngle(");
-			build(builder, value , tinyExpressionTokens);
-			builder.append("))");
+      Token value = token.filteredChildren.get(0);
+      builder.append("(float) Math.tan(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens);
+      builder.append("))");
 
-		} else if (parser instanceof SquareRootParser) {
+    } else if (parser instanceof SquareRootParser) {
 
-			Token value = token.filteredChildren.get(0);
-			builder.append("(float) Math.sqrt(");
-			build(builder, value , tinyExpressionTokens);
-			builder.append(")");
+      Token value = token.filteredChildren.get(0);
+      builder.append("(float) Math.sqrt(");
+      build(builder, value , tinyExpressionTokens);
+      builder.append(")");
 
-		} else if (parser instanceof MinParser) {
+    } else if (parser instanceof MinParser) {
 
-			builder.append("Math.min(");
-			build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
-			builder.append(",");
-			build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
-			builder.append(")");
+      builder.append("Math.min(");
+      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
+      builder.append(",");
+      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+      builder.append(")");
 
-		} else if (parser instanceof MaxParser) {
+    } else if (parser instanceof MaxParser) {
 
-			builder.append("Math.max(");
-			build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
-			builder.append(",");
-			build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
-			builder.append(")");
+      builder.append("Math.max(");
+      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
+      builder.append(",");
+      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+      builder.append(")");
 
-		} else if (parser instanceof RandomParser) {
+    } else if (parser instanceof RandomParser) {
 
-			builder.append("calculateContext.nextRandom()");
+      builder.append("calculateContext.nextRandom()");
 
-		} else if (parser instanceof ToNumParser) {
+    } else if (parser instanceof ToNumParser) {
 
-			Token leftString = token.filteredChildren.get(0);
-			Token rightFloatDefault = token.filteredChildren.get(1);
+      Token leftString = token.filteredChildren.get(0);
+      Token rightFloatDefault = token.filteredChildren.get(1);
 
-			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.toNum(");
-			builder.append(StringClauseBuilder.SINGLETON.build(leftString , tinyExpressionTokens).toString());
-			builder.append(",");
-			build(builder, rightFloatDefault , tinyExpressionTokens);
-			builder.append("f)");
+      builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.toNum(");
+      builder.append(StringClauseBuilder.SINGLETON.build(leftString , tinyExpressionTokens).toString());
+      builder.append(",");
+      build(builder, rightFloatDefault , tinyExpressionTokens);
+      builder.append("f)");
 
-		} else if (parser instanceof StringLengthParser) {
+    } else if (parser instanceof StringLengthParser) {
 
-			Token stringExpressionToken = token.filteredChildren.get(0);//3rd children is inner
-			String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken , tinyExpressionTokens).toString();
-			if(string == null || string.isEmpty()) {
-				string ="\"\"";
-			}
-			builder
-				.append(string)
-				.append(".length()");
+      Token stringExpressionToken = token.filteredChildren.get(0);//3rd children is inner
+      String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken , tinyExpressionTokens).toString();
+      if(string == null || string.isEmpty()) {
+        string ="\"\"";
+      }
+      builder
+        .append(string)
+        .append(".length()");
 
-		}else if (parser instanceof SideEffectExpressionParser) {
-			
-			SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-			
-//		} else if (parser instanceof StringIndexOfParser) {
+    }else if (parser instanceof SideEffectExpressionParser) {
+      
+      SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+      
+//    } else if (parser instanceof StringIndexOfParser) {
 //
-//			return StringIndexOfOperator.SINGLETON.evaluate(calculateContext, token);
-		}else {
-			throw new IllegalArgumentException();
-		}
+//      return StringIndexOfOperator.SINGLETON.evaluate(calculateContext, token);
+    }else if (parser instanceof MethodInvocationParser) {
+      
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+    }else {
+      throw new IllegalArgumentException();
+    }
+  }
 
-	}
+  void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
+      TinyExpressionTokens tinyExpressionTokens) {
 
-	void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
-	    TinyExpressionTokens tinyExpressionTokens) {
+    builder.append("(");
 
-		builder.append("(");
+    build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+    builder.append(operator);
+    build(builder, token.filteredChildren.get(2) , tinyExpressionTokens);
 
-		build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
-		builder.append(operator);
-		build(builder, token.filteredChildren.get(2) , tinyExpressionTokens);
-
-		builder.append(")");
-	}
+    builder.append(")");
+  }
 }

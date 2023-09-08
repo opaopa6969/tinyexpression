@@ -32,14 +32,14 @@ public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedL
             )
           ):
           new Parsers(
-              Parser.get(StrictTypedStringTermParser.class),
-              new ZeroOrMore(
-                new Choice(
-                  Parser.get(StringPlusParser.class),
-                  Parser.get(StrictTypedStringTermParser.class)
-                )
+            Parser.get(StrictTypedStringTermParser.class),
+            new ZeroOrMore(
+              new Choice(
+                Parser.get(StringPlusParser.class),
+                Parser.get(StrictTypedStringTermParser.class)
               )
-            );
+            )
+          );
 
   }
 

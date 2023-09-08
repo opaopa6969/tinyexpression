@@ -1,13 +1,13 @@
 package org.unlaxer.tinyexpression;
-import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.Token;
 
-public interface TokenBaseOperator<C,T>  extends CalculatorOperator<C, TinyExpressionTokens, T>{
+public interface TokenBaseOperator<C,T>  extends CalculatorOperator<C, Token, T> {
 
-	public T evaluate(C context , TinyExpressionTokens token);
-	
-	@Override
-	public default T apply(C context , TinyExpressionTokens token) {
-		return evaluate(context, token);
-	}
-	
+  public T evaluate(C context , Token token);
+
+  @Override
+  public default T apply(C context , Token token) {
+    return evaluate(context, token);
+  }
+
 }

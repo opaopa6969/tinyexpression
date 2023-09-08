@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
 
-public class BooleanTypeHintParser extends LazyChoice {
+public class BooleanTypeHintParser extends LazyChoice implements TypeHint{
 
   private static final long serialVersionUID = 212851319466314194L;
 
@@ -22,5 +22,10 @@ public class BooleanTypeHintParser extends LazyChoice {
           new WordParser("Boolean"), //
           new WordParser("boolean")
       );
+  }
+
+  @Override
+  public ExpressionType type() {
+    return ExpressionType.bool;
   }
 }

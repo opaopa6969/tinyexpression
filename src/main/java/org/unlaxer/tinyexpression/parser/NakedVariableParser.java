@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Name;
-import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -32,22 +31,12 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	  return 
       new Parsers(
         Parser.get(DollarParser.class),
-        Parser.get(IdentifierParser.class)
+        Parser.get(IdentifierParser.class).addTag(variableNameTag)
       );
 	}
-	
-	public String getVariableName(Token thisParserParsed) {
-	  
-	  return getVariableNameFromNaked(thisParserParsed);
-	}
-	
-  public static String getVariableNameFromNaked(Token thisParserParsed) {
-    String variableName = thisParserParsed.tokenString.get().substring(1);
-    return variableName; 
-  }
 
   @Override
-  public Optional<VariableType> type() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.empty();
   }
   

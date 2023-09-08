@@ -9,18 +9,18 @@ import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class SideEffectExpressionParameterSuccessor extends JavaStyleDelimitedLazyChain{
+public class ArgumentSuccessorParser extends JavaStyleDelimitedLazyChain{
 
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
         Parser.get(CommaParser.class),
-        Parser.get(SideEffectExpressionParameterChoice.class)
+        Parser.get(ArgumentChoiceParser.class)
     );
   }
   
   @TokenExtractor
   public static Token extractParameter(Token thisParserParsed) {
-    return thisParserParsed.getChildWithParser(SideEffectExpressionParameterChoice.class);
+    return thisParserParsed.getChildWithParser(ArgumentChoiceParser.class);
   }
 }

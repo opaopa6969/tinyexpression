@@ -13,6 +13,8 @@ public class StringLiteralParserTest extends StringContentsTest{
 		testAllMatch(stringLiteralParser, d("opa"));
 		testAllMatch(stringLiteralParser, d("'opa'"));
 		testAllMatch(stringLiteralParser, d("\\\"opa\\\""));
+    testAllMatch(stringLiteralParser, d("\'opa\'"));
+    testAllMatch(stringLiteralParser, d("\\'opa\\'"));
 	}
 
 	@Test

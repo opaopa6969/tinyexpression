@@ -16,6 +16,7 @@ public class BooleanCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	
 	public BooleanCaseFactorParser() {
 		super();
+		addTag(ExpressionTags.matchCaseFactor.tag());
 	}
 
 	@Override

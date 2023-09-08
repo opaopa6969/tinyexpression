@@ -14,6 +14,7 @@ public class StringCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 
 	public StringCaseExpressionParser() {
 		super();
+    addTag(ExpressionTags.matchCase.tag());
 	}
 	
 

@@ -46,24 +46,29 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     Parsers parsers = new Parsers(
       Parser.get(IfFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),
-      Parser.get(BooleanExpressionParser.class),//2
+      Parser.newInstance(BooleanExpressionParser.class).addTag(ExpressionTags.condition.tag()),//2
       Parser.get(RightParenthesisParser.class),
       Parser.get(LeftCurlyBraceParser.class),
    // if(condition){$variable}else{$variable}だった時にどちらかの変数が型指定をする事を求める
       new Choice(
           new Chain(
-              Parser.newInstance(strictTypedReturning()),
+              Parser.newInstance(strictTypedReturning())
+                .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
               Parser.get(RightCurlyBraceParser.class),
               Parser.get(()->new WordParser("else")),
               Parser.get(LeftCurlyBraceParser.class),
-              Parser.get(nonStrictTypedReturning())
+              Parser.newInstance(nonStrictTypedReturning())
+                .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
           ),
           new Chain(
-              Parser.get(nonStrictTypedReturning()),
+              Parser.newInstance(nonStrictTypedReturning())
+                .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
               Parser.get(RightCurlyBraceParser.class),
               Parser.get(()->new WordParser("else")),
               Parser.get(LeftCurlyBraceParser.class),
               Parser.newInstance(strictTypedReturning())
+                .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
+
           )
       ),
       Parser.get(RightCurlyBraceParser.class)

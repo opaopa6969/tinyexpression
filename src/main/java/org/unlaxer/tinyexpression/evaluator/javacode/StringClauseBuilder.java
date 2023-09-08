@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
@@ -16,6 +17,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
@@ -162,16 +164,20 @@ public class StringClauseBuilder {
 		  
       List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
       
-			String variableName = ((VariableParser)parser).getVariableName(token);
+      TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+      VariableParser variableParser = typed.getParser();
+      
+      
+			String variableName = variableParser.getVariableName(typed);
 			
 			SimpleBuilder builder = new SimpleBuilder();
 			
 	     boolean isMatch =false;
 	     for (Token declarationTtoken : variableDeclarationsTokens) {
 	       
-	       Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
+	       TypedToken<?  extends VariableParser> nakedVariableToken = declarationTtoken.getChildWithParserTyped(NakedVariableParser.class);
 	       
-	       VariableParser variabvleParser = nakedVariableToken.getParser(VariableParser.class);
+	       VariableParser variabvleParser = nakedVariableToken.getParser();
 	       String _variableName = variabvleParser.getVariableName(nakedVariableToken);
 	       
 	       if(_variableName.equals(variableName)) {
@@ -294,6 +300,13 @@ public class StringClauseBuilder {
       builder.decTab();
       return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
 
+		}else if(parser instanceof MethodInvocationParser) {
+		  
+      SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+		  
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+
+      return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
 		}
 
 		throw new IllegalArgumentException();

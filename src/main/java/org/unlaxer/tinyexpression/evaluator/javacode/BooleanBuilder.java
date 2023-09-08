@@ -4,28 +4,29 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
-import org.unlaxer.tinyexpression.parser.AbstractBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.EqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
-import org.unlaxer.tinyexpression.parser.GreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.GreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
-import org.unlaxer.tinyexpression.parser.LessExpressionParser;
-import org.unlaxer.tinyexpression.parser.LessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.NotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -33,6 +34,7 @@ import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class BooleanBuilder implements TokenCodeBuilder {
 	
@@ -74,10 +76,6 @@ public class BooleanBuilder implements TokenCodeBuilder {
 	    TinyExpressionTokens tinyExpressionTokens) {
 		Parser parser = token.parser;
 		
-		if(parser instanceof AbstractBooleanExpressionParser) {
-		  System.out.println(parser);
-		}
-		
 		if(parser instanceof NotBooleanExpressionParser) {
 			
 			builder.append("(false ==(");
@@ -107,8 +105,8 @@ public class BooleanBuilder implements TokenCodeBuilder {
 					.append(toHour).append("f)");
 					
 		}else if(parser instanceof BooleanVariableParser || parser instanceof NakedVariableParser) {
-		  
-      VariableBuilder.build(this, builder, token, tinyExpressionTokens, BooleanSetterParser.class,
+		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+      VariableBuilder.build(this, builder, typed, tinyExpressionTokens, BooleanSetterParser.class,
           "false","getBoolean","setAndGet");
 //			String variableName = BooleanVariableParser.getVariableName(token);
 //			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
@@ -127,12 +125,12 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			builder.append("false");
 			
 		}else if(
-			parser instanceof EqualEqualExpressionParser ||
-			parser instanceof NotEqualExpressionParser ||
-			parser instanceof GreaterOrEqualExpressionParser ||
-			parser instanceof LessOrEqualExpressionParser ||
-			parser instanceof GreaterExpressionParser ||
-			parser instanceof LessExpressionParser
+			parser instanceof NumberEqualEqualExpressionParser ||
+			parser instanceof NumberNotEqualExpressionParser ||
+			parser instanceof NumberGreaterOrEqualExpressionParser ||
+			parser instanceof NumberLessOrEqualExpressionParser ||
+			parser instanceof NumberGreaterExpressionParser ||
+			parser instanceof NumberLessExpressionParser
 		){
 			BinaryConditionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			
@@ -201,8 +199,13 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
       builder.append(")");
       builder.decTab();
+      
+    }else if (parser instanceof MethodInvocationParser) {
+      
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
 
 		}else {
+		  //ここでBooleanExpressionParserでエラーが発生するのはOperatorOperandTreeCreatorできちんとapplyされてない時
 		  throw new IllegalArgumentException();
 		}
 	}

@@ -2,9 +2,17 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.Token.ChildrenKind;
+import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
+import org.unlaxer.context.ParseContext;
+import org.unlaxer.parser.AfterParse;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.RootParserIndicator;
@@ -15,7 +23,8 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
-public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator{
+public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , 
+  AfterParse{
 
   @Override
   public List<Parser> getLazyParsers() {
@@ -23,8 +32,38 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
         Parser.get(ImportsParser.class),
         Parser.get(VariableDeclarationsParser.class),
         Parser.get(AnnotationsParser.class),
-        Parser.get(NumberExpressionParser.class)
+        new org.unlaxer.parser.combinator.Optional(
+            Parser.get(NumberExpressionParser.class)
+        ),
+        Parser.get(MethodsParser.class)
     );
+  }
+  
+  
+  
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    Parsed parsed = super.parse(parseContext, tokenKind, invertMatch);
+    return afterParse(parseContext, parsed, tokenKind, invertMatch);
+  }
+
+//  @Override
+//  public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
+//    return parsed;
+//  }
+
+  @Override
+  public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
+    if(parsed.isSucceeded()) {
+     Token rootToken = parsed.getRootToken(true);
+     Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(NumberExpressionParser.class));
+     Optional<Token> child2 = rootToken.getChildAsOptional(TokenPredicators.parsers(MethodsParser.class));
+     if(child1.isEmpty() && child2.isEmpty()) {
+       parsed = parsed.negate().setMessage("specify method or expression");
+       
+     }
+    }
+    return parsed;
   }
   
   /**
@@ -62,9 +101,9 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
 
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static List<Token> extractVariables(Token tinyExpressionToken) {
-    if(false == tinyExpressionToken.parser instanceof TinyExpressionParser) {
-      throw new IllegalArgumentException();
-    }
+    
+    Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
+    
     Optional<Token> childWithParserAsOptional = tinyExpressionToken.getChildWithParserAsOptional(VariableDeclarationsParser.class);
     
     List<Token> variableChildren = childWithParserAsOptional
@@ -74,12 +113,27 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     return variableChildren;
   }
   
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List</*Typed*/Token/*<MethodParser>*/> extractMethods(/*Typed*/Token/*<TinyExpressionParser>*/ tinyExpressionToken) {
+    
+    Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
+    
+    Optional</*Typed*/Token/*<MethodsParser>*/> childWithParserAsOptional = 
+        tinyExpressionToken.getChildWithParserAsOptional/*Typed*/(MethodsParser.class);
+    
+    List</*Typed*/Token/*<MethodParser>*/> methodChildren = childWithParserAsOptional
+      .map(MethodsParser::extractMethods)
+      .orElseGet(List::of);
+
+    return methodChildren;
+  }
+  
   
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static Token extractVariablesToken(Token tinyExpressionToken) {
-    if(false == tinyExpressionToken.parser instanceof TinyExpressionParser) {
-      throw new IllegalArgumentException();
-    }
+    
+    Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
+
     List<Token> variableChildren = extractVariables(tinyExpressionToken);
     Token variables = new Token(TokenKind.consumed, variableChildren, Parser.get(VariableDeclarationsParser.class),0);
     return variables;
@@ -100,5 +154,37 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     Token variables = new Token(TokenKind.consumed, extractAnnotaions, Parser.get(AnnotationsParser.class),0);
     return variables;
   }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractMethodsToken(TypedToken<TinyExpressionParser> tinyExpressionToken) {
+    
+    Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
+    
+    List</*Typed*/Token/*<MethodParser>*/> methodChildren = extractMethods(tinyExpressionToken);
+    /*Typed*/Token/*<MethodsParser>*/ methods = new /*Typed*/Token/*<>*/(TokenKind.consumed, methodChildren, Parser.get(MethodsParser.class),0);
+    return methods;
+  }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Optional<Token> returningTypeHint(Token tinyExpressionToken , String methodName){
+    
+    Parser.checkTokenParsedBySpecifiedParser(tinyExpressionToken , TinyExpressionParser.class);
 
+    Token child = tinyExpressionToken.getChild(TokenPredicators.parsers(MethodsParser.class));
+    List<Token> methods = child.flatten(ScanDirection.Breadth, ChildrenKind.astNodes).stream()
+      .filter(TokenPredicators.parserImplements(MethodParser.class))
+      .collect(Collectors.toList());
+    for (Token token : methods) {
+      TypedToken<MethodParser> methodParserToken = token.typed(MethodParser.class);
+      MethodParser parser = methodParserToken.getParser();
+      String methodNameOfChild = parser.methodName(methodParserToken).getToken().get();
+      if(methodName.equals(methodNameOfChild)) {
+        return Optional.of( token.getChildWithParser(parser.returningParser()));
+      }
+    }
+    return Optional.empty();
+  }
+  
+  
+  
 }

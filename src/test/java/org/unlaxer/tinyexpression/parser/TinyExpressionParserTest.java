@@ -56,7 +56,7 @@ public class TinyExpressionParserTest extends ParserTestBase{
   @Test
   public void testMinimum() {
     
-    setLevel(OutputLevel.detail);
+    setLevel(OutputLevel.mostDetail);
     
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
     
@@ -225,4 +225,93 @@ public class TinyExpressionParserTest extends ParserTestBase{
     String string = TokenPrinter.get(rootToken);
     System.out.println(string);
   }
+  
+  @Test
+  public void testSimpleExpression() {
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .n()
+//      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 1000,")
+      .line("  $age>=60 -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+//      .line("}")
+      ;
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+  
+  @Test
+  public void testMethod() {
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("import org.unlaxer.tinyexpression.Fee#calculate as calculate;")
+      .n()
+      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 1000,")
+      .line("  $age>=60 -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+      .line("}")
+      ;
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+  
+  @Test
+  public void testNoParameterSideEffect() {
+    
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("if($sex=='woman'){")
+      .line("  0 //女性無料")
+      .line("}else{")
+      .line("  external returning as number : Fee#calculate()")
+      .line("}");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+
 }

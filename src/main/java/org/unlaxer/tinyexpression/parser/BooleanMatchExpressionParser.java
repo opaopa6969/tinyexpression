@@ -16,6 +16,7 @@ public class BooleanMatchExpressionParser extends JavaStyleDelimitedLazyChain im
 	
 	public BooleanMatchExpressionParser() {
 		super();
+		addTag(ExpressionTags.matchExpression.tag());
 	}
 	
 	@Override

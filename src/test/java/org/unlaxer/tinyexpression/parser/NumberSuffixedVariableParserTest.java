@@ -1,11 +1,11 @@
 package org.unlaxer.tinyexpression.parser;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
-import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
 import org.unlaxer.listener.OutputLevel;
 
 public class NumberSuffixedVariableParserTest extends ParserTestBase{
@@ -17,7 +17,7 @@ public class NumberSuffixedVariableParserTest extends ParserTestBase{
     var parser = new NumberSuffixedVariableParser();
     TestResult testAllMatch = testAllMatch(parser, "$hoge as number");
     
-    Token rootToken = testAllMatch.parsed.getRootToken();
+    TypedToken<VariableParser> rootToken = testAllMatch.parsed.getRootToken().typed(VariableParser.class);
     String variableName = parser.getVariableName(rootToken);
     
     System.out.println(variableName);

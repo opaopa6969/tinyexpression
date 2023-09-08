@@ -16,6 +16,7 @@ public class NumberCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 
 	public NumberCaseExpressionParser() {
 		super();
+    addTag(ExpressionTags.matchCase.tag());
 	}
 	
 

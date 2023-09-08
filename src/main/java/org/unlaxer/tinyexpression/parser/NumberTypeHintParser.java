@@ -10,7 +10,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
 
-public class NumberTypeHintParser extends LazyChoice {
+public class NumberTypeHintParser extends LazyChoice implements TypeHint{
 
   private static final long serialVersionUID = 411285131946664894L;
 
@@ -35,6 +35,11 @@ public class NumberTypeHintParser extends LazyChoice {
     Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
     List<Token> children = List.of(token);
     return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
+  }
+
+  @Override
+  public ExpressionType type() {
+    return ExpressionType.number;
   }
     
 

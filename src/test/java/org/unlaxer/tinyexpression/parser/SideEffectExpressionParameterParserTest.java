@@ -10,7 +10,7 @@ public class SideEffectExpressionParameterParserTest extends ParserTestBase{
 
   @Test
   public void test() {
-    var parser = new SideEffectExpressionParameterParser();
+    var parser = new ArgumentsParser();
     testAllMatch(parser, "$foo as float , $bar as String , $hoge as boolean");
     testAllMatch(parser, "(float)$foo , (string)$bar , (boolean)$hoge");
     testAllMatch(parser, "(float)$foo , (string)$bar , (boolean)$hoge //@niku niku");

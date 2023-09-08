@@ -11,5 +11,6 @@ public class StrictTypedNumberMatchExpressionParser extends PredicateAnyMatchFor
         TokenPredicators.hasTagInParent(NumberMatchExpressionParser.choiceTag)
           .and(TokenPredicators.hasTag(StrictTyped.get()))         
     );
+    addTag(ExpressionTags.matchExpression.tag());
   }
 }

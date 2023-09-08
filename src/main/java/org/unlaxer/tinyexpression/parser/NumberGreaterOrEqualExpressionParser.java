@@ -8,11 +8,11 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
-public class GreaterOrEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
+public class NumberGreaterOrEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser ,BooleanExpression{
 
 	private static final long serialVersionUID = -7757393839244596676L;
 	
-	public GreaterOrEqualExpressionParser() {
+	public NumberGreaterOrEqualExpressionParser() {
 		super();
 	}
 	

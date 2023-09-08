@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Name;
-import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -46,12 +45,8 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
       );
   }
   
-  public String getVariableName(Token thisParserParsed) {
-    return NakedVariableParser.getVariableNameFromNaked(thisParserParsed);
-  }
-
   @Override
-  public Optional<VariableType> type() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.empty();
   }
   

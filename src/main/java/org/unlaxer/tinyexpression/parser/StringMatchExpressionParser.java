@@ -16,6 +16,7 @@ public class StringMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	
 	public StringMatchExpressionParser() {
 		super();
+		addTag(ExpressionTags.matchExpression.tag());
 	}
 	
 	@Override

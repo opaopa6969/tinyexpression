@@ -13,13 +13,9 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberDefaultCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.ExpressionTags;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.StrictTypedNumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.RightCurlyBraceParser;
 
 public class Formatter {
@@ -58,7 +54,8 @@ public class Formatter {
     
     List<Token> filteredChildren = token.filteredChildren;
     for (Token child : filteredChildren) {
-      if(child.getParser() instanceof NumberExpressionParser) {
+//      if(child.getParser() instanceof NumberExpressionParser) {
+      if(child.getParser().hasTag(ExpressionTags.returning.tag())) {
 //        formatterContext.n();
         formatterContext.increment();
         render(formatterContext, child);
@@ -74,7 +71,8 @@ public class Formatter {
   public static void renderCaseExpression(FormatterContext context , Token token) {
     
     List<Token> filteredChildren = token.filteredChildren.stream()
-        .filter(child->child.getParser() instanceof NumberCaseFactorParser)
+//      .filter(child->child.getParser() instanceof NumberCaseFactorParser)
+        .filter(child->child.getParser().hasTag(ExpressionTags.matchCaseFactor.tag()))
         .collect(Collectors.toList());
     Iterator<Token> iterator = filteredChildren.iterator();
     while (iterator.hasNext()) {
@@ -94,7 +92,8 @@ public class Formatter {
     
     List<Token> filteredChildren = token.filteredChildren;
     for (Token child : filteredChildren) {
-      if(child.getParser() instanceof NumberCaseExpressionParser) {
+//    if(child.getParser() instanceof NumberCaseExpressionParser) {
+      if(child.getParser().hasTag(ExpressionTags.matchCase.tag())) {
         formatterContext.increment();
       }
       if(child.getParser() instanceof RightCurlyBraceParser) {
@@ -107,23 +106,27 @@ public class Formatter {
   
   public static void render(FormatterContext context , Token token) {
     
-    if(token.getParser() instanceof IfExpressionParser) {
+    Parser parser = token.getParser();
+    
+    if(parser instanceof IfExpressionParser) {
       renderIf(context, token);
       return;
     }
     
-    if(token.getParser() instanceof StrictTypedNumberMatchExpressionParser) {
+    if(parser.hasTag(ExpressionTags.matchExpression.tag())) {
       renderMatch(context, token);
       return;
     }
     
-    if(token.getParser() instanceof NumberCaseExpressionParser) {
+//    if(parser instanceof NumberCaseExpressionParser) {
+    if(parser.hasTag(ExpressionTags.matchCase.tag())) {
+
       renderCaseExpression(context, token);
       return;
     }
     
     //FIXME! DefaultCaseFactorParser starts ",", to change starts default->
-    if(token.getParser() instanceof NumberDefaultCaseFactorParser) {
+    if(parser.hasTag(ExpressionTags.matchDefaultFactor.tag())) {
       context
         .append("default->");
         render(context, token.filteredChildren.get(3));

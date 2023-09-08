@@ -1,13 +1,14 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 
+import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 
 public class DummyCalculator2 implements TokenBaseOperator<CalculationContext, Float> {
 
 	@Override
-	public Float evaluate(CalculationContext calculateContext, TinyExpressionTokens token) {
+	public Float evaluate(CalculationContext calculateContext, Token token) {
 		
 		java.util.Optional<WhiteListSetter> function1 = calculateContext.getObject(
 				org.unlaxer.tinyexpression.evaluator.javacode.WhiteListSetter.class);

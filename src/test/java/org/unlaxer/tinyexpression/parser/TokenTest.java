@@ -65,7 +65,7 @@ public abstract class TokenTest {
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		
 		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator(formula).calculateReturningDetails(context);
+		CalculateResult result = calculator(formula).calculate(context,formula);
 		Token token = result.tokenAst.get();
 		EnclosureDirection outer = EnclosureDirection.Outer;
 		EnclosureDirection inner = EnclosureDirection.Inner;
@@ -126,7 +126,7 @@ public abstract class TokenTest {
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		
 		CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator(formula).calculateReturningDetails(context);
+		CalculateResult result = calculator(formula).calculate(context,formula);
 		Token token = result.tokenAst.get();
 		EnclosureDirection outer = EnclosureDirection.Outer;
 		

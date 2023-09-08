@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.NumberSetterParser;
-import org.unlaxer.tinyexpression.parser.VariableType;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
@@ -30,7 +30,7 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.number);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.number);
   }
 }

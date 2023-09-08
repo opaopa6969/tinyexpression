@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
-import org.unlaxer.tinyexpression.parser.VariableType;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class BooleanVariableDeclarationParser extends AbstractVariableDeclarationParser {
 
@@ -30,8 +30,8 @@ public class BooleanVariableDeclarationParser extends AbstractVariableDeclaratio
   }
 
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.bool);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionType.bool);
   }
 
 }

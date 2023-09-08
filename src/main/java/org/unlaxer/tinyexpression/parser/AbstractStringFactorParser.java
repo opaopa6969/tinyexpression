@@ -34,6 +34,9 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
     parsers.add(TrimParser.class);
     parsers.add(ToUpperCaseParser.class);
     parsers.add(ToLowerCaseParser.class);
+    if(MethodInvocationParser.enabled3) {
+      parsers.add(MethodInvocationParser.class);
+    }
     return parsers;
   }
 }

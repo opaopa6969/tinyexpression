@@ -6,13 +6,12 @@ import java.util.Optional;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
-public class BooleanVariableParser extends LazyChoice implements VariableParser , BooleanExpression{
+public class BooleanVariableParser extends LazyChoice implements RootVariableParser , BooleanExpression{
 
   private static final long serialVersionUID = -60484510350410L;
   
@@ -27,25 +26,15 @@ public class BooleanVariableParser extends LazyChoice implements VariableParser 
   public List<Parser> getLazyParsers() {
     return 
       new Parsers(//
+          Parser.get(BooleanVariableMatchedWithVariableDeclarationParser.class),
           Parser.get(BooleanPrefixedVariableParser.class), 
-          Parser.get(BooleanSuffixedVariableParser.class),
-          Parser.get(BooleanVariableMatchedWithVariableDeclarationParser.class)
+          Parser.get(BooleanSuffixedVariableParser.class)
       );
   }
   
-  public String getVariableName(Token thisParserParsed) {
-    Token choiced = ChoiceInterface.choiced(thisParserParsed);
-    if(choiced.parser instanceof BooleanPrefixedVariableParser) {
-      return BooleanPrefixedVariableParser.get().getVariableName(choiced);
-    }else if(choiced.parser instanceof BooleanSuffixedVariableParser) {
-      return BooleanSuffixedVariableParser.get(). getVariableName(choiced);
-    }
-    throw new IllegalArgumentException();
-  }
-
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.bool);
+  public Optional<ExpressionType> typeAsOptional() {
+    return Optional.of(ExpressionType.bool);
   }
   
   public static class BooleanVariableMatchedWithVariableDeclarationParser extends LazyChain implements BooleanExpression {
@@ -68,12 +57,24 @@ public class BooleanVariableParser extends LazyChoice implements VariableParser 
       return token;
     }
 
-    public String getVariableName(Token thisParserParsed) {
-      return NakedVariableParser.getVariableNameFromNaked(getVariableNameToken(thisParserParsed));
-    }
   }
   
   public static BooleanVariableParser get() {
     return SINGLETON.get();
+  }
+
+  @Override
+  public Class<? extends RootVariableParser> rootOfTypedVariableParser() {
+    return BooleanVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends VariableParser> oneOfTypedVariableParser() {
+    return BooleanPrefixedVariableParser.class;
+  }
+
+  @Override
+  public Class<? extends TypeHintVariableParser> typeHintVariableParser() {
+    return BooleanTypeHintPrefixParser.class;
   }
 }

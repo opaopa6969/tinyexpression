@@ -46,7 +46,9 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
             Parser.get(JavaMethodParser.class).addTag(classMethodOrMethod)
         ),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(SideEffectExpressionParameterParser.class),//4
+        new Optional(
+            Parser.get(ArgumentsParser.class)
+        ),
         Parser.get(RightParenthesisParser.class)
       );
 	}
@@ -77,14 +79,19 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	
   @TokenExtractor
 	public static Token getParametersClause(Token thisParserParsed) {
-    return thisParserParsed.getChildWithParser(SideEffectExpressionParameterParser.class); //4
+    return thisParserParsed.getChildWithParser(ArgumentsParser.class); //4
 	}
   
   @TokenExtractor
 	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
     
     Token returning = token.getChildFromAstNodes(0);
-    Returning returnParser = (Returning) ChoiceInterface.choiced(token).parser;
+    Parser parser = ChoiceInterface.choiced(token).parser;
+    if(parser instanceof ReturningParser) {
+      parser = ChoiceInterface.choiced(returning).parser;
+    }
+    
+    Returning returnParser =  (Returning) parser;
     
     Class<?> returningType = returnParser.returningType(); 
         
@@ -95,10 +102,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 		
 		Token parametersClause = getParametersClause(token);
 		
-		SideEffectExpressionParameterParser sideEffectExpressionParameterParser = 
-				Parser.get(SideEffectExpressionParameterParser.class);
-		
-		List<Token> parameterTokens = sideEffectExpressionParameterParser.parameterTokens(parametersClause , tinyExpressionTokens);
+		List<Token> parameterTokens = ArgumentsParser.parameterTokens(extract.getIdentifier(), parametersClause , tinyExpressionTokens);
 		
 		return new MethodAndParameters(returning , returningType, extract, parameterTokens);
 	}

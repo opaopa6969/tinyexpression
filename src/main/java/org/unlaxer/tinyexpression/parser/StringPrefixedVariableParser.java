@@ -31,13 +31,9 @@ public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
     return token;
   }
 
-  public String getVariableName(Token thisParserParsed) {
-    return NakedVariableParser.getVariableNameFromNaked(getVariableNameToken(thisParserParsed));
-  }
-
   @Override
-  public Optional<VariableType> type() {
-    return Optional.of(VariableType.string);
+  public Optional<ExpressionType> typeAsOptional() {
+    return Optional.of(ExpressionType.string);
   }
 
 }

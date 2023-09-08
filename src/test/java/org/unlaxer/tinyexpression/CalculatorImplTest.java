@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
@@ -19,7 +20,6 @@ import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
-import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
@@ -246,7 +246,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	    
 	    Calculator<T> calculator = preConstructedCalculator(formula);
 	    testAllMatch(calculator.getParser(), formula);
-	    CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
+	    CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 	    BigDecimal x = calculateResult.answer.get();
 	    System.out.format(" %s = %s \n" , formula , x.toString());
@@ -282,7 +282,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		
 		Calculator<T> calculator = preConstructedCalculator(formula);
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
+		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 		if(calculateResult.errors.raisedException.isPresent()) {
 		  throw new CalculationException(calculateResult.errors.raisedException.get());
@@ -307,7 +307,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     
     Calculator<T> calculator = preConstructedCalculator(formula);
     testAllMatch(calculator.getParser(), formula);
-    CalculateResult calculateResult = calculator.calculateReturningDetails(calculateContext);
+    CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
     calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
     BigDecimal x = calculateResult.answer.get();
     System.out.format(" %s = %s \n" , formula , x.toString());
@@ -341,7 +341,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculateReturningDetails(context);
+		CalculateResult result = calculator.calculate(context,formula);
 		BigDecimal answer = result.answer.get();
 		assertEquals(new BigDecimal("2"), answer);
 		assertFalse(result.success);
@@ -357,7 +357,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculateReturningDetails(context);
+		CalculateResult result = calculator.calculate(context,formula);
 		assertFalse(result.answer.isPresent());
 		assertFalse(result.success);
 		assertEquals("", result.parseContext.getConsumed(TokenKind.consumed));
@@ -375,7 +375,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculateReturningDetails(context);
+		CalculateResult result = calculator.calculate(context,formula);
 		assertTrue(result.answer.isPresent());
 		assertTrue(result.success);
 		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed));
@@ -821,6 +821,9 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
         "external returning as number : org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
         new BigDecimal("6969")));
 
+    assertTrue(calc(context,
+        "external org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod($isMale as boolean)",
+        new BigDecimal("6969")));
   }
   
   @Test
@@ -902,7 +905,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     ResultAndMatch calcWithResult = calcWithResult(context, formula, new BigDecimal("0"));
     
     calcWithResult.calculateResult.operatorOperandTreeToken
-      .map(TinyExpressionTokens::getTinyExpressionToken)
+//      .map(TinyExpressionTokens::getTinyExpressionToken)
       .map(TokenPrinter::get)
       .ifPresent(System.out::println);;
     
@@ -1198,5 +1201,89 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
       assertTrue(calc(context,simpleBuilder.toString(),new BigDecimal("-1000")));
     }
     
+  }
+  
+  @Test
+  @Ignore("型未解決型をleafとするBNFを追加してparserを作る。型解決・型推論のフェーズで色々するようにする。とりあえずは他の修正部分を修正して公開する必要がありignoreとした")
+  //FIXME!
+  public void testMultiMethod() {
+    setLevel(OutputLevel.mostDetail);
+    
+    CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set(new Fee());
+    context.set("age", 18);
+    context.set("sex", "man");
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+//      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 500,")
+      .line("  $age>=60 -> 700,")
+      .line("  default  -> call feeBySex($sex)")
+      .line(" }")
+//      .line("}")
+      .n()
+      .line("float feeBySex($sex as string){")
+      .line(" match{")
+      // $sexはformalParameterで型指定がされているので型解決ができる。
+      // またcall discountingSttringの戻り値でも型推論ができる
+//       testケースを 'man' == call とか $sex stringとか(String)$sexとか作る。
+      .line("  $sex==call discountSexString() & call doDiscountBySex() -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+      .line("}")
+      .n()
+      .line("String discountSexString(){")
+      .line(" 'woman'")
+      .line("}")
+      .n()
+      .line("boolean doDiscountBySex(){")
+      .line(" true")
+      .line("}")
+      ;
+    
+    
+    String string = simpleBuilder.toString();
+    
+    System.out.println(string);
+    assertTrue(calc(context,string,new BigDecimal("1800")));
+  }
+  
+  
+  public static void main(String[] args) {
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+//      .line("float main(){")
+      .line(" match{")
+      .line("  $age<18  -> 500,")
+      .line("  $age>=60 -> 700,")
+      .line("  default  -> call feeBySex($sex)")
+      .line(" }")
+//      .line("}")
+      .n()
+      .line("float feeBySex($sex as string){")
+      .line(" match{")
+      // $sexはformalParameterで型指定がされているので型解決ができる。
+      // またcall discountingSttringの戻り値でも型推論ができる
+//       testケースを 'man' == call とか $sex stringとか(String)$sexとか作る。
+      .line("  $sex==call discountSexString() & call doDiscountBySex() -> 1000,")
+      .line("  default  -> 1800")
+      .line(" }")
+      .line("}")
+      .n()
+      .line("String discountSexString(){")
+      .line(" 'woman'")
+      .line("}")
+      .n()
+      .line("boolean doDiscountBySex(){")
+      .line(" true")
+      .line("}")
+      ;
+    
+    System.out.println(simpleBuilder.toString());
+
   }
 }

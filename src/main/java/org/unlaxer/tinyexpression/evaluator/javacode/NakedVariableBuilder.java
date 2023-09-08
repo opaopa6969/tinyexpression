@@ -1,7 +1,8 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.TypedToken;
+import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class NakedVariableBuilder implements TokenCodeBuilder{
 
@@ -11,9 +12,9 @@ public class NakedVariableBuilder implements TokenCodeBuilder{
   public void build(SimpleJavaCodeBuilder builder, Token token ,
       TinyExpressionTokens tinyExpressionTokens) {
     
-    String variableName = NakedVariableParser.get().getVariableName(token);
+    TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+    VariableParser parser = typed.getParser();
+    String variableName = parser.getVariableName(typed);
     builder.append("calculateContext.getFromNumberOrStringOrBoolean(").w(variableName).append(")");
-    
-    
   }
 }
