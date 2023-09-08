@@ -23,4 +23,14 @@ public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleD
         )
     );
   }
+  
+  
+  public static class Tuple{
+    
+    public static class TupleElement{
+      
+      ExpressionType expressionType;
+      
+    }
+  }
 }

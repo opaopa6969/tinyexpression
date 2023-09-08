@@ -3,9 +3,9 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.Tag;
 
 public enum ExpressionType{
-  number("float"),
+  number("Float"),
   string("String"),
-  bool("boolean"),
+  bool("Boolean"),
   tuple("Tuple"),
   list("List"),
   map("Map")
@@ -49,5 +49,11 @@ public enum ExpressionType{
   
   public String javaType() {
     return javaType;
+  }
+  
+  public boolean isCollection() {
+    
+    return this == map || this == list || this == tuple;
+    
   }
 }
