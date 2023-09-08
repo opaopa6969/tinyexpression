@@ -5,7 +5,10 @@ import org.unlaxer.Tag;
 public enum ExpressionType{
   number("float"),
   string("String"),
-  bool("boolean")
+  bool("boolean"),
+  tuple("Tuple"),
+  list("List"),
+  map("Map")
   ;
   final Tag tag;
   final String javaType;
@@ -30,6 +33,18 @@ public enum ExpressionType{
   
   public boolean isString() {
     return this == string;
+  }
+  
+  public boolean isTuple() {
+    return this == tuple;
+  }
+  
+  public boolean isList() {
+    return this == list;
+  }
+  
+  public boolean isMap() {
+    return this == map;
   }
   
   public String javaType() {
