@@ -8,6 +8,7 @@ import org.unlaxer.TestResult;
 import org.unlaxer.TypedToken;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.string.StringPrefixedVariableParser;
 
 public class StringPrefixedVariableParserTest extends ParserTestBase{
 

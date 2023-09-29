@@ -11,10 +11,10 @@ import org.unlaxer.TokenEnclosureUtil;
 import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberFactorParser;
+import org.unlaxer.tinyexpression.parser.number.NumberTermParser;
 import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.util.StringUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{

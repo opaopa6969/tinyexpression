@@ -4,6 +4,7 @@ import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
+import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
 
 public class NumberExpressionParserTest extends ParserTestBase{
 

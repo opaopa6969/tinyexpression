@@ -21,8 +21,8 @@ import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
-import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
+import org.unlaxer.tinyexpression.parser.number.NumberIfExpressionParser;
 
 import net.arnx.jsonic.JSON;
 

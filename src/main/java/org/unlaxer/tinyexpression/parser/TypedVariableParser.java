@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.bool.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.number.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.string.StringVariableParser;
 
 public interface TypedVariableParser extends VariableParser{
   

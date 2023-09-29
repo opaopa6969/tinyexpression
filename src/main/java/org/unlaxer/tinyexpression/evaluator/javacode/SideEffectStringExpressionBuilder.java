@@ -7,11 +7,11 @@ import java.util.function.Supplier;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.SideEffectStringExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectStringExpressionParser.MethodAndParameters;
-import org.unlaxer.tinyexpression.parser.StringExpression;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
+import org.unlaxer.tinyexpression.parser.string.StringExpression;
 
 public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 

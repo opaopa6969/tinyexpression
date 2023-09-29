@@ -5,11 +5,11 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
-import org.unlaxer.tinyexpression.parser.StringExpression;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
+import org.unlaxer.tinyexpression.parser.string.StringExpression;
 
 public class ParametersBuilder  {
 

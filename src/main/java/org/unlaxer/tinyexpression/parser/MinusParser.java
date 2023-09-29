@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.elementary.SingleCharacterParser;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
 
 public class MinusParser extends SingleCharacterParser implements NumberExpression{
 	

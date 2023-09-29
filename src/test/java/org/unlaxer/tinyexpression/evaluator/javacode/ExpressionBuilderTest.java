@@ -9,8 +9,8 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
 
 public class ExpressionBuilderTest {
 

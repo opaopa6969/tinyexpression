@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.string.StrictTypedStringMatchExpressionParser;
 
 public class StringMatchExpressionParserTest extends ParserTestBase{
 

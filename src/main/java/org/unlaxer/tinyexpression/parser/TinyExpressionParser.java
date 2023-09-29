@@ -19,7 +19,7 @@ import org.unlaxer.parser.RootParserIndicator;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportsParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
+import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
@@ -35,6 +35,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
         new org.unlaxer.parser.combinator.Optional(
             Parser.get(NumberExpressionParser.class)
         ),
+//        Parser.get(ExpressionsParser.class),
         Parser.get(MethodsParser.class)
     );
   }

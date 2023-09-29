@@ -13,19 +13,8 @@ import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberCaseExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberExpression;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberParser;
-import org.unlaxer.tinyexpression.parser.NumberSetterParser;
-import org.unlaxer.tinyexpression.parser.NumberTermParser;
-import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
@@ -35,6 +24,17 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.parser.number.NumberCaseExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
+import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberFactorParser;
+import org.unlaxer.tinyexpression.parser.number.NumberIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberParser;
+import org.unlaxer.tinyexpression.parser.number.NumberSetterParser;
+import org.unlaxer.tinyexpression.parser.number.NumberTermParser;
+import org.unlaxer.tinyexpression.parser.number.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.string.StringLengthParser;
 
 public class NumberExpressionBuilder implements TokenCodeBuilder {
 

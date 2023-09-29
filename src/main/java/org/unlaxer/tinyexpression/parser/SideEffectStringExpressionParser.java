@@ -10,7 +10,10 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
+import org.unlaxer.tinyexpression.parser.string.StringExpression;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChain

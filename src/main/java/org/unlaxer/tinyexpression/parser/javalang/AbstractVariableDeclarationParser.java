@@ -13,6 +13,7 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
 import org.unlaxer.tinyexpression.parser.DescriptionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.VariableDeclaration;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 

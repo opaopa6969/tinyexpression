@@ -13,8 +13,13 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.bool.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
+import org.unlaxer.tinyexpression.parser.number.NumberExpression;
+import org.unlaxer.tinyexpression.parser.number.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.string.StringExpression;
+import org.unlaxer.tinyexpression.parser.string.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class ArgumentsParser extends JavaStyleDelimitedLazyChain {

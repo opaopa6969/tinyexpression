@@ -6,6 +6,7 @@ import org.unlaxer.TestResult;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.bool.BooleanSideEffectExpressionParser;
 
 
 public class SideEffectBooleanExpressionParserTest extends ParserTestBase{

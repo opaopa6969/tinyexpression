@@ -7,6 +7,7 @@ import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
 import org.unlaxer.TypedToken;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.number.NumberPrefixedVariableParser;
 
 public class NumberPrefixedVariableParserTest extends ParserTestBase{
 

@@ -3,6 +3,9 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.NakedVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.number.NumberVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.string.StringVariableDeclarationParser;
 
 public class StringVariableDeclarationParserTest extends ParserTestBase{
 

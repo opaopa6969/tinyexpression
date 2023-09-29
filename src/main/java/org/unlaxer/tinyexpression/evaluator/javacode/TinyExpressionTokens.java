@@ -10,9 +10,9 @@ import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
+import org.unlaxer.tinyexpression.parser.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
-import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 
 public class TinyExpressionTokens{
   

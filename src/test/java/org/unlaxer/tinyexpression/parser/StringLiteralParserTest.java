@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.junit.Test;
+import org.unlaxer.tinyexpression.parser.string.StringLiteralParser;
 
 public class StringLiteralParserTest extends StringContentsTest{
 	

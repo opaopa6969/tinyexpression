@@ -8,6 +8,7 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 
 public class CommaSeparatedStringExpressionParser extends JavaStyleDelimitedLazyChain{
 

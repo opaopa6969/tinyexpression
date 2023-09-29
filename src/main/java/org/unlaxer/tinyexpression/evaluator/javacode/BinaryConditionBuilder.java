@@ -1,12 +1,12 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberEqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberGreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberLessOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.number.NumberNotEqualExpressionParser;
 
 public class BinaryConditionBuilder implements TokenCodeBuilder{
 	

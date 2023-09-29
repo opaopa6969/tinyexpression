@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.elementary.IgnoreCaseWordParser;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
 
 public class FalseTokenParser extends IgnoreCaseWordParser implements BooleanExpression{
 

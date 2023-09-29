@@ -8,6 +8,8 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 

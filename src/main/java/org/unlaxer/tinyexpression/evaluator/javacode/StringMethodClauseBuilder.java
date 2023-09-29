@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.StringContainsParser;
-import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
-import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
+import org.unlaxer.tinyexpression.parser.string.StringContainsParser;
+import org.unlaxer.tinyexpression.parser.string.StringEndsWithParser;
+import org.unlaxer.tinyexpression.parser.string.StringStartsWithParser;
 
 public class StringMethodClauseBuilder implements TokenCodeBuilder {
 

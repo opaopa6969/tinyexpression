@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
 
 public class EqualEqualParser extends WordParser implements BooleanExpression{
 
