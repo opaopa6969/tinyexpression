@@ -8,18 +8,21 @@ public class CustomTypeTest {
 
   @Test
   public void test() {
-    CustomType customType = new CustomType(ExpressionType.list,List.of(
-        new CustomType(ExpressionType.tuple,
-            List.of(
-                new CustomType(ExpressionType.string),
-                new CustomType(ExpressionType.number),
-                new CustomType(ExpressionType.bool)
-                )
-            )
-        )    
+    CustomType customType = new CustomType(//
+        ExpressionType.list, //
+        List.of(//
+            new CustomType(//
+                ExpressionType.tuple, //
+                List.of(//
+                    new CustomType(ExpressionType.string), //
+                    new CustomType(ExpressionType.number), //
+                    new CustomType(ExpressionType.bool)//
+                )//
+            )//
+        )//
     );
-    
+
     System.out.println(customType.toString());
   }
-  
+
 }

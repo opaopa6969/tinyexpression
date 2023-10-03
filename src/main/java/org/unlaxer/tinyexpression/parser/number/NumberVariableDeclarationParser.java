@@ -24,6 +24,8 @@ import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationPar
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.string.StringTypeHintParser;
+import org.unlaxer.tinyexpression.parser.tuple.TupleTypeDeclarationParser;
+import org.unlaxer.tinyexpression.parser.tuple.TupleVariableParser;
 
 public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
@@ -195,70 +197,20 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
     }
   }
   
-  public static class TupleTypeHintParser extends  TupleParser{
-  }
-  
   public static class MapTypeHintParser extends  MapParser{
   }
   
   public static class ListTypeHintParser extends  ListParser{
   }
   
-  public static class TupleVariableDeclarationParser extends AbstractVariableDeclarationParser{
-
-    
-
-    @Override
-    public Optional<ExpressionType> type() {
-      return Optional.of(ExpressionType.tuple);
-    }
   
-    @Override
-    public Optional<Parser> setter() {
-      return Optional.of(
-          new org.unlaxer.parser.combinator.Optional(
-              Parser.get(TupleSetterParser.class)
-          )
-      );
-    }
-  
-    @Override
-    public Optional<Parser> typeDeclaration() {
-      return java.util.Optional.of(
-          Parser.newInstance(TupleTypeDeclarationParser.class).addTag(typed, typeTag()));
-    }
-  
-    @Override
-    public Tag typeTag() {
-      return Tag.of(TupleVariableDeclarationParser.class);
-    }
-  
-  }
-  
-  
-  public static class TupleSetterParser extends WhiteSpaceDelimitedLazyChain implements SetterParser{
+  public class TupleExpressionParser extends LazyChoice{
 
     @Override
     public List<Parser> getLazyParsers() {
       return new Parsers(
-          Parser.get(SetWordParser.class),
-          Parser.get(()->new org.unlaxer.parser.combinator.Optional(Parser.get(IfNotExistsParser.class))),
-          Parser.get(()->new Choice(
-              Parser.newInstance(TupleExpressionParser.class)
-            )
-          )
-      );
-    }
-    
-  }
-  
-  public static class TupleExpressionParser extends LazyChoice{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          Parsers.get(ImmediatelyTupleCreationParser.class),
-          Parsers.get()
+          Parser.get(ImmediatelyTupleCreationParser.class),
+          Parser.get(TupleVariableParser.class)
       );
     }
     
