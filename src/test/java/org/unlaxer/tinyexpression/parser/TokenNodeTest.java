@@ -17,7 +17,12 @@ public class TokenNodeTest{
   public void testAstNode() {
     
     var parser =
-        new ZeroOrMore(new org.unlaxer.parser.combinator.Optional(new WordParser("abc")));
+        new ZeroOrMore(
+//            new org.unlaxer.parser.combinator.Optional(
+                new WordParser("abc")
+//            )
+        )
+        ;
     
     StringSource stringSource = new StringSource("abc");
     ParseContext parseContext = new ParseContext(stringSource);
