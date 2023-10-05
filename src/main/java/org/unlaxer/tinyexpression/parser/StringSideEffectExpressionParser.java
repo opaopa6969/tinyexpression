@@ -2,7 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 
-public class StringSideEffectExpressionParser extends SideEffectExpressionParser{
+public class StringSideEffectExpressionParser extends SideEffectExpressionParser implements StringExpression{
 
   @Override
   Parser typedReturningParser() {

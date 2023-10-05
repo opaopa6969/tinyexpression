@@ -21,7 +21,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
-public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
+public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements ExpressionInterface{
   
   private static final long serialVersionUID = 8228933717392969866L;
 	

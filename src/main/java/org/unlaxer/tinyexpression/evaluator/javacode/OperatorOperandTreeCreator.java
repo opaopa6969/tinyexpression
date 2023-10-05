@@ -31,6 +31,7 @@ import org.unlaxer.tinyexpression.parser.BooleanFactorParser;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
+import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
@@ -60,6 +61,7 @@ import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberSetterParser;
+import org.unlaxer.tinyexpression.parser.NumberSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
@@ -89,6 +91,7 @@ import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
+import org.unlaxer.tinyexpression.parser.StringSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
@@ -435,6 +438,10 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 		}else if(parser instanceof MethodInvocationParser) {
 		  
       return extracteMethodInvocation(operator);
+      
+    }else if(parser instanceof SideEffectExpressionParser){
+      
+      return sideEffect(operator.typed(StringSideEffectExpressionParser.class));
 
 		}
 		throw new IllegalArgumentException();
@@ -539,23 +546,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 			
 		}else if(parser instanceof SideEffectExpressionParser){
 		  
-		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
-		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-		  Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
-		  
-		  // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
-//      Token returning = apply(extractReturning(returningClause));
-			
-			return operator.newCreatesOf(
-//			    returning causeをtoken化する。
-//			    ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
-			    returningClause,
-			    SideEffectExpressionParser.getMethodClause(operator),
-			    extractParameters
-			    
-			);
+      return sideEffect(operator.typed(NumberSideEffectExpressionParser.class));
 
-    }else if(parser instanceof MethodInvocationParser){
+		}else if(parser instanceof MethodInvocationParser){
       String path = token.getPath();
       return extracteMethodInvocation(operator);
 
@@ -782,10 +775,35 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     }else if(parser instanceof MethodInvocationParser){
       
       return extracteMethodInvocation(operator);
-		}
+      
+    }else if(parser instanceof SideEffectExpressionParser){
+      
+      return sideEffect(operator.typed(BooleanSideEffectExpressionParser.class));
+    }
 
 		throw new IllegalArgumentException();
 	}
+	
+  public Token sideEffect(TypedToken<? extends SideEffectExpressionParser> token) {
+    
+     Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(token));
+     Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
+     Token returningClause = SideEffectExpressionParser.getReturningClause(token,firstParameter);
+     
+     // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
+//     Token returning = apply(extractReturning(returningClause));
+     
+     return token.newCreatesOf(
+//         returning causeをtoken化する。
+//         ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
+         returningClause,
+         SideEffectExpressionParser.getMethodClause(token),
+         extractParameters
+         
+     );
+	   
+	 }
+
 	
 	Token clearChildren(Token token) {
 		token.filteredChildren.clear();

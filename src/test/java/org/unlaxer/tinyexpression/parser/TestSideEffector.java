@@ -56,6 +56,19 @@ public class TestSideEffector {
     return name.contains("Dr.") ? averageSalary * 2 : averageSalary;
   }
   
-
+  /**
+   * 
+   * @param calculationContext
+   * @param date (yyyy/MM/dd)
+   * @return
+   */
+  public boolean beforeSupecifiedDate(CalculationContext calculationContext, String date) {
+    
+    return true;
+  }
+  
+  public float getAge(CalculationContext calculationContext, String date) {
+    return 0;
+  }
 
 }

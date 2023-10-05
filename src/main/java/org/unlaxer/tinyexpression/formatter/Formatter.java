@@ -13,10 +13,14 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.AndParser;
+import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.ExpressionTags;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.OrParser;
 import org.unlaxer.tinyexpression.parser.RightCurlyBraceParser;
+import org.unlaxer.tinyexpression.parser.XorParser;
 
 public class Formatter {
   
@@ -68,6 +72,28 @@ public class Formatter {
     context.append(formatterContext.toString());
   }
   
+  public static void renderCondition(FormatterContext context , Token token) {
+    
+    FormatterContext formatterContext = new FormatterContext(context.startPosition());
+    
+    List<Token> filteredChildren = token.filteredChildren;
+    boolean existsMultiCondition = false;
+    for (Token child : filteredChildren) {
+      Parser parser = child.getParser();
+      if(parser instanceof AndParser || parser instanceof OrParser || parser instanceof XorParser) {
+        render(formatterContext, child);
+        if(false == existsMultiCondition) {
+          existsMultiCondition = true;
+        }
+        formatterContext.increment();
+        continue;
+      }
+      render(formatterContext, child);
+    }
+    formatterContext.decrement();
+    context.append(formatterContext.toString());
+  }
+  
   public static void renderCaseExpression(FormatterContext context , Token token) {
     
     List<Token> filteredChildren = token.filteredChildren.stream()
@@ -113,6 +139,11 @@ public class Formatter {
       return;
     }
     
+    if(parser instanceof BooleanExpressionParser) {
+      renderCondition(context, token);
+      return;
+    }
+    
     if(parser.hasTag(ExpressionTags.matchExpression.tag())) {
       renderMatch(context, token);
       return;
@@ -151,6 +182,9 @@ public class Formatter {
     
     int tabSize = 2;
     int level = 0;
+    
+    int width=80;
+    
     Map<Integer,Integer> startPositionByLevel = new HashMap<>();
     Map<Integer,Integer> positionByLevel = new HashMap<>();
     StringBuilder builder = new StringBuilder();
