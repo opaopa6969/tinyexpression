@@ -1,11 +1,15 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.util.Optional;
 import java.util.function.Function;
 
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.util.Either;
 
 public class ExpressionOrLiteral extends Either<String, String> {
 
+  SimpleJavaCodeBuilder returning;
+  
 	private ExpressionOrLiteral(String raw, String mustWrap) {
 		super(raw, mustWrap);
 	}
@@ -27,5 +31,27 @@ public class ExpressionOrLiteral extends Either<String, String> {
 	public String toString() {
 		return apply(Function.identity(), word -> "\"" + word + "\"");
 //		return apply(Function.identity(),Function.identity());
+	}
+	
+	public ExpressionOrLiteral setReturning(SimpleJavaCodeBuilder returning) {
+	  this.returning = returning;
+	  return this;
+	}
+	
+	public Optional<SimpleJavaCodeBuilder> getReturning(){
+	  return Optional.ofNullable(returning);
+	}
+	
+	public void populateTo(SimpleJavaCodeBuilder destinationBuilder,Kind... kinds ) {
+	  if(returning == null) {
+	    return;
+	  }
+	  
+	  for (Kind kind : kinds) {
+      StringBuilder builder = returning.getBuilder(kind);
+      if(builder.length()>0) {
+        destinationBuilder.getBuilder(kind).append(builder.toString());
+      }
+    }
 	}
 }

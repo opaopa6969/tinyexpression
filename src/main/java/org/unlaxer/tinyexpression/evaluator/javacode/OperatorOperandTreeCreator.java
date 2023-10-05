@@ -119,82 +119,82 @@ import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterfac
 
 @TokenReConstructor
 public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
-	
-	public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
-	
-	@Override
-	public Token apply(Token token) {
-		
-		Parser parser = token.parser;
-		
-//		if(parser instanceof ExclusiveNakedVariableParser) {
-//		  
-//		  TypedToken<? extends VariableParser> resolveTypedVariable = 
-//		      VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-//		  
-//		  parser = resolveTypedVariable.getParser();
-//		}
-		
-		if(parser instanceof TinyExpressionParser) {
-		  
-		  TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
-		  
-		  Token extractImports = TinyExpressionParser.extractImportsToken(token);
-		  
-		  Token extractNumberExpression = TinyExpressionParser.extractNumberExpression(token);
-		  Token appliedNumberExpression = apply(extractNumberExpression);
-		  extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
-		  
-		  Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
-		  Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
-		  List</*Typed*/Token/*<MethodParser>*/> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
-		  
-		  extractMethodsTokens = extractMethodsTokens.stream()
-		    .map(methodToken->{
-		      return methodToken.newCreatesOf(
-		          new TokenEffecterWithMatcher(
-		            TokenPredicators.parserImplements(ExpressionInterface.class),
-		            this::apply
-		          )
-		        );   
-		    }).collect(Collectors.toList());
-		  Token extractMethodsToken = new Token(TokenKind.consumed, extractMethodsTokens, Parser.get(MethodsParser.class),0);
-//		  extractMethodsToken = extractMethodsToken.newCreatesOf(
-//	      new TokenEffecterWithMatcher(
+  
+  public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
+  
+  @Override
+  public Token apply(Token token) {
+    
+    Parser parser = token.parser;
+    
+//    if(parser instanceof ExclusiveNakedVariableParser) {
+//      
+//      TypedToken<? extends VariableParser> resolveTypedVariable = 
+//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+//      
+//      parser = resolveTypedVariable.getParser();
+//    }
+    
+    if(parser instanceof TinyExpressionParser) {
+      
+      TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
+      
+      Token extractImports = TinyExpressionParser.extractImportsToken(token);
+      
+      Token extractNumberExpression = TinyExpressionParser.extractNumberExpression(token);
+      Token appliedNumberExpression = apply(extractNumberExpression);
+      extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
+      
+      Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
+      Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
+      List</*Typed*/Token/*<MethodParser>*/> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
+      
+      extractMethodsTokens = extractMethodsTokens.stream()
+        .map(methodToken->{
+          return methodToken.newCreatesOf(
+              new TokenEffecterWithMatcher(
+                TokenPredicators.parserImplements(ExpressionInterface.class),
+                this::apply
+              )
+            );   
+        }).collect(Collectors.toList());
+      Token extractMethodsToken = new Token(TokenKind.consumed, extractMethodsTokens, Parser.get(MethodsParser.class),0);
+//      extractMethodsToken = extractMethodsToken.newCreatesOf(
+//        new TokenEffecterWithMatcher(
 //          TokenPredicators.parserImplements(ExpressionInterface.class),
 //          this::apply
 //        )
-//		  );
-		  
-		  
-//		  System.out.println(extractMethodsToken.getPath()); 
-		  Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
-		  String path = newCreatesOf.getPath();
-//		  System.out.println(path);
-		  return newCreatesOf;
-		}
-		
-		if(parser instanceof NumberVariableDeclarationParser ||
-		    parser instanceof BooleanVariableDeclarationParser ||
-		    parser instanceof StringVariableDeclarationParser) {
-		  
-		  return token.newCreatesOf(
-	      new TokenEffecterWithMatcher(
+//      );
+      
+      
+//      System.out.println(extractMethodsToken.getPath()); 
+      Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
+      String path = newCreatesOf.getPath();
+//      System.out.println(path);
+      return newCreatesOf;
+    }
+    
+    if(parser instanceof NumberVariableDeclarationParser ||
+        parser instanceof BooleanVariableDeclarationParser ||
+        parser instanceof StringVariableDeclarationParser) {
+      
+      return token.newCreatesOf(
+        new TokenEffecterWithMatcher(
           TokenPredicators.parserImplements(ExpressionInterface.class),
           this::apply
         )
       );
-		}
-		
-		if(parser instanceof VariableDeclarationsParser || 
-		    parser instanceof AnnotationsParser) {
+    }
+    
+    if(parser instanceof VariableDeclarationsParser || 
+        parser instanceof AnnotationsParser) {
       return token.newCreatesOf(
           new TokenEffecterWithMatcher(
               TokenPredicators.allMatch(),
               this::apply
           )
       );
-		}
+    }
     
     if(parser instanceof BooleanSetterParser||
         parser instanceof StringSetterParser||
@@ -234,69 +234,69 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     }
 
 
-		
-		if(parser instanceof ArgumentSuccessorParser) {
-		  token = ArgumentSuccessorParser.extractParameter(token);
+    
+    if(parser instanceof ArgumentSuccessorParser) {
+      token = ArgumentSuccessorParser.extractParameter(token);
       return apply(token);
-		}
-		
-		if(parser instanceof ArgumentChoiceParser) {
-		  token = ChoiceInterface.choiced(token);
-		  return apply(token);
     }
-		
-		if(
+    
+    if(parser instanceof ArgumentChoiceParser) {
+      token = ChoiceInterface.choiced(token);
+      return apply(token);
+    }
+    
+    if(
       parser instanceof StrictTypedNumberExpressionParser || 
-		  parser instanceof NumberExpressionParser || 
+      parser instanceof NumberExpressionParser || 
       parser instanceof StrictTypedNumberTermParser ||
       parser instanceof NumberTermParser ||
-			parser instanceof StrictTypedBooleanExpressionParser ||
-			parser instanceof BooleanExpressionParser ||
+      parser instanceof StrictTypedBooleanExpressionParser ||
+      parser instanceof BooleanExpressionParser ||
       parser instanceof StrictTypedStringExpressionParser || 
-			parser instanceof StringExpressionParser
-			) {
-			
-			List<Token> originalTokens = token.filteredChildren;
-			Iterator<Token> iterator = originalTokens.iterator();
-			
-			Token left = apply(iterator.next());
-			
-			Token lastOpearatorAndOperands = left;
-			
-			while(iterator.hasNext()){
-				Token operator = iterator.next();
-				Token right = apply(iterator.next());
-				lastOpearatorAndOperands = 
-					operator.newCreatesOf(operator , lastOpearatorAndOperands , right);
-			}
-			return lastOpearatorAndOperands;
-			
+      parser instanceof StringExpressionParser
+      ) {
+      
+      List<Token> originalTokens = token.filteredChildren;
+      Iterator<Token> iterator = originalTokens.iterator();
+      
+      Token left = apply(iterator.next());
+      
+      Token lastOpearatorAndOperands = left;
+      
+      while(iterator.hasNext()){
+        Token operator = iterator.next();
+        Token right = apply(iterator.next());
+        lastOpearatorAndOperands = 
+          operator.newCreatesOf(operator , lastOpearatorAndOperands , right);
+      }
+      return lastOpearatorAndOperands;
+      
 
-		}else if(
-		    parser instanceof StrictTypedNumberFactorParser ||
-		    parser instanceof NumberFactorParser
-		    ) {
-			
-			return factor(token);
-			
-		}else if(parser instanceof NumberCaseExpressionParser){
-			
-			List<Token> casefactors = token.filteredChildren.stream()
-				.filter(child-> child.parser instanceof NumberCaseFactorParser)
-				.map(this::apply)
-				.collect(Collectors.toList());
-			return token.newCreatesOf(casefactors);
-			
-		}else if(parser instanceof NumberCaseFactorParser){
-			
-			return token.newCreatesOf(
-				apply(NumberCaseFactorParser.getBooleanExpression(token)),
-				apply(NumberCaseFactorParser.getExpression(token))
-			);
-			
-		}else if(parser instanceof NumberDefaultCaseFactorParser){
-			
-			return apply(NumberCaseFactorParser.getExpression(token));
+    }else if(
+        parser instanceof StrictTypedNumberFactorParser ||
+        parser instanceof NumberFactorParser
+        ) {
+      
+      return factor(token);
+      
+    }else if(parser instanceof NumberCaseExpressionParser){
+      
+      List<Token> casefactors = token.filteredChildren.stream()
+        .filter(child-> child.parser instanceof NumberCaseFactorParser)
+        .map(this::apply)
+        .collect(Collectors.toList());
+      return token.newCreatesOf(casefactors);
+      
+    }else if(parser instanceof NumberCaseFactorParser){
+      
+      return token.newCreatesOf(
+        apply(NumberCaseFactorParser.getBooleanExpression(token)),
+        apply(NumberCaseFactorParser.getExpression(token))
+      );
+      
+    }else if(parser instanceof NumberDefaultCaseFactorParser){
+      
+      return apply(NumberCaseFactorParser.getExpression(token));
 
     }else if(parser instanceof BooleanCaseExpressionParser){
       
@@ -337,54 +337,54 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       return apply(StringDefaultCaseFactorParser.getExpression(token));
 
     }else if(parser instanceof BooleanFactorParser || 
-		    parser instanceof StrictTypedBooleanFactorParser ||
-		    parser instanceof BooleanExpression
-		    ) {
-			
-			return booleanExpression(token);
-			
-		}else if(
-		    parser instanceof StrictTypedStringTermParser||
-		    parser instanceof StringTermParser
-		    ) {
+        parser instanceof StrictTypedBooleanFactorParser ||
+        parser instanceof BooleanExpression
+        ) {
+      
+      return booleanExpression(token);
+      
+    }else if(
+        parser instanceof StrictTypedStringTermParser||
+        parser instanceof StringTermParser
+        ) {
 
-			List<Token> originalTokens = token.filteredChildren;
-			Iterator<Token> iterator = originalTokens.iterator();
-			
-			Token left = apply(iterator.next());
-			
-			Token lastOpearatorAndOperands = left;
-			
-			while(iterator.hasNext()){
-				Token operator = iterator.next();
-				lastOpearatorAndOperands = 
-					operator.newCreatesOf(operator , lastOpearatorAndOperands);
-			}
-			return lastOpearatorAndOperands;
-			
-		}else if(
+      List<Token> originalTokens = token.filteredChildren;
+      Iterator<Token> iterator = originalTokens.iterator();
+      
+      Token left = apply(iterator.next());
+      
+      Token lastOpearatorAndOperands = left;
+      
+      while(iterator.hasNext()){
+        Token operator = iterator.next();
+        lastOpearatorAndOperands = 
+          operator.newCreatesOf(operator , lastOpearatorAndOperands);
+      }
+      return lastOpearatorAndOperands;
+      
+    }else if(
         parser instanceof StrictTypedStringFactorParser||
         parser instanceof StringFactorParser
-		    ) {
-			
-			return stringFactor(token);
-		
-		}else if(parser instanceof PseudoRootParser) {
-			
-			return token;
-			
-		}
+        ) {
+      
+      return stringFactor(token);
+    
+    }else if(parser instanceof PseudoRootParser) {
+      
+      return token;
+      
+    }
 
-		
-		throw new IllegalArgumentException();
-			
-	}
+    
+    throw new IllegalArgumentException();
+      
+  }
 
-	private Token stringFactor(Token token) {
-		Token operator = ChoiceInterface.choiced(token);
-		
-		Parser parser = operator.parser;
-		
+  private Token stringFactor(Token token) {
+    Token operator = ChoiceInterface.choiced(token);
+    
+    Parser parser = operator.parser;
+    
 //    if(parser instanceof ExclusiveNakedVariableParser) {
 //      
 //      TypedToken<? extends VariableParser> resolveTypedVariable = 
@@ -393,33 +393,33 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //      parser = resolveTypedVariable.getParser();
 //    }
 
-		
-		if(parser instanceof StringLiteralParser){
-			
-			return operator;
-			
-		}else if(parser instanceof StringVariableParser|| 
+    
+    if(parser instanceof StringLiteralParser){
+      
+      return operator;
+      
+    }else if(parser instanceof StringVariableParser|| 
         parser instanceof NakedVariableParser || parser instanceof ExclusiveNakedVariableParser){
-			
-			return operator;
-			
-		}else if(parser instanceof ParenthesesParser){
-			
-			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
+      
+      return operator;
+      
+    }else if(parser instanceof ParenthesesParser){
+      
+      return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
 
-		}else if(parser instanceof TrimParser){
-			
-			return operator.newCreatesOf(apply(TrimParser.getInnerParserParsed(operator)));
+    }else if(parser instanceof TrimParser){
+      
+      return operator.newCreatesOf(apply(TrimParser.getInnerParserParsed(operator)));
 
-		}else if(parser instanceof ToUpperCaseParser){
-			
-			return operator.newCreatesOf(apply(ToUpperCaseParser.getInnerParserParsed(operator)));
+    }else if(parser instanceof ToUpperCaseParser){
+      
+      return operator.newCreatesOf(apply(ToUpperCaseParser.getInnerParserParsed(operator)));
 
-		}else if(parser instanceof ToLowerCaseParser){
-			
-			return operator.newCreatesOf(apply(ToLowerCaseParser.getInnerParserParsed(operator)));
+    }else if(parser instanceof ToLowerCaseParser){
+      
+      return operator.newCreatesOf(apply(ToLowerCaseParser.getInnerParserParsed(operator)));
 
-		}else if(parser instanceof StringIfExpressionParser) {
+    }else if(parser instanceof StringIfExpressionParser) {
       Token booleanExpression = IfExpressionParser.getBooleanExpression(operator);
       return operator.newCreatesOf(
           apply(booleanExpression),
@@ -432,19 +432,34 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
         apply(StringMatchExpressionParser.getCaseExpression(operator)),
         apply(StringMatchExpressionParser.getDefaultExpression(operator))
       );
-		}else if(parser instanceof MethodInvocationParser) {
-		  
+    }else if(parser instanceof MethodInvocationParser) {
+      
       return extracteMethodInvocation(operator);
+      
+    }else if(parser instanceof SideEffectExpressionParser){
+      
+      Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
+      Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
+      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      return operator.newCreatesOf(
+//          returning causeをtoken化する。
+//          ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
+          returningClause,
+          SideEffectExpressionParser.getMethodClause(operator),
+          extractParameters
+          
+      );
 
-		}
-		throw new IllegalArgumentException();
-	}
+    }
+    throw new IllegalArgumentException();
+  }
 
-	private Token factor(Token token) {
-		
-		Token operator = ChoiceInterface.choiced(token);
-		Parser parser = operator.parser;
-		
+  private Token factor(Token token) {
+    
+    Token operator = ChoiceInterface.choiced(token);
+    Parser parser = operator.parser;
+    
 //    if(parser instanceof ExclusiveNakedVariableParser) {
 //      
 //      TypedToken<? extends VariableParser> resolveTypedVariable = 
@@ -454,114 +469,114 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //    }
 
     if(parser instanceof NumberParser){
-			
-			return clearChildren(operator);
-			
-		}else if(parser instanceof NakedVariableParser ){
-			
-			return clearChildren(operator);
-			
-		}else if(parser instanceof NumberVariableParser){
-//		  Token choiced = ChoiceInterface.choiced(operator);
-		  return operator;
-			
-		}else if(parser instanceof NumberIfExpressionParser){
-			
-			Token booleanExpression = IfExpressionParser.getBooleanExpression(operator);
+      
+      return clearChildren(operator);
+      
+    }else if(parser instanceof NakedVariableParser ){
+      
+      return clearChildren(operator);
+      
+    }else if(parser instanceof NumberVariableParser){
+//      Token choiced = ChoiceInterface.choiced(operator);
+      return operator;
+      
+    }else if(parser instanceof NumberIfExpressionParser){
+      
+      Token booleanExpression = IfExpressionParser.getBooleanExpression(operator);
       return operator.newCreatesOf(
-				apply(booleanExpression),
-				apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanExpression)),
-				apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanExpression))
-			);
-			
-		}else if(parser instanceof NumberMatchExpressionParser){
-			
-			return operator.newCreatesOf(
-				apply(NumberMatchExpressionParser.getCaseExpression(operator)),
-				apply(NumberMatchExpressionParser.getDefaultExpression(operator))
-			);
-			
-		}else if(parser instanceof ParenthesesParser){
-			
-			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
-			
-		}else if(parser instanceof SinParser){
-			
-			return operator.newCreatesOf(apply(SinParser.getExpression(operator)));
-			
-		}else if(parser instanceof CosParser){
-			
-			return operator.newCreatesOf(apply(CosParser.getExpression(operator)));
-			
-		}else if(parser instanceof TanParser){
-			
-			return operator.newCreatesOf(apply(TanParser.getExpression(operator)));
-			
-		}else if(parser instanceof SquareRootParser){
-			
-			return operator.newCreatesOf(apply(SquareRootParser.getExpression(operator)));
-			
-		}else if(parser instanceof MinParser){
-			
-			return operator.newCreatesOf(
-				apply(MinParser.getLeftExpression(operator)),
-				apply(MinParser.getRightExpression(operator))
-			);
+        apply(booleanExpression),
+        apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanExpression)),
+        apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanExpression))
+      );
+      
+    }else if(parser instanceof NumberMatchExpressionParser){
+      
+      return operator.newCreatesOf(
+        apply(NumberMatchExpressionParser.getCaseExpression(operator)),
+        apply(NumberMatchExpressionParser.getDefaultExpression(operator))
+      );
+      
+    }else if(parser instanceof ParenthesesParser){
+      
+      return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
+      
+    }else if(parser instanceof SinParser){
+      
+      return operator.newCreatesOf(apply(SinParser.getExpression(operator)));
+      
+    }else if(parser instanceof CosParser){
+      
+      return operator.newCreatesOf(apply(CosParser.getExpression(operator)));
+      
+    }else if(parser instanceof TanParser){
+      
+      return operator.newCreatesOf(apply(TanParser.getExpression(operator)));
+      
+    }else if(parser instanceof SquareRootParser){
+      
+      return operator.newCreatesOf(apply(SquareRootParser.getExpression(operator)));
+      
+    }else if(parser instanceof MinParser){
+      
+      return operator.newCreatesOf(
+        apply(MinParser.getLeftExpression(operator)),
+        apply(MinParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof MaxParser){
-			
-			return operator.newCreatesOf(
-				apply(MaxParser.getLeftExpression(operator)),
-				apply(MaxParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof MaxParser){
+      
+      return operator.newCreatesOf(
+        apply(MaxParser.getLeftExpression(operator)),
+        apply(MaxParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof RandomParser){
-			
-			return operator;
+    }else if(parser instanceof RandomParser){
+      
+      return operator;
 
-		}else if(parser instanceof FactorOfStringParser){
-			
-			Token choiceToken = operator.filteredChildren.get(0);
-			
-			if(choiceToken.parser instanceof StringLengthParser) {
-				
-				return choiceToken.newCreatesOf(apply(choiceToken.filteredChildren.get(2)));
-				
-//			}else if(choiceToken.parser instanceof StringIndexOfParser) {
-//				
-//				return choiceToken;
-			}
-		} else if (parser instanceof ToNumParser) {
-			return operator.newCreatesOf(
-					apply(ToNumParser.getLeftExpression(operator)),
-					apply(ToNumParser.getRightExpression(operator))
-			);
-			
-		}else if(parser instanceof SideEffectExpressionParser){
-		  
-		  Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
-		  Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-		  Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
-		  
-		  // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
+    }else if(parser instanceof FactorOfStringParser){
+      
+      Token choiceToken = operator.filteredChildren.get(0);
+      
+      if(choiceToken.parser instanceof StringLengthParser) {
+        
+        return choiceToken.newCreatesOf(apply(choiceToken.filteredChildren.get(2)));
+        
+//      }else if(choiceToken.parser instanceof StringIndexOfParser) {
+//        
+//        return choiceToken;
+      }
+    } else if (parser instanceof ToNumParser) {
+      return operator.newCreatesOf(
+          apply(ToNumParser.getLeftExpression(operator)),
+          apply(ToNumParser.getRightExpression(operator))
+      );
+      
+    }else if(parser instanceof SideEffectExpressionParser){
+      
+      Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
+      Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
+      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
 //      Token returning = apply(extractReturning(returningClause));
-			
-			return operator.newCreatesOf(
-//			    returning causeをtoken化する。
-//			    ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
-			    returningClause,
-			    SideEffectExpressionParser.getMethodClause(operator),
-			    extractParameters
-			    
-			);
+      
+      return operator.newCreatesOf(
+//          returning causeをtoken化する。
+//          ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
+          returningClause,
+          SideEffectExpressionParser.getMethodClause(operator),
+          extractParameters
+          
+      );
 
     }else if(parser instanceof MethodInvocationParser){
       String path = token.getPath();
       return extracteMethodInvocation(operator);
 
     }
-		throw new IllegalArgumentException();
-	}
+    throw new IllegalArgumentException();
+  }
 
   private Token extracteMethodInvocation(Token operator) {
     Optional<Token> extractParameters = MethodInvocationParser.getParametersClause(operator)
@@ -593,12 +608,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
             extractParameters.get()
           );
   }
-	
-	private Optional<Token> extractFirstParmeter(Token extractParameters) {
-	  List<Token> filteredChildren = extractParameters.filteredChildren;
-	  return filteredChildren.isEmpty() ?
-	      Optional.empty():
-	      Optional.of(filteredChildren.get(0));
+  
+  private Optional<Token> extractFirstParmeter(Token extractParameters) {
+    List<Token> filteredChildren = extractParameters.filteredChildren;
+    return filteredChildren.isEmpty() ?
+        Optional.empty():
+        Optional.of(filteredChildren.get(0));
   }
 
   Token extractReturning(Token returningClause) {
@@ -621,20 +636,20 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
   }
 
   Token extractParameters(Token argumentsToken) {
-	  
-	  List<Token> appliedChildren = argumentsToken.filteredChildren.stream()
-	      .filter(token-> false == token.parser instanceof CommaParser)
-	      .map(this::apply)
-	      .collect(Collectors.toList());
-	  
-	  return argumentsToken.newCreatesOf(appliedChildren);
-	}
+    
+    List<Token> appliedChildren = argumentsToken.filteredChildren.stream()
+        .filter(token-> false == token.parser instanceof CommaParser)
+        .map(this::apply)
+        .collect(Collectors.toList());
+    
+    return argumentsToken.newCreatesOf(appliedChildren);
+  }
 
-	private Token booleanExpression(Token token) {
-		
-		Token operator = ChoiceInterface.choiced(token);
-		Parser parser = operator.parser;
-		
+  private Token booleanExpression(Token token) {
+    
+    Token operator = ChoiceInterface.choiced(token);
+    Parser parser = operator.parser;
+    
     if(parser instanceof ExclusiveNakedVariableParser) {
       
       TypedToken<? extends VariableParser> resolveTypedVariable = 
@@ -643,77 +658,77 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       parser = resolveTypedVariable.getParser();
     }
 
-		
-		if(parser instanceof TrueTokenParser ||
-			parser instanceof FalseTokenParser) {
-			return operator;
-			
-		}else if(parser instanceof NotBooleanExpressionParser) {
-			
-			Token booleanExpression = NotBooleanExpressionParser.getBooleanExpression(operator);
-			return operator.newCreatesOf(apply(booleanExpression));
-			
-		}else if(parser instanceof BooleanVariableParser || 
-		    parser instanceof NakedVariableParser) {
-			
-			return operator;
-			
-			
-		}else if(parser instanceof ParenthesesParser) {
+    
+    if(parser instanceof TrueTokenParser ||
+      parser instanceof FalseTokenParser) {
+      return operator;
+      
+    }else if(parser instanceof NotBooleanExpressionParser) {
+      
+      Token booleanExpression = NotBooleanExpressionParser.getBooleanExpression(operator);
+      return operator.newCreatesOf(apply(booleanExpression));
+      
+    }else if(parser instanceof BooleanVariableParser || 
+        parser instanceof NakedVariableParser) {
+      
+      return operator;
+      
+      
+    }else if(parser instanceof ParenthesesParser) {
 
-			return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
-			
-		}else if(parser instanceof IsPresentParser) {
+      return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
+      
+    }else if(parser instanceof IsPresentParser) {
 
-			return operator.newCreatesOf(IsPresentParser.getVariable(operator));
+      return operator.newCreatesOf(IsPresentParser.getVariable(operator));
 
-		} else if(parser instanceof InTimeRangeParser) {
-			return operator.newCreatesOf(
-					apply(InTimeRangeParser.getLeftExpression(operator)),
-					apply(InTimeRangeParser.getRightExpression(operator))
-			);
+    } else if(parser instanceof InTimeRangeParser) {
+      return operator.newCreatesOf(
+          apply(InTimeRangeParser.getLeftExpression(operator)),
+          apply(InTimeRangeParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberEqualEqualExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberEqualEqualExpressionParser.getLeftExpression(operator)),
-				apply(NumberEqualEqualExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberEqualEqualExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberEqualEqualExpressionParser.getLeftExpression(operator)),
+        apply(NumberEqualEqualExpressionParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberNotEqualExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberNotEqualExpressionParser.getLeftExpression(operator)),
-				apply(NumberNotEqualExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberNotEqualExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberNotEqualExpressionParser.getLeftExpression(operator)),
+        apply(NumberNotEqualExpressionParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberGreaterOrEqualExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberGreaterOrEqualExpressionParser.getLeftExpression(operator)),
-				apply(NumberGreaterOrEqualExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberGreaterOrEqualExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberGreaterOrEqualExpressionParser.getLeftExpression(operator)),
+        apply(NumberGreaterOrEqualExpressionParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberLessOrEqualExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberLessOrEqualExpressionParser.getLeftExpression(operator)),
-				apply(NumberLessOrEqualExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberLessOrEqualExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberLessOrEqualExpressionParser.getLeftExpression(operator)),
+        apply(NumberLessOrEqualExpressionParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberGreaterExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberGreaterExpressionParser.getLeftExpression(operator)),
-				apply(NumberGreaterExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberGreaterExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberGreaterExpressionParser.getLeftExpression(operator)),
+        apply(NumberGreaterExpressionParser.getRightExpression(operator))
+      );
 
-		}else if(parser instanceof NumberLessExpressionParser) {
-			
-			return operator.newCreatesOf(
-				apply(NumberLessExpressionParser.getLeftExpression(operator)),
-				apply(NumberLessExpressionParser.getRightExpression(operator))
-			);
+    }else if(parser instanceof NumberLessExpressionParser) {
+      
+      return operator.newCreatesOf(
+        apply(NumberLessExpressionParser.getLeftExpression(operator)),
+        apply(NumberLessExpressionParser.getRightExpression(operator))
+      );
 
     }else if(parser instanceof BooleanIfExpressionParser) {
       
@@ -732,72 +747,87 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       );
       
     }else if(parser instanceof BooleanExpressionOfStringParser) {
-			
-			Token operatorWithString = ChoiceInterface.choiced(operator);
-			
-			if(operatorWithString.parser instanceof StringEqualsExpressionParser) {
-				
-				return operatorWithString.newCreatesOf(
-					apply(StringEqualsExpressionParser.getLeftExpression(operatorWithString)),
-					apply(StringEqualsExpressionParser.getRightExpression(operatorWithString))
-				);
-				
-			}else if(operatorWithString.parser instanceof StringNotEqualsExpressionParser) {
-				
-				return operatorWithString.newCreatesOf(
-					apply(StringNotEqualsExpressionParser.getLeftExpression(operatorWithString)),
-					apply(StringNotEqualsExpressionParser.getRightExpression(operatorWithString))
-				);
-				
-			}else if(
-					operatorWithString.parser instanceof StringStartsWithParser||
-					operatorWithString.parser instanceof StringEndsWithParser||
-					operatorWithString.parser instanceof StringContainsParser
-			) {
+      
+      Token operatorWithString = ChoiceInterface.choiced(operator);
+      
+      if(operatorWithString.parser instanceof StringEqualsExpressionParser) {
+        
+        return operatorWithString.newCreatesOf(
+          apply(StringEqualsExpressionParser.getLeftExpression(operatorWithString)),
+          apply(StringEqualsExpressionParser.getRightExpression(operatorWithString))
+        );
+        
+      }else if(operatorWithString.parser instanceof StringNotEqualsExpressionParser) {
+        
+        return operatorWithString.newCreatesOf(
+          apply(StringNotEqualsExpressionParser.getLeftExpression(operatorWithString)),
+          apply(StringNotEqualsExpressionParser.getRightExpression(operatorWithString))
+        );
+        
+      }else if(
+          operatorWithString.parser instanceof StringStartsWithParser||
+          operatorWithString.parser instanceof StringEndsWithParser||
+          operatorWithString.parser instanceof StringContainsParser
+      ) {
 
-				Token leftExpression = StringMethodExpressionParser.getLeftExpression(operatorWithString);
-				Token argument = StringExpressionMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
-				return operatorWithString.newCreatesOf(
-					apply(leftExpression),
-					apply(argument)
-				);
-				
-			}else if(operatorWithString.parser instanceof StringInParser) {
-				
-				
-				List<Token> stringExpressions = new ArrayList<>();
-				Token leftExpression = StringInParser.getLeftExpression(operatorWithString);
-				Token inMethod = StringInParser.getInMethod(operatorWithString);
-				
-				stringExpressions.add(leftExpression);
-				stringExpressions.addAll(getStringExpressions(inMethod));
-				
-				List<Token> appliedExpressions = stringExpressions.stream()
-					.map(this::apply)
-					.collect(Collectors.toList());
-			
-				return operatorWithString.newCreatesOf(appliedExpressions);
-			}
-			
+        Token leftExpression = StringMethodExpressionParser.getLeftExpression(operatorWithString);
+        Token argument = StringExpressionMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
+        return operatorWithString.newCreatesOf(
+          apply(leftExpression),
+          apply(argument)
+        );
+        
+      }else if(operatorWithString.parser instanceof StringInParser) {
+        
+        
+        List<Token> stringExpressions = new ArrayList<>();
+        Token leftExpression = StringInParser.getLeftExpression(operatorWithString);
+        Token inMethod = StringInParser.getInMethod(operatorWithString);
+        
+        stringExpressions.add(leftExpression);
+        stringExpressions.addAll(getStringExpressions(inMethod));
+        
+        List<Token> appliedExpressions = stringExpressions.stream()
+          .map(this::apply)
+          .collect(Collectors.toList());
+      
+        return operatorWithString.newCreatesOf(appliedExpressions);
+      }
+      
     }else if(parser instanceof MethodInvocationParser){
       
       return extracteMethodInvocation(operator);
-		}
+      
+    }else if(parser instanceof SideEffectExpressionParser){
+      
+      Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
+      Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
+      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      return operator.newCreatesOf(
+//          returning causeをtoken化する。
+//          ただし、optionalなのでemptyの場合はreturn as number default 1stParameter　 にする
+          returningClause,
+          SideEffectExpressionParser.getMethodClause(operator),
+          extractParameters
+          
+      );
+    }
 
-		throw new IllegalArgumentException();
-	}
-	
-	Token clearChildren(Token token) {
-		token.filteredChildren.clear();
-		return token;
-	}
-	
-	static List<Token> getStringExpressions(Token inMethod){
-		
-		Token stringExpressions = InMethodParser.getStringExpressions(inMethod);
-		List<Token> expressions = stringExpressions.filteredChildren.stream()
-			.filter(token->token.parser instanceof StringExpressionParser)
-			.collect(Collectors.toList());
-		return expressions;
-	}
+    throw new IllegalArgumentException();
+  }
+  
+  Token clearChildren(Token token) {
+    token.filteredChildren.clear();
+    return token;
+  }
+  
+  static List<Token> getStringExpressions(Token inMethod){
+    
+    Token stringExpressions = InMethodParser.getStringExpressions(inMethod);
+    List<Token> expressions = stringExpressions.filteredChildren.stream()
+      .filter(token->token.parser instanceof StringExpressionParser)
+      .collect(Collectors.toList());
+    return expressions;
+  }
 }

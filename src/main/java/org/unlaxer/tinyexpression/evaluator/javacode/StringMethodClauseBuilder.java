@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
@@ -39,5 +40,9 @@ public class StringMethodClauseBuilder implements TokenCodeBuilder {
 		builder
 			.append(right.toString())
 			.append("))");
+		
+    left.populateTo(builder, Kind.Function);
+    right.populateTo(builder, Kind.Function);
+
 	}
 }

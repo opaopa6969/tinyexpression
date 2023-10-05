@@ -14,19 +14,20 @@ import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
-import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
-import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.NotBooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
+import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
@@ -156,7 +157,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
-			SideEffectExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0),tinyExpressionTokens);
+			SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens);
 			
 		}else if (parser instanceof BooleanIfExpressionParser) {
 		  

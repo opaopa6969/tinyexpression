@@ -28,6 +28,7 @@ import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringPlusParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
+import org.unlaxer.tinyexpression.parser.StringSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
@@ -307,6 +308,15 @@ public class StringClauseBuilder {
       MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
 
       return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
+      
+    } else if (parser instanceof StringSideEffectExpressionParser) {
+      
+      SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+      
+      SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens);
+
+      return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Calculation).toString())
+          .setReturning(builder);
 		}
 
 		throw new IllegalArgumentException();

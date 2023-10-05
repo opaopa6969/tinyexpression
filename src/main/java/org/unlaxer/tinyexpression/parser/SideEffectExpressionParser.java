@@ -5,6 +5,7 @@ import java.util.List;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -21,7 +22,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
-public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression{
+public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements ExpressionInterface{
   
   private static final long serialVersionUID = 8228933717392969866L;
 	
