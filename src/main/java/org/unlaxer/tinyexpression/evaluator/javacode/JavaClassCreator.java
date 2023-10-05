@@ -120,7 +120,9 @@ public interface JavaClassCreator{
       }else if(expressionType.isBoolean()) {
         BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else {
-        builder.append(StringClauseBuilder.SINGLETON.build(expression , tinyExpressionTokens).toString());
+        ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , tinyExpressionTokens);
+        build.populateTo(builder, Kind.Function);
+        builder.append(build.toString());
       }
           
       builder

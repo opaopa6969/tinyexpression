@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 import java.util.List;
 
 import org.unlaxer.Token;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 
 public class StringBooleanNotEqualClauseBuilder implements TokenCodeBuilder {
 
@@ -21,5 +22,9 @@ public class StringBooleanNotEqualClauseBuilder implements TokenCodeBuilder {
 			.append(".equals(")
 			.append(right.toString())
 			.append("))");
+		
+    left.populateTo(builder, Kind.Function);
+    right.populateTo(builder, Kind.Function);
+
 	}	
 }

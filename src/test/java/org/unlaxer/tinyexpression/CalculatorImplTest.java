@@ -1297,6 +1297,29 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     assertTrue(calc(context, string, new BigDecimal("0")));
   }
   
+  @Test
+  public void testSideEffectReturningString() {
+    setLevel(OutputLevel.mostDetail);
+    CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+    context.set(new Fee());
+    context.setObject("lastLoginTimestamp", 1696271608000L);
+    context.set(new TestSideEffector());
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+    simpleBuilder
+        .line(" import org.unlaxer.tinyexpression.parser.TestSideEffector#getYear as getYear;")
+        .line(" if(external returning as string : getYear('2023/10/01') == '2023'){")
+        .line("   0 ")
+        .line(" }else{")
+        .line("   1")
+        .line(" }")
+    ;
+    String string = simpleBuilder.toString();
+    System.out.println(string);
+    testAllMatch( new TinyExpressionParser(),string);
+    assertTrue(calc(context, string, new BigDecimal("0")));
+  }
+
+  
   
   public static void main(String[] args) {
     SimpleBuilder simpleBuilder = new SimpleBuilder();

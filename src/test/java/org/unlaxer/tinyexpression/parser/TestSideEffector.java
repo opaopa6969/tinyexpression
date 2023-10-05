@@ -70,5 +70,11 @@ public class TestSideEffector {
   public float getAge(CalculationContext calculationContext, String date) {
     return 0;
   }
+  
+  public String getYear(CalculationContext calculationContext, String date) {
+    String[] split = date.split("/");
+    return split[0];
+  }
+
 
 }
