@@ -8,24 +8,19 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Chain;
-import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
-import org.unlaxer.tinyexpression.parser.SetWordParser;
-import org.unlaxer.tinyexpression.parser.SetterParser;
 import org.unlaxer.tinyexpression.parser.bool.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.bool.BooleanTypeHintParser;
 import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.string.StringTypeHintParser;
-import org.unlaxer.tinyexpression.parser.tuple.TupleTypeDeclarationParser;
-import org.unlaxer.tinyexpression.parser.tuple.TupleVariableParser;
+import org.unlaxer.tinyexpression.parser.tuple.TupleCreationParser;
+import org.unlaxer.tinyexpression.parser.tuple.TupleParser;
 
 public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
@@ -66,18 +61,7 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
     }
   }
   
-  public static class TupleTypeDefinitionParser extends JavaStyleDelimitedLazyChain{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          Parser.get(TypeDefHeaderParser.class),
-          Parser.get(IdentifierParser.class),
-          new WordParser("="),
-          Parser.get(TupleParser.class)
-      );
-    }
-  }
+  
   
   public static class TupleNameParser extends WordParser{
 
@@ -86,18 +70,7 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
     }
   }
   
-  public static class TupleParser extends JavaStyleDelimitedLazyChain{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          Parser.get(TupleNameParser.class),
-          new WordParser("<"),
-          Parser.get(TypeParametersParser.class),
-          new WordParser(">")
-      );
-    }
-  }
+  
   
   public static class TypeParametersParser extends JavaStyleDelimitedLazyChain{
 
@@ -203,50 +176,6 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
   public static class ListTypeHintParser extends  ListParser{
   }
   
-  
-  public class TupleExpressionParser extends LazyChoice{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          Parser.get(ImmediatelyTupleCreationParser.class),
-          Parser.get(TupleVariableParser.class)
-      );
-    }
-    
-  }
-  
-  public static class ImmediatelyTupleCreationParser extends JavaStyleDelimitedLazyChain{
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          new WordParser("new"),
-          new WordParser("Tuple"),
-          new WordParser("("),
-          new WordParser(")"),
-          Parser.get(TupleCreationParser.class)
-      );
-    }
-  }
-  
-  public static class TupleCreationParser extends JavaStyleDelimitedLazyChain {
-
-    @Override
-    public List<Parser> getLazyParsers() {
-      return new Parsers(
-          new WordParser("["),
-          Parser.get(ExpressionChoiceParser.class),
-          new ZeroOrMore(
-              new Chain(
-                  Parser.get(CommaParser.class),
-                  Parser.get(ExpressionChoiceParser.class)
-              )
-          ),
-          new WordParser("]")
-      );
-    }
-  }
   
   public static class ExpressionChoiceParser extends LazyChoice{
 

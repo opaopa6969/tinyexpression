@@ -19,6 +19,7 @@ import org.unlaxer.tinyexpression.parser.string.StringPrefixedVariableParser;
 import org.unlaxer.tinyexpression.parser.string.StringSuffixedVariableParser;
 import org.unlaxer.tinyexpression.parser.string.StringTypeHintPrefixParser;
 import org.unlaxer.tinyexpression.parser.string.StringVariableDeclarationMatchedTokenParser;
+import org.unlaxer.tinyexpression.parser.string.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class TupleVariableParser extends LazyChoice implements RootVariableParser , TupleExpression{

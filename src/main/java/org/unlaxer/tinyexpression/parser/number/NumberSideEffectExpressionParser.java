@@ -5,10 +5,10 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.tinyexpression.parser.ReturningNumberParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 
-public class NumberSideEffectExpressionParser extends SideEffectExpressionParser{
+public class NumberSideEffectExpressionParser extends SideEffectExpressionParser implements NumberExpression{
 
   @Override
-  Parser typedReturningParser() {
+  public Parser typedReturningParser() {
     return new Optional(Parser.get(ReturningNumberParser.class));
   }
 }

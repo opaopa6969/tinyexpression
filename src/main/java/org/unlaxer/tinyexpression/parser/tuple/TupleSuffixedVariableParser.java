@@ -12,6 +12,7 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
+@SuppressWarnings("serial")
 public class TupleSuffixedVariableParser extends JavaStyleDelimitedLazyChain implements TupleExpression ,VariableParser{
 
   public TupleSuffixedVariableParser() {

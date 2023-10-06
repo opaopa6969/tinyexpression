@@ -156,7 +156,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
-			SideEffectExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0),tinyExpressionTokens);
+			SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens);
 			
 		}else if (parser instanceof BooleanIfExpressionParser) {
 		  

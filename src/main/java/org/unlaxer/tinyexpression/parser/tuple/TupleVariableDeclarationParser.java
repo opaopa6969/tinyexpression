@@ -6,11 +6,9 @@ import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
-import org.unlaxer.tinyexpression.parser.number.NumberVariableDeclarationParser.TupleSetterParser;
 
+@SuppressWarnings("serial")
 public class TupleVariableDeclarationParser extends AbstractVariableDeclarationParser{
-
-    
 
     @Override
     public Optional<ExpressionType> type() {
@@ -37,4 +35,4 @@ public class TupleVariableDeclarationParser extends AbstractVariableDeclarationP
       return Tag.of(TupleVariableDeclarationParser.class);
     }
   
-  }
+}

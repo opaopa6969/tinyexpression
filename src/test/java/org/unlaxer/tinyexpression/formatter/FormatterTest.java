@@ -64,4 +64,14 @@ public class FormatterTest {
   }
   
   
+  @Test
+  public void testMultipleConditions() {
+    String string = "if($name=='mintia' & $age>=18 & ($gender!='female' | $country=='jp')){0}else{1}";
+    String format = Formatter.format(string);
+    System.out.println(format);
+//    assertEquals(12, format.split("\n").length);
+  }
+
+  
+  
 }

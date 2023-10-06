@@ -32,6 +32,7 @@ import org.unlaxer.tinyexpression.parser.string.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.string.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.string.StringPlusParser;
 import org.unlaxer.tinyexpression.parser.string.StringSetterParser;
+import org.unlaxer.tinyexpression.parser.string.StringSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.string.StringTermParser;
 import org.unlaxer.tinyexpression.parser.string.StringVariableParser;
 import org.unlaxer.util.FactoryBoundCache;
@@ -307,6 +308,15 @@ public class StringClauseBuilder {
       MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
 
       return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Main).toString());
+      
+    } else if (parser instanceof StringSideEffectExpressionParser) {
+      
+      SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+      
+      SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens);
+
+      return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Calculation).toString())
+          .setReturning(builder);
 		}
 
 		throw new IllegalArgumentException();

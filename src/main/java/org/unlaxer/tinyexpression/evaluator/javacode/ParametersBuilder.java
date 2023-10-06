@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
 import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
@@ -35,7 +36,9 @@ public class ParametersBuilder  {
 			}else if(parser instanceof BooleanExpression) {
 				BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			}else if (parser instanceof StringExpression) {
-				builder.append(StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens).toString());
+				ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
+        build.populateTo(builder, Kind.Function);
+        builder.append(build.toString());
 			}else {
 				throw new IllegalArgumentException();
 			}

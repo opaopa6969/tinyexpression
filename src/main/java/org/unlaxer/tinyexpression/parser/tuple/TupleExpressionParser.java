@@ -5,7 +5,6 @@ import java.util.List;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.number.NumberVariableDeclarationParser.ImmediatelyTupleCreationParser;
 
 public class TupleExpressionParser extends LazyChoice{
 

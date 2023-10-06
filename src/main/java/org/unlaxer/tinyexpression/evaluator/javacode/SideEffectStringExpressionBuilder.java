@@ -87,7 +87,9 @@ public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 				}else if(parser instanceof BooleanExpression) {
 					BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if (parser instanceof StringExpression) {
-					builder.append(StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens).toString());
+					ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
+			    build.populateTo(builder, Kind.Function);
+          builder.append(build.toString());
 				}else {
 					throw new IllegalArgumentException();
 				}

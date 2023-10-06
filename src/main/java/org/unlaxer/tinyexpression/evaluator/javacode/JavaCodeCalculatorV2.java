@@ -147,9 +147,25 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
               e.printStackTrace();
               compileResult = CompileResultCache.get(className);
             }
-            System.out.println("c:" + compileResult);
-            System.out.println("l:" + compileResult.loadedClass);
-            tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
+            try {
+              
+              tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
+            }catch (ClassCastException e) {
+              
+              try (CachedCompilerModifiedForByteCodeGetting compiler = compiler()){
+      
+                compileResult =
+                    (CompileResult<TokenBaseOperator<CalculationContext, Float>>) 
+                    compiler.loadFromJava(className, javaSourceCode , classLoader);
+                
+                CompileResultCache.set(className, compileResult);
+      
+                }catch (Throwable e2) {
+                  e.printStackTrace();
+                  compileResult = CompileResultCache.get(className);
+                }
+                tokenBaseOperator = (TokenBaseOperator<CalculationContext, Float>) compileResult.loadedClass.getDeclaredConstructor().newInstance();
+            }
           }
       }
       
@@ -159,8 +175,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float> implem
       throw new RuntimeException(e);
     }
     return  new CompileResultAndOperator(compileResult, tokenBaseOperator);
-  }
-  
+  }  
   @SuppressWarnings("unchecked")
   public JavaCodeCalculatorV2(String formula , String javaCode , String className , byte[] byteCode , 
       String byteCodeHash,ClassLoader classLoader) {

@@ -78,6 +78,5 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
   static Supplier<Float> sampleSupplier = ()->{System.out.println("");return 10.0f;};
   static Function<Float,Float> sampleFunction= (x)->{x++;return x;};
-  
-  
+
 }
