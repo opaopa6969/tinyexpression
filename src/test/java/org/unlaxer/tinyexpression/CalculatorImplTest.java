@@ -1,9 +1,6 @@
 package org.unlaxer.tinyexpression;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -424,6 +421,12 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		context.set("name", "opa");
 		assertTrue(calc(context,"if(isPresent($name)){5}else{10}",new BigDecimal("5")));
 		assertTrue(calc(context,"if(not(isPresent($name))){5}else{10}",new BigDecimal("10")));
+
+		assertTrue(calc(context,"if(isPresent($object)){5}else{10}",new BigDecimal("10")));
+		assertTrue(calc(context,"if(not(isPresent($object))){5}else{10}",new BigDecimal("5")));
+		context.setObject("object", new Object());
+		assertTrue(calc(context,"if(isPresent($object)){5}else{10}",new BigDecimal("5")));
+		assertTrue(calc(context,"if(not(isPresent($object))){5}else{10}",new BigDecimal("10")));
 
 
 		
