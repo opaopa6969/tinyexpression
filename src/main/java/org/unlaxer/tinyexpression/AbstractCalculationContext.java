@@ -101,7 +101,8 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	public boolean isExists(String name) {
 		return valueByName.get(name) != null ||
 				booleanByName.get(name) != null ||
-				stringByName.get(name) != null;
+				stringByName.get(name) != null ||
+				objectByName.get(name) != null;
 	}
 	
 	/* (non-Javadoc)
