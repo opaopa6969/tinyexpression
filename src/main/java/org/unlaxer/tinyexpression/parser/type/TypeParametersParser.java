@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.tuple;
+package org.unlaxer.tinyexpression.parser.type;
 
 import java.util.List;
 
@@ -6,25 +6,21 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.CommaParser;
-import org.unlaxer.tinyexpression.parser.ExpressionChoiceParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class TupleCreationParser extends JavaStyleDelimitedLazyChain {
+public class TypeParametersParser extends JavaStyleDelimitedLazyChain{
 
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
-        new WordParser("["),
-        Parser.get(ExpressionChoiceParser.class),
+        Parser.get(TypeParameterParser.class),
         new ZeroOrMore(
             new Chain(
                 Parser.get(CommaParser.class),
-                Parser.get(ExpressionChoiceParser.class)
+                Parser.get(TypeParameterParser.class)
             )
-        ),
-        new WordParser("]")
+        )
     );
   }
 }

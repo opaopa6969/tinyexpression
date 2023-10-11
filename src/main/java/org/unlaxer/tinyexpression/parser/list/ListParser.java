@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.tuple;
+package org.unlaxer.tinyexpression.parser.list;
 
 import java.util.List;
 
@@ -8,12 +8,12 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.type.TypeParametersParser;
 
-public class TupleParser extends JavaStyleDelimitedLazyChain{
+public class ListParser extends JavaStyleDelimitedLazyChain{
 
   @Override
   public List<Parser> getLazyParsers() {
     return new Parsers(
-        Parser.get(TupleNameParser.class),
+        Parser.get(ListNameParser.class),
         new WordParser("<"),
         Parser.get(TypeParametersParser.class),
         new WordParser(">")

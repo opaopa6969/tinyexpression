@@ -64,6 +64,5 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
 						parser instanceof BooleanExpression ||
 						parser instanceof StringExpression;
 			}).collect(Collectors.toList());
-			
 	}
 }
