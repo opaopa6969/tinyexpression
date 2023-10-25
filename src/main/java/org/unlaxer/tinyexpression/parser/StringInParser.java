@@ -19,7 +19,7 @@ public class StringInParser extends JavaStyleDelimitedLazyChain implements Boole
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
 	      //  StringIn:=StringExpression'.in('StringExpression(','StringExpression)*')';
         new Parsers(

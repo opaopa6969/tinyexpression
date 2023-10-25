@@ -47,7 +47,7 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(MaxFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),

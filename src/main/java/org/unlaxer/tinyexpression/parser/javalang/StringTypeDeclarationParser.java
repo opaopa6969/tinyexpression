@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.StringTypeHintParser;
 public class StringTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             new WordParser("as")

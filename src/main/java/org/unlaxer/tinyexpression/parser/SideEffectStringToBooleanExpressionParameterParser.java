@@ -30,7 +30,7 @@ public class SideEffectStringToBooleanExpressionParameterParser extends JavaStyl
 	private static final long serialVersionUID = 1L;
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
           Parser.get(StringExpressionParser.class),

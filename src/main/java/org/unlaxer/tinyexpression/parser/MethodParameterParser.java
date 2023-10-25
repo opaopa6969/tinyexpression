@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 public class MethodParameterParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(NumberVariableMethodParameterParser.class),
         Parser.get(StringVariableMethodParameterParser.class),

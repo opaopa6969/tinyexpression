@@ -43,7 +43,7 @@ public class SquareRootParser extends JavaStyleDelimitedLazyChain implements Num
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
       Parser.get(SqrtFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),

@@ -18,7 +18,7 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
 	public static Class<? extends Parser> NESTED = StringExpressionParser.class;
 	
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     
     Parsers parsers = new Parsers();
     

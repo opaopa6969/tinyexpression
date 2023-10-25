@@ -15,7 +15,7 @@ public class ImmediatesBooleanExpressionParser extends LazyChoice{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(

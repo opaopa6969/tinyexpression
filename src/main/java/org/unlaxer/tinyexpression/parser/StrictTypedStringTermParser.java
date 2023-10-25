@@ -18,7 +18,7 @@ public class StrictTypedStringTermParser extends AbstractStringTermParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

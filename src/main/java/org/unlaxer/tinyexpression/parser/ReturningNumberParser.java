@@ -17,7 +17,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
 //  static final String word = "returning";
 //  static final WordParser wordParser = new WordParser(word);
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             Parser.get(()->new WordParser("returning"))

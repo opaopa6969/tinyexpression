@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public abstract class AbstractNumberExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , NumberExpression , VariableTypeSelectable{
 	
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     
     // <expression> ::= <term>[('+'|'-')<term>]*
     Parsers parsers = new Parsers();

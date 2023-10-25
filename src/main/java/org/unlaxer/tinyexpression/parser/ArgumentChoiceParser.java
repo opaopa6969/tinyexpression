@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 public class ArgumentChoiceParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.newInstance(StrictTypedBooleanExpressionParser.class),
         Parser.newInstance(StrictTypedStringExpressionParser.class),

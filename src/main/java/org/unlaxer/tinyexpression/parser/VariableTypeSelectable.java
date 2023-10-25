@@ -8,6 +8,6 @@ public interface VariableTypeSelectable {
   
   public boolean hasNakedVariableParser();
   
-  public List<Parser> getLazyParsers(boolean withNakedVariable);
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable);
   
 }

@@ -16,7 +16,7 @@ public class StringTypeHintParser extends LazyChoice implements TypeHint{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("String"), //
         new WordParser("string")

@@ -12,7 +12,7 @@ public class StringFactorParser extends AbstractStringFactorParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

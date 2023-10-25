@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parser;
 public class NumberFactorParser extends AbstractFactorParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

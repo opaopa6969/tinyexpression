@@ -12,7 +12,7 @@ public class BooleanExpressionParser extends AbstractBooleanExpressionParser{
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

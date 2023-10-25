@@ -24,7 +24,7 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
   public Optional<Parser> setter() {
     return Optional.of(
         new org.unlaxer.parser.combinator.Optional(
-            Parser.get(NumberSetterParser.class)
+            NumberSetterParser.class
         )
     );
   }

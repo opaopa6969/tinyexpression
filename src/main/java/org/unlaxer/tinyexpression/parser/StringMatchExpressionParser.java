@@ -20,7 +20,7 @@ public class StringMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
       new Parsers(

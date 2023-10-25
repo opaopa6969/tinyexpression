@@ -10,7 +10,7 @@ import org.unlaxer.parser.elementary.WordParser;
 public class IfNotExistsParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("if"),
         new WordParser("not"),

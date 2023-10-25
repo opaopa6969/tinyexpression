@@ -7,7 +7,7 @@ import org.unlaxer.parser.Parser;
 public class BooleanFactorParser extends AbstractBooleanFactorParser{
 
    @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
 

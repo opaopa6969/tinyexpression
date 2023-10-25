@@ -19,7 +19,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   public static boolean enabled3 = true;
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         //ここをoptionalにするとparseが意図しない結果となる。
 //        new Optional(
@@ -28,7 +28,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
         Parser.get(IdentifierParser.class),
         Parser.get(LeftParenthesisParser.class),
         new Optional(
-            Parser.get(ArgumentsParser.class)
+            ArgumentsParser.class
         ),
         Parser.get(RightParenthesisParser.class)
     );

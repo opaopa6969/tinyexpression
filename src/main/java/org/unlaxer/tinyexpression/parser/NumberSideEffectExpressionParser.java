@@ -7,6 +7,6 @@ public class NumberSideEffectExpressionParser extends SideEffectExpressionParser
 
   @Override
   Parser typedReturningParser() {
-    return new Optional(Parser.get(ReturningNumberParser.class));
+    return new Optional(ReturningNumberParser.class);
   }
 }

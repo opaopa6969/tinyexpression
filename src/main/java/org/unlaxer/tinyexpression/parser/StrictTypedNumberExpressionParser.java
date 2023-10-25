@@ -18,7 +18,7 @@ public class StrictTypedNumberExpressionParser extends AbstractNumberExpressionP
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

@@ -5,7 +5,6 @@ import java.util.List;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
-import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -33,23 +32,21 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
 //        new Optional(Parser.get(ReturningParser.class)),
         typedReturningParser(),
         new Optional(
-            Parser.get(()->new WordParser(":"))
+            new WordParser(":")
         ),
         new Choice(
             Parser.get(JavaClassMethodParser.class).addTag(classMethodOrMethod),
             Parser.get(JavaMethodParser.class).addTag(classMethodOrMethod)
         ),
         Parser.get(LeftParenthesisParser.class),
-        new Optional(
-            Parser.get(ArgumentsParser.class)
-        ),
+        new Optional(ArgumentsParser.class),
         Parser.get(RightParenthesisParser.class)
       );
 	}

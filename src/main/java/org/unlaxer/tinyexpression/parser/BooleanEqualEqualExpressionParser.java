@@ -15,7 +15,7 @@ public class BooleanEqualEqualExpressionParser extends JavaStyleDelimitedLazyCha
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return
 	    new Parsers(
         Parser.get(BooleanFactorParser.class),

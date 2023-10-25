@@ -18,7 +18,7 @@ public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedL
 	}
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     return
         withNakedVariable ? 
         // StringExpression:=StringTerm('+'StringTerm)*;

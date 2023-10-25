@@ -19,17 +19,17 @@ public class SliceParser extends JavaStyleDelimitedLazyChain implements StringEx
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
 	      // Slice:='['Expression?':'Expression?(':'Expression)?']';
         new Parsers(
           Parser.<WordParser>get(()->new WordParser("[")),
           new ZeroOrOne(
-            Parser.get(NumberExpressionParser.class)
+            NumberExpressionParser.class
           ),
           Parser.<WordParser>get(()->new WordParser(":")),
           new ZeroOrOne(
-            Parser.get(NumberExpressionParser.class)
+            NumberExpressionParser.class
           ),
           new ZeroOrOne(
             new Chain(

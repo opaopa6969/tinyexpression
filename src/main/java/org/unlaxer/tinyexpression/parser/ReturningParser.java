@@ -14,7 +14,7 @@ import org.unlaxer.util.annotation.VirtualTokenCreator;
 public class ReturningParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return
         new Parsers(
             Parser.get(ReturningNumberParser.class),

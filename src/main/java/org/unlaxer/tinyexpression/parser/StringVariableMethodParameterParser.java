@@ -15,7 +15,7 @@ public class StringVariableMethodParameterParser extends LazyChoice implements T
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(StringPrefixedVariableParser.class),//
         Parser.get(StringSuffixedVariableParser.class)

@@ -12,7 +12,7 @@ import org.unlaxer.util.annotation.TokenExtractor;
 public class ArgumentSuccessorParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(CommaParser.class),
         Parser.get(ArgumentChoiceParser.class)
