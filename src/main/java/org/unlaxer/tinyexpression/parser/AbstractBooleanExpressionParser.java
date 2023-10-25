@@ -21,7 +21,7 @@ public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimited
 
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     
     Class<? extends Parser> booleanExpressionParserClazz = 
         withNakedVariable ? BooleanFactorParser.class : StrictTypedBooleanFactorParser.class;

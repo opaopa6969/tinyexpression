@@ -18,7 +18,7 @@ public class StringEqualsExpressionParser extends JavaStyleDelimitedLazyChain im
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(StringExpressionParser.class),

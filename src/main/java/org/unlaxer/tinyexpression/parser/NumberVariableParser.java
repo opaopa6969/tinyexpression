@@ -20,7 +20,7 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(NumberVariableMatchedWithVariableDeclarationParser.class),
@@ -47,7 +47,7 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
     }
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public org.unlaxer.parser.Parsers getLazyParsers() {
       return new Parsers(//
           Parser.get(DollarParser.class), //0
           Parser.get(NumberVariableDeclarationMatchedTokenParser.class)//1

@@ -17,7 +17,7 @@ public class StringLiteralParser extends LazyChoice implements StringExpression{
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return 
 	      // StringLiteral:="CharactersWithoutDoubleQuote*"|'CharactersWithoutSingleQuote*';      
         new Parsers(

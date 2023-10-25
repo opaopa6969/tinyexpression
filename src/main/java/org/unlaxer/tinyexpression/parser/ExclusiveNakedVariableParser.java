@@ -27,7 +27,7 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     
     return 
       new Parsers(

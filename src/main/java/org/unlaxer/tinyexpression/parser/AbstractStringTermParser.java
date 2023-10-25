@@ -19,7 +19,7 @@ public abstract class AbstractStringTermParser extends JavaStyleDelimitedLazyCha
 
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     
     return 
         

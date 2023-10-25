@@ -16,10 +16,10 @@ public class StringTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(//
         new Optional(
-            Parser.get(AsParser.class) //
+            AsParser.class //
         ),
         Parser.get(StringTypeHintParser.class)//
     );

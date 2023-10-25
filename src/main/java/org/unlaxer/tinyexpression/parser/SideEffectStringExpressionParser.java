@@ -24,7 +24,7 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return
         new Parsers(Parser.get(SideEffectNameParser.class),
             Parser.get(() -> new WordParser(":")), Parser.get(JavaClassMethodParser.class), // 2

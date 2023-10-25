@@ -20,7 +20,7 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
   static final WordParser numberWordParser = new WordParser("number");
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return
       new Parsers(
           new WordParser("Number"), //

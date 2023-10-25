@@ -17,7 +17,7 @@ private static final long serialVersionUID = -6949606984841006427L;
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return 
 	      new Parsers(
 	        Parser.get(StringExpressionParser.class),

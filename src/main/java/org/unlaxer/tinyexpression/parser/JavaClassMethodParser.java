@@ -25,7 +25,7 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
 //	        new Optional(

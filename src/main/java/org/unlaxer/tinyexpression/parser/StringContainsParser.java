@@ -14,7 +14,7 @@ public class StringContainsParser extends StringMethodExpressionParser implement
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       //  StringContains:=StringExpression'.contains('StringExpression')';
       new Parsers(

@@ -30,7 +30,7 @@ public class NumberParser extends LazyChain implements StaticParser , NumberExpr
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return new Parsers(				
 				// + or -
 				new Optional(Name.of("optional-signParser"),signParser),
@@ -57,7 +57,7 @@ public class NumberParser extends LazyChain implements StaticParser , NumberExpr
 					)
 				),
 				// e-3
-				new Optional(new ExponentParser())
+				new Optional(ExponentParser.class)
 		);
 	}
 

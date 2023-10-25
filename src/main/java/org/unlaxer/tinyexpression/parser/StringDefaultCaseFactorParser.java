@@ -19,7 +19,7 @@ public class StringDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return
 	    new Parsers(
         new WordParser(","),

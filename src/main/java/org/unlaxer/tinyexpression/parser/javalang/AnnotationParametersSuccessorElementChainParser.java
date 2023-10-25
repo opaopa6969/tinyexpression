@@ -10,7 +10,7 @@ import org.unlaxer.parser.posix.CommaParser;
 public class AnnotationParametersSuccessorElementChainParser extends LazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(CommaParser.class),
         Parser.get(AnnotationParameterParser.class)

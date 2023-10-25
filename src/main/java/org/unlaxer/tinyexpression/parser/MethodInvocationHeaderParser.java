@@ -11,7 +11,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class MethodInvocationHeaderParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(MethodInvocationHeader1Parser.class),
         Parser.get(()->new WordParser("call")),
@@ -22,7 +22,7 @@ public class MethodInvocationHeaderParser extends LazyChoice{
   public static class MethodInvocationHeader1Parser extends JavaStyleDelimitedLazyChain{
     
     @Override
-    public List<Parser> getLazyParsers() {
+    public org.unlaxer.parser.Parsers getLazyParsers() {
       return new Parsers(
           Parser.get(()->new WordParser("call")),
           Parser.get(()->new WordParser("internal"))

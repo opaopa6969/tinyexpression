@@ -15,7 +15,7 @@ public class BooleanAndExpressionParser extends JavaStyleDelimitedLazyChain impl
 	}
 	
 	 @Override
-	  public List<Parser> getLazyParsers() {
+	  public org.unlaxer.parser.Parsers getLazyParsers() {
 	    return
         new Parsers(
           Parser.get(BooleanFactorParser.class),

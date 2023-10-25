@@ -10,7 +10,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public abstract class AbstractMethodParser extends JavaStyleDelimitedLazyChain implements MethodParser{
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(returningParser()),
         Parser.get(IdentifierParser.class),

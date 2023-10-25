@@ -21,7 +21,7 @@ public class ImportParser extends JavaStyleDelimitedLazyChain{
   static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("import"),
         new Choice(

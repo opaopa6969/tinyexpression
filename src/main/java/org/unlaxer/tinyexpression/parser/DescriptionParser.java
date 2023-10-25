@@ -10,7 +10,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class DescriptionParser extends JavaStyleDelimitedLazyChain implements NoExpression{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(()->new WordParser("description")),
         Parser.get(()->new WordParser("=")),

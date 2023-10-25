@@ -19,7 +19,7 @@ public class BooleanPrefixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return 
     new Parsers(//
         Parser.get(BooleanTypeHintPrefixParser.class), //0

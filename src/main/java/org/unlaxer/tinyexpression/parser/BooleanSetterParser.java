@@ -11,10 +11,10 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 public class BooleanSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements BooleanExpression, SetterParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(SetWordParser.class),
-        Parser.get(()->new Optional(Parser.get(IfNotExistsParser.class))),
+        Parser.get(()->new Optional(IfNotExistsParser.class)),
         Parser.get(()->new Choice(
             Parser.newInstance(StrictTypedBooleanExpressionParser.class),
             Parser.get(BooleanExpressionParser.class)

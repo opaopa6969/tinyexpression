@@ -30,7 +30,7 @@ public abstract class AbstractFactorParser extends LazyChoice implements NumberE
   }
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     Parsers parsers = new Parsers();
     
     parsers.add(NumberSideEffectExpressionParser.class);

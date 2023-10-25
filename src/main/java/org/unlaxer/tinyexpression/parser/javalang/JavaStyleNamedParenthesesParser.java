@@ -35,7 +35,7 @@ public abstract class JavaStyleNamedParenthesesParser extends JavaStyleDelimited
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return
 			new Parsers(
 				nameParser(),

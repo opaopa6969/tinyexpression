@@ -18,7 +18,7 @@ public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(StringTypeHintPrefixParser.class), //0
         Parser.get(NakedVariableParser.class)//1

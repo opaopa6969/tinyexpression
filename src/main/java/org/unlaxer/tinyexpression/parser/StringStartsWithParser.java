@@ -14,7 +14,7 @@ public class StringStartsWithParser extends StringMethodExpressionParser impleme
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
     //  StringStartsWith:=StringExpression'.startsWith('StringExpression')';
     return
       new Parsers(

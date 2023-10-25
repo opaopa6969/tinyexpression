@@ -24,7 +24,7 @@ public class JavaClassNameParser extends LazyChain {
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(

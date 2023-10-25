@@ -32,23 +32,21 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
 //        new Optional(Parser.get(ReturningParser.class)),
         typedReturningParser(),
         new Optional(
-            Parser.get(()->new WordParser(":"))
+            new WordParser(":")
         ),
         new Choice(
             Parser.get(JavaClassMethodParser.class).addTag(classMethodOrMethod),
             Parser.get(JavaMethodParser.class).addTag(classMethodOrMethod)
         ),
         Parser.get(LeftParenthesisParser.class),
-        new Optional(
-            Parser.get(ArgumentsParser.class)
-        ),
+        new Optional(ArgumentsParser.class),
         Parser.get(RightParenthesisParser.class)
       );
 	}

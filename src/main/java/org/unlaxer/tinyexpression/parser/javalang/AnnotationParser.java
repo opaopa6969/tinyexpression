@@ -15,7 +15,7 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 public class AnnotationParser extends LazyChain{
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     
     return new Parsers(
         new WordParser("@"),

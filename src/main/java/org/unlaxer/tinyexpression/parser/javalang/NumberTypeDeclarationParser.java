@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.NumberTypeHintParser;
 public class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             new WordParser("as")

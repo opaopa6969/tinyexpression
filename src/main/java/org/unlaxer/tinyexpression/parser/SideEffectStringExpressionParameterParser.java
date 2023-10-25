@@ -27,7 +27,7 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(StringExpressionParser.class),

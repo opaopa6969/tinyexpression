@@ -27,13 +27,13 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   AfterParse{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(ImportsParser.class),
         Parser.get(VariableDeclarationsParser.class),
         Parser.get(AnnotationsParser.class),
         new org.unlaxer.parser.combinator.Optional(
-            Parser.get(NumberExpressionParser.class)
+            NumberExpressionParser.class
         ),
         Parser.get(MethodsParser.class)
     );

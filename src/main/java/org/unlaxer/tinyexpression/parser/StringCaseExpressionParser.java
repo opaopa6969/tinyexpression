@@ -19,7 +19,7 @@ public class StringCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 	
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return
       new Parsers(
         Parser.get(StringCaseFactorParser.class),
