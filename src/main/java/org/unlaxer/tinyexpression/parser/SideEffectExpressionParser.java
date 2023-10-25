@@ -5,7 +5,6 @@ import java.util.List;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
-import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;

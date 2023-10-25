@@ -7,7 +7,7 @@ public class StringTypeHintPrefixParser extends JavaStyleParenthesesParser imple
   private static final long serialVersionUID = -784438216103654415L;
 
   public StringTypeHintPrefixParser() {
-    super(Parser.get(StringTypeHintParser.class));
+    super(StringTypeHintParser.class);
   }
 
   @Override
