@@ -25,7 +25,8 @@ public class IfExpressionParserTest extends ParserTestBase{
     testAllMatch(ifExpressionParser, "if((1==1) == if(1==1){'niku'=='niku'}else{'niku'=='sushi'}){100}else{0}");
     testAllMatch(ifExpressionParser, "if((1==1) == if(1==1){'nikuniku'[0:4]=='niku'}else{1*3==4}){100}else{0}");
     testAllMatch(ifExpressionParser, "if((10==10) == if(1==1){false}else{true}){100}else{0}");
+    testAllMatch(ifExpressionParser, "if((10==10) == if(1==1){false} else {true}){100} else {0}");
+    testAllMatch(ifExpressionParser, "if(10==20 /*test*/) /*test*/{ /*test*/ 10/*test*/ }/*test*/ else/*test*/ {/*test*/ 0/*test*/}");
 
   }
-
 }

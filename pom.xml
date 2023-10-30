@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.2.7.5</version>
+  <version>1.2.7.6</version>
   <name>tinyExpression</name>
   <packaging>jar</packaging>
   <!-- FIXME change it to the project's website -->

@@ -55,6 +55,12 @@ public class Formatter {
     List<Token> filteredChildren = token.filteredChildren;
     for (Token child : filteredChildren) {
 //      if(child.getParser() instanceof NumberExpressionParser) {
+      if(child.getParser().hasTag(ExpressionTags.thenAndElse.tag())) {
+          renderIf(formatterContext, child);
+          context.append(formatterContext.toString());
+          formatterContext.clear();
+          continue;
+      }
       if(child.getParser().hasTag(ExpressionTags.returning.tag())) {
 //        formatterContext.n();
         formatterContext.increment();
@@ -213,6 +219,11 @@ public class Formatter {
     
     public FormatterContext trimLast() {
       builder.deleteCharAt(builder.length()-1);
+      return this;
+    }
+    
+    public FormatterContext clear() {
+      builder = new StringBuilder();
       return this;
     }
   }

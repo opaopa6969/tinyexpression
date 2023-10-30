@@ -94,6 +94,8 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		setLevel(OutputLevel.detail);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    assertTrue(calc(context,"if( 10==20 ) { 10 } else { 0 }",new BigDecimal("0")));
+    assertTrue(calc(context,"if(10==20 /*test*/) /*test*/{ /*test*/ 10/*test*/ }/*test*/ else/*test*/ {/*test*/ 0/*test*/}",new BigDecimal("0")));
 		assertTrue(calc(context,"if(10==20){10}else{0}",new BigDecimal("0")));
 		assertTrue(calc(context,"if(10==10){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(10!=10){10}else{0}",new BigDecimal("0")));

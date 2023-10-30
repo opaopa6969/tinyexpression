@@ -72,6 +72,11 @@ public class FormatterTest {
 //    assertEquals(12, format.split("\n").length);
   }
 
-  
+
+  public static void main(String[] args) {
+    String string="if(true){0}else{1}";
+    String format = Formatter.format(string);
+    System.out.println(format);
+  }
   
 }
