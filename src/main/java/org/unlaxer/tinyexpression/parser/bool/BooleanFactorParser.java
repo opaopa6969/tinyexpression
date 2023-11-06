@@ -1,8 +1,6 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 
 public class BooleanFactorParser extends AbstractBooleanFactorParser{
 

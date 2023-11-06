@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
 
 public abstract class JavaStyleDelimitedLazyOneOrMore extends LazyOneOrMore {

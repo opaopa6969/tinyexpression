@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ZeroOrMore;
@@ -21,7 +19,7 @@ public abstract class AbstractStringTermParser extends JavaStyleDelimitedLazyCha
 
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public Parsers getLazyParsers(boolean withNakedVariable) {
     
     return 
         

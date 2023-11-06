@@ -30,7 +30,7 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
 	}
 	
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public Parsers getLazyParsers(boolean withNakedVariable) {
     
     // BooleanExpression ::= 
     //    | 'true'

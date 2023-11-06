@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyOptional;
 
 public abstract class JavaStyleDelimitedLazyOptional extends LazyOptional {
@@ -13,7 +13,7 @@ public abstract class JavaStyleDelimitedLazyOptional extends LazyOptional {
   
   public JavaStyleDelimitedLazyOptional() {
     super();
-    List<Parser> parser = List.of(targetParser().get());
+    Parsers parser = Parsers.of(targetParser().get());
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override
@@ -26,7 +26,7 @@ public abstract class JavaStyleDelimitedLazyOptional extends LazyOptional {
 
   public JavaStyleDelimitedLazyOptional(Name name) {
     super(name);
-    List<Parser> parser = List.of(targetParser().get());
+    Parsers parser = Parsers.of(targetParser().get());
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override

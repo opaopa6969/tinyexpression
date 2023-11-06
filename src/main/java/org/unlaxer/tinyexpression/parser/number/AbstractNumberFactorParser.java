@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -35,7 +33,7 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
   }
 
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public Parsers getLazyParsers(boolean withNakedVariable) {
     Parsers parsers = new Parsers();
     
     parsers.add(NumberSideEffectExpressionParser.class);

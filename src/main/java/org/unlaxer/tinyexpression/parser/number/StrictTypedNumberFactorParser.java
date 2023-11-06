@@ -1,8 +1,6 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.StrictTyped;
 
 public class StrictTypedNumberFactorParser extends AbstractNumberFactorParser{
