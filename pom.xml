@@ -74,7 +74,6 @@
         <artifactId>maven-clean-plugin</artifactId>
         <version>3.1.0</version>
       </plugin>
-      <!--
       <plugin>
 	    <groupId>org.apache.maven.plugins</groupId>
 	    <artifactId>maven-eclipse-plugin</artifactId>
@@ -83,7 +82,6 @@
 	        <downloadJavadocs>true</downloadJavadocs>
 	    </configuration>
       </plugin>
-      -->
       <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>

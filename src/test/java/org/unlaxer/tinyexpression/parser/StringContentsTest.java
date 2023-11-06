@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
@@ -26,7 +27,7 @@ public class StringContentsTest extends ParserTestBase{
 	}
 	
 	static Supplier<ParseContext> create(String source) {
-		StringSource stringSource = new StringSource(source);
+		StringSource stringSource = StringSource.createRootSource(source);
 		return ()->new ParseContext(stringSource);
 		
 	}
@@ -49,8 +50,8 @@ public class StringContentsTest extends ParserTestBase{
 		try(ParseContext parseContext = create(d(source)).get()){
 			Parsed parsed = parser.parse(parseContext);
 			Token rootToken = parsed.getRootToken();
-			String contents = QuotedParser.contents(rootToken);
-			assertEquals(source, contents);
+			Source contents = QuotedParser.contents(rootToken);
+			assertEquals(source, contents.sourceAsString());
 		}
 	}
 	
@@ -59,8 +60,8 @@ public class StringContentsTest extends ParserTestBase{
 		try(ParseContext parseContext = create(s(source)).get()){
 			Parsed parsed = parser.parse(parseContext);
 			Token rootToken = parsed.getRootToken();
-			String contents = QuotedParser.contents(rootToken);
-			assertEquals(source, contents);
+			Source contents = QuotedParser.contents(rootToken);
+			assertEquals(source, contents.sourceAsString());
 		}
 	}
 }

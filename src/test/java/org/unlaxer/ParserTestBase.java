@@ -176,7 +176,7 @@ public class ParserTestBase {
 	
 	public Parsed parse(Parser parser , String source) {
 		
-		StringSource stringSource = new StringSource(source);
+		StringSource stringSource = StringSource.createRootSource(source);
 		ParseContext parseContext = new ParseContext(stringSource,CreateMetaTokenSprcifier.createMetaOn);
 		Parsed parsed = parser.parse(parseContext);
 		return parsed;
@@ -283,7 +283,7 @@ public class ParserTestBase {
 		int count = counts.get();
 		counts.set(count+1);
 
-		StringSource source = new StringSource(sourceString);
+		StringSource source = StringSource.createRootSource(sourceString);
 		try (OutputStream transactionFile = createFileOutputSream("transaction" , count);
 			OutputStream parseFile = createFileOutputSream("parse" , count);
 			OutputStream bothFile = createFileOutputSream("combined" , count);

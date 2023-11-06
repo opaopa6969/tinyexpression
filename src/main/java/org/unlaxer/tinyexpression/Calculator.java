@@ -13,7 +13,7 @@ import org.unlaxer.parser.Parser;
 public interface Calculator<T> {
   
   public default CalculateResult calculate(CalculationContext calculateContext, String formula) {
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     Parsed parsed = getParser().parse(parseContext);
     try{
       Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
