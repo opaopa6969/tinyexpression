@@ -1,8 +1,6 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 
 public class NumberTermParser extends AbstractNumberTermParser{
 
@@ -12,7 +10,7 @@ public class NumberTermParser extends AbstractNumberTermParser{
   }
   
   @Override
-  public List<Parser> getLazyParsers(){
+  public Parsers getLazyParsers(){
     return getLazyParsers(true);
   }
 }

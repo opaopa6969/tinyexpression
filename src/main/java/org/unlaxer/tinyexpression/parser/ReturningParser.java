@@ -28,7 +28,7 @@ public class ReturningParser extends LazyChoice{
   public static Token getReturningParserWhenNotSpecifiedReturingClause(
       CodePointIndex position , Optional<Token> sideEffectFirstParameter) {
     
-    Token _sideEffectFirstParameter = sideEffectFirstParameter.orElseThrow(()->new IllegalArgumentException("parameter must be specufued"));
+    Token _sideEffectFirstParameter = sideEffectFirstParameter.orElseThrow(()->new IllegalArgumentException("parameter must be specified"));
     
     // only ReturningNumberParser
     

@@ -42,8 +42,8 @@ public class TinyExpressionTokens{
     classNameByIdentifier = importTokens.stream()
       .collect(
         Collectors.toMap(
-          importToken->(String)(ImportParser.extractIdentifier(importToken).getToken().orElse("")),
-          importToken->(String)(ImportParser.extractJavaClassMethodOrClassName(importToken).getToken().orElse(""))
+          importToken->(String)(ImportParser.extractIdentifier(importToken).getSource().sourceAsString()),
+          importToken->(String)(ImportParser.extractJavaClassMethodOrClassName(importToken).getSource().sourceAsString())
         )
       );
     
@@ -67,7 +67,7 @@ public class TinyExpressionTokens{
            _token->{
              MethodParser parser = _token.getParser(MethodParser.class);
              
-             return (parser.methodName(_token).getToken().get());
+             return (parser.methodName(_token).getSource().sourceAsString());
            },
            Function.identity()
            )
