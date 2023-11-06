@@ -73,7 +73,7 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 		long start = System.nanoTime();
 		StringSource stringSource ;
 		for(int i =0 ; i < 1000;i++){
-			stringSource = new StringSource(formula);
+			stringSource = StringSource.createRootSource(formula);
 			calculator.getParser().parse(new ParseContext(stringSource));
 		}
 		System.out.println((System.nanoTime()-start));

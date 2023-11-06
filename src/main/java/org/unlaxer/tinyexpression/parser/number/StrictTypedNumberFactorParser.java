@@ -14,7 +14,7 @@ public class StrictTypedNumberFactorParser extends AbstractNumberFactorParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

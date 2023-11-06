@@ -10,7 +10,7 @@ import org.unlaxer.parser.elementary.WordParser;
 public class TypeDefHeaderParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("typedef"),
         new WordParser("typeDefinition")

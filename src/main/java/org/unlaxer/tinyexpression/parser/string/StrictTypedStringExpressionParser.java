@@ -19,7 +19,7 @@ public class StrictTypedStringExpressionParser extends AbstractStringExpressionP
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

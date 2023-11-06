@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 public class MapExpressionParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(ImmediatelyMapCreationParser.class),
         Parser.get(MapVariableParser.class)

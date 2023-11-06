@@ -33,7 +33,7 @@ public class JavaStyleDelimitedLazyChainTest extends ParserTestBase{
   public static class FooCStyleDelimitedLazyChain extends JavaStyleDelimitedLazyChain{
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return 
         new Parsers(
           new WordParser("ABC"),

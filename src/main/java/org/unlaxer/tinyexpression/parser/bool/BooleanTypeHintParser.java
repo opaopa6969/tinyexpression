@@ -18,7 +18,7 @@ public class BooleanTypeHintParser extends LazyChoice implements TypeHint{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
       new Parsers(
           new WordParser("Boolean"), //

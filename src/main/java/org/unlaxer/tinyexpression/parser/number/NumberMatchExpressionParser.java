@@ -39,7 +39,7 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
       new Parsers(

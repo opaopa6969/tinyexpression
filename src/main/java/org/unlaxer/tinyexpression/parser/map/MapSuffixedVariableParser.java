@@ -20,7 +20,7 @@ public class MapSuffixedVariableParser extends JavaStyleDelimitedLazyChain imple
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(NakedVariableParser.class), //0
         Parser.get(MapTypeHintSuffixParser.class)//1

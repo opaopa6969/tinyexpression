@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.string.StringTypeHintSuffixParser;
 public class ReturningStringParser extends JavaStyleDelimitedLazyChain implements Returning{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             Parser.get(()->new WordParser("returning"))

@@ -21,7 +21,7 @@ public class StringDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return
 	    new Parsers(
         new WordParser(","),

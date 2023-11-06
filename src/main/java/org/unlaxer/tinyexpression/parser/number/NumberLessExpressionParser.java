@@ -19,7 +19,7 @@ public class NumberLessExpressionParser extends JavaStyleDelimitedLazyChain impl
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(NumberExpressionParser.class),

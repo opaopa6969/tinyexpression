@@ -21,7 +21,7 @@ public class ListPrefixedVariableParser extends JavaStyleDelimitedLazyChain impl
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(ListTypeHintPrefixParser.class), //0
         Parser.get(NakedVariableParser.class)//1

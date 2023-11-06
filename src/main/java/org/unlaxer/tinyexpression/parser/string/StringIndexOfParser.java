@@ -17,7 +17,7 @@ public class StringIndexOfParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	   // StringIndexOf:=StringExpression'.indexOf('StringExpression')';
     return  
       new Parsers(

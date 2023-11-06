@@ -43,7 +43,7 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
     Parsers parsers = new Parsers(
       Parser.get(IfFuctionNameParser.class),

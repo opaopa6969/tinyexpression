@@ -34,7 +34,7 @@ public class NotImmediatesBooleanExpressionParser extends JavaStyleDelimitedLazy
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(

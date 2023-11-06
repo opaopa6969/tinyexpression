@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 public class ExpressionsParser extends LazyChoice{
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(
           Parser.get(NumberExpressionParser.class),
           Parser.get(StringExpressionParser.class),

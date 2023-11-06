@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -10,7 +8,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public abstract class AbstractMethodParser extends JavaStyleDelimitedLazyChain implements MethodParser{
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(returningParser()),
         Parser.get(IdentifierParser.class),

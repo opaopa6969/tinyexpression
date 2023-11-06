@@ -17,7 +17,7 @@ public class StringEndsWithParser extends StringMethodExpressionParser implement
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
 	      //  StringEndsWith:=StringExpression'.startsWith('StringExpression')';
         new Parsers(

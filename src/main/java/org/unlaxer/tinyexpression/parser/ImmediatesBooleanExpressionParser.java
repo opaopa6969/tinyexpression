@@ -16,7 +16,7 @@ public class ImmediatesBooleanExpressionParser extends LazyChoice{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(

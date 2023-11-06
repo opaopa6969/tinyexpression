@@ -18,7 +18,7 @@ public class BooleanCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return
       new Parsers(
         Parser.get(BooleanCaseFactorParser.class),

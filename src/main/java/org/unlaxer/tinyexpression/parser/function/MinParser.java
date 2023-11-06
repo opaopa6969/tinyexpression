@@ -48,7 +48,7 @@ public class MinParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(MinParser.MinFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),

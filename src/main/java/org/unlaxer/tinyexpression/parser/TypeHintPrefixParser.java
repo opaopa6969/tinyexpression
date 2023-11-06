@@ -18,7 +18,7 @@ public class TypeHintPrefixParser extends LazyChoice {
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return  new Parsers(
         Parser.get(StringTypeHintPrefixParser.class),//
         Parser.get(NumberTypeHintPrefixParser.class),//

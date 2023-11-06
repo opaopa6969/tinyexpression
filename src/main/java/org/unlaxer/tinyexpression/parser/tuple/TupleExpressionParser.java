@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 public class TupleExpressionParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(ImmediatelyTupleCreationParser.class),
         Parser.get(TupleVariableParser.class)

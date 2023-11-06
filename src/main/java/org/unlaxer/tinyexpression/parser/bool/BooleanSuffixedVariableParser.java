@@ -24,7 +24,7 @@ public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(NakedVariableParser.class), //

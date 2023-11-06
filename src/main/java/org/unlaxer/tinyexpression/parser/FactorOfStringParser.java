@@ -18,7 +18,7 @@ public class FactorOfStringParser extends LazyChoice implements NumberExpression
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
 	  return 
 	      

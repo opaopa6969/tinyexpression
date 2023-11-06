@@ -19,7 +19,7 @@ public class StrictTypedNumberExpressionParser extends AbstractNumberExpressionP
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

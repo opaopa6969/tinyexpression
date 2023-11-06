@@ -20,7 +20,7 @@ public class TupleSuffixedVariableParser extends JavaStyleDelimitedLazyChain imp
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(NakedVariableParser.class), //0
         Parser.get(TupleTypeHintSuffixParser.class)//1

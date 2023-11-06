@@ -19,7 +19,7 @@ public class CommaSeparatedStringExpressionParser extends JavaStyleDelimitedLazy
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
 	      //  CommaSeparatedStringExpression:=StringExpression(','StringExpression)*')';
       new Parsers(

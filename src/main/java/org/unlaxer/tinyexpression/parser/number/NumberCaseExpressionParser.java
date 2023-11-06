@@ -22,7 +22,7 @@ public class NumberCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 	
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return
       new Parsers(
         Parser.get(NumberCaseFactorParser.class),

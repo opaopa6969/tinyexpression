@@ -15,7 +15,7 @@ import org.unlaxer.tinyexpression.parser.tuple.TupleParser;
 public class TypeParameterParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(StringTypeHintParser.class),
         Parser.get(NumberTypeHintParser.class),

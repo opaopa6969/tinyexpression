@@ -17,7 +17,7 @@ public class BooleanTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           new Optional(

@@ -15,7 +15,7 @@ import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 public class ArgumentChoiceParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.newInstance(StrictTypedBooleanExpressionParser.class),
         Parser.newInstance(StrictTypedStringExpressionParser.class),

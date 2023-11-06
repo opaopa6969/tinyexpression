@@ -15,7 +15,7 @@ import org.unlaxer.util.annotation.TokenExtractor;
 public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(LeftParenthesisParser.class),
         new Optional(

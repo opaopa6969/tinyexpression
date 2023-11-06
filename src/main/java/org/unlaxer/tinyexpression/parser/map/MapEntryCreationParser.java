@@ -11,7 +11,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class MapEntryCreationParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(ExpressionChoiceParser.class),
         new WordParser(":"),

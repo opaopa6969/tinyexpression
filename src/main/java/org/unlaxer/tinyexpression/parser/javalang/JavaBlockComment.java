@@ -22,7 +22,7 @@ public class JavaBlockComment extends LazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return new ChainParsers(
 			new WordParser("/*"),
 			new WildCardStringTerninatorParser("*/"),

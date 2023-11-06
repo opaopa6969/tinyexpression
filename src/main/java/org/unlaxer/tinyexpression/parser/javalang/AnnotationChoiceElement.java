@@ -9,7 +9,7 @@ import org.unlaxer.parser.combinator.LazyChoice;
 public class AnnotationChoiceElement extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(AnnotationParser.class),
         Parser.get(LineAnnotationParser.class)

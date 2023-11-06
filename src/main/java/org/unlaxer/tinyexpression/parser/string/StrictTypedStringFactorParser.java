@@ -19,7 +19,7 @@ public class StrictTypedStringFactorParser extends AbstractStringFactorParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
 }

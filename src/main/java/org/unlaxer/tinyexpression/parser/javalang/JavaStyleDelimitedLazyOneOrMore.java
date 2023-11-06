@@ -17,7 +17,7 @@ public abstract class JavaStyleDelimitedLazyOneOrMore extends LazyOneOrMore {
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override
-      public List<Parser> getLazyParsers() {
+      public Parsers getLazyParsers() {
         return parser;
       }
       
@@ -30,7 +30,7 @@ public abstract class JavaStyleDelimitedLazyOneOrMore extends LazyOneOrMore {
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override
-      public List<Parser> getLazyParsers() {
+      public Parsers getLazyParsers() {
         return parser;
       }
       

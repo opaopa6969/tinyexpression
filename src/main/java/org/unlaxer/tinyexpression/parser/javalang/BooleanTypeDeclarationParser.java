@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.bool.BooleanTypeHintParser;
 public class BooleanTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             new WordParser("as")

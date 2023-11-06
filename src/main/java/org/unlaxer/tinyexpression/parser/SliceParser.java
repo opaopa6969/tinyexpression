@@ -21,7 +21,7 @@ public class SliceParser extends JavaStyleDelimitedLazyChain implements StringEx
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
 	      // Slice:='['Expression?':'Expression?(':'Expression)?']';
         new Parsers(

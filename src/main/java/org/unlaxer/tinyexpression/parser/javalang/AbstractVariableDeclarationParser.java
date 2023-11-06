@@ -22,7 +22,7 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
   public final static Tag typed = Tag.of("typed");
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     Parsers parsers = new Parsers();
     parsers.add(

@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser.number;
 
 import java.util.List;
 
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
@@ -19,7 +20,7 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
       new Parsers(//
           new Optional(
@@ -29,8 +30,7 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
       );
   }
   
-  public static Token createToken(int position,TokenKind tokenKind) {
-    
+  public static Token createToken(CodePointIndex position,TokenKind tokenKind) {
     
     Token asToken = AsParser.createToken(position, tokenKind);
     position += asToken.tokenRange.endIndexExclusive;

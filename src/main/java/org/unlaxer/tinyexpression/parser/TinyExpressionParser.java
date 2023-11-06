@@ -27,7 +27,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   AfterParse{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(ImportsParser.class),
         Parser.get(VariableDeclarationsParser.class),

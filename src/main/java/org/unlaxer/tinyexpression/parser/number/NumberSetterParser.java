@@ -16,7 +16,7 @@ public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleD
   implements NumberExpression , SetterParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(SetWordParser.class),
         Parser.get(()->new Optional(Parser.get(IfNotExistsParser.class))),

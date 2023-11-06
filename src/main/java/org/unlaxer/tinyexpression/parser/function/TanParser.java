@@ -42,7 +42,7 @@ public class TanParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(TanFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),

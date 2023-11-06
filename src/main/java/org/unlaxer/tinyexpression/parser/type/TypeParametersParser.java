@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class TypeParametersParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(TypeParameterParser.class),
         new ZeroOrMore(

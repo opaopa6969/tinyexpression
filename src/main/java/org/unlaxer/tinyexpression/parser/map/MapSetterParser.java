@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.SetterParser;
 public class MapSetterParser extends WhiteSpaceDelimitedLazyChain implements SetterParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(SetWordParser.class),
         Parser.get(()->new org.unlaxer.parser.combinator.Optional(

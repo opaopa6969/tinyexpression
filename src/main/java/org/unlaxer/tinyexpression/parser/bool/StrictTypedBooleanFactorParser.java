@@ -14,7 +14,7 @@ public class StrictTypedBooleanFactorParser extends AbstractBooleanFactorParser{
   }
 
     @Override
-   public List<Parser> getLazyParsers() {
+   public Parsers getLazyParsers() {
      return getLazyParsers(false);
    }
 

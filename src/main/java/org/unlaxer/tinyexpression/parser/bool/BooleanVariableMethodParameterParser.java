@@ -20,7 +20,7 @@ public class BooleanVariableMethodParameterParser extends LazyChoice implements 
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(BooleanPrefixedVariableParser.class), 

@@ -26,7 +26,7 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(

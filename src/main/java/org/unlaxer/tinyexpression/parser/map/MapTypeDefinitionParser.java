@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.type.TypeDefHeaderParser;
 public class MapTypeDefinitionParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(TypeDefHeaderParser.class),
         Parser.get(IdentifierParser.class),

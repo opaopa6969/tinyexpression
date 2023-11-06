@@ -12,7 +12,7 @@ import org.unlaxer.parser.elementary.SpaceDelimitor;
 public class JavaStyleDelimitorElements extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     return new Parsers(
         Parser.get(BlockComment.class),

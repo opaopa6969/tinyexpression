@@ -12,7 +12,7 @@ public class StringExpressionParser extends AbstractStringExpressionParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

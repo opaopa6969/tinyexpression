@@ -17,7 +17,7 @@ public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {
 	private static final long serialVersionUID = -4619955945031421138L;
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(InTimeRangeNameParser.class), // 0

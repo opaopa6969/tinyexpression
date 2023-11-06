@@ -28,7 +28,7 @@ public class ToNumParser extends JavaStyleDelimitedLazyChain {
   }
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return new Parsers(
         Parser.get(ToNumNameParser.class), // 0
         Parser.get(LeftParenthesisParser.class), // 1

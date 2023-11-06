@@ -20,7 +20,7 @@ public class IsPresentParser extends JavaStyleDelimitedLazyChain implements Bool
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       // IsPresentExpression:='isPresent('Variable');
         new Parsers(

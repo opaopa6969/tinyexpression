@@ -19,7 +19,7 @@ public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(NumberTypeHintPrefixParser.class), //0

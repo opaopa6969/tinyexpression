@@ -23,7 +23,7 @@ public class BooleanMatchExpressionParser extends JavaStyleDelimitedLazyChain im
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
       new Parsers(

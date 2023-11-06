@@ -21,7 +21,7 @@ public class NumberEqualEqualExpressionParser extends JavaStyleDelimitedLazyChai
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
       new Parsers(
         Parser.get(NumberExpressionParser.class),//0

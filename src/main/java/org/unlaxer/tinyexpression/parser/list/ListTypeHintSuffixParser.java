@@ -16,7 +16,7 @@ public class ListTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         new Optional(
             Parser.get(AsParser.class) //

@@ -20,7 +20,7 @@ public class ListSuffixedVariableParser extends JavaStyleDelimitedLazyChain impl
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(NakedVariableParser.class), //0
         Parser.get(ListTypeHintSuffixParser.class)//1

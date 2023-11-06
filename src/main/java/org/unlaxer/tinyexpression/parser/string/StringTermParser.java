@@ -12,7 +12,7 @@ public class StringTermParser extends AbstractStringTermParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

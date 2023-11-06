@@ -21,7 +21,7 @@ public class StringInParser extends JavaStyleDelimitedLazyChain implements Boole
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
 	      //  StringIn:=StringExpression'.in('StringExpression(','StringExpression)*')';
         new Parsers(

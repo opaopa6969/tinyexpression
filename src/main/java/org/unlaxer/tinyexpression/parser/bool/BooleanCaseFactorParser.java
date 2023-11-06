@@ -22,7 +22,7 @@ public class BooleanCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
       new Parsers(
         Parser.get(BooleanExpressionParser.class),//0

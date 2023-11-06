@@ -15,7 +15,7 @@ import org.unlaxer.tinyexpression.parser.tuple.TupleCreationParser;
 public class ExpressionChoiceParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(NumberExpressionParser.class),
         Parser.get(StringExpressionParser.class),

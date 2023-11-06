@@ -23,7 +23,7 @@ public class MapVariableParser extends LazyChoice implements RootVariableParser 
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(MapVariableMatchedWithVariableDeclarationParser.class),
         Parser.get(MapPrefixedVariableParser.class),//
@@ -43,7 +43,7 @@ public class MapVariableParser extends LazyChoice implements RootVariableParser 
     }
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(//
           Parser.get(DollarParser.class), //0
           Parser.get(MapVariableDeclarationMatchedTokenParser.class)//1

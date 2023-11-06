@@ -25,7 +25,7 @@ public class ListVariableParser extends LazyChoice implements RootVariableParser
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(ListVariableMatchedWithVariableDeclarationParser.class),
         Parser.get(ListPrefixedVariableParser.class),//
@@ -45,7 +45,7 @@ public class ListVariableParser extends LazyChoice implements RootVariableParser
     }
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(//
           Parser.get(DollarParser.class), //0
           Parser.get(StringVariableDeclarationMatchedTokenParser.class)//1

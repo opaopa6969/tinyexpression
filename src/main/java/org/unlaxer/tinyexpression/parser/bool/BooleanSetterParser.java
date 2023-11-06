@@ -14,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.SetterParser;
 public class BooleanSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements BooleanExpression, SetterParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(SetWordParser.class),
         Parser.get(()->new Optional(Parser.get(IfNotExistsParser.class))),

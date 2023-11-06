@@ -14,7 +14,7 @@ import org.unlaxer.tinyexpression.parser.string.StringExpressionParser;
 public class AnnotationParameterParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(IdentifierParser.class),
         Parser.get(EqualParser.class),

@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class ReturningBooleanParser extends JavaStyleDelimitedLazyChain implements Returning{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             Parser.get(()->new WordParser("returning"))

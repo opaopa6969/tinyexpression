@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
@@ -38,7 +39,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
@@ -73,9 +74,9 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
             getReturningPosition(thisParserParsed),firstParameter));
   }
   
-  static int getReturningPosition(Token thisParserParsed) {
-    Token childWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
-    return childWithParser.tokenRange.endIndexExclusive;
+  static CodePointIndex getReturningPosition(Token thisParserParsed) {
+    Token tokenOfChildWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
+    return tokenOfChildWithParser.getSource().cursorRange().endIndexExclusive.getPosition();
   }
 
 	@TokenExtractor

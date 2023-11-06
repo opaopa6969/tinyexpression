@@ -18,14 +18,14 @@ import org.unlaxer.util.annotation.TokenExtractor;
 public class MethodParametersElementParser extends LazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(MethodParameterParser.class),
         new ZeroOrMore(
             new JavaStyleDelimitedLazyChain() {
 
               @Override
-              public List<Parser> getLazyParsers() {
+              public Parsers getLazyParsers() {
                 return new Parsers(
                     Parser.get(CommaParser.class),
                     Parser.get(MethodParameterParser.class)

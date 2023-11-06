@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
@@ -14,7 +15,7 @@ import org.unlaxer.util.annotation.VirtualTokenCreator;
 public class ReturningParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
         new Parsers(
             Parser.get(ReturningNumberParser.class),
@@ -25,7 +26,7 @@ public class ReturningParser extends LazyChoice{
   
   @VirtualTokenCreator
   public static Token getReturningParserWhenNotSpecifiedReturingClause(
-      int position , Optional<Token> sideEffectFirstParameter) {
+      CodePointIndex position , Optional<Token> sideEffectFirstParameter) {
     
     Token _sideEffectFirstParameter = sideEffectFirstParameter.orElseThrow(()->new IllegalArgumentException("parameter must be specufued"));
     

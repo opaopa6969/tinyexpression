@@ -22,7 +22,7 @@ public class BooleanExpressionOfStringParser extends LazyChoice implements Boole
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
     // BooleanExpressionOfString:=
     //  (StringExpression'=='StringExpression)|
     //  (StringExpression'!='StringExpression)|

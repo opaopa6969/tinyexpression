@@ -11,7 +11,7 @@ import org.unlaxer.parser.elementary.WordParser;
 public class MapTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             new WordParser("as")

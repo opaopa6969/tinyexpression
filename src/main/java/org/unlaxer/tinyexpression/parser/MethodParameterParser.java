@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.string.StringVariableMethodParameterPar
 public class MethodParameterParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(NumberVariableMethodParameterParser.class),
         Parser.get(StringVariableMethodParameterParser.class),

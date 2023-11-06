@@ -18,7 +18,7 @@ import org.unlaxer.tinyexpression.parser.string.StringVariableDeclarationParser;
 public class VariableDeclarationParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(NumberVariableDeclarationParser.class),
         Parser.get(StringVariableDeclarationParser.class),

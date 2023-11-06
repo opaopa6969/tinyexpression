@@ -12,7 +12,7 @@ public class NumberExpressionParser extends AbstractNumberExpressionParser{
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

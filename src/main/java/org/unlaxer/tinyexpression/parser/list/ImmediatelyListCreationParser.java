@@ -10,7 +10,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class ImmediatelyListCreationParser extends JavaStyleDelimitedLazyChain{
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(
           new WordParser("new"),
           new WordParser("List"),

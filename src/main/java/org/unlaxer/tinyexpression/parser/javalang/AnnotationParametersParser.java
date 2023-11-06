@@ -10,7 +10,7 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 public class AnnotationParametersParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(LeftParenthesisParser.class),
         Parser.get(AnnotationFirstParameterParser.class),

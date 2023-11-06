@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.parser.Parser;
@@ -18,7 +19,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
 //  static final String word = "returning";
 //  static final WordParser wordParser = new WordParser(word);
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             Parser.get(()->new WordParser("returning"))
@@ -28,10 +29,10 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
   }
   
   @VirtualTokenCreator
-  public static Token getReturningNumberParserWhenNotSpecifiedReturingClause(int position,
+  public static Token getReturningNumberParserWhenNotSpecifiedReturingClause(CodePointIndex position,
       Token sideEffectFirstParameter) {
     
-    int current = position;
+    CodePointIndex current = position;
 //    Token wordToken = new Token(TokenKind.virtualTokenConsumed, new RangedString(position, word), wordParser);
 //    current += wordToken.tokenRange.endIndexExclusive;
     
