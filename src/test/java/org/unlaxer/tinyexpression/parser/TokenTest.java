@@ -8,6 +8,8 @@ import java.util.Optional;
 
 import org.junit.Test;
 import org.unlaxer.EnclosureDirection;
+import org.unlaxer.Source;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
 import org.unlaxer.parser.ParsersSpecifier;
@@ -59,7 +61,7 @@ public abstract class TokenTest {
 		    ) (14 - 15): RightParenthesisParser 
 	*/
 
-		String formula = "(1+1)/3+sin(30)";
+		Source formula = StringSource.createRootSource("(1+1)/3+sin(30)");
 		int position = formula.indexOf("1");
 		
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;

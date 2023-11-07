@@ -2,8 +2,8 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
-import org.unlaxer.CodePointIndex;
-import org.unlaxer.RangedString;
+import org.unlaxer.CodePointOffset;
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
@@ -21,9 +21,8 @@ public class AsParser extends WordParser{
     super("as");
   }
   
-  public static Token createToken(CodePointIndex position,TokenKind tokenKind) {
+  public static Token createToken(Source rootSource, CodePointOffset position,TokenKind tokenKind) {
     
-    
-    return new Token(tokenKind, new RangedString(position, " as "), Parser.get(AsParser.class));
+    return new Token(tokenKind, StringSource.createSubSource(" as ", rootSource ,  position) , Parser.get(AsParser.class));
   }
 }

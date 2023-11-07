@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
@@ -322,5 +323,5 @@ public class StringClauseBuilder {
 		throw new IllegalArgumentException();
 	}
 
-	static FactoryBoundCache<Token, String> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
+	static FactoryBoundCache<Token, Source> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
 }
