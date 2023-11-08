@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
-import org.unlaxer.CodePointIndex;
 import org.unlaxer.CodePointOffset;
 import org.unlaxer.Source;
 import org.unlaxer.Tag;

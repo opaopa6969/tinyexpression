@@ -99,8 +99,8 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			builder.append("calculateContext.isExists(").w(variableName).append(")");
 
 		} else if (parser instanceof InTimeRangeParser) {
-			String fromHour = token.filteredChildren.get(0).tokenString.get();
-			String toHour= token.filteredChildren.get(1).tokenString.get();
+			String fromHour = token.filteredChildren.get(0).getSource().sourceAsString();
+			String toHour= token.filteredChildren.get(1).getSource().sourceAsString();
 
 			parserValuesValidator.validateTimeRangeValues(fromHour, toHour);
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")

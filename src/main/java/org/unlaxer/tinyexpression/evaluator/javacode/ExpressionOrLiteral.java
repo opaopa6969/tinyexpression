@@ -5,6 +5,7 @@ import java.util.function.Function;
 
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.util.Either;
+import org.unlaxer.util.SimpleBuilder;
 
 public class ExpressionOrLiteral extends Either<String, String> {
 
@@ -48,7 +49,7 @@ public class ExpressionOrLiteral extends Either<String, String> {
 	  }
 	  
 	  for (Kind kind : kinds) {
-      StringBuilder builder = returning.getBuilder(kind);
+      SimpleBuilder builder = returning.getBuilder(kind);
       if(builder.length()>0) {
         destinationBuilder.getBuilder(kind).append(builder.toString());
       }

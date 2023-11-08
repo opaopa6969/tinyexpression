@@ -1,8 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;

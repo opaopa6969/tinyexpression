@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;

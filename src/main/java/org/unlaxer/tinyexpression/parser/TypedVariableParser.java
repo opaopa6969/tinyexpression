@@ -12,7 +12,7 @@ public interface TypedVariableParser extends VariableParser{
   }
   
   public default RootVariableParser getRootVariableParer() {
-    
+    //FIXME!
     switch (type()) {
     case string:
       return Parser.get(StringVariableParser.class);
@@ -20,6 +20,14 @@ public interface TypedVariableParser extends VariableParser{
       return Parser.get(BooleanVariableParser.class);
     case number:
       return Parser.get(NumberVariableParser.class);
+    case list:
+      break;
+    case map:
+      break;
+    case tuple:
+      break;
+    default:
+      break;
     }
     throw new IllegalArgumentException(type().toString());
   }

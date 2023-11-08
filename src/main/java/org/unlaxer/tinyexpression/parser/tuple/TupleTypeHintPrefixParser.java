@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.tuple;
 
-import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;

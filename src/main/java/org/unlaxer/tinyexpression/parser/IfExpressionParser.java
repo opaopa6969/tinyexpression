@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.function.Predicate;
 
 import org.unlaxer.Token;

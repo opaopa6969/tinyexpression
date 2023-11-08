@@ -73,14 +73,14 @@ public class FormulaParserTest {
 	
 	void output(Token token,PrintStream out, int level){
 		
-		if(false == token.tokenString.isPresent()){
+		if(false == token.getSource().isPresent()){
 			return;
 		}
 		for(int i = 0 ; i < level ; i++){
 			out.print(" ");
 		}
 		
-		out.format("%s : %s \n" , token.tokenString.get() , token.parser.getClass().getSimpleName());
+		out.format("%s : %s \n" , token.getSource().sourceAsString() , token.parser.getClass().getSimpleName());
 		if(false == token.filteredChildren.isEmpty()){
 			level++;
 			for(Token original : token.filteredChildren){

@@ -23,7 +23,7 @@ public interface VariableParser extends Parser{
     Token identifierToken = token.flatten().stream()
       .filter(TokenPredicators.hasTag(variableNameTag))
       .findFirst().get();
-    return identifierToken.tokenString.get();
+    return identifierToken.getSource().sourceAsString();
   }
   
 }

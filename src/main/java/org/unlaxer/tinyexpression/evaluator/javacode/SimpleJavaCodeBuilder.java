@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.stream.Stream;
 
+import org.unlaxer.Source;
 import org.unlaxer.util.SimpleBuilder;
 
 
@@ -114,6 +115,11 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 	
+	public SimpleJavaCodeBuilder w(Source word) {
+    word = word == null  ? Source.EMPTY :  word;
+    append("\"" + word.replaceAll("\"","\\\"") +  "\"");
+    return this;
+  }
 	
 	public SimpleJavaCodeBuilder w(String word) {
 		word = word == null  ? "" :  word;
@@ -121,7 +127,7 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 	
-	public SimpleJavaCodeBuilder p(String word) {
+	public SimpleJavaCodeBuilder p(CharSequence word) {
 		word = word == null  ? "" :  word;
 		append("(" + word +  ")");
 		return this;

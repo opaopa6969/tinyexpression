@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
