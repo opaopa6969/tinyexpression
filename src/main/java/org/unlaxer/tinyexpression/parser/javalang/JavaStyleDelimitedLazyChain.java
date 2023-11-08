@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.unlaxer.Name;
 import org.unlaxer.RecursiveMode;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.reducer.TagBasedReducer.NodeKind;
 
@@ -32,10 +33,10 @@ public abstract class JavaStyleDelimitedLazyChain extends LazyChain {
   }
 
   @Override
-  public void prepareChildren(List<Parser> childrenContainer) {
+  public void prepareChildren(Parsers childrenContainer) {
     
     if(childrenContainer.isEmpty()){
-      List<Parser> lazyParsers = getLazyParsers();
+      Parsers lazyParsers = getLazyParsers();
       childrenContainer.add(delimitor);
       for (Parser parser : lazyParsers) {
         childrenContainer.add(parser);

@@ -6,7 +6,7 @@ import org.unlaxer.TestResult;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
+import org.unlaxer.util.SimpleBuilder;
 
 public class TinyExpressionParserTest extends ParserTestBase{
 

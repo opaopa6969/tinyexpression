@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 import java.util.Iterator;
 import java.util.List;
 
+import org.unlaxer.CodePointIndex;
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
@@ -92,7 +94,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 		
 		}else if(parser instanceof IsPresentParser){
 			
-			String variableName = token.tokenString.get().substring(1);
+		  Source variableName = token.getSource().subSource(new CodePointIndex(1));
 
 			builder.append("calculateContext.isExists(").w(variableName).append(")");
 

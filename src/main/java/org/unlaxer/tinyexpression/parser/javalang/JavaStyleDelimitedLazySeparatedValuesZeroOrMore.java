@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.parser.combinator.ZeroOrMore;
@@ -27,7 +27,7 @@ public abstract class JavaStyleDelimitedLazySeparatedValuesZeroOrMore extends La
   }
 
   @Override
-  public void prepareChildren(List<Parser> childrenContainer) {
+  public void prepareChildren(Parsers childrenContainer) {
     
     if(childrenContainer.isEmpty()){
       Parser targetParser = getLazyParser().get();

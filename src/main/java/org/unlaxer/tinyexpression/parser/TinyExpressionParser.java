@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Parsed;
-import org.unlaxer.Source.SourceKind;
 import org.unlaxer.Token;
 import org.unlaxer.Token.ChildrenKind;
 import org.unlaxer.Token.ScanDirection;
@@ -189,7 +188,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     for (Token token : methods) {
       TypedToken<MethodParser> methodParserToken = token.typed(MethodParser.class);
       MethodParser parser = methodParserToken.getParser();
-      String methodNameOfChild = parser.methodName(methodParserToken).getToken().get();
+      String methodNameOfChild = parser.methodName(methodParserToken).getSource().sourceAsString();
       if(methodName.equals(methodNameOfChild)) {
         return Optional.of( token.getChildWithParser(parser.returningParser()));
       }
