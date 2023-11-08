@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
-import org.unlaxer.CodePointIndex;
+import org.unlaxer.CodePointOffset;
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenList;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -30,13 +30,13 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
       );
   }
   
-  public static Token createToken(CodePointIndex position,TokenKind tokenKind) {
+  public static Token createToken(Source rootSource , CodePointOffset position,TokenKind tokenKind) {
     
-    Token asToken = AsParser.createToken(position, tokenKind);
-    position += asToken.tokenRange.endIndexExclusive;
-    Token numberTypeHintToken = NumberTypeHintParser.createToken(position, tokenKind);
-    List<Token> children = List.of(asToken,numberTypeHintToken);
+    Token asToken = AsParser.createToken(rootSource ,  position, tokenKind);
+    position = position.newWithAdd(asToken.getSource().cursorRange().endIndexExclusive.getPosition());
+    Token numberTypeHintToken = NumberTypeHintParser.createToken(rootSource, position, tokenKind);
+    TokenList children = TokenList.of(asToken,numberTypeHintToken);
     
-    return new Token(tokenKind, children, Parser.get(NumberTypeHintSuffixParser.class),position);
+    return new Token(tokenKind, children, Parser.get(NumberTypeHintSuffixParser.class));
   }
 }

@@ -452,7 +452,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root, operator,firstParameter);
       
       return operator.newCreatesOf(
 //          returning causeをtoken化する。
@@ -568,7 +570,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root , operator,firstParameter);
       
       // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
 //      Token returning = apply(extractReturning(returningClause));
@@ -816,7 +820,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root , operator,firstParameter);
       
       return operator.newCreatesOf(
 //          returning causeをtoken化する。

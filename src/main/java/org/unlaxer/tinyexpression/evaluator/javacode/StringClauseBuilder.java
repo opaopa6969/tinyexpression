@@ -146,7 +146,7 @@ public class StringClauseBuilder {
 
 			ExpressionOrLiteral inner = build(stringFactorToken , tinyExpressionTokens);
 
-			Optional<String> specifier = slicerToken.getToken()
+			Stringspecifier = slicerToken.getToken()
 					.map(wrapped -> wrapped.substring(1, wrapped.length() - 1));
 
 			ExpressionOrLiteral evaluate = specifier.map(slicerSpecifier -> 

@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
@@ -30,15 +31,17 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
-			Calculator<?> calculator = calculator(formula.toString());
-			assertTrue(calc(calculator,context,formula.toString(),new BigDecimal("1")));
+			
+			Source source = StringSource.createRootSource(formula.toString());
+			Calculator<?> calculator = calculator(source);
+			assertTrue(calc(calculator,context,source,new BigDecimal("1")));
 		}
 		
 	}
 	
-	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
+	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , Source formula , BigDecimal expected){
 		long start = System.nanoTime();
-		testAllMatch(calculator.getParser(), formula);
+		testAllMatch(calculator.getParser(), formula.sourceAsString());
 		CalculateResult calculateResult = calculator.calculate(calculationContext,formula);
 		BigDecimal x = calculateResult.answer.get();
 //		System.out.println(formula+":" + (System.nanoTime()-start)+"nsec");
@@ -62,7 +65,10 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
-			Calculator<?> calculator = calculator(formula.toString());
+			
+	    Source source = StringSource.createRootSource(formula.toString());
+
+			Calculator<?> calculator = calculator(source);
 			parse(calculator,formula.toString());
 		}
 		System.out.println();
@@ -79,6 +85,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 		System.out.println((System.nanoTime()-start));
 	}
 	
-	public abstract Calculator<?> calculator(String formula);
+	public abstract Calculator<?> calculator(Source formula);
 
 }

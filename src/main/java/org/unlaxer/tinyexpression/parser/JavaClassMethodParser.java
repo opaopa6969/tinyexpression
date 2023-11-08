@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.ParseException;
@@ -59,8 +57,8 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
 		}
 		
 		Token javaClassAndHash = javaClassAndHash(token);
-		String identifier = identifier(token).getToken().orElse("");
-		String javaClass = javaClassName(javaClassAndHash).getToken().orElse("");
+		String identifier = identifier(token).getSource().sourceAsString();
+		String javaClass = javaClassName(javaClassAndHash).getSource().sourceAsString(); 
 		
 		return new ClassNameAndIdentifier(javaClass, identifier);
 	}
@@ -80,7 +78,7 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
         TinyExpressionTokens tinyExpressionTokens) {
   
       try {
-        String methodName = token.tokenString.get();
+        String methodName = token.getSource().sourceAsString();
         String resolveJavaClass = tinyExpressionTokens.resolveJavaClass(methodName);
         String[] split = resolveJavaClass.split("#");
         
