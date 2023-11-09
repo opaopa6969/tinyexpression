@@ -7,7 +7,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
 
-@SuppressWarnings("serial")
 public class TupleVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
     @Override

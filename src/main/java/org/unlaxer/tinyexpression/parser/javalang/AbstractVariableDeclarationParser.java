@@ -9,6 +9,7 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
+import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
 import org.unlaxer.tinyexpression.parser.DescriptionParser;
@@ -34,7 +35,7 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
     parsers.add(Parser.get(NakedVariableParser.class));
     typeDeclaration().ifPresent(parsers::add);
     setter().ifPresent(parsers::add);
-    parsers.add(Parser.get(DescriptionParser.class));
+    parsers.add(new Optional(Parser.get(DescriptionParser.class)));
     parsers.add(Parser.get(SemiColonParser.class));
     
     return parsers;

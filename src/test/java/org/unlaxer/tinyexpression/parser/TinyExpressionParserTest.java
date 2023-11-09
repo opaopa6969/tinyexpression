@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
@@ -312,6 +313,31 @@ public class TinyExpressionParserTest extends ParserTestBase{
     
     String string = TokenPrinter.get(rootToken);
     System.out.println(string);
+  }
+  
+  @Test
+  public void testCollections() {
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+    
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+
+    simpleBuilder
+      .line("var $test as Tuple<Number,String,Boolean>[69,'scott tiger',true] description='scott tiger information' ;")
+;
+    //      .line("var $test2 as Tuple<Number,List<String>,Tuple<Number,Boolean>>[69,['scott tiger','marco '],true] description='scott tiger information' ;")
+//      .line("var $test3 as List<Tuple<Number,List<String>,Tuple<Number,Boolean>>>[[69,['scott tiger','marco '],true] ,[69,['scott tiger','marco '],true]]  ;");
+    
+    String formula = simpleBuilder.toString();
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+    
   }
 
 }
