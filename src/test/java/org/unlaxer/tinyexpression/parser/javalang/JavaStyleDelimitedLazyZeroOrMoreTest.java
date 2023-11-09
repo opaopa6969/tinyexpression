@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -27,7 +26,7 @@ public class JavaStyleDelimitedLazyZeroOrMoreTest extends ParserTestBase{
   public static class TestChainParser extends JavaStyleDelimitedLazyChain{
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(new WordParser("b"));
     }
   }

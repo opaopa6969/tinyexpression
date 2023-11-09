@@ -7,7 +7,10 @@ import java.math.RoundingMode;
 import java.util.Optional;
 
 import org.junit.Test;
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.EnclosureDirection;
+import org.unlaxer.Source;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
 import org.unlaxer.parser.ParsersSpecifier;
@@ -59,8 +62,8 @@ public abstract class TokenTest {
 		    ) (14 - 15): RightParenthesisParser 
 	*/
 
-		String formula = "(1+1)/3+sin(30)";
-		int position = formula.indexOf("1");
+		Source formula = StringSource.createRootSource("(1+1)/3+sin(30)");
+		CodePointIndex position = formula.codePointIndexOf("1").orElseThrow();
 		
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		
@@ -73,23 +76,23 @@ public abstract class TokenTest {
 		//expand
 		Optional<Token> enclosureWithMatchInitial = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , Optional.empty(), enclosurematchers);
-		assertEquals("1", enclosureWithMatchInitial.get().tokenString.get());
+		assertEquals("1", enclosureWithMatchInitial.get().getSource().sourceAsString());
 
 		Optional<Token> enclosureWithMatch = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , enclosureWithMatchInitial, enclosurematchers);
-		assertEquals("1+1", enclosureWithMatch.get().tokenString.get());
+		assertEquals("1+1", enclosureWithMatch.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch2 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , enclosureWithMatch , enclosurematchers);
-		assertEquals("(1+1)", enclosureWithMatch2.get().tokenString.get());
+		assertEquals("(1+1)", enclosureWithMatch2.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch3 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , enclosureWithMatch2 , enclosurematchers);
-		assertEquals("(1+1)/3", enclosureWithMatch3.get().tokenString.get());
+		assertEquals("(1+1)/3", enclosureWithMatch3.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch4 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , enclosureWithMatch3 , enclosurematchers);
-		assertEquals(formula, enclosureWithMatch4.get().tokenString.get());
+		assertEquals(formula, enclosureWithMatch4.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch5 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,outer , position , enclosureWithMatch4 , enclosurematchers);
@@ -98,19 +101,19 @@ public abstract class TokenTest {
 		//collapse
 		Optional<Token> enclosureWithMatch6 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,inner , position , enclosureWithMatch4 , enclosurematchers);
-		assertEquals("(1+1)/3", enclosureWithMatch6.get().tokenString.get());
+		assertEquals("(1+1)/3", enclosureWithMatch6.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch7 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,inner , position , enclosureWithMatch6 , enclosurematchers);
-		assertEquals("(1+1)", enclosureWithMatch7.get().tokenString.get());
+		assertEquals("(1+1)", enclosureWithMatch7.get().getSource().sourceAsString());
 
 		Optional<Token> enclosureWithMatch8 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,inner , position , enclosureWithMatch7 , enclosurematchers);
-		assertEquals("1+1", enclosureWithMatch8.get().tokenString.get());
+		assertEquals("1+1", enclosureWithMatch8.get().getSource().sourceAsString());
 
 		Optional<Token> enclosureWithMatch9 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,inner , position , enclosureWithMatch8 , enclosurematchers);
-		assertEquals("1", enclosureWithMatch9.get().tokenString.get());
+		assertEquals("1", enclosureWithMatch9.get().getSource().sourceAsString());
 		
 		Optional<Token> enclosureWithMatch10 = 
 				TokenEnclosureUtil.getEnclosureWithToken(token,inner , position , enclosureWithMatch9 , enclosurematchers);
@@ -120,8 +123,8 @@ public abstract class TokenTest {
 	}
 	@Test
 	public void testEnclosureSelectWithInvalid() {
-		String formula = "(1+1)/3ax+sign(30)";
-		int position = formula.indexOf("a");
+		Source formula = StringSource.createRootSource("(1+1)/3ax+sign(30)");
+		CodePointIndex position = formula.codePointIndexOf("a").orElseThrow();
 		
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		
@@ -136,6 +139,6 @@ public abstract class TokenTest {
 		assertFalse(enclosureWithMatchInitial.isPresent());
 	}
 	
-	public abstract Calculator<?> calculator(String formula);
+	public abstract Calculator<?> calculator(Source formula);
 
 }

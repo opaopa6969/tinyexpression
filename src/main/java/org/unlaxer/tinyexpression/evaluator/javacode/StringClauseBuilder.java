@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
@@ -36,6 +37,7 @@ import org.unlaxer.tinyexpression.parser.string.StringSideEffectExpressionParser
 import org.unlaxer.tinyexpression.parser.string.StringTermParser;
 import org.unlaxer.tinyexpression.parser.string.StringVariableParser;
 import org.unlaxer.util.FactoryBoundCache;
+import org.unlaxer.util.SimpleBuilder;
 
 public class StringClauseBuilder {
   
@@ -145,7 +147,7 @@ public class StringClauseBuilder {
 
 			ExpressionOrLiteral inner = build(stringFactorToken , tinyExpressionTokens);
 
-			Optional<String> specifier = slicerToken.getToken()
+			Optional<String> specifier = slicerToken.getSource().nonEmptyString()
 					.map(wrapped -> wrapped.substring(1, wrapped.length() - 1));
 
 			ExpressionOrLiteral evaluate = specifier.map(slicerSpecifier -> 
@@ -158,7 +160,7 @@ public class StringClauseBuilder {
 		} else if (parser instanceof StringLiteralParser) {
 
 			Token literalChoiceToken = ChoiceInterface.choiced(token);
-			String contents = stringByToken.get(literalChoiceToken);
+			String contents = stringByToken.get(literalChoiceToken).sourceAsString();
 			return ExpressionOrLiteral.literalOf(contents == null ? "" : contents);
 
 		} else if (parser instanceof NakedVariableParser || parser instanceof StringVariableParser) {
@@ -322,5 +324,5 @@ public class StringClauseBuilder {
 		throw new IllegalArgumentException();
 	}
 
-	static FactoryBoundCache<Token, String> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
+	static FactoryBoundCache<Token, Source> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
 }

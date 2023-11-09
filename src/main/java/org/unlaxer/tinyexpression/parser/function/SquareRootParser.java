@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.function;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -43,7 +41,7 @@ public class SquareRootParser extends JavaStyleDelimitedLazyChain implements Num
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
       Parser.get(SqrtFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),

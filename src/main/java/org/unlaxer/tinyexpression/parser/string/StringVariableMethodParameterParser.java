@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
@@ -17,7 +16,7 @@ public class StringVariableMethodParameterParser extends LazyChoice implements T
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(StringPrefixedVariableParser.class),//
         Parser.get(StringSuffixedVariableParser.class)

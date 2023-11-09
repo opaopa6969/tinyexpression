@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -20,7 +18,7 @@ private static final long serialVersionUID = -6949606984841006427L;
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
 	      new Parsers(
 	        Parser.get(StringExpressionParser.class),

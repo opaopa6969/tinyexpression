@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 
 public abstract class JavaStyleDelimitedLazyZeroOrMore extends LazyZeroOrMore {
@@ -13,11 +13,11 @@ public abstract class JavaStyleDelimitedLazyZeroOrMore extends LazyZeroOrMore {
   
   public JavaStyleDelimitedLazyZeroOrMore() {
     super();
-    List<Parser> parser = List.of(targetParser().get());
+    Parsers parser = Parsers.of(targetParser().get());
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override
-      public List<Parser> getLazyParsers() {
+      public Parsers getLazyParsers() {
         return parser;
       }
       
@@ -26,11 +26,11 @@ public abstract class JavaStyleDelimitedLazyZeroOrMore extends LazyZeroOrMore {
 
   public JavaStyleDelimitedLazyZeroOrMore(Name name) {
     super(name);
-    List<Parser> parser = List.of(targetParser().get());
+    Parsers parser = Parsers.of(targetParser().get());
     chain = new JavaStyleDelimitedLazyChain() {
 
       @Override
-      public List<Parser> getLazyParsers() {
+      public Parsers getLazyParsers() {
         return parser;
       }
       

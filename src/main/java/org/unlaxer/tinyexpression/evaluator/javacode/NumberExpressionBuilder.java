@@ -105,7 +105,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
     } else if (parser instanceof NumberParser) {
 
-      builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
+      builder.append(String.valueOf(Float.parseFloat(token.getSource().sourceAsString()))+"f");
 
     } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 

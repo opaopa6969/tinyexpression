@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.BlockComment;
@@ -12,7 +10,7 @@ import org.unlaxer.parser.elementary.SpaceDelimitor;
 public class JavaStyleDelimitorElements extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     return new Parsers(
         Parser.get(BlockComment.class),

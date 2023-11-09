@@ -2,6 +2,8 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
+import org.unlaxer.CodePointOffset;
+import org.unlaxer.Source;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
@@ -38,7 +40,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(SideEffectNameParser.class),
@@ -67,15 +69,16 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 //  }
   @TokenExtractor
   @VirtualTokenCreator
-  public static Token getReturningClause(Token thisParserParsed, java.util.Optional<Token> firstParameter) {
+  public static Token getReturningClause(Source rootSource , Token thisParserParsed, java.util.Optional<Token> firstParameter) {
     return thisParserParsed.getChildAsOptional(token->token.parser instanceof Returning)
         .orElseGet(()->ReturningParser.getReturningParserWhenNotSpecifiedReturingClause(
+            rootSource,
             getReturningPosition(thisParserParsed),firstParameter));
   }
   
-  static int getReturningPosition(Token thisParserParsed) {
-    Token childWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
-    return childWithParser.tokenRange.endIndexExclusive;
+  static CodePointOffset getReturningPosition(Token thisParserParsed) {
+    Token tokenOfChildWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
+    return new CodePointOffset(tokenOfChildWithParser.getSource().cursorRange().endIndexExclusive.getPosition());
   }
 
 	@TokenExtractor

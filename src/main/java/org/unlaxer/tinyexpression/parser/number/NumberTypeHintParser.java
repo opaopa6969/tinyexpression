@@ -1,10 +1,11 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
-import org.unlaxer.RangedString;
+import org.unlaxer.CodePointOffset;
+import org.unlaxer.Source;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenList;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -22,7 +23,7 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
   static final WordParser numberWordParser = new WordParser("number");
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
       new Parsers(
           new WordParser("Number"), //
@@ -32,11 +33,11 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
       );
   }
   
-  public static Token createToken(int position,TokenKind tokenKind) {
+  public static Token createToken(Source rootSource , CodePointOffset position,TokenKind tokenKind) {
     
-    Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
-    List<Token> children = List.of(token);
-    return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
+    Token token = new Token(tokenKind, StringSource.createSubSource(" number " , rootSource , position), numberWordParser);
+    TokenList children = TokenList.of(token);
+    return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class));
   }
 
   @Override

@@ -1,8 +1,6 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.StrictTyped;
 
 public class StrictTypedStringExpressionParser extends AbstractStringExpressionParser{
@@ -19,7 +17,7 @@ public class StrictTypedStringExpressionParser extends AbstractStringExpressionP
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
   

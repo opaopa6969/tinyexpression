@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
@@ -15,7 +13,7 @@ public class StringStartsWithParser extends StringMethodExpressionParser impleme
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
     //  StringStartsWith:=StringExpression'.startsWith('StringExpression')';
     return
       new Parsers(

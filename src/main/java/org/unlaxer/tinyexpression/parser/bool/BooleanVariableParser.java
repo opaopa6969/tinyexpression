@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -29,7 +28,7 @@ public class BooleanVariableParser extends LazyChoice implements RootVariablePar
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(BooleanVariableMatchedWithVariableDeclarationParser.class),
@@ -50,7 +49,7 @@ public class BooleanVariableParser extends LazyChoice implements RootVariablePar
     }
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(//
           Parser.get(DollarParser.class), //0
           Parser.get(BooleanVariableDeclarationMatchedTokenParser.class)//1

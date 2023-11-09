@@ -39,7 +39,7 @@ public class FormulaTest extends ParserTestBase{
 		
 		Parser formulaParser = Parser.get(FormulaParser.class);
 
-		try(ParseContext parseContext = new ParseContext(new StringSource(formula))){
+		try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula))){
 			
 			Parsed parsed = formulaParser.parse(parseContext);
 			
@@ -53,14 +53,14 @@ public class FormulaTest extends ParserTestBase{
 	
 	void output(Token token,PrintStream out, int level){
 		
-		if(false == token.tokenString.isPresent()){
+		if(false == token.getSource().isPresent()){
 			return;
 		}
 		for(int i = 0 ; i < level ; i++){
 			out.print(" ");
 		}
 		
-		out.format("%s : %s \n" , token.tokenString.get() , token.parser.getClass().getSimpleName());
+		out.format("%s : %s \n" , token.getSource().sourceAsString() , token.parser.getClass().getSimpleName());
 		if(false == token.filteredChildren.isEmpty()){
 			level++;
 			for(Token original : token.filteredChildren){

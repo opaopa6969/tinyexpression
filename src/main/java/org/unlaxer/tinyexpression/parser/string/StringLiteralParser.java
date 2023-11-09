@@ -1,8 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.DoubleQuotedParser;
@@ -17,7 +14,7 @@ public class StringLiteralParser extends LazyChoice implements StringExpression{
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
 	      // StringLiteral:="CharactersWithoutDoubleQuote*"|'CharactersWithoutSingleQuote*';      
         new Parsers(

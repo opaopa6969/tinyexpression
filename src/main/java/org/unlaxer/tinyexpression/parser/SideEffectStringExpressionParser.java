@@ -27,7 +27,7 @@ public class SideEffectStringExpressionParser extends JavaStyleDelimitedLazyChai
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
         new Parsers(Parser.get(SideEffectNameParser.class),
             Parser.get(() -> new WordParser(":")), Parser.get(JavaClassMethodParser.class), // 2

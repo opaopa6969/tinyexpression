@@ -1,8 +1,6 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 
 public class BooleanExpressionParser extends AbstractBooleanExpressionParser{
 
@@ -12,7 +10,7 @@ public class BooleanExpressionParser extends AbstractBooleanExpressionParser{
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
   

@@ -2,17 +2,20 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.stream.Stream;
 
+import org.unlaxer.Source;
+import org.unlaxer.util.SimpleBuilder;
+
 
 public class SimpleJavaCodeBuilder {
 
 	int functionNumber=0;
 	int supplierNumber=0;
 	int index;
-	StringBuilder builder;
-	StringBuilder functionBuilder = new StringBuilder();
-	StringBuilder calcBuilder = new StringBuilder();
-	StringBuilder fieldBuilder = new StringBuilder();
-	StringBuilder mainBuilder = new StringBuilder();
+	SimpleBuilder builder;
+	SimpleBuilder functionBuilder = new SimpleBuilder();
+	SimpleBuilder calcBuilder = new SimpleBuilder();
+	SimpleBuilder fieldBuilder = new SimpleBuilder();
+	SimpleBuilder mainBuilder = new SimpleBuilder();
 	
 	Kind kind = Kind.Main;
 	
@@ -36,7 +39,7 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 
-	public StringBuilder getBuilder(Kind kind) {
+	public SimpleBuilder getBuilder(Kind kind) {
 	  return kind == Kind.Main ?
 	      mainBuilder : kind == Kind.Function ?
 	          functionBuilder : kind == Kind.Calculation ?
@@ -68,27 +71,30 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 	
-	public SimpleJavaCodeBuilder append(String word) {
+	public SimpleJavaCodeBuilder append(CharSequence word) {
 		builder.append(word);
 		return this;
 	}
-	public SimpleJavaCodeBuilder withTab(String word) {
+	
+	public SimpleJavaCodeBuilder withTab(CharSequence word) {
 		tab();
 		builder.append(word);
 		return this;
 	}
 
 	
-	public SimpleJavaCodeBuilder line(String word) {
+	public SimpleJavaCodeBuilder line(CharSequence word) {
 		tab();
-		append(word+"\n");
+		append(word);
+		n();
 		return this;
 	}
 	public SimpleJavaCodeBuilder lines(String lines) {
 		String[] split = lines.split("\n");
 		for (String line : split) {
 			tab();
-			append(line+"\n");
+			append(line);
+			n();
 		}
 		return this;
 	}
@@ -109,6 +115,11 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 	
+	public SimpleJavaCodeBuilder w(Source word) {
+    word = word == null  ? Source.EMPTY :  word;
+    append("\"" + word.replaceAll("\"","\\\"") +  "\"");
+    return this;
+  }
 	
 	public SimpleJavaCodeBuilder w(String word) {
 		word = word == null  ? "" :  word;
@@ -116,7 +127,7 @@ public class SimpleJavaCodeBuilder {
 		return this;
 	}
 	
-	public SimpleJavaCodeBuilder p(String word) {
+	public SimpleJavaCodeBuilder p(CharSequence word) {
 		word = word == null  ? "" :  word;
 		append("(" + word +  ")");
 		return this;
@@ -151,7 +162,7 @@ public class SimpleJavaCodeBuilder {
 
 
 	public SimpleJavaCodeBuilder n() {
-		append("\n");
+	  builder.n();
 		return this;
 	}
 }

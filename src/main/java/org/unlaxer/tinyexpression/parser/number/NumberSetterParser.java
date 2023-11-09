@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -16,7 +14,7 @@ public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleD
   implements NumberExpression , SetterParser{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(SetWordParser.class),
         Parser.get(()->new Optional(Parser.get(IfNotExistsParser.class))),

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
@@ -18,7 +16,7 @@ import org.unlaxer.tinyexpression.parser.string.StringVariableDeclarationParser;
 public class VariableDeclarationParser extends LazyChoice{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(NumberVariableDeclarationParser.class),
         Parser.get(StringVariableDeclarationParser.class),

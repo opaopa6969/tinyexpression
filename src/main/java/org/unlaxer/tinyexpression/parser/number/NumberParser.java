@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -30,7 +28,7 @@ public class NumberParser extends LazyChain implements StaticParser , NumberExpr
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return new Parsers(				
 				// + or -
 				new Optional(Name.of("optional-signParser"),signParser),

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.AndParser;
@@ -17,7 +15,7 @@ public class BooleanAndExpressionParser extends JavaStyleDelimitedLazyChain impl
 	}
 	
 	 @Override
-	  public List<Parser> getLazyParsers() {
+	  public Parsers getLazyParsers() {
 	    return
         new Parsers(
           Parser.get(BooleanFactorParser.class),

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
@@ -15,7 +13,7 @@ public class StringContainsParser extends StringMethodExpressionParser implement
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       //  StringContains:=StringExpression'.contains('StringExpression')';
       new Parsers(

@@ -84,7 +84,7 @@ public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimite
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
 	    new Parsers(
         Parser.get(SideEffectNameParser.class),

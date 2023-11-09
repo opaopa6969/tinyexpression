@@ -1,13 +1,11 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
 
 public class BooleanFactorParser extends AbstractBooleanFactorParser{
 
    @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
 

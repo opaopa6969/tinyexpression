@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.tuple;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -21,7 +20,7 @@ public class TuplePrefixedVariableParser extends JavaStyleDelimitedLazyChain imp
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(TupleTypeHintPrefixParser.class), //0
         Parser.get(NakedVariableParser.class)//1

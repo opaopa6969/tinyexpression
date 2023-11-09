@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
@@ -20,7 +18,7 @@ public class StringCaseExpressionParser extends JavaStyleDelimitedLazyChain{
 	
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return
       new Parsers(
         Parser.get(StringCaseFactorParser.class),

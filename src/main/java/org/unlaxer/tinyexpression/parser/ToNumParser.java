@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -28,7 +26,7 @@ public class ToNumParser extends JavaStyleDelimitedLazyChain {
   }
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return new Parsers(
         Parser.get(ToNumNameParser.class), // 0
         Parser.get(LeftParenthesisParser.class), // 1

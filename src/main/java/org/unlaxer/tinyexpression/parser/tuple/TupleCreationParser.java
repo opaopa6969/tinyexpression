@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.tuple;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Chain;
@@ -14,7 +12,7 @@ import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 public class TupleCreationParser extends JavaStyleDelimitedLazyChain {
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("["),
         Parser.get(ExpressionChoiceParser.class),

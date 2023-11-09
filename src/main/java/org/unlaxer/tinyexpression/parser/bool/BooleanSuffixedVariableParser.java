@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -24,7 +23,7 @@ public class BooleanSuffixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(NakedVariableParser.class), //

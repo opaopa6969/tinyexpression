@@ -80,7 +80,7 @@ public interface JavaClassCreator{
       String javaType = typeHintParser.type().javaType();
       
       Token methodNameToken = token.getChild(TokenPredicators.parsers(IdentifierParser.class));
-      String methodName = methodNameToken.tokenString.get();
+      String methodName = methodNameToken.getSource().sourceAsString();
       
       List<Token> parameters = token.flatten().stream()
           .filter(TokenPredicators.parsers(

@@ -4,18 +4,21 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Optional;
 
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.EnclosureDirection;
 import org.unlaxer.Range;
+import org.unlaxer.Source;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
 import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
+import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.parser.number.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.number.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.number.NumberTermParser;
-import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.util.StringUtil;
+import org.unlaxer.util.SourceUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{
 	
@@ -34,10 +37,10 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 
 
 	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext) {
-		this(calculator , calculateContext , "");
+		this(calculator , calculateContext , StringSource.createRootSource(""));
 	}
 	
-	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext , String formula) {
+	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext , Source formula) {
 		super();
 		this.calculateContext = calculateContext;
 		this.calculator = calculator;
@@ -48,7 +51,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		edits.add(editHistory);
 		
 		editHistory = 
-				new EditHistory(new EditAction(formula) ,
+				new EditHistory(new EditAction(formula.sourceAsString()) ,
 						formula.length(), calculateContext, calculateResult); 
 		edits.add(editHistory);
 	}
@@ -82,49 +85,52 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	public boolean insert(String part) {
 		
 		//first implementation -> do simple !
+	  
+	  StringSource partSource = StringSource.createRootSource(part);
+	  
 		
-		String formulaString = getFormulaString();
-		int position = getPosition();
+		Source formulaString = getFormulaString();
+		CodePointIndex position = new CodePointIndex(getPosition());
 		
 		Optional<Token> selection = getSelection();
 		Range tokenRange = selection.isPresent() ?
-				selection.get().tokenRange :
-					new Range(position , position+1);
-		String deleted = StringUtil.deleteAndInsert(formulaString, tokenRange , part);
-		EditHistory createInsertEditHistory = createInsertEditHistory(deleted , tokenRange, position, part);
+				selection.get().getSource().cursorRange().toRange() :
+					new Range(position , position.newWithAdd(1));
+		Source deleted = SourceUtil.newWithDeleteAndInsert(formulaString, tokenRange , partSource);
+		EditHistory createInsertEditHistory = createInsertEditHistory(deleted , tokenRange, position, partSource);
 		edits.add(createInsertEditHistory);
 		return true;
 	}
 
-	boolean backspace(int position){
-		return delete(ActionType.backSpace , position-1);
+	boolean backspace(CodePointIndex position){
+		return delete(ActionType.backSpace , position.newWithMinus(1));
 	}
-	boolean delete(int position){
+	boolean delete(CodePointIndex position){
 		return delete(ActionType.delete, position);
 	}
 
-	boolean delete(ActionType actionType , int position){
+	boolean delete(ActionType actionType , CodePointIndex position){
 		
-		String formulaString = getFormulaString();
+		Source formulaString = getFormulaString();
 		
 		Optional<Token> selection = getSelection();
 		if(selection.isPresent()){
-			Range tokenRange = selection.get().tokenRange;
-			String deleted = StringUtil.delete(formulaString, tokenRange);
+			Range tokenRange = selection.get().getSource().cursorRange().toRange();
+			Source deleted = SourceUtil.newWithDelete(formulaString, tokenRange);
 			return addDeleteAction(actionType, position, formulaString , deleted , Optional.of(tokenRange));
 			
 		}else{
-			String deleted = StringUtil.delete(formulaString , position);
+			Source deleted = SourceUtil.newWithDelete(formulaString , position);
 			return addDeleteAction(actionType, position, formulaString, deleted , Optional.empty());
 		}
 	}
 
 	private boolean addDeleteAction(
-			ActionType actionType, int position, String formulaString, String deleted ,Optional<Range> effectedRange) {
+			ActionType actionType, CodePointIndex position, Source formulaString, Source deleted ,Optional<Range> effectedRange) {
 		
 		boolean success = deleted.length() != formulaString.length();
 		if(success){
-			Range range = effectedRange.orElse(new Range(position , position +1));
+			Range range = effectedRange.orElse(new Range(position , position.newWithPlus(1)));
 			EditHistory createEditHistory = createEditHistory(actionType , deleted, range , position);
 			edits.add(createEditHistory);
 		}
@@ -132,21 +138,21 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	}
 	
 	
-	EditHistory createEditHistory(ActionType actionType , String formula ,Range range ,int  position){
+	EditHistory createEditHistory(ActionType actionType , Source formula ,Range range ,CodePointIndex position){
 		
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		EditHistory editHistory = 
-				new EditHistory(new EditAction(actionType , range), position , calculateContext, calculateResult);
+				new EditHistory(new EditAction(actionType , range), position.value() , calculateContext, calculateResult);
 		
 		return editHistory;
 	}
 	
-	EditHistory createInsertEditHistory(String formula ,Range range ,int  position , String insertion){
+	EditHistory createInsertEditHistory(Source formula ,Range range ,CodePointIndex position , Source insertion){
 		
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		
 		EditHistory editHistory = 
-				new EditHistory(new EditAction(insertion,range), position , calculateContext, calculateResult);
+				new EditHistory(new EditAction(insertion.sourceAsString(),range), position.value() , calculateContext, calculateResult);
 		
 		return editHistory;
 	}
@@ -159,13 +165,14 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	public boolean cursorRight() {
 		Optional<Token> currentSelection = getSelection();
 		if(currentSelection.isPresent()){
-			updatePosition(ActionType.cursorRight , currentSelection.get().tokenRange.endIndexExclusive);
+			updatePosition(ActionType.cursorRight , 
+			    currentSelection.get().getSource().cursorRange().endIndexExclusive.getPosition());
 			return true;
 		}
-		String formulaString = getFormulaString();
-		int position = getPosition();
-		boolean movable = formulaString.length() > position;
-		position = movable ? ++position : position;
+		Source formulaString = getFormulaString();
+		CodePointIndex position = getPosition();
+		boolean movable = formulaString.codePointLength().gt(position);
+		position = movable ? position.newWithIncrements() : position;
 		updatePosition(ActionType.cursorRight , position);
 		return movable;
 	}
@@ -175,39 +182,41 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	public boolean cursorLeft() {
 		Optional<Token> currentSelection = getSelection();
 		if(currentSelection.isPresent()){
-			int position = Math.max(0, currentSelection.get().tokenRange.startIndexInclusive-1);
+			CodePointIndex position = new CodePointIndex(			    
+			    Math.max(0, currentSelection.get().getSource().cursorRange().startIndexInclusive().getPosition().newWithMinus(1).value())
+	    );
 			updatePosition(ActionType.cursorLeft , position);
 			return true;
 		}
-		int position = getPosition();
-		boolean movable = 0 < position;
-		position = movable ? --position : position;
+		CodePointIndex position = getPosition();
+		boolean movable = position.isGreaterThanZero();
+		position = movable ? position.newWithDecrements() : position;
 		updatePosition(ActionType.cursorLeft, position);
 		return movable;
 	}
 	
 	@Override
 	public boolean home() {
-		int position = getPosition();
-		boolean movable = 0 < position;
-		position = 0;
+		CodePointIndex position = getPosition();
+		boolean movable = position.isGreaterThanZero();
+		position = new CodePointIndex(0);
 		updatePosition(ActionType.home , position);
 		return movable;
 	}
 
 	@Override
 	public boolean end() {
-		String formulaString = getFormulaString();
-		int position = getPosition();
-		boolean movable = formulaString.length() > position;
-		position = formulaString.length();
+		Source formulaString = getFormulaString();
+		CodePointIndex position = getPosition();
+		boolean movable = formulaString.codePointLength().gt(position);
+		position = new CodePointIndex(formulaString.codePointLength());
 		updatePosition(ActionType.end, position);
 		return movable;
 	}
 	
-	void updatePosition(ActionType actionType , int position){
+	void updatePosition(ActionType actionType , CodePointIndex position){
 		EditHistory updated = getCurrent().clone(EditAction.of(actionType));
-		updated.caretPosition = position;
+		updated.caretPosition = position.value();
 		edits.push(updated);
 	}
 	
@@ -221,7 +230,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		if(false == rootToken.isPresent()){
 			return Optional.empty();
 		}
-		int position = getPosition();
+		CodePointIndex position = getPosition();
 		Optional<Token> selected = 
 				TokenEnclosureUtil.getEnclosureWithToken(rootToken.get(),
 						enclosureDirection, position, getSelection(), enclosureMatchers);
@@ -257,12 +266,12 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		return edits.peekFirst();
 	}
 	
-	String getFormulaString(){
-		return getCurrent().calculateResult.parseContext.source.toString();
+	Source getFormulaString(){
+		return getCurrent().calculateResult.parseContext.source;
 	}
 	
-	int getPosition(){
-		return getCurrent().caretPosition;
+	CodePointIndex getPosition(){
+		return new CodePointIndex(getCurrent().caretPosition);
 	}
 
 }

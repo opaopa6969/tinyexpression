@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.IndexOfMethodParser;
@@ -17,7 +15,7 @@ public class StringIndexOfParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	   // StringIndexOf:=StringExpression'.indexOf('StringExpression')';
     return  
       new Parsers(

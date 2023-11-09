@@ -1,10 +1,9 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
-import org.unlaxer.RangedString;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenList;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 
@@ -19,11 +18,11 @@ public interface RootVariableParser extends TypedVariableParser{
     
     ExpressionType expressionType = typedVariable.typeAsOptional().get();
 
-    Token typePrefix = new Token(TokenKind.consumed, new RangedString(0, expressionType.javaType()), Parser.get(typeHintVariableParser()));
+    Token typePrefix = new Token(TokenKind.consumed, StringSource.createDetachedSource(expressionType.javaType()), Parser.get(typeHintVariableParser()));
     
     TypedToken<? extends VariableParser> newCreatesOfTyped = child.newCreatesOfTyped(typePrefix ,
         tokenOfNakedVariable.newWithReplaceTyped(Parser.get(NakedVariableParser.class)));
-    root = root.newCreatesOfTyped(List.of(newCreatesOfTyped));
+    root = root.newCreatesOfTyped(TokenList.of(newCreatesOfTyped));
     return root;
   }
   

@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Name;
@@ -27,7 +26,7 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     return 
       new Parsers(

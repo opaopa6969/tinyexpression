@@ -33,7 +33,7 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       new Parsers(
         Parser.get(StringExpressionParser.class),

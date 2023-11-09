@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.Name;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
@@ -23,7 +21,7 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
   public final static Tag typed = Tag.of("typed");
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     Parsers parsers = new Parsers();
     parsers.add(

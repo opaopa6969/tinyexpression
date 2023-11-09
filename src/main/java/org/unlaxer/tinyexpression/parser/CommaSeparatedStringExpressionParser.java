@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
@@ -19,7 +17,7 @@ public class CommaSeparatedStringExpressionParser extends JavaStyleDelimitedLazy
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
 	      //  CommaSeparatedStringExpression:=StringExpression(','StringExpression)*')';
       new Parsers(

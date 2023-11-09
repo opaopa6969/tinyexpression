@@ -23,7 +23,7 @@ public class Formatter {
   public static String format(String expression) {
     
     
-    try(ParseContext parseContext = new ParseContext(new StringSource(expression))){
+    try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(expression))){
       FormatterContext formatterContext = new FormatterContext(0);
       
       FormulaParser formulaParser = Parser.get(FormulaParser.class);
@@ -45,7 +45,7 @@ public class Formatter {
   }
   
   static Comparator<Token> tokenComparator = (o1,o2)->{
-    return o1.getTokenRange().compareTo(o2.tokenRange);
+    return o1.getSource().cursorRange().compareTo(o2.getSource().cursorRange());
   };
   
   public static void renderIf(FormatterContext context , Token token) {
@@ -135,7 +135,7 @@ public class Formatter {
     
     List<Token> tokens = new ArrayList<>(token.filteredChildren);
     if(tokens.size() ==0) {
-      token.getRangedString().token.ifPresent(context::append);
+      context.append(token.getSource().sourceAsString());
       return;
     }
       

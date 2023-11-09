@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -22,7 +20,7 @@ public class BooleanExpressionOfStringParser extends LazyChoice implements Boole
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
     // BooleanExpressionOfString:=
     //  (StringExpression'=='StringExpression)|
     //  (StringExpression'!='StringExpression)|

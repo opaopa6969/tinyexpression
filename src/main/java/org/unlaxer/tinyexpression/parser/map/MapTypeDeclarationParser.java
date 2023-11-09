@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.map;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -11,7 +9,7 @@ import org.unlaxer.parser.elementary.WordParser;
 public class MapTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             new WordParser("as")

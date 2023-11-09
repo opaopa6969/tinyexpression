@@ -20,7 +20,7 @@ public class SideEffectName2Parser extends JavaStyleDelimitedLazyChain{
   }
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return
       new Parsers(
         new Optional(Parser.get(()->new WordParser("call"))),

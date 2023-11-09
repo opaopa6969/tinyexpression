@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenEffecterWithMatcher;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenList;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.ParseException;
@@ -147,18 +149,20 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
       Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
-      List</*Typed*/Token/*<MethodParser>*/> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
+      TokenList extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
       
-      extractMethodsTokens = extractMethodsTokens.stream()
-        .map(methodToken->{
-          return methodToken.newCreatesOf(
-              new TokenEffecterWithMatcher(
-                TokenPredicators.parserImplements(ExpressionInterface.class),
-                this::apply
-              )
-            );   
-        }).collect(Collectors.toList());
-      Token extractMethodsToken = new Token(TokenKind.consumed, extractMethodsTokens, Parser.get(MethodsParser.class),0);
+      extractMethodsTokens = TokenList.of( 
+          extractMethodsTokens.stream()
+          .map(methodToken->{
+            return methodToken.newCreatesOf(
+                new TokenEffecterWithMatcher(
+                  TokenPredicators.parserImplements(ExpressionInterface.class),
+                  this::apply
+                )
+              );   
+          }).collect(Collectors.toList())
+      );
+      Token extractMethodsToken = new Token(TokenKind.consumed, extractMethodsTokens, Parser.get(MethodsParser.class));
 //      extractMethodsToken = extractMethodsToken.newCreatesOf(
 //        new TokenEffecterWithMatcher(
 //          TokenPredicators.parserImplements(ExpressionInterface.class),
@@ -217,10 +221,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     }
     
     if(parser instanceof AnnotationParser) {
-        List<Token> collect = token.flatten().stream()
-          .filter(TokenPredicators.parsers(AnnotationParameterParser.class))
-          .map(this::apply)
-          .collect(Collectors.toList());
+        TokenList collect = TokenList.of( 
+            token.flatten().stream()
+              .filter(TokenPredicators.parsers(AnnotationParameterParser.class))
+              .map(this::apply)
+              .collect(Collectors.toList())
+        );
         
         return token.newCreatesOf(collect);
     }
@@ -281,10 +287,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
     }else if(parser instanceof NumberCaseExpressionParser){
       
-      List<Token> casefactors = token.filteredChildren.stream()
-        .filter(child-> child.parser instanceof NumberCaseFactorParser)
-        .map(this::apply)
-        .collect(Collectors.toList());
+      TokenList casefactors = TokenList.of(
+          token.filteredChildren.stream()
+            .filter(child-> child.parser instanceof NumberCaseFactorParser)
+            .map(this::apply)
+            .collect(Collectors.toList())
+      );
       return token.newCreatesOf(casefactors);
       
     }else if(parser instanceof NumberCaseFactorParser){
@@ -300,10 +308,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 
     }else if(parser instanceof BooleanCaseExpressionParser){
       
-      List<Token> casefactors = token.filteredChildren.stream()
-        .filter(child-> child.parser instanceof BooleanCaseFactorParser)
-        .map(this::apply)
-        .collect(Collectors.toList());
+      TokenList casefactors = TokenList.of( 
+          token.filteredChildren.stream()
+            .filter(child-> child.parser instanceof BooleanCaseFactorParser)
+            .map(this::apply)
+            .collect(Collectors.toList())
+      );
       return token.newCreatesOf(casefactors);
       
     }else if(parser instanceof BooleanCaseFactorParser){
@@ -319,10 +329,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 
     }else if(parser instanceof StringCaseExpressionParser){
       
-      List<Token> casefactors = token.filteredChildren.stream()
-        .filter(child-> child.parser instanceof StringCaseFactorParser)
-        .map(this::apply)
-        .collect(Collectors.toList());
+      TokenList casefactors = TokenList.of( 
+          token.filteredChildren.stream()
+            .filter(child-> child.parser instanceof StringCaseFactorParser)
+            .map(this::apply)
+            .collect(Collectors.toList())
+      );
       return token.newCreatesOf(casefactors);
       
     }else if(parser instanceof StringCaseFactorParser){
@@ -440,7 +452,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root, operator,firstParameter);
       
       return operator.newCreatesOf(
 //          returning causeをtoken化する。
@@ -556,7 +570,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root , operator,firstParameter);
       
       // defaultを廃止したのでコメントアウト。実装ヒントとして残しておく
 //      Token returning = apply(extractReturning(returningClause));
@@ -583,7 +599,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
         .map(this::extractParameters);
     
     Token methodNameToken = MethodInvocationParser.getMethodName(operator);
-    String methodName = methodNameToken.getToken().get();
+    String  methodName = methodNameToken.getSource().sourceAsString();
     
     Token tinyExpressionParserToken = operator.getAncestor(TokenPredicators.parsers(TinyExpressionParser.class));
     
@@ -637,11 +653,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 
   Token extractParameters(Token argumentsToken) {
     
-    List<Token> appliedChildren = argumentsToken.filteredChildren.stream()
-        .filter(token-> false == token.parser instanceof CommaParser)
-        .map(this::apply)
-        .collect(Collectors.toList());
-    
+    TokenList appliedChildren = TokenList.of( 
+        argumentsToken.filteredChildren.stream()
+          .filter(token-> false == token.parser instanceof CommaParser)
+          .map(this::apply)
+          .collect(Collectors.toList())
+    );
     return argumentsToken.newCreatesOf(appliedChildren);
   }
 
@@ -787,10 +804,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
         stringExpressions.add(leftExpression);
         stringExpressions.addAll(getStringExpressions(inMethod));
         
-        List<Token> appliedExpressions = stringExpressions.stream()
-          .map(this::apply)
-          .collect(Collectors.toList());
-      
+        TokenList  appliedExpressions = TokenList.of(
+            stringExpressions.stream()
+              .map(this::apply)
+              .collect(Collectors.toList())
+        );
         return operatorWithString.newCreatesOf(appliedExpressions);
       }
       
@@ -802,7 +820,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       Token extractParameters = extractParameters(SideEffectExpressionParser.getParametersClause(operator));
       Optional<Token> firstParameter = extractFirstParmeter(extractParameters);
-      Token returningClause = SideEffectExpressionParser.getReturningClause(operator,firstParameter);
+      
+      Source root = token.getSource().root();
+      Token returningClause = SideEffectExpressionParser.getReturningClause(root , operator,firstParameter);
       
       return operator.newCreatesOf(
 //          returning causeをtoken化する。

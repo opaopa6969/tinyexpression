@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.list;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -16,7 +14,7 @@ public class ListTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         new Optional(
             Parser.get(AsParser.class) //

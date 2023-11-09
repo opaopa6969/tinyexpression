@@ -3,7 +3,7 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
+import org.unlaxer.util.SimpleBuilder;
 
 public class ImportsParserTest extends ParserTestBase{
 

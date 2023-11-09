@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
@@ -15,7 +13,7 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 public class AnnotationParser extends LazyChain{
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     
     return new Parsers(
         new WordParser("@"),

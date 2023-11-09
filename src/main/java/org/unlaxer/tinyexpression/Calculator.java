@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.unlaxer.Parsed;
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
@@ -13,7 +14,11 @@ import org.unlaxer.parser.Parser;
 public interface Calculator<T> {
   
   public default CalculateResult calculate(CalculationContext calculateContext, String formula) {
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    return calculate(calculateContext, StringSource.createRootSource(formula));
+  }
+  
+  public default CalculateResult calculate(CalculationContext calculateContext, Source formula) {
+    ParseContext parseContext = new ParseContext(formula);
     Parsed parsed = getParser().parse(parseContext);
     try{
       Token rootToken = tokenReduer().apply(parsed.getRootToken(true));

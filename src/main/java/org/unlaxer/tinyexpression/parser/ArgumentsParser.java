@@ -35,7 +35,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return 
       new Parsers(
         Parser.get(ArgumentChoiceParser.class),

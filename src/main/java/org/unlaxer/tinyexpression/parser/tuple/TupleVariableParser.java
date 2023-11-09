@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.tuple;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -29,7 +28,7 @@ public class TupleVariableParser extends LazyChoice implements RootVariableParse
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(StringVariableMatchedWithVariableDeclarationParser.class),
         Parser.get(StringPrefixedVariableParser.class),//
@@ -49,7 +48,7 @@ public class TupleVariableParser extends LazyChoice implements RootVariableParse
     }
 
     @Override
-    public List<Parser> getLazyParsers() {
+    public Parsers getLazyParsers() {
       return new Parsers(//
           Parser.get(DollarParser.class), //0
           Parser.get(StringVariableDeclarationMatchedTokenParser.class)//1

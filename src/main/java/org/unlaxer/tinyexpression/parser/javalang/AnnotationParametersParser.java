@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -10,7 +8,7 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 public class AnnotationParametersParser extends JavaStyleDelimitedLazyChain{
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(LeftParenthesisParser.class),
         Parser.get(AnnotationFirstParameterParser.class),

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
-import java.util.List;
-
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
@@ -23,7 +21,7 @@ public class BooleanMatchExpressionParser extends JavaStyleDelimitedLazyChain im
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
       new Parsers(

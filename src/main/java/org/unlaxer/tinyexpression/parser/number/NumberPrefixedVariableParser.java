@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
@@ -19,7 +18,7 @@ public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return 
       new Parsers(//
           Parser.get(NumberTypeHintPrefixParser.class), //0

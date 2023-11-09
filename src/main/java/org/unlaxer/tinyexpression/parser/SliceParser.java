@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Chain;
@@ -21,7 +19,7 @@ public class SliceParser extends JavaStyleDelimitedLazyChain implements StringEx
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
 	      // Slice:='['Expression?':'Expression?(':'Expression)?']';
         new Parsers(

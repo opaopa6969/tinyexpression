@@ -1,9 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
+import org.unlaxer.CodePointOffset;
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
+import org.unlaxer.TokenList;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -18,7 +19,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
 //  static final String word = "returning";
 //  static final WordParser wordParser = new WordParser(word);
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new Optional(
             Parser.get(()->new WordParser("returning"))
@@ -28,24 +29,27 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
   }
   
   @VirtualTokenCreator
-  public static Token getReturningNumberParserWhenNotSpecifiedReturingClause(int position,
+  public static Token getReturningNumberParserWhenNotSpecifiedReturingClause(Source rootSource , CodePointOffset position,
       Token sideEffectFirstParameter) {
     
-    int current = position;
+    CodePointOffset current = position;
 //    Token wordToken = new Token(TokenKind.virtualTokenConsumed, new RangedString(position, word), wordParser);
 //    current += wordToken.tokenRange.endIndexExclusive;
     
     Token numberTypeHintSuffixToken = 
-        NumberTypeHintSuffixParser.createToken(current, TokenKind.virtualTokenConsumed);
-    current += numberTypeHintSuffixToken.tokenRange.endIndexExclusive;
+        NumberTypeHintSuffixParser.createToken(rootSource, current, TokenKind.virtualTokenConsumed);
+    current = current.newWithAdd(
+        numberTypeHintSuffixToken.getSource().cursorRange().endIndexExclusive.getPosition());
     
 //    Token defaultClauseToken = DefaultClauseParser.createToken(current, TokenKind.virtualTokenConsumed);
 //    current += defaultClauseToken.tokenRange.endIndexExclusive;
  
-    List<Token> children = List.of(/*wordToken , */ numberTypeHintSuffixToken /*defaultClauseToken*/, sideEffectFirstParameter);
+    TokenList children = TokenList.of(
+        /*wordToken , */ numberTypeHintSuffixToken ,
+        /*defaultClauseToken*/ sideEffectFirstParameter);
     
     return new Token(TokenKind.virtualTokenConsumed, children, 
-        Parser.get(ReturningNumberParser.class), position);
+        Parser.get(ReturningNumberParser.class));
   }
 
   @Override

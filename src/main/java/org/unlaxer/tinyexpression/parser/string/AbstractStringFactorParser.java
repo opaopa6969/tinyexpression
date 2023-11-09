@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -24,7 +22,7 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
 	public static Class<? extends Parser> NESTED = StringExpressionParser.class;
 	
   @Override
-  public List<Parser> getLazyParsers(boolean withNakedVariable) {
+  public Parsers getLazyParsers(boolean withNakedVariable) {
     
     Parsers parsers = new Parsers();
     

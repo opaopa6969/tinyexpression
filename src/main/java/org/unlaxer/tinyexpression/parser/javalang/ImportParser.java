@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
@@ -21,7 +19,7 @@ public class ImportParser extends JavaStyleDelimitedLazyChain{
   static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         new WordParser("import"),
         new Choice(

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.number;
 
-import java.util.List;
-
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
@@ -39,7 +37,7 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  return
       //MatchExpression:='match{'CaseExpression,DefaultCaseFactor'}';
       new Parsers(

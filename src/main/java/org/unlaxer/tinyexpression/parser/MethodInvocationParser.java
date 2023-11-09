@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -19,7 +17,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   public static boolean enabled3 = true;
   
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         //ここをoptionalにするとparseが意図しない結果となる。
 //        new Optional(
@@ -52,8 +50,6 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   
   public static String getMethodNameAsString(Token thisParserParsed) {
     
-    return getMethodName(thisParserParsed).getToken().get();
-    
+    return getMethodName(thisParserParsed).getSource().sourceAsString();
   }
-
 }

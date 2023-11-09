@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.function;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -48,7 +46,7 @@ public class MinParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 	}
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(MinParser.MinFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),

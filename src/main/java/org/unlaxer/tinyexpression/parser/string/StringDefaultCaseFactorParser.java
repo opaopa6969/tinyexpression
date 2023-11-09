@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.string;
 
-import java.util.List;
-
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
@@ -21,7 +19,7 @@ public class StringDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
 	}
 
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 		return
 	    new Parsers(
         new WordParser(","),

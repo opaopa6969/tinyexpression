@@ -19,11 +19,11 @@ import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.Calculator.CalculationException;
-import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.number.NumberIfExpressionParser;
+import org.unlaxer.util.SimpleBuilder;
 
 import net.arnx.jsonic.JSON;
 

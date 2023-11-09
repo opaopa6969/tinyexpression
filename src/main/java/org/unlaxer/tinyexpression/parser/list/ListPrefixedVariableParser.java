@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser.list;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -21,7 +20,7 @@ public class ListPrefixedVariableParser extends JavaStyleDelimitedLazyChain impl
   }
 
   @Override
-  public List<Parser> getLazyParsers() {
+  public Parsers getLazyParsers() {
     return new Parsers(//
         Parser.get(ListTypeHintPrefixParser.class), //0
         Parser.get(NakedVariableParser.class)//1

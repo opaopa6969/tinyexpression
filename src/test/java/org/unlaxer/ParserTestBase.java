@@ -95,7 +95,7 @@ public class ParserTestBase {
 			(parseContext , parsed)->{
 
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				Optional<String> lastToken = Optional.of(parseContext.getCurrent().source().sourceAsString());
 				resultTokenString.set(lastToken);
 				
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
@@ -115,8 +115,8 @@ public class ParserTestBase {
 						
 						testResult.add(
 								checkAssertFalse(
-								    parsed.getConsumed().tokenString.isPresent() &&
-								    false == parsed.getConsumed().tokenString.get().equals("")
+								    parsed.getConsumed().getSource().isPresent() &&
+								    false == parsed.getConsumed().getSource().sourceAsString().equals("")
 								    
 								    , doAssert)
 						);
@@ -125,7 +125,7 @@ public class ParserTestBase {
 					}else{
 						
 						testResult.add(
-								checkAssertEquals(matchedString, parsed.getConsumed().tokenString.orElse("") , doAssert)
+								checkAssertEquals(matchedString, parsed.getConsumed().getSource().sourceAsString() , doAssert)
 						);
 					}
 				}
@@ -176,7 +176,7 @@ public class ParserTestBase {
 	
 	public Parsed parse(Parser parser , String source) {
 		
-		StringSource stringSource = new StringSource(source);
+		StringSource stringSource = StringSource.createRootSource(source);
 		ParseContext parseContext = new ParseContext(stringSource,CreateMetaTokenSprcifier.createMetaOn);
 		Parsed parsed = parser.parse(parseContext);
 		return parsed;
@@ -245,7 +245,7 @@ public class ParserTestBase {
 		return test(parser, sourceString, createMeta,
 			(parseContext , parsed)->{
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				Optional<String> lastToken = Optional.of(parseContext.getCurrent().source().sourceAsString());
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
 				
 				testResult.add(
@@ -268,7 +268,7 @@ public class ParserTestBase {
 		return test(parser, sourceString, createMeta, 
 			(parseContext , parsed)->{
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				Optional<String> lastToken = Optional.of(parseContext.getCurrent().source().sourceAsString());
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
 				testResult.add(
 						checkAssertEquals(true, parsed.isSucceeded()  ,doAssert)
@@ -283,7 +283,7 @@ public class ParserTestBase {
 		int count = counts.get();
 		counts.set(count+1);
 
-		StringSource source = new StringSource(sourceString);
+		StringSource source = StringSource.createRootSource(sourceString);
 		try (OutputStream transactionFile = createFileOutputSream("transaction" , count);
 			OutputStream parseFile = createFileOutputSream("parse" , count);
 			OutputStream bothFile = createFileOutputSream("combined" , count);

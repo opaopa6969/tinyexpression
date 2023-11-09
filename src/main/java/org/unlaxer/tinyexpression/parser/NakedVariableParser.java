@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Name;
@@ -26,7 +25,7 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	}
 	
 	@Override
-	public List<Parser> getLazyParsers() {
+	public Parsers getLazyParsers() {
 	  
 	  return 
       new Parsers(
