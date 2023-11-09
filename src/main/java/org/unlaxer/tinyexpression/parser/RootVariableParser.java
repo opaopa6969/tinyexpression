@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
@@ -17,8 +18,8 @@ public interface RootVariableParser extends TypedVariableParser{
     TypedToken<? extends VariableParser> child = tokenOfNakedVariable.newWithReplaceTyped(Parser.get(oneOfTypedVariableParser()));
     
     ExpressionType expressionType = typedVariable.typeAsOptional().get();
-
-    Token typePrefix = new Token(TokenKind.consumed, StringSource.createDetachedSource(expressionType.javaType()), Parser.get(typeHintVariableParser()));
+    Source rootSource = tokenOfNakedVariable.getSource().root();
+    Token typePrefix = new Token(TokenKind.consumed, StringSource.createSubSource(rootSource,expressionType.javaType()), Parser.get(typeHintVariableParser()));
     
     TypedToken<? extends VariableParser> newCreatesOfTyped = child.newCreatesOfTyped(typePrefix ,
         tokenOfNakedVariable.newWithReplaceTyped(Parser.get(NakedVariableParser.class)));

@@ -11,6 +11,7 @@ public enum ExpressionTags{
   matchCase,
   matchCaseFactor,
   matchDefaultFactor,
+  thenAndElse,
   ;
   Tag tag;
 

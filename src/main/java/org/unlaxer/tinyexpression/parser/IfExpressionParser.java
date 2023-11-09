@@ -1,15 +1,17 @@
 package org.unlaxer.tinyexpression.parser;
 
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.bool.BooleanExpression;
@@ -52,25 +54,37 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
       Parser.get(LeftCurlyBraceParser.class),
    // if(condition){$variable}else{$variable}だった時にどちらかの変数が型指定をする事を求める
       new Choice(
-          new Chain(
-              Parser.newInstance(strictTypedReturning())
-                .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
-              Parser.get(RightCurlyBraceParser.class),
-              Parser.get(()->new WordParser("else")),
-              Parser.get(LeftCurlyBraceParser.class),
-              Parser.newInstance(nonStrictTypedReturning())
-                .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
-          ),
-          new Chain(
-              Parser.newInstance(nonStrictTypedReturning())
-                .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
-              Parser.get(RightCurlyBraceParser.class),
-              Parser.get(()->new WordParser("else")),
-              Parser.get(LeftCurlyBraceParser.class),
-              Parser.newInstance(strictTypedReturning())
-                .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
+          new JavaStyleDelimitedLazyChain() {
 
-          )
+            @Override
+            public Parsers getLazyParsers() {
+              return Parsers.of(
+                  Parser.newInstance(strictTypedReturning())
+                    .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
+                  Parser.get(RightCurlyBraceParser.class),
+                  Parser.get(()->new WordParser("else")),
+                  Parser.get(LeftCurlyBraceParser.class),
+                  Parser.newInstance(nonStrictTypedReturning())
+                    .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
+              );
+            }
+          }.addTag(ExpressionTags.thenAndElse.tag()),
+          new JavaStyleDelimitedLazyChain() {
+
+            @Override
+            public Parsers getLazyParsers() {
+              return Parsers.of(
+                  Parser.newInstance(nonStrictTypedReturning())
+                    .addTag(ExpressionTags.returning.tag(),ExpressionTags.thenClause.tag()),
+                  Parser.get(RightCurlyBraceParser.class),
+                  Parser.get(()->new WordParser("else")),
+                  Parser.get(LeftCurlyBraceParser.class),
+                  Parser.newInstance(strictTypedReturning())
+                    .addTag(ExpressionTags.returning.tag(),ExpressionTags.elseClause.tag())
+
+              );
+            }
+          }.addTag(ExpressionTags.thenAndElse.tag())
       ),
       Parser.get(RightCurlyBraceParser.class)
     );
@@ -96,7 +110,15 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     Predicate<Token> expressionFilter = 
         TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
           .and(TokenPredicators.afterToken(conditionToken));
-    return thisParserParsed.getChildrenAsList(expressionFilter).get(0);
+    
+    List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
+        .peek(x->{System.out.println("前:"+x);})
+        .filter(expressionFilter)
+        .peek(x->{System.out.println("後:"+x);})
+        .limit(2)
+        .collect(Collectors.toList());
+
+      return returning.get(0);
 	}
 	
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
@@ -105,7 +127,15 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 	  Predicate<Token> expressionFilter = 
 	      TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
   	      .and(TokenPredicators.afterToken(conditionToken));
-		return thisParserParsed.getChildrenAsList(expressionFilter).get(1);
+	  
+    List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
+        .peek(x->{System.out.println("前:"+x);})
+        .filter(expressionFilter)
+        .peek(x->{System.out.println("後:"+x);})
+        .limit(2)
+        .collect(Collectors.toList());
+
+      return returning.get(1);
 	}
 	
 }
