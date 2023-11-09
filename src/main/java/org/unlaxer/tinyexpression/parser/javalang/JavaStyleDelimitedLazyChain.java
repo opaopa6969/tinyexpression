@@ -3,7 +3,10 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import java.util.Optional;
 
 import org.unlaxer.Name;
+import org.unlaxer.Parsed;
 import org.unlaxer.RecursiveMode;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
@@ -29,6 +32,11 @@ public abstract class JavaStyleDelimitedLazyChain extends LazyChain {
   static final JavaStyleDelimitor delimitor = new JavaStyleDelimitor();
   static {
     delimitor.addTag(NodeKind.notNode.getTag());
+  }
+  
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
   }
 
   @Override

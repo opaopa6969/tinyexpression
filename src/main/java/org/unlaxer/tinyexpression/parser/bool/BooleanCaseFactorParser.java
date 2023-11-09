@@ -1,7 +1,10 @@
 package org.unlaxer.tinyexpression.parser.bool;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -18,6 +21,11 @@ public class BooleanCaseFactorParser extends JavaStyleDelimitedLazyChain{
 		super();
 		addTag(ExpressionTags.matchCaseFactor.tag());
 	}
+	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 
 	@Override
 	public Parsers getLazyParsers() {

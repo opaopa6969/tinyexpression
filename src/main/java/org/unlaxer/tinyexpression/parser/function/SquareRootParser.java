@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.parser.function;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -20,6 +23,12 @@ public class SquareRootParser extends JavaStyleDelimitedLazyChain implements Num
 	public SquareRootParser() {
 		super();
 	}
+	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
 		
 	public static class SqrtFuctionNameParser extends SuggestableParser{
 

@@ -1,10 +1,12 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.CodePointOffset;
+import org.unlaxer.Parsed;
 import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenList;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -15,6 +17,12 @@ import org.unlaxer.tinyexpression.parser.number.NumberTypeHintSuffixParser;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
 public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implements Returning {
+
+  
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 
 //  static final String word = "returning";
 //  static final WordParser wordParser = new WordParser(word);

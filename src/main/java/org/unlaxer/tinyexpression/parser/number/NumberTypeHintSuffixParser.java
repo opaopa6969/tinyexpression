@@ -1,10 +1,12 @@
 package org.unlaxer.tinyexpression.parser.number;
 
 import org.unlaxer.CodePointOffset;
+import org.unlaxer.Parsed;
 import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
 import org.unlaxer.TokenList;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
@@ -17,6 +19,11 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
 
   public NumberTypeHintSuffixParser() {
     super();
+  }
+  
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
   }
   
   @Override

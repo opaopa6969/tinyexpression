@@ -1,5 +1,8 @@
 package org.unlaxer.tinyexpression.parser.tuple;
 
+import org.unlaxer.Parsed;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;
@@ -11,6 +14,11 @@ public class TupleTypeHintPrefixParser extends JavaStyleParenthesesParser implem
 
   public TupleTypeHintPrefixParser() {
     super(Parser.get(TupleTypeHintParser.class));
+  }
+
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
   }
 
   @Override

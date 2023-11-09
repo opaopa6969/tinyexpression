@@ -4,8 +4,11 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.Token.ScanDirection;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -43,6 +46,11 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 		}
 	}
 	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
 	@Override
 	public Parsers getLazyParsers() {
 	  
@@ -55,6 +63,11 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
    // if(condition){$variable}else{$variable}だった時にどちらかの変数が型指定をする事を求める
       new Choice(
           new JavaStyleDelimitedLazyChain() {
+            
+            @Override
+            public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+              return super.parse(parseContext, tokenKind, invertMatch);
+            }
 
             @Override
             public Parsers getLazyParsers() {
@@ -70,6 +83,11 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
             }
           }.addTag(ExpressionTags.thenAndElse.tag()),
           new JavaStyleDelimitedLazyChain() {
+
+            @Override
+            public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+              return super.parse(parseContext, tokenKind, invertMatch);
+            }
 
             @Override
             public Parsers getLazyParsers() {

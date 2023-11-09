@@ -3,7 +3,10 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.List;
 
 import org.unlaxer.Name;
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -31,6 +34,11 @@ public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimite
 	public SideEffectStringToBooleanExpressionParser(Name name) {
 		super(name);
 	}
+	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 		
 	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
 		Token classMethodToken = getMethodClause(token);

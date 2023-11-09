@@ -26,7 +26,7 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , 
   AfterParse{
-
+  
   @Override
   public Parsers getLazyParsers() {
     return new Parsers(

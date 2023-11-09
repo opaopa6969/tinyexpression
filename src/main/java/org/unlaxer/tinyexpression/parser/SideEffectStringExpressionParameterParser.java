@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Name;
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -31,6 +34,11 @@ public class SideEffectStringExpressionParameterParser extends JavaStyleDelimite
 	public SideEffectStringExpressionParameterParser(Name name) {
 		super(name);
 	}
+	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 
 	@Override
 	public Parsers getLazyParsers() {

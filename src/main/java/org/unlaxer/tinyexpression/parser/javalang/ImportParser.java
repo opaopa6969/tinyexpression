@@ -1,8 +1,11 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -17,6 +20,11 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 public class ImportParser extends JavaStyleDelimitedLazyChain{
   
   static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
+
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 
   @Override
   public Parsers getLazyParsers() {

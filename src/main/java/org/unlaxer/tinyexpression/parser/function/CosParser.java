@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.parser.function;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
@@ -21,6 +24,11 @@ public class CosParser extends JavaStyleNamedParenthesesParser implements Number
 		super();
 	}
 	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
 	public static class CosFuctionNameParser extends SuggestableParser{
 
 		private static final long serialVersionUID = 6594507116737484751L;

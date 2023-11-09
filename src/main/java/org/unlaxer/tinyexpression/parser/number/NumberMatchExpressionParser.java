@@ -1,7 +1,10 @@
 package org.unlaxer.tinyexpression.parser.number;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -21,6 +24,12 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 		super();
 		addTag(ExpressionTags.matchExpression.tag());
 	}
+	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
 	
 	public static class MatchFuctionNameParser extends SuggestableParser{
 

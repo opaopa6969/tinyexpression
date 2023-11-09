@@ -1,7 +1,12 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.junit.Test;
+import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
+import org.unlaxer.StringSource;
+import org.unlaxer.TokenPrinter;
+import org.unlaxer.context.ParseContext;
+import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.parser.number.NumberIfExpressionParser;
 
 public class IfExpressionParserTest extends ParserTestBase{
@@ -28,5 +33,18 @@ public class IfExpressionParserTest extends ParserTestBase{
     testAllMatch(ifExpressionParser, "if((10==10) == if(1==1){false}else{true}){100}else{0}");
 
   }
+  
+  
+  public static void main(String[] args) {
+      StringSource source = StringSource.createRootSource("if(\"opa\"==\"opa\"){1}else{0}");
+      NumberIfExpressionParser ifExpressionParser = new NumberIfExpressionParser();
+      
+      ParseContext parseContext = new ParseContext(source);
+      
+      Parsed parse = ifExpressionParser.parse(parseContext);
+      String string = TokenPrinter.get(parse.getRootToken(),OutputLevel.detail);
+      System.out.println(string);
+  }
+  
 
 }

@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.parser.function;
 
+import org.unlaxer.Parsed;
 import org.unlaxer.Token;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -20,6 +23,11 @@ public class TanParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 		super();
 	}
 	
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
 	public static class TanFuctionNameParser extends SuggestableParser{
 
 		private static final long serialVersionUID = -8336790883062156195L;
