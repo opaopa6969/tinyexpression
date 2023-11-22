@@ -40,7 +40,7 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   public static Token createToken(Source rootSource , CodePointOffset position,TokenKind tokenKind) {
     
     Token asToken = AsParser.createToken(rootSource ,  position, tokenKind);
-    position = position.newWithAdd(asToken.getSource().cursorRange().endIndexExclusive.getPosition());
+    position = position.newWithAdd(asToken.getSource().cursorRange().endIndexExclusive.position());
     Token numberTypeHintToken = NumberTypeHintParser.createToken(rootSource, position, tokenKind);
     TokenList children = TokenList.of(asToken,numberTypeHintToken);
     

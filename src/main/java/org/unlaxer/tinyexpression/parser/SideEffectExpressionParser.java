@@ -78,7 +78,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
   
   static CodePointOffset getReturningPosition(Token thisParserParsed) {
     Token tokenOfChildWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
-    return new CodePointOffset(tokenOfChildWithParser.getSource().cursorRange().endIndexExclusive.getPosition());
+    return new CodePointOffset(tokenOfChildWithParser.getSource().cursorRange().endIndexExclusive.position());
   }
 
 	@TokenExtractor

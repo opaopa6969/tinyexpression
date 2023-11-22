@@ -166,7 +166,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		Optional<Token> currentSelection = getSelection();
 		if(currentSelection.isPresent()){
 			updatePosition(ActionType.cursorRight , 
-			    currentSelection.get().getSource().cursorRange().endIndexExclusive.getPosition());
+			    currentSelection.get().getSource().cursorRange().endIndexExclusive.position());
 			return true;
 		}
 		Source formulaString = getFormulaString();
@@ -183,7 +183,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		Optional<Token> currentSelection = getSelection();
 		if(currentSelection.isPresent()){
 			CodePointIndex position = new CodePointIndex(			    
-			    Math.max(0, currentSelection.get().getSource().cursorRange().startIndexInclusive().getPosition().newWithMinus(1).value())
+			    Math.max(0, currentSelection.get().getSource().cursorRange().startIndexInclusive().position().newWithMinus(1).value())
 	    );
 			updatePosition(ActionType.cursorLeft , position);
 			return true;

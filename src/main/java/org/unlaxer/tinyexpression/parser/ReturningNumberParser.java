@@ -47,7 +47,7 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
     Token numberTypeHintSuffixToken = 
         NumberTypeHintSuffixParser.createToken(rootSource, current, TokenKind.virtualTokenConsumed);
     current = current.newWithAdd(
-        numberTypeHintSuffixToken.getSource().cursorRange().endIndexExclusive.getPosition());
+        numberTypeHintSuffixToken.getSource().cursorRange().endIndexExclusive.position());
     
 //    Token defaultClauseToken = DefaultClauseParser.createToken(current, TokenKind.virtualTokenConsumed);
 //    current += defaultClauseToken.tokenRange.endIndexExclusive;
