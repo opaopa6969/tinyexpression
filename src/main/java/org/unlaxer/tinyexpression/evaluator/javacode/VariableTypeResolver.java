@@ -26,7 +26,7 @@ public class VariableTypeResolver{
     //4. not等のunary operatorの型から解決する
     //5. VariableDeclarationの型から解決する
     
-    String path = token.getPath();
+//    String path = token.getPath();
 
     String variableName = token.getParser().getVariableName(token);
     
@@ -63,7 +63,7 @@ public class VariableTypeResolver{
           VariableParser parser = resolveTypedVariable.getParser();
           if(parser.getClass() != ExclusiveNakedVariableParser.class) {
             _token.replace(parser);
-            String path = _token.getPath();
+//            String path = _token.getPath();
           }
         }
       });

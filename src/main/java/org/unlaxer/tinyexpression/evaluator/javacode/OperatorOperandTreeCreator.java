@@ -173,7 +173,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
 //      System.out.println(extractMethodsToken.getPath()); 
       Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
-      String path = newCreatesOf.getPath();
+//      String path = newCreatesOf.getPath();
 //      System.out.println(path);
       return newCreatesOf;
     }
@@ -587,7 +587,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       );
 
     }else if(parser instanceof MethodInvocationParser){
-      String path = token.getPath();
+//      String path = token.getPath();
       return extracteMethodInvocation(operator);
 
     }
