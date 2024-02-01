@@ -135,8 +135,13 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
         .peek(x->{System.out.println("後:"+x);})
         .limit(2)
         .collect(Collectors.toList());
+    
+    //FIXME!
+    if(returning.isEmpty()) {
+      System.out.println("empty");
+    }
 
-      return returning.get(0);
+    return returning.get(0);
 	}
 	
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
@@ -152,8 +157,13 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
         .peek(x->{System.out.println("後:"+x);})
         .limit(2)
         .collect(Collectors.toList());
+    
+    //FIXME!
+    if(returning.isEmpty()) {
+      System.out.println("empty");
+    }
 
-      return returning.get(1);
+    return returning.get(1);
 	}
 	
 }
