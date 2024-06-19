@@ -108,7 +108,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 		}else if(parser instanceof BooleanVariableParser || parser instanceof NakedVariableParser) {
 		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, BooleanSetterParser.class,
-          "false","getBoolean","setAndGet");
+          "false","getBoolean","setAndGet",false);
 //			String variableName = BooleanVariableParser.getVariableName(token);
 //			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
 //			

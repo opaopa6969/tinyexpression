@@ -112,7 +112,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
-          "0f","getValue","setAndGet");
+          "0f","getValue","setAndGet",true);
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //      
 //      

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Optional;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -1323,13 +1324,106 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     testAllMatch( new TinyExpressionParser(),string);
     assertTrue(calc(context, string, new BigDecimal("0")));
   }
+  
+  /*
+   * これは $name も $remitterAccountHolderKana　型指定されていないので numberとして処理をする。
+   * 本来的には型指定されていないのでエラーとしたいところだが、互換性のために型指定されていない場合は数値としている。
+   * 変数の定義をするか、キャストを行う。
+if ($endpoint == 'withdrawal'
+    & (isPresent($withdrawalStatsLastAmountAsNum) & $withdrawalStatsLastAmountAsNum < 10000)
+    & isPresent($name) & $name == $remitterAccountHolderKana
+) {
+  1
+} else {
+  0
+}
+   */
 
   @Test
   public void testTypeInference(){
 	  
+	  String formula = "if( $name == $remitterAccountHolderKana){1}else{0}";
+	  
+	  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+	  
+	    testAllMatch( new TinyExpressionParser(),formula);
+	    
+	    CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+
+	    assertTrue(calc(context, formula, new BigDecimal("1")));
+
+	  
+  }
+  
+  
+  public static class V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA implements org.unlaxer.tinyexpression.TokenBaseCalculator{
+
+  	@Override
+  	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
+  		int a= Float.compare(calculateContext.getValue("name").orElse(0f), calculateContext.getValue("remitterAccountHolderKana").orElse(0f));
+
+  		float answer = (float)
+  				
+  			  ((calculateContext.getValue("name").orElse(0f)==calculateContext.getValue("remitterAccountHolderKana").orElse(0f)) ? 
+  					  1.0f:
+  					  0.0f)
+
+//  (((float)calculateContext.getValue("name").orElse(0f)==(float)calculateContext.getValue("remitterAccountHolderKana").orElse(0f)) ? 
+//  1.0f:
+//  0.0f)
+  		;
+  		return answer;
+  	}
+
+
   }
   
   public static void main(String[] args) {
+	  
+	  System.out.println("0f == 0f:" + (0f == 0f));
+	  
+	  V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA calculator = new V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA();
+	  
+	  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+	  
+	  System.out.println("== from context get orElse:" + ((context.getValue("name").orElse(0f)==context.getValue("remitterAccountHolderKana").orElse(0f))));
+	  System.out.println("== from optional orElse:" + ((Optional.empty().orElse(0f)==Optional.empty().orElse(0f))));
+	  var x = Optional.empty().orElse(0f);
+	  var y = Optional.empty().orElse(0f);
+	  System.out.println("var from orElse(0f):" + (x==y));
+	  
+	  x=0f;
+	  y=0f;
+	  
+	  System.out.println("var:" +(x==y));
+	  
+	  
+	  float x1=0f;
+	  float y1=0f;
+	  System.out.println("float var:" + (x1==y1));
+	  System.out.println("Float#compare:" +(Float.compare(x1, y1) ==0));
+	  
+	  float x2 = (float)Optional.empty().orElse(0f);
+	  float y2 = (float)Optional.empty().orElse(0f);
+	  System.out.println("float var from optional :" + (x2==y2));
+
+	  
+	  
+	  Float apply = calculator.apply(context, null);
+	  
+	  context.set("name", 0f);
+	  context.set("remitterAccountHolderKana", 0f);
+	  
+	  System.out.println("name:" + context.getValue("name").orElse(0f));;
+	  System.out.println("remitterAccountHolderKana:" + context.getValue("remitterAccountHolderKana").orElse(0f));;
+	  System.out.println("== from context get parameter set:" + ((context.getValue("name").orElse(0f)==context.getValue("remitterAccountHolderKana").orElse(0f))));
+	  
+	  System.out.println("apply:" + apply);
+
+
+	  
+	  
+	  
     SimpleBuilder simpleBuilder = new SimpleBuilder();
 
     simpleBuilder
