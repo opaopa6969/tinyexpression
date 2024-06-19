@@ -1324,7 +1324,10 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
     assertTrue(calc(context, string, new BigDecimal("0")));
   }
 
-  
+  @Test
+  public void testTypeInference(){
+	  
+  }
   
   public static void main(String[] args) {
     SimpleBuilder simpleBuilder = new SimpleBuilder();
