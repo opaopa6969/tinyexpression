@@ -270,16 +270,19 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	  public final boolean match;
 	  public final CalculateResult calculateResult;
 	  public final BigDecimal answer;
-    public ResultAndMatch(boolean match, CalculateResult calculateResult, BigDecimal answer) {
-      super();
-      this.match = match;
-      this.calculateResult = calculateResult;
-      this.answer = answer;
-    }
+	    public ResultAndMatch(boolean match, CalculateResult calculateResult, BigDecimal answer) {
+	      super();
+	      this.match = match;
+	      this.calculateResult = calculateResult;
+	      this.answer = answer;
+	    }
 	}
 
-	
 	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected){
+		return calc(calculateContext, formula, expected,false);
+	}
+	
+	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected , boolean outputJavaCode){
 		
 		Calculator<T> calculator = preConstructedCalculator(formula);
 		testAllMatch(calculator.getParser(), formula);
@@ -295,11 +298,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 			// this is work around for rounding error on float calculation
 			expected.subtract(x).abs().floatValue() < 0.01;
 
-		if(false == match) {
+		if(false == match || outputJavaCode) {
 		  System.err.println("answer = " + x);
 		  System.err.format("formatted error formula:\n  %s \n" , Formatter.format(formula));
 		  System.err.println(JSON.encode(calculateContext,true));
-      System.err.println(calculator.javaCode());
+		  System.err.println(calculator.javaCode());
 		}
 		return match;
 	}
@@ -1341,18 +1344,101 @@ if ($endpoint == 'withdrawal'
 
   @Test
   public void testTypeInference(){
+	  {
+		  System.out.println("変数の型を指定していない");
+		  String formula = "if( $name == $remitterAccountHolderKana){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+		  
+		  assertTrue(calc(context, formula, new BigDecimal("1"),true));
+	  }
+	  {
+		  System.out.println("左辺変数の型をStringへ");
+		  String formula = "if( (String)$name == $remitterAccountHolderKana){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+		  
+		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  		  
+		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
+	  }
 	  
-	  String formula = "if( $name == $remitterAccountHolderKana){1}else{0}";
+	  {
+		  System.out.println("右辺変数の型をStringへ");
+		  String formula = "if($name == $remitterAccountHolderKana as String){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+		  
+		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  
+		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
+	  }
 	  
-	  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
-	  
-	    testAllMatch( new TinyExpressionParser(),formula);
-	    
-	    CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+	  {
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ");
+		  String formula = "var $name as string set if not exists 'opa' description='名前だよ！';if($name == $remitterAccountHolderKana as String){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
 
-	    assertTrue(calc(context, formula, new BigDecimal("1")));
+//		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  
 
+		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
+	  }
 	  
+	  {
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ");
+		  String formula = "var $name as string set if not exists 'opai' description='名前だよ！';if($name == $remitterAccountHolderKana as String){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+
+//		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  
+
+		  assertTrue(calc(context, formula, new BigDecimal("1"),true));
+	  }
+	  
+	  {
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型を指定しない");
+		  String formula = "var $name as string set if not exists 'opa' description='名前だよ！';if($name == $remitterAccountHolderKana){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+
+//		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  
+
+		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
+	  }
+
   }
   
   

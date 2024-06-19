@@ -104,6 +104,12 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
     return (X) objectByKey.get(key);
   }
   
-  
+	public abstract String className();
+	public abstract String javaCode();
+	public abstract String classNameWithHash();
+
+	public abstract byte[] byteCode();
+	public abstract String formulaHash();
+	public abstract String byteCodeHash();
 
 }

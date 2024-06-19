@@ -20,36 +20,57 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 		Token factor1 = token.filteredChildren.get(0);
 		Token factor2 = token.filteredChildren.get(1);
 		
+		builder
+			.append("(java.lang.Float.compare(");
+		
 		NumberExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
+		
+		builder
+			.append(",");
+		NumberExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
+		builder
+			.append(")");
+		
+		
 		
 		if(token.parser instanceof NumberEqualEqualExpressionParser) {
 			
-			builder.append("==");
+//			builder.append(" == ");
+			builder.append(" == 0");
+			
 			
 		}else if(token.parser instanceof NumberNotEqualExpressionParser) {
 			
-			builder.append("!=");
+//			builder.append("!=");
+			builder.append(" != 0");
 			
 		}else if(token.parser instanceof NumberGreaterOrEqualExpressionParser) {
 			
-			builder.append(">=");
+//			builder.append(">=");
+			builder.append(" >= 0");
 			
 		}else if(token.parser instanceof NumberLessOrEqualExpressionParser) {
 			
-			builder.append("<=");
+//			builder.append("<=");
+			builder.append(" <= 0");
+
 
 		}else if(token.parser instanceof NumberGreaterExpressionParser) {
 			
-			builder.append(">");
+//			builder.append(">");
+			builder.append(" > 0");
+
 			
 		}else if(token.parser instanceof NumberLessExpressionParser) {
 			
-			builder.append("<");
+//			builder.append("<");
+			builder.append(" < 0");
+
 		}else {
 			throw new IllegalArgumentException();
 		}
-		NumberExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
-
+		builder
+			.append(")");
 	}
 	
 }

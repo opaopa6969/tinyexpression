@@ -389,4 +389,14 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
 		}
 	}
 
+	@Override
+	public String className() {
+		return className;
+	}
+
+	@Override
+	public String classNameWithHash() {
+		return classNameWithHash;
+	}
+
 }
