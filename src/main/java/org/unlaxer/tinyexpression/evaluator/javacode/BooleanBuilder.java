@@ -14,6 +14,7 @@ import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
@@ -107,8 +108,9 @@ public class BooleanBuilder implements TokenCodeBuilder {
 					
 		}else if(parser instanceof BooleanVariableParser || parser instanceof NakedVariableParser) {
 		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+		  
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, BooleanSetterParser.class,
-          "false","getBoolean","setAndGet",false);
+          "false","getBoolean","setAndGet" , ExpressionType.bool);
 //			String variableName = BooleanVariableParser.getVariableName(token);
 //			builder.append("calculateContext.getBoolean(").w(variableName).append(").orElse(false)");
 //			

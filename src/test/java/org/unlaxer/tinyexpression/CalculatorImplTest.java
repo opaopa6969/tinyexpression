@@ -1345,6 +1345,23 @@ if ($endpoint == 'withdrawal'
   @Test
   public void testTypeInference(){
 	  {
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型を指定しない");
+		  String formula = "var $name as string set if not exists 'opa' description='名前だよ！';if($name == $remitterAccountHolderKana){1}else{0}";
+		  
+		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
+		  
+		  testAllMatch( new TinyExpressionParser(),formula);
+		  
+		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
+
+//		  context.set("name", "opa");
+		  context.set("remitterAccountHolderKana", "opai");
+		  
+
+		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
+	  }
+	  
+	  {
 		  System.out.println("変数の型を指定していない");
 		  String formula = "if( $name == $remitterAccountHolderKana){1}else{0}";
 		  
@@ -1389,7 +1406,7 @@ if ($endpoint == 'withdrawal'
 	  }
 	  
 	  {
-		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ");
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ。両方の値を違うものに");
 		  String formula = "var $name as string set if not exists 'opa' description='名前だよ！';if($name == $remitterAccountHolderKana as String){1}else{0}";
 		  
 		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
@@ -1406,7 +1423,7 @@ if ($endpoint == 'withdrawal'
 	  }
 	  
 	  {
-		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ");
+		  System.out.println("左辺変数の型をvarでStringへ。右辺の型をstringへ。両方の値を同一に");
 		  String formula = "var $name as string set if not exists 'opai' description='名前だよ！';if($name == $remitterAccountHolderKana as String){1}else{0}";
 		  
 		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
@@ -1421,24 +1438,6 @@ if ($endpoint == 'withdrawal'
 
 		  assertTrue(calc(context, formula, new BigDecimal("1"),true));
 	  }
-	  
-	  {
-		  System.out.println("左辺変数の型をvarでStringへ。右辺の型を指定しない");
-		  String formula = "var $name as string set if not exists 'opa' description='名前だよ！';if($name == $remitterAccountHolderKana){1}else{0}";
-		  
-		  //型がnumber== numberとなるのでどんな文字列変数をセットしてもtrueになる
-		  
-		  testAllMatch( new TinyExpressionParser(),formula);
-		  
-		  CalculationContext context = new ConcurrentCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
-
-//		  context.set("name", "opa");
-		  context.set("remitterAccountHolderKana", "opai");
-		  
-
-		  assertTrue(calc(context, formula, new BigDecimal("0"),true));
-	  }
-
   }
   
   

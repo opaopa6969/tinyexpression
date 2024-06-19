@@ -104,11 +104,18 @@ public class TinyExpressionTokens{
     return java.util.Optional.ofNullable(token);
   }
   
-  public java.util.Optional<Token> matchedMethod(String VariableName){
-    
-    Token token = variableDeclarationByVariableName.get(VariableName);
-    return java.util.Optional.ofNullable(token);
+  public java.util.Optional<Token> matchedTypeFromVariableDeclaration(String VariableName){
+	    
+	    Token token = variableDeclarationByVariableName.get(VariableName);
+	    return java.util.Optional.ofNullable(token);
   }
+  
+//  public java.util.Optional<Token> matchedMethod(String VariableName){
+//
+//     
+//    Token token = variableDeclarationByVariableName.get(VariableName);
+//    return java.util.Optional.ofNullable(token);
+//  }
   
   public Optional<Token> getMethodToken(String methodName){
     Token token = methodDeclarationBymethodName.get(methodName);

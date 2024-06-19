@@ -5,10 +5,13 @@ import java.util.Optional;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
+import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 
 public class VariableTypeResolver{
   
@@ -70,4 +73,30 @@ public class VariableTypeResolver{
     return token;
   }
   
+  public static Optional<ExpressionType> resolveFromVariableParserToken(Token token , 
+		  TinyExpressionTokens tinyExpressionTokens){
+	  
+	  Parser parser = token.getParser();
+	  if(parser instanceof VariableParser) {
+		  
+		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+		  VariableParser variableParser = typed.getParser();
+		  
+		  Optional<ExpressionType> typeAsOptional = variableParser.typeAsOptional();
+		  if(typeAsOptional.isPresent()) {
+			  return typeAsOptional;
+		  }
+		  String variableName = variableParser.getVariableName(typed);
+		  Optional<Token> matchedTypeFromVariableDeclaration = 
+				  tinyExpressionTokens.matchedTypeFromVariableDeclaration(variableName);
+		  
+		   Optional<ExpressionType> expressionType = matchedTypeFromVariableDeclaration
+		  	.map(_token->_token.typed(VariableDeclaration.class))
+		  	.map(TypedToken::getParser)
+		  	.flatMap(VariableDeclaration::type);
+		   
+		   return expressionType;
+	  }
+	  return Optional.empty();
+  }
 }

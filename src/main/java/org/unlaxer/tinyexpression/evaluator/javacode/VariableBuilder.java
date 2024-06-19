@@ -7,6 +7,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
@@ -17,7 +18,7 @@ public class VariableBuilder {
    public static void build(TokenCodeBuilder parentBuilder , SimpleJavaCodeBuilder builder,
        TypedToken<VariableParser> token ,
        TinyExpressionTokens tinyExpressionTokens , Class<? extends SetterParser> setterParserClass,
-       String defaultValue , String getMethod , String setAndGetMethod , boolean isNumber) {
+       String defaultValue , String getMethod , String setAndGetMethod , ExpressionType variableType) {
      
      VariableParser variableParser = token.getParser();
      
@@ -67,7 +68,7 @@ public class VariableBuilder {
        builder.append("calculateContext."+getMethod+"(").w(variableName).append(").orElse("+defaultValue+")");
      }
      
-     if(isNumber && isOptional) {
+     if(variableType.isNumber() && isOptional) {
     	 builder.append(".floatValue()");
      }
    }
