@@ -169,7 +169,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
 //      System.out.println(extractMethodsToken.getPath()); 
       Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
-      String path = newCreatesOf.getPath();
+//      String path = newCreatesOf.getPath();
 //      System.out.println(path);
       return newCreatesOf;
     }
@@ -460,13 +460,19 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     Token operator = ChoiceInterface.choiced(token);
     Parser parser = operator.parser;
     
-//    if(parser instanceof ExclusiveNakedVariableParser) {
-//      
-//      TypedToken<? extends VariableParser> resolveTypedVariable = 
-//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-//      
-//      parser = resolveTypedVariable.getParser();
-//    }
+    if(parser instanceof ExclusiveNakedVariableParser) {
+      
+      TinyExpressionTokens tinyExpressionTokens = 
+          new TinyExpressionTokens(operator.getAncestor(TokenPredicators.parsers(TinyExpressionParser.class)));
+      
+      
+      Optional<VariableParser> resolveTypedVariable = 
+          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class),tinyExpressionTokens.variableDeclarationByVariableName);
+      
+      if(resolveTypedVariable.isPresent()) {
+        parser = resolveTypedVariable.get();
+      }
+    }
 
     if(parser instanceof NumberParser){
       
@@ -650,14 +656,16 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     Token operator = ChoiceInterface.choiced(token);
     Parser parser = operator.parser;
     
-    if(parser instanceof ExclusiveNakedVariableParser) {
-      
-      TypedToken<? extends VariableParser> resolveTypedVariable = 
-          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-      
-      parser = resolveTypedVariable.getParser();
-    }
-
+//    if(parser instanceof ExclusiveNakedVariableParser) {
+//      
+//      Optional<VariableParser> resolveTypedVariable = 
+//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
+//      
+//      if(resolveTypedVariable.isPresent()) {
+//        parser = resolveTypedVariable.get();
+//      }
+//      
+//    }
     
     if(parser instanceof TrueTokenParser ||
       parser instanceof FalseTokenParser) {

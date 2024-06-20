@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Name;
@@ -14,6 +13,7 @@ import org.unlaxer.tinyexpression.parser.javalang.NumberTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringTypeDeclarationParser;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
+@SuppressWarnings("serial")
 public class ExclusiveNakedVariableParser extends NakedVariableParser {//implements Expression , BooleanExpression , StringExpression{
   
   static final SupplierBoundCache<ExclusiveNakedVariableParser> SINGLETON = new SupplierBoundCache<>(ExclusiveNakedVariableParser::new);

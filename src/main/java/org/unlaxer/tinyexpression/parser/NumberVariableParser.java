@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
@@ -10,10 +9,12 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.cache.SupplierBoundCache;
 
 public class NumberVariableParser extends LazyChoice implements RootVariableParser , NumberExpression {
+  
+  static final SupplierBoundCache<NumberVariableParser> SINGLETON = new SupplierBoundCache<>(NumberVariableParser::new);
 
-  private static final long serialVersionUID = -6048451001170410L;
 
   public NumberVariableParser() {
     super();
@@ -59,6 +60,10 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
       Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
       return token;
     }
+  }
+  
+  public static NumberVariableParser get() {
+    return SINGLETON.get();
   }
 
   @Override

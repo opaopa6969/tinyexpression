@@ -122,6 +122,21 @@ public class TinyExpressionTokens{
     return Optional.ofNullable(token);
   }
 
+  public List<Token> getAnnotationTokens() {
+    return annotationTokens;
+  }
+
+  public Map<String, String> getClassNameByIdentifier() {
+    return classNameByIdentifier;
+  }
+
+  public Map<String, Token> getVariableDeclarationByVariableName() {
+    return variableDeclarationByVariableName;
+  }
+
+  public Map<String, TypedToken<MethodParser>> getMethodDeclarationBymethodName() {
+    return methodDeclarationBymethodName;
+  }
   
   
 }

@@ -13,6 +13,7 @@ import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
+@SuppressWarnings("serial")
 public class VariableDeclarationsParser extends LazyZeroOrMore{
 
   @Override

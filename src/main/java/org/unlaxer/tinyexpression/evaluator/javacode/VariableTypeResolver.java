@@ -1,102 +1,160 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.MethodParser;
+import org.unlaxer.tinyexpression.parser.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 
-public class VariableTypeResolver{
+public class VariableTypeResolver {
   
-  public static TypedToken<? extends VariableParser> resolveTypedVariable(TypedToken<ExclusiveNakedVariableParser> token) {
-    
+  static final Map<ExpressionType, ? extends VariableParser> variableParserByExpressionType = Map.of(
+      ExpressionType.bool, BooleanVariableParser.get(),
+      ExpressionType.string, StringVariableParser.get(),
+      ExpressionType.number, NumberVariableParser.get()
+
+  );
+
+  public static Optional<VariableParser> resolveTypedVariable(
+      TypedToken<ExclusiveNakedVariableParser> token, Map<String, Token> variableDeclarationByName) {
+
 //    //FIXME!
 //    if(true) {
 //      return token;
 //    }
-    
+
     // 型推論/型解決を行う
-    //1. 親にMethodParserがあればMethodParameterから解決をする
-    //2. 比較演算の他方の型から解決する。method callや == や -1等
-    //3. methodの実パラメータの場合仮引数の型から解決する
-    //4. not等のunary operatorの型から解決する
-    //5. VariableDeclarationの型から解決する
-    
-    String path = token.getPath();
+    // 1. 親にMethodParserがあればMethodParameterから解決をする
+    // 2. 比較演算の他方の型から解決する。method callや == や -1等
+    // 3. methodの実パラメータの場合仮引数の型から解決する
+    // 4. not等のunary operatorの型から解決する
+    // 5. VariableDeclarationの型から解決する
+
+//		String path = token.getPath();
 
     String variableName = token.getParser().getVariableName(token);
-    
-    //1. 親にMethodParserがあればMethodParameterから解決をする
-    Optional<Token> ancestorAsOptional = token.getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
-    if(ancestorAsOptional.isPresent()) {
-      
+
+    // 1. 親にMethodParserがあればMethodParameterから解決をする
+    Optional<Token> ancestorAsOptional = token
+        .getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
+    if (ancestorAsOptional.isPresent()) {
+
       TypedToken<MethodParser> methodParserToken = ancestorAsOptional.get().typed(MethodParser.class);
       MethodParser methodParser = methodParserToken.getParser();
-      Optional<TypedToken<TypedVariableParser>> typedVariableParser = 
-          methodParser.typedVariableParser(methodParserToken, variableName);
-      
-      if(typedVariableParser.isPresent()) {
-        return typedVariableParser.get();
+      Optional<TypedToken<TypedVariableParser>> typedVariableParser = methodParser
+          .typedVariableParser(methodParserToken, variableName);
+
+      if (typedVariableParser.isPresent()) {
+        return Optional.of(typedVariableParser.get().getParser());
       }
     }
-    //2. 比較演算の他方の型から解決する。method callや == や -1等
-    //3. methodの実パラメータの場合仮引数の型から解決する
-    //4. not等のunary operatorの型から解決する
-    //5. VariableDeclarationの型から解決する
-    
-    return token;
+    // 2. 比較演算の他方の型から解決する。method callや == や -1等
+    // 3. methodの実パラメータの場合仮引数の型から解決する
+    // 4. not等のunary operatorの型から解決する
+
+    // 5. VariableDeclarationの型から解決する
+
+    Token declarationToken = variableDeclarationByName.get(variableName);
+
+    if (declarationToken != null) {
+
+      TypedToken<VariableDeclaration> typed = declarationToken.typed(VariableDeclaration.class);
+      Optional<ExpressionType> type = typed.getParser().type();
+      
+      return type.map(variableParserByExpressionType::get);
+    }
+    return Optional.empty();
   }
   
-  public static Token resolveVariableType(Token token) {
-    token.flatten().stream()
-      .forEach(_token->{
-        if(_token.parser.getClass() == ExclusiveNakedVariableParser.class) {
-          TypedToken<ExclusiveNakedVariableParser> typed = 
-              _token.typed(ExclusiveNakedVariableParser.class);
-          TypedToken<? extends VariableParser> resolveTypedVariable = 
-              VariableTypeResolver.resolveTypedVariable(typed);
-          
-          VariableParser parser = resolveTypedVariable.getParser();
-          if(parser.getClass() != ExclusiveNakedVariableParser.class) {
+  
+
+
+  /**
+   * rootTokenからすべてを走査してExclusiveNakedVariableParserの型解決を行う
+   */
+  public static Token resolveVariableType(Token rootToken) {
+
+    // 最初にVariableDeclarationを取得する
+    Map<String, Token> variableDeclarationByName = variableDeclarations(rootToken);
+
+    rootToken.flatten().stream().forEach(_token -> {
+      if (_token.parser.getClass() == ExclusiveNakedVariableParser.class) {
+        TypedToken<ExclusiveNakedVariableParser> typed = _token.typed(ExclusiveNakedVariableParser.class);
+        Optional<VariableParser> resolveTypedVariable = VariableTypeResolver
+            .resolveTypedVariable(typed, variableDeclarationByName);
+        
+        resolveTypedVariable.ifPresent(parser->{
+          if (parser.getClass() != ExclusiveNakedVariableParser.class) {
             _token.replace(parser);
-            String path = _token.getPath();
           }
-        }
-      });
-    return token;
+        });
+      }
+    });
+    return rootToken;
   }
-  
-  public static Optional<ExpressionType> resolveFromVariableParserToken(Token token , 
-		  TinyExpressionTokens tinyExpressionTokens){
-	  
-	  Parser parser = token.getParser();
-	  if(parser instanceof VariableParser) {
-		  
-		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
-		  VariableParser variableParser = typed.getParser();
-		  
-		  Optional<ExpressionType> typeAsOptional = variableParser.typeAsOptional();
-		  if(typeAsOptional.isPresent()) {
-			  return typeAsOptional;
-		  }
-		  String variableName = variableParser.getVariableName(typed);
-		  Optional<Token> matchedTypeFromVariableDeclaration = 
-				  tinyExpressionTokens.matchedTypeFromVariableDeclaration(variableName);
-		  
-		   Optional<ExpressionType> expressionType = matchedTypeFromVariableDeclaration
-		  	.map(_token->_token.typed(VariableDeclaration.class))
-		  	.map(TypedToken::getParser)
-		  	.flatMap(VariableDeclaration::type);
-		   
-		   return expressionType;
-	  }
-	  return Optional.empty();
+
+  public static Map<String, Token> variableDeclarations(Token rootToken) {
+
+    Optional<Token> childWithParserAsOptional = rootToken
+        .getChildWithParserAsOptional(VariableDeclarationsParser.class);
+
+    List<Token> variableChildren = childWithParserAsOptional
+        .map(VariableDeclarationsParser::extractVariables)
+        .orElseGet(List::of);
+
+    Map<String, Token> variableDeclarationByVariableName = variableChildren.stream()
+        .collect(Collectors.toMap(
+            token -> {
+              TypedToken<VariableParser> extractVariableParserToOken = VariableDeclarationParser
+                  .extractVariableParserToken(token);
+              VariableParser parser = extractVariableParserToOken.getParser(VariableParser.class);
+              String variableName = parser.getVariableName(extractVariableParserToOken);
+              return variableName;
+            },
+            Function.identity()));
+
+    return variableDeclarationByVariableName;
+  }
+
+  public static Optional<ExpressionType> resolveFromVariableParserToken(Token token,
+      TinyExpressionTokens tinyExpressionTokens) {
+
+    Parser parser = token.getParser();
+    if (parser instanceof VariableParser) {
+
+      TypedToken<VariableParser> typed = token.typed(VariableParser.class);
+      VariableParser variableParser = typed.getParser();
+
+      Optional<ExpressionType> typeAsOptional = variableParser.typeAsOptional();
+      if (typeAsOptional.isPresent()) {
+        return typeAsOptional;
+      }
+      String variableName = variableParser.getVariableName(typed);
+      Optional<Token> matchedTypeFromVariableDeclaration = tinyExpressionTokens
+          .matchedTypeFromVariableDeclaration(variableName);
+
+      Optional<ExpressionType> expressionType = matchedTypeFromVariableDeclaration
+          .map(_token -> _token.typed(VariableDeclaration.class)).map(TypedToken::getParser)
+          .flatMap(VariableDeclaration::type);
+
+      return expressionType;
+    }
+    return Optional.empty();
   }
 }
