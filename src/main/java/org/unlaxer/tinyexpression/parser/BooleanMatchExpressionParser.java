@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
