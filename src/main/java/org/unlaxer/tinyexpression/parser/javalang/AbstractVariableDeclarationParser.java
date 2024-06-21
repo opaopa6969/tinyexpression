@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
-import java.util.List;
-
 import org.unlaxer.Name;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
@@ -66,4 +64,5 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
       super(name, word);
     }
   }
+  
 }

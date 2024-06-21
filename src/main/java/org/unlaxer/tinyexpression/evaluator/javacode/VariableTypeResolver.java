@@ -67,9 +67,9 @@ public class VariableTypeResolver {
     // 2. 比較演算の他方の型から解決する。method callや == や -1等
     // 3. methodの実パラメータの場合仮引数の型から解決する
     // 4. not等のunary operatorの型から解決する
+    
 
     // 5. VariableDeclarationの型から解決する
-
     Token declarationToken = variableDeclarationByName.get(variableName);
 
     if (declarationToken != null) {
@@ -87,6 +87,8 @@ public class VariableTypeResolver {
 
   /**
    * rootTokenからすべてを走査してExclusiveNakedVariableParserの型解決を行う
+   * ただし、上位Parserが型解決で得られた型と違う場合があるため上位parserの型も書き換えてやらねばならない
+   * これはParse時に実行したほうがよさそうだ。
    */
   public static Token resolveVariableType(Token rootToken) {
 
@@ -102,6 +104,7 @@ public class VariableTypeResolver {
         resolveTypedVariable.ifPresent(parser->{
           if (parser.getClass() != ExclusiveNakedVariableParser.class) {
             _token.replace(parser);
+            ExpressionType expressionType = parser.typeAsOptional().get();
           }
         });
       }

@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.parser;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.parser.combinator.Chain;
+import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
 
 public class StringVariableParserTest extends ParserTestBase{
 
@@ -18,6 +20,31 @@ public class StringVariableParserTest extends ParserTestBase{
     testAllMatch(parser, "(String)$foo");
     testUnMatch(parser, "$foo as boolean");
     testUnMatch(parser, "(boolean)$foo");
+  }
+  
+  
+  @Test
+  public void testMatchesWithDeclaration() {
+    
+    setLevel(OutputLevel.detail);
+    StringVariableDeclarationParser declarationParser = new StringVariableDeclarationParser();
+    testAllMatch(declarationParser, "var $foo as string description='';");
+    {
+      NakedVariableParser parser = new NakedVariableParser();
+      
+      Chain chain = new Chain(declarationParser,parser);
+      
+      testAllMatch(chain, "var $foo as string description='';$foo");
+      
+    }
+    {
+      StringVariableParser parser = new StringVariableParser();
+      
+      Chain chain = new Chain(declarationParser,parser);
+      
+      testAllMatch(chain, "var $foo as string description='';$foo");
+      
+    }
   }
 
 }
