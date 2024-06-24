@@ -6,14 +6,13 @@ import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
-import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 
 public interface VariableParser extends Parser{
   
-  public Optional<ExpressionType> typeAsOptional(ParseContext parseContext);
-  public default boolean hasType(ParseContext parseContext) {
-    return typeAsOptional(parseContext).isPresent();
+  public Optional<ExpressionType> typeAsOptional();
+  public default boolean hasType() {
+    return typeAsOptional().isPresent();
   }
   
 //  public String getVariableName(Token thisParserParsed);

@@ -17,7 +17,10 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
+import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -86,6 +89,22 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
       super();
       this.expressionType = expressionType;
       this.name = name;
+    }
+    
+    public VariableParser matchedVariableParser() {
+      
+      switch (expressionType) {
+        case bool:
+          return Parser.get(BooleanVariableParser.class);
+        case number:
+          return Parser.get(NumberVariableParser.class);
+        case string:
+          return Parser.get(StringVariableParser.class);
+        case object:
+        default:
+          throw new IllegalArgumentException();
+      }
+      
     }
   }
 

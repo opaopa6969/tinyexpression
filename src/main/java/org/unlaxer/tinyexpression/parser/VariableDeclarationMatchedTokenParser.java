@@ -42,7 +42,7 @@ public class VariableDeclarationMatchedTokenParser extends AbstractParser{
     ExclusiveNakedVariableParser exclusiveNakedVariableParser = 
         ExclusiveNakedVariableParser.SINGLETON.get();
 
-    parseContext.getCurrent().setResetMatchedWithConsumed(true);
+    parseContext.getCurrent().setResetMatchedWithConsumed(false);
 
     parseContext.startParse(this, parseContext, tokenKind, invertMatch);
     parseContext.begin(this);

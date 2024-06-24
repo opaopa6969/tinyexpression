@@ -111,7 +111,8 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
     } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
     	
-      Optional<ExpressionType> fromVariableParserToken = VariableTypeResolver.resolveFromVariableParserToken(token, tinyExpressionTokens);
+      Optional<ExpressionType> fromVariableParserToken = 
+          VariableTypeResolver.resolveFromVariableParserToken(token, tinyExpressionTokens);
 
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       

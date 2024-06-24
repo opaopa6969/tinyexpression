@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.Optional;
 
-import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
@@ -28,7 +27,7 @@ public class BooleanPrefixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
   
   @Override
-  public Optional<ExpressionType> typeAsOptional(ParseContext parseContext) {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionType.bool);
   }
   
