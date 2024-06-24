@@ -12,11 +12,11 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 
-public abstract class AbstractFactorParser extends LazyChoice implements NumberExpression  , VariableTypeSelectable{
+public abstract class AbstractNumberFactorParser extends LazyChoice implements NumberExpression  , VariableTypeSelectable{
 	
 	private static final long serialVersionUID = 3521391436954908685L;
 	
-	public AbstractFactorParser() {
+	public AbstractNumberFactorParser() {
 		super();
 	}
 

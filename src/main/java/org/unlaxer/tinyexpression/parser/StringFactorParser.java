@@ -13,7 +13,7 @@ public class StringFactorParser extends AbstractStringFactorParser implements Ty
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    return getLazyParsers(true);
+    return getLazyParsers(false);
   }
 
   @Override

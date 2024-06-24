@@ -4,11 +4,11 @@ import java.util.Set;
 
 import org.unlaxer.util.Singletons;
 
-public class NumberFactorParser extends AbstractFactorParser implements TypedParser{
+public class NumberFactorParser extends AbstractNumberFactorParser implements TypedParser{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    return getLazyParsers(true);
+    return getLazyParsers(false);
   }
   
   @Override

@@ -118,14 +118,14 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
   @Override
   public void onRollback(ParseContext parseContext, Parser parser, List<Token> rollbackedTokens) {
     
-    if(false == parser instanceof AbstractVariableDeclarationParser) {
-      return ;
-    }
-    
-    Token token = rollbackedTokens.get(0);
-    
-    VariableInfo variableInfo = extractVariableInfo(token);
-    variableDeclarations.remove(parseContext, variableInfo.name);
+//    if(false == parser instanceof AbstractVariableDeclarationParser) {
+//      return ;
+//    }
+//    
+//    Token token = rollbackedTokens.get(0);
+//    
+//    VariableInfo variableInfo = extractVariableInfo(token);
+//    variableDeclarations.remove(parseContext, variableInfo.name);
     
   }
 

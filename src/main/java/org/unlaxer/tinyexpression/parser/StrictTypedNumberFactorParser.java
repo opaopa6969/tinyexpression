@@ -1,6 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
-public class StrictTypedNumberFactorParser extends AbstractFactorParser{
+public class StrictTypedNumberFactorParser extends AbstractNumberFactorParser{
 
   
   public StrictTypedNumberFactorParser() {
