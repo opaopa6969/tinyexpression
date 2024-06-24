@@ -17,6 +17,8 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
@@ -31,6 +33,7 @@ import org.unlaxer.listener.DebugParserListener;
 import org.unlaxer.listener.DebugTransactionListener;
 import org.unlaxer.listener.LogOutputCountListener;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.util.BlackHole;
 import org.unlaxer.util.MultipleOutputStream;
@@ -174,6 +177,10 @@ public class ParserTestBase {
 		
 		StringSource stringSource = new StringSource(source);
 		ParseContext parseContext = new ParseContext(stringSource,CreateMetaTokenSprcifier.createMetaOn);
+    transactionListeners()
+      .forEach(listener->parseContext.addTransactionListener(
+          Name.of(listener.getClass()), listener));
+
 		Parsed parsed = parser.parse(parseContext);
 		return parsed;
 	}
@@ -182,7 +189,7 @@ public class ParserTestBase {
 			boolean createMeta, StringSource source, 
 			PrintStream transactionOut, PrintStream parseOut) {
 		
-		return new ParseContext(
+		ParseContext parseContext = new ParseContext(
 			source, //
 			
 			new CombinedDebugSpecifier(
@@ -205,6 +212,13 @@ public class ParserTestBase {
 			),
 			CreateMetaTokenSprcifier.of(createMeta)
 		);
+		
+		transactionListeners()
+		  .forEach(listener->parseContext.addTransactionListener(
+		      Name.of(listener.getClass()), listener));
+		
+		return parseContext;
+		
 	}
 	
 	public TestResult testAllMatch(Parser parser, String sourceString ) {
@@ -294,6 +308,8 @@ public class ParserTestBase {
 			ParseContext parseContext = 
 				createParseContext(createMeta, source, transactionPrintStream , parsePrintStream);
 			){
+		  
+//		  parseContext.addTransactionListener(null, null);
 			Parsed parsed = parser.parse(parseContext);
 			TestResult testResult = parseFunction.apply(parseContext, parsed);
 			
@@ -548,5 +564,9 @@ public class ParserTestBase {
 	
 	public Class<?> getTestClass(){
 		return getClass();
+	}
+	
+	public Collection<TransactionListener> transactionListeners(){
+	  return Collections.emptySet();
 	}
 }

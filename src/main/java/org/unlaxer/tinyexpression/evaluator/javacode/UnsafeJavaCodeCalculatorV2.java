@@ -16,10 +16,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.UnaryOperator;
 
 import javax.tools.FileObject;
@@ -37,12 +39,14 @@ import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.compiler.CustomClassloaderJavaFileManager;
 import org.unlaxer.compiler.JavaFileManagerContext;
+import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.util.digest.MD5;
 
 import sun.misc.Unsafe;
@@ -413,5 +417,10 @@ public class UnsafeJavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
 	public String classNameWithHash() {
 		return classNameWithHash;
 	}
+	
+	@Override
+  public Collection<TransactionListener> transactionListeners() {
+    return Set.of(Parser.get(VariableDeclarationParser.class));
+  }
 
 }

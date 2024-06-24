@@ -14,8 +14,8 @@ import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
-public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimitedLazyChain implements VariableDeclaration{
   
+public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimitedLazyChain implements VariableDeclaration{
   public final static Tag typed = Tag.of("typed");
   
   @Override

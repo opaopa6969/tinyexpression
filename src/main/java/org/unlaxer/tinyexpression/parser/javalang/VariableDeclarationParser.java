@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.unlaxer.Name;
 import org.unlaxer.Token;
@@ -17,6 +18,7 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -31,6 +33,13 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         Parser.get(BooleanVariableDeclarationParser.class)
     );
   }
+  
+  public VariableDeclarationParser() {
+    super();
+    variableDeclarations = new VariableDeclarations();
+  }
+  
+  VariableDeclarations variableDeclarations;
   
   @TokenExtractor
   public static TypedToken<VariableParser> extractVariableParserToken(Token thisParserParsed) {
@@ -57,10 +66,17 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     
     TypedToken<VariableParser> variableParserToken = extractVariableParserToken(thisParserParsed);
     VariableParser parser = variableParserToken.getParser();
-    ExpressionType expressionType = parser.typeAsOptional().get();
+    TypedToken<TypeHint> typed = thisParserParsed.flatten().stream()
+        .filter(TokenPredicators.parserImplements(TypeHint.class))//
+        .findFirst().get()
+        .typed(TypeHint.class);
+        
+    ExpressionType expressionType = typed.getParser().type();
     String variableName = parser.getVariableName(variableParserToken);
     return new VariableInfo(expressionType, variableName);
   }
+  
+  
   
   public static class VariableInfo{
     
@@ -88,17 +104,29 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
   @Override
   public void onCommit(ParseContext parseContext, Parser parser, List<Token> committedTokens) {
     
+    if(false == parser instanceof AbstractVariableDeclarationParser) {
+      return ;
+    }
     
     //Number or String or boolean VariableDeclararionParser
     Token token = committedTokens.get(0);
     
     VariableInfo variableInfo = extractVariableInfo(token);
-    VariableDeclarations.set(parseContext, variableInfo);
-    
+    variableDeclarations.set(parseContext, variableInfo);
   }
 
   @Override
   public void onRollback(ParseContext parseContext, Parser parser, List<Token> rollbackedTokens) {
+    
+    if(false == parser instanceof AbstractVariableDeclarationParser) {
+      return ;
+    }
+    
+    Token token = rollbackedTokens.get(0);
+    
+    VariableInfo variableInfo = extractVariableInfo(token);
+    variableDeclarations.remove(parseContext, variableInfo.name);
+    
   }
 
   @Override
@@ -107,26 +135,38 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
   
   public static class VariableDeclarations{
     
-    public static Name STORES = Name.of(VariableDeclarations.class , "Stores");
+    public static final VariableDeclarations SINGLETON = new VariableDeclarations();
+    
+    public static final Name STORES = Name.of(VariableDeclarations.class , "Stores");
     
     @SuppressWarnings("unchecked")
-    public static void set(ParseContext parseContext , VariableInfo variableInfo) {
-      
+    Map<String, VariableInfo> infoByName(ParseContext parseContext){
       Map<Name, Object> globalScopeTreeMap = parseContext.getGlobalScopeTreeMap();
-
-      ((Map<Name,VariableInfo>)
-          globalScopeTreeMap.computeIfAbsent(STORES,key->new HashMap<>()))
-            .put(Name.of(variableInfo.name ), variableInfo); 
+      Map<String, VariableInfo> infoByName = (Map<String, VariableInfo>) globalScopeTreeMap
+          .computeIfAbsent(STORES,name->new HashMap<>());
+      return infoByName;
+      
     }
     
-    @SuppressWarnings("unchecked")
-    public VariableInfo get(ParseContext parseContext , Name name) {
+    public void set(ParseContext parseContext , VariableInfo variableInfo) {
       
-      Map<Name, Object> globalScopeTreeMap = parseContext.getGlobalScopeTreeMap();
+      infoByName(parseContext).put(variableInfo.name, variableInfo); 
+    }
+    
+    /**
+     * @param parseContext
+     * @param method name
+     * @return VariableInfo removed
+     */
+    public VariableInfo remove(ParseContext parseContext , String methodName) {
       
-      Map<Name , VariableInfo> infoByName = (Map<Name, VariableInfo>) globalScopeTreeMap.get(STORES);
       
-      return infoByName.get(name);
+      return infoByName(parseContext).remove(methodName);
+    }
+    
+    public Optional<VariableInfo> get(ParseContext parseContext , String methodName) {
+      
+      return Optional.ofNullable(infoByName(parseContext).get(methodName));
     }
   }
   
