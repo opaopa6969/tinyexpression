@@ -32,7 +32,7 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
     return 
       new Parsers(
         Parser.get(DollarParser.class),
-        Parser.get(IdentifierParser.class),
+        Parser.newInstance(IdentifierParser.class).addTag(VariableParser.variableNameTag),
         new Not(
 //              new MatchOnly(
                 new Choice(

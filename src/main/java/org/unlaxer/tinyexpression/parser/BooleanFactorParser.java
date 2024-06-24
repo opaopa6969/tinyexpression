@@ -8,7 +8,7 @@ public class BooleanFactorParser extends AbstractBooleanFactorParser implements 
 
    @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    return getLazyParsers(false);
+    return getLazyParsers(true);
   }
 
   @Override

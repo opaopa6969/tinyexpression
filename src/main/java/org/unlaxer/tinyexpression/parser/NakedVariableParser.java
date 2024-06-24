@@ -30,7 +30,7 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	  return 
       new Parsers(
         Parser.get(DollarParser.class),
-        Parser.get(IdentifierParser.class).addTag(variableNameTag)
+        Parser.newInstance(IdentifierParser.class).addTag(variableNameTag)
       );
 	}
 
