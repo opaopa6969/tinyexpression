@@ -98,7 +98,6 @@ import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -169,7 +168,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
 //      System.out.println(extractMethodsToken.getPath()); 
       Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
-      String path = newCreatesOf.getPath();
+//      String path = newCreatesOf.getPath();
 //      System.out.println(path);
       return newCreatesOf;
     }
@@ -650,14 +649,19 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     Token operator = ChoiceInterface.choiced(token);
     Parser parser = operator.parser;
     
-    if(parser instanceof ExclusiveNakedVariableParser) {
-      
-      TypedToken<? extends VariableParser> resolveTypedVariable = 
-          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class));
-      
-      parser = resolveTypedVariable.getParser();
-    }
-
+//    if(parser instanceof ExclusiveNakedVariableParser) {
+//      
+//      TinyExpressionTokens tinyExpressionTokens = 
+//          new TinyExpressionTokens(operator.getAncestor(TokenPredicators.parsers(TinyExpressionParser.class)));
+//      
+//      
+//      Optional<VariableParser> resolveTypedVariable = 
+//          VariableTypeResolver.resolveTypedVariable(token.typed(ExclusiveNakedVariableParser.class),tinyExpressionTokens.variableDeclarationByVariableName);
+//      
+//      if(resolveTypedVariable.isPresent()) {
+//        parser = resolveTypedVariable.get();
+//      }
+//    }
     
     if(parser instanceof TrueTokenParser ||
       parser instanceof FalseTokenParser) {

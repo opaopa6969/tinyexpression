@@ -1,13 +1,16 @@
 package org.unlaxer.tinyexpression;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Name;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 
@@ -37,6 +40,10 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
     if(createToken) {
       
       parseContext = new ParseContext(new StringSource(formula));
+      transactionListeners().forEach(listenser->{
+          parseContext.addTransactionListener(Name.of(listenser.getClass()), listenser);
+        }
+      );
       try (parseContext) {
         parsed = getParser().parse(parseContext);
         if (false == parsed.isSucceeded()) {
@@ -104,6 +111,14 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
     return (X) objectByKey.get(key);
   }
   
-  
+	public abstract String className();
+	public abstract String javaCode();
+	public abstract String classNameWithHash();
+
+	public abstract byte[] byteCode();
+	public abstract String formulaHash();
+	public abstract String byteCodeHash();
+	
+	public abstract Collection<TransactionListener> transactionListeners();
 
 }

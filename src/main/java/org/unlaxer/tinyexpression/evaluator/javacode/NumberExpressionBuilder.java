@@ -2,12 +2,14 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
@@ -108,11 +110,14 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
 
     } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
+    	
+      Optional<ExpressionType> fromVariableParserToken = 
+          VariableTypeResolver.resolveFromVariableParserToken(token, tinyExpressionTokens);
 
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
-          "0f","getValue","setAndGet");
+          "0f","getValue","setAndGet",fromVariableParserToken.orElse(ExpressionType.number));
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //      
 //      

@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 
 public class StringTypeHintPrefixParser extends JavaStyleParenthesesParser implements TypeHintVariableParser{

@@ -1,8 +1,8 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
-import org.unlaxer.parser.Parser;
+import org.unlaxer.Parsed;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 
 public class NumberExpressionParser extends AbstractNumberExpressionParser{
 
@@ -15,5 +15,12 @@ public class NumberExpressionParser extends AbstractNumberExpressionParser{
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
+
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
+  
+  
   
 }

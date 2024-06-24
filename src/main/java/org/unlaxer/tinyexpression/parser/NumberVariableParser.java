@@ -1,19 +1,18 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.cache.SupplierBoundCache;
 
 public class NumberVariableParser extends LazyChoice implements RootVariableParser , NumberExpression {
+  
+  static final SupplierBoundCache<NumberVariableParser> SINGLETON = new SupplierBoundCache<>(NumberVariableParser::new);
 
-  private static final long serialVersionUID = -6048451001170410L;
 
   public NumberVariableParser() {
     super();
@@ -40,25 +39,8 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
     return Optional.of(ExpressionType.number);
   }
   
-  public static class NumberVariableMatchedWithVariableDeclarationParser extends LazyChain implements NumberExpression {
-
-    public NumberVariableMatchedWithVariableDeclarationParser() {
-      super();
-    }
-
-    @Override
-    public org.unlaxer.parser.Parsers getLazyParsers() {
-      return new Parsers(//
-          Parser.get(DollarParser.class), //0
-          Parser.get(NumberVariableDeclarationMatchedTokenParser.class)//1
-      );
-    }
-    
-    @TokenExtractor
-    static Token getVariableNameToken(Token thisParserParsed) {
-      Token token = thisParserParsed.getChildWithParser(NakedVariableParser.class);
-      return token;
-    }
+  public static NumberVariableParser get() {
+    return SINGLETON.get();
   }
 
   @Override

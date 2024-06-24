@@ -7,6 +7,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
@@ -17,9 +18,11 @@ public class VariableBuilder {
    public static void build(TokenCodeBuilder parentBuilder , SimpleJavaCodeBuilder builder,
        TypedToken<VariableParser> token ,
        TinyExpressionTokens tinyExpressionTokens , Class<? extends SetterParser> setterParserClass,
-       String defaultValue , String getMethod , String setAndGetMethod) {
+       String defaultValue , String getMethod , String setAndGetMethod , ExpressionType variableType) {
      
      VariableParser variableParser = token.getParser();
+     
+     boolean isOptional = true;
      
      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
      
@@ -48,11 +51,14 @@ public class VariableBuilder {
          String expseeionString = simpleJavaCodeBuilder.builder.toString();
 //     String expseeionString = expression.getToken().orElseThrow();
          
+         
+         
          if(ifNotExists.isPresent()) {
            
            builder.append("calculateContext."+getMethod+"(").w(variableName).append(").orElse("+expseeionString+")");
          }else {
            builder.append("calculateContext."+setAndGetMethod+"(").w(variableName).append(","+expseeionString+")");
+           isOptional = false;
          }
          isMatch = true;
          break;
@@ -60,6 +66,10 @@ public class VariableBuilder {
      }
      if(false == isMatch) {
        builder.append("calculateContext."+getMethod+"(").w(variableName).append(").orElse("+defaultValue+")");
+     }
+     
+     if(variableType.isNumber() && isOptional) {
+    	 builder.append(".floatValue()");
      }
    }
 

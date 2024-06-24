@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.List;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
@@ -20,7 +18,7 @@ public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyCha
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
-
+    
     // <term>::= <factor>[('*'|'/')<factor>]*
     Parsers parsers = new Parsers();
     

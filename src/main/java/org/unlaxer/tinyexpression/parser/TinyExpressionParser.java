@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
+@SuppressWarnings("serial")
 public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , 
   AfterParse{
 

@@ -21,7 +21,7 @@ public class JavaCodeCalculatorSpeedTest {
 		context.set("number_accessCountByCaulisCookieInMiddlePeriod", 100);
 		
 		long start = System.nanoTime();
-		JavaCodeCalculator simpleCalculator = new JavaCodeCalculator(formula , "DummyCalculator", Thread.currentThread().getContextClassLoader());
+		JavaCodeCalculatorV2 simpleCalculator = new JavaCodeCalculatorV2(formula , "DummyCalculator", Thread.currentThread().getContextClassLoader());
 		
 		float count = 100000000;
 		float toMicro = count * 10000f;

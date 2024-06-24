@@ -5,7 +5,8 @@ import org.unlaxer.Tag;
 public enum ExpressionType{
   number("float"),
   string("String"),
-  bool("boolean")
+  bool("boolean"),
+  object("Object")
   ;
   final Tag tag;
   final String javaType;

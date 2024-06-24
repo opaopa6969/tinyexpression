@@ -12,7 +12,7 @@ public class TestResult{
 	public final ParseContext parseContext;
 	public final Optional<String> lastToken;
 	public final List<Boolean> assertValues;
-
+	
 	
 	public TestResult(Parsed parsed, ParseContext parseContext, Optional<String> lastToken  , List<Boolean> assertValues) {
 		super();

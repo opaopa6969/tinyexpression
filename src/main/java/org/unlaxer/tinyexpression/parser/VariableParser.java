@@ -25,5 +25,4 @@ public interface VariableParser extends Parser{
       .findFirst().get();
     return identifierToken.tokenString.get();
   }
-  
 }
