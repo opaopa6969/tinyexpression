@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.Optional;
 
 import org.unlaxer.Name;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -46,7 +47,9 @@ public class ExclusiveNakedVariableParser extends NakedVariableParser {//impleme
   }
   
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional(ParseContext parseContext) {
+    
+    return 
     return Optional.empty();
   }
   

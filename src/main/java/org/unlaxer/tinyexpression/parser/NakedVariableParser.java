@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import java.util.Optional;
 
 import org.unlaxer.Name;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
@@ -35,7 +36,7 @@ public class NakedVariableParser extends LazyChain implements VariableParser{//i
 	}
 
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional(ParseContext parseContext) {
     return Optional.empty();
   }
   

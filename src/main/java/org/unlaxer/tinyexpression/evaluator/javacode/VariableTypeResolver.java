@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
@@ -17,6 +18,7 @@ import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypedVariableParser;
+import org.unlaxer.tinyexpression.parser.VariableDeclarationMatchedTokenParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
@@ -69,16 +71,16 @@ public class VariableTypeResolver {
     // 4. not等のunary operatorの型から解決する
     
 
-    // 5. VariableDeclarationの型から解決する
-    Token declarationToken = variableDeclarationByName.get(variableName);
-
-    if (declarationToken != null) {
-
-      TypedToken<VariableDeclaration> typed = declarationToken.typed(VariableDeclaration.class);
-      Optional<ExpressionType> type = typed.getParser().type();
-      
-      return type.map(variableParserByExpressionType::get);
-    }
+    // 5. VariableDeclarationの型から解決する <-これは VariableDeclarationMatchedTokenParserで解決したのでいらない
+//    Token declarationToken = variableDeclarationByName.get(variableName);
+//
+//    if (declarationToken != null) {
+//
+//      TypedToken<VariableDeclaration> typed = declarationToken.typed(VariableDeclaration.class);
+//      Optional<ExpressionType> type = typed.getParser().type();
+//      
+//      return type.map(variableParserByExpressionType::get);
+//    }
     return Optional.empty();
   }
   
@@ -90,7 +92,7 @@ public class VariableTypeResolver {
    * ただし、上位Parserが型解決で得られた型と違う場合があるため上位parserの型も書き換えてやらねばならない
    * これはParse時に実行したほうがよさそうだ。
    */
-  public static Token resolveVariableType(Token rootToken) {
+  public static Token resolveVariableType(ParseContext parseContext ,  Token rootToken) {
 
     // 最初にVariableDeclarationを取得する
     Map<String, Token> variableDeclarationByName = variableDeclarations(rootToken);
@@ -104,7 +106,7 @@ public class VariableTypeResolver {
         resolveTypedVariable.ifPresent(parser->{
           if (parser.getClass() != ExclusiveNakedVariableParser.class) {
             _token.replace(parser);
-            ExpressionType expressionType = parser.typeAsOptional().get();
+            ExpressionType expressionType = parser.typeAsOptional(parseContext).get();
           }
         });
       }
@@ -135,7 +137,9 @@ public class VariableTypeResolver {
     return variableDeclarationByVariableName;
   }
 
-  public static Optional<ExpressionType> resolveFromVariableParserToken(Token token,
+  public static Optional<ExpressionType> resolveFromVariableParserToken(
+      ParseContext parseContext,
+      Token token,
       TinyExpressionTokens tinyExpressionTokens) {
 
     Parser parser = token.getParser();
@@ -144,7 +148,7 @@ public class VariableTypeResolver {
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       VariableParser variableParser = typed.getParser();
 
-      Optional<ExpressionType> typeAsOptional = variableParser.typeAsOptional();
+      Optional<ExpressionType> typeAsOptional = variableParser.typeAsOptional(parseContext);
       if (typeAsOptional.isPresent()) {
         return typeAsOptional;
       }

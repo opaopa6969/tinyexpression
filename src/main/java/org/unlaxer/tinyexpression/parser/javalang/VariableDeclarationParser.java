@@ -158,15 +158,15 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
      * @param method name
      * @return VariableInfo removed
      */
-    public VariableInfo remove(ParseContext parseContext , String methodName) {
+    public VariableInfo remove(ParseContext parseContext , String variableName) {
       
       
-      return infoByName(parseContext).remove(methodName);
+      return infoByName(parseContext).remove(variableName);
     }
     
-    public Optional<VariableInfo> get(ParseContext parseContext , String methodName) {
+    public Optional<VariableInfo> get(ParseContext parseContext , String variableName) {
       
-      return Optional.ofNullable(infoByName(parseContext).get(methodName));
+      return Optional.ofNullable(infoByName(parseContext).get(variableName));
     }
   }
   

@@ -2,13 +2,16 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.Set;
 
+import org.unlaxer.Parsed;
+import org.unlaxer.TokenKind;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.util.Singletons;
 
 public class NumberFactorParser extends AbstractNumberFactorParser implements TypedParser{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    return getLazyParsers(false);
+    return getLazyParsers(true);
   }
   
   @Override
@@ -44,4 +47,8 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
       Singletons.get(BooleanFactorParser.class)
   );
 
+  @Override
+  public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
+    return super.parse(parseContext, tokenKind, invertMatch);
+  }
 }
