@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.loader.model;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -8,15 +7,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Supplier;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
-import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
+import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.util.EpochPeriodForNavigable;
 import org.unlaxer.util.MultiDateParser;
 import org.unlaxer.util.digest.HEX;
@@ -31,10 +27,12 @@ public class FormulaInfo{
 //  public SiteId siteId;
   // for formula name
 //  public CheckKind checkKind;
+  
+  public Optional<String> multiTenancyId = Optional.empty();
+
   public String formulaName;
+  
   public String byteCodeAsHex;
-  
-  
   public String formulaText;
   public String javaCodeText;
   public String hash;
@@ -48,11 +46,14 @@ public class FormulaInfo{
   public Map<String,String> extraValueByKey;
   public List<String> text;
   
-  public FormulaInfo() {
+  private final FormulaInfoAdditionalFields additionalFields;
+  
+  public FormulaInfo(FormulaInfoAdditionalFields additionalFields) {
     super();
     extraValueByKey = new LinkedHashMap<>();
     text = new ArrayList<>();
     tags = new LinkedHashSet<>();
+    this.additionalFields = additionalFields; 
   }
   
 
@@ -159,13 +160,22 @@ public class FormulaInfo{
       .line(periodStartInclusive)
       
       .append("periodEndExclusive:")
-      .line(periodEndExclusive)
+      .line(periodEndExclusive);
       
-      .append("siteId:")
-      .line(siteId.toString())
+    if(multiTenancyId.isPresent()) {
+//        builder.append("siteId:")
+      builder
+        .append(additionalFields.multiTenancyAttributeName().get())
+        .append(":")
+        .line(multiTenancyId.get());
+    }
       
-      .append("checkKind:")
-      .line(checkKind.toString())
+    builder
+      .append(additionalFields.formulaNameAttributeName())
+      .append(":")
+    
+//      .append("checkKind:")
+      .line(formulaName)
     
       .append("hash:")
       .line(hash)

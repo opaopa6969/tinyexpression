@@ -25,7 +25,8 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
   }
 
   @TokenExtractor
-  public FormulaInfoList extract(TypedToken<FormulaInfoBlocksParser> typedToken , ClassLoader classLoader) {
+  public FormulaInfoList extract(TypedToken<FormulaInfoBlocksParser> typedToken , 
+      FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
     List<TypedToken<FormulaInfoBlockParser>> childrenWithParserAsListTyped = 
         typedToken.getChildrenWithParserAsListTyped(FormulaInfoBlockParser.class);
     
@@ -36,7 +37,7 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
         return hasElement;
       })
       .map(_typeToken->{
-        return FormulaInfoParser.extractFormulaInfo(_typeToken , classLoader);
+        return FormulaInfoParser.extractFormulaInfo(_typeToken , additionalFields , classLoader);
       })
       .collect(Collectors.toList());
     

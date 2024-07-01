@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.lang3.StringUtils;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
@@ -17,11 +16,10 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
+import org.unlaxer.util.digest.HEX;
 import org.unlaxer.util.function.Unchecked;
-
-import jp.caulis.fraud.model.CheckKinds;
-import jp.caulis.fraud.model.SiteId;
 
 public class FormulaInfoParser extends LazyOneOrMore{
   
@@ -47,9 +45,10 @@ public class FormulaInfoParser extends LazyOneOrMore{
 
   
   @TokenExtractor
-  public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed , ClassLoader classLoader){
+  public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed , 
+      FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
     
-    FormulaInfo formulaInfo = new FormulaInfo();
+    FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields);
     List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
     
     AtomicBoolean hasByteCode = new AtomicBoolean(false);
@@ -68,15 +67,23 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "description", (value)->formulaInfo.description = value);
         match |= set(keyValue, "periodStartInclusive", (value)->formulaInfo.periodStartInclusive = value);
         match |= set(keyValue, "periodEndExclusive", (value)->formulaInfo.periodEndExclusive = value);
-        match |= set(keyValue, "siteId", (value)->formulaInfo.siteId = SiteId.of(value));
-        match |= set(keyValue, "checkKind", (value)->formulaInfo.checkKind = CheckKinds.ofWithDynamicIfNotMatched(value));
+        
+        if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
+          match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, (value)->formulaInfo.multiTenancyId = Optional.of(value));
+          
+        }
+        
+        match |= set(keyValue, formulaInfoAdditionalFields.formulaNameAttributeName()/*"checkKind"*/, 
+            (value)->formulaInfo.formulaName = value /*CheckKinds.ofWithDynamicIfNotMatched(value)*/);
+        
+        
         match |= set(keyValue, "hash", (value)->formulaInfo.hash = value);
         match |= set(keyValue, "hashByByteCode", (value)->formulaInfo.hashByByteCode = value);
         match |= set(keyValue, "formula", (value)->formulaInfo.formulaText = value);
         match |= set(keyValue, "javaCode", (value)->formulaInfo.javaCodeText = value);
         match |= set(keyValue, "byteCode", (value)->{
           formulaInfo.byteCodeAsHex = value;
-          formulaInfo.byteCode = Unchecked.supplier(()->Hex.decodeHex(value.toCharArray())).get();
+          formulaInfo.byteCode = Unchecked.supplier(()->HEX.decode(value)).get();
           hasByteCode.set(true);
         });
         if(match == false ) {
@@ -117,6 +124,47 @@ public class FormulaInfoParser extends LazyOneOrMore{
         .collect(Collectors.toMap(KeyValue::getKey,KeyValue::getValue));
     
     return valueByKey;
+  }
+  
+  public static class FormulaInfoModifier{
+    final String multiTenancyAttributeName;
+    final String multiTenancyAttributeValue;
+    
+    final String formulaNameAttributeName;
+    final String formulaNameAttributeValue;
+    
+    public FormulaInfoModifier(String multiTenancyAttributeName, String multiTenancyAttributeValue,
+        String formulaNameAttributeName, String formulaNameAttributeValue) {
+      super();
+      this.multiTenancyAttributeName = multiTenancyAttributeName;
+      this.multiTenancyAttributeValue = multiTenancyAttributeValue;
+      this.formulaNameAttributeName = formulaNameAttributeName;
+      this.formulaNameAttributeValue = formulaNameAttributeValue;
+    }
+    
+    public FormulaInfoModifier(String formulaNameAttributeName, String formulaNameAttributeValue) {
+      super();
+      this.multiTenancyAttributeName = null;
+      this.multiTenancyAttributeValue = null;
+      this.formulaNameAttributeName = formulaNameAttributeName;
+      this.formulaNameAttributeValue = formulaNameAttributeValue;
+    }
+
+    public Optional<String> getMultiTenancyAttributeName() {
+      return Optional.ofNullable(multiTenancyAttributeName);
+    }
+
+    public Optional<String> getMultiTenancyAttributeValue() {
+      return Optional.ofNullable(multiTenancyAttributeValue);
+    }
+
+    public String getFormulaNameAttributeName() {
+      return formulaNameAttributeName;
+    }
+
+    public String getFormulaNameAttributeValue() {
+      return formulaNameAttributeValue;
+    }
   }
 
 }

@@ -1,10 +1,6 @@
 package org.unlaxer.tinyexpression.loader.model;
 
-import static jp.caulis.fraud.model.calc.FormulaInfo.logger;
-
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,15 +11,15 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.io.IOUtils;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
+import org.unlaxer.util.StringUtils;
+import org.unlaxer.util.Try;
 import org.unlaxer.util.Tuple2;
-
-import jp.caulis.fraud.model.CheckKind;
 
 @V2CustomFunction
 public class FormulaInfoList {
@@ -31,7 +27,7 @@ public class FormulaInfoList {
   List<FormulaInfo> infos;
   
   String output;
-
+  
   public FormulaInfoList() {
     super();
     this.infos = Collections.emptyList();
@@ -178,7 +174,8 @@ public class FormulaInfoList {
 //  }
   
   
-  public static FormulaInfoList parse(String text , ClassLoader classLoader) {
+  public static Try<FormulaInfoList> parse(String text ,
+      FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
 
     try {
       FormulaInfoBlocksParser formulaInfoBlocksParser = new FormulaInfoBlocksParser();
@@ -190,13 +187,12 @@ public class FormulaInfoList {
           parsed.getRootToken().typed(FormulaInfoBlocksParser.class);
       
       FormulaInfoBlocksParser parser = typedToken.getParser();
-      FormulaInfoList extract = parser.extract(typedToken , classLoader);
-      return extract;
+      FormulaInfoList extract = parser.extract(typedToken , additionalFields , classLoader);
+      return Try.immediatesOf(extract);
 
     } catch (Throwable e) {
-      e.printStackTrace();
-      logger.error("failed to parse formulaIfno",e);
-      return new FormulaInfoList();
+      
+      return Try.immediatesOf(e);
     }
   }
   
@@ -224,12 +220,8 @@ public class FormulaInfoList {
     return infos.stream().map(info->info.formulaName);
   }
 
-  public static FormulaInfoList parse(InputStream binaryStream , ClassLoader classLoader) {
-    try {
-      return parse(IOUtils.toString(binaryStream, StandardCharsets.UTF_8) , classLoader);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  public static Try<FormulaInfoList> parse(InputStream binaryStream , FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
+      return parse(StringUtils.from(binaryStream, StandardCharsets.UTF_8) , additionalFields, classLoader);
   }
   
 }
