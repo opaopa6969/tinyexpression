@@ -8,7 +8,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
@@ -16,13 +15,13 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
+import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.function.Unchecked;
 
 import jp.caulis.fraud.model.CheckKinds;
 import jp.caulis.fraud.model.SiteId;
-import jp.caulis.fraud.model.calc.FormulaInfo;
-import jp.caulis.fraud.model.calc.parser.FormulaInfoElementParser.KeyValue;
 
 public class FormulaInfoParser extends LazyOneOrMore{
   

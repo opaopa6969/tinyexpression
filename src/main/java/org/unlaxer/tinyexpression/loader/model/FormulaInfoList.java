@@ -21,8 +21,8 @@ import org.unlaxer.StringSource;
 import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
+import org.unlaxer.util.Tuple2;
 
-import io.vavr.Tuple2;
 import jp.caulis.fraud.model.CheckKind;
 
 @V2CustomFunction
@@ -220,8 +220,8 @@ public class FormulaInfoList {
     }
   }
   
-  public Stream<CheckKind> checkKindStream(){
-    return infos.stream().map(info->info.checkKind);
+  public Stream<String> nameStream(){
+    return infos.stream().map(info->info.formulaName);
   }
 
   public static FormulaInfoList parse(InputStream binaryStream , ClassLoader classLoader) {
