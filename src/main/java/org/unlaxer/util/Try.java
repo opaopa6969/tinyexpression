@@ -38,7 +38,7 @@ public class Try<R> extends Either<Throwable, R> {
    * right value is {@link Supplier#get()} 1 times.
    * 
    * @param supplier
-   * @return Try<R>
+   * @return Try
    */
   public static <R> Try<R> resultOf(ThrowingSupplier<R> supplier) {
     try {
@@ -53,7 +53,7 @@ public class Try<R> extends Either<Throwable, R> {
    * right value is {@link Supplier#get()} 1 times.
    * 
    * @param supplier
-   * @return Try<R>
+   * @return Try
    */
   public static <R> Try<R> resultOf(ThrowingSupplier<R> supplier,
       Consumer<Throwable> throwableConsumer) {

@@ -1,6 +1,6 @@
 package org.unlaxer.util;
 
-/**
+/*
  * this class is subclass of EpochPeriod with compare with start epoch for
  * NavigableMap<EpochStartWithEnd,T>
  *

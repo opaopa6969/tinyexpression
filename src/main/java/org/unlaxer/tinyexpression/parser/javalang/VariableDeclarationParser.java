@@ -174,7 +174,7 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     
     /**
      * @param parseContext
-     * @param method name
+     * @param variableName
      * @return VariableInfo removed
      */
     public VariableInfo remove(ParseContext parseContext , String variableName) {
