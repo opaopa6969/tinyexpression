@@ -76,6 +76,11 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, formulaInfoAdditionalFields.formulaNameAttributeName()/*"checkKind"*/, 
             (value)->formulaInfo.formulaName = value /*CheckKinds.ofWithDynamicIfNotMatched(value)*/);
         
+        for(String additional : formulaInfoAdditionalFields.additionalAttributeNames()) {
+          
+          match |= set(keyValue, additional , 
+              (value)->formulaInfo.addAdditional(keyValue.key, value));
+        }
         
         match |= set(keyValue, "hash", (value)->formulaInfo.hash = value);
         match |= set(keyValue, "hashByByteCode", (value)->formulaInfo.hashByByteCode = value);

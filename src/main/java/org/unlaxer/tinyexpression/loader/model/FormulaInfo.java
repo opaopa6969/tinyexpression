@@ -56,8 +56,9 @@ public class FormulaInfo{
     this.additionalFields = additionalFields; 
   }
   
-
-
+  public void addAdditional(String key , String value) {
+    extraValueByKey.put(key, value);
+  }
 
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
     calculator = new JavaCodeCalculatorV2(
