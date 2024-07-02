@@ -88,7 +88,24 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
   }
 
   // if class path changes , then reload.
-  static JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+  static JavaCompiler compiler;
+  static {
+    reset();
+  }
+
+  private static void reset() {
+    compiler = ToolProvider.getSystemJavaCompiler();
+    if (compiler == null) {
+        try {
+            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
+            Method create = javacTool.getMethod("create");
+            compiler = (JavaCompiler) create.invoke(null);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+  
+}
 
 //  private static final Method DEFINE_CLASS_METHOD;
 //  static {
