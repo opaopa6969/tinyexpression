@@ -470,7 +470,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
       MethodType methodType = MethodType.methodType(Class.class, String.class, byte[].class, int.class,
           int.class);
       MethodHandle virtual = lookup.findVirtual(ClassLoader.class, "defineClass", methodType);
-      return (Class) virtual.invoke(classLoader, className, byteCode, 0, byteCode.length);
+      return (Class) virtual.invokeExact(classLoader, className, byteCode, 0, byteCode.length);
     } catch (Throwable e) {
       throw new RuntimeException(e);
     }
