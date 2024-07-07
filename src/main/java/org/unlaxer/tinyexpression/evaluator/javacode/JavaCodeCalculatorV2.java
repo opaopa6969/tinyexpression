@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
@@ -444,19 +447,32 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
     return Set.of(Parser.get(VariableDeclarationParser.class));
   }
 
+//  @SuppressWarnings("rawtypes")
+//  public static Class defineClass(ClassLoader classLoader, String className, byte[] byteCode) {
+//    Method defineClassMethod;
+//    try {
+//      defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class,
+//          int.class);
+//      defineClassMethod.setAccessible(true);
+//
+//      return (Class) defineClassMethod.invoke(classLoader, className, byteCode, 0, byteCode.length);
+//    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+//        | InvocationTargetException e) {
+//      throw new RuntimeException(e);
+//    }
+//  }
+  
   @SuppressWarnings("rawtypes")
   public static Class defineClass(ClassLoader classLoader, String className, byte[] byteCode) {
-    Method defineClassMethod;
+    
     try {
-      defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class,
+      MethodHandles.Lookup lookup = MethodHandles.lookup();
+      MethodType methodType = MethodType.methodType(Class.class, String.class, byte[].class, int.class,
           int.class);
-      defineClassMethod.setAccessible(true);
-
-      return (Class) defineClassMethod.invoke(classLoader, className, byteCode, 0, byteCode.length);
-    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-        | InvocationTargetException e) {
+      MethodHandle virtual = lookup.findVirtual(ClassLoader.class, "defineClass", methodType);
+      return (Class) virtual.invoke(classLoader, className, byteCode, 0, byteCode.length);
+    } catch (Throwable e) {
       throw new RuntimeException(e);
     }
   }
-
 }
