@@ -449,6 +449,21 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
   
   @SuppressWarnings("rawtypes")
   public static Class defineClass(ClassLoader classLoader, String className, byte[] byteCode) {
+    Method defineClassMethod;
+    try {
+      defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class,
+          int.class);
+      defineClassMethod.setAccessible(true);
+  
+      return (Class) defineClassMethod.invoke(classLoader, className, byteCode, 0, byteCode.length);
+    } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
+        | InvocationTargetException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  @SuppressWarnings("rawtypes")
+  public static Class defineClassWithMethodHandle(ClassLoader classLoader, String className, byte[] byteCode) {
     
     try {
       MethodHandles.Lookup lookup = MethodHandles.lookup();
