@@ -5,9 +5,11 @@ import java.util.Deque;
 import java.util.Optional;
 
 import org.unlaxer.CodePointIndex;
+import org.unlaxer.CodePointOffset;
 import org.unlaxer.EnclosureDirection;
 import org.unlaxer.Range;
 import org.unlaxer.Source;
+import org.unlaxer.Source.SourceKind;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
@@ -39,6 +41,8 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext) {
 		this(calculator , calculateContext , StringSource.createRootSource(""));
 	}
+	
+
 	
 	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext , Source formula) {
 		super();
@@ -110,7 +114,7 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	}
 
 	boolean delete(ActionType actionType , CodePointIndex position){
-		
+	  
 		Source formulaString = getFormulaString();
 		
 		Optional<Token> selection = getSelection();
@@ -142,7 +146,8 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		EditHistory editHistory = 
-				new EditHistory(new EditAction(actionType , range), position.value() , calculateContext, calculateResult);
+				new EditHistory(new EditAction(actionType , range), 
+				    position.value(SourceKind.subSource) , calculateContext, calculateResult);
 		
 		return editHistory;
 	}
@@ -152,7 +157,8 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		
 		EditHistory editHistory = 
-				new EditHistory(new EditAction(insertion.sourceAsString(),range), position.value() , calculateContext, calculateResult);
+				new EditHistory(new EditAction(insertion.sourceAsString(),range), 
+				    position.value(SourceKind.subSource), calculateContext, calculateResult);
 		
 		return editHistory;
 	}
@@ -180,10 +186,14 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	@Override
 	public boolean cursorLeft() {
+	  
+	  CodePointOffset codePointOffset = new CodePointOffset(0);
 		Optional<Token> currentSelection = getSelection();
 		if(currentSelection.isPresent()){
 			CodePointIndex position = new CodePointIndex(			    
-			    Math.max(0, currentSelection.get().getSource().cursorRange().startIndexInclusive().position().newWithMinus(1).value())
+			    Math.max(0, currentSelection.get().getSource().cursorRange().startIndexInclusive().position()
+			        .newWithMinus(1).value(SourceKind.subSource)),
+			    codePointOffset
 	    );
 			updatePosition(ActionType.cursorLeft , position);
 			return true;
@@ -197,9 +207,10 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	
 	@Override
 	public boolean home() {
+	  CodePointOffset codePointOffset = new CodePointOffset(0);
 		CodePointIndex position = getPosition();
 		boolean movable = position.isGreaterThanZero();
-		position = new CodePointIndex(0);
+		position = new CodePointIndex(0,codePointOffset);
 		updatePosition(ActionType.home , position);
 		return movable;
 	}
@@ -208,15 +219,16 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 	public boolean end() {
 		Source formulaString = getFormulaString();
 		CodePointIndex position = getPosition();
+		CodePointOffset codePointOffset = new CodePointOffset(0);
 		boolean movable = formulaString.codePointLength().gt(position);
-		position = new CodePointIndex(formulaString.codePointLength());
+		position = new CodePointIndex(formulaString.codePointLength(),codePointOffset);
 		updatePosition(ActionType.end, position);
 		return movable;
 	}
 	
 	void updatePosition(ActionType actionType , CodePointIndex position){
 		EditHistory updated = getCurrent().clone(EditAction.of(actionType));
-		updated.caretPosition = position.value();
+		updated.caretPosition = position.value(SourceKind.subSource);
 		edits.push(updated);
 	}
 	

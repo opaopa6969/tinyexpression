@@ -94,7 +94,8 @@ public class BooleanBuilder implements TokenCodeBuilder {
 		
 		}else if(parser instanceof IsPresentParser){
 			
-		  Source variableName = token.getSource().subSource(new CodePointIndex(1));
+		  Source source = token.getSource();
+      Source variableName = source.subSource(new CodePointIndex(1,source.offsetFromRoot()));
 
 			builder.append("calculateContext.isExists(").w(variableName).append(")");
 

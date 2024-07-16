@@ -130,9 +130,9 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
           .and(TokenPredicators.afterToken(conditionToken));
     
     List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
-        .peek(x->{System.out.println("前:"+x);})
+        .peek(x->{System.out.println("前:"+x);})//FIXME!
         .filter(expressionFilter)
-        .peek(x->{System.out.println("後:"+x);})
+        .peek(x->{System.out.println("後:"+x);})//FIXME!
         .limit(2)
         .collect(Collectors.toList());
     
@@ -152,15 +152,15 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
   	      .and(TokenPredicators.afterToken(conditionToken));
 	  
     List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
-        .peek(x->{System.out.println("前:"+x);})
+        .peek(x->{System.out.println("前:"+x);})//FIXME!
         .filter(expressionFilter)
-        .peek(x->{System.out.println("後:"+x);})
+        .peek(x->{System.out.println("後:"+x);})//FIXME!
         .limit(2)
         .collect(Collectors.toList());
     
     //FIXME!
     if(returning.isEmpty()) {
-      System.out.println("empty");
+      System.out.println("empty");//FIXME!
     }
 
     return returning.get(1);
