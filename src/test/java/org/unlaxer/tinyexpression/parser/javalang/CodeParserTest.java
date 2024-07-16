@@ -23,6 +23,7 @@ public class CodeParserTest extends ParserTestBase{
     
     builder
       .line("```java:org.unlaxer.test.Dummy")
+      // ```の三文字ずつ取っているためpositionがおかしい
       .line("package org.unlaxer.test;")
       .line("public class Dummy{")
       .incTab()

@@ -7,7 +7,6 @@ import org.unlaxer.Name;
 import org.unlaxer.Parsed;
 import org.unlaxer.Token;
 import org.unlaxer.TokenKind;
-import org.unlaxer.TokenPredicators;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -16,7 +15,6 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.parser.combinator.NotPropagatableSource;
 import org.unlaxer.parser.combinator.ParserWrapper;
-import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 /*
@@ -71,12 +69,7 @@ public class StartAndEndQuotedParser extends LazyChain {
 			  leftQuote,
 				startQuoteParser
 			),
-			new ZeroOrMore(contents,
-				new Choice(
-					new EscapeInQuotedParser(),
-					new NotPropagatableSource(quoteParser)
-				)
-			),
+			new QuotedContentsParser(quoteParser),
 			new ParserWrapper(
 				Name.of(StartAndEndQuotedParser.class, Parts.rightQuote.get()),
 				endQuoteParser
@@ -120,10 +113,7 @@ public class StartAndEndQuotedParser extends LazyChain {
 
 		@Override
 		public Supplier<Parser> getLazyParser() {
-			return ()-> new Choice(
-				new EscapeInQuotedParser(),
-				new NotPropagatableSource(quoteParser)
-			);
+			return ()-> Parser.get(WildCardStringParser.class);
 		}
 
 		@Override
