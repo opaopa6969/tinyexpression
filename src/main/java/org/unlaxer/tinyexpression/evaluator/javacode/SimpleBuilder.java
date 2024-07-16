@@ -69,7 +69,7 @@ public class SimpleBuilder {
   static byte tabBytes = " ".getBytes()[0];
 
   private SimpleBuilder tab() {
-    byte[] tabs = new byte[index];
+    byte[] tabs = new byte[index* tabSpace];
     for (int i = 0; i < index * tabSpace; i++) {
       tabs[i] = tabBytes;
     }
