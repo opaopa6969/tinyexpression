@@ -1,4 +1,7 @@
 package org.unlaxer.util.digest;
+
+import java.util.HexFormat;
+
 public class HEX{
 	
 	public enum ByteOrder{
@@ -31,5 +34,9 @@ public class HEX{
 
 	public static String encode(byte[] byteArray) {
 	    return encode(byteArray, true, ByteOrder.BIG_ENDIAN);
+	}
+	
+	public static byte[] decode(String hexString) {
+	  return HexFormat.of().parseHex(hexString);
 	}
 }

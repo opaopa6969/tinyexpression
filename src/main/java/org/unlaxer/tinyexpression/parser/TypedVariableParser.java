@@ -17,6 +17,8 @@ public interface TypedVariableParser extends VariableParser{
       return Parser.get(BooleanVariableParser.class);
     case number:
       return Parser.get(NumberVariableParser.class);
+      default:
+        break;
     }
     throw new IllegalArgumentException(type().toString());
   }
