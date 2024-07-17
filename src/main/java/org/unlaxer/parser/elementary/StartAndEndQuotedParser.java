@@ -10,10 +10,9 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
-import org.unlaxer.parser.combinator.NotPropagatableSource;
+import org.unlaxer.parser.combinator.MatchOnly;
 import org.unlaxer.parser.combinator.ParserWrapper;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -43,15 +42,15 @@ public class StartAndEndQuotedParser extends LazyChain {
 		}
 	}
 	
+	Parser startQuoteParser;
+	Parser contentsParser;
   Parser endQuoteParser;
-  Parser startQuoteParser;
-  Parser quoteParser;
 	
-	public StartAndEndQuotedParser(Parser startQuoteParser , Parser endQuoteParser , Parser quoteParser) {
+	public StartAndEndQuotedParser(Parser startQuoteParser , Parser contentsParser , Parser endQuoteParser) {
 		super();
 		this.endQuoteParser = endQuoteParser;
 		this.startQuoteParser = startQuoteParser;
-		this.quoteParser = quoteParser;
+		this.contentsParser = contentsParser;
 	}
 
   public static final Name contents = Name.of(StartAndEndQuotedParser.class, Parts.contents.get());
@@ -69,7 +68,10 @@ public class StartAndEndQuotedParser extends LazyChain {
 			  leftQuote,
 				startQuoteParser
 			),
-			new QuotedContentsParser(quoteParser),
+      new ParserWrapper(
+        contents,
+        contentsParser
+			),
 			new ParserWrapper(
 				Name.of(StartAndEndQuotedParser.class, Parts.rightQuote.get()),
 				endQuoteParser
@@ -87,21 +89,12 @@ public class StartAndEndQuotedParser extends LazyChain {
     }
 	}
   
-  @TokenExtractor
-  public static String extractContents(Token thisParserParsed) {
-      String string = thisParserParsed.flatten().stream()
-        .filter(token->token.parser.getName().equals(contents))
-        .findFirst()
-        .get().getToken().get();
-      return string;
-  }
-	
 	public static class QuotedContentsParser extends LazyZeroOrMore{
 
 
 		public QuotedContentsParser(Parser quoteParser) {
 			super(QuotedParser.contentsName);
-			this.quoteParser = quoteParser;
+			this.quoteParser = new MatchOnly(quoteParser);
 		}
 		
 		@Override
@@ -118,7 +111,7 @@ public class StartAndEndQuotedParser extends LazyChain {
 
 		@Override
 		public Optional<Parser> getLazyTerminatorParser() {
-			return Optional.empty();
+			return Optional.of(quoteParser);
 		}
 	}
 	

@@ -4,13 +4,16 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.StartAndEndQuotedParser;
-import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class CodeParser extends StartAndEndQuotedParser{
 
   public CodeParser() {
-    super(Parser.get(CodeStartParser.class), Parser.get(CodeEndParser.class) , new WordParser("```"));
+    super(
+        Parser.get(CodeStartParser.class), //
+        new QuotedContentsParser(Parser.get(CodeEndParser.class)) , //
+        Parser.get(CodeEndParser.class)
+    );
   }
   
   @TokenExtractor
@@ -26,5 +29,12 @@ public class CodeParser extends StartAndEndQuotedParser{
     
   }
 
-  
+  @TokenExtractor
+  public static String extractContents(Token thisParserParsed) {
+      String string = thisParserParsed.flatten().stream()
+        .filter(token->token.parser.getClass() == QuotedContentsParser.class)
+        .findFirst()
+        .get().getToken().get();
+      return string;
+  }
 }
