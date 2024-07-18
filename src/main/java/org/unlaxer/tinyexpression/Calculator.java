@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
@@ -27,6 +29,15 @@ public interface Calculator<T> {
     }finally{
       parseContext.close();
     }
+  }
+  
+  public default Type getResultType(){
+    return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+  }
+
+  @SuppressWarnings("unchecked")
+  public default Class<T> getTypeClass() {
+      return (Class<T>) getResultType();
   }
   
   public Parser getParser();

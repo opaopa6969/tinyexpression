@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
@@ -31,6 +32,11 @@ public class FormulaInfo{
   public Optional<String> multiTenancyId = Optional.empty();
 
   public String formulaName;
+  
+  @Nullable
+  public String resultType; // default float
+  @Nullable
+  public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
   public String byteCodeAsHex;
   public String formulaText;
@@ -176,8 +182,23 @@ public class FormulaInfo{
       .append(":")
     
 //      .append("checkKind:")
-      .line(formulaName)
+      .line(formulaName);
     
+    if(resultType != null) {
+      builder
+        .append("resultType")
+        .append(":")
+        .line(resultType);
+    }
+    
+    if(outputTo != null) {
+      builder
+        .append("outputTo")
+        .append(":")
+        .line("outputTo");
+    }
+  
+    builder
       .append("hash:")
       .line(hash)
     
