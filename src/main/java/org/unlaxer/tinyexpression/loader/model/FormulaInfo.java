@@ -34,6 +34,8 @@ public class FormulaInfo{
   public String formulaName;
   
   @Nullable
+  public String dependsOn; // default float
+  @Nullable
   public String resultType; // default float
   @Nullable
   public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
@@ -183,6 +185,13 @@ public class FormulaInfo{
     
 //      .append("checkKind:")
       .line(formulaName);
+    
+    if(dependsOn != null) {
+      builder
+        .append("dependsOn")
+        .append(":")
+        .line(dependsOn);
+    }
     
     if(resultType != null) {
       builder

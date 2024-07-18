@@ -1443,7 +1443,7 @@ if ($endpoint == 'withdrawal'
   }
   
   
-  public static class V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA implements org.unlaxer.tinyexpression.TokenBaseCalculator{
+  public static class V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA implements org.unlaxer.tinyexpression.TokenBaseCalculator<Float>{
 
   	@Override
   	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {

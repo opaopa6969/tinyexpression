@@ -67,6 +67,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "description", (value)->formulaInfo.description = value);
         match |= set(keyValue, "periodStartInclusive", (value)->formulaInfo.periodStartInclusive = value);
         match |= set(keyValue, "periodEndExclusive", (value)->formulaInfo.periodEndExclusive = value);
+        match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
         match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = value);
         match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         

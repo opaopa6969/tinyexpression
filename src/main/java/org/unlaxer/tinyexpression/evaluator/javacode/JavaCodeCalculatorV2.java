@@ -11,7 +11,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -52,8 +51,8 @@ import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
 
-public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
-    implements JavaClassCreator, TokenBaseCalculator {
+public class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T>
+    implements JavaClassCreator, TokenBaseCalculator<T> {
 
   public final String className;
   public final String javaCode;
@@ -63,7 +62,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
   final String formulaHash;
   final String byteCodeHash;
 
-  TokenBaseOperator<CalculationContext, Float> operator;
+  TokenBaseOperator<CalculationContext, T> operator;
 
   // constructors for source code
 
@@ -185,7 +184,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
 
           Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
 
-          operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
+          operator = (TokenBaseOperator<CalculationContext, T>) clazz.getDeclaredConstructor().newInstance();
 
           byteCode = memoryClassLoader.getBytes(classNameWithHash);
           byteCodeHash = MD5.toHex(byteCode);
@@ -198,7 +197,6 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
     }
   }
 
-  @SuppressWarnings("serial")
   public static class CompileError extends RuntimeException {
 
     public CompileError() {
@@ -257,7 +255,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
           }
         }
       }
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -302,7 +300,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
     formulaHash = MD5.toHex(formula);
 
     try {
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
           .newInstance();
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
         | NoSuchMethodException | SecurityException e) {
@@ -326,7 +324,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
   }
 
   @Override
-  public TokenBaseOperator<CalculationContext, Float> getCalculatorOperator() {
+  public TokenBaseOperator<CalculationContext, T> getCalculatorOperator() {
     return operator;
   }
 
@@ -346,7 +344,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator<Float>
   }
 
   @Override
-  public Float evaluate(CalculationContext context, Token token) {
+  public T evaluate(CalculationContext context, Token token) {
     return getCalculatorOperator().evaluate(context, token);
   }
 

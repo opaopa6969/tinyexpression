@@ -53,7 +53,7 @@ import org.unlaxer.util.digest.MD5;
 //import sun.misc.Unsafe;
 
 public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
-    implements JavaClassCreator, TokenBaseCalculator {
+    implements JavaClassCreator, TokenBaseCalculator<Float> {
 
   public final String className;
   public final String javaCode;
