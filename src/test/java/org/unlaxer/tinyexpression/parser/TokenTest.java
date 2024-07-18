@@ -14,8 +14,8 @@ import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
-import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.NormalCalculationContext;
+import org.unlaxer.tinyexpression.NumberCalculator;
 import org.unlaxer.tinyexpression.model.CalculatorEditableLineModel;
 
 public abstract class TokenTest {
@@ -136,6 +136,6 @@ public abstract class TokenTest {
 		assertFalse(enclosureWithMatchInitial.isPresent());
 	}
 	
-	public abstract Calculator<?> calculator(String formula);
+	public abstract NumberCalculator calculator(String formula);
 
 }

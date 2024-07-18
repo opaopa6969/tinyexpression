@@ -2,14 +2,14 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Name;
 import org.unlaxer.tinyexpression.CalculatorImplTest;
-import org.unlaxer.tinyexpression.PreConstructedCalculator;
+import org.unlaxer.tinyexpression.PreConstructedNumberCalculator;
 
 public class JavaCodeCalculatorV2Test extends CalculatorImplTest<Float>{
 	
 
 	@Override
-	public PreConstructedCalculator<Float> preConstructedCalculator(String formula) {
-		return new JavaCodeCalculatorV2(Name.of("V2Test") , formula , 
+	public PreConstructedNumberCalculator preConstructedCalculator(String formula) {
+		return new JavaCodeNumberCalculatorV2(Name.of("V2Test") , formula , 
 		    Thread.currentThread().getContextClassLoader());
 	}
 

@@ -30,13 +30,13 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
-			Calculator<?> calculator = calculator(formula.toString());
+			NumberCalculator calculator = calculator(formula.toString());
 			assertTrue(calc(calculator,context,formula.toString(),new BigDecimal("1")));
 		}
 		
 	}
 	
-	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
+	boolean calc(NumberCalculator calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
 		long start = System.nanoTime();
 		testAllMatch(calculator.getParser(), formula);
 		CalculateResult calculateResult = calculator.calculate(calculationContext,formula);
@@ -79,6 +79,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 		System.out.println((System.nanoTime()-start));
 	}
 	
-	public abstract Calculator<?> calculator(String formula);
+	public abstract NumberCalculator calculator(String formula);
 
 }

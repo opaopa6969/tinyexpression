@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -183,7 +186,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		context.set("number_accessCountByCaulisCookieInMiddlePeriod", 100);
 		
 		long start = System.nanoTime();
-		PreConstructedCalculator<T> preConstructedCalculator = preConstructedCalculator(formula);
+		PreConstructedNumberCalculator preConstructedCalculator = preConstructedCalculator(formula);
 		for(int i =0 ; i < 10000000; i++) {
 			preConstructedCalculator.calculate(context);
 		}
@@ -192,7 +195,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		System.out.format("calculation time:%f(microsec)\n" , ((float)duration)/10000000000f);
 	}
 	
-	public abstract PreConstructedCalculator<T> preConstructedCalculator(String formula);
+	public abstract PreConstructedNumberCalculator preConstructedCalculator(String formula);
 
 	@Test
 	public void testMultipleVariableCondition() {
@@ -245,7 +248,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	ResultAndMatch calcWithResult(CalculationContext calculateContext , String formula , BigDecimal expected){
 	    
-	    Calculator<T> calculator = preConstructedCalculator(formula);
+	    NumberCalculator calculator = preConstructedCalculator(formula);
 	    testAllMatch(calculator.getParser(), formula);
 	    CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
@@ -284,7 +287,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected , boolean outputJavaCode){
 		
-		Calculator<T> calculator = preConstructedCalculator(formula);
+		NumberCalculator calculator = preConstructedCalculator(formula);
 		testAllMatch(calculator.getParser(), formula);
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
@@ -309,7 +312,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	void compileOnly(CalculationContext calculateContext , String formula){
     
-    Calculator<T> calculator = preConstructedCalculator(formula);
+	  NumberCalculator calculator = preConstructedCalculator(formula);
     testAllMatch(calculator.getParser(), formula);
     CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
     calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
@@ -342,7 +345,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "1+1/s";
 		
-		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
+		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context,formula);
@@ -358,7 +361,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "s/1+1";
 
-		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
+		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
 
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context,formula);
@@ -376,7 +379,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "(1+1)/3+sin(30)";
 		
-		PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
+		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		CalculateResult result = calculator.calculate(context,formula);
@@ -551,8 +554,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		{
 			String formula = "if($country.in('jp','ca','us')){1}else{0}";
 			
-			PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
-
+			PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
 			
 			Token rootToken = parse(calculator.getParser(),formula).getRootToken();
 			TokenPrinter.output(rootToken,System.out);
@@ -564,7 +566,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		{
 			String formula = "if((isPresent($country)&$country.in('russian-federation','china','taiwan-province-of-china','ukraine','korea-democratic-peoples-republic-of'))|(isPresent($calculated_TorNode)&$calculated_TorNode>0.0)|((isPresent($calculated_BlackIPAddressInThisSite)&$calculated_BlackIPAddressInThisSite>0.0)|(isPresent($calculated_BlackIPAddressInOtherSites)&$calculated_BlackIPAddressInOtherSites>0.0))|(isPresent($calculated_BrowserTypeIsTool)&$calculated_BrowserTypeIsTool>0.0)){1}else{0}";
 			
-			PreConstructedCalculator<T> calculator = preConstructedCalculator(formula);
+			PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
 			
 			Token rootToken = parse(calculator.getParser(),formula).getRootToken();
 			TokenPrinter.output(rootToken,System.out);

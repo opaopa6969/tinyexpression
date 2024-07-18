@@ -10,8 +10,8 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
 import org.unlaxer.parser.ParsersSpecifier;
 import org.unlaxer.tinyexpression.CalculateResult;
-import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.NumberCalculator;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
@@ -26,18 +26,18 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 			NumberFactorParser.class
 		);
 	
-	final Calculator<?> calculator;
+	final NumberCalculator calculator;
 	CalculationContext calculateContext;
 	
 	public final Deque<EditHistory> calculations = new ArrayDeque<EditHistory>();
 	public final Deque<EditHistory> edits = new ArrayDeque<EditHistory>();
 
 
-	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext) {
+	public CalculatorEditableLineModel(NumberCalculator calculator , CalculationContext calculateContext) {
 		this(calculator , calculateContext , "");
 	}
 	
-	public CalculatorEditableLineModel(Calculator<?> calculator , CalculationContext calculateContext , String formula) {
+	public CalculatorEditableLineModel(NumberCalculator calculator , CalculationContext calculateContext , String formula) {
 		super();
 		this.calculateContext = calculateContext;
 		this.calculator = calculator;

@@ -86,7 +86,7 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   }
 
   public T calculate(CalculationContext calculateContext) {
-    return toFloat(getCalculatorOperator().evaluate(calculateContext, rootToken));
+    return getCalculatorOperator().evaluate(calculateContext, rootToken);
   }
 
   @Override
