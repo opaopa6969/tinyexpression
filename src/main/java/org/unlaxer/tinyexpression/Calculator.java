@@ -26,6 +26,8 @@ public interface Calculator<T> {
   public default UnaryOperator<Token> tokenReduer() {
     return UnaryOperator.identity();
   }
+  
+  public String returningType();
 
   public String javaCode();
 
@@ -69,6 +71,5 @@ public interface Calculator<T> {
     public CalculationException(Throwable cause) {
       super(cause);
     }
-
   }
 }

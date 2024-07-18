@@ -51,7 +51,7 @@ import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
 
-public class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T>
+public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T>
     implements JavaClassCreator, TokenBaseCalculator<T> {
 
   public final String className;

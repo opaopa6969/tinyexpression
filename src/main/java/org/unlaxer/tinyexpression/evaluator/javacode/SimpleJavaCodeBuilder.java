@@ -72,6 +72,24 @@ public class SimpleJavaCodeBuilder {
 		builder.append(word);
 		return this;
 	}
+	
+	public SimpleJavaCodeBuilder appendRS(String word) {
+    builder.append(word);
+    builder.append(" ");
+    return this;
+  }
+	
+	public SimpleJavaCodeBuilder appendLS(String word) {
+	  builder.append(" ");
+    builder.append(word);
+    return this;
+  }
+	
+  public SimpleJavaCodeBuilder space() {
+    builder.append(" ");
+    return this;
+  }
+	
 	public SimpleJavaCodeBuilder withTab(String word) {
 		tab();
 		builder.append(word);

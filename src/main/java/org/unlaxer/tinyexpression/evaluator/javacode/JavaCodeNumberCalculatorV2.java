@@ -475,4 +475,9 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       throw new RuntimeException(e);
     }
   }
+
+  @Override
+  public String returningType() {
+    return "float";
+  }
 }
