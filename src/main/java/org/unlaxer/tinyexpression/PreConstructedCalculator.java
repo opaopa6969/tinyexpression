@@ -81,11 +81,11 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   }
 
   @Override
-  public Float apply(CalculationContext calculateContext) {
+  public T apply(CalculationContext calculateContext) {
     return calculate(calculateContext);
   }
 
-  public float calculate(CalculationContext calculateContext) {
+  public T calculate(CalculationContext calculateContext) {
     return toFloat(getCalculatorOperator().evaluate(calculateContext, rootToken));
   }
 

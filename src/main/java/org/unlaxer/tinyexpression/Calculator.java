@@ -44,9 +44,9 @@ public interface Calculator<T> {
   
   public TokenBaseOperator<CalculationContext ,T> getCalculatorOperator();
   
-  public BigDecimal toBigDecimal(T value);
-  
-  public float toFloat(T value);
+//  public BigDecimal toBigDecimal(T value);
+//  
+//  public float toFloat(T value);
   
   public default UnaryOperator<Token> tokenReduer(){
     return UnaryOperator.identity();
@@ -62,7 +62,7 @@ public interface Calculator<T> {
   
   public String byteCodeHash();
   
-  public Float apply(CalculationContext calculationContext);
+  public T apply(CalculationContext calculationContext);
   
   public void setObject(String key , Object object);
   

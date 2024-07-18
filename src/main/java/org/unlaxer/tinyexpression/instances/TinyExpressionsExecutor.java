@@ -1,136 +1,98 @@
 package org.unlaxer.tinyexpression.instances;
 
-import org.unlaxer.Name;
-import org.unlaxer.parser.combinator.Optional;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.Predicate;
+
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public class TinyExpressionsExecutor {
   
-  
-  @Inject
-  public CustomFunctionEvaluatorService(CustomFunctionsCache customFunctionsCache) {
-    this.customFunctionsCache = customFunctionsCache;
-  }
-
-  public void evaluate(CustomFunctionEvaluationRequest customFunctionEvaluationRequest, CheckResult checkResult) {
-    // There are 3 types of custom functions available, and we run them in a specific order
-    // Each type has access to the execution results of the previous type
-    // Normal - standard CF
-    // Post Process - executes after normal (and can use those results)
-    // Post Process Relative Suspicious - uses all the data to determine the rsv score (危険度)
-
-    String appliedCFTag = customFunctionsCache.getActiveTagName(customFunctionEvaluationRequest.siteID);
-
-    evaluateNormal(customFunctionEvaluationRequest, appliedCFTag);
-    evaluatePostProcess(customFunctionEvaluationRequest, appliedCFTag);
-    calculatePostProcessRelativeSuspicious(customFunctionEvaluationRequest, appliedCFTag);
-
-    checkResult.setTags(appliedCFTag);
-  }
-
-  private void evaluateNormal(CustomFunctionEvaluationRequest request, String appliedCFTag) {
-    customFunctionsCache.get(request.siteID, request.timestamp, CalculatorKind.normal, Optional.of(appliedCFTag))
-        .forEach((checkKind, calculator) -> {
-          int res = calculator.apply(request.calculationContext).intValue();
-          request.calculationContext.set("calculated_" + checkKind.name(), res);
-          request.response.addSuspiciousByKind(checkKind.name(), res);
-        }
-    );
-  }
-
-  private void evaluatePostProcess(CustomFunctionEvaluationRequest request, String appliedCFTag) {
-    customFunctionsCache.get(request.siteID, request.timestamp, CalculatorKind.postProcess, Optional.of(appliedCFTag))
-        .forEach((checkKind, calculator) -> {
-              int res = calculator.apply(request.calculationContext).intValue();
-              request.calculationContext.set(checkKind.name(), res);
-              request.response.addSuspiciousByKind(checkKind.name(), res);
-            }
-        );
-  }
-
-  private void calculatePostProcessRelativeSuspicious(CustomFunctionEvaluationRequest request, String appliedCFTag) {
-    customFunctionsCache.get(request.siteID, request.timestamp, CalculatorKind.postProcessRelative, Optional.of(appliedCFTag))
-        .values()
-        .stream()
-        .findFirst()
-        .ifPresent(calc -> {
-          int calculatedRelativeSuspiciousValue = calc.apply(request.calculationContext).intValue();
-          request.response.setRelativeSuspiciousValue(calculatedRelativeSuspiciousValue);
-        });
-
-    // Otherwise just use whatever has been set up until now
-  }
-
-  public void evaluatePreProcess(CustomFunctionEvaluationRequest request, CheckResult checkResult){
-    String appliedCFTag = customFunctionsCache.getActiveTagName(request.siteID);
-
-    customFunctionsCache.get(request.siteID, request.timestamp, CalculatorKind.preProcess, Optional.of(appliedCFTag))
-        .forEach((checkKind, calculator) -> {
-              int res = calculator.apply(request.calculationContext).intValue();
-              request.calculationContext.set(checkKind.name(), res);
-            }
-        );
-
-    checkResult.setTags(appliedCFTag);
-  }
-  
-  public void execute(ResultConsumer resultConsumer) {
+  @SuppressWarnings("unchecked")
+  public void execute(
+      TenantID tenantID,
+      CalculationContext calculationContext,
+      ResultConsumer resultConsumer , 
+      TinyExpressionInstancesCache tinyExpressionInstancesCache ,
+      Comparator<Calculator<?>> comparator,
+      Predicate<Calculator<?>> passFilter) {
     
+    List<Calculator<?>> list = tinyExpressionInstancesCache.get(tenantID , comparator , passFilter);
+    
+    list.forEach(calculator->{
+      Object result = calculator.apply(calculationContext);
+      FormulaInfo formulaInfo = FormulaInfo.get(calculator);
+      
+      if(result instanceof Number) {
+        resultConsumer.accept((Calculator<? extends Number>)calculator, formulaInfo.formulaName, (Number) result);
+      }else if(result instanceof String) {
+        resultConsumer.accept((Calculator<String>)calculator, formulaInfo.formulaName, (String) result);
+      }else if(result instanceof Boolean) {
+        resultConsumer.accept((Calculator<Boolean>)calculator, formulaInfo.formulaName, (Boolean) result);
+      }else if(result instanceof Object) {
+        resultConsumer.accept((Calculator<Object>)calculator, formulaInfo.formulaName, result);
+      }else {
+        throw new IllegalArgumentException("no match:" + result.getClass());
+      }
+    });
   }
-  
-  
-
-  
   
   public interface TenantID{
     
     int asNumber();
-    String asString();
+    public default String asString() {
+      return String.valueOf(asNumber());
+    }
   }
   
   
   public interface NumberResultConsumer{
     
-    void set(Calculator<? extends Number> calclator , Name name , Number result);
+    void accept(Calculator<? extends Number> calclator , String formulaName, Number result);
   }
   
   public interface StringResultConsumer{
     
-    void set(Calculator<String> calclator , Name name , String result);
+    void accept(Calculator<String> calclator , String formulaName , String result);
   }
   
   public interface BooleanResultConsumer{
     
-    void set(Calculator<Boolean> calclator , Name name , boolean result);
+    void accept(Calculator<Boolean> calclator , String formulaName , boolean result);
   }
   
   public interface ObjectResultConsumer{
     
-    void set(Calculator<Object> calclator , Name name , Object result);
+    void accept(Calculator<Object> calclator , String formulaName , Object result);
   }
   
   public interface TypedResultConsumer<T>{
     
-    void set(Calculator<T> calclator , Name name , T result);
+    void accept(Calculator<T> calclator , String formulaName , T result);
   }
   
   public interface ResultConsumer extends NumberResultConsumer , StringResultConsumer,
-    BooleanResultConsumer , ObjectResultConsumer {}
-  
-  
-  
-  
-  public interface UpdatableByCustomFunction {
-
-    void setRelativeSuspiciousValue(int rsv);
-    void addSuspiciousByKind(String checkKind, int value);
-    default void addSuspiciousByKind(CheckKind checkKind, Score value) {
-      this.addSuspiciousByKind(checkKind.name(), value.value());
-    }
+    BooleanResultConsumer , ObjectResultConsumer {
+    
+    
   }
   
   
-
-
+    
+  public interface TinyExpressionInstancesCache extends TinyExpressionInstances{
+    
+    boolean clearCache(TenantID siteID);
+    
+    List<Calculator<?>> get(
+        TenantID tenantID,
+        Comparator<Calculator<?>> comparator , 
+        Predicate<Calculator<?>> passFilter);
+  }
+  
+  public interface TinyExpressionInstances {
+    
+    List<Calculator<?>> get(TenantID tenantID,Comparator<Calculator<?>> comparator);
+  }
 }
