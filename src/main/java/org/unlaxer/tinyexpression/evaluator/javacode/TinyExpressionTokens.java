@@ -34,7 +34,7 @@ public class TinyExpressionTokens{
     }
     this.tinyExpressionToken = tinyExpressionToken;
     importTokens = TinyExpressionParser.extractImports(tinyExpressionToken);
-    expressionToken = TinyExpressionParser.extractNumberExpression(tinyExpressionToken);
+    expressionToken = TinyExpressionParser.extractExpressionWithAfterReduced(tinyExpressionToken);
     
     variableDeclarationTokens = TinyExpressionParser.extractVariables(tinyExpressionToken);
     annotationTokens = TinyExpressionParser.extractAnnotaions(tinyExpressionToken);

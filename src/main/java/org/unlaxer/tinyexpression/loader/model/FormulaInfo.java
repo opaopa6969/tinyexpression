@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV2;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.util.EpochPeriodForNavigable;
@@ -69,7 +70,8 @@ public class FormulaInfo{
   }
 
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
-    calculator = new JavaCodeCalculatorV2(
+    //FIXME!
+    calculator = new JavaCodeNumberCalculatorV2(
         formulaText, className, classLoader);
     
     this.byteCode = calculator.byteCode();
@@ -123,7 +125,8 @@ public class FormulaInfo{
   public void updateCalculatorWithByteCode(ClassLoader classLoader) {
     
     try {
-      calculator = new JavaCodeCalculatorV2(
+      //FIXME!
+      calculator = new JavaCodeNumberCalculatorV2(
           formulaText , javaCodeText , classNameWithHash ,byteCode, hashByByteCode,
           Thread.currentThread().getContextClassLoader());
       calculator.setObject(FormulaInfo.class.getSimpleName(), this);
