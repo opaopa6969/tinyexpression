@@ -104,10 +104,12 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   }
   
   @TokenExtractor(timings = Timing.UseOperatorOperandTree)
-  public static Token extractExpressionWithAfterReduced(Token thisParserParsed){
+  public static TypedToken<ExpressionInterface> extractExpressionWithAfterReduced(Token thisParserParsed){
     
-    Token extractExpressionToken = thisParserParsed.getChildWithParser(
-        _parser->_parser instanceof ExpressionInterface);
+    TypedToken<ExpressionInterface> extractExpressionToken = thisParserParsed.getChildWithParser(
+        _parser->_parser instanceof ExpressionInterface)
+        .typed(ExpressionInterface.class);
+    
     return extractExpressionToken;
     
   }

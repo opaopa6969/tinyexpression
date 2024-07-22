@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;

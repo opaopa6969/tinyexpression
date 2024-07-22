@@ -20,7 +20,11 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface JavaClassCreator{
   default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken) {
-
+    
+    TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
+    ExpressionInterface parser = expressionToken.getParser();
+    String returningType = parser.expressionType().javaType();
+    
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
     String calculationContextName = CalculationContext.class.getName();
@@ -33,7 +37,10 @@ public interface JavaClassCreator{
       .n()
       .append("public class ")
       .append(className)
-    .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
+      .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator<")
+      .append(returningType)
+      .append(">{")
+    
 //    .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
 //      .append(" implements ContextCalculator {")
       
@@ -42,14 +49,19 @@ public interface JavaClassCreator{
       .setKind(Kind.Function)
       .incTab()
       .line("@Override")
-      .line("public Float evaluate("+calculationContextName+" calculateContext , Token token) {")
+      .append("public ")
+      .append(returningType)
+      .line(" evaluate("+calculationContextName+" calculateContext , Token token) {")
 //      .line("public Float apply(org.unlaxer.tinyexpression.CalculationContext calculateContext){")
       .setKind(Kind.Calculation)
       .incTab()
-      .line("float answer = (float) ")
+      .append(returningType)
+      .append(" answer = (")
+      .append(returningType)
+      .line(") ")
       .n();
 
-    NumberExpressionBuilder.SINGLETON.build(builder, tinyExpressionToken.expressionToken, tinyExpressionToken);
+    NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
     builder
       .setKind(Kind.Calculation)

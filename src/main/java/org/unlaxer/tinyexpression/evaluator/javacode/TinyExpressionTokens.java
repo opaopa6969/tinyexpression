@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
@@ -20,7 +21,7 @@ public class TinyExpressionTokens{
   final List<Token> importTokens;
   final List<Token> variableDeclarationTokens;
   final List<Token> annotationTokens;
-  final Token expressionToken;
+  final TypedToken<ExpressionInterface> expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
   final Map<String,TypedToken<MethodParser>> methodDeclarationBymethodName;
