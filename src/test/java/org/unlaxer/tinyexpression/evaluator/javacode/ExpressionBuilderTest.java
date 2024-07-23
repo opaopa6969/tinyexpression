@@ -20,6 +20,7 @@ public class ExpressionBuilderTest {
     ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
     Parsed parsed= tinyExpressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとOperatorOperandTreeCreatorがうまく動かない
+    rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
     TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
@@ -28,13 +29,13 @@ public class ExpressionBuilderTest {
           tinyExpressionTokens.expressionToken , tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
-      assertFalse(build.contains("(1.0f+(8.0f/4.0f))"));
+      assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
     }
 
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
 
-      rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
+//      rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
 //      tinyExpressionTokens = new TinyExpressionTokens(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
       tinyExpressionTokens = new TinyExpressionTokens(rootToken);
