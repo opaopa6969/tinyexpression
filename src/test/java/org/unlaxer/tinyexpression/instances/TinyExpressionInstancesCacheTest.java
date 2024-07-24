@@ -27,7 +27,7 @@ public class TinyExpressionInstancesCacheTest {
     public static final String FILENAME = "formulaInfo.txt"; 
     static FormulaInfoBlocksParser formulaInfoBlocksParser = new FormulaInfoBlocksParser();
     
-    Path rootFolder;]
+    Path rootFolder;
     FormulaInfoAdditionalFields formulaInfoAdditionalFields;
     Map<TenantID,List<Calculator<?>>> calculatorsByTenantId = new ConcurrentHashMap<>();
     

@@ -102,7 +102,7 @@ public class FormulaInfo{
       throw new IllegalStateException();
     }
     if(calculatorReturningClass == null) {
-      calculator.getReturningTypeClass()
+      calculatorReturningClass = calculator.getReturningTypeClass();
     }
     return calculatorReturningClass;
   }

@@ -17,9 +17,10 @@ public class TinyExpressionsExecutor {
       ResultConsumer resultConsumer , 
       TinyExpressionInstancesCache tinyExpressionInstancesCache ,
       Comparator<Calculator<?>> comparator,
-      Predicate<Calculator<?>> passFilter) {
+      Predicate<Calculator<?>> passFilter,
+      ClassLoader classLoader) {
     
-    List<Calculator<?>> list = tinyExpressionInstancesCache.get(tenantID , comparator , passFilter);
+    List<Calculator<?>> list = tinyExpressionInstancesCache.get(tenantID , comparator , passFilter , classLoader);
     
     list.forEach(calculator->{
       Object result = calculator.apply(calculationContext);
