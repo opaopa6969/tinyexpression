@@ -94,7 +94,7 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     public VariableParser matchedVariableParser() {
       
       switch (expressionType) {
-        case bool:
+        case _boolean:
           return Parser.get(BooleanVariableParser.class);
         case number:
           return Parser.get(NumberVariableParser.class);

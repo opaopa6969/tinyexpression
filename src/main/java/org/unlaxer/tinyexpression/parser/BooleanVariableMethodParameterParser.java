@@ -27,7 +27,7 @@ public class BooleanVariableMethodParameterParser extends LazyChoice implements 
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.bool);
+  return Optional.of(ExpressionType._boolean);
   }
   
 }

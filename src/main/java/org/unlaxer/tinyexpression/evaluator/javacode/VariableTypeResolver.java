@@ -25,7 +25,7 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 public class VariableTypeResolver {
   
   static final Map<ExpressionType, ? extends VariableParser> variableParserByExpressionType = Map.of(
-      ExpressionType.bool, BooleanVariableParser.get(),
+      ExpressionType._boolean, BooleanVariableParser.get(),
       ExpressionType.string, StringVariableParser.get(),
       ExpressionType.number, NumberVariableParser.get()
 

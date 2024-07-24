@@ -13,7 +13,7 @@ public interface TypedVariableParser extends VariableParser{
     switch (type()) {
     case string:
       return Parser.get(StringVariableParser.class);
-    case bool:
+    case _boolean:
       return Parser.get(BooleanVariableParser.class);
     case number:
       return Parser.get(NumberVariableParser.class);

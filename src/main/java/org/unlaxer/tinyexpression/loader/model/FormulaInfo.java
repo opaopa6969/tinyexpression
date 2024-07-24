@@ -34,9 +34,9 @@ public class FormulaInfo{
   public String formulaName;
   
   @Nullable
-  public String dependsOn; // default float
+  public String dependsOn; //
   @Nullable
-  public String resultType; // default float
+  public String resultType; // default Float
   @Nullable
   public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
@@ -48,11 +48,24 @@ public class FormulaInfo{
   public byte[] byteCode;
   public String className;
   public String classNameWithHash;
-  public Calculator<Float> calculator;
+  //FIXME!
+  private Calculator<?> calculator;
   public Collection<String> tags;
   public String description;
   public Map<String,String> extraValueByKey;
   public List<String> text;
+  private Class<?> calculatorReturningClass;
+  FormulaInfoState state;
+  
+  public enum FormulaInfoState{
+    initialized,
+    parsed,
+    calculatorConstructed,
+    ;
+    public boolean formulaInfoConstructed() {
+      return this == parsed || this == calculatorConstructed;
+    }
+  }
   
   private final FormulaInfoAdditionalFields additionalFields;
   
@@ -61,7 +74,8 @@ public class FormulaInfo{
     extraValueByKey = new LinkedHashMap<>();
     text = new ArrayList<>();
     tags = new LinkedHashSet<>();
-    this.additionalFields = additionalFields; 
+    this.additionalFields = additionalFields;
+    state = FormulaInfoState.initialized;
   }
   
   public void addAdditional(String key , String value) {
@@ -79,9 +93,24 @@ public class FormulaInfo{
     byteCodeAsHex = HEX.encode(byteCode);
     hashByByteCode = MD5.toHex(byteCode);
     
-    calculator.setObject(FormulaInfo.class.getSimpleName(), this);
+    calculator.setFormulaInfo(this);
+    state = FormulaInfoState.calculatorConstructed;
   }
   
+  public Class<?> calculatorReturningClass(){
+    if(false == state.formulaInfoConstructed()) {
+      throw new IllegalStateException();
+    }
+    if(calculatorReturningClass == null) {
+      
+    }
+    return calculatorReturningClass;
+  }
+  
+  @SuppressWarnings("unchecked")
+  public <T> Calculator<T> calculator(Class<T> returningType){
+    return (Calculator<T>) calculator;
+  }
 
   public static FormulaInfo get(Calculator<?> calculator) {
     FormulaInfo object = calculator.getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class);
@@ -129,6 +158,7 @@ public class FormulaInfo{
           formulaText , javaCodeText , classNameWithHash ,byteCode, hashByByteCode,
           Thread.currentThread().getContextClassLoader());
       calculator.setObject(FormulaInfo.class.getSimpleName(), this);
+      state = FormulaInfoState.calculatorConstructed;
     }catch (Throwable e) {
       e.printStackTrace();
       throw new RuntimeException(e);

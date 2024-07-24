@@ -7,6 +7,7 @@ import java.util.function.UnaryOperator;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public interface Calculator<T> {
 
@@ -44,6 +45,14 @@ public interface Calculator<T> {
   public void setObject(String key, Object object);
 
   public <X> X getObject(String key, Class<X> objectClass);
+  
+  public default Optional<FormulaInfo> formulaInfo(){
+    return Optional.of(getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class));
+  }
+  
+  public default void setFormulaInfo(FormulaInfo formulaInfo){
+    setObject(FormulaInfo.class.getSimpleName(), formula());
+  }
 
   public default <X> Optional<X> getObjectAsOptional(String key, Class<X> objectClass) {
     return Optional.ofNullable(getObject(key, objectClass));
@@ -71,5 +80,12 @@ public interface Calculator<T> {
     public CalculationException(Throwable cause) {
       super(cause);
     }
+  }
+  
+  public CreatedFrom createdFrom();
+  
+  public enum CreatedFrom{
+    formula,
+    byteCode
   }
 }

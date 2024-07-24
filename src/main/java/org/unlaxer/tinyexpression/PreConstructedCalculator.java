@@ -121,4 +121,8 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
 	
 	public abstract Collection<TransactionListener> transactionListeners();
 
+  @Override
+  public CreatedFrom createdFrom() {
+    return parsed == null ? CreatedFrom.byteCode : CreatedFrom.formula;
+  }
 }

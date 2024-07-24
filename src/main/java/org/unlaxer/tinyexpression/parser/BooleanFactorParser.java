@@ -18,7 +18,7 @@ public class BooleanFactorParser extends AbstractBooleanFactorParser implements 
 
   @Override
   public ExpressionType type() {
-    return ExpressionType.bool;
+    return ExpressionType._boolean;
   }
 
   @Override

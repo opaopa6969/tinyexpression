@@ -23,7 +23,7 @@ public interface JavaClassCreator{
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
-    String returningType = parser.expressionType().javaType();
+    String returningType = parser.expressionType().javaType().getSimpleName();
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
@@ -89,7 +89,7 @@ public interface JavaClassCreator{
       
       Token typeHintToken = token.getChild(TokenPredicators.parserImplements(TypeHint.class));
       TypeHint typeHintParser = typeHintToken.getParser(TypeHint.class);
-      String javaType = typeHintParser.type().javaType();
+      String javaType = typeHintParser.type().javaType().getSimpleName();
       
       Token methodNameToken = token.getChild(TokenPredicators.parsers(IdentifierParser.class));
       String methodName = methodNameToken.tokenString.get();
@@ -163,7 +163,7 @@ public interface JavaClassCreator{
         ExpressionType variableType = parser.typeAsOptional().get();
         String variableName = parser.getVariableName(typed);
         builder
-          .append(variableType.javaType())
+          .append(variableType.javaType().getSimpleName())
           .append(" ")
           .append(variableName);
         

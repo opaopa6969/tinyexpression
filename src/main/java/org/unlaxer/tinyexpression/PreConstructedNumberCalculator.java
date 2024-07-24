@@ -120,5 +120,9 @@ public abstract class PreConstructedNumberCalculator implements NumberCalculator
 	public abstract String byteCodeHash();
 	
 	public abstract Collection<TransactionListener> transactionListeners();
-
+	
+  @Override
+  public CreatedFrom createdFrom() {
+    return parsed == null ? CreatedFrom.byteCode : CreatedFrom.formula;
+  }
 }

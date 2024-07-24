@@ -4,6 +4,6 @@ public interface BooleanExpression extends ExpressionInterface{
 
   @Override
   default ExpressionType expressionType() {
-    return ExpressionType.bool;
+    return ExpressionType._boolean;
   }
 }

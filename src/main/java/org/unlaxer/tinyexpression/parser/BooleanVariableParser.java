@@ -33,7 +33,7 @@ public class BooleanVariableParser extends LazyChoice implements RootVariablePar
   
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.bool);
+    return Optional.of(ExpressionType._boolean);
   }
   
   public static class BooleanVariableMatchedWithVariableDeclarationParser extends LazyChain implements BooleanExpression {

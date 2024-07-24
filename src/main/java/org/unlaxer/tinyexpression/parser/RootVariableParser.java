@@ -19,7 +19,7 @@ public interface RootVariableParser extends TypedVariableParser{
     
     ExpressionType expressionType = typedVariable.typeAsOptional().get();
 
-    Token typePrefix = new Token(TokenKind.consumed, new RangedString(0, expressionType.javaType()), Parser.get(typeHintVariableParser()));
+    Token typePrefix = new Token(TokenKind.consumed, new RangedString(0, expressionType.javaType().getSimpleName()), Parser.get(typeHintVariableParser()));
     
     TypedToken<? extends VariableParser> newCreatesOfTyped = child.newCreatesOfTyped(typePrefix ,
         tokenOfNakedVariable.newWithReplaceTyped(Parser.get(NakedVariableParser.class)));

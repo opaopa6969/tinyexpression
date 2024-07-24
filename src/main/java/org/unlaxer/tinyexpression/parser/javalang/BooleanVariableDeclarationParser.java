@@ -31,7 +31,7 @@ public class BooleanVariableDeclarationParser extends AbstractVariableDeclaratio
 
   @Override
   public Optional<ExpressionType> type() {
-    return Optional.of(ExpressionType.bool);
+    return Optional.of(ExpressionType._boolean);
   }
 
 }

@@ -57,6 +57,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   public final String className;
   public final String javaCode;
   public final String classNameWithHash;
+  public final Class<?> returningClass;
 
   public final byte[] byteCode;
   final String formulaHash;
@@ -66,27 +67,27 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 
   // constructors for source code
 
-  public JavaCodeCalculatorV2(Name name, String formula) throws CompileError {
-    this(name, formula, (Path) null);
+  public JavaCodeCalculatorV2(Name name, String formula , Class<?> returningClass) throws CompileError {
+    this(name, formula, returningClass, (Path) null);
   }
 
-  public JavaCodeCalculatorV2(Name name, String formula, Path outputRootDirectory) throws CompileError {
-    this(name, formula, Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
+  public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, Path outputRootDirectory) throws CompileError {
+    this(name, formula, returningClass, Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
         new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV2(Name name, String formula, ClassLoader classLoader) throws CompileError {
-    this(name, formula, classLoader, null, true, new JavaFileManagerContext());
+  public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, ClassLoader classLoader) throws CompileError {
+    this(name, formula, returningClass, classLoader, null, true, new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV2(Name name, String formula, ClassLoader classLoader, Path outputRootDirectory,
+  public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, ClassLoader classLoader, Path outputRootDirectory,
       boolean randomize, JavaFileManagerContext javaFileManagerContext) throws CompileError {
-    this(formula, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
+    this(formula, returningClass, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
         classLoader, outputRootDirectory, javaFileManagerContext);
   }
 
-  public JavaCodeCalculatorV2(String formula, String className, ClassLoader classLoader) throws CompileError {
-    this(formula, className, classLoader, null, new JavaFileManagerContext());
+  public JavaCodeCalculatorV2(String formula, Class<?> returningClass, String className, ClassLoader classLoader) throws CompileError {
+    this(formula, returningClass , className, classLoader, null, new JavaFileManagerContext());
   }
 
   // if class path changes , then reload.
@@ -128,12 +129,23 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 //      }
 //  }
 
+  /**
+   * from formula text
+   * 
+   * @param formula
+   * @param returningClass
+   * @param className
+   * @param classLoader
+   * @param outputRootDirectory
+   * @param javaFileManagerContext
+   * @throws CompileError
+   */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula, String className, ClassLoader classLoader,
+  public JavaCodeCalculatorV2(String formula, Class<?> returningClass, String className, ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
-
+    
     StringWriter output = new StringWriter();
 
     try {
@@ -142,8 +154,10 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       formulaHash = MD5.toHex(formula);
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+      this.returningClass = tinyExpressionTokens.expressionToken.getParser().expressionType().javaType();
 
       classNameWithHash = className + "_" + formulaHash;
+      
       javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
 
       JavaFileObject javaFileObject = new SimpleJavaFileObject(
@@ -220,8 +234,17 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     }
   }
 
-  // constructor for byte codes;
 
+  /**
+   * from byte code
+   * 
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param classLoader
+   */
   @SuppressWarnings("unchecked")
   public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
       ClassLoader classLoader) {
@@ -255,6 +278,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
           }
         }
       }
+      Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
+      this.returningClass = method.getReturnType();
+      
       operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
@@ -289,7 +315,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   }
 
   public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, ClassLoader classLoader) {
+      Class<TokenBaseOperator<CalculationContext, ?>> calculatorClass, ClassLoader classLoader) {
     super(formula, className, false);
     this.className = className;
     this.javaCode = javaCode;
@@ -300,6 +326,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     formulaHash = MD5.toHex(formula);
 
     try {
+      Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
+      this.returningClass = method.getReturnType();
+
       operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
           .newInstance();
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
