@@ -102,7 +102,7 @@ public class FormulaInfo{
       throw new IllegalStateException();
     }
     if(calculatorReturningClass == null) {
-      
+      calculator.getReturningTypeClass()
     }
     return calculatorReturningClass;
   }
@@ -111,6 +111,11 @@ public class FormulaInfo{
   public <T> Calculator<T> calculator(Class<T> returningType){
     return (Calculator<T>) calculator;
   }
+  
+  public Calculator<?> calculator(){
+    return calculator;
+  }
+
 
   public static FormulaInfo get(Calculator<?> calculator) {
     FormulaInfo object = calculator.getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class);

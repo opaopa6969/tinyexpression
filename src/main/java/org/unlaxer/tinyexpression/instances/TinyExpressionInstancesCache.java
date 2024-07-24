@@ -13,5 +13,6 @@ public interface TinyExpressionInstancesCache extends TinyExpressionInstances{
   List<Calculator<?>> get(
       TenantID tenantID,
       Comparator<Calculator<?>> comparator , 
-      Predicate<Calculator<?>> passFilter);
+      Predicate<Calculator<?>> passFilter , 
+      ClassLoader classLoader);
 }

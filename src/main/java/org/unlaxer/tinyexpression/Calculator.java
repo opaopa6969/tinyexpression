@@ -11,13 +11,13 @@ import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public interface Calculator<T> {
 
-  public default Type getResultType() {
+  public default Type getReturningType() {
     return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
 
   @SuppressWarnings("unchecked")
-  public default Class<T> getTypeClass() {
-    return (Class<T>) getResultType();
+  public default Class<T> getReturningTypeClass() {
+    return (Class<T>) getReturningType();
   }
 
   public Parser getParser();
@@ -28,7 +28,7 @@ public interface Calculator<T> {
     return UnaryOperator.identity();
   }
   
-  public String returningType();
+  public String returningTypeAsString();
 
   public String javaCode();
 

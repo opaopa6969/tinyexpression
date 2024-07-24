@@ -7,5 +7,5 @@ import org.unlaxer.tinyexpression.Calculator;
 
 public interface TinyExpressionInstances {
   
-  List<Calculator<?>> get(TenantID tenantID,Comparator<Calculator<?>> comparator);
+  List<Calculator<?>> get(TenantID tenantID,Comparator<Calculator<?>> comparator, ClassLoader classLoader);
 }

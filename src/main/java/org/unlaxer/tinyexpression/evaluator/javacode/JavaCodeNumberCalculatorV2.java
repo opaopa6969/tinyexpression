@@ -477,7 +477,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   }
 
   @Override
-  public String returningType() {
+  public String returningTypeAsString() {
     return "float";
   }
 }
