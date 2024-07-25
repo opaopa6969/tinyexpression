@@ -1,8 +1,8 @@
 package org.unlaxer.tinyexpression.instances;
 
-import static org.junit.Assert.fail;
-
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import org.junit.Test;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
@@ -39,7 +39,11 @@ public class TinyExpressionInstancesCacheTest {
       this.formulaInfoAdditionalFields = formulaInfoAdditionalFields;
     }
 
-    public  <T extends Comparable<? super Calculator<T>>> List<Calculator<? extends T>> get1(TenantID tenantID, Comparator<Calculator<T>> comparator , ClassLoader classLoader) {
+    public  /*<T extends Comparable<? super Calculator<T>>> */
+    List<Calculator<?/* extends T*/>> get1(
+        TenantID tenantID, 
+        Comparator<Calculator<?/*T*/>> comparator , 
+        ClassLoader classLoader) {
       
       List<Calculator<?>> computeIfAbsent = 
           calculatorsByTenantId.computeIfAbsent(tenantID, 
@@ -50,15 +54,15 @@ public class TinyExpressionInstancesCacheTest {
                       FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
                   
                   parse.throwIfMatch();
-                  List<Calculator<? super T>> list = parse.right().get().get().stream()
+                  List<Calculator<?>> list = parse.right().get().get().stream()
                     .map(FormulaInfo::calculator)
                     .sorted(comparator)
-                    .toList();
+                    .collect(Collectors.toList());
                   return list;
                   
+                } catch (IOException e) {
+                  throw new UncheckedIOException(e);
                 }
-                
-              
               }
           );
       return computeIfAbsent;
@@ -67,22 +71,42 @@ public class TinyExpressionInstancesCacheTest {
 
     @Override
     public boolean clearCache(TenantID tenantID) {
-      // TODO Auto-generated method stub
-      return false;
+      calculatorsByTenantId.remove(tenantID);
+      return true;
+    }
+
+
+    @Override
+    public List<Calculator<?>> get(TenantID tenantID, Comparator<Calculator<?>> comparator, ClassLoader classLoader) {
+      return get(tenantID, comparator, x->true , classLoader);
     }
 
     @Override
     public List<Calculator<?>> get(TenantID tenantID, Comparator<Calculator<?>> comparator,
-        Predicate<Calculator<?>> passFilter) {
-      // TODO Auto-generated method stub
-      return null;
-    }
-    
+        Predicate<Calculator<?>> passFilter, ClassLoader classLoader) {
+      
+        List<Calculator<?>> matchedCalculators = 
+            calculatorsByTenantId.computeIfAbsent(tenantID, 
+                tenantId->{
+                  Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
+                  try(InputStream inputStream = Files.newInputStream(resolve);){
+                    Try<FormulaInfoList> parse = 
+                        FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
+                    
+                    parse.throwIfMatch();
+                    List<Calculator<?>> list = parse.right().get().get().stream()
+                      .map(FormulaInfo::calculator)
+                      .filter(passFilter)
+                      .sorted(comparator)
+                      .collect(Collectors.toList());
+                    return list;
+                    
+                  } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                  }
+                }
+            );
+        return matchedCalculators;
+      }
   }
-
-  @Test
-  public void test() {
-    fail("Not yet implemented");
-  }
-
 }
