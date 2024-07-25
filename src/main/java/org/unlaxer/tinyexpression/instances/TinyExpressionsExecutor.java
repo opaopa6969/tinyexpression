@@ -27,13 +27,13 @@ public class TinyExpressionsExecutor {
       FormulaInfo formulaInfo = FormulaInfo.get(calculator);
       
       if(result instanceof Number) {
-        resultConsumer.accept((Calculator<? extends Number>)calculator, formulaInfo.formulaName, (Number) result);
+        resultConsumer.accept(calculationContext,(Calculator<? extends Number>)calculator, formulaInfo, (Number) result);
       }else if(result instanceof String) {
-        resultConsumer.accept((Calculator<String>)calculator, formulaInfo.formulaName, (String) result);
+        resultConsumer.accept(calculationContext,(Calculator<String>)calculator, formulaInfo, (String) result);
       }else if(result instanceof Boolean) {
-        resultConsumer.accept((Calculator<Boolean>)calculator, formulaInfo.formulaName, (Boolean) result);
+        resultConsumer.accept(calculationContext,(Calculator<Boolean>)calculator, formulaInfo, (Boolean) result);
       }else if(result instanceof Object) {
-        resultConsumer.accept((Calculator<Object>)calculator, formulaInfo.formulaName, result);
+        resultConsumer.accept(calculationContext,(Calculator<Object>)calculator, formulaInfo, result);
       }else {
         throw new IllegalArgumentException("no match:" + result.getClass());
       }

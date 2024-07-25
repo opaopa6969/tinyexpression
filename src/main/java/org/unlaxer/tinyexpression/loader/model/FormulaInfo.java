@@ -1,12 +1,16 @@
 package org.unlaxer.tinyexpression.loader.model;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Nullable;
@@ -14,6 +18,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
 import org.unlaxer.util.EpochPeriodForNavigable;
 import org.unlaxer.util.MultiDateParser;
 import org.unlaxer.util.digest.HEX;
@@ -22,8 +27,54 @@ import org.unlaxer.util.digest.MD5;
 @V2CustomFunction
 public class FormulaInfo{
   
-  public String periodStartInclusive;
-  public String periodEndExclusive;
+  static Map<String,Function<Object,String>> converterByName = new HashMap<>();
+  static Map<String,Field> fieldByName = new HashMap<>();
+  
+  static {
+    Field[] fields2 = FormulaInfo.class.getFields();
+    for (Field field : fields2) {
+      try {
+        FormulaInfoField annotation = field.getAnnotation(FormulaInfoField.class);
+        if(annotation == null) {
+          continue;
+        }
+        fieldByName.put(field.getName(),field);
+        Class<? extends Function<Object, String>> converterClass = annotation.converter();
+        Function<Object, String> converter = converterClass.getDeclaredConstructor().newInstance();
+        converterByName.put(field.getName(), converter);
+      } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException | SecurityException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+  
+  public boolean hasField(String fieldName) {
+    return extraValueByKey.containsKey(fieldName) || 
+        fieldByName.containsKey(fieldName);
+  }
+  
+  public Optional<String> getValue(String fieldName) {
+    String value = extraValueByKey.get(fieldName);
+    if(value != null) {
+      return Optional.of(value);
+    }
+    Field field = fieldByName.get(fieldName);
+    if(field != null) {
+      try {
+        Object object = field.get(this);
+        Function<Object, String> function = converterByName.get(fieldName);
+        String apply = function.apply(object);
+        return Optional.of(apply);
+      } catch (IllegalArgumentException | IllegalAccessException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    return Optional.empty();
+  }
+  
+  
+  @FormulaInfoField public String periodStartInclusive;
+  @FormulaInfoField public String periodEndExclusive;
   // for multi tenancy
 //  public SiteId siteId;
   // for formula name
@@ -31,27 +82,28 @@ public class FormulaInfo{
   
   public Optional<String> multiTenancyId = Optional.empty();
 
-  public String formulaName;
+  @FormulaInfoField public String formulaName;
   
   @Nullable
-  public String dependsOn; //
+  @FormulaInfoField public String dependsOn; //
   @Nullable
-  public String resultType; // default Float
+  @FormulaInfoField public String resultType; // default Float
   @Nullable
-  public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
+  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
-  public String byteCodeAsHex;
-  public String formulaText;
-  public String javaCodeText;
-  public String hash;
-  public String hashByByteCode;
+  @FormulaInfoField public String byteCodeAsHex;
+  @FormulaInfoField public String formulaText;
+  @FormulaInfoField public String javaCodeText;
+  @FormulaInfoField public String hash;
+  @FormulaInfoField public String hashByByteCode;
   public byte[] byteCode;
-  public String className;
-  public String classNameWithHash;
-  //FIXME!
+  @FormulaInfoField public String className;
+  @FormulaInfoField public String classNameWithHash;
+  //FIXME! return type
   private Calculator<?> calculator;
-  public Collection<String> tags;
-  public String description;
+  @FormulaInfoField(converter = StringsToString.class) public Collection<String> tags;
+  
+  @FormulaInfoField public String description;
   public Map<String,String> extraValueByKey;
   public List<String> text;
   private Class<?> calculatorReturningClass;
@@ -83,7 +135,7 @@ public class FormulaInfo{
   }
 
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
-    //FIXME!
+    //FIXME! return type
     calculator = new JavaCodeNumberCalculatorV2(
         formulaText, className, classLoader);
     
@@ -158,7 +210,7 @@ public class FormulaInfo{
   public void updateCalculatorWithByteCode(ClassLoader classLoader) {
     
     try {
-      //FIXME!
+      //FIXME!  return type
       calculator = new JavaCodeNumberCalculatorV2(
           formulaText , javaCodeText , classNameWithHash ,byteCode, hashByByteCode,
           Thread.currentThread().getContextClassLoader());

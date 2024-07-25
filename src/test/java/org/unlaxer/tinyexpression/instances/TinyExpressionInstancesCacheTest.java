@@ -22,6 +22,11 @@ import org.unlaxer.util.Try;
 public class TinyExpressionInstancesCacheTest {
   
   
+  /**
+   * 指定されたroot pathからtenantID毎にDirectoryを掘って中にformulaInfo.txtというfileを置いて
+   * instanceを生成管理するTinyExpressionInstancesCacheの実装です
+   *
+   */
   public static class FileBaseTinyExpressionInstancesCache implements TinyExpressionInstancesCache{
     
     public static final String FILENAME = "formulaInfo.txt"; 
@@ -37,36 +42,6 @@ public class TinyExpressionInstancesCacheTest {
       super();
       this.rootFolder = rootFolder;
       this.formulaInfoAdditionalFields = formulaInfoAdditionalFields;
-    }
-
-    public  /*<T extends Comparable<? super Calculator<T>>> */
-    List<Calculator<?/* extends T*/>> get1(
-        TenantID tenantID, 
-        Comparator<Calculator<?/*T*/>> comparator , 
-        ClassLoader classLoader) {
-      
-      List<Calculator<?>> computeIfAbsent = 
-          calculatorsByTenantId.computeIfAbsent(tenantID, 
-              tenantId->{
-                Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
-                try(InputStream inputStream = Files.newInputStream(resolve);){
-                  Try<FormulaInfoList> parse = 
-                      FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
-                  
-                  parse.throwIfMatch();
-                  List<Calculator<?>> list = parse.right().get().get().stream()
-                    .map(FormulaInfo::calculator)
-                    .sorted(comparator)
-                    .collect(Collectors.toList());
-                  return list;
-                  
-                } catch (IOException e) {
-                  throw new UncheckedIOException(e);
-                }
-              }
-          );
-      return computeIfAbsent;
-        
     }
 
     @Override

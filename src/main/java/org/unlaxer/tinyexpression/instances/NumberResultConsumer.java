@@ -1,8 +1,11 @@
 package org.unlaxer.tinyexpression.instances;
 
+import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public interface NumberResultConsumer{
   
-  void accept(Calculator<? extends Number> calclator , String formulaName, Number result);
+  void accept(CalculationContext calculationContext,
+      Calculator<? extends Number> calclator , FormulaInfo formulaInfo, Number result);
 }
