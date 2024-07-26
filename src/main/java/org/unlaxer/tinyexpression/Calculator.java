@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -39,6 +40,34 @@ public interface Calculator<T> {
   public String formulaHash();
 
   public String byteCodeHash();
+  
+  public List<Calculator<?>> dependsOns();
+  
+  public Optional<Calculator<?>> dependsOnBy();
+
+  public default int dependsOnByNestLevel(){
+    int nestLevel = 0;
+    Calculator<?> current = this;
+    while(true) {
+      if(current.dependsOnBy().isEmpty()) {
+        break;
+      }
+      current = dependsOnBy().get();
+      nestLevel++;
+    }
+    return nestLevel;
+  }
+  
+  public default Calculator<?> rootDependsOnBy(){
+    Calculator<?> current = this;
+    while(true) {
+      if(current.dependsOnBy().isEmpty()) {
+        break;
+      }
+      current = dependsOnBy().get();
+    }
+    return current;
+  }
 
   public T apply(CalculationContext calculationContext);
 
