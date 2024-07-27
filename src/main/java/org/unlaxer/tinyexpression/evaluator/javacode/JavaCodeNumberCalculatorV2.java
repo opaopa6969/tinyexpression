@@ -124,6 +124,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
 
+      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
+      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
+      生成を行分ければならない。
+      
       classNameWithHash = className + "_" + formulaHash;
       javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
 

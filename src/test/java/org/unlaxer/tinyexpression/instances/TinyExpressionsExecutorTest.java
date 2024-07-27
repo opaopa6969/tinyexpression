@@ -194,5 +194,10 @@ public class TinyExpressionsExecutorTest {
     
   }
   
+  
+  public static void main(String[] args) {
+    boolean matches = "a10c".matches(".\\d+.");
+    System.out.println(matches);
+  }
 
 }
