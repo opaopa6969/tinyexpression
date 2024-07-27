@@ -4,9 +4,9 @@ periodStartInclusive:2018-05-01_00:00:00
 periodEndExclusive:2037-05-01_00:00:00
 siteId:69
 # outputToでcheckKindやfieldやvarなどをしてするけどいらないかな？
-calculatorName:Mintia
+calculatorName:setFloatToMintia
 checkKind:Mintia
-dependsOn:sqrt
+dependsOn:setSqrt2ToVar
 resultType:float
 formula:
 match{
@@ -19,7 +19,7 @@ description:$sqrtにsqrt(2)を代入します
 periodStartInclusive:2018-05-01_00:00:00
 periodEndExclusive:2037-05-01_00:00:00
 siteId:69
-calculatorName:sqrt
+calculatorName:setSqrt2ToVar
 var:sqrt
 dependsOn:
 resultType:float
