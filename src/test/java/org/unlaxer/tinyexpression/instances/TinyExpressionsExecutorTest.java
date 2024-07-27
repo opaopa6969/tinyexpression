@@ -171,10 +171,7 @@ public class TinyExpressionsExecutorTest {
     CheckResult checkResult = new CheckResult();
     ResultConsumerWithCheckResult resultConsumerWithCheckResult = new ResultConsumerWithCheckResult(checkResult);
     
-    
     ;
-    
-    
     CalculationContext calculationContext = CalculationContext.newConcurrentContext();
     
     List<CalculationResult> execute = tinyExpressionsExecutor.execute(
@@ -191,6 +188,9 @@ public class TinyExpressionsExecutorTest {
     CalculationResult calculationResult = execute.get(0);
     System.out.println(calculationContext.getValue("sqrt"));
     System.out.println(calculationResult.result);
+    
+    assertEquals("1.4142135", String.valueOf(calculationResult.result));
+    assertEquals("6969", String.valueOf((int)checkResult.theScore));
     
   }
   
