@@ -1,0 +1,39 @@
+tags:NORMAL
+description:最終的な点数をcheckKindとして出力します
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:69
+# outputToでcheckKindやfieldやvarなどをしてするけどいらないかな？
+calculatorName:Mintia
+checkKind:Mintia
+dependsOn:sqrt
+resultType:float
+formula:
+match{
+    $mintia == 2 -> $sqrt ,
+    default -> 3.141592
+}
+---END_OF_PART---
+tags:NORMAL
+description:$sqrtにsqrt(2)を代入します
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:69
+calculatorName:sqrt
+var:sqrt
+dependsOn:
+resultType:float
+formula:
+sqrt(2)
+---END_OF_PART---
+#tags:NORMAL
+#description:$nameに代入します
+#periodStartInclusive:2018-05-01_00:00:00
+#periodEndExclusive:2037-05-01_00:00:00
+#siteId:69
+#field:name
+#dependsOn:
+#resultType:String
+#formula:
+#"opaopa"
+#---END_OF_PART---

@@ -67,9 +67,10 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "description", (value)->formulaInfo.description = value);
         match |= set(keyValue, "periodStartInclusive", (value)->formulaInfo.periodStartInclusive = value);
         match |= set(keyValue, "periodEndExclusive", (value)->formulaInfo.periodEndExclusive = value);
+        match |= set(keyValue, "calculatorName", (value)->formulaInfo.calculatorName = value);
         match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
         match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = value);
-        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
+//        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
           match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, (value)->formulaInfo.multiTenancyId = Optional.of(value));

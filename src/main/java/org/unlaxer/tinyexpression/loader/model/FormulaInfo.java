@@ -82,14 +82,17 @@ public class FormulaInfo{
   
   public Optional<String> multiTenancyId = Optional.empty();
 
+  @Nullable
+  @FormulaInfoField public String calculatorName;
+  
   @FormulaInfoField public String formulaName;
   
   @Nullable
   @FormulaInfoField public String dependsOn; //
   @Nullable
   @FormulaInfoField public String resultType; // default Float
-  @Nullable
-  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
+//  @Nullable
+//  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
   @FormulaInfoField public String byteCodeAsHex;
   @FormulaInfoField public String formulaText;
@@ -267,6 +270,13 @@ public class FormulaInfo{
         .append(":")
         .line(multiTenancyId.get());
     }
+    
+    if(calculatorName != null) {
+      builder
+        .append("calculatorName")
+        .append(":")
+        .line(calculatorName);
+    }
       
     builder
       .append(additionalFields.formulaNameAttributeName())
@@ -289,13 +299,6 @@ public class FormulaInfo{
         .line(resultType);
     }
     
-    if(outputTo != null) {
-      builder
-        .append("outputTo")
-        .append(":")
-        .line("outputTo");
-    }
-  
     builder
       .append("hash:")
       .line(hash)

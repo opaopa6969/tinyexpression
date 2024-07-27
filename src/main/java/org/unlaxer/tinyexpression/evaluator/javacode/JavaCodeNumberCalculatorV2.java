@@ -16,6 +16,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,6 +66,8 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   public final byte[] byteCode;
   final String formulaHash;
   final String byteCodeHash;
+  final List<Calculator<?>> dependsOns;
+  Optional<Calculator<?>> dependsOnBy;
 
   TokenBaseOperator<CalculationContext, Float> operator;
 
@@ -93,50 +96,24 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     this(formula, className, classLoader, null, new JavaFileManagerContext());
   }
 
-  // if class path changes , then reload.
-  static JavaCompiler compiler;
-  static {
-    reset();
-  }
 
-  private static void reset() {
-    compiler = ToolProvider.getSystemJavaCompiler();
-    if (compiler == null) {
-        try {
-            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
-            Method create = javacTool.getMethod("create");
-            compiler = (JavaCompiler) create.invoke(null);
-        } catch (Exception e) {
-            throw new AssertionError(e);
-        }
-    }
-  
-}
-
-//  private static final Method DEFINE_CLASS_METHOD;
-//  static {
-//      try {
-//          Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-//          theUnsafe.setAccessible(true);
-//          Unsafe u = (Unsafe) theUnsafe.get(null);
-//          DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-//          try {
-//              Field f = AccessibleObject.class.getDeclaredField("override");
-//              long offset = u.objectFieldOffset(f);
-//              u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
-//          } catch (NoSuchFieldException e) {
-//              DEFINE_CLASS_METHOD.setAccessible(true);
-//          }
-//      } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
-//          throw new AssertionError(e);
-//      }
-//  }
-
+  /**
+   * from formula
+   * @param formula
+   * @param className
+   * @param classLoader
+   * @param outputRootDirectory
+   * @param javaFileManagerContext
+   * @throws CompileError
+   */
   @SuppressWarnings("unchecked")
   public JavaCodeNumberCalculatorV2(String formula, String className, ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
 
     StringWriter output = new StringWriter();
 
@@ -201,32 +178,16 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
   }
 
-  @SuppressWarnings("serial")
-  public static class CompileError extends RuntimeException {
-
-    public CompileError() {
-      super();
-    }
-
-    public CompileError(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-    }
-
-    public CompileError(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    public CompileError(String message) {
-      super(message);
-    }
-
-    public CompileError(Throwable cause) {
-      super(cause);
-    }
-  }
-
-  // constructor for byte codes;
-
+  /**
+   * from bytecode
+   * 
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param classLoader
+   */
   @SuppressWarnings("unchecked")
   public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
       ClassLoader classLoader) {
@@ -236,6 +197,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     this.javaCode = javaCode;
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+
 
     formulaHash = MD5.toHex(formula);
 
@@ -269,7 +234,79 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       throw new RuntimeException(e);
     }
   }
+  
+  /**
+   * from bytecode
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param calculatorClass
+   * @param classLoader
+   */
+  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, ClassLoader classLoader) {
+    super(formula, className, false);
+    this.className = className;
+    this.javaCode = javaCode;
+    this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    this.classNameWithHash = "";
 
+    formulaHash = MD5.toHex(formula);
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+
+    try {
+      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+          .newInstance();
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | NoSuchMethodException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  // if class path changes , then reload.
+  static JavaCompiler compiler;
+  static {
+    reset();
+  }
+
+  private static void reset() {
+    compiler = ToolProvider.getSystemJavaCompiler();
+    if (compiler == null) {
+        try {
+            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
+            Method create = javacTool.getMethod("create");
+            compiler = (JavaCompiler) create.invoke(null);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+  }
+
+//  private static final Method DEFINE_CLASS_METHOD;
+//  static {
+//      try {
+//          Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+//          theUnsafe.setAccessible(true);
+//          Unsafe u = (Unsafe) theUnsafe.get(null);
+//          DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+//          try {
+//              Field f = AccessibleObject.class.getDeclaredField("override");
+//              long offset = u.objectFieldOffset(f);
+//              u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
+//          } catch (NoSuchFieldException e) {
+//              DEFINE_CLASS_METHOD.setAccessible(true);
+//          }
+//      } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
+//          throw new AssertionError(e);
+//      }
+//  }
+
+  
   @SuppressWarnings("rawtypes")
   public static Class defineClass(@NotNull String className, @NotNull byte[] bytes) {
     return defineClass(Thread.currentThread().getContextClassLoader(), className, bytes);
@@ -293,26 +330,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
   }
 
-  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, ClassLoader classLoader) {
-    super(formula, className, false);
-    this.className = className;
-    this.javaCode = javaCode;
-    this.byteCode = byteCode;
-    this.byteCodeHash = byteCodeHash;
-    this.classNameWithHash = "";
-
-    formulaHash = MD5.toHex(formula);
-
-    try {
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
-          .newInstance();
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-        | NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-
-  }
+  
 
   static boolean loaded(ClassLoader classLoader, String className) {
     try {
@@ -482,6 +500,21 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   @Override
   public String returningTypeAsString() {
     return "float";
+  }
+
+  @Override
+  public List<Calculator<?>> dependsOns() {
+    return dependsOns;
+  }
+
+  @Override
+  public Optional<Calculator<?>> dependsOnBy() {
+    return dependsOnBy;
+  }
+
+  @Override
+  public void setDependsOnBy(Calculator<?> calculator) {
+    dependsOnBy = Optional.of(calculator);
   }
 
 }

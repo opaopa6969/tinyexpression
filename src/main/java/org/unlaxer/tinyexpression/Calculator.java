@@ -80,7 +80,7 @@ public interface Calculator<T> {
   }
   
   public default void setFormulaInfo(FormulaInfo formulaInfo){
-    setObject(FormulaInfo.class.getSimpleName(), formula());
+    setObject(FormulaInfo.class.getSimpleName(), formulaInfo);
   }
 
   public default <X> Optional<X> getObjectAsOptional(String key, Class<X> objectClass) {
@@ -117,4 +117,11 @@ public interface Calculator<T> {
     formula,
     byteCode
   }
+
+  public default void addDependsOn(Calculator<?> dependsOncalculator) {
+    dependsOns().add(dependsOncalculator);
+    dependsOncalculator.setDependsOnBy(this);
+  }
+  
+  public void setDependsOnBy(Calculator<?> calculator);
 }

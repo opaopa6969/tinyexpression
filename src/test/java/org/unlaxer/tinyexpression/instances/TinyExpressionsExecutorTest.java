@@ -1,18 +1,21 @@
 package org.unlaxer.tinyexpression.instances;
 
+import static org.junit.Assert.assertEquals;
+
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.instances.TinyExpressionInstancesCacheTest.FileBaseTinyExpressionInstancesCache;
+import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.CalculationResult;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
@@ -168,12 +171,13 @@ public class TinyExpressionsExecutorTest {
     CheckResult checkResult = new CheckResult();
     ResultConsumerWithCheckResult resultConsumerWithCheckResult = new ResultConsumerWithCheckResult(checkResult);
     
+    
     ;
     
     
     CalculationContext calculationContext = CalculationContext.newConcurrentContext();
     
-    tinyExpressionsExecutor.execute(
+    List<CalculationResult> execute = tinyExpressionsExecutor.execute(
         TenantID.create(69), 
         calculationContext,
         resultConsumerWithCheckResult,
@@ -183,6 +187,10 @@ public class TinyExpressionsExecutorTest {
 //        PRE,POSTなどでフィルターして複数の実行をおこなったり,
         x->true,
         Thread.currentThread().getContextClassLoader());
+    
+    CalculationResult calculationResult = execute.get(0);
+    System.out.println(calculationContext.getValue("sqrt"));
+    System.out.println(calculationResult.result);
     
   }
   

@@ -15,11 +15,14 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.UnaryOperator;
@@ -42,6 +45,7 @@ import org.unlaxer.compiler.JavaFileManagerContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
@@ -62,76 +66,80 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   public final byte[] byteCode;
   final String formulaHash;
   final String byteCodeHash;
+  final List<Calculator<?>> dependsOns;
+  Optional<Calculator<?>> dependsOnBy;
+
 
   TokenBaseOperator<CalculationContext, T> operator;
+  
 
-  // constructors for source code
-
+  /**
+   * from formula
+   * @param name
+   * @param formula
+   * @param returningClass
+   * @throws CompileError
+   */
   public JavaCodeCalculatorV2(Name name, String formula , Class<?> returningClass) throws CompileError {
     this(name, formula, returningClass, (Path) null);
   }
 
+  /**
+   * from formula
+   * @param name
+   * @param formula
+   * @param returningClass
+   * @param outputRootDirectory
+   * @throws CompileError
+   */
   public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, Path outputRootDirectory) throws CompileError {
     this(name, formula, returningClass, Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
         new JavaFileManagerContext());
   }
 
+  /**
+   * from formula
+   * @param name
+   * @param formula
+   * @param returningClass
+   * @param classLoader
+   * @throws CompileError
+   */
   public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, ClassLoader classLoader) throws CompileError {
     this(name, formula, returningClass, classLoader, null, true, new JavaFileManagerContext());
   }
 
+  /**
+   * from formula
+   * @param name
+   * @param formula
+   * @param returningClass
+   * @param classLoader
+   * @param outputRootDirectory
+   * @param randomize
+   * @param javaFileManagerContext
+   * @throws CompileError
+   */
   public JavaCodeCalculatorV2(Name name, String formula, Class<?> returningClass, ClassLoader classLoader, Path outputRootDirectory,
       boolean randomize, JavaFileManagerContext javaFileManagerContext) throws CompileError {
     this(formula, returningClass, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
         classLoader, outputRootDirectory, javaFileManagerContext);
   }
 
+  /**
+   * from formula
+   * @param formula
+   * @param returningClass
+   * @param className
+   * @param classLoader
+   * @throws CompileError
+   */
   public JavaCodeCalculatorV2(String formula, Class<?> returningClass, String className, ClassLoader classLoader) throws CompileError {
     this(formula, returningClass , className, classLoader, null, new JavaFileManagerContext());
   }
 
-  // if class path changes , then reload.
-  static JavaCompiler compiler;
-  static {
-    reset();
-  }
-
-  private static void reset() {
-    compiler = ToolProvider.getSystemJavaCompiler();
-    if (compiler == null) {
-        try {
-            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
-            Method create = javacTool.getMethod("create");
-            compiler = (JavaCompiler) create.invoke(null);
-        } catch (Exception e) {
-            throw new AssertionError(e);
-        }
-    }
-  
-}
-
-//  private static final Method DEFINE_CLASS_METHOD;
-//  static {
-//      try {
-//          Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-//          theUnsafe.setAccessible(true);
-//          Unsafe u = (Unsafe) theUnsafe.get(null);
-//          DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-//          try {
-//              Field f = AccessibleObject.class.getDeclaredField("override");
-//              long offset = u.objectFieldOffset(f);
-//              u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
-//          } catch (NoSuchFieldException e) {
-//              DEFINE_CLASS_METHOD.setAccessible(true);
-//          }
-//      } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
-//          throw new AssertionError(e);
-//      }
-//  }
-
   /**
-   * from formula text
-   * 
+   * from formula
    * @param formula
    * @param returningClass
    * @param className
@@ -145,6 +153,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
     
     StringWriter output = new StringWriter();
 
@@ -211,32 +222,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     }
   }
 
-  public static class CompileError extends RuntimeException {
-
-    public CompileError() {
-      super();
-    }
-
-    public CompileError(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-    }
-
-    public CompileError(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    public CompileError(String message) {
-      super(message);
-    }
-
-    public CompileError(Throwable cause) {
-      super(cause);
-    }
-  }
-
 
   /**
-   * from byte code
+   * from bytecode
    * 
    * @param formula
    * @param javaCode
@@ -254,6 +242,10 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     this.javaCode = javaCode;
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+
 
     formulaHash = MD5.toHex(formula);
 
@@ -291,6 +283,85 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     }
   }
 
+  /**
+   * from bytecode
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param calculatorClass
+   * @param classLoader
+   */
+  @SuppressWarnings("unchecked")
+  public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+      Class<TokenBaseOperator<CalculationContext, ?>> calculatorClass, ClassLoader classLoader) {
+    super(formula, className, false);
+    this.className = className;
+    this.javaCode = javaCode;
+    this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    this.classNameWithHash = "";
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+
+    formulaHash = MD5.toHex(formula);
+
+    try {
+      Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
+      this.returningClass = method.getReturnType();
+
+      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
+          .newInstance();
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | NoSuchMethodException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  
+  
+
+  
+//private static final Method DEFINE_CLASS_METHOD;
+//static {
+//    try {
+//        Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+//        theUnsafe.setAccessible(true);
+//        Unsafe u = (Unsafe) theUnsafe.get(null);
+//        DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+//        try {
+//            Field f = AccessibleObject.class.getDeclaredField("override");
+//            long offset = u.objectFieldOffset(f);
+//            u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
+//        } catch (NoSuchFieldException e) {
+//            DEFINE_CLASS_METHOD.setAccessible(true);
+//        }
+//    } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
+//        throw new AssertionError(e);
+//    }
+//}
+
+  // if class path changes , then reload.
+  static JavaCompiler compiler;
+  static {
+    reset();
+  }
+
+  private static void reset() {
+    compiler = ToolProvider.getSystemJavaCompiler();
+    if (compiler == null) {
+        try {
+            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
+            Method create = javacTool.getMethod("create");
+            compiler = (JavaCompiler) create.invoke(null);
+        } catch (Exception e) {
+            throw new AssertionError(e);
+        }
+    }
+  }
+
+  
   @SuppressWarnings("rawtypes")
   public static Class defineClass(@NotNull String className, @NotNull byte[] bytes) {
     return defineClass(Thread.currentThread().getContextClassLoader(), className, bytes);
@@ -314,29 +385,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     }
   }
 
-  public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, ?>> calculatorClass, ClassLoader classLoader) {
-    super(formula, className, false);
-    this.className = className;
-    this.javaCode = javaCode;
-    this.byteCode = byteCode;
-    this.byteCodeHash = byteCodeHash;
-    this.classNameWithHash = "";
 
-    formulaHash = MD5.toHex(formula);
-
-    try {
-      Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
-      this.returningClass = method.getReturnType();
-
-      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
-          .newInstance();
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-        | NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-
-  }
 
   static boolean loaded(ClassLoader classLoader, String className) {
     try {
@@ -491,5 +540,10 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
     } catch (Throwable e) {
       throw new RuntimeException(e);
     }
+  }
+  
+  @Override
+  public void setDependsOnBy(Calculator<?> calculator) {
+    dependsOnBy = Optional.of(calculator);
   }
 }
