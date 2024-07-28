@@ -45,13 +45,16 @@ import org.unlaxer.compiler.CustomClassloaderJavaFileManager;
 import org.unlaxer.compiler.JavaFileManagerContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.elementary.StartAndEndQuotedParser.SchemeAndIdentifier;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedNumberCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
+import org.unlaxer.util.Try;
 import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
@@ -124,20 +127,14 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
 
-      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
-      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
-      生成を行分ければならない。
+//      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
+//      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
+//      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
       
       classNameWithHash = className + "_" + formulaHash;
       javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
 
-      JavaFileObject javaFileObject = new SimpleJavaFileObject(
-          URI.create("string:///" + classNameWithHash + ".java"), JavaFileObject.Kind.SOURCE) {
-        @Override
-        public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-          return javaCode;
-        }
-      };
+      JavaFileObject javaFileObject = createJavaFileObject(classNameWithHash , javaCode);
 
       if (outputRootDirectory != null) {
         try (BufferedWriter newBufferedWriter = Files
@@ -147,38 +144,109 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
           e1.printStackTrace();
         }
       }
+      
+      Try<ClassAndByteCode> classOrError = compile(javaFileObject, classLoader);
+      classOrError.throwIfMatch();
 
-      try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
-          StandardCharsets.UTF_8);
+      ClassAndByteCode classAndByteCode = classOrError.get();
+      operator = (TokenBaseOperator<CalculationContext, Float>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
 
-          CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-              classLoader, fileManager);
-
-          MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
-
-        JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
-            null, null, Arrays.asList(javaFileObject));
-
-        boolean success = task.call();
-//        System.out.println("Compilation " + (success ? "succeeded" : "failed"));
-//        System.out.println(output.toString());
-
-        if (success) {
-
-          MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getClassBytes(), classLoader);
-
-          Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
-
-          operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
-
-          byteCode = memoryClassLoader.getBytes(classNameWithHash);
-          byteCodeHash = MD5.toHex(byteCode);
-        } else {
-          throw new CompileError(output.toString());
-        }
-      }
+      byteCode = classAndByteCode.bytes;
+      byteCodeHash = MD5.toHex(byteCode);
+    } catch (CompileError e) {
+      throw e;
     } catch (Throwable e) {
-      throw new RuntimeException(output.toString(), e);
+      throw new CompileError(output.toString(), e);
+    }
+  }
+  
+  public static class ClassAndByteCode{
+    public final Class<?> clazz;
+    public final byte[] bytes;
+    public ClassAndByteCode(Class<?> clazz, byte[] bytes) {
+      super();
+      this.clazz = clazz;
+      this.bytes = bytes;
+    }
+  }
+  
+  private Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , ClassLoader classLoader){
+    
+    StringWriter output = new StringWriter();
+
+    try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
+        StandardCharsets.UTF_8);
+
+        CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
+            classLoader, fileManager);
+
+        MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
+
+      JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
+          null, null, Arrays.asList(javaFileObject));
+
+      boolean success = task.call();
+//      System.out.println("Compilation " + (success ? "succeeded" : "failed"));
+//      System.out.println(output.toString());
+
+      if (success) {
+
+        MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getClassBytes(), classLoader);
+
+        Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
+        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, memoryClassLoader.getBytes(classNameWithHash));
+        
+        return Try.immediatesOf(classAndByteCode);
+
+//        operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
+//
+//        byteCode = memoryClassLoader.getBytes(classNameWithHash);
+//        byteCodeHash = MD5.toHex(byteCode);
+      } else {
+        return Try.immediatesOf(new CompileError(output.toString()));
+      }
+    }catch (Exception e) {
+      return  Try.immediatesOf(new CompileError(output.toString(),e));
+    }
+  }
+
+  
+  private JavaFileObject createJavaFileObject(String ClassName , String javaSourceCode) {
+    JavaFileObject javaFileObject = new SimpleJavaFileObject(
+        URI.create("string:///" + className + ".java"), JavaFileObject.Kind.SOURCE) {
+      @Override
+      public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+        return javaSourceCode;
+      }
+    };
+    return javaFileObject;
+  }
+  
+  
+  
+  void createJavaFromCodedBlock(CalculationContext calculationContext,
+      TinyExpressionTokens tinyExpressionTokens, ClassLoader classLoader) {
+    
+    List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
+    for (CodeBlock codeBlock : codeBlocks) {
+      String code = codeBlock.code;
+      SchemeAndIdentifier schemeAndIdentifier = codeBlock.schemeAndIdentifier;
+      if(false ==schemeAndIdentifier.scheme.equalsIgnoreCase("java")){
+        continue;
+      }
+      JavaFileObject createJavaFileObject = createJavaFileObject(schemeAndIdentifier.idenitifier , code);
+      Try<ClassAndByteCode> clazzOrError = compile(createJavaFileObject, classLoader);
+      clazzOrError.throwIfMatch();
+      Class<?> clazz = clazzOrError.get().clazz;
+      
+      Object newInstance;
+      try {
+        newInstance = clazz.getDeclaredConstructor().newInstance();
+        calculationContext.set(newInstance);
+      } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+          | NoSuchMethodException | SecurityException e) {
+        throw new CompileError(e);
+      }
     }
   }
 

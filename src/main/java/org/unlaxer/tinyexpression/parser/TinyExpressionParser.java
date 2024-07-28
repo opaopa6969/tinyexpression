@@ -21,6 +21,7 @@ import org.unlaxer.tinyexpression.parser.javalang.CodesParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportsParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
@@ -67,6 +68,22 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
      }
     }
     return parsed;
+  }
+  
+  /**
+   * @param thisParserParsed
+   * @return CodeBlock List
+   */
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List<CodeBlock> extractCodeBlocks(Token thisParserParsed){
+    
+    Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(CodesParser.class);
+    
+    List<CodeBlock> codeBlocks = childWithParserAsOptional
+      .map(CodesParser::extractCodeBlocks)
+      .orElseGet(List::of);
+    
+    return codeBlocks;
   }
   
   /**

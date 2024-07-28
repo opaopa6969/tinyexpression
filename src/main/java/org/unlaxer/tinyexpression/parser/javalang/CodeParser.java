@@ -16,6 +16,13 @@ public class CodeParser extends StartAndEndQuotedParser{
     );
   }
   
+  public static CodeBlock extractCodeBlock(Token thisParserParsed) {
+    return new CodeBlock(
+        extractSchemeAndIdentifier(thisParserParsed),
+        extractContents(thisParserParsed)
+    );
+  }
+  
   @TokenExtractor
   public static SchemeAndIdentifier extractSchemeAndIdentifier(Token thisParserParsed) {
     Token collect = thisParserParsed.flatten().stream()
@@ -36,5 +43,16 @@ public class CodeParser extends StartAndEndQuotedParser{
         .findFirst()
         .get().getToken().get();
       return string;
+  }
+  
+  public static class CodeBlock{
+    
+    public final SchemeAndIdentifier schemeAndIdentifier;
+    public final String code;
+    public CodeBlock(SchemeAndIdentifier schemeAndIdentifier, String code) {
+      super();
+      this.schemeAndIdentifier = schemeAndIdentifier;
+      this.code = code;
+    }
   }
 }

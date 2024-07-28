@@ -12,12 +12,14 @@ import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 
 public class TinyExpressionTokens{
   
   final Token tinyExpressionToken;
+  final List<CodeBlock> codeBlocks;
   final List<Token> importTokens;
   final List<Token> variableDeclarationTokens;
   final List<Token> annotationTokens;
@@ -34,6 +36,7 @@ public class TinyExpressionTokens{
       throw new IllegalArgumentException();
     }
     this.tinyExpressionToken = tinyExpressionToken;
+    codeBlocks = TinyExpressionParser.extractCodeBlocks(tinyExpressionToken);
     importTokens = TinyExpressionParser.extractImports(tinyExpressionToken);
     expressionToken = TinyExpressionParser.extractExpressionWithAfterReduced(tinyExpressionToken);
     
