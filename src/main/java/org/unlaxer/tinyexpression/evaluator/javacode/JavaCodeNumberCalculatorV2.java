@@ -71,6 +71,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   final String byteCodeHash;
   final List<Calculator<?>> dependsOns;
   Optional<Calculator<?>> dependsOnBy;
+  final List<InstanceAndByteCode> instanceAndByteCodeList;
 
   TokenBaseOperator<CalculationContext, Float> operator;
 
@@ -118,14 +119,14 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
 
-    StringWriter output = new StringWriter();
-
     try {
 
       this.className = className;
       formulaHash = MD5.toHex(formula);
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+      
+      instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, classLoader);
 
 //      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
 //      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
@@ -145,7 +146,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
         }
       }
       
-      Try<ClassAndByteCode> classOrError = compile(javaFileObject, classLoader);
+      Try<ClassAndByteCode> classOrError = compile(javaFileObject, classLoader, classNameWithHash);
       classOrError.throwIfMatch();
 
       ClassAndByteCode classAndByteCode = classOrError.get();
@@ -156,21 +157,136 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     } catch (CompileError e) {
       throw e;
     } catch (Throwable e) {
-      throw new CompileError(output.toString(), e);
+      throw new CompileError(e);
     }
   }
   
-  public static class ClassAndByteCode{
-    public final Class<?> clazz;
-    public final byte[] bytes;
-    public ClassAndByteCode(Class<?> clazz, byte[] bytes) {
-      super();
-      this.clazz = clazz;
-      this.bytes = bytes;
+  
+  /**
+   * from bytecode
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param classNameAndByteCodeList
+   * @param classLoader
+   */
+  @SuppressWarnings("unchecked")
+  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+      List<ClassNameAndByteCode> classNameAndByteCodeList,
+      ClassLoader classLoader) {
+    super(formula, className, false);
+    this.className = className;
+    this.classNameWithHash = null;
+    this.javaCode = javaCode;
+    this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+    
+    instanceAndByteCodeList = classNameAndByteCodeList.stream()
+      .map(classNameAndByteCode->{
+        Object newInstance = newInstance(classNameAndByteCode.className, classNameAndByteCode.byteCode, classLoader);
+        return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode);
+      }).toList();
+
+
+    formulaHash = MD5.toHex(formula);
+
+    Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
+
+    try {
+      calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) loadClass(className, byteCode, classLoader);
+      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+          .newInstance();
+
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | NoSuchMethodException | SecurityException | NoClassDefFoundError e) {
+
+      throw new RuntimeException(e);
     }
   }
   
-  private Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , ClassLoader classLoader){
+  /**
+   * from bytecode
+   * @param formula
+   * @param javaCode
+   * @param className
+   * @param byteCode
+   * @param byteCodeHash
+   * @param calculatorClass
+   * @param classNameAndByteCodeList
+   * @param classLoader
+   */
+  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, 
+      List<ClassNameAndByteCode> classNameAndByteCodeList,
+      ClassLoader classLoader) {
+    super(formula, className, false);
+    this.className = className;
+    this.javaCode = javaCode;
+    this.byteCode = byteCode;
+    this.byteCodeHash = byteCodeHash;
+    this.classNameWithHash = "";
+
+    formulaHash = MD5.toHex(formula);
+    
+    dependsOnBy = Optional.empty();
+    dependsOns = new ArrayList<>();
+    
+    instanceAndByteCodeList = classNameAndByteCodeList.stream()
+        .map(classNameAndByteCode->{
+          Object newInstance = newInstance(classNameAndByteCode.className, classNameAndByteCode.byteCode, classLoader);
+          return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode);
+        }).toList();
+
+    try {
+      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+          .newInstance();
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+        | NoSuchMethodException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  static Class<?> loadClass(String className , byte[] byteCode , ClassLoader classLoader){
+    Class<?> clazz;
+    try {
+      try {
+        clazz = classLoader.loadClass(className);
+
+      } catch (ClassNotFoundException e) {
+
+        try {
+          clazz = defineClass(classLoader, className, byteCode);
+        } catch (Throwable e2) {
+          try {
+            clazz = defineClass(null, className, byteCode);
+          } catch (Throwable e3) {
+            clazz = defineClass(null, null, byteCode);
+          }
+        }
+      }
+    } catch (IllegalArgumentException | SecurityException | NoClassDefFoundError e) {
+
+      throw new RuntimeException(e);
+    }
+    return clazz;
+  }
+  
+  
+  static Object newInstance(String classNmae , byte[] byteCode , ClassLoader classLoader){
+    try {
+      Class<?> loadClass = loadClass(classNmae, byteCode, classLoader);
+      return loadClass.getDeclaredConstructor().newInstance();
+    }catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    
+  }
+  private static Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , ClassLoader classLoader , String className){
     
     StringWriter output = new StringWriter();
 
@@ -193,8 +309,8 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
         MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getClassBytes(), classLoader);
 
-        Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
-        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, memoryClassLoader.getBytes(classNameWithHash));
+        Class<?> clazz = memoryClassLoader.loadClass(className);
+        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, memoryClassLoader.getBytes(className));
         
         return Try.immediatesOf(classAndByteCode);
 
@@ -211,9 +327,9 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   }
 
   
-  private JavaFileObject createJavaFileObject(String ClassName , String javaSourceCode) {
+  private static JavaFileObject createJavaFileObject(String clazzName , String javaSourceCode) {
     JavaFileObject javaFileObject = new SimpleJavaFileObject(
-        URI.create("string:///" + className + ".java"), JavaFileObject.Kind.SOURCE) {
+        URI.create("string:///" + clazzName + ".java"), JavaFileObject.Kind.SOURCE) {
       @Override
       public CharSequence getCharContent(boolean ignoreEncodingErrors) {
         return javaSourceCode;
@@ -224,121 +340,35 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   
   
   
-  void createJavaFromCodedBlock(CalculationContext calculationContext,
-      TinyExpressionTokens tinyExpressionTokens, ClassLoader classLoader) {
+  static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, ClassLoader classLoader) {
     
     List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
+    
+    List<InstanceAndByteCode> instanceAndByteCodeList = new ArrayList<>();
     for (CodeBlock codeBlock : codeBlocks) {
       String code = codeBlock.code;
       SchemeAndIdentifier schemeAndIdentifier = codeBlock.schemeAndIdentifier;
       if(false ==schemeAndIdentifier.scheme.equalsIgnoreCase("java")){
         continue;
       }
+      String className = codeBlock.schemeAndIdentifier.idenitifier;
       JavaFileObject createJavaFileObject = createJavaFileObject(schemeAndIdentifier.idenitifier , code);
-      Try<ClassAndByteCode> clazzOrError = compile(createJavaFileObject, classLoader);
+      Try<ClassAndByteCode> clazzOrError = compile(createJavaFileObject, classLoader, className);
       clazzOrError.throwIfMatch();
       Class<?> clazz = clazzOrError.get().clazz;
       
       Object newInstance;
       try {
         newInstance = clazz.getDeclaredConstructor().newInstance();
-        calculationContext.set(newInstance);
+        instanceAndByteCodeList.add(new InstanceAndByteCode(newInstance,clazzOrError.get().bytes));
       } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
           | NoSuchMethodException | SecurityException e) {
         throw new CompileError(e);
       }
     }
+    return instanceAndByteCodeList;
   }
 
-  /**
-   * from bytecode
-   * 
-   * @param formula
-   * @param javaCode
-   * @param className
-   * @param byteCode
-   * @param byteCodeHash
-   * @param classLoader
-   */
-  @SuppressWarnings("unchecked")
-  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      ClassLoader classLoader) {
-    super(formula, className, false);
-    this.className = className;
-    this.classNameWithHash = null;
-    this.javaCode = javaCode;
-    this.byteCode = byteCode;
-    this.byteCodeHash = byteCodeHash;
-    
-    dependsOnBy = Optional.empty();
-    dependsOns = new ArrayList<>();
-
-
-    formulaHash = MD5.toHex(formula);
-
-    Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
-
-    try {
-      try {
-        calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader
-            .loadClass(className);
-
-      } catch (ClassNotFoundException e) {
-
-        try {
-          calculatorClass = defineClass(classLoader, className, byteCode);
-        } catch (Throwable e2) {
-          e2.printStackTrace();
-          try {
-            calculatorClass = defineClass(null, className, byteCode);
-          } catch (Throwable e3) {
-            e3.printStackTrace();
-            calculatorClass = defineClass(null, null, byteCode);
-          }
-        }
-      }
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
-          .newInstance();
-
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-        | NoSuchMethodException | SecurityException | NoClassDefFoundError e) {
-
-      throw new RuntimeException(e);
-    }
-  }
-  
-  /**
-   * from bytecode
-   * @param formula
-   * @param javaCode
-   * @param className
-   * @param byteCode
-   * @param byteCodeHash
-   * @param calculatorClass
-   * @param classLoader
-   */
-  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, ClassLoader classLoader) {
-    super(formula, className, false);
-    this.className = className;
-    this.javaCode = javaCode;
-    this.byteCode = byteCode;
-    this.byteCodeHash = byteCodeHash;
-    this.classNameWithHash = "";
-
-    formulaHash = MD5.toHex(formula);
-    
-    dependsOnBy = Optional.empty();
-    dependsOns = new ArrayList<>();
-
-    try {
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
-          .newInstance();
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-        | NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-  }
   
   // if class path changes , then reload.
   static JavaCompiler compiler;
@@ -463,10 +493,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     return byteCodeHash;
   }
 
-  class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
+  static class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
     private final Map<String, ByteArrayJavaFileObject> classFiles = new HashMap<>();
 
-    protected MemoryJavaFileManager(JavaFileManager fileManager) {
+    public MemoryJavaFileManager(JavaFileManager fileManager) {
       super(fileManager);
     }
 
@@ -487,7 +517,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
   }
 
-  class ByteArrayJavaFileObject extends SimpleJavaFileObject {
+  static class ByteArrayJavaFileObject extends SimpleJavaFileObject {
     private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
     protected ByteArrayJavaFileObject(String name, Kind kind) {
@@ -504,7 +534,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
   }
 
-  class MemoryClassLoader extends ClassLoader {
+  static class MemoryClassLoader extends ClassLoader {
     private final Map<String, byte[]> classBytes;
 
     public MemoryClassLoader(Map<String, byte[]> classBytes, ClassLoader parent) {
@@ -588,5 +618,16 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   public void setDependsOnBy(Calculator<?> calculator) {
     dependsOnBy = Optional.of(calculator);
   }
+
+  @Override
+  public void before(CalculationContext calculationContext) {
+    instanceAndByteCodeList.stream().forEach(x -> calculationContext.set(x.object));
+  }
+
+  @Override
+  public void after(CalculationContext calculationContext) {
+  }
+  
+  
 
 }

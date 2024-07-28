@@ -119,7 +119,7 @@ public class FormulaInfoList {
   }
   
   public Stream<String> nameStream(){
-    return infos.stream().map(info->info.formulaName);
+    return infos.stream().map(FormulaInfo::getName);
   }
 
   public static Try<FormulaInfoList> parse(InputStream binaryStream , FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {

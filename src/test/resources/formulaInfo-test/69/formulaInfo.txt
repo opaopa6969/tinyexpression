@@ -1,4 +1,32 @@
 tags:NORMAL
+description:JavaCodeBlockで呼び出しをします
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:69
+calculatorName:callJavaCodeBlock
+var:matchNumber
+dependsOn:
+resultType:float
+formula:
+```java:sample.v1.CheckDigits
+package sample.v1;//version1. if logic updates then update package.
+import org.unlaxer.tinyexpression.CalculationContext;
+
+public class CheckDigits{
+	public boolean check(CalculationContext calculationContext,String target){
+		return target.matches("\\d+");
+	}
+}
+```
+import sample.v1.CheckDigits#checkDigits as checkDigits;
+var $input as string set if not exists 'not number' description='入力値';
+if(external returning as boolean checkDigits($input)){
+  1
+}else{
+  0
+}
+---END_OF_PART---
+tags:NORMAL
 description:最終的な点数をcheckKindとして出力します
 periodStartInclusive:2018-05-01_00:00:00
 periodEndExclusive:2037-05-01_00:00:00
@@ -37,34 +65,6 @@ dependsOn:
 resultType:float
 formula:
 6969
----END_OF_PART---
-tags:NORMAL
-description:JavaCodeBlockで呼び出しをします
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:callJavaCodeBlock
-var:matchNumber
-dependsOn:
-resultType:float
-formula:
-```java:sample.v1.CheckDigits
-package sample.v1;//version1. if logic updates then update package.
-import org.unlaxer.tinyexpression.CalculationContext;
-
-public class CheckDigits{
-	public boolean check(CalculationContext calculationContext,String target){
-		return target.matches("\\d+");
-	}
-}
-```
-import sample.v1.CheckDigits#checkDigits as checkDigits;
-var $input as string set if not exists 'not number' description='入力値';
-if(external returning as boolean checkDigits($input)){
-  1
-}else{
-  0
-}
 ---END_OF_PART---
 #tags:NORMAL
 #description:$nameに代入します

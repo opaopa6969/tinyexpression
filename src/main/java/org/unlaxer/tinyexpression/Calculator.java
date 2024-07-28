@@ -69,7 +69,11 @@ public interface Calculator<T> {
     return current;
   }
 
+  public void before(CalculationContext calculationContext);
+
   public T apply(CalculationContext calculationContext);
+  
+  public void after(CalculationContext calculationContext);
 
   public void setObject(String key, Object object);
 

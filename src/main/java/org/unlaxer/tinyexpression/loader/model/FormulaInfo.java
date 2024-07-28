@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
@@ -107,6 +108,7 @@ public class FormulaInfo{
   @FormulaInfoField(converter = StringsToString.class) public Collection<String> tags;
   
   @FormulaInfoField public String description;
+  public List<ClassNameAndByteCode> classNameAndByteCodeList; 
   public Map<String,String> extraValueByKey;
   public List<String> text;
   private Class<?> calculatorReturningClass;
@@ -129,6 +131,7 @@ public class FormulaInfo{
     extraValueByKey = new LinkedHashMap<>();
     text = new ArrayList<>();
     tags = new LinkedHashSet<>();
+    classNameAndByteCodeList = new ArrayList<>();
     this.additionalFields = additionalFields;
     state = FormulaInfoState.initialized;
   }
@@ -206,7 +209,7 @@ public class FormulaInfo{
   }
   
   public void updateClassName() {
-    className = "Formula_" + formulaName/*checkKind.name()*/; 
+    className = "Formula_" + getName()/*checkKind.name()*/; 
     classNameWithHash = className + "_" + hash.toUpperCase();
   }
   
@@ -216,6 +219,7 @@ public class FormulaInfo{
       //FIXME!  return type
       calculator = new JavaCodeNumberCalculatorV2(
           formulaText , javaCodeText , classNameWithHash ,byteCode, hashByByteCode,
+          classNameAndByteCodeList,
           Thread.currentThread().getContextClassLoader());
       calculator.setObject(FormulaInfo.class.getSimpleName(), this);
       state = FormulaInfoState.calculatorConstructed;
@@ -223,6 +227,10 @@ public class FormulaInfo{
       e.printStackTrace();
       throw new RuntimeException(e);
     }
+  }
+  
+  public String getName() {
+    return formulaName != null ? formulaName : calculatorName;
   }
   
   public enum TagKind {

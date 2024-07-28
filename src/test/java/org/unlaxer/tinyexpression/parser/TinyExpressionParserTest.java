@@ -313,5 +313,10 @@ public class TinyExpressionParserTest extends ParserTestBase{
     String string = TokenPrinter.get(rootToken);
     System.out.println(string);
   }
+  
+  @Test
+  public void testCodes() {
+    
+  }
 
 }
