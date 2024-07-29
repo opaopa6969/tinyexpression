@@ -1,9 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.invoke.MethodHandle;
@@ -18,19 +16,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -40,8 +33,11 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.Name;
 import org.unlaxer.Token;
+import org.unlaxer.compiler.CompileError;
 import org.unlaxer.compiler.CustomClassloaderJavaFileManager;
 import org.unlaxer.compiler.JavaFileManagerContext;
+import org.unlaxer.compiler.MemoryClassLoader;
+import org.unlaxer.compiler.MemoryJavaFileManager;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -205,7 +201,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 
         if (success) {
 
-          MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getClassBytes(), classLoader);
+          MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getBytesByName(), classLoader);
 
           Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
 
@@ -435,68 +431,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   public String byteCodeHash() {
     return byteCodeHash;
   }
-
-  class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
-    private final Map<String, ByteArrayJavaFileObject> classFiles = new HashMap<>();
-
-    protected MemoryJavaFileManager(JavaFileManager fileManager) {
-      super(fileManager);
-    }
-
-    @Override
-    public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind,
-        FileObject sibling) throws IOException {
-      ByteArrayJavaFileObject fileObject = new ByteArrayJavaFileObject(className, kind);
-      classFiles.put(className, fileObject);
-      return fileObject;
-    }
-
-    public Map<String, byte[]> getClassBytes() {
-      Map<String, byte[]> classBytes = new HashMap<>();
-      for (Map.Entry<String, ByteArrayJavaFileObject> entry : classFiles.entrySet()) {
-        classBytes.put(entry.getKey(), entry.getValue().getBytes());
-      }
-      return classBytes;
-    }
-  }
-
-  class ByteArrayJavaFileObject extends SimpleJavaFileObject {
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-    protected ByteArrayJavaFileObject(String name, Kind kind) {
-      super(URI.create("string:///" + name.replace('.', '/') + kind.extension), kind);
-    }
-
-    @Override
-    public OutputStream openOutputStream() throws IOException {
-      return outputStream;
-    }
-
-    public byte[] getBytes() {
-      return outputStream.toByteArray();
-    }
-  }
-
-  class MemoryClassLoader extends ClassLoader {
-    private final Map<String, byte[]> classBytes;
-
-    public MemoryClassLoader(Map<String, byte[]> classBytes, ClassLoader parent) {
-      super(parent);
-      this.classBytes = classBytes;
-    }
-
-    public byte[] getBytes(String name) {
-      return classBytes.get(name);
-    }
-
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-      byte[] bytes = classBytes.get(name);
-      if (bytes == null) {
-        throw new ClassNotFoundException(name);
-      }
-      return defineClass(name, bytes, 0, bytes.length);
-    }
-  }
+  
 
   @Override
   public String className() {

@@ -138,6 +138,8 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
       
+      Token extractCodes = TinyExpressionParser.extractCodesToken(token);
+      
       Token extractImports = TinyExpressionParser.extractImportsToken(token);
       
       Token extractNumberExpression = TinyExpressionParser.extractExpression(token);
@@ -167,7 +169,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       
 //      System.out.println(extractMethodsToken.getPath()); 
-      Token newCreatesOf = token.newCreatesOf(extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
+      Token newCreatesOf = token.newCreatesOf(extractCodes,extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
 //      String path = newCreatesOf.getPath();
 //      System.out.println(path);
       return newCreatesOf;

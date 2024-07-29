@@ -75,16 +75,41 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
    * @return CodeBlock List
    */
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public static List<CodeBlock> extractCodeBlocks(Token thisParserParsed){
+  public static List<CodeBlock> extractCodeBlocksAsModel(Token thisParserParsed){
     
     Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(CodesParser.class);
     
     List<CodeBlock> codeBlocks = childWithParserAsOptional
-      .map(CodesParser::extractCodeBlocks)
+      .map(CodesParser::extractCodeBlocksAsModel)
       .orElseGet(List::of);
     
     return codeBlocks;
   }
+  
+  /**
+   * @param thisParserParsed
+   * @return CodeBlock List
+   */
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List<Token> extractCodes(Token thisParserParsed){
+    
+    Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(CodesParser.class);
+    
+    List<Token> importChildren = childWithParserAsOptional
+      .map(CodesParser::extractCodeBlocks)
+      .orElseGet(List::of);
+    
+    return importChildren;
+  }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractCodesToken(Token thisParserParsed){
+    
+    List<Token> codesChildren = extractCodes(thisParserParsed);
+    Token codes = new Token(TokenKind.consumed, codesChildren, Parser.get(CodesParser.class),0);
+    return codes;
+  }
+
   
   /**
    * @param thisParserParsed

@@ -1,51 +1,35 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
-import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.UnaryOperator;
 
-import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileManager;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.StandardJavaFileManager;
-import javax.tools.ToolProvider;
-
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.Name;
 import org.unlaxer.Token;
-import org.unlaxer.compiler.CustomClassloaderJavaFileManager;
+import org.unlaxer.compiler.ClassAndByteCode;
+import org.unlaxer.compiler.ClassName;
+import org.unlaxer.compiler.CompileContext;
+import org.unlaxer.compiler.CompileError;
 import org.unlaxer.compiler.JavaFileManagerContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.parser.elementary.StartAndEndQuotedParser.SchemeAndIdentifier;
+import org.unlaxer.parser.elementary.SchemeAndIdentifier;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedNumberCalculator;
@@ -99,8 +83,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   public JavaCodeNumberCalculatorV2(String formula, String className, ClassLoader classLoader) throws CompileError {
     this(formula, className, classLoader, null, new JavaFileManagerContext());
   }
-
-
+  
   /**
    * from formula
    * @param formula
@@ -116,9 +99,11 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
     
+    CompileContext compileContext = new CompileContext(classLoader);
+    
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
-
+    
     try {
 
       this.className = className;
@@ -126,7 +111,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
       
-      instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, classLoader);
+      instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, compileContext);
 
 //      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
 //      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
@@ -134,8 +119,9 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       
       classNameWithHash = className + "_" + formulaHash;
       javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
+      
+      ClassName classNameObject = new ClassName(classNameWithHash);
 
-      JavaFileObject javaFileObject = createJavaFileObject(classNameWithHash , javaCode);
 
       if (outputRootDirectory != null) {
         try (BufferedWriter newBufferedWriter = Files
@@ -146,7 +132,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
         }
       }
       
-      Try<ClassAndByteCode> classOrError = compile(javaFileObject, classLoader, classNameWithHash);
+      Try<ClassAndByteCode> classOrError = compileContext.compile(classNameObject,javaCode);
       classOrError.throwIfMatch();
 
       ClassAndByteCode classAndByteCode = classOrError.get();
@@ -286,61 +272,63 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
     
   }
-  private static Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , ClassLoader classLoader , String className){
-    
-    StringWriter output = new StringWriter();
-
-    try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
-        StandardCharsets.UTF_8);
-
-        CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-            classLoader, fileManager);
-
-        MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
-
-      JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
-          null, null, Arrays.asList(javaFileObject));
-
-      boolean success = task.call();
-//      System.out.println("Compilation " + (success ? "succeeded" : "failed"));
-//      System.out.println(output.toString());
-
-      if (success) {
-
-        MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getClassBytes(), classLoader);
-
-        Class<?> clazz = memoryClassLoader.loadClass(className);
-        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, memoryClassLoader.getBytes(className));
-        
-        return Try.immediatesOf(classAndByteCode);
-
-//        operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
+//  private static Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , CompileContext compileContext , ClassName className){
+//    
+//    StringWriter output = new StringWriter();
 //
-//        byteCode = memoryClassLoader.getBytes(classNameWithHash);
-//        byteCodeHash = MD5.toHex(byteCode);
-      } else {
-        return Try.immediatesOf(new CompileError(output.toString()));
-      }
-    }catch (Exception e) {
-      return  Try.immediatesOf(new CompileError(output.toString(),e));
-    }
-  }
+//    try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
+//        StandardCharsets.UTF_8);
+//
+//        CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
+//            compileContext.classLoader, fileManager);
+//
+//        MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
+//
+//      JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
+//          null, null, Arrays.asList(javaFileObject));
+//
+//      boolean success = task.call();
+////      System.out.println("Compilation " + (success ? "succeeded" : "failed"));
+////      System.out.println(output.toString());
+//
+//      if (success) {
+//        
+//        compileContext.putAll(memoryFileManager.getBytesByName());
+//
+////        MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getBytesByName(), compileContext);
+//
+//        Class<?> clazz = compileContext.memoryClassLoader.loadClass(className.fullName());
+//        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, compileContext.memoryClassLoader.getBytes(className.fullName()));
+//        
+//        return Try.immediatesOf(classAndByteCode);
+//
+////        operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
+////
+////        byteCode = memoryClassLoader.getBytes(classNameWithHash);
+////        byteCodeHash = MD5.toHex(byteCode);
+//      } else {
+//        return Try.immediatesOf(new CompileError(output.toString()));
+//      }
+//    }catch (Exception e) {
+//      return  Try.immediatesOf(new CompileError(output.toString(),e));
+//    }
+//  }
 
   
-  private static JavaFileObject createJavaFileObject(String clazzName , String javaSourceCode) {
-    JavaFileObject javaFileObject = new SimpleJavaFileObject(
-        URI.create("string:///" + clazzName + ".java"), JavaFileObject.Kind.SOURCE) {
-      @Override
-      public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-        return javaSourceCode;
-      }
-    };
-    return javaFileObject;
-  }
+//  private static JavaFileObject createJavaFileObject(ClassName className , String javaSourceCode) {
+//    JavaFileObject javaFileObject = new SimpleJavaFileObject(
+//        URI.create("string:///" + className.name() + ".java"), JavaFileObject.Kind.SOURCE) {
+//      @Override
+//      public CharSequence getCharContent(boolean ignoreEncodingErrors) {
+//        return javaSourceCode;
+//      }
+//    };
+//    return javaFileObject;
+//  }
   
   
   
-  static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, ClassLoader classLoader) {
+  static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
     
     List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
     
@@ -351,9 +339,9 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       if(false ==schemeAndIdentifier.scheme.equalsIgnoreCase("java")){
         continue;
       }
-      String className = codeBlock.schemeAndIdentifier.idenitifier;
-      JavaFileObject createJavaFileObject = createJavaFileObject(schemeAndIdentifier.idenitifier , code);
-      Try<ClassAndByteCode> clazzOrError = compile(createJavaFileObject, classLoader, className);
+      ClassName className = new ClassName(codeBlock.schemeAndIdentifier.idenitifier);
+      
+      Try<ClassAndByteCode> clazzOrError = compileContext.compile(className,code);
       clazzOrError.throwIfMatch();
       Class<?> clazz = clazzOrError.get().clazz;
       
@@ -370,24 +358,24 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   }
 
   
-  // if class path changes , then reload.
-  static JavaCompiler compiler;
-  static {
-    reset();
-  }
-
-  private static void reset() {
-    compiler = ToolProvider.getSystemJavaCompiler();
-    if (compiler == null) {
-        try {
-            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
-            Method create = javacTool.getMethod("create");
-            compiler = (JavaCompiler) create.invoke(null);
-        } catch (Exception e) {
-            throw new AssertionError(e);
-        }
-    }
-  }
+//  // if class path changes , then reload.
+//  static JavaCompiler compiler;
+//  static {
+//    reset();
+//  }
+//
+//  private static void reset() {
+//    compiler = ToolProvider.getSystemJavaCompiler();
+//    if (compiler == null) {
+//        try {
+//            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
+//            Method create = javacTool.getMethod("create");
+//            compiler = (JavaCompiler) create.invoke(null);
+//        } catch (Exception e) {
+//            throw new AssertionError(e);
+//        }
+//    }
+//  }
 
 //  private static final Method DEFINE_CLASS_METHOD;
 //  static {
@@ -426,11 +414,11 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 //        }
 //    }
 
-  public static class CustomClassLoader extends ClassLoader {
-    public Class<?> defineClass(String name, byte[] b) {
-      return defineClass(name, b, 0, b.length);
-    }
-  }
+//  public static class CustomClassLoader extends ClassLoader {
+//    public Class<?> defineClass(String name, byte[] b) {
+//      return defineClass(name, b, 0, b.length);
+//    }
+//  }
 
   
 
@@ -491,68 +479,6 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   @Override
   public String byteCodeHash() {
     return byteCodeHash;
-  }
-
-  static class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
-    private final Map<String, ByteArrayJavaFileObject> classFiles = new HashMap<>();
-
-    public MemoryJavaFileManager(JavaFileManager fileManager) {
-      super(fileManager);
-    }
-
-    @Override
-    public JavaFileObject getJavaFileForOutput(Location location, String className, JavaFileObject.Kind kind,
-        FileObject sibling) throws IOException {
-      ByteArrayJavaFileObject fileObject = new ByteArrayJavaFileObject(className, kind);
-      classFiles.put(className, fileObject);
-      return fileObject;
-    }
-
-    public Map<String, byte[]> getClassBytes() {
-      Map<String, byte[]> classBytes = new HashMap<>();
-      for (Map.Entry<String, ByteArrayJavaFileObject> entry : classFiles.entrySet()) {
-        classBytes.put(entry.getKey(), entry.getValue().getBytes());
-      }
-      return classBytes;
-    }
-  }
-
-  static class ByteArrayJavaFileObject extends SimpleJavaFileObject {
-    private final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-    protected ByteArrayJavaFileObject(String name, Kind kind) {
-      super(URI.create("string:///" + name.replace('.', '/') + kind.extension), kind);
-    }
-
-    @Override
-    public OutputStream openOutputStream() throws IOException {
-      return outputStream;
-    }
-
-    public byte[] getBytes() {
-      return outputStream.toByteArray();
-    }
-  }
-
-  static class MemoryClassLoader extends ClassLoader {
-    private final Map<String, byte[]> classBytes;
-
-    public MemoryClassLoader(Map<String, byte[]> classBytes, ClassLoader parent) {
-      super(parent);
-      this.classBytes = classBytes;
-    }
-
-    public byte[] getBytes(String name) {
-      return classBytes.get(name);
-    }
-
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-      byte[] bytes = classBytes.get(name);
-      if (bytes == null) {
-        throw new ClassNotFoundException(name);
-      }
-      return defineClass(name, bytes, 0, bytes.length);
-    }
   }
 
   @Override
@@ -627,7 +553,5 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   @Override
   public void after(CalculationContext calculationContext) {
   }
-  
-  
 
 }

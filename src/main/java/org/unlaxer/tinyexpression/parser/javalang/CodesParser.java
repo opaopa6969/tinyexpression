@@ -24,7 +24,14 @@ public class CodesParser extends LazyZeroOrMore{
   }
   
   @TokenExtractor
-  public static List<CodeBlock> extractCodeBlocks(Token thisParserParsed){
+  public static List<CodeBlock> extractCodeBlocksAsModel(Token thisParserParsed){
+    return thisParserParsed.filteredChildren.stream()
+      .map(CodeParser::extractCodeBlockAsModel)
+      .collect(Collectors.toList());
+  }
+  
+  @TokenExtractor
+  public static List<Token> extractCodeBlocks(Token thisParserParsed){
     return thisParserParsed.filteredChildren.stream()
       .map(CodeParser::extractCodeBlock)
       .collect(Collectors.toList());

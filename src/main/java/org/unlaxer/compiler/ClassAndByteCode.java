@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.evaluator.javacode;
+package org.unlaxer.compiler;
 
 public class ClassAndByteCode{
   public final Class<?> clazz;

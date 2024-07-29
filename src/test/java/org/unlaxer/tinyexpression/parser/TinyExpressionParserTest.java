@@ -317,6 +317,37 @@ public class TinyExpressionParserTest extends ParserTestBase{
   @Test
   public void testCodes() {
     
+    setLevel(OutputLevel.mostDetail);
+    
+    TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
+
+    String formula= """
+```java:sample.v1.CheckDigits
+package sample.v1;//version1. if logic updates then update package.
+import org.unlaxer.tinyexpression.CalculationContext;
+
+public class CheckDigits{
+  public boolean check(CalculationContext calculationContext,String target){
+    return target.matches("\\d+");
+  }
+}
+```
+import sample.v1.CheckDigits#checkDigits as checkDigits;
+var $input as string set if not exists 'not number' description='入力値';
+if(external returning as boolean checkDigits($input)){
+  1
+}else{
+  0
+}
+""";
+    
+    System.out.println(formula);
+    
+    TestResult testAllMatch = testAllMatch(tinyExpressionParser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
   }
 
 }

@@ -36,7 +36,7 @@ public class TinyExpressionTokens{
       throw new IllegalArgumentException();
     }
     this.tinyExpressionToken = tinyExpressionToken;
-    codeBlocks = TinyExpressionParser.extractCodeBlocks(tinyExpressionToken);
+    codeBlocks = TinyExpressionParser.extractCodeBlocksAsModel(tinyExpressionToken);
     importTokens = TinyExpressionParser.extractImports(tinyExpressionToken);
     expressionToken = TinyExpressionParser.extractExpressionWithAfterReduced(tinyExpressionToken);
     
