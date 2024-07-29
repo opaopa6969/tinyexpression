@@ -26,6 +26,7 @@ import org.unlaxer.compiler.ClassAndByteCode;
 import org.unlaxer.compiler.ClassName;
 import org.unlaxer.compiler.CompileContext;
 import org.unlaxer.compiler.CompileError;
+import org.unlaxer.compiler.InstanceAndByteCode;
 import org.unlaxer.compiler.JavaFileManagerContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.Parser;
@@ -272,60 +273,6 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     }
     
   }
-//  private static Try<ClassAndByteCode> compile(JavaFileObject javaFileObject , CompileContext compileContext , ClassName className){
-//    
-//    StringWriter output = new StringWriter();
-//
-//    try (StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
-//        StandardCharsets.UTF_8);
-//
-//        CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-//            compileContext.classLoader, fileManager);
-//
-//        MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
-//
-//      JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
-//          null, null, Arrays.asList(javaFileObject));
-//
-//      boolean success = task.call();
-////      System.out.println("Compilation " + (success ? "succeeded" : "failed"));
-////      System.out.println(output.toString());
-//
-//      if (success) {
-//        
-//        compileContext.putAll(memoryFileManager.getBytesByName());
-//
-////        MemoryClassLoader memoryClassLoader = new MemoryClassLoader(memoryFileManager.getBytesByName(), compileContext);
-//
-//        Class<?> clazz = compileContext.memoryClassLoader.loadClass(className.fullName());
-//        ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz, compileContext.memoryClassLoader.getBytes(className.fullName()));
-//        
-//        return Try.immediatesOf(classAndByteCode);
-//
-////        operator = (TokenBaseOperator<CalculationContext, Float>) clazz.getDeclaredConstructor().newInstance();
-////
-////        byteCode = memoryClassLoader.getBytes(classNameWithHash);
-////        byteCodeHash = MD5.toHex(byteCode);
-//      } else {
-//        return Try.immediatesOf(new CompileError(output.toString()));
-//      }
-//    }catch (Exception e) {
-//      return  Try.immediatesOf(new CompileError(output.toString(),e));
-//    }
-//  }
-
-  
-//  private static JavaFileObject createJavaFileObject(ClassName className , String javaSourceCode) {
-//    JavaFileObject javaFileObject = new SimpleJavaFileObject(
-//        URI.create("string:///" + className.name() + ".java"), JavaFileObject.Kind.SOURCE) {
-//      @Override
-//      public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-//        return javaSourceCode;
-//      }
-//    };
-//    return javaFileObject;
-//  }
-  
   
   
   static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
@@ -357,70 +304,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
     return instanceAndByteCodeList;
   }
 
-  
-//  // if class path changes , then reload.
-//  static JavaCompiler compiler;
-//  static {
-//    reset();
-//  }
-//
-//  private static void reset() {
-//    compiler = ToolProvider.getSystemJavaCompiler();
-//    if (compiler == null) {
-//        try {
-//            Class<?> javacTool = Class.forName("com.sun.tools.javac.api.JavacTool");
-//            Method create = javacTool.getMethod("create");
-//            compiler = (JavaCompiler) create.invoke(null);
-//        } catch (Exception e) {
-//            throw new AssertionError(e);
-//        }
-//    }
-//  }
-
-//  private static final Method DEFINE_CLASS_METHOD;
-//  static {
-//      try {
-//          Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
-//          theUnsafe.setAccessible(true);
-//          Unsafe u = (Unsafe) theUnsafe.get(null);
-//          DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
-//          try {
-//              Field f = AccessibleObject.class.getDeclaredField("override");
-//              long offset = u.objectFieldOffset(f);
-//              u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
-//          } catch (NoSuchFieldException e) {
-//              DEFINE_CLASS_METHOD.setAccessible(true);
-//          }
-//      } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
-//          throw new AssertionError(e);
-//      }
-//  }
-
-  
   @SuppressWarnings("rawtypes")
   public static Class defineClass(@NotNull String className, @NotNull byte[] bytes) {
     return defineClass(Thread.currentThread().getContextClassLoader(), className, bytes);
   }
-
-//  public static Class defineClass(ClassLoader classLoader, @NotNull String className, @NotNull byte[] bytes) {
-////      return new CustomClassLoader().defineClass(className, bytes);
-//        try {
-//            return (Class) DEFINE_CLASS_METHOD.invoke(classLoader, className, bytes, 0, bytes.length);
-//        } catch (IllegalAccessException e) {
-//            throw new AssertionError(e);
-//        } catch (InvocationTargetException e) {
-//            //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
-//            throw new AssertionError(e.getCause());
-//        }
-//    }
-
-//  public static class CustomClassLoader extends ClassLoader {
-//    public Class<?> defineClass(String name, byte[] b) {
-//      return defineClass(name, b, 0, b.length);
-//    }
-//  }
-
-  
 
   static boolean loaded(ClassLoader classLoader, String className) {
     try {

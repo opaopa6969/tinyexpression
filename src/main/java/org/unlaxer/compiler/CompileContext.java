@@ -113,4 +113,36 @@ public class CompileContext implements Closeable{
     Unchecked.run(()->customClassloaderJavaFileManager.close());
     Unchecked.run(()->memoryFileManager.close());
   }
+  
+//private static final Method DEFINE_CLASS_METHOD;
+//static {
+//    try {
+//        Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+//        theUnsafe.setAccessible(true);
+//        Unsafe u = (Unsafe) theUnsafe.get(null);
+//        DEFINE_CLASS_METHOD = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class, int.class);
+//        try {
+//            Field f = AccessibleObject.class.getDeclaredField("override");
+//            long offset = u.objectFieldOffset(f);
+//            u.putBoolean(DEFINE_CLASS_METHOD, offset, true);
+//        } catch (NoSuchFieldException e) {
+//            DEFINE_CLASS_METHOD.setAccessible(true);
+//        }
+//    } catch (NoSuchMethodException | IllegalAccessException | NoSuchFieldException e) {
+//        throw new AssertionError(e);
+//    }
+//}
+
+//public static Class defineClass(ClassLoader classLoader, @NotNull String className, @NotNull byte[] bytes) {
+////return new CustomClassLoader().defineClass(className, bytes);
+//try {
+//    return (Class) DEFINE_CLASS_METHOD.invoke(classLoader, className, bytes, 0, bytes.length);
+//} catch (IllegalAccessException e) {
+//    throw new AssertionError(e);
+//} catch (InvocationTargetException e) {
+//    //noinspection ThrowInsideCatchBlockWhichIgnoresCaughtException
+//    throw new AssertionError(e.getCause());
+//}
+//}
+
 }
