@@ -80,14 +80,14 @@ public class BooleanBuilder implements TokenCodeBuilder {
 		if(parser instanceof NotBooleanExpressionParser) {
 			
 			builder.append("(false ==(");
-			build(builder , token.filteredChildren.get(0) , tinyExpressionTokens);
+			BooleanExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0) , tinyExpressionTokens);
 			builder.append("))");
 				
 		}else if(parser instanceof ParenthesesParser){
 		
 			Token parenthesesed = ParenthesesParser.getParenthesesed(token);
 			builder.append("(");
-			build(builder , parenthesesed , tinyExpressionTokens);
+			BooleanExpressionBuilder.SINGLETON.build(builder , parenthesesed , tinyExpressionTokens);
 			builder.append(")");
 			
 		
@@ -176,10 +176,10 @@ public class BooleanBuilder implements TokenCodeBuilder {
       BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
 
       builder.append(" ? ").n().incTab();
-      build(builder, factor1 , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
 
       builder.append(":").n();
-      build(builder, factor2 , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
 
       builder.decTab();
 
@@ -197,7 +197,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
       BooleanCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
       builder.n();
-      build(builder, defaultCaseFactor , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, defaultCaseFactor , tinyExpressionTokens);
 
       builder.append(")");
       builder.decTab();

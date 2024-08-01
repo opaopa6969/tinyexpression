@@ -121,7 +121,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		setLevel(OutputLevel.detail);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		assertTrue(calc(context,"if(true|true){10}else{0}",new BigDecimal("10")));
+    assertTrue(calc(context,"if(not(true|1==1)){10}else{0}",new BigDecimal("0")));
+    assertTrue(calc(context,"if(not(false|true)){10}else{0}",new BigDecimal("0")));
+    assertTrue(calc(context,"if(not(true|false)){10}else{0}",new BigDecimal("0")));
+    assertTrue(calc(context,"if(not(false|false)){10}else{0}",new BigDecimal("10")));
+    assertTrue(calc(context,"if(true|true){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(false|true){10}else{0}",new BigDecimal("10")));
 		assertTrue(calc(context,"if(false|false){10}else{0}",new BigDecimal("0")));
 		assertTrue(calc(context,"if(true|true|false){10}else{0}",new BigDecimal("10")));
