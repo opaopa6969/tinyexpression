@@ -3,13 +3,17 @@ package org.unlaxer.compiler;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
+
+import net.arnx.jsonic.JSON;
 
 /*
  * modified and repackage below sources for java9 and j2ee container
@@ -99,7 +103,8 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	@Override
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds,
 			boolean recurse) throws IOException {
-
+	  
+	  
 		if (javaFileManagerContext.matchForStandardFileManager.test(location)) {
 
 			return standardFileManager.list(location, packageName, kinds, recurse);
@@ -108,7 +113,10 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 			if (packageName.startsWith("java.")) {// a hack to let standard manager handle locations like "java.lang" or "java.util". Prob would make
 				return standardFileManager.list(location, packageName, kinds, recurse);
 			} else {
-				return finder.find(packageName);
+			  System.out.println("pacakge:" + packageName + "→" + location);
+				List<JavaFileObject> list = finder.find(packageName);
+				System.out.println(toString(list));
+        return list;
 			}
 		}
 		return Collections.emptyList();
@@ -134,5 +142,12 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 
 	public String inferModuleName(Location location) throws IOException {
 		return standardFileManager.inferModuleName(location);
+	}
+	
+	static String toString(List<JavaFileObject> javaFiles) {
+	  String collect = javaFiles.stream()
+	    .map(JavaFileObject::getName)
+	    .collect(Collectors.joining(","));
+	  return collect;
 	}
 }

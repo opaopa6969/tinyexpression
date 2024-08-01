@@ -7,9 +7,11 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -29,14 +31,21 @@ public class CompileContext implements Closeable{
   
   final CustomClassloaderJavaFileManager customClassloaderJavaFileManager;
   final MemoryJavaFileManager memoryFileManager;
+  
+  final Path outputPath;
 
   public CompileContext(ClassLoader classLoader) {
+    this(classLoader,null);
+  }
+  
+  public CompileContext(ClassLoader classLoader,Path outputPath) {
     super();
     this.memoryClassLoader = new MemoryClassLoader(classLoader);
     this.classLoader = classLoader;
+    this.outputPath = outputPath;
     
     customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-        classLoader, fileManager);
+        memoryClassLoader, fileManager);
     memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);
   }
 
@@ -63,8 +72,6 @@ public class CompileContext implements Closeable{
     }
   }
 
-  
-
   public Try<ClassAndByteCode> compile(ClassName className , String javaSourceCode) {
     
     JavaFileObject javaFileObject = createJavaFileObject(className, javaSourceCode);
@@ -73,7 +80,8 @@ public class CompileContext implements Closeable{
 
     try {
 
-      JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
+      JavaCompiler.CompilationTask task = compiler.getTask(
+          new PrintWriter(output), memoryFileManager, null,
           null, null, Arrays.asList(javaFileObject));
 
       boolean success = task.call();
@@ -113,6 +121,12 @@ public class CompileContext implements Closeable{
     Unchecked.run(()->customClassloaderJavaFileManager.close());
     Unchecked.run(()->memoryFileManager.close());
   }
+  
+  public Optional<Path> outputPath(){
+    
+    return Optional.ofNullable(outputPath);
+  }
+  
   
 //private static final Method DEFINE_CLASS_METHOD;
 //static {
