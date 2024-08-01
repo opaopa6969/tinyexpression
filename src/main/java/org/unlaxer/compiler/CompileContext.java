@@ -1,9 +1,9 @@
 package org.unlaxer.compiler;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
@@ -21,7 +21,6 @@ import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
-import org.unlaxer.util.IOUtils;
 import org.unlaxer.util.Try;
 import org.unlaxer.util.function.Unchecked;
 
@@ -120,20 +119,14 @@ public class CompileContext implements Closeable{
   
   public static JavaFileObject createJavaFileObjectWithClass(ClassName className , byte[] bytes) {
     
-    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    
-    
-    
     JavaFileObject javaFileObject = new SimpleJavaFileObject(
         URI.create("string:///" + className.name() + ".class"), JavaFileObject.Kind.CLASS) {
 
-      @Override
-      public ByteArrayOutputStream openOutputStream() throws IOException {
-        
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-          return outputStream;
-      }
-
+          @Override
+          public InputStream openInputStream() throws IOException {
+            
+            return new ByteArrayInputStream(bytes);
+          }
 
     };
     return javaFileObject;
