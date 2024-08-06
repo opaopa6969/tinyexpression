@@ -13,8 +13,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 
-import net.arnx.jsonic.JSON;
-
 /*
  * modified and repackage below sources for java9 and j2ee container
  * https://atamur.blogspot.com/2009/10/using-built-in-javacompiler-with-custom.html
@@ -28,10 +26,6 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	private final StandardJavaFileManager standardFileManager;
 	private final PackageInternalsFinder finder;
 	private final JavaFileManagerContext javaFileManagerContext;
-
-	public CustomClassloaderJavaFileManager(ClassLoader classLoader, StandardJavaFileManager standardFileManager) {
-		this(classLoader, standardFileManager, new JavaFileManagerContext());
-	}
 
 	public CustomClassloaderJavaFileManager(ClassLoader classLoader, StandardJavaFileManager standardFileManager,
 			JavaFileManagerContext javaFileManagerContext) {
@@ -51,6 +45,7 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 		if (file instanceof CustomJavaFileObject) {
 			return ((CustomJavaFileObject) file).binaryName();
 		}
+		// standard expects PathFileObject
 		return standardFileManager.inferBinaryName(location, file);
 	}
 
@@ -104,18 +99,45 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds,
 			boolean recurse) throws IOException {
 	  
+	  if(location.getName().contains("http")) {
+	    System.out.println(packageName);
+	  }
 	  
 		if (javaFileManagerContext.matchForStandardFileManager.test(location)) {
 
-			return standardFileManager.list(location, packageName, kinds, recurse);
+			Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
+			list.forEach(c->{
+        if(c.toString().contains("ValueBased")) {
+          
+          System.out.println(packageName);
+        }
+      });
+			
+			return list;
 
 		} else if (location == StandardLocation.CLASS_PATH && kinds.contains(JavaFileObject.Kind.CLASS)) {
 			if (packageName.startsWith("java.")) {// a hack to let standard manager handle locations like "java.lang" or "java.util". Prob would make
-				return standardFileManager.list(location, packageName, kinds, recurse);
+			  Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
+			  list.forEach(c->{
+	        if(c.toString().contains("ValueBased")) {
+	          
+	          System.out.println(packageName);
+	        }
+	      });
+			  return list;
 			} else {
 			  System.out.println("pacakge:" + packageName + "→" + location);
 				List<JavaFileObject> list = finder.find(packageName);
+				
+				
 				System.out.println(toString(list));
+				
+				list.forEach(c->{
+	        if(c.toString().contains("ValueBased")) {
+	          
+	          System.out.println(packageName);
+	        }
+	      });
         return list;
 			}
 		}
@@ -147,7 +169,7 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	static String toString(List<JavaFileObject> javaFiles) {
 	  String collect = javaFiles.stream()
 	    .map(JavaFileObject::getName)
-	    .collect(Collectors.joining(","));
+	    .collect(Collectors.joining("\n"));
 	  return collect;
 	}
 }

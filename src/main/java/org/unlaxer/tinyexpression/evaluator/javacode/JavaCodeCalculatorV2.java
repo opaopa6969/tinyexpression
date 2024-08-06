@@ -188,7 +188,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
           StandardCharsets.UTF_8);
 
           CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-              classLoader, fileManager);
+              classLoader, fileManager , javaFileManagerContext);
 
           MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
 

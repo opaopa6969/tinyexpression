@@ -100,7 +100,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
     
-    CompileContext compileContext = new CompileContext(classLoader);
+    CompileContext compileContext = new CompileContext(classLoader,javaFileManagerContext);
     
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();

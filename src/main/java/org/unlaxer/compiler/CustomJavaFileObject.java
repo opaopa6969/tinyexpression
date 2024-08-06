@@ -75,7 +75,7 @@ class CustomJavaFileObject implements JavaFileObject {
   return Kind.CLASS;
  }
 
- @Override // copied from SImpleJavaFileManager
+ @Override // copied from SimpleJavaFileManager
  public boolean isNameCompatible(String simpleName, Kind kind) {
   String baseName = simpleName + kind.extension;
   return kind.equals(getKind())

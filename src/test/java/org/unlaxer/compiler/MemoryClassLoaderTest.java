@@ -35,10 +35,12 @@ public class ClassUser{
     
     ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
     
+    JavaFileManagerContext javaFileManagerContext = new JavaFileManagerContext();
+    
     MemoryClassLoader memoryClassLoader = new MemoryClassLoader(contextClassLoader);
     
     
-    try (CompileContext compileContext = new CompileContext(memoryClassLoader)) {
+    try (CompileContext compileContext = new CompileContext(memoryClassLoader,javaFileManagerContext)) {
       ClassName className1 = new ClassName("CheckDigits");
       
       Try<ClassAndByteCode> compile1 = compileContext.compile(className1,code1);

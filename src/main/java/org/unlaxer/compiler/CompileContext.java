@@ -1,23 +1,21 @@
 package org.unlaxer.compiler;
 
-import java.io.ByteArrayInputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
@@ -33,22 +31,27 @@ public class CompileContext implements Closeable{
   
   final CustomClassloaderJavaFileManager customClassloaderJavaFileManager;
   final MemoryJavaFileManager memoryFileManager;
+  final JavaFileManagerContext javaFileManagerContext;
   
   final Path outputPath;
+  
+  final Set<JavaFileObject> compiledClassJavaFileObjects;
 
-  public CompileContext(ClassLoader classLoader) {
-    this(classLoader,null);
+  public CompileContext(ClassLoader classLoader, JavaFileManagerContext javaFileManagerContext) {
+    this(classLoader,null,javaFileManagerContext);
   }
   
-  public CompileContext(ClassLoader classLoader,Path outputPath) {
+  public CompileContext(ClassLoader classLoader,Path outputPath , JavaFileManagerContext javaFileManagerContext) {
     super();
     this.memoryClassLoader = new MemoryClassLoader(classLoader);
     this.classLoader = classLoader;
     this.outputPath = outputPath;
+    this.javaFileManagerContext = javaFileManagerContext;
     
     customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
-        memoryClassLoader, fileManager);
+        memoryClassLoader, fileManager , javaFileManagerContext);
     memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);
+    compiledClassJavaFileObjects = new HashSet<>();
   }
 
   public void putAll(Map<? extends String, ? extends byte[]> m) {
@@ -76,7 +79,7 @@ public class CompileContext implements Closeable{
 
   public Try<ClassAndByteCode> compile(ClassName className , String javaSourceCode) {
     
-    JavaFileObject javaFileObject = createJavaFileObject(className, javaSourceCode);
+    JavaFileObject javaFileObjectForJava = new MemoryJavaFileObjectForJava(className, javaSourceCode);
 
     StringWriter output = new StringWriter();
 
@@ -84,7 +87,7 @@ public class CompileContext implements Closeable{
 
       JavaCompiler.CompilationTask task = compiler.getTask(
           new PrintWriter(output), memoryFileManager, null,
-          null, null, Arrays.asList(javaFileObject));
+          null, null, Arrays.asList(javaFileObjectForJava));
 
       boolean success = task.call();
 
@@ -93,9 +96,12 @@ public class CompileContext implements Closeable{
         putAll(memoryFileManager.getBytesByName());
 
         Class<?> clazz = memoryClassLoader.loadClass(className.fullName());
+        byte[] bytes = memoryClassLoader.getBytes(className.fullName());
         ClassAndByteCode classAndByteCode = new ClassAndByteCode(clazz,
-            memoryClassLoader.getBytes(className.fullName()));
+            bytes);
 
+        memoryFileManager.setJavaFileOBjectForClass(className.fullName,new MemoryJavaFileObjectForClass(className, bytes));
+        
         return Try.immediatesOf(classAndByteCode);
 
       } else {
@@ -106,32 +112,6 @@ public class CompileContext implements Closeable{
     }
   }
   
-  public static JavaFileObject createJavaFileObject(ClassName className , String javaSourceCode) {
-    JavaFileObject javaFileObject = new SimpleJavaFileObject(
-        URI.create("string:///" + className.name() + ".java"), JavaFileObject.Kind.SOURCE) {
-      @Override
-      public CharSequence getCharContent(boolean ignoreEncodingErrors) {
-        return javaSourceCode;
-      }
-    };
-    return javaFileObject;
-  }
-  
-  public static JavaFileObject createJavaFileObjectWithClass(ClassName className , byte[] bytes) {
-    
-    JavaFileObject javaFileObject = new SimpleJavaFileObject(
-        URI.create("string:///" + className.name() + ".class"), JavaFileObject.Kind.CLASS) {
-
-          @Override
-          public InputStream openInputStream() throws IOException {
-            
-            return new ByteArrayInputStream(bytes);
-          }
-
-    };
-    return javaFileObject;
-  }
-
   @Override
   public void close() throws IOException {
     Unchecked.run(()->fileManager.close());
