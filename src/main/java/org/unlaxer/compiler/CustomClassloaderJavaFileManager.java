@@ -99,45 +99,21 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds,
 			boolean recurse) throws IOException {
 	  
-	  if(location.getName().contains("http")) {
-	    System.out.println(packageName);
-	  }
-	  
+    System.out.println(location.getName());
+
 		if (javaFileManagerContext.matchForStandardFileManager.test(location)) {
 
 			Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
-			list.forEach(c->{
-        if(c.toString().contains("ValueBased")) {
-          
-          System.out.println(packageName);
-        }
-      });
 			
 			return list;
 
 		} else if (location == StandardLocation.CLASS_PATH && kinds.contains(JavaFileObject.Kind.CLASS)) {
 			if (packageName.startsWith("java.")) {// a hack to let standard manager handle locations like "java.lang" or "java.util". Prob would make
 			  Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
-			  list.forEach(c->{
-	        if(c.toString().contains("ValueBased")) {
-	          
-	          System.out.println(packageName);
-	        }
-	      });
 			  return list;
 			} else {
-			  System.out.println("pacakge:" + packageName + "→" + location);
+//			  System.out.println("pacakge:" + packageName + "→" + location);
 				List<JavaFileObject> list = finder.find(packageName);
-				
-				
-				System.out.println(toString(list));
-				
-				list.forEach(c->{
-	        if(c.toString().contains("ValueBased")) {
-	          
-	          System.out.println(packageName);
-	        }
-	      });
         return list;
 			}
 		}

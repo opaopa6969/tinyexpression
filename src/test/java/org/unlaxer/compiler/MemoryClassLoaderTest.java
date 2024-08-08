@@ -1,6 +1,7 @@
 package org.unlaxer.compiler;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.InvocationTargetException;
 
 import org.junit.Test;
@@ -46,6 +47,11 @@ public class ClassUser{
       Try<ClassAndByteCode> compile1 = compileContext.compile(className1,code1);
       
       ClassAndByteCode classAndByteCode = compile1.get();
+//      
+//      Iterable<JavaFileObject> list = compileContext.memoryFileManager.list(Location.valueOf("CheckDigits"), "", 
+//          Set.of(javax.tools.JavaFileObject.Kind.CLASS), true);
+//      
+//      list.forEach(System.out::println);
       
       ClassName className2 = new ClassName("v1.ClassUser");
       
@@ -54,6 +60,7 @@ public class ClassUser{
       ClassAndByteCode classAndByteCode2 = compile2.get();
     } catch (IOException e) {
       e.printStackTrace();
+      throw new UncheckedIOException(e);
     }
     
   }

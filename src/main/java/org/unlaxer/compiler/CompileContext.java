@@ -26,12 +26,12 @@ public class CompileContext implements Closeable{
 
   public final MemoryClassLoader memoryClassLoader;
   public final ClassLoader classLoader;
-  final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
+  public final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(),
       StandardCharsets.UTF_8);
   
-  final CustomClassloaderJavaFileManager customClassloaderJavaFileManager;
-  final MemoryJavaFileManager memoryFileManager;
-  final JavaFileManagerContext javaFileManagerContext;
+  public final CustomClassloaderJavaFileManager customClassloaderJavaFileManager;
+  public final MemoryJavaFileManager memoryFileManager;
+  public final JavaFileManagerContext javaFileManagerContext;
   
   final Path outputPath;
   
@@ -50,7 +50,7 @@ public class CompileContext implements Closeable{
     
     customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
         memoryClassLoader, fileManager , javaFileManagerContext);
-    memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);
+    memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager , javaFileManagerContext);
     compiledClassJavaFileObjects = new HashSet<>();
   }
 
@@ -64,6 +64,7 @@ public class CompileContext implements Closeable{
     reset();
   }
 
+  // this code import from OpenHFT/Java-Runtime-Compiler
   private static void reset() {
     compiler = ToolProvider.getSystemJavaCompiler();
     if (compiler == null) {

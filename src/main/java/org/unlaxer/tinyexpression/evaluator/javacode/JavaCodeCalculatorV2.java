@@ -190,7 +190,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
           CustomClassloaderJavaFileManager customClassloaderJavaFileManager = new CustomClassloaderJavaFileManager(
               classLoader, fileManager , javaFileManagerContext);
 
-          MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager);) {
+          MemoryJavaFileManager memoryFileManager = new MemoryJavaFileManager(customClassloaderJavaFileManager , javaFileManagerContext);) {
 
         JavaCompiler.CompilationTask task = compiler.getTask(new PrintWriter(output), memoryFileManager, null,
             null, null, Arrays.asList(javaFileObject));

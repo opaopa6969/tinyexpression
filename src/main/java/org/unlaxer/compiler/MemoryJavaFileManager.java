@@ -16,9 +16,12 @@ import javax.tools.JavaFileObject.Kind;
 public class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileManager> {
   private final Map<String, ByteArrayJavaFileObject> outputFileByClassName = new HashMap<>();
   private final Map<String, MemoryJavaFileObjectForClass> inputFileByClassName = new HashMap<>();
+  
+  private final JavaFileManagerContext javaFileManagerContext;
 
-  public MemoryJavaFileManager(JavaFileManager fileManager) {
+  public MemoryJavaFileManager(JavaFileManager fileManager , JavaFileManagerContext javaFileManagerContext) {
     super(fileManager);
+    this.javaFileManagerContext = javaFileManagerContext;
   }
 
   @Override
@@ -55,12 +58,16 @@ public class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileMan
   @Override
   public Iterable<JavaFileObject> list(Location location, String packageName, Set<Kind> kinds, boolean recurse)
       throws IOException {
+    System.out.println(location.getName());
     
-    if(packageName.contains("jdk.zipfs")) {
-      System.out.println("jdk.zipfs");
+    if(false == javaFileManagerContext.matchForOtherFileManager.test(location)) {
+      return List.of();
     }
     
-
+    
+    if(location.getName().contains("CheckDigits")) {
+      System.out.println("CheckDigits");
+    }
     
     List<JavaFileObject> result = new ArrayList<JavaFileObject>();
     
@@ -73,16 +80,16 @@ public class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileMan
     super.list(location, packageName, kinds, recurse)
       .forEach(result::add);
     
-    if(result.size()>0) {
-      System.out.println(result.size());
-    }
+//    if(result.size()>0) {
+//      System.out.println(result.size());
+//    }
     
-    result.forEach(c->{
-      if(c.toUri().toASCIIString().contains("jdk")) {
-        
-        System.out.println(packageName);
-      }
-    });
+//    result.forEach(c->{
+//      if(c.toUri().toASCIIString().contains("jdk")) {
+//        
+//        System.out.println("packageName:"+packageName);
+//      }
+//    });
     
     return result;
   }
