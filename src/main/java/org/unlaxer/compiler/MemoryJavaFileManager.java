@@ -58,15 +58,10 @@ public class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileMan
   @Override
   public Iterable<JavaFileObject> list(Location location, String packageName, Set<Kind> kinds, boolean recurse)
       throws IOException {
-    System.out.println(location.getName());
+//    System.out.println("☆彡☆彡☆彡---- "+packageName+" ----☆彡☆彡☆彡"+location.getName());
     
     if(false == javaFileManagerContext.matchForOtherFileManager.test(location)) {
       return List.of();
-    }
-    
-    
-    if(location.getName().contains("CheckDigits")) {
-      System.out.println("CheckDigits");
     }
     
     List<JavaFileObject> result = new ArrayList<JavaFileObject>();
@@ -90,7 +85,7 @@ public class MemoryJavaFileManager extends ForwardingJavaFileManager<JavaFileMan
 //        System.out.println("packageName:"+packageName);
 //      }
 //    });
-    
+//    System.out.println("◇◇◇◇◇◇;" + result.size() +"/"+ inputFileByClassName.size());
     return result;
   }
 }

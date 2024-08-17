@@ -99,7 +99,7 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds,
 			boolean recurse) throws IOException {
 	  
-    System.out.println(location.getName());
+//    System.out.println(location.getName());
 
 		if (javaFileManagerContext.matchForStandardFileManager.test(location)) {
 
