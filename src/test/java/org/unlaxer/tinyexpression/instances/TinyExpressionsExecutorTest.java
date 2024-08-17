@@ -174,6 +174,8 @@ public class TinyExpressionsExecutorTest {
     ;
     CalculationContext calculationContext = CalculationContext.newConcurrentContext();
     
+    calculationContext.set("input", "1234");
+    
     List<CalculationResult> execute = tinyExpressionsExecutor.execute(
         TenantID.create(69), 
         calculationContext,
@@ -188,9 +190,13 @@ public class TinyExpressionsExecutorTest {
     CalculationResult calculationResult = execute.get(0);
     System.out.println(calculationContext.getValue("sqrt"));
     System.out.println(calculationResult.result);
+    System.out.println(calculationContext.getValue("matchNumber"));
+    System.out.println(calculationContext.getValue("callJavaCodeBlock"));
+    
     
     assertEquals("1.4142135", String.valueOf(calculationResult.result));
     assertEquals("6969", String.valueOf((int)checkResult.theScore));
+    assertEquals("1.0", String.valueOf(calculationContext.getValue("matchNumber").orElseThrow()));
     
   }
   

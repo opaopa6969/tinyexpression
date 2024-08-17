@@ -52,7 +52,10 @@ public class TinyExpressionsExecutor {
         Throwable throwable;
         try {
           
+          calculator.before(calculationContext);
           result = calculator.apply(calculationContext);
+          calculator.after(calculationContext);
+
           FormulaInfo formulaInfo = FormulaInfo.get(calculator);
           
           if(result instanceof Number) {
