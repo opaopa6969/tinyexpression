@@ -19,6 +19,7 @@ import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface GeneralJavaClassCreator{
+  
   default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken, ResultType resultType) {
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;

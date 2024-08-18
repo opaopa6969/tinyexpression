@@ -14,6 +14,7 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
+import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.util.StringUtils;
@@ -69,7 +70,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "periodEndExclusive", (value)->formulaInfo.periodEndExclusive = value);
         match |= set(keyValue, "calculatorName", (value)->formulaInfo.calculatorName = value);
         match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
-        match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = value);
+        match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = new ResultType(value));
 //        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
@@ -100,6 +101,10 @@ public class FormulaInfoParser extends LazyOneOrMore{
         }
       }
     }
+    if(formulaInfo.resultType == null) {
+      formulaInfo.resultType = new ResultType("float");
+    }
+    
     boolean formulaExists = StringUtils.isNoneBlank(formulaInfo.formulaText);
     boolean needsUpdate = formulaInfo.needsUpdate();
     if(needsUpdate && formulaExists) {

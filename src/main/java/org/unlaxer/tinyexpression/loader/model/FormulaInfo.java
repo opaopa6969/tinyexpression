@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
+import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
@@ -91,7 +92,7 @@ public class FormulaInfo{
   @Nullable
   @FormulaInfoField public String dependsOn; //
   @Nullable
-  @FormulaInfoField public String resultType; // default Float
+  @FormulaInfoField public ResultType resultType; // default Float
 //  @Nullable
 //  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
@@ -112,7 +113,8 @@ public class FormulaInfo{
   public Map<String,String> extraValueByKey;
   public List<String> text;
   private Class<?> calculatorReturningClass;
-  FormulaInfoState state;
+  private FormulaInfoState state;
+  private final CalculatorCreator calculatorCreator;
   
   public enum FormulaInfoState{
     initialized,
@@ -126,7 +128,8 @@ public class FormulaInfo{
   
   private final FormulaInfoAdditionalFields additionalFields;
   
-  public FormulaInfo(FormulaInfoAdditionalFields additionalFields) {
+  public FormulaInfo(FormulaInfoAdditionalFields additionalFields,
+      CalculatorCreator calculatorCreator) {
     super();
     extraValueByKey = new LinkedHashMap<>();
     text = new ArrayList<>();
@@ -134,12 +137,13 @@ public class FormulaInfo{
     classNameAndByteCodeList = new ArrayList<>();
     this.additionalFields = additionalFields;
     state = FormulaInfoState.initialized;
+    this.calculatorCreator = calculatorCreator;
   }
   
   public void addAdditional(String key , String value) {
     extraValueByKey.put(key, value);
   }
-
+  
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
     //FIXME! return type
     calculator = new JavaCodeNumberCalculatorV2(

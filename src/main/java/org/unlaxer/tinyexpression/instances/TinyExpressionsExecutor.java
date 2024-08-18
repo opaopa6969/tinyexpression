@@ -3,12 +3,10 @@ package org.unlaxer.tinyexpression.instances;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.Nullable;
 import org.unlaxer.compiler.CompileError;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
@@ -17,8 +15,6 @@ import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 public class TinyExpressionsExecutor {
   
   final Consumer<Map<String,Object>> mapConsumer;
-  
-  
   
   
   public TinyExpressionsExecutor() {
@@ -80,22 +76,6 @@ public class TinyExpressionsExecutor {
       throw new CompileError(e,map->{
         map.put(CompileError.ComileErrorContextKey.calculatorList.name(), _list);
       });
-    }
-  }
-  
-  public static class CalculationResult{
-    
-    public final Calculator<?> calculator;
-    public final Object result;
-    private final Throwable throwable;
-    public CalculationResult(Calculator<?> calculator, Object result, @Nullable Throwable throwable) {
-      super();
-      this.calculator = calculator;
-      this.result = result;
-      this.throwable = throwable;
-    }
-    public Optional<Throwable> error(){
-      return Optional.ofNullable(throwable);
     }
   }
 }

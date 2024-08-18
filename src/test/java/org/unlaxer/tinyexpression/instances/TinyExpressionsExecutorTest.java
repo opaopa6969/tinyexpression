@@ -15,7 +15,6 @@ import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.instances.TinyExpressionInstancesCacheTest.FileBaseTinyExpressionInstancesCache;
-import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.CalculationResult;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
