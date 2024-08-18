@@ -7,7 +7,6 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,7 +44,7 @@ import org.unlaxer.util.digest.MD5;
 //import sun.misc.Unsafe;
 
 public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
-    implements JavaClassCreator, TokenBaseCalculator<Object> {
+    implements GeneralJavaClassCreator, TokenBaseCalculator<Object> {
 
   public final String className;
   public final String javaCode;
@@ -89,6 +88,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * from formula
    * @param formula
    * @param className
+   * @param resultType
    * @param classLoader
    * @param outputRootDirectory
    * @param javaFileManagerContext
@@ -119,7 +119,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
 //      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
       
       classNameWithHash = className + "_" + formulaHash;
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , resultType);
       
       ClassName classNameObject = new ClassName(classNameWithHash);
 
@@ -154,6 +154,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param formula
    * @param javaCode
    * @param className
+   * @param resultType
    * @param byteCode
    * @param byteCodeHash
    * @param classNameAndByteCodeList
@@ -201,6 +202,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param formula
    * @param javaCode
    * @param className
+   * @param resultType
    * @param byteCode
    * @param byteCodeHash
    * @param calculatorClass
