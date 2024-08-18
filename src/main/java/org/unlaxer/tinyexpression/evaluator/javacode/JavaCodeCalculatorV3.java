@@ -33,7 +33,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.SchemeAndIdentifier;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
-import org.unlaxer.tinyexpression.PreConstructedNumberCalculator;
+import org.unlaxer.tinyexpression.PreConstructedObjectCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
@@ -44,8 +44,8 @@ import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
 
-public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
-    implements JavaClassCreator, TokenBaseCalculator<Float> {
+public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
+    implements JavaClassCreator, TokenBaseCalculator<Object> {
 
   public final String className;
   public final String javaCode;
@@ -58,31 +58,31 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   Optional<Calculator<?>> dependsOnBy;
   final List<InstanceAndByteCode> instanceAndByteCodeList;
 
-  TokenBaseOperator<CalculationContext, Float> operator;
+  TokenBaseOperator<CalculationContext, Object> operator;
 
   // constructors for source code
 
-  public JavaCodeNumberCalculatorV2(Name name, String formula) throws CompileError {
-    this(name, formula, (Path) null);
+  public JavaCodeCalculatorV3(Name name, String formula , ResultType resultType) throws CompileError {
+    this(name, formula, resultType ,  (Path) null);
   }
 
-  public JavaCodeNumberCalculatorV2(Name name, String formula, Path outputRootDirectory) throws CompileError {
-    this(name, formula, Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
+  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType, Path outputRootDirectory) throws CompileError {
+    this(name, formula, resultType , Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
         new JavaFileManagerContext());
   }
 
-  public JavaCodeNumberCalculatorV2(Name name, String formula, ClassLoader classLoader) throws CompileError {
-    this(name, formula, classLoader, null, true, new JavaFileManagerContext());
+  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType , ClassLoader classLoader) throws CompileError {
+    this(name, formula, resultType , classLoader, null, true, new JavaFileManagerContext());
   }
 
-  public JavaCodeNumberCalculatorV2(Name name, String formula, ClassLoader classLoader, Path outputRootDirectory,
+  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType ,ClassLoader classLoader, Path outputRootDirectory,
       boolean randomize, JavaFileManagerContext javaFileManagerContext) throws CompileError {
     this(formula, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
-        classLoader, outputRootDirectory, javaFileManagerContext);
+        resultType, classLoader, outputRootDirectory, javaFileManagerContext);
   }
 
-  public JavaCodeNumberCalculatorV2(String formula, String className, ClassLoader classLoader) throws CompileError {
-    this(formula, className, classLoader, null, new JavaFileManagerContext());
+  public JavaCodeCalculatorV3(String formula, String className, ResultType resultType, ClassLoader classLoader) throws CompileError {
+    this(formula, className, resultType, classLoader, null, new JavaFileManagerContext());
   }
   
   /**
@@ -95,10 +95,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
    * @throws CompileError
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeNumberCalculatorV2(String formula, String className, ClassLoader classLoader,
+  public JavaCodeCalculatorV3(String formula, String className, ResultType resultType , ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
-    super(formula, className, true);
+    super(formula, className, resultType,  true);
     
     CompileContext compileContext = new CompileContext(classLoader,javaFileManagerContext);
     
@@ -137,7 +137,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
       classOrError.throwIfMatch();
 
       ClassAndByteCode classAndByteCode = classOrError.get();
-      operator = (TokenBaseOperator<CalculationContext, Float>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
+      operator = (TokenBaseOperator<CalculationContext, Object>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
 
       byteCode = classAndByteCode.bytes;
       byteCodeHash = MD5.toHex(byteCode);
@@ -160,10 +160,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
    * @param classLoader
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      List<ClassNameAndByteCode> classNameAndByteCodeList,
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className, ResultType resultType,
+      byte[] byteCode, String byteCodeHash, List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
-    super(formula, className, false);
+    super(formula, className, resultType , false);
     this.className = className;
     this.classNameWithHash = null;
     this.javaCode = javaCode;
@@ -182,11 +182,11 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
     formulaHash = MD5.toHex(formula);
 
-    Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
+    Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass = null;
 
     try {
-      calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) loadClass(className, byteCode, classLoader);
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+      calculatorClass = (Class<TokenBaseOperator<CalculationContext, Object>>) loadClass(className, byteCode, classLoader);
+      operator = (TokenBaseOperator<CalculationContext, Object>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -207,11 +207,11 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
    * @param classNameAndByteCodeList
    * @param classLoader
    */
-  public JavaCodeNumberCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass, 
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className,ResultType resultType,  
+      byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass, 
       List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
-    super(formula, className, false);
+    super(formula, className, resultType ,  false);
     this.className = className;
     this.javaCode = javaCode;
     this.byteCode = byteCode;
@@ -230,7 +230,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
         }).toList();
 
     try {
-      operator = (TokenBaseOperator<CalculationContext, Float>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext, Object>) calculatorClass.getDeclaredConstructor()
           .newInstance();
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
         | NoSuchMethodException | SecurityException e) {
@@ -324,18 +324,8 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   }
 
   @Override
-  public TokenBaseOperator<CalculationContext, Float> getCalculatorOperator() {
+  public TokenBaseOperator<CalculationContext, Object> getCalculatorOperator() {
     return operator;
-  }
-
-  @Override
-  public BigDecimal toBigDecimal(Float value) {
-    return new BigDecimal(value);
-  }
-
-  @Override
-  public float toFloat(Float value) {
-    return value;
   }
 
   @Override
@@ -354,7 +344,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   }
 
   @Override
-  public Float evaluate(CalculationContext context, Token token) {
+  public Object evaluate(CalculationContext context, Token token) {
     return getCalculatorOperator().evaluate(context, token);
   }
 
@@ -441,9 +431,4 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
   public void after(CalculationContext calculationContext) {
   }
 
-  @Override
-  public ResultType resultType() {
-    return RESULT_TYPE;
-  }
-  static final ResultType RESULT_TYPE = new ResultType("float");
 }

@@ -8,19 +8,22 @@ import java.util.function.UnaryOperator;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public interface Calculator<T> {
 
-  public default Type getReturningType() {
+  public default Type getReturningTypeFromImplements() {
     return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
 
   @SuppressWarnings("unchecked")
-  public default Class<T> getReturningTypeClass() {
-    return (Class<T>) getReturningType();
+  public default Class<T> getReturningTypeClassFromImplements() {
+    return (Class<T>) getReturningTypeFromImplements();
   }
 
+  public ResultType resultType(); 
+  
   public Parser getParser();
 
   public TokenBaseOperator<CalculationContext, T> getCalculatorOperator();

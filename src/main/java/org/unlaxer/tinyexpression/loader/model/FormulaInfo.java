@@ -160,7 +160,7 @@ public class FormulaInfo{
       throw new IllegalStateException();
     }
     if(calculatorReturningClass == null) {
-      calculatorReturningClass = calculator.getReturningTypeClass();
+      calculatorReturningClass = calculator.getReturningTypeClassFromImplements();
     }
     return calculatorReturningClass;
   }

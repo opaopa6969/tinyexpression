@@ -27,6 +27,34 @@ if(external returning as boolean checkDigits($input)){
 }
 ---END_OF_PART---
 tags:NORMAL
+description:JavaCodeBlockで呼び出しをします。packageを使用します
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:69
+calculatorName:callJavaCodeBlockWithPackage
+var:matchAlphabet
+dependsOn:
+resultType:float
+formula:
+```java:sample.v1.CheckAlphabets
+package sample.v1;//version1. if logic updates then update package.
+import org.unlaxer.tinyexpression.CalculationContext;
+
+public class CheckAlphabets{
+	public boolean check(CalculationContext calculationContext,String target){
+		return target.matches("[a-zA-Z]+");
+	}
+}
+```
+import sample.v1.CheckAlphabets#check as checkAlphabets;
+var $inputName as string set if not exists '1234' description='入力値';
+if(external returning as boolean checkAlphabets($inputName)){
+  1
+}else{
+  0
+}
+---END_OF_PART---
+tags:NORMAL
 description:最終的な点数をcheckKindとして出力します
 periodStartInclusive:2018-05-01_00:00:00
 periodEndExclusive:2037-05-01_00:00:00
@@ -67,7 +95,7 @@ formula:
 6969
 ---END_OF_PART---
 #tags:NORMAL
-#description:$nameに代入します
+#description:$nameに文字列を代入します
 #periodStartInclusive:2018-05-01_00:00:00
 #periodEndExclusive:2037-05-01_00:00:00
 #siteId:69
