@@ -14,8 +14,11 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
+import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
+import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -49,7 +52,15 @@ public class FormulaInfoParser extends LazyOneOrMore{
   public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed , 
       FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
     
-    FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields);
+    CalculatorCreator calculatorCreator = new CalculatorCreator() {
+      
+      @Override
+      public Calculator<?> create(String formulaText, String className, ResultType resultType, ClassLoader classLoader) {
+        return new JavaCodeNumberCalculatorV2(formulaText, className, classLoader);
+      }
+    };
+    
+    FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields , calculatorCreator);
     List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
     
     AtomicBoolean hasByteCode = new AtomicBoolean(false);

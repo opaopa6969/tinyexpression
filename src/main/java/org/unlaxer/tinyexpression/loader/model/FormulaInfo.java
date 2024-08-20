@@ -308,7 +308,7 @@ public class FormulaInfo{
       builder
         .append("resultType")
         .append(":")
-        .line(resultType);
+        .line(resultType.resulTypeAsString);
     }
     
     builder

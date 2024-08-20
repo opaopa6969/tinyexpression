@@ -21,13 +21,13 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     //    | 'false'
     //    | 'not(' BooleanExpression ')'
     //    | '(' BooleanExpression ')'
+    //    | BooleanExpressionOfString
     //    | Expression '==' Expression 
     //    | Expression '!=' Expression 
     //    | Expression '>=' Expression 
     //    | Expression '<=' Expression 
     //    | Expression '>' Expression 
     //    | Expression '<' Expression 
-    //    | BooleanExpressionOfString
     //    | Variable
     
     Parsers parsers = new Parsers();
@@ -41,13 +41,14 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     parsers.add(NotBooleanExpressionParser.class);
     parsers.add(new ParenthesesParser(Parser.get(BooleanExpressionParser.class)));
     parsers.add(IsPresentParser.class);
+    parsers.add(BooleanExpressionOfStringParser.class); // <- number == number系より早く評価しないとダメ
     parsers.add(NumberEqualEqualExpressionParser.class);
     parsers.add(NumberNotEqualExpressionParser.class);
     parsers.add(NumberGreaterOrEqualExpressionParser.class);
     parsers.add(NumberLessOrEqualExpressionParser.class);
     parsers.add(NumberGreaterExpressionParser.class);
     parsers.add(NumberLessExpressionParser.class);
-    parsers.add(BooleanExpressionOfStringParser.class);
+//    parsers.add(BooleanExpressionOfStringParser.class);　　// <- number == number系より早く評価しないとダメ
     parsers.add(BooleanVariableParser.class);
     if(withNakedVariable) {
       parsers.add(ExclusiveNakedVariableParser.class);
