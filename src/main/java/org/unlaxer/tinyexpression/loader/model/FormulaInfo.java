@@ -146,8 +146,8 @@ public class FormulaInfo{
   
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
     //FIXME! return type
-    calculator = new JavaCodeNumberCalculatorV2(
-        formulaText, className, classLoader);
+    calculator = calculatorCreator.create(
+        formulaText, className, resultType , classLoader);
     
     this.byteCode = calculator.byteCode();
     
