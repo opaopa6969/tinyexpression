@@ -6,6 +6,7 @@ import org.unlaxer.parser.ChildOccurs;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 
+@SuppressWarnings("serial")
 public class StringVariableMatchedWithVariableDeclarationParser extends VariableDeclarationMatchedTokenParser
     implements StringExpression, VariableParser {
 
@@ -28,7 +29,7 @@ public class StringVariableMatchedWithVariableDeclarationParser extends Variable
   }
 
   @Override
-  public Optional<ExpressionTypes> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionTypes.string);
   }
 }

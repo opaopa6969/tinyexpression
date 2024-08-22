@@ -35,6 +35,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedObjectCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
@@ -65,22 +66,22 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
     this(name, formula, resultType ,  (Path) null);
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType, Path outputRootDirectory) throws CompileError {
+  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType, Path outputRootDirectory) throws CompileError {
     this(name, formula, resultType , Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
         new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType , ClassLoader classLoader) throws CompileError {
+  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType , ClassLoader classLoader) throws CompileError {
     this(name, formula, resultType , classLoader, null, true, new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ResultType resultType ,ClassLoader classLoader, Path outputRootDirectory,
+  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType ,ClassLoader classLoader, Path outputRootDirectory,
       boolean randomize, JavaFileManagerContext javaFileManagerContext) throws CompileError {
     this(formula, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
         resultType, classLoader, outputRootDirectory, javaFileManagerContext);
   }
 
-  public JavaCodeCalculatorV3(String formula, String className, ResultType resultType, ClassLoader classLoader) throws CompileError {
+  public JavaCodeCalculatorV3(String formula, String className, ExpressionType resultType, ClassLoader classLoader) throws CompileError {
     this(formula, className, resultType, classLoader, null, new JavaFileManagerContext());
   }
   
@@ -95,7 +96,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @throws CompileError
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV3(String formula, String className, ResultType resultType , ClassLoader classLoader,
+  public JavaCodeCalculatorV3(String formula, String className, ExpressionType resultType , ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, resultType,  true);

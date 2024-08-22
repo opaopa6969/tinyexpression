@@ -8,8 +8,8 @@ import java.util.function.UnaryOperator;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public interface Calculator<T> {
 
@@ -22,7 +22,7 @@ public interface Calculator<T> {
     return (Class<T>) getReturningTypeFromImplements();
   }
 
-  public ResultType resultType(); 
+  public ExpressionType resultType(); 
   
   public Parser getParser();
 
@@ -94,7 +94,8 @@ public interface Calculator<T> {
     return Optional.ofNullable(getObject(key, objectClass));
   }
 
-  public static class CalculationException extends RuntimeException {
+  @SuppressWarnings("serial")
+public static class CalculationException extends RuntimeException {
 
     public CalculationException() {
       super();

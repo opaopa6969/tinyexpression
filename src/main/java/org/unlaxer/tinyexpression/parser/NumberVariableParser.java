@@ -9,6 +9,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
+@SuppressWarnings("serial")
 public class NumberVariableParser extends LazyChoice implements RootVariableParser , NumberExpression {
   
   static final SupplierBoundCache<NumberVariableParser> SINGLETON = new SupplierBoundCache<>(NumberVariableParser::new);
@@ -35,7 +36,7 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
   }
 
   @Override
-  public Optional<ExpressionTypes> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionTypes.number);
   }
   

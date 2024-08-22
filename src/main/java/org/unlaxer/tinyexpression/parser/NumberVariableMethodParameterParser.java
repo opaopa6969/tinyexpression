@@ -6,6 +6,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 
+@SuppressWarnings("serial")
 public class NumberVariableMethodParameterParser extends LazyChoice implements TypedVariableParser , NumberExpression{
 
 
@@ -23,7 +24,7 @@ public class NumberVariableMethodParameterParser extends LazyChoice implements T
   }
   
   @Override
-  public Optional<ExpressionTypes> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionTypes.number);
   }
   

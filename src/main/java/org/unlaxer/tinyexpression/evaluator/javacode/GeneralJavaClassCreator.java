@@ -20,7 +20,7 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface GeneralJavaClassCreator{
   
-  default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken, ResultType resultType) {
+  default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken, ExpressionType resultType) {
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();

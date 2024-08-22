@@ -28,7 +28,7 @@ public class BooleanVariableMatchedWithVariableDeclarationParser extends Variabl
   }
 
   @Override
-  public Optional<ExpressionTypes> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionTypes._boolean);
   }
 }

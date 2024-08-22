@@ -27,7 +27,7 @@ public class BooleanPrefixedVariableParser extends JavaStyleDelimitedLazyChain i
   }
   
   @Override
-  public Optional<ExpressionTypes> typeAsOptional() {
+  public Optional<ExpressionType> typeAsOptional() {
     return Optional.of(ExpressionTypes._boolean);
   }
   

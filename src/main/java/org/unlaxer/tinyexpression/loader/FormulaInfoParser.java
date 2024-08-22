@@ -20,6 +20,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.digest.HEX;
@@ -55,7 +56,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
     CalculatorCreator calculatorCreator = new CalculatorCreator() {
       
       @Override
-      public Calculator<?> create(String formulaText, String className, ResultType resultType, ClassLoader classLoader) {
+      public Calculator<?> create(String formulaText, String className, ExpressionType resultType, ClassLoader classLoader) {
         return new JavaCodeCalculatorV3(formulaText, className, resultType, classLoader);
       }
     };
