@@ -4,6 +4,9 @@ import java.math.BigDecimal;
 import java.security.Timestamp;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class ResultType{
   public final String resulTypeAsString;
@@ -21,6 +24,10 @@ public class ResultType{
       }
     });
     resulTypeClass = classByName.get(resulTypeAsString);
+  }
+  
+  public Optional<ExpressionType> expressionType(){
+    return ExpressionType.of(resulTypeClass);
   }
   
   static Map<String,Class<?>> classByName = new HashMap<>();

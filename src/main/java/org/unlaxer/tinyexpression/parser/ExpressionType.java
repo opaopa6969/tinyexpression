@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.parser;
 
+import java.sql.Timestamp;
 import java.util.Optional;
 
 import org.unlaxer.Tag;
@@ -17,6 +18,7 @@ public enum ExpressionType{
   string(String.class),
   _boolean(Boolean.class,boolean.class),
   object(Object.class),
+  timestamp(Timestamp.class),
   _void(Void.class , void.class)
   ;
   final Tag tag;
@@ -34,11 +36,9 @@ public enum ExpressionType{
     this.javaType = javaType;
     this.javaTypePrimitive = null;
   }
-
-
+  
   public Tag asTag() {
     return tag;
-   
   }
   
   public boolean isBoolean() {
@@ -94,9 +94,22 @@ public enum ExpressionType{
   public Class<?> javaType() {
     return javaType;
   }
+  public boolean isTimestamp() {
+    return this == timestamp;
+  }
   
+  public static Optional<ExpressionType> of(Class<?> clazz){
+    
+    for(ExpressionType expressionType : values()) {
+      
+      if(expressionType.javaType() == clazz || expressionType.javaTypePrimitive().map(x-> x==clazz).orElse(false)) {
+        return  Optional.of(expressionType);
+      }
+    }
+    return Optional.empty();
+  }
+    
   public Optional<Class<?>> javaTypePrimitive() {
     return Optional.ofNullable(javaTypePrimitive);
   }
-
 }
