@@ -17,10 +17,10 @@ import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
-import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.util.EpochPeriodForNavigable;
 import org.unlaxer.util.MultiDateParser;
 import org.unlaxer.util.digest.HEX;
@@ -92,7 +92,7 @@ public class FormulaInfo{
   @Nullable
   @FormulaInfoField public String dependsOn; //
   @Nullable
-  @FormulaInfoField public ResultType resultType; // default Float
+  @FormulaInfoField public ExpressionType resultType; // default Float
 //  @Nullable
 //  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
@@ -308,7 +308,7 @@ public class FormulaInfo{
       builder
         .append("resultType")
         .append(":")
-        .line(resultType.resulTypeAsString);
+        .line(resultType.javaType().getTypeName());
     }
     
     builder

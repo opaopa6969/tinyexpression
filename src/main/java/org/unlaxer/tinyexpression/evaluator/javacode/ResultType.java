@@ -14,6 +14,7 @@ public class ResultType implements ExpressionType{
   private final String resulTypeAsString;
   private final Class<?> resulTypeClass;
   private final Tag tag;
+  private final Optional<ExpressionTypes> expressionTypes;
 
   public ResultType(String resulTypeAsString) {
     super();
@@ -29,6 +30,7 @@ public class ResultType implements ExpressionType{
     });
     resulTypeClass = classByName.get(resulTypeAsString);
     tag = Tag.of(resulTypeClass);
+    expressionTypes = ExpressionTypes.of(resulTypeClass);
   }
   
   public Optional<ExpressionTypes> expressionType(){
@@ -73,108 +75,97 @@ public class ResultType implements ExpressionType{
 
   @Override
   public boolean isBoolean() {
-    return false;
+    return expressionTypes.map(ExpressionType::isBoolean).orElse(false);
   }
 
   @Override
   public boolean isShort() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isShort).orElse(false);
   }
 
   @Override
   public boolean isByte() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isByte).orElse(false);
   }
 
   @Override
   public boolean isInt() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isInt).orElse(false);
   }
 
   @Override
   public boolean isFloat() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isFloat).orElse(false);
   }
 
   @Override
   public boolean isLong() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isLong).orElse(false);
   }
 
   @Override
   public boolean isDouble() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isDouble).orElse(false);
   }
 
   @Override
   public boolean isBigInteger() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isBigInteger).orElse(false);
   }
 
   @Override
   public boolean isBigDecimal() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isBigDecimal).orElse(false);
   }
 
   @Override
   public boolean isNumber() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isNumber).orElse(false);
   }
 
   @Override
   public boolean isBigNumber() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isBigNumber).orElse(false);
   }
 
   @Override
   public boolean isPrimitiveNumber() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isPrimitiveNumber).orElse(false);
   }
 
   @Override
   public boolean isVoid() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isVoid).orElse(false);
   }
 
   @Override
   public boolean isObject() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isObject).orElse(false);
   }
 
   @Override
   public boolean isString() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isString).orElse(false);
   }
 
   @Override
   public Class<?> javaType() {
-    // TODO Auto-generated method stub
-    return null;
+    return resulTypeClass;
   }
+  
+  @Override
+  public String javaTypeAsString() {
+    return resulTypeClass.getTypeName();
+  }
+
 
   @Override
   public boolean isTimestamp() {
-    // TODO Auto-generated method stub
-    return false;
+    return expressionTypes.map(ExpressionType::isTimestamp).orElse(false);
   }
 
   @Override
   public Optional<Class<?>> javaTypePrimitive() {
-    // TODO Auto-generated method stub
-    return Optional.empty();
+    return expressionTypes.flatMap(ExpressionType::javaTypePrimitive);
   }
 }

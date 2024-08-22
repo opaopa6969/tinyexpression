@@ -24,11 +24,15 @@ public interface ExpressionType{
     public boolean isVoid();
     public boolean isObject();
     public boolean isString();
-    public Class<?> javaType();
     public boolean isTimestamp();
     
+    public Class<?> javaType();
+    public default String javaTypeAsString() {
+      return javaType().getTypeName();
+    }
 //    public static Optional<ExpressionType> of(Class<?> clazz);
       
     public Optional<Class<?>> javaTypePrimitive();
+
 
   }
