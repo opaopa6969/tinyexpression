@@ -18,7 +18,7 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
@@ -74,7 +74,7 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         .findFirst().get()
         .typed(TypeHint.class);
         
-    ExpressionType expressionType = typed.getParser().type();
+    ExpressionTypes expressionType = typed.getParser().type();
     String variableName = parser.getVariableName(variableParserToken);
     return new VariableInfo(expressionType, variableName);
   }
@@ -83,9 +83,9 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
   
   public static class VariableInfo{
     
-    public final ExpressionType expressionType;
+    public final ExpressionTypes expressionType;
     public String name;
-    public VariableInfo(ExpressionType expressionType, String name) {
+    public VariableInfo(ExpressionTypes expressionType, String name) {
       super();
       this.expressionType = expressionType;
       this.name = name;

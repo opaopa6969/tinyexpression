@@ -146,7 +146,6 @@ public class FormulaInfo{
   
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
     //FIXME! return type 
-    asdasdas
     calculator = calculatorCreator.create(
         formulaText, className, resultType , classLoader);
     

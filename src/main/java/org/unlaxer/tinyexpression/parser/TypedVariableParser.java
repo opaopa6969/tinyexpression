@@ -4,7 +4,7 @@ import org.unlaxer.parser.Parser;
 
 public interface TypedVariableParser extends VariableParser{
   
-  public default ExpressionType type(){
+  public default ExpressionTypes type(){
     return typeAsOptional().get();
   }
   

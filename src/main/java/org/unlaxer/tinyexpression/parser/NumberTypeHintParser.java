@@ -38,8 +38,8 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
   }
 
   @Override
-  public ExpressionType type() {
-    return ExpressionType.number;
+  public ExpressionTypes type() {
+    return ExpressionTypes.number;
   }
     
 

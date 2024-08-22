@@ -10,7 +10,7 @@ public class BooleanVariableMatchedWithVariableDeclarationParser extends Variabl
     implements BooleanExpression, VariableParser {
 
   public BooleanVariableMatchedWithVariableDeclarationParser() {
-    super(ExpressionType._boolean);
+    super(ExpressionTypes._boolean);
   }
 
   @Override
@@ -28,7 +28,7 @@ public class BooleanVariableMatchedWithVariableDeclarationParser extends Variabl
   }
 
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType._boolean);
+  public Optional<ExpressionTypes> typeAsOptional() {
+    return Optional.of(ExpressionTypes._boolean);
   }
 }

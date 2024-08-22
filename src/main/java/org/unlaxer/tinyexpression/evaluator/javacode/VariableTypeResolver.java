@@ -13,6 +13,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
@@ -25,9 +26,9 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 public class VariableTypeResolver {
   
   static final Map<ExpressionType, ? extends VariableParser> variableParserByExpressionType = Map.of(
-      ExpressionType._boolean, BooleanVariableParser.get(),
-      ExpressionType.string, StringVariableParser.get(),
-      ExpressionType.number, NumberVariableParser.get()
+      ExpressionTypes._boolean, BooleanVariableParser.get(),
+      ExpressionTypes.string, StringVariableParser.get(),
+      ExpressionTypes.number, NumberVariableParser.get()
 
   );
 

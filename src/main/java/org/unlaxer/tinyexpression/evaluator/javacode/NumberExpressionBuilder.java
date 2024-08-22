@@ -10,6 +10,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
@@ -117,7 +118,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
-          "0f","getValue","setAndGet",fromVariableParserToken.orElse(ExpressionType.number));
+          "0f","getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes.number));
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //      
 //      

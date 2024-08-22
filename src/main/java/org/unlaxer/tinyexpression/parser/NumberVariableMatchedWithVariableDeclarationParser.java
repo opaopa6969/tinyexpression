@@ -10,7 +10,7 @@ public class NumberVariableMatchedWithVariableDeclarationParser extends Variable
     implements NumberExpression, VariableParser {
 
   public NumberVariableMatchedWithVariableDeclarationParser() {
-    super(ExpressionType.number);
+    super(ExpressionTypes.number);
   }
 
   @Override
@@ -28,7 +28,7 @@ public class NumberVariableMatchedWithVariableDeclarationParser extends Variable
   }
 
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.number);
+  public Optional<ExpressionTypes> typeAsOptional() {
+    return Optional.of(ExpressionTypes.number);
   }
 }

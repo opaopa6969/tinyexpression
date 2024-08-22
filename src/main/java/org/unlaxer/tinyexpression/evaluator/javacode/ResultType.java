@@ -6,11 +6,15 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import org.unlaxer.Tag;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
-public class ResultType{
-  public final String resulTypeAsString;
-  public final Class<?> resulTypeClass;
+public class ResultType implements ExpressionType{
+  private final String resulTypeAsString;
+  private final Class<?> resulTypeClass;
+  private final Tag tag;
+
   public ResultType(String resulTypeAsString) {
     super();
     this.resulTypeAsString = resulTypeAsString;
@@ -24,10 +28,11 @@ public class ResultType{
       }
     });
     resulTypeClass = classByName.get(resulTypeAsString);
+    tag = Tag.of(resulTypeClass);
   }
   
-  public Optional<ExpressionType> expressionType(){
-    return ExpressionType.of(resulTypeClass);
+  public Optional<ExpressionTypes> expressionType(){
+    return ExpressionTypes.of(resulTypeClass);
   }
   
   static Map<String,Class<?>> classByName = new HashMap<>();
@@ -59,6 +64,117 @@ public class ResultType{
 
     classByName.put("object",Object.class);
     classByName.put("Object",Object.class);
-      
+  }
+
+  @Override
+  public Tag asTag() {
+    return tag;
+  }
+
+  @Override
+  public boolean isBoolean() {
+    return false;
+  }
+
+  @Override
+  public boolean isShort() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isByte() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isInt() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isFloat() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isLong() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isDouble() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isBigInteger() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isBigDecimal() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isNumber() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isBigNumber() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isPrimitiveNumber() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isVoid() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isObject() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public boolean isString() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Class<?> javaType() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public boolean isTimestamp() {
+    // TODO Auto-generated method stub
+    return false;
+  }
+
+  @Override
+  public Optional<Class<?>> javaTypePrimitive() {
+    // TODO Auto-generated method stub
+    return Optional.empty();
   }
 }

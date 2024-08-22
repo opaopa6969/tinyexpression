@@ -35,8 +35,8 @@ public class NumberVariableParser extends LazyChoice implements RootVariablePars
   }
 
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.number);
+  public Optional<ExpressionTypes> typeAsOptional() {
+    return Optional.of(ExpressionTypes.number);
   }
   
   public static NumberVariableParser get() {

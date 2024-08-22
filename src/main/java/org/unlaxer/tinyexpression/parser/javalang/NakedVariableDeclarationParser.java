@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class NakedVariableDeclarationParser extends AbstractVariableDeclarationParser {
 
@@ -24,7 +24,7 @@ public class NakedVariableDeclarationParser extends AbstractVariableDeclarationP
   }
 
   @Override
-  public Optional<ExpressionType> type() {
+  public Optional<ExpressionTypes> type() {
     return Optional.empty();
   }
   

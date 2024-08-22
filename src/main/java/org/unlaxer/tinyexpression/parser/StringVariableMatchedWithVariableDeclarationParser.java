@@ -10,7 +10,7 @@ public class StringVariableMatchedWithVariableDeclarationParser extends Variable
     implements StringExpression, VariableParser {
 
   public StringVariableMatchedWithVariableDeclarationParser() {
-    super(ExpressionType.string);
+    super(ExpressionTypes.string);
   }
 
   @Override
@@ -28,7 +28,7 @@ public class StringVariableMatchedWithVariableDeclarationParser extends Variable
   }
 
   @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.string);
+  public Optional<ExpressionTypes> typeAsOptional() {
+    return Optional.of(ExpressionTypes.string);
   }
 }
