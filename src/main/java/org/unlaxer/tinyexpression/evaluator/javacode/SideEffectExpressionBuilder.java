@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
 
@@ -15,7 +16,7 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
 
   @Override
   public void build(SimpleJavaCodeBuilder builder, Token token , 
-      TinyExpressionTokens tinyExpressionTokens) {
+      TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
     
     MethodAndParameters methodAndParameters = 
         SideEffectExpressionParser.extract(token , tinyExpressionTokens);
@@ -50,7 +51,8 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
       .append("(calculateContext , ")
       .incrementFunction();
     
-    ParametersBuilder.buildParameter(builder, methodAndParameters , tinyExpressionTokens);
+    ParametersBuilder.buildParameter(builder, methodAndParameters , 
+        tinyExpressionTokens , resultType);
     
     builder
       .append(")).orElseThrow(()->new org.unlaxer.tinyexpression.Calculator.CalculationException(\"class not found in CalculationContext. please set :"+className+"\"))");

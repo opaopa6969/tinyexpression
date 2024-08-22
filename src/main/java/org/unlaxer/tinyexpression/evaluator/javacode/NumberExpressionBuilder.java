@@ -10,6 +10,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionType.PrePost;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
@@ -46,7 +47,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     public static NumberCaseExpressionBuilder SINGLETON = new NumberCaseExpressionBuilder();
 
     public void build(SimpleJavaCodeBuilder builder, Token token ,
-        TinyExpressionTokens tinyExpressionTokens) {
+        TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
 
       List<Token> originalTokens = token.filteredChildren;
       Iterator<Token> iterator = originalTokens.iterator();
@@ -56,9 +57,11 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
         Token booleanExpression = caseFactor.filteredChildren.get(0);
         Token expression = caseFactor.filteredChildren.get(1);
-        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression ,
+            tinyExpressionTokens,resultType);
         builder.append(" ? ");
-        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+        NumberExpressionBuilder.SINGLETON.build(builder, expression , 
+            tinyExpressionTokens , resultType);
         builder
           .append(":")
           .n();
@@ -68,7 +71,8 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
   
   public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
 
-  public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
+  public void build(SimpleJavaCodeBuilder builder, Token token , 
+		  TinyExpressionTokens tinyExpressionTokens, ExpressionType resultType) {
 
     Parser parser = token.parser;
     
@@ -92,23 +96,25 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     
     if (parser instanceof PlusParser) {
 
-      binaryOperate(builder, token, "+" , tinyExpressionTokens);
+      binaryOperate(builder, token, "+" , tinyExpressionTokens , resultType);
 
     } else if (parser instanceof MinusParser) {
 
-      binaryOperate(builder, token, "-" , tinyExpressionTokens);
+      binaryOperate(builder, token, "-" , tinyExpressionTokens , resultType);
 
     } else if (parser instanceof MultipleParser) {
 
-      binaryOperate(builder, token, "*" , tinyExpressionTokens);
+      binaryOperate(builder, token, "*" , tinyExpressionTokens , resultType);
 
     } else if (parser instanceof DivisionParser) {
 
-      binaryOperate(builder, token, "/" , tinyExpressionTokens);
+      binaryOperate(builder, token, "/" , tinyExpressionTokens , resultType);
 
     } else if (parser instanceof NumberParser) {
+      
+      String numberWithSuffix = resultType.numberWithSuffix(token.tokenString.get());
 
-      builder.append(String.valueOf(Float.parseFloat(token.tokenString.get()))+"f");
+      builder.append(numberWithSuffix);
 
     } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
     	
@@ -118,7 +124,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
       
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
-          "0f","getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes.number));
+          resultType.zeroNumber(),"getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes.number));
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //      
 //      
@@ -175,13 +181,14 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , 
+          tinyExpressionTokens , resultType);
 
       builder.append(" ? ").n().incTab();
-      build(builder, factor1 , tinyExpressionTokens);
+      build(builder, factor1 , tinyExpressionTokens , resultType);
 
       builder.append(":").n();
-      build(builder, factor2 , tinyExpressionTokens);
+      build(builder, factor2 , tinyExpressionTokens , resultType);
 
       builder.decTab();
 
@@ -197,76 +204,104 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
+      NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , 
+          tinyExpressionTokens , resultType);
       builder.n();
-      build(builder, defaultCaseFactor , tinyExpressionTokens);
+      build(builder, defaultCaseFactor , tinyExpressionTokens , resultType);
 
       builder.append(")");
       builder.decTab();
 
     } else if (parser instanceof SinParser) {
+      
+      PrePost wrapNumber = resultType.wrapNumber();
 
       Token value = token.filteredChildren.get(0);
-      builder.append("(float) Math.sin(calculateContext.radianAngle(");
-      build(builder, value , tinyExpressionTokens);
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.sin(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens , resultType);
+      builder.append(wrapNumber.post());
       builder.append("))");
 
     } else if (parser instanceof CosParser) {
 
+      PrePost wrapNumber = resultType.wrapNumber();
+      
       Token value = token.filteredChildren.get(0);
-      builder.append("(float) Math.cos(calculateContext.radianAngle(");
-      build(builder, value , tinyExpressionTokens);
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.cos(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens , resultType);
+      builder.append(wrapNumber.post());
       builder.append("))");
 
     } else if (parser instanceof TanParser) {
+      
+      PrePost wrapNumber = resultType.wrapNumber();
 
       Token value = token.filteredChildren.get(0);
-      builder.append("(float) Math.tan(calculateContext.radianAngle(");
-      build(builder, value , tinyExpressionTokens);
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.tan(calculateContext.radianAngle(");
+      build(builder, value , tinyExpressionTokens , resultType);
+      builder.append(wrapNumber.post());
       builder.append("))");
 
     } else if (parser instanceof SquareRootParser) {
 
+      PrePost wrapNumber = resultType.wrapNumber();
+
       Token value = token.filteredChildren.get(0);
-      builder.append("(float) Math.sqrt(");
-      build(builder, value , tinyExpressionTokens);
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.sqrt(");
+      build(builder, value , tinyExpressionTokens , resultType);
       builder.append(")");
+      builder.append(wrapNumber.post());
 
     } else if (parser instanceof MinParser) {
-
-      builder.append("Math.min(");
-      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
+      
+      PrePost wrapNumber = resultType.wrapNumber();
+      
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.min(");
+      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens , resultType);
       builder.append(",");
-      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens , resultType);
       builder.append(")");
+      builder.append(wrapNumber.post());
 
     } else if (parser instanceof MaxParser) {
 
-      builder.append("Math.max(");
-      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
+      PrePost wrapNumber = resultType.wrapNumber();
+      builder.append(wrapNumber.pre());
+      builder.append(" Math.max(");
+      build(builder, token.filteredChildren.get(0) , tinyExpressionTokens , resultType);
       builder.append(",");
-      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+      build(builder, token.filteredChildren.get(1) , tinyExpressionTokens , resultType);
       builder.append(")");
+      builder.append(wrapNumber.post());
 
     } else if (parser instanceof RandomParser) {
 
+      PrePost wrapNumber = resultType.wrapNumber();
+      builder.append(wrapNumber.pre());
       builder.append("calculateContext.nextRandom()");
+      builder.append(wrapNumber.post());
 
     } else if (parser instanceof ToNumParser) {
 
+      //TODO apply result type
       Token leftString = token.filteredChildren.get(0);
       Token rightFloatDefault = token.filteredChildren.get(1);
 
       builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.toNum(");
-      builder.append(StringClauseBuilder.SINGLETON.build(leftString , tinyExpressionTokens).toString());
+      builder.append(StringClauseBuilder.SINGLETON.build(leftString , tinyExpressionTokens , resultType).toString());
       builder.append(",");
-      build(builder, rightFloatDefault , tinyExpressionTokens);
+      build(builder, rightFloatDefault , tinyExpressionTokens , resultType);
       builder.append("f)");
 
     } else if (parser instanceof StringLengthParser) {
 
       Token stringExpressionToken = token.filteredChildren.get(0);//3rd children is inner
-      String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken , tinyExpressionTokens).toString();
+      String string = StringClauseBuilder.SINGLETON.build(stringExpressionToken , tinyExpressionTokens , resultType).toString();
       if(string == null || string.isEmpty()) {
         string ="\"\"";
       }
@@ -276,27 +311,27 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
     }else if (parser instanceof SideEffectExpressionParser) {
       
-      SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+      SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens ,resultType);
       
 //    } else if (parser instanceof StringIndexOfParser) {
 //
 //      return StringIndexOfOperator.SINGLETON.evaluate(calculateContext, token);
     }else if (parser instanceof MethodInvocationParser) {
       
-      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens , resultType);
     }else {
       throw new IllegalArgumentException();
     }
   }
 
   void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
-      TinyExpressionTokens tinyExpressionTokens) {
+      TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
 
     builder.append("(");
 
-    build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+    build(builder, token.filteredChildren.get(1) , tinyExpressionTokens , resultType);
     builder.append(operator);
-    build(builder, token.filteredChildren.get(2) , tinyExpressionTokens);
+    build(builder, token.filteredChildren.get(2) , tinyExpressionTokens , resultType);
 
     builder.append(")");
   }

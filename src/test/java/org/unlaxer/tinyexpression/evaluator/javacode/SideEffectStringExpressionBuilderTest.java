@@ -7,6 +7,7 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.SideEffectStringExpressionParser;
 
 public class SideEffectStringExpressionBuilderTest extends ParserTestBase {
@@ -29,7 +30,7 @@ public class SideEffectStringExpressionBuilderTest extends ParserTestBase {
 
     var builder = new SideEffectStringExpressionBuilder();//
     SimpleJavaCodeBuilder builder2 = new SimpleJavaCodeBuilder();
-    builder.build(builder2, sideEffectToken , null/**/);
+    builder.build(builder2, sideEffectToken , null/**/ , ExpressionTypes._float);
     System.out.println(builder2.toString());
 
   }

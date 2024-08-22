@@ -36,6 +36,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedNumberCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
@@ -119,7 +120,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 //      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
       
       classNameWithHash = className + "_" + formulaHash;
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , ExpressionTypes._float);
       
       ClassName classNameObject = new ClassName(classNameWithHash);
 

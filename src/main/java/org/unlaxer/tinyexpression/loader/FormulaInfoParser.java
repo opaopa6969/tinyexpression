@@ -26,6 +26,7 @@ import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.digest.HEX;
 import org.unlaxer.util.function.Unchecked;
 
+@SuppressWarnings("serial")
 public class FormulaInfoParser extends LazyOneOrMore{
   
   public enum Kind{

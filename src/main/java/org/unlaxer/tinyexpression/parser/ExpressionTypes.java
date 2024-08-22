@@ -10,9 +10,9 @@ public enum ExpressionTypes implements ExpressionType{
   _byte(Byte.class,byte.class),
   _short(Short.class,short.class),
   _int(Integer.class,int.class),
-  _float(Float.class,float.class),
-  _double(Double.class,double.class),
-  _long(Long.class,long.class),
+  _float(Float.class,float.class,"f"),
+  _double(Double.class,double.class,"d"),
+  _long(Long.class,long.class,"L"),
   bigDecimal(java.math.BigDecimal.class),
   bigInteger(java.math.BigInteger.class),
   string(String.class),
@@ -24,17 +24,26 @@ public enum ExpressionTypes implements ExpressionType{
   final Tag tag;
   final Class<?> javaTypePrimitive;
   final Class<?> javaType;
+  final String javaLiteralSuffix;
   
+  private ExpressionTypes(Class<?> javaType  , Class<?> javaTypePrimitive , String javaLiteralSuffix) {
+    this.tag = Tag.of(this);
+    this.javaType = javaType;
+    this.javaTypePrimitive = javaTypePrimitive;
+    this.javaLiteralSuffix = javaLiteralSuffix;
+  }
   private ExpressionTypes(Class<?> javaType  , Class<?> javaTypePrimitive) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
     this.javaTypePrimitive = javaTypePrimitive;
+    this.javaLiteralSuffix = "";
   }
   
   private ExpressionTypes(Class<?> javaType) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
     this.javaTypePrimitive = null;
+    this.javaLiteralSuffix = "";
   }
   
   public Tag asTag() {
@@ -112,5 +121,9 @@ public enum ExpressionTypes implements ExpressionType{
     }
     return Optional.empty();
   }
-    
+  @Override
+
+  public String javaLiteralSuffix() {
+    return javaLiteralSuffix;
+  }
 }

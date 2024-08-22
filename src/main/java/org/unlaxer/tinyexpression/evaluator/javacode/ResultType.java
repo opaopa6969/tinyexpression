@@ -168,4 +168,12 @@ public class ResultType implements ExpressionType{
   public Optional<Class<?>> javaTypePrimitive() {
     return expressionTypes.flatMap(ExpressionType::javaTypePrimitive);
   }
+
+@Override
+public String javaLiteralSuffix() {
+	return expressionTypes.map(ExpressionType::javaLiteralSuffix)
+			.orElse(ExpressionType.super.javaLiteralSuffix());
+}
+  
+  
 }

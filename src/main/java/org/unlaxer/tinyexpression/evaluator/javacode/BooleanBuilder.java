@@ -14,6 +14,7 @@ import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
@@ -44,7 +45,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
     public static BooleanCaseExpressionBuilder SINGLETON = new BooleanCaseExpressionBuilder();
 
     public void build(SimpleJavaCodeBuilder builder, Token token,
-        TinyExpressionTokens tinyExpressionTokens) {
+        TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
 
       List<Token> originalTokens = token.filteredChildren;
       Iterator<Token> iterator = originalTokens.iterator();
@@ -58,9 +59,11 @@ public class BooleanBuilder implements TokenCodeBuilder {
 //        Token booleanExpression = BooleanCaseFactorParser.getBooleanExpression(caseFactor);
 //        Token expression = BooleanCaseFactorParser.getExpression(caseFactor);
         
-        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression ,
+            tinyExpressionTokens , resultType);
         builder.append(" ? ");
-        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+        BooleanExpressionBuilder.SINGLETON.build(builder, expression , 
+            tinyExpressionTokens , resultType);
         builder
           .append(":")
           .n();
@@ -74,20 +77,22 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token, 
-	    TinyExpressionTokens tinyExpressionTokens) {
+	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
 		Parser parser = token.parser;
 		
 		if(parser instanceof NotBooleanExpressionParser) {
 			
 			builder.append("(false ==(");
-			BooleanExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0) , tinyExpressionTokens);
+			BooleanExpressionBuilder.SINGLETON.build(builder , token.filteredChildren.get(0) , 
+			    tinyExpressionTokens , resultType);
 			builder.append("))");
 				
 		}else if(parser instanceof ParenthesesParser){
 		
 			Token parenthesesed = ParenthesesParser.getParenthesesed(token);
 			builder.append("(");
-			BooleanExpressionBuilder.SINGLETON.build(builder , parenthesesed , tinyExpressionTokens);
+			BooleanExpressionBuilder.SINGLETON.build(builder , parenthesesed , 
+			    tinyExpressionTokens , resultType);
 			builder.append(")");
 			
 		
@@ -134,15 +139,15 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			parser instanceof NumberGreaterExpressionParser ||
 			parser instanceof NumberLessExpressionParser
 		){
-			BinaryConditionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			BinaryConditionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 			
 		}else if (parser instanceof StringEqualsExpressionParser) {
 
-			StringBooleanEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			StringBooleanEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 
 		} else if (parser instanceof StringNotEqualsExpressionParser) {
 
-			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 
 		}else if(
 			parser instanceof StringStartsWithParser||
@@ -150,15 +155,15 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			parser instanceof StringContainsParser
 		){
 			
-			StringMethodClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			StringMethodClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 			
 		} else if (parser instanceof StringInParser) {
 
-			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
-			SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens);
+			SideEffectExpressionBuilder.SINGLETON.build(builder , token ,tinyExpressionTokens , resultType);
 			
 		}else if (parser instanceof BooleanIfExpressionParser) {
 		  
@@ -173,13 +178,14 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , 
+          tinyExpressionTokens , resultType);
 
       builder.append(" ? ").n().incTab();
-      BooleanExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens , resultType);
 
       builder.append(":").n();
-      BooleanExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens , resultType);
 
       builder.decTab();
 
@@ -195,16 +201,18 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      BooleanCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
+      BooleanCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , 
+          tinyExpressionTokens , resultType);
       builder.n();
-      BooleanExpressionBuilder.SINGLETON.build(builder, defaultCaseFactor , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, defaultCaseFactor , 
+          tinyExpressionTokens , resultType);
 
       builder.append(")");
       builder.decTab();
       
     }else if (parser instanceof MethodInvocationParser) {
       
-      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
+      MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens , resultType);
 
 		}else {
 		  //ここでBooleanExpressionParserでエラーが発生するのはOperatorOperandTreeCreatorできちんとapplyされてない時

@@ -162,7 +162,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param classLoader
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV3(String formula, String javaCode, String className, ResultType resultType,
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className, ExpressionType resultType,
       byte[] byteCode, String byteCodeHash, List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
     super(formula, className, resultType , false);
@@ -210,7 +210,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param classNameAndByteCodeList
    * @param classLoader
    */
-  public JavaCodeCalculatorV3(String formula, String javaCode, String className,ResultType resultType,  
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className,ExpressionType resultType,  
       byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass, 
       List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {

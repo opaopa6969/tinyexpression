@@ -45,6 +45,8 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.util.digest.MD5;
@@ -150,6 +152,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
     
+    ExpressionType resultType = ExpressionTypes._float;
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
     
@@ -165,7 +168,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 
       classNameWithHash = className + "_" + formulaHash;
       
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , resultType);
 
       JavaFileObject javaFileObject = new SimpleJavaFileObject(
           URI.create("string:///" + classNameWithHash + ".java"), JavaFileObject.Kind.SOURCE) {

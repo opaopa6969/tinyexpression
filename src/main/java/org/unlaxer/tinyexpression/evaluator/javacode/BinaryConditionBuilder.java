@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.NumberEqualEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberGreaterExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
@@ -15,23 +16,27 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token,
-	    TinyExpressionTokens tinyExpressionTokens) {
+	    TinyExpressionTokens tinyExpressionTokens, ExpressionType resultType) {
 		
 		Token factor1 = token.filteredChildren.get(0);
 		Token factor2 = token.filteredChildren.get(1);
 		
-		builder
-			.append("(java.lang.Float.compare(");
+		String className = resultType.javaTypeAsString();
 		
-		NumberExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
+		builder
+//    .append("(java.lang.Float.compare(");
+    .append("(")
+    .append(className)
+    .append(".compare(");
+		
+		NumberExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens , resultType);
 		
 		builder
 			.append(",");
-		NumberExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
+		NumberExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens , resultType);
 		builder
 			.append(")");
-		
-		
+
 		
 		if(token.parser instanceof NumberEqualEqualExpressionParser) {
 			

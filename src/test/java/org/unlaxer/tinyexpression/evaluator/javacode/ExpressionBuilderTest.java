@@ -9,6 +9,7 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 
@@ -26,7 +27,7 @@ public class ExpressionBuilderTest {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
       System.out.println(TokenPrinter.get(rootToken));
       NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, 
-          tinyExpressionTokens.expressionToken , tinyExpressionTokens);
+          tinyExpressionTokens.expressionToken , tinyExpressionTokens, ExpressionTypes._float);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -40,7 +41,8 @@ public class ExpressionBuilderTest {
       System.out.println(TokenPrinter.get(rootToken));
       tinyExpressionTokens = new TinyExpressionTokens(rootToken);
       
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, tinyExpressionTokens.expressionToken , tinyExpressionTokens);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, tinyExpressionTokens.expressionToken ,
+          tinyExpressionTokens, ExpressionTypes._float);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -56,7 +58,7 @@ public class ExpressionBuilderTest {
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
       System.out.println(TokenPrinter.get(rootToken));
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null , ExpressionTypes._float);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertFalse(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -68,7 +70,7 @@ public class ExpressionBuilderTest {
       rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
       
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null, ExpressionTypes._float);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));

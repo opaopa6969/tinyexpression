@@ -6,6 +6,7 @@ import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.AndParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.NotEqualParser;
 import org.unlaxer.tinyexpression.parser.OrParser;
 import org.unlaxer.tinyexpression.parser.XorParser;
@@ -16,7 +17,7 @@ public class BooleanExpressionBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token,
-	    TinyExpressionTokens tinyExpressionTokens) {
+	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
 
 		builder.append("(");
 		
@@ -25,38 +26,38 @@ public class BooleanExpressionBuilder implements TokenCodeBuilder {
 		
 		if(parser instanceof OrParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
 			builder.append("||");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 			
 		}else if(parser instanceof AndParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
 			builder.append("&&");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 			
 		}else if(parser instanceof XorParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
 			builder.append("^");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 			
 		}else if(parser instanceof EqualEqualParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
 			builder.append("==");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 
 		}else if(parser instanceof NotEqualParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
 			builder.append("!=");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 			
 //		}else if(parser instanceof BooleanExpressionParser) {
 		}else {
 
-			BooleanBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			BooleanBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
 			
 //		}else {
 //			throw new IllegalArgumentException();

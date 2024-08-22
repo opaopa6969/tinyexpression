@@ -47,7 +47,7 @@ public class VariableBuilder {
          Optional<Token> ifNotExists = _setterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
          
          SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
-         parentBuilder.build(simpleJavaCodeBuilder, expression, tinyExpressionTokens);
+         parentBuilder.build(simpleJavaCodeBuilder, expression, tinyExpressionTokens , variableType);
          String expseeionString = simpleJavaCodeBuilder.builder.toString();
 //     String expseeionString = expression.getToken().orElseThrow();
          
