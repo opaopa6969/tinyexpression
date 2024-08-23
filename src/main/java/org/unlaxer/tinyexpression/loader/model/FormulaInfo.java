@@ -18,6 +18,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -93,6 +94,8 @@ public class FormulaInfo{
   @FormulaInfoField public String dependsOn; //
   @Nullable
   @FormulaInfoField public ExpressionType resultType; // default Float
+  @Nullable
+  @FormulaInfoField public ExpressionType numberType; // default Float
 //  @Nullable
 //  @FormulaInfoField public String outputTo;  // this field used from org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor.ResultConsumer
   
@@ -147,7 +150,7 @@ public class FormulaInfo{
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
     //FIXME! return type 
     calculator = calculatorCreator.create(
-        formulaText, className, resultType , classLoader);
+        formulaText, className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader);
     
     this.byteCode = calculator.byteCode();
     
@@ -309,6 +312,13 @@ public class FormulaInfo{
         .append("resultType")
         .append(":")
         .line(resultType.javaType().getTypeName());
+    }
+    
+    if(numberType != null) {
+      builder
+        .append("numberType")
+        .append(":")
+        .line(numberType.javaType().getTypeName());
     }
     
     builder

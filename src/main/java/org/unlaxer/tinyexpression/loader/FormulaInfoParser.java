@@ -17,6 +17,7 @@ import org.unlaxer.parser.combinator.LazyOneOrMore;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
@@ -57,8 +58,9 @@ public class FormulaInfoParser extends LazyOneOrMore{
     CalculatorCreator calculatorCreator = new CalculatorCreator() {
       
       @Override
-      public Calculator<?> create(String formulaText, String className, ExpressionType resultType, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(formulaText, className, resultType, classLoader);
+      public Calculator<?> create(String formulaText, String className, 
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        return new JavaCodeCalculatorV3(formulaText, className, specifiedExpressionTypes, classLoader);
       }
     };
     
@@ -84,6 +86,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "calculatorName", (value)->formulaInfo.calculatorName = value);
         match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
         match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = new ResultType(value));
+        match |= set(keyValue, "numberType", (value)->formulaInfo.numberType = new ResultType(value));
 //        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {

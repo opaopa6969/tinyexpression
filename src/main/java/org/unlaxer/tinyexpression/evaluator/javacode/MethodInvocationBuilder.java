@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.parser.ArgumentsParser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 
 public class MethodInvocationBuilder implements TokenCodeBuilder{
@@ -15,7 +14,7 @@ public class MethodInvocationBuilder implements TokenCodeBuilder{
 
   @Override
   public void build(SimpleJavaCodeBuilder builder, Token token, 
-      TinyExpressionTokens tinyExpressionTokens,ExpressionType resultType) {
+      TinyExpressionTokens tinyExpressionTokens) {
     
     String methodNameAsString = MethodInvocationParser.getMethodNameAsString(token);
     Optional<Token> parametersClause = MethodInvocationParser.getParametersClause(token);
@@ -32,7 +31,7 @@ public class MethodInvocationBuilder implements TokenCodeBuilder{
       builder
         .append(",");
     }
-    ParametersBuilder.buildParameter(builder, parameterTokens, tinyExpressionTokens , resultType);
+    ParametersBuilder.buildParameter(builder, parameterTokens, tinyExpressionTokens);
     builder
       .append(")");
      return ;

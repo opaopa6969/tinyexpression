@@ -35,7 +35,6 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedObjectCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
@@ -62,44 +61,52 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
 
   // constructors for source code
 
-  public JavaCodeCalculatorV3(Name name, String formula , ResultType resultType) throws CompileError {
-    this(name, formula, resultType ,  (Path) null);
+  public JavaCodeCalculatorV3(Name name, String formula , SpecifiedExpressionTypes specifiedExpressionTypes) throws CompileError {
+    this(name, formula, specifiedExpressionTypes ,  (Path) null);
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType, Path outputRootDirectory) throws CompileError {
-    this(name, formula, resultType , Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
+  public JavaCodeCalculatorV3(Name name, String formula, SpecifiedExpressionTypes specifiedExpressionTypes ,
+      Path outputRootDirectory) throws CompileError {
+    this(name, formula, specifiedExpressionTypes , Thread.currentThread().getContextClassLoader(), outputRootDirectory, true,
         new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType , ClassLoader classLoader) throws CompileError {
-    this(name, formula, resultType , classLoader, null, true, new JavaFileManagerContext());
+  public JavaCodeCalculatorV3(Name name, String formula, SpecifiedExpressionTypes specifiedExpressionTypes , 
+      ClassLoader classLoader) throws CompileError {
+    this(name, formula, specifiedExpressionTypes , classLoader, null, true, new JavaFileManagerContext());
   }
 
-  public JavaCodeCalculatorV3(Name name, String formula, ExpressionType resultType ,ClassLoader classLoader, Path outputRootDirectory,
+  public JavaCodeCalculatorV3(Name name, String formula, 
+      SpecifiedExpressionTypes specifiedExpressionTypes ,
+      ClassLoader classLoader, Path outputRootDirectory,
       boolean randomize, JavaFileManagerContext javaFileManagerContext) throws CompileError {
     this(formula, name.getName() + "_CalculatorClass" + (randomize ? Math.abs(new Random().nextLong()) : ""),
-        resultType, classLoader, outputRootDirectory, javaFileManagerContext);
+        specifiedExpressionTypes , classLoader, outputRootDirectory, javaFileManagerContext);
   }
 
-  public JavaCodeCalculatorV3(String formula, String className, ExpressionType resultType, ClassLoader classLoader) throws CompileError {
-    this(formula, className, resultType, classLoader, null, new JavaFileManagerContext());
+  public JavaCodeCalculatorV3(String formula, String className,
+      SpecifiedExpressionTypes specifiedExpressionTypes ,
+      ClassLoader classLoader) throws CompileError {
+    this(formula, className, specifiedExpressionTypes, classLoader, null, new JavaFileManagerContext());
   }
   
   /**
    * from formula
    * @param formula
    * @param className
-   * @param resultType
+   * @param specifiedExpressionTypes
    * @param classLoader
    * @param outputRootDirectory
    * @param javaFileManagerContext
    * @throws CompileError
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV3(String formula, String className, ExpressionType resultType , ClassLoader classLoader,
+  public JavaCodeCalculatorV3(String formula, String className, 
+      SpecifiedExpressionTypes specifiedExpressionTypes ,
+      ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
-    super(formula, className, resultType,  true);
+    super(formula, className, specifiedExpressionTypes ,  true);
     
     CompileContext compileContext = new CompileContext(classLoader,javaFileManagerContext);
     
@@ -111,7 +118,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
       this.className = className;
       formulaHash = MD5.toHex(formula);
 
-      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken , specifiedExpressionTypes);
       
       instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, compileContext);
 
@@ -120,7 +127,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
 //      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
       
       classNameWithHash = className + "_" + formulaHash;
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , resultType);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , specifiedExpressionTypes);
       
       ClassName classNameObject = new ClassName(classNameWithHash);
 
@@ -162,10 +169,11 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param classLoader
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV3(String formula, String javaCode, String className, ExpressionType resultType,
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className, 
+      SpecifiedExpressionTypes specifiedExpressionTypes,
       byte[] byteCode, String byteCodeHash, List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
-    super(formula, className, resultType , false);
+    super(formula, className, specifiedExpressionTypes , false);
     this.className = className;
     this.classNameWithHash = null;
     this.javaCode = javaCode;
@@ -210,11 +218,12 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param classNameAndByteCodeList
    * @param classLoader
    */
-  public JavaCodeCalculatorV3(String formula, String javaCode, String className,ExpressionType resultType,  
+  public JavaCodeCalculatorV3(String formula, String javaCode, String className,
+      SpecifiedExpressionTypes specifiedExpressionTypes,  
       byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass, 
       List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
-    super(formula, className, resultType ,  false);
+    super(formula, className, specifiedExpressionTypes ,  false);
     this.className = className;
     this.javaCode = javaCode;
     this.byteCode = byteCode;

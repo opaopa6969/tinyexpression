@@ -18,7 +18,7 @@ public class BooleanExpressionBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token,
-	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
+	    TinyExpressionTokens tinyExpressionTokens) {
 
 		builder.append("(");
 		
@@ -27,41 +27,41 @@ public class BooleanExpressionBuilder implements TokenCodeBuilder {
 		
 		if(parser instanceof OrParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens);
 			builder.append("||");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens);
 			
 		}else if(parser instanceof AndParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens);
 			builder.append("&&");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens);
 			
 		}else if(parser instanceof XorParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens);
 			builder.append("^");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens);
 			
 		}else if(parser instanceof EqualEqualParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens);
 			builder.append("==");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens);
 
 		}else if(parser instanceof NotEqualParser) {
 			
-			build(builder, filteredChildren.get(1),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(1),tinyExpressionTokens);
 			builder.append("!=");
-			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
+			build(builder, filteredChildren.get(2),tinyExpressionTokens);
 			
 		}else if(parser instanceof BooleanExpressionParser) {
 		  filteredChildren.forEach(child->{
-		    build(builder, child, tinyExpressionTokens, resultType);
+		    build(builder, child, tinyExpressionTokens);
 		  });
 		}else {
 
-			BooleanBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
+			BooleanBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			
 //		}else {
 //			throw new IllegalArgumentException();

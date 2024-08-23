@@ -20,13 +20,15 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface GeneralJavaClassCreator{
   
-  default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken, ExpressionType resultType) {
+  default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken, 
+      SpecifiedExpressionTypes specifiedExpressionTypes) {
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
     
     //TODO determine which use resultType or parser.expressionType()
 //    String returningType = parser.expressionType().javaType().getSimpleName();
+    ExpressionType resultType = specifiedExpressionTypes.resultType();
     String returningType = resultType.javaTypeAsString();
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
@@ -67,15 +69,15 @@ public interface GeneralJavaClassCreator{
     
     if(resultType.isNotBigNumber() && resultType.isNumber()) {
       
-      NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken , resultType);
+      NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
     }else if(resultType.isString()) {
       
-      StringExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken , resultType);
+      StringExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
   
     }else if(resultType.isBoolean()) {
       
-      BooleanExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken , resultType);
+      BooleanExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
     } 
 
@@ -145,12 +147,12 @@ public interface GeneralJavaClassCreator{
         
 //        型に沿ったbuilderでappend
       if(expressionType.isNumber()) {
-        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens , resultType);
+        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else if(expressionType.isBoolean()) {
-        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens , resultType);
+        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else {
         ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , 
-            tinyExpressionTokens , resultType);
+            tinyExpressionTokens);
         build.populateTo(builder, Kind.Function);
         builder.append(build.toString());
       }

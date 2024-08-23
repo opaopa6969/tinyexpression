@@ -4,7 +4,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class StringInBooleanExpressionBuilder implements TokenCodeBuilder {
 
@@ -12,13 +11,13 @@ public class StringInBooleanExpressionBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token , 
-	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultTyhpe) {
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		builder.append("org.unlaxer.util.StringIn.match(");
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		Iterator<ExpressionOrLiteral> iterator = filteredChildren.stream()
-			.map(_token-> StringClauseBuilder.SINGLETON.build(_token, tinyExpressionTokens , resultTyhpe))
+			.map(_token-> StringClauseBuilder.SINGLETON.build(_token, tinyExpressionTokens))
 			.iterator();
 		
 		while (iterator.hasNext()) {

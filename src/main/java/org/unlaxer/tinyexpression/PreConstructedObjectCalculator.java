@@ -12,6 +12,7 @@ import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.ParseException;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 
@@ -24,17 +25,18 @@ public abstract class PreConstructedObjectCalculator implements ObjectCalculator
   final Parsed parsed;
   Map<String,Object> objectByKey;
   
-  final ExpressionType resultType;
+  final SpecifiedExpressionTypes specifiedExpressionTypes;
 
 //	public PreConstructedCalculator(String formula , boolean randomize) {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
 //	}
 
-  public PreConstructedObjectCalculator(String formula, String name , ExpressionType resultType , boolean createToken) {
+  public PreConstructedObjectCalculator(String formula, String name , 
+      SpecifiedExpressionTypes specifiedExpressionTypes , boolean createToken) {
     super();
     this.formula = formula;
     this.name = name;
-    this.resultType = resultType;
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     objectByKey = new HashMap<>();
     
 
@@ -132,6 +134,6 @@ public abstract class PreConstructedObjectCalculator implements ObjectCalculator
   
   @Override
   public ExpressionType resultType() {
-    return resultType;
+    return specifiedExpressionTypes.resultType();
   }
 }

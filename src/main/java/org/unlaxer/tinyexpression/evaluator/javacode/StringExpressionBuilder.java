@@ -1,7 +1,6 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.Token;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class StringExpressionBuilder implements TokenCodeBuilder {
 
@@ -9,9 +8,9 @@ public class StringExpressionBuilder implements TokenCodeBuilder {
 
   @Override
   public void build(SimpleJavaCodeBuilder builder , Token token , 
-      TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
+      TinyExpressionTokens tinyExpressionTokens) {
     
-    ExpressionOrLiteral one = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens , resultType);
+    ExpressionOrLiteral one = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
     
     builder.append(one.toString());
   }

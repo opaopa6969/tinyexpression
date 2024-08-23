@@ -5,7 +5,6 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
@@ -16,16 +15,16 @@ public class StringMethodClauseBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder, Token token , 
-	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		Parser parser = token.parser;
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		
 		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0),
-		    tinyExpressionTokens , resultType);
+		    tinyExpressionTokens);
 		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1),
-		    tinyExpressionTokens , resultType);
+		    tinyExpressionTokens);
 		
 		builder.append("(")
 			.append(left.toString());

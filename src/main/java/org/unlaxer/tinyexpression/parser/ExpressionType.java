@@ -129,4 +129,5 @@ public interface ExpressionType{
     
     return String.valueOf(parseNumber(numberToken))+javaLiteralSuffix();
   }
+  
 }

@@ -22,12 +22,14 @@ public class ExpressionBuilderTest {
     Parsed parsed= tinyExpressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとOperatorOperandTreeCreatorがうまく動かない
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
-    TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+    SpecifiedExpressionTypes specifiedExpressionTypes = 
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken , specifiedExpressionTypes);
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
       System.out.println(TokenPrinter.get(rootToken));
       NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, 
-          tinyExpressionTokens.expressionToken , tinyExpressionTokens, ExpressionTypes._float);
+          tinyExpressionTokens.expressionToken , tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -39,10 +41,11 @@ public class ExpressionBuilderTest {
 //      rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
 //      tinyExpressionTokens = new TinyExpressionTokens(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
-      tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+
+      tinyExpressionTokens = new TinyExpressionTokens(rootToken, specifiedExpressionTypes);
       
       NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, tinyExpressionTokens.expressionToken ,
-          tinyExpressionTokens, ExpressionTypes._float);
+          tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -51,6 +54,9 @@ public class ExpressionBuilderTest {
   @Test
   public void testOld() {
     
+    SpecifiedExpressionTypes specifiedExpressionTypes = 
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    
     NumberExpressionParser expressionParser = new NumberExpressionParser();
     ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
     Parsed parsed= expressionParser.parse(parseContext);
@@ -58,7 +64,7 @@ public class ExpressionBuilderTest {
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
       System.out.println(TokenPrinter.get(rootToken));
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null , ExpressionTypes._float);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertFalse(build.contains("(1.0f+(8.0f/4.0f))"));
@@ -70,7 +76,7 @@ public class ExpressionBuilderTest {
       rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
       System.out.println(TokenPrinter.get(rootToken));
       
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null, ExpressionTypes._float);
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));

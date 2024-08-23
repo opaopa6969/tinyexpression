@@ -110,8 +110,10 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 
       this.className = className;
       formulaHash = MD5.toHex(formula);
+      SpecifiedExpressionTypes specifiedExpressionTypes = 
+          new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
 
-      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken , specifiedExpressionTypes);
       
       instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, compileContext);
 
@@ -120,7 +122,7 @@ public class JavaCodeNumberCalculatorV2 extends PreConstructedNumberCalculator
 //      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
       
       classNameWithHash = className + "_" + formulaHash;
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , ExpressionTypes._float);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
       
       ClassName classNameObject = new ClassName(classNameWithHash);
 

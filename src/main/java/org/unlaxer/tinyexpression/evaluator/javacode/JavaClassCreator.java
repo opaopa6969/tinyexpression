@@ -20,7 +20,7 @@ import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface JavaClassCreator{
   default String createJavaClass(String className, 
-      TinyExpressionTokens tinyExpressionToken , ExpressionType resultType) {
+      TinyExpressionTokens tinyExpressionToken) {
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
@@ -62,7 +62,7 @@ public interface JavaClassCreator{
       .line(") ")
       .n();
 
-    NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken , resultType);
+    NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
     builder
       .setKind(Kind.Calculation)
@@ -74,7 +74,7 @@ public interface JavaClassCreator{
       .decTab()
       .n();
 
-    createMethods(builder, tinyExpressionToken , calculationContextName , resultType);
+    createMethods(builder, tinyExpressionToken , calculationContextName);
     
     builder
       .setKind(Kind.Main);
@@ -85,7 +85,7 @@ public interface JavaClassCreator{
   }
   
   default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens ,
-      String calculationContextName , ExpressionType resultType) {
+      String calculationContextName) {
     List<Token> methodTokens = tinyExpressionTokens.getMethodTokens();
     for (Token token : methodTokens) {
       
@@ -130,12 +130,12 @@ public interface JavaClassCreator{
         
 //        型に沿ったbuilderでappend
       if(expressionType.isNumber()) {
-        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens , resultType);
+        NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else if(expressionType.isBoolean()) {
-        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens , resultType);
+        BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else {
         ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , 
-            tinyExpressionTokens , resultType);
+            tinyExpressionTokens);
         build.populateTo(builder, Kind.Function);
         builder.append(build.toString());
       }

@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class StringBooleanEqualClauseBuilder implements TokenCodeBuilder {
 
@@ -12,14 +11,14 @@ public class StringBooleanEqualClauseBuilder implements TokenCodeBuilder {
 
 	@Override
 	public void build(SimpleJavaCodeBuilder builder , Token token , 
-	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		
 		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0) , 
-		    tinyExpressionTokens , resultType);
+		    tinyExpressionTokens);
 		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1) ,
-		    tinyExpressionTokens , resultType);
+		    tinyExpressionTokens);
 		
 		builder.append("(")
 			.append(left.toString())

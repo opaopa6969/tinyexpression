@@ -152,7 +152,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
     super(formula, className, true);
     
-    ExpressionType resultType = ExpressionTypes._float;
+    SpecifiedExpressionTypes specifiedExpressionTypes = 
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
     
@@ -163,12 +165,12 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       this.className = className;
       formulaHash = MD5.toHex(formula);
 
-      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken);
+      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken,specifiedExpressionTypes);
       this.returningClass = tinyExpressionTokens.expressionToken.getParser().expressionType().javaType();
 
       classNameWithHash = className + "_" + formulaHash;
       
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , resultType);
+      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
 
       JavaFileObject javaFileObject = new SimpleJavaFileObject(
           URI.create("string:///" + classNameWithHash + ".java"), JavaFileObject.Kind.SOURCE) {

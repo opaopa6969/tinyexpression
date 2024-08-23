@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
@@ -28,10 +30,13 @@ public class TinyExpressionTokens{
   final Map<String,Token> variableDeclarationByVariableName;
   final Map<String,TypedToken<MethodParser>> methodDeclarationBymethodName;
   final List<Token> methodTokens;
-
+  final SpecifiedExpressionTypes specifiedExpressionTypes;
   
-  public TinyExpressionTokens(Token tinyExpressionToken) {
+  public TinyExpressionTokens(Token tinyExpressionToken ,  
+      SpecifiedExpressionTypes specifiedExpressionTypes) {
     super();
+    assert specifiedExpressionTypes.numberType().isNumber();
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     if(false ==tinyExpressionToken.parser instanceof TinyExpressionParser) {
       throw new IllegalArgumentException();
     }
@@ -76,6 +81,16 @@ public class TinyExpressionTokens{
            Function.identity()
            )
        );
+  }
+  
+  public ExpressionType numberType() {
+    if(specifiedExpressionTypes.numberType() != null) {
+      return specifiedExpressionTypes.numberType();
+    }
+    if(specifiedExpressionTypes.resultType()!= null && specifiedExpressionTypes.resultType().isNumber()) {
+      return specifiedExpressionTypes.resultType();
+    }
+    return ExpressionTypes._float;
   }
   
   public Token getTinyExpressionToken() {

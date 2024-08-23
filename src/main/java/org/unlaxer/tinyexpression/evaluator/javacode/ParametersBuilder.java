@@ -16,12 +16,12 @@ import org.unlaxer.tinyexpression.parser.StringExpression;
 public class ParametersBuilder  {
 
 	public static void buildParameter(SimpleJavaCodeBuilder builder, MethodAndParameters methodAndParameters , 
-	    TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
-	  buildParameter(builder, methodAndParameters.parameterTokens, tinyExpressionTokens , resultType);
+	    TinyExpressionTokens tinyExpressionTokens) {
+	  buildParameter(builder, methodAndParameters.parameterTokens, tinyExpressionTokens);
 	}
 	
   public static void buildParameter(SimpleJavaCodeBuilder builder, List<Token> Parameters , 
-        TinyExpressionTokens tinyExpressionTokens , ExpressionType resultType) {
+        TinyExpressionTokens tinyExpressionTokens) {
 		
 		Iterator<Token> iterator = Parameters.iterator();
 		
@@ -31,13 +31,13 @@ public class ParametersBuilder  {
 			Parser parser = token.parser;
 			if(parser instanceof NakedVariableParser) {
 //				  NakedVariableBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-        NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);//デフォルトでnumberとする
+        NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);//デフォルトでnumberとする
 			}else if(parser instanceof NumberExpression) {
-				NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
+				NumberExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			}else if(parser instanceof BooleanExpression) {
-				BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);
+				BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			}else if (parser instanceof StringExpression) {
-				ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens , resultType);
+				ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
         build.populateTo(builder, Kind.Function);
         builder.append(build.toString());
 			}else {
