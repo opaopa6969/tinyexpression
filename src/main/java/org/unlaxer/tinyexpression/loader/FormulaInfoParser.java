@@ -21,7 +21,6 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.digest.HEX;

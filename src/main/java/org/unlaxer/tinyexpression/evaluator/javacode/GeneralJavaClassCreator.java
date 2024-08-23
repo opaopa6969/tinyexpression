@@ -97,7 +97,7 @@ public interface GeneralJavaClassCreator{
       .setKind(Kind.Main);
 
     String code = builder.toString();
-    System.out.println(code);
+//    System.out.println(code);
     return code;
   }
   

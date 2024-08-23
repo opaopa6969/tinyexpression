@@ -142,3 +142,10 @@ resultType:boolean
 formula:
 (1==1)&true|('肉'!='魚')
 ---END_OF_PART---
+var:numberType指定真偽値計算結果
+dependsOn:
+resultType:boolean
+numberType:long
+formula:
+(423372036854775807==423372036854775807)&true|('肉'!='魚')
+---END_OF_PART---

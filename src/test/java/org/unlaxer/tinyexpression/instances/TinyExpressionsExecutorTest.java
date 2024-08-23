@@ -206,6 +206,7 @@ public class TinyExpressionsExecutorTest {
         String.valueOf(calculationContext.getNumber("ダブル計算結果").orElseThrow()));
     
     assertEquals(true,calculationContext.getBoolean("真偽値計算結果").orElseThrow());
+    assertEquals(true,calculationContext.getBoolean("numberType指定真偽値計算結果").orElseThrow());
   }
   
   

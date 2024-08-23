@@ -35,7 +35,6 @@ public class TinyExpressionTokens{
   public TinyExpressionTokens(Token tinyExpressionToken ,  
       SpecifiedExpressionTypes specifiedExpressionTypes) {
     super();
-    assert specifiedExpressionTypes.numberType().isNumber();
     this.specifiedExpressionTypes = specifiedExpressionTypes;
     if(false ==tinyExpressionToken.parser instanceof TinyExpressionParser) {
       throw new IllegalArgumentException();
