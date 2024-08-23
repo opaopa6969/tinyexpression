@@ -162,7 +162,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param formula
    * @param javaCode
    * @param className
-   * @param resultType
+   * @param specifiedExpressionTypes
    * @param byteCode
    * @param byteCodeHash
    * @param classNameAndByteCodeList
@@ -211,7 +211,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    * @param formula
    * @param javaCode
    * @param className
-   * @param resultType
+   * @param specifiedExpressionTypes
    * @param byteCode
    * @param byteCodeHash
    * @param calculatorClass
