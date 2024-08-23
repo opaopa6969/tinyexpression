@@ -6,7 +6,6 @@ import java.util.Optional;
 import org.unlaxer.Tag;
 
 public enum ExpressionTypes implements ExpressionType{
-  number(Float.class,float.class),
   _byte(Byte.class,byte.class),
   _short(Short.class,short.class),
   _int(Integer.class,int.class),
@@ -15,6 +14,7 @@ public enum ExpressionTypes implements ExpressionType{
   _long(Long.class,long.class,"L"),
   bigDecimal(java.math.BigDecimal.class),
   bigInteger(java.math.BigInteger.class),
+  number(Float.class,float.class),
   string(String.class),
   _boolean(Boolean.class,boolean.class),
   object(Object.class),
@@ -63,7 +63,7 @@ public enum ExpressionTypes implements ExpressionType{
     return this == _int;
   }
   public boolean isFloat() {
-    return this == _int;
+    return this == _float;
   }
   public boolean isLong() {
     return this == _long;

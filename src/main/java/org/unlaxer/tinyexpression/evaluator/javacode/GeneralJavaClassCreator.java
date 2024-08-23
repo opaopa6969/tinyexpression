@@ -24,7 +24,10 @@ public interface GeneralJavaClassCreator{
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
-    String returningType = parser.expressionType().javaType().getSimpleName();
+    
+    //TODO determine which use resultType or parser.expressionType()
+//    String returningType = parser.expressionType().javaType().getSimpleName();
+    String returningType = resultType.javaTypeAsString();
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
@@ -62,7 +65,7 @@ public interface GeneralJavaClassCreator{
       .line(") ")
       .n();
     
-    if(resultType.isNotBigNumber()) {
+    if(resultType.isNotBigNumber() && resultType.isNumber()) {
       
       NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken , resultType);
 
@@ -91,8 +94,8 @@ public interface GeneralJavaClassCreator{
     builder
       .setKind(Kind.Main);
 
-
     String code = builder.toString();
+    System.out.println(code);
     return code;
   }
   

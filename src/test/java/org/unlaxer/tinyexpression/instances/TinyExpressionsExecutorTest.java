@@ -45,11 +45,11 @@ public class TinyExpressionsExecutorTest {
         checkResult.suspiciousByKind.put(checkKindName, result.floatValue());
       });
       formulaInfo.getValue("var").ifPresent(varName->{
-        calculationContext.set(varName, result.floatValue());
+        calculationContext.set(varName, result);
       });
       formulaInfo.getValue("field").ifPresent(fieldName->{
         try {
-          CheckResult.class.getDeclaredField(fieldName).set(checkResult, result.floatValue());
+          CheckResult.class.getDeclaredField(fieldName).set(checkResult, result);
         } catch (IllegalArgumentException | IllegalAccessException | NoSuchFieldException | SecurityException e) {
           throw new RuntimeException(e);
         }
@@ -198,7 +198,14 @@ public class TinyExpressionsExecutorTest {
     assertEquals("6969", String.valueOf((int)checkResult.theScore));
     assertEquals("1.0", String.valueOf(calculationContext.getValue("matchNumber").orElseThrow()));
     assertEquals("1.0", String.valueOf(calculationContext.getValue("matchAlphabet").orElseThrow()));
+    assertEquals("opaopa", calculationContext.getString("name").orElseThrow());
+    assertEquals("opaopa", checkResult.theName);
+    assertEquals(String.valueOf(423372036854775807L*2), 
+        String.valueOf(calculationContext.getNumber("ロング計算結果").orElseThrow()));
+    assertEquals(String.valueOf(423372036854775807D*2), 
+        String.valueOf(calculationContext.getNumber("ダブル計算結果").orElseThrow()));
     
+    assertEquals(true,calculationContext.getBoolean("真偽値計算結果").orElseThrow());
   }
   
   

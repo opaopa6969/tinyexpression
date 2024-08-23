@@ -5,6 +5,7 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.AndParser;
+import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.NotEqualParser;
@@ -54,7 +55,10 @@ public class BooleanExpressionBuilder implements TokenCodeBuilder {
 			builder.append("!=");
 			build(builder, filteredChildren.get(2),tinyExpressionTokens , resultType);
 			
-//		}else if(parser instanceof BooleanExpressionParser) {
+		}else if(parser instanceof BooleanExpressionParser) {
+		  filteredChildren.forEach(child->{
+		    build(builder, child, tinyExpressionTokens, resultType);
+		  });
 		}else {
 
 			BooleanBuilder.SINGLETON.build(builder, token , tinyExpressionTokens , resultType);

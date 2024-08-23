@@ -11,7 +11,7 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	public final RoundingMode roundingMode;
 	public final Angle angle;
 	
-	public final Map<String,Float> valueByName = newMap();
+	public final Map<String,Number> valueByName = newMap();
 	
 	public final Map<String,Boolean> booleanByName = newMap();
 	
@@ -53,6 +53,7 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	 */
 	@Override
 	public void set(String name,float value) {
+	  
 		valueByName.put(name, value);
 	}
 	
@@ -62,7 +63,7 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	@Override
 	public Optional<Float> getValue(String name) {
 
-		return Optional.ofNullable(valueByName.get(name));
+		return Optional.ofNullable((Float)valueByName.get(name));
 	}
 	
 	/* (non-Javadoc)
@@ -124,8 +125,6 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 		return random.nextFloat();
 	}
 	
-	
-	
 	@Override
 	public Angle angle() {
 		return angle;
@@ -142,5 +141,17 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	}
 
 	public abstract <T> Map<String,T> newMap();
+
+  @Override
+  public void set(String name, Number value) {
+    valueByName.put(name, value);
+  }
+
+  @Override
+  public Optional<? extends Number> getNumber(String name) {
+    return Optional.ofNullable(valueByName.get(name));
+  }
+	
+	
 
 }
