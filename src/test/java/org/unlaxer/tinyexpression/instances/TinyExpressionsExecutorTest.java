@@ -18,8 +18,15 @@ import org.unlaxer.tinyexpression.instances.TinyExpressionInstancesCacheTest.Fil
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
+/**
+ * TinyExpressionsExecutorはCalculatorのCacheを指定されたComparator<Calculator>とPredicate<Calculator>でsort/filteringを
+ * 行って実行するクラス。ResultConsumerを指定することにより計算結果をcheckResultや変数に書き込んだりする
+ */
 public class TinyExpressionsExecutorTest {
   
+  /*
+   * Test用の簡易的なCheckResult class
+   */
   public static class CheckResult{
     public Map<String,Float> suspiciousByKind = new HashMap<>();
     public float theScore;
@@ -28,6 +35,9 @@ public class TinyExpressionsExecutorTest {
     public Timestamp theTimestamp;
   }
   
+  /**
+   * CheckResultを内部にもち計算結果を処理してcheckResultや変数に書き込む
+   */
   public static class ResultConsumerWithCheckResult implements ResultConsumer{
     
     public final CheckResult checkResult;
@@ -37,16 +47,24 @@ public class TinyExpressionsExecutorTest {
       this.checkResult = checkResult;
     }
 
+    /**
+     * 数値の計算結果を処理する
+     */
     @Override
     public void accept(CalculationContext calculationContext, Calculator<? extends Number> calclator,
         FormulaInfo formulaInfo, Number result) {
-      
+    
+      //formulaInfoにcheckKindが指定されていればsuspiciousByKindに書き込む
       formulaInfo.getValue("checkKind").ifPresent(checkKindName->{
         checkResult.suspiciousByKind.put(checkKindName, result.floatValue());
       });
+      
+      //formulaInfoにvarが指定されていれば変数に書き込む
       formulaInfo.getValue("var").ifPresent(varName->{
         calculationContext.set(varName, result);
       });
+      
+      //formulaInfoにfieldが指定されていればcheckResultのfieldに書き込む
       formulaInfo.getValue("field").ifPresent(fieldName->{
         try {
           CheckResult.class.getDeclaredField(fieldName).set(checkResult, result);
@@ -57,6 +75,9 @@ public class TinyExpressionsExecutorTest {
       
     }
 
+    /**
+     * 文字列の計算結果を処理する
+     */
     @Override
     public void accept(CalculationContext calculationContext, Calculator<String> calclator, 
         FormulaInfo formulaInfo,String result) {
@@ -73,6 +94,9 @@ public class TinyExpressionsExecutorTest {
       });      
     }
 
+    /**
+     * booleanの計算結果を処理する
+     */
     @Override
     public void accept(CalculationContext calculationContext, Calculator<Boolean> calclator, 
         FormulaInfo formulaInfo,boolean result) {
@@ -88,6 +112,9 @@ public class TinyExpressionsExecutorTest {
       });
     }
 
+    /**
+     * Objectの計算結果を処理する
+     */
     @Override
     public void accept(CalculationContext calculationContext, Calculator<Object> calclator, 
         FormulaInfo formulaInfo,Object result) {
@@ -104,6 +131,11 @@ public class TinyExpressionsExecutorTest {
     }
   }
   
+  /**
+   * Calculatorの実行順序を決定するComparator
+   * PREやPOSTが名前についていればそれに従い優先順を決める
+   * DependsOnが指定されていればDependsOnのnestLevelで補正を行う
+   */
   public static class NameAndDependsOnComparator implements Comparator<Calculator<?>>{
     
     public static final NameAndDependsOnComparator SINGLETON= new NameAndDependsOnComparator();
@@ -156,18 +188,25 @@ public class TinyExpressionsExecutorTest {
   @Test
   public void test() {
     
+    // MultiTenancyで使用されるIDと結果の出力の項目名を指定する
     FormulaInfoAdditionalFields formulaInfoAdditionalFields = 
         new FormulaInfoAdditionalFields("siteId","checkKind");
     
+    // TestのformulaInfo.txtが保存されているroot dirを指定する。ここからtenantId毎にsub directoryが掘られてformulaInfo.txtが保存される
     Path rootPath = Paths.get(".", "src","test","resources","formulaInfo-test");
     
-    
+    //formula-info.txtからCalculatorのlistをcacheするクラス
+    //実際のapplicationではRDBから読み込む実装になったりする
     FileBaseTinyExpressionInstancesCache fileBaseTinyExpressionInstancesCache = 
         new FileBaseTinyExpressionInstancesCache(rootPath,formulaInfoAdditionalFields);
     
+    //実行するexecutor
     TinyExpressionsExecutor tinyExpressionsExecutor = new TinyExpressionsExecutor();
     
+    //最終敵に値を格納するCheckResult
     CheckResult checkResult = new CheckResult();
+    
+    //計算結果を格納するためのResultConsumer
     ResultConsumerWithCheckResult resultConsumerWithCheckResult = new ResultConsumerWithCheckResult(checkResult);
     
     ;
@@ -176,6 +215,7 @@ public class TinyExpressionsExecutorTest {
     calculationContext.set("input", "1234");
     calculationContext.set("inputName", "ABCD");
     
+    //実行はしてCalculationResultのListを得る
     List<CalculationResult> execute = tinyExpressionsExecutor.execute(
         TenantID.create(69), 
         calculationContext,
