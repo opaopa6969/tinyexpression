@@ -51,35 +51,4 @@ public class ExpressionBuilderTest {
       assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
     }
   }
-  @Test
-  public void testOld() {
-    
-    SpecifiedExpressionTypes specifiedExpressionTypes = 
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
-    
-    NumberExpressionParser expressionParser = new NumberExpressionParser();
-    ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
-    Parsed parsed= expressionParser.parse(parseContext);
-    Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとASTCreatorがうまく動かない
-    {
-      SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
-      System.out.println(TokenPrinter.get(rootToken));
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
-      String build = simpleJavaCodeBuilder.build();
-      System.out.println(build);
-      assertFalse(build.contains("(1.0f+(8.0f/4.0f))"));
-    }
-
-    {
-      SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
-
-      rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
-      System.out.println(TokenPrinter.get(rootToken));
-      
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, rootToken,null);
-      String build = simpleJavaCodeBuilder.build();
-      System.out.println(build);
-      assertTrue(build.contains("(1.0f+(8.0f/4.0f))"));
-    }
-  }
 }
