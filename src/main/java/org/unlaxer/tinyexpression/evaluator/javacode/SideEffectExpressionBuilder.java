@@ -54,7 +54,7 @@ public class SideEffectExpressionBuilder implements TokenCodeBuilder {
         tinyExpressionTokens);
     
     builder
-      .append(")).orElseThrow(()->new org.unlaxer.tinyexpression.Calculator.CalculationException(\"class not found in CalculationContext. please set :"+className+"\"))");
+      .append(")).orElseThrow(()->new org.unlaxer.tinyexpression.CalculationException(\"class not found in CalculationContext. please set :"+className+"\"))");
     // 1st implementation : first parameter is default returning value
     // 2nd implementation : "returning as type default xxx". xxx is default returning value
     //　　　　　　　　　　　　　　　　 : if returning clause is not exists , then first parameter is default returning value

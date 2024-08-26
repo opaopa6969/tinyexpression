@@ -253,7 +253,7 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 	    CalculateResult calculateResult = 
 	        calculator.calculate(calculateContext,formula,ExpressionTypes._float);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
-	    BigDecimal x = calculateResult.get(BigDecimal.class);
+	    BigDecimal x = new BigDecimal(calculateResult.get(Float.class));
 	    System.out.format(" %s = %s \n" , formula , x.toString());
 	    boolean match = 
 	      expected.compareTo(x) ==0 ||

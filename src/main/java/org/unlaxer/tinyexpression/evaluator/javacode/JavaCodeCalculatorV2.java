@@ -238,7 +238,8 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
    * @param classLoader
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+  public JavaCodeCalculatorV2(String formula, String javaCode, String className, 
+      byte[] byteCode, String byteCodeHash,
       ClassLoader classLoader) {
     super(formula, className,
         new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
@@ -299,7 +300,8 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
    * @param calculatorClass
    * @param classLoader
    */
-  public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
+  public JavaCodeCalculatorV2(String formula, String javaCode, String className, 
+      byte[] byteCode, String byteCodeHash,
       Class<TokenBaseOperator<CalculationContext>> calculatorClass, ClassLoader classLoader) {
     super(formula, className, 
         new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),

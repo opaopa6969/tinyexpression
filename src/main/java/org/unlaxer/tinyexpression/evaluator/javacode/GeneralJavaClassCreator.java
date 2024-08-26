@@ -43,9 +43,9 @@ public interface GeneralJavaClassCreator{
       .n()
       .append("public class ")
       .append(className)
-      .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator<")
-      .append(returningType)
-      .append(">{")
+      .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
+//      .append(returningType)
+//      .append(">{")
     
 //    .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
 //      .append(" implements ContextCalculator {")

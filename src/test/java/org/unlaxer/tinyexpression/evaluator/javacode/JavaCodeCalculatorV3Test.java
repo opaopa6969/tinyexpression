@@ -14,7 +14,4 @@ public class JavaCodeCalculatorV3Test extends CalculatorImplTest{
 		    new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
 		    Thread.currentThread().getContextClassLoader());
 	}
-
-	
-	
 }

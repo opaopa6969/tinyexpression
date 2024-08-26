@@ -99,7 +99,7 @@ public class TinyExpressionsExecutorTest {
      */
     @Override
     public void accept(CalculationContext calculationContext, Calculator calclator, 
-        FormulaInfo formulaInfo,boolean result) {
+        FormulaInfo formulaInfo,Boolean result) {
       formulaInfo.getValue("var").ifPresent(varName->{
         calculationContext.set(varName, result);
       });
