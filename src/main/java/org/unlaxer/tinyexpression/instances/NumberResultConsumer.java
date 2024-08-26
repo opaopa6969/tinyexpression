@@ -7,5 +7,5 @@ import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 public interface NumberResultConsumer{
   
   void accept(CalculationContext calculationContext,
-      Calculator<? extends Number> calclator , FormulaInfo formulaInfo, Number result);
+      Calculator calclator , FormulaInfo formulaInfo, Number result);
 }

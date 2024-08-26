@@ -34,7 +34,7 @@ public class TinyExpressionInstancesCacheTest {
     
     Path rootFolder;
     FormulaInfoAdditionalFields formulaInfoAdditionalFields;
-    Map<TenantID,List<Calculator<?>>> calculatorsByTenantId = new ConcurrentHashMap<>();
+    Map<TenantID,List<Calculator>> calculatorsByTenantId = new ConcurrentHashMap<>();
     
     
     public FileBaseTinyExpressionInstancesCache(Path rootFolder , 
@@ -52,15 +52,15 @@ public class TinyExpressionInstancesCacheTest {
 
 
     @Override
-    public List<Calculator<?>> get(TenantID tenantID, Comparator<Calculator<?>> comparator, ClassLoader classLoader) {
+    public List<Calculator> get(TenantID tenantID, Comparator<Calculator> comparator, ClassLoader classLoader) {
       return get(tenantID, comparator, x->true , classLoader);
     }
 
     @Override
-    public List<Calculator<?>> get(TenantID tenantID, Comparator<Calculator<?>> comparator,
-        Predicate<Calculator<?>> passFilter, ClassLoader classLoader) {
+    public List<Calculator> get(TenantID tenantID, Comparator<Calculator> comparator,
+        Predicate<Calculator> passFilter, ClassLoader classLoader) {
       
-        List<Calculator<?>> matchedCalculators = 
+        List<Calculator> matchedCalculators = 
             calculatorsByTenantId.computeIfAbsent(tenantID, 
                 tenantId->{
                   Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
@@ -69,7 +69,7 @@ public class TinyExpressionInstancesCacheTest {
                         FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
                     
                     parse.throwIfMatch();
-                    List<Calculator<?>> list = parse.right().get().get().stream()
+                    List<Calculator> list = parse.right().get().get().stream()
                       .map(FormulaInfo::calculator)
                       .filter(passFilter)
                       .sorted(comparator)

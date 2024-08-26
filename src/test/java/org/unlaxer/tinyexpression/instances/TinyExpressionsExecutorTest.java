@@ -51,7 +51,7 @@ public class TinyExpressionsExecutorTest {
      * 数値の計算結果を処理する
      */
     @Override
-    public void accept(CalculationContext calculationContext, Calculator<? extends Number> calclator,
+    public void accept(CalculationContext calculationContext, Calculator calclator,
         FormulaInfo formulaInfo, Number result) {
     
       //formulaInfoにcheckKindが指定されていればsuspiciousByKindに書き込む
@@ -79,7 +79,7 @@ public class TinyExpressionsExecutorTest {
      * 文字列の計算結果を処理する
      */
     @Override
-    public void accept(CalculationContext calculationContext, Calculator<String> calclator, 
+    public void accept(CalculationContext calculationContext, Calculator calclator, 
         FormulaInfo formulaInfo,String result) {
       
       formulaInfo.getValue("var").ifPresent(varName->{
@@ -98,7 +98,7 @@ public class TinyExpressionsExecutorTest {
      * booleanの計算結果を処理する
      */
     @Override
-    public void accept(CalculationContext calculationContext, Calculator<Boolean> calclator, 
+    public void accept(CalculationContext calculationContext, Calculator calclator, 
         FormulaInfo formulaInfo,boolean result) {
       formulaInfo.getValue("var").ifPresent(varName->{
         calculationContext.set(varName, result);
@@ -116,7 +116,7 @@ public class TinyExpressionsExecutorTest {
      * Objectの計算結果を処理する
      */
     @Override
-    public void accept(CalculationContext calculationContext, Calculator<Object> calclator, 
+    public void accept(CalculationContext calculationContext, Calculator calclator, 
         FormulaInfo formulaInfo,Object result) {
       formulaInfo.getValue("var").ifPresent(varName->{
         calculationContext.setObject(varName, result);
@@ -136,7 +136,7 @@ public class TinyExpressionsExecutorTest {
    * PREやPOSTが名前についていればそれに従い優先順を決める
    * DependsOnが指定されていればDependsOnのnestLevelで補正を行う
    */
-  public static class NameAndDependsOnComparator implements Comparator<Calculator<?>>{
+  public static class NameAndDependsOnComparator implements Comparator<Calculator>{
     
     public static final NameAndDependsOnComparator SINGLETON= new NameAndDependsOnComparator();
     
@@ -145,11 +145,11 @@ public class TinyExpressionsExecutorTest {
     public static final int POST  =3000000;
 
     @Override
-    public int compare(Calculator<?> o1, Calculator<?> o2) {
+    public int compare(Calculator o1, Calculator o2) {
       return score(o1)-score(o2);
     }
     
-    public int score(Calculator<?> calculator) {
+    public int score(Calculator calculator) {
       
       int dependsOnByNestLevel = calculator.dependsOnByNestLevel();
       if(dependsOnByNestLevel == 0) {
@@ -158,7 +158,7 @@ public class TinyExpressionsExecutorTest {
       return scoreByName(calculator.rootDependsOnBy()) - dependsOnByNestLevel;
     }
     
-    public int scoreByName(Calculator<?> calculator) {
+    public int scoreByName(Calculator calculator) {
       Optional<FormulaInfo> formulaInfoOptional = calculator.formulaInfo();
       if(formulaInfoOptional.isEmpty()) {
         return NORMAL;

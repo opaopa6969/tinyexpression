@@ -4,10 +4,10 @@ import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 
-public class SampleConstructed implements TokenBaseOperator<CalculationContext, Float>{
+public class SampleConstructed implements TokenBaseOperator<CalculationContext>{
 	
 	@Override
-	public Float evaluate(CalculationContext calculateContext , Token token) {
+	public Object evaluate(CalculationContext calculateContext , Token token) {
 		
 		/*
 		if(

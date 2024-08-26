@@ -15,6 +15,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -57,9 +58,18 @@ public class FormulaInfoParser extends LazyOneOrMore{
     CalculatorCreator calculatorCreator = new CalculatorCreator() {
       
       @Override
-      public Calculator<?> create(String formulaText, String className, 
+      public Calculator create(String formulaText, String className, 
           SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(formulaText, className, specifiedExpressionTypes, classLoader);
+        return new JavaCodeCalculatorV3(formulaText, className, 
+            specifiedExpressionTypes, classLoader);
+      }
+
+      @Override
+      public Calculator create(String formula, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        return new JavaCodeCalculatorV3(formula, javaCode, className, specifiedExpressionTypes,
+            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
       }
     };
     

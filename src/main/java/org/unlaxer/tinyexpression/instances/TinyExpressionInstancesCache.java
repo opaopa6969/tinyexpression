@@ -10,9 +10,9 @@ public interface TinyExpressionInstancesCache extends TinyExpressionInstances{
   
   boolean clearCache(TenantID tenantID);
   
-  List<Calculator<?>> get(
+  List<Calculator> get(
       TenantID tenantID,
-      Comparator<Calculator<?>> comparator , 
-      Predicate<Calculator<?>> passFilter , 
+      Comparator<Calculator> comparator , 
+      Predicate<Calculator> passFilter , 
       ClassLoader classLoader);
 }

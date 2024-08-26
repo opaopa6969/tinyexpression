@@ -12,9 +12,11 @@ import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.ParseException;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
-public abstract class PreConstructedCalculator<T> implements Calculator<T> {
+public abstract class PreConstructedCalculator implements Calculator {
   
   public final String name;
   public final String formula;
@@ -22,15 +24,19 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   final ParseContext parseContext;
   final Parsed parsed;
   Map<String,Object> objectByKey;
+  
+  final SpecifiedExpressionTypes specifiedExpressionTypes;
 
 //	public PreConstructedCalculator(String formula , boolean randomize) {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
 //	}
 
-  public PreConstructedCalculator(String formula, String name , boolean createToken) {
+  public PreConstructedCalculator(String formula, String name , 
+      SpecifiedExpressionTypes specifiedExpressionTypes , boolean createToken) {
     super();
     this.formula = formula;
     this.name = name;
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     objectByKey = new HashMap<>();
     
 
@@ -81,11 +87,11 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
   }
 
   @Override
-  public T apply(CalculationContext calculateContext) {
+  public Object apply(CalculationContext calculateContext) {
     return calculate(calculateContext);
   }
 
-  public T calculate(CalculationContext calculateContext) {
+  public Object calculate(CalculationContext calculateContext) {
     return getCalculatorOperator().evaluate(calculateContext, rootToken);
   }
 
@@ -120,9 +126,14 @@ public abstract class PreConstructedCalculator<T> implements Calculator<T> {
 	public abstract String byteCodeHash();
 	
 	public abstract Collection<TransactionListener> transactionListeners();
-
+	
   @Override
   public CreatedFrom createdFrom() {
     return parsed == null ? CreatedFrom.byteCode : CreatedFrom.formula;
+  }
+  
+  @Override
+  public ExpressionType resultType() {
+    return specifiedExpressionTypes.resultType();
   }
 }

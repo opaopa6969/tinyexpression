@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -53,8 +54,8 @@ import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
 
-public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T>
-    implements JavaClassCreator, TokenBaseCalculator<T> {
+public class JavaCodeCalculatorV2 extends PreConstructedCalculator
+    implements JavaClassCreator, TokenBaseCalculator {
 
   public final String className;
   public final String javaCode;
@@ -64,11 +65,11 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   public final byte[] byteCode;
   final String formulaHash;
   final String byteCodeHash;
-  final List<Calculator<?>> dependsOns;
-  Optional<Calculator<?>> dependsOnBy;
+  final List<Calculator> dependsOns;
+  Optional<Calculator> dependsOnBy;
 
 
-  TokenBaseOperator<CalculationContext, T> operator;
+  TokenBaseOperator<CalculationContext> operator;
   
 
   /**
@@ -150,7 +151,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   public JavaCodeCalculatorV2(String formula, Class<?> returningClass, String className, ClassLoader classLoader,
       @Nullable Path outputRootDirectory,
       JavaFileManagerContext javaFileManagerContext) throws CompileError {
-    super(formula, className, true);
+    super(formula, className,
+        new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
+        true);
     
     SpecifiedExpressionTypes specifiedExpressionTypes = 
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
@@ -210,7 +213,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 
           Class<?> clazz = memoryClassLoader.loadClass(classNameWithHash);
 
-          operator = (TokenBaseOperator<CalculationContext, T>) clazz.getDeclaredConstructor().newInstance();
+          operator = (TokenBaseOperator<CalculationContext>) clazz.getDeclaredConstructor().newInstance();
 
           byteCode = memoryClassLoader.getBytes(classNameWithHash);
           byteCodeHash = MD5.toHex(byteCode);
@@ -237,7 +240,9 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   @SuppressWarnings("unchecked")
   public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
       ClassLoader classLoader) {
-    super(formula, className, false);
+    super(formula, className,
+        new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
+        false);
     this.className = className;
     this.classNameWithHash = null;
     this.javaCode = javaCode;
@@ -250,11 +255,11 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
 
     formulaHash = MD5.toHex(formula);
 
-    Class<TokenBaseOperator<CalculationContext, Float>> calculatorClass = null;
+    Class<TokenBaseOperator<CalculationContext>> calculatorClass = null;
 
     try {
       try {
-        calculatorClass = (Class<TokenBaseOperator<CalculationContext, Float>>) classLoader
+        calculatorClass = (Class<TokenBaseOperator<CalculationContext>>) classLoader
             .loadClass(className);
 
       } catch (ClassNotFoundException e) {
@@ -274,7 +279,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
       this.returningClass = method.getReturnType();
       
-      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -294,10 +299,11 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
    * @param calculatorClass
    * @param classLoader
    */
-  @SuppressWarnings("unchecked")
   public JavaCodeCalculatorV2(String formula, String javaCode, String className, byte[] byteCode, String byteCodeHash,
-      Class<TokenBaseOperator<CalculationContext, ?>> calculatorClass, ClassLoader classLoader) {
-    super(formula, className, false);
+      Class<TokenBaseOperator<CalculationContext>> calculatorClass, ClassLoader classLoader) {
+    super(formula, className, 
+        new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
+        false);
     this.className = className;
     this.javaCode = javaCode;
     this.byteCode = byteCode;
@@ -313,7 +319,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
       Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
       this.returningClass = method.getReturnType();
 
-      operator = (TokenBaseOperator<CalculationContext, T>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
           .newInstance();
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
         | NoSuchMethodException | SecurityException e) {
@@ -403,7 +409,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   }
 
   @Override
-  public TokenBaseOperator<CalculationContext, T> getCalculatorOperator() {
+  public TokenBaseOperator<CalculationContext> getCalculatorOperator() {
     return operator;
   }
 
@@ -423,7 +429,7 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   }
 
   @Override
-  public T evaluate(CalculationContext context, Token token) {
+  public Object evaluate(CalculationContext context, Token token) {
     return getCalculatorOperator().evaluate(context, token);
   }
 
@@ -483,7 +489,35 @@ public abstract class JavaCodeCalculatorV2<T> extends PreConstructedCalculator<T
   }
   
   @Override
-  public void setDependsOnBy(Calculator<?> calculator) {
+  public void setDependsOnBy(Calculator calculator) {
     dependsOnBy = Optional.of(calculator);
+  }
+
+  @Override
+  public ExpressionType resultType() {
+    return ExpressionTypes._float;
+  }
+
+  @Override
+  public String returningTypeAsString() {
+    return "float";
+  }
+
+  @Override
+  public List<Calculator> dependsOns() {
+    return Collections.emptyList();
+  }
+
+  @Override
+  public Optional<Calculator> dependsOnBy() {
+    return Optional.empty();
+  }
+
+  @Override
+  public void before(CalculationContext calculationContext) {
+  }
+
+  @Override
+  public void after(CalculationContext calculationContext) {
   }
 }

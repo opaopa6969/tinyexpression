@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.NormalCalculationContext;
 
 public class JavaCodeCalculatorSpeedTest {
@@ -21,7 +22,10 @@ public class JavaCodeCalculatorSpeedTest {
 		context.set("number_accessCountByCaulisCookieInMiddlePeriod", 100);
 		
 		long start = System.nanoTime();
-		JavaCodeNumberCalculatorV2 simpleCalculator = new JavaCodeNumberCalculatorV2(formula , "DummyCalculator", Thread.currentThread().getContextClassLoader());
+		JavaCodeCalculatorV3 simpleCalculator = 
+		    new JavaCodeCalculatorV3(formula , "DummyCalculator",
+		        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+		        Thread.currentThread().getContextClassLoader());
 		
 		float count = 100000000;
 		float toMicro = count * 10000f;

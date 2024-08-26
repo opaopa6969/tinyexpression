@@ -7,10 +7,10 @@ import org.unlaxer.tinyexpression.Calculator;
 
 public class CalculationResult{
   
-  public final Calculator<?> calculator;
+  public final Calculator calculator;
   public final Object result;
   private final Throwable throwable;
-  public CalculationResult(Calculator<?> calculator, Object result, @Nullable Throwable throwable) {
+  public CalculationResult(Calculator calculator, Object result, @Nullable Throwable throwable) {
     super();
     this.calculator = calculator;
     this.result = result;

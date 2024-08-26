@@ -32,7 +32,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.SchemeAndIdentifier;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
-import org.unlaxer.tinyexpression.PreConstructedObjectCalculator;
+import org.unlaxer.tinyexpression.PreConstructedCalculator;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
@@ -43,8 +43,8 @@ import org.unlaxer.util.digest.MD5;
 
 //import sun.misc.Unsafe;
 
-public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
-    implements GeneralJavaClassCreator, TokenBaseCalculator<Object> {
+public class JavaCodeCalculatorV3 extends PreConstructedCalculator
+    implements GeneralJavaClassCreator, TokenBaseCalculator {
 
   public final String className;
   public final String javaCode;
@@ -53,11 +53,11 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
   public final byte[] byteCode;
   final String formulaHash;
   final String byteCodeHash;
-  final List<Calculator<?>> dependsOns;
-  Optional<Calculator<?>> dependsOnBy;
+  final List<Calculator> dependsOns;
+  Optional<Calculator> dependsOnBy;
   final List<InstanceAndByteCode> instanceAndByteCodeList;
 
-  TokenBaseOperator<CalculationContext, Object> operator;
+  TokenBaseOperator<CalculationContext> operator;
 
   // constructors for source code
 
@@ -145,7 +145,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
       classOrError.throwIfMatch();
 
       ClassAndByteCode classAndByteCode = classOrError.get();
-      operator = (TokenBaseOperator<CalculationContext, Object>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
+      operator = (TokenBaseOperator<CalculationContext>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
 
       byteCode = classAndByteCode.bytes;
       byteCodeHash = MD5.toHex(byteCode);
@@ -192,11 +192,11 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
 
     formulaHash = MD5.toHex(formula);
 
-    Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass = null;
+    Class<TokenBaseOperator<CalculationContext>> calculatorClass = null;
 
     try {
-      calculatorClass = (Class<TokenBaseOperator<CalculationContext, Object>>) loadClass(className, byteCode, classLoader);
-      operator = (TokenBaseOperator<CalculationContext, Object>) calculatorClass.getDeclaredConstructor()
+      calculatorClass = (Class<TokenBaseOperator<CalculationContext>>) loadClass(className, byteCode, classLoader);
+      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
@@ -220,7 +220,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
    */
   public JavaCodeCalculatorV3(String formula, String javaCode, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes,  
-      byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext, Object>> calculatorClass, 
+      byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext>> calculatorClass, 
       List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
     super(formula, className, specifiedExpressionTypes ,  false);
@@ -242,7 +242,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
         }).toList();
 
     try {
-      operator = (TokenBaseOperator<CalculationContext, Object>) calculatorClass.getDeclaredConstructor()
+      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
           .newInstance();
     } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
         | NoSuchMethodException | SecurityException e) {
@@ -336,7 +336,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
   }
 
   @Override
-  public TokenBaseOperator<CalculationContext, Object> getCalculatorOperator() {
+  public TokenBaseOperator<CalculationContext> getCalculatorOperator() {
     return operator;
   }
 
@@ -416,21 +416,21 @@ public class JavaCodeCalculatorV3 extends PreConstructedObjectCalculator
 
   @Override
   public String returningTypeAsString() {
-    return "float";
+    return resultType().javaTypeAsString();
   }
 
   @Override
-  public List<Calculator<?>> dependsOns() {
+  public List<Calculator> dependsOns() {
     return dependsOns;
   }
 
   @Override
-  public Optional<Calculator<?>> dependsOnBy() {
+  public Optional<Calculator> dependsOnBy() {
     return dependsOnBy;
   }
 
   @Override
-  public void setDependsOnBy(Calculator<?> calculator) {
+  public void setDependsOnBy(Calculator calculator) {
     dependsOnBy = Optional.of(calculator);
   }
 

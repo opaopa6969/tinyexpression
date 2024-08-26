@@ -1,10 +1,10 @@
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 
-public class V1Test_CalculatorClass4618600887499287469 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext, Float>{
+public class V1Test_CalculatorClass4618600887499287469 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext>{
 
   @Override
-  public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
+  public Object evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
     float answer = (float) 
 
 

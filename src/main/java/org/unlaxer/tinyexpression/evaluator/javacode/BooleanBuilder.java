@@ -14,7 +14,6 @@ import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;

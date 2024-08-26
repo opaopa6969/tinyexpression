@@ -4,5 +4,5 @@ import org.unlaxer.tinyexpression.Calculator;
 
 public interface TypedResultConsumer<T>{
   
-  void accept(Calculator<T> calclator , String formulaName , T result);
+  void accept(Calculator calclator , String formulaName , T result);
 }

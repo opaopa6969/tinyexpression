@@ -19,16 +19,16 @@ import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
-import org.unlaxer.tinyexpression.Calculator.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 
 import net.arnx.jsonic.JSON;
 
-public abstract class CalculatorImplTest<T> extends ParserTestBase{
+public abstract class CalculatorImplTest extends ParserTestBase{
 
 	@Test
 	public void test() {
@@ -186,7 +186,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		context.set("number_accessCountByCaulisCookieInMiddlePeriod", 100);
 		
 		long start = System.nanoTime();
-		PreConstructedNumberCalculator preConstructedCalculator = preConstructedCalculator(formula);
+		PreConstructedCalculator preConstructedCalculator = preConstructedCalculator(formula);
 		for(int i =0 ; i < 10000000; i++) {
 			preConstructedCalculator.calculate(context);
 		}
@@ -195,7 +195,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		System.out.format("calculation time:%f(microsec)\n" , ((float)duration)/10000000000f);
 	}
 	
-	public abstract PreConstructedNumberCalculator preConstructedCalculator(String formula);
+	public abstract PreConstructedCalculator preConstructedCalculator(String formula);
 
 	@Test
 	public void testMultipleVariableCondition() {
@@ -248,11 +248,12 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	ResultAndMatch calcWithResult(CalculationContext calculateContext , String formula , BigDecimal expected){
 	    
-	    NumberCalculator calculator = preConstructedCalculator(formula);
+	    Calculator calculator = preConstructedCalculator(formula);
 	    testAllMatch(calculator.getParser(), formula);
-	    CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
+	    CalculateResult calculateResult = 
+	        calculator.calculate(calculateContext,formula,ExpressionTypes._float);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
-	    BigDecimal x = calculateResult.answer.get();
+	    BigDecimal x = calculateResult.get(BigDecimal.class);
 	    System.out.format(" %s = %s \n" , formula , x.toString());
 	    boolean match = 
 	      expected.compareTo(x) ==0 ||
@@ -287,14 +288,14 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected , boolean outputJavaCode){
 		
-		NumberCalculator calculator = preConstructedCalculator(formula);
+		Calculator calculator = preConstructedCalculator(formula);
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
+		CalculateResult calculateResult = calculator.calculate(calculateContext,formula , ExpressionTypes._float);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 		if(calculateResult.errors.raisedException.isPresent()) {
 		  throw new CalculationException(calculateResult.errors.raisedException.get());
 		}
-		BigDecimal x = calculateResult.answer.get();
+		BigDecimal x = new BigDecimal(calculateResult.get(Float.class));
 		System.out.format(" %s = %s \n" , formula , x.toString());
 		boolean match = 
 			expected.compareTo(x) ==0 ||
@@ -312,11 +313,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 	
 	void compileOnly(CalculationContext calculateContext , String formula){
     
-	  NumberCalculator calculator = preConstructedCalculator(formula);
+	  Calculator calculator = preConstructedCalculator(formula);
     testAllMatch(calculator.getParser(), formula);
-    CalculateResult calculateResult = calculator.calculate(calculateContext,formula);
+    CalculateResult calculateResult = calculator.calculate(calculateContext,formula,ExpressionTypes._float);
     calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
-    BigDecimal x = calculateResult.answer.get();
+    BigDecimal x = new BigDecimal(calculateResult.get(Float.class));
     System.out.format(" %s = %s \n" , formula , x.toString());
   }
 
@@ -345,11 +346,12 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "1+1/s";
 		
-		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
+		PreConstructedCalculator calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context,formula);
-		BigDecimal answer = result.answer.get();
+		CalculateResult result = calculator.calculate(context,formula,
+		    ExpressionTypes._float);
+		BigDecimal answer = new BigDecimal(result.get(Float.class));
 		assertEquals(new BigDecimal("2"), answer);
 		assertFalse(result.success);
 		assertEquals("1+1", result.parseContext.getConsumed(TokenKind.consumed));
@@ -361,10 +363,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "s/1+1";
 
-		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
+		PreConstructedCalculator calculator = preConstructedCalculator(formula);
 
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context,formula);
+		CalculateResult result = calculator.calculate(context,formula,
+		    ExpressionTypes._float);
 		assertFalse(result.answer.isPresent());
 		assertFalse(result.success);
 		assertEquals("", result.parseContext.getConsumed(TokenKind.consumed));
@@ -379,10 +382,11 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 
 		String formula = "(1+1)/3+sin(30)";
 		
-		PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
+		PreConstructedCalculator calculator = preConstructedCalculator(formula);
 		
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
-		CalculateResult result = calculator.calculate(context,formula);
+		CalculateResult result = calculator.calculate(context,formula,
+		    ExpressionTypes._float);
 		assertTrue(result.answer.isPresent());
 		assertTrue(result.success);
 		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed));
@@ -554,7 +558,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		{
 			String formula = "if($country.in('jp','ca','us')){1}else{0}";
 			
-			PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
+			PreConstructedCalculator calculator = preConstructedCalculator(formula);
 			
 			Token rootToken = parse(calculator.getParser(),formula).getRootToken();
 			TokenPrinter.output(rootToken,System.out);
@@ -566,7 +570,7 @@ public abstract class CalculatorImplTest<T> extends ParserTestBase{
 		{
 			String formula = "if((isPresent($country)&$country.in('russian-federation','china','taiwan-province-of-china','ukraine','korea-democratic-peoples-republic-of'))|(isPresent($calculated_TorNode)&$calculated_TorNode>0.0)|((isPresent($calculated_BlackIPAddressInThisSite)&$calculated_BlackIPAddressInThisSite>0.0)|(isPresent($calculated_BlackIPAddressInOtherSites)&$calculated_BlackIPAddressInOtherSites>0.0))|(isPresent($calculated_BrowserTypeIsTool)&$calculated_BrowserTypeIsTool>0.0)){1}else{0}";
 			
-			PreConstructedNumberCalculator calculator = preConstructedCalculator(formula);
+			PreConstructedCalculator calculator = preConstructedCalculator(formula);
 			
 			Token rootToken = parse(calculator.getParser(),formula).getRootToken();
 			TokenPrinter.output(rootToken,System.out);
@@ -1441,10 +1445,10 @@ if ($endpoint == 'withdrawal'
   }
   
   
-  public static class V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA implements org.unlaxer.tinyexpression.TokenBaseCalculator<Float>{
+  public static class V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA implements org.unlaxer.tinyexpression.TokenBaseCalculator{
 
   	@Override
-  	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
+  	public Object evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
   		int a= Float.compare(calculateContext.getValue("name").orElse(0f), calculateContext.getValue("remitterAccountHolderKana").orElse(0f));
 
   		float answer = (float)
@@ -1494,7 +1498,7 @@ if ($endpoint == 'withdrawal'
 
 	  
 	  
-	  Float apply = calculator.apply(context, null);
+	  Object apply = calculator.apply(context, null);
 	  
 	  context.set("name", 0f);
 	  context.set("remitterAccountHolderKana", 0f);

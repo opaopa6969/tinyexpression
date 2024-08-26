@@ -1,6 +1,5 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -10,7 +9,6 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 
 public class ExpressionBuilderTest {

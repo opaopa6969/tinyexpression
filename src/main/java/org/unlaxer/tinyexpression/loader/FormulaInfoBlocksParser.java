@@ -33,7 +33,7 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
     List<TypedToken<FormulaInfoBlockParser>> childrenWithParserAsListTyped = 
         typedToken.getChildrenWithParserAsListTyped(FormulaInfoBlockParser.class);
     
-    Map<String,Calculator<?>> calculatorByName = new HashMap<>();
+    Map<String,Calculator> calculatorByName = new HashMap<>();
     
     List<FormulaInfo> collect = childrenWithParserAsListTyped.stream()
       .filter(_typeToken->{
@@ -46,19 +46,19 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
       })
       .peek(formulaInfo->{
           String name = formulaInfo.calculatorName;
-          Calculator<?> calculator = formulaInfo.calculator();
+          Calculator calculator = formulaInfo.calculator();
           calculatorByName.put(name,calculator);
       })
       .collect(Collectors.toList());
     
     collect.forEach(formulaInfo->{
-      Calculator<?> calculator = formulaInfo.calculator();
+      Calculator calculator = formulaInfo.calculator();
       String[] split = formulaInfo.dependsOn.split(",");
       for (String dependsOnCalculatorName : split) {
         if(dependsOnCalculatorName.isBlank()) {
           continue;
         }
-        Calculator<?> dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
+        Calculator dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
         calculator.addDependsOn(dependsOncalculator);
         
         

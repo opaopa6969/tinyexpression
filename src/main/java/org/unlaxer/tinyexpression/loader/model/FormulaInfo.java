@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.Nullable;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeNumberCalculatorV2;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
@@ -108,7 +108,7 @@ public class FormulaInfo{
   @FormulaInfoField public String className;
   @FormulaInfoField public String classNameWithHash;
   //FIXME! return type
-  private Calculator<?> calculator;
+  private Calculator calculator;
   @FormulaInfoField(converter = StringsToString.class) public Collection<String> tags;
   
   @FormulaInfoField public String description;
@@ -172,22 +172,21 @@ public class FormulaInfo{
     return calculatorReturningClass;
   }
   
-  @SuppressWarnings("unchecked")
-  public <T> Calculator<T> calculator(Class<T> returningType){
-    return (Calculator<T>) calculator;
+  public <T> Calculator calculator(Class<T> returningType){
+    return (Calculator) calculator;
   }
   
-  public Calculator<?> calculator(){
+  public Calculator calculator(){
     return calculator;
   }
 
 
-  public static FormulaInfo get(Calculator<?> calculator) {
+  public static FormulaInfo get(Calculator calculator) {
     FormulaInfo object = calculator.getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class);
     return object;
   }
 
-  public static boolean hasTag(Calculator<?> calculator, Collection<String> tags) {
+  public static boolean hasTag(Calculator calculator, Collection<String> tags) {
     FormulaInfo formulaInfo = get(calculator);
     for (String tag : tags) {
       if (formulaInfo.tags.contains(tag)) {
@@ -223,9 +222,10 @@ public class FormulaInfo{
   public void updateCalculatorWithByteCode(ClassLoader classLoader) {
     
     try {
-      //FIXME!  return type
-      calculator = new JavaCodeNumberCalculatorV2(
-          formulaText , javaCodeText , classNameWithHash ,byteCode, hashByByteCode,
+      calculator = new JavaCodeCalculatorV3(
+          formulaText , javaCodeText , classNameWithHash ,
+          new SpecifiedExpressionTypes(resultType , numberType),
+          byteCode, hashByByteCode,
           classNameAndByteCodeList,
           Thread.currentThread().getContextClassLoader());
       calculator.setObject(FormulaInfo.class.getSimpleName(), this);

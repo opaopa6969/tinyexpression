@@ -27,17 +27,16 @@ public class TinyExpressionsExecutor {
     this.mapConsumer = mapConsumer;
   }
 
-  @SuppressWarnings("unchecked")
   public List<CalculationResult> execute(
       TenantID tenantID,
       CalculationContext calculationContext,
       ResultConsumer resultConsumer , 
       TinyExpressionInstancesCache tinyExpressionInstancesCache ,
-      Comparator<Calculator<?>> comparator,
-      Predicate<Calculator<?>> passFilter,
+      Comparator<Calculator> comparator,
+      Predicate<Calculator> passFilter,
       ClassLoader classLoader) {
     
-    List<Calculator<?>> list = null ;
+    List<Calculator> list = null ;
     try {
       
       list = tinyExpressionInstancesCache.get(tenantID , comparator , passFilter , classLoader);
@@ -55,13 +54,13 @@ public class TinyExpressionsExecutor {
           FormulaInfo formulaInfo = FormulaInfo.get(calculator);
           
           if(result instanceof Number) {
-            resultConsumer.accept(calculationContext,(Calculator<? extends Number>)calculator, formulaInfo, (Number) result);
+            resultConsumer.accept(calculationContext,calculator, formulaInfo, (Number) result);
           }else if(result instanceof String) {
-            resultConsumer.accept(calculationContext,(Calculator<String>)calculator, formulaInfo, (String) result);
+            resultConsumer.accept(calculationContext,calculator, formulaInfo, (String) result);
           }else if(result instanceof Boolean) {
-            resultConsumer.accept(calculationContext,(Calculator<Boolean>)calculator, formulaInfo, (Boolean) result);
+            resultConsumer.accept(calculationContext,calculator, formulaInfo, (Boolean) result);
           }else if(result instanceof Object) {
-            resultConsumer.accept(calculationContext,(Calculator<Object>)calculator, formulaInfo, result);
+            resultConsumer.accept(calculationContext,calculator, formulaInfo, result);
           }else {
             throw new IllegalArgumentException("no match:" + result.getClass());
           }
@@ -72,7 +71,7 @@ public class TinyExpressionsExecutor {
         }
       }).collect(Collectors.toList());
     }catch (Exception e) {
-      List<Calculator<?>> _list = list;
+      List<Calculator> _list = list;
       throw new CompileError(e,map->{
         map.put(CompileError.ComileErrorContextKey.calculatorList.name(), _list);
       });

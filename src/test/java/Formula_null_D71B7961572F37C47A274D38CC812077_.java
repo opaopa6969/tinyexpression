@@ -1,6 +1,6 @@
 import org.unlaxer.Token;
 
-public class Formula_null_D71B7961572F37C47A274D38CC812077_ implements org.unlaxer.tinyexpression.TokenBaseCalculator<Long>{
+public class Formula_null_D71B7961572F37C47A274D38CC812077_ implements org.unlaxer.tinyexpression.TokenBaseCalculator{
 
 	@Override
 public Long	 evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {

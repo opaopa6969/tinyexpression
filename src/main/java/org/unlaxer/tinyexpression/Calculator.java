@@ -6,27 +6,29 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Parsed;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
+import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 
-public interface Calculator<T> {
+public interface Calculator {
 
   public default Type getReturningTypeFromImplements() {
     return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
 
-  @SuppressWarnings("unchecked")
-  public default Class<T> getReturningTypeClassFromImplements() {
-    return (Class<T>) getReturningTypeFromImplements();
+  public default Class<?> getReturningTypeClassFromImplements() {
+    return (Class<?>) getReturningTypeFromImplements();
   }
 
   public ExpressionType resultType(); 
   
   public Parser getParser();
 
-  public TokenBaseOperator<CalculationContext, T> getCalculatorOperator();
+  public TokenBaseOperator<CalculationContext> getCalculatorOperator();
 
   public default UnaryOperator<Token> tokenReduer() {
     return UnaryOperator.identity();
@@ -44,13 +46,13 @@ public interface Calculator<T> {
 
   public String byteCodeHash();
   
-  public List<Calculator<?>> dependsOns();
+  public List<Calculator> dependsOns();
   
-  public Optional<Calculator<?>> dependsOnBy();
+  public Optional<Calculator> dependsOnBy();
 
   public default int dependsOnByNestLevel(){
     int nestLevel = 0;
-    Calculator<?> current = this;
+    Calculator current = this;
     while(true) {
       if(current.dependsOnBy().isEmpty()) {
         break;
@@ -61,8 +63,8 @@ public interface Calculator<T> {
     return nestLevel;
   }
   
-  public default Calculator<?> rootDependsOnBy(){
-    Calculator<?> current = this;
+  public default Calculator rootDependsOnBy(){
+    Calculator current = this;
     while(true) {
       if(current.dependsOnBy().isEmpty()) {
         break;
@@ -74,7 +76,7 @@ public interface Calculator<T> {
 
   public void before(CalculationContext calculationContext);
 
-  public T apply(CalculationContext calculationContext);
+  public Object apply(CalculationContext calculationContext);
   
   public void after(CalculationContext calculationContext);
 
@@ -94,31 +96,6 @@ public interface Calculator<T> {
     return Optional.ofNullable(getObject(key, objectClass));
   }
 
-  @SuppressWarnings("serial")
-public static class CalculationException extends RuntimeException {
-
-    public CalculationException() {
-      super();
-    }
-
-    public CalculationException(String message, Throwable cause, boolean enableSuppression,
-        boolean writableStackTrace) {
-      super(message, cause, enableSuppression, writableStackTrace);
-    }
-
-    public CalculationException(String message, Throwable cause) {
-      super(message, cause);
-    }
-
-    public CalculationException(String message) {
-      super(message);
-    }
-
-    public CalculationException(Throwable cause) {
-      super(cause);
-    }
-  }
-  
   public CreatedFrom createdFrom();
   
   public enum CreatedFrom{
@@ -126,10 +103,28 @@ public static class CalculationException extends RuntimeException {
     byteCode
   }
 
-  public default void addDependsOn(Calculator<?> dependsOncalculator) {
+  public default void addDependsOn(Calculator dependsOncalculator) {
     dependsOns().add(dependsOncalculator);
     dependsOncalculator.setDependsOnBy(this);
   }
   
-  public void setDependsOnBy(Calculator<?> calculator);
+  public void setDependsOnBy(Calculator calculator);
+  
+  public default CalculateResult calculate(CalculationContext calculateContext,
+      String formula , ExpressionType resultType) {
+    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    Parsed parsed = getParser().parse(parseContext);
+    try {
+      Token rootToken = tokenReduer().apply(parsed.getRootToken(true));
+      Object answer = getCalculatorOperator().evaluate(calculateContext, rootToken);
+
+      return new CalculateResult(parseContext, parsed, Optional.of(answer), rootToken,resultType);
+
+    } catch (Exception e) {
+      Errors errors = new Errors(e);
+      return new CalculateResult(parseContext, parsed, Optional.empty(), errors, null , resultType);
+    } finally {
+      parseContext.close();
+    }
+  }
 }
