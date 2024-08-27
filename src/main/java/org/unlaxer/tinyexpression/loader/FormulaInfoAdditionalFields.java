@@ -36,7 +36,15 @@ public class FormulaInfoAdditionalFields{
     return Optional.ofNullable(multiTenancyAttributeName);
   }
   
+  /**
+   * 
+   * @param formulaInfo
+   * @return
+   */
   public String getName(FormulaInfo formulaInfo) {
+    
+//    String checkKind = formulaInfo.extraValueByKey.get("checkKind");
+//    return checkKind != null ? checkKind : formulaInfo.calculatorName;
     return nameExtractor.apply(formulaInfo);
   }
 //  public String formulaNameAttributeName() {

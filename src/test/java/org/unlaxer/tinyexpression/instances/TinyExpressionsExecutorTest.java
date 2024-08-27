@@ -186,8 +186,17 @@ public class TinyExpressionsExecutorTest {
   
 
   @Test
-  public void test() {
-    
+  public void testFromSource() {
+    testWith(69);
+  }
+  
+  @Test
+  public void testFromByteCoe() {
+    testWith(86);
+  }
+  
+  
+  public void testWith(int tenantId) {
     // MultiTenancyで使用されるIDと結果の出力の項目名を指定する
     FormulaInfoAdditionalFields formulaInfoAdditionalFields = 
         new FormulaInfoAdditionalFields("siteId",
@@ -223,7 +232,7 @@ public class TinyExpressionsExecutorTest {
     
     //実行はしてCalculationResultのListを得る
     List<CalculationResult> execute = tinyExpressionsExecutor.execute(
-        TenantID.create(69), 
+        TenantID.create(tenantId), 
         calculationContext,
         resultConsumerWithCheckResult,
         fileBaseTinyExpressionInstancesCache,
@@ -253,8 +262,8 @@ public class TinyExpressionsExecutorTest {
     
     assertEquals(true,calculationContext.getBoolean("真偽値計算結果").orElseThrow());
     assertEquals(true,calculationContext.getBoolean("numberType指定真偽値計算結果").orElseThrow());
+    
   }
-  
   
   public static void main(String[] args) {
     boolean matches = "a10c".matches(".\\d+.");
