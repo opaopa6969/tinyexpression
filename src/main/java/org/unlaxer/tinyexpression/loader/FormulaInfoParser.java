@@ -99,12 +99,10 @@ public class FormulaInfoParser extends LazyOneOrMore{
 //        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
-          match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, (value)->formulaInfo.multiTenancyId = Optional.of(value));
+          match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, 
+              (value)->formulaInfo.multiTenancyId = Optional.of(value));
           
         }
-        
-        match |= set(keyValue, formulaInfoAdditionalFields.formulaNameAttributeName()/*"checkKind"*/, 
-            (value)->formulaInfo.formulaName = value /*CheckKinds.ofWithDynamicIfNotMatched(value)*/);
         
         for(String additional : formulaInfoAdditionalFields.additionalAttributeNames()) {
           
@@ -135,7 +133,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
 
         
         if(match == false ) {
-          formulaInfo.extraValueByKey.put(keyValue.getKey(), keyValue.getValue());
+          formulaInfo.addAdditional(keyValue.getKey(), keyValue.getValue());
         }
       }
     }

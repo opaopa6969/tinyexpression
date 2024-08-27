@@ -88,7 +88,7 @@ public class FormulaInfo{
   @Nullable
   @FormulaInfoField public String calculatorName;
   
-  @FormulaInfoField public String formulaName;
+//  @FormulaInfoField public String formulaName;
   
   @Nullable
   @FormulaInfoField public String dependsOn; //
@@ -236,7 +236,7 @@ public class FormulaInfo{
   }
   
   public String getName() {
-    return formulaName != null ? formulaName : calculatorName;
+    return additionalFields.getName(this);
   }
   
   public enum TagKind {
@@ -292,12 +292,12 @@ public class FormulaInfo{
         .line(calculatorName);
     }
       
-    builder
-      .append(additionalFields.formulaNameAttributeName())
-      .append(":")
-    
-//      .append("checkKind:")
-      .line(formulaName);
+//    builder
+//      .append(additionalFields.formulaNameAttributeName())
+//      .append(":")
+//    
+////      .append("checkKind:")
+//      .line(formulaName);
     
     if(dependsOn != null) {
       builder

@@ -190,7 +190,13 @@ public class TinyExpressionsExecutorTest {
     
     // MultiTenancyで使用されるIDと結果の出力の項目名を指定する
     FormulaInfoAdditionalFields formulaInfoAdditionalFields = 
-        new FormulaInfoAdditionalFields("siteId","checkKind");
+        new FormulaInfoAdditionalFields("siteId",
+            //formulaInfoからnameを取得するfunction。checkKindがあればそれをnameになぇればcalculatorNameを使用する
+            formulaInfo->{
+              String checkKind = formulaInfo.extraValueByKey.get("checkKind");
+              return checkKind != null ? checkKind : formulaInfo.calculatorName;
+            }
+        );
     
     // TestのformulaInfo.txtが保存されているroot dirを指定する。ここからtenantId毎にsub directoryが掘られてformulaInfo.txtが保存される
     Path rootPath = Paths.get(".", "src","test","resources","formulaInfo-test");
