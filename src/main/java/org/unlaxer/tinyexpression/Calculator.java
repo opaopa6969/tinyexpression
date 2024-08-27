@@ -9,6 +9,7 @@ import java.util.function.UnaryOperator;
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
+import org.unlaxer.compiler.InstanceAndByteCode;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
@@ -126,5 +127,9 @@ public interface Calculator {
     } finally {
       parseContext.close();
     }
+  }
+
+  public default List<InstanceAndByteCode> instanceAndByteCodeList(){
+    return List.of();
   }
 }

@@ -121,6 +121,19 @@ public class FormulaInfoParser extends LazyOneOrMore{
           formulaInfo.byteCode = Unchecked.supplier(()->HEX.decode(value)).get();
           hasByteCode.set(true);
         });
+        
+        match |= setStartsWith(keyValue, "byteCode_", (value)->{
+          String className = keyValue.key.substring("byteCode_".length());
+          ClassNameAndByteCode classNameAndByteCode = 
+              ClassNameAndByteCode.of(
+                  className,
+                  Unchecked.supplier(()->HEX.decode(value)).get()
+              );
+          
+          formulaInfo.classNameAndByteCodeList.add(classNameAndByteCode);
+        });
+
+        
         if(match == false ) {
           formulaInfo.extraValueByKey.put(keyValue.getKey(), keyValue.getValue());
         }
@@ -148,6 +161,13 @@ public class FormulaInfoParser extends LazyOneOrMore{
   
   static boolean set(KeyValue keyValue , String targetKey , Consumer<String> valueConsumer) {
     if(keyValue.getKey().equals(targetKey)) {
+      valueConsumer.accept(keyValue.getValue());
+      return true;
+    }
+    return false;
+  }
+  static boolean setStartsWith(KeyValue keyValue , String targetKey , Consumer<String> valueConsumer) {
+    if(keyValue.getKey().startsWith(targetKey)) {
       valueConsumer.accept(keyValue.getValue());
       return true;
     }

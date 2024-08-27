@@ -185,8 +185,8 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
     
     instanceAndByteCodeList = classNameAndByteCodeList.stream()
       .map(classNameAndByteCode->{
-        Object newInstance = newInstance(classNameAndByteCode.className, classNameAndByteCode.byteCode, classLoader);
-        return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode);
+        Object newInstance = newInstance(classNameAndByteCode.className(), classNameAndByteCode.byteCode(), classLoader);
+        return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode());
       }).toList();
 
 
@@ -206,49 +206,49 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
     }
   }
   
-  /**
-   * from bytecode
-   * @param formula
-   * @param javaCode
-   * @param className
-   * @param specifiedExpressionTypes
-   * @param byteCode
-   * @param byteCodeHash
-   * @param calculatorClass
-   * @param classNameAndByteCodeList
-   * @param classLoader
-   */
-  public JavaCodeCalculatorV3(String formula, String javaCode, String className,
-      SpecifiedExpressionTypes specifiedExpressionTypes,  
-      byte[] byteCode, String byteCodeHash,Class<TokenBaseOperator<CalculationContext>> calculatorClass, 
-      List<ClassNameAndByteCode> classNameAndByteCodeList,
-      ClassLoader classLoader) {
-    super(formula, className, specifiedExpressionTypes ,  false);
-    this.className = className;
-    this.javaCode = javaCode;
-    this.byteCode = byteCode;
-    this.byteCodeHash = byteCodeHash;
-    this.classNameWithHash = "";
-
-    formulaHash = MD5.toHex(formula);
-    
-    dependsOnBy = Optional.empty();
-    dependsOns = new ArrayList<>();
-    
-    instanceAndByteCodeList = classNameAndByteCodeList.stream()
-        .map(classNameAndByteCode->{
-          Object newInstance = newInstance(classNameAndByteCode.className, classNameAndByteCode.byteCode, classLoader);
-          return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode);
-        }).toList();
-
-    try {
-      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
-          .newInstance();
-    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
-        | NoSuchMethodException | SecurityException e) {
-      throw new RuntimeException(e);
-    }
-  }
+//  /**
+//   * from bytecode
+//   * @param formula
+//   * @param javaCode
+//   * @param className
+//   * @param specifiedExpressionTypes
+//   * @param byteCode
+//   * @param byteCodeHash
+//   * @param calculatorClass
+//   * @param classNameAndByteCodeList
+//   * @param classLoader
+//   */
+//  public JavaCodeCalculatorV3(String formula, String javaCode, String className,
+//      SpecifiedExpressionTypes specifiedExpressionTypes,  
+//      byte[] byteCode, String byteCodeHash, Class<TokenBaseOperator<CalculationContext>> calculatorClass, 
+//      List<ClassNameAndByteCode> classNameAndByteCodeList,
+//      ClassLoader classLoader) {
+//    super(formula, className, specifiedExpressionTypes ,  false);
+//    this.className = className;
+//    this.javaCode = javaCode;
+//    this.byteCode = byteCode;
+//    this.byteCodeHash = byteCodeHash;
+//    this.classNameWithHash = "";
+//
+//    formulaHash = MD5.toHex(formula);
+//    
+//    dependsOnBy = Optional.empty();
+//    dependsOns = new ArrayList<>();
+//    
+//    instanceAndByteCodeList = classNameAndByteCodeList.stream()
+//        .map(classNameAndByteCode->{
+//          Object newInstance = newInstance(classNameAndByteCode.className(), classNameAndByteCode.byteCode(), classLoader);
+//          return new InstanceAndByteCode(newInstance, classNameAndByteCode.byteCode());
+//        }).toList();
+//
+//    try {
+//      operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
+//          .newInstance();
+//    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException
+//        | NoSuchMethodException | SecurityException e) {
+//      throw new RuntimeException(e);
+//    }
+//  }
 
   static Class<?> loadClass(String className , byte[] byteCode , ClassLoader classLoader){
     Class<?> clazz;
@@ -436,11 +436,15 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
 
   @Override
   public void before(CalculationContext calculationContext) {
-    instanceAndByteCodeList.stream().forEach(x -> calculationContext.set(x.object));
+    instanceAndByteCodeList.stream().forEach(x -> calculationContext.set(x.instance()));
   }
 
   @Override
   public void after(CalculationContext calculationContext) {
   }
 
+  @Override
+  public List<InstanceAndByteCode> instanceAndByteCodeList() {
+    return instanceAndByteCodeList;
+  }
 }

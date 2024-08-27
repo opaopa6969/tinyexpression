@@ -14,9 +14,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.Nullable;
+import org.unlaxer.compiler.InstanceAndByteCode;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
@@ -107,7 +107,6 @@ public class FormulaInfo{
   public byte[] byteCode;
   @FormulaInfoField public String className;
   @FormulaInfoField public String classNameWithHash;
-  //FIXME! return type
   private Calculator calculator;
   @FormulaInfoField(converter = StringsToString.class) public Collection<String> tags;
   
@@ -148,7 +147,7 @@ public class FormulaInfo{
   }
   
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
-    //FIXME! return type 
+     
     calculator = calculatorCreator.create(
         formulaText, className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader);
     
@@ -222,7 +221,7 @@ public class FormulaInfo{
   public void updateCalculatorWithByteCode(ClassLoader classLoader) {
     
     try {
-      calculator = new JavaCodeCalculatorV3(
+      calculator = calculatorCreator.create(
           formulaText , javaCodeText , classNameWithHash ,
           new SpecifiedExpressionTypes(resultType , numberType),
           byteCode, hashByByteCode,
@@ -328,7 +327,17 @@ public class FormulaInfo{
       .append("hashByByteCode:")
       .line(hashByByteCode);
     
-   if(byteCodeAsHex != null) {
+    if(false ==calculator().instanceAndByteCodeList().isEmpty()) {
+      for(InstanceAndByteCode instanceAndByteCode: calculator().instanceAndByteCodeList()) {
+        builder
+          .append("byteCode_")
+          .append(instanceAndByteCode.className())
+          .append(":")
+          .line(HEX.encode(instanceAndByteCode.byteCode()));
+      }
+    }
+    
+    if(byteCodeAsHex != null) {
       builder
         .append("byteCode:")
         .line(byteCodeAsHex);
