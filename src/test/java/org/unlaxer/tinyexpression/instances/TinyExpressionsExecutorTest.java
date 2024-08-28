@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
@@ -21,8 +22,15 @@ import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 /**
  * TinyExpressionsExecutorはCalculatorのCacheを指定されたComparator<Calculator>とPredicate<Calculator>でsort/filteringを
  * 行って実行するクラス。ResultConsumerを指定することにより計算結果をcheckResultや変数に書き込んだりする
+ * 以下のJVM optionが必要
+ * --add-opens java.base/java.lang=ALL-UNNAMED
  */
 public class TinyExpressionsExecutorTest {
+  
+  @BeforeClass
+  public static void setup() {
+    System.setProperty("--add-opens", "java.base/java.lang=ALL-UNNAMED");
+  }
   
   /*
    * Test用の簡易的なCheckResult class
@@ -248,6 +256,12 @@ public class TinyExpressionsExecutorTest {
     System.out.println(calculationContext.getValue("matchNumber"));
     System.out.println(calculationContext.getValue("callJavaCodeBlock"));
     
+    
+    for (CalculationResult calculationResult_ : execute) {
+      System.out.println(calculationResult_.toString());
+      //エラーがあればthrow
+      calculationResult_.throwIfMatch();
+    }
     
     assertEquals("1.4142135", String.valueOf(calculationResult.result));
     assertEquals("6969", String.valueOf((int)checkResult.theScore));

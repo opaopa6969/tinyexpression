@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.instances;
 import java.util.Optional;
 
 import org.jetbrains.annotations.Nullable;
+import org.unlaxer.compiler.CompileError;
 import org.unlaxer.tinyexpression.Calculator;
 
 public class CalculationResult{
@@ -18,5 +19,15 @@ public class CalculationResult{
   }
   public Optional<Throwable> error(){
     return Optional.ofNullable(throwable);
+  }
+  @Override
+  public String toString() {
+    return "Calculator="+(calculator == null ? "null" : calculator.formulaInfo().get().getName())+"/Result="+result+"/Throwable="+throwable;
+  }
+  
+  public void throwIfMatch() {
+    if(throwable != null) {
+      throw new CompileError(throwable);
+    }
   }
 }
