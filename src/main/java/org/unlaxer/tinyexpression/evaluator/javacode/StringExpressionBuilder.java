@@ -7,7 +7,8 @@ public class StringExpressionBuilder implements TokenCodeBuilder {
   public static final StringExpressionBuilder SINGLETON = new StringExpressionBuilder();
 
   @Override
-  public void build(SimpleJavaCodeBuilder builder , Token token , TinyExpressionTokens tinyExpressionTokens) {
+  public void build(SimpleJavaCodeBuilder builder , Token token , 
+      TinyExpressionTokens tinyExpressionTokens) {
     
     ExpressionOrLiteral one = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
     

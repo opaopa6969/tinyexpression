@@ -4,9 +4,11 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 
+@SuppressWarnings("serial")
 public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
   @Override
@@ -31,6 +33,6 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
 
   @Override
   public Optional<ExpressionType> type() {
-    return Optional.of(ExpressionType.number);
+    return Optional.of(ExpressionTypes.number);
   }
 }

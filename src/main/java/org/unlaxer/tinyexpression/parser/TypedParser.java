@@ -11,9 +11,9 @@ public interface TypedParser extends Parser{
       
       return parserClass.cast(this);
     }
-    ExpressionType type();
+    ExpressionTypes type();
     Set<TypedParser> allTypes();
-    public default TypedParser typed(ExpressionType expressionType) {
+    public default TypedParser typed(ExpressionTypes expressionType) {
       
       for(TypedParser typedParser : allTypes()) {
         
@@ -24,7 +24,7 @@ public interface TypedParser extends Parser{
       throw new IllegalArgumentException(expressionType.name());
     }
     Set<TypedParser> otherTypes();
-    public default void replaceType(Token enclosingToken , ExpressionType expressionType) {
+    public default void replaceType(Token enclosingToken , ExpressionTypes expressionType) {
       
       enclosingToken.replace(typed(expressionType));
     }

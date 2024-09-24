@@ -13,7 +13,8 @@ public class MethodInvocationBuilder implements TokenCodeBuilder{
   public static final MethodInvocationBuilder SINGLETON = new MethodInvocationBuilder();
 
   @Override
-  public void build(SimpleJavaCodeBuilder builder, Token token, TinyExpressionTokens tinyExpressionTokens) {
+  public void build(SimpleJavaCodeBuilder builder, Token token, 
+      TinyExpressionTokens tinyExpressionTokens) {
     
     String methodNameAsString = MethodInvocationParser.getMethodNameAsString(token);
     Optional<Token> parametersClause = MethodInvocationParser.getParametersClause(token);

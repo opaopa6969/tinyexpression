@@ -14,10 +14,10 @@ if($ForcedRelativeSuspiciousValue1){1919}else{
   }
 }
 */
-public class V1Test_CalculatorClass7841115246689273491 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext, Float>{
+public class V1Test_CalculatorClass7841115246689273491 implements TokenBaseOperator<org.unlaxer.tinyexpression.CalculationContext>{
 
 	@Override
-	public Float evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
+	public Object evaluate(org.unlaxer.tinyexpression.CalculationContext calculateContext , Token token) {
 			float answer = (float) 
 
 ((calculateContext.getBoolean("ForcedRelativeSuspiciousValue1").orElse(false)) ? 

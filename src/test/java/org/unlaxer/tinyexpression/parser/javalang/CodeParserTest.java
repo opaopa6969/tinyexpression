@@ -8,7 +8,7 @@ import org.unlaxer.ParserTestBase;
 import org.unlaxer.TestResult;
 import org.unlaxer.Token;
 import org.unlaxer.listener.OutputLevel;
-import org.unlaxer.parser.elementary.StartAndEndQuotedParser.SchemeAndIdentifier;
+import org.unlaxer.parser.elementary.SchemeAndIdentifier;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 
 public class CodeParserTest extends ParserTestBase{
@@ -44,10 +44,10 @@ public class CodeParserTest extends ParserTestBase{
     TestResult testAllMatch = testAllMatch(codeParser,javaSource);
     Token rootToken = testAllMatch.parsed.getRootToken();
     
-    String extractContents = CodeParser.extractContents(rootToken);
+    String extractContents = CodeParser.extractContentsAsString(rootToken);
     
     System.out.println("extract contents:" + extractContents);
-    SchemeAndIdentifier extractSchemeAndIdentifier = CodeParser.extractSchemeAndIdentifier(rootToken);
+    SchemeAndIdentifier extractSchemeAndIdentifier = CodeParser.extractSchemeAndIdentifierAsModel(rootToken);
     
     assertEquals("java", extractSchemeAndIdentifier.scheme);
     assertEquals("org.unlaxer.test.Dummy", extractSchemeAndIdentifier.idenitifier);

@@ -1,0 +1,16 @@
+tags:NORMAL
+description:最終的な点数をcheckKindとして出力します
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:1
+# outputToでcheckKindやfieldやvarなどをしてするけどいらないかな？
+checkKind:Mintia
+dependsOn:
+resultType:float
+outputTo:
+formula:
+match{
+    $mintia == 3 -> 1.41421356
+    default -> 3.141592
+}
+---END_OF_PART---

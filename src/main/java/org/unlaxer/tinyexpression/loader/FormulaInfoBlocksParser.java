@@ -1,6 +1,8 @@
 package org.unlaxer.tinyexpression.loader;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -8,6 +10,7 @@ import java.util.stream.Collectors;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
+import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoList;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -30,6 +33,8 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
     List<TypedToken<FormulaInfoBlockParser>> childrenWithParserAsListTyped = 
         typedToken.getChildrenWithParserAsListTyped(FormulaInfoBlockParser.class);
     
+    Map<String,Calculator> calculatorByName = new HashMap<>();
+    
     List<FormulaInfo> collect = childrenWithParserAsListTyped.stream()
       .filter(_typeToken->{
         boolean hasElement = _typeToken.flatten().stream()
@@ -39,7 +44,27 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
       .map(_typeToken->{
         return FormulaInfoParser.extractFormulaInfo(_typeToken , additionalFields , classLoader);
       })
+      .peek(formulaInfo->{
+          String name = formulaInfo.calculatorName;
+          Calculator calculator = formulaInfo.calculator();
+          calculatorByName.put(name,calculator);
+      })
       .collect(Collectors.toList());
+    
+    collect.forEach(formulaInfo->{
+      Calculator calculator = formulaInfo.calculator();
+      String[] split = formulaInfo.dependsOn.split(",");
+      for (String dependsOnCalculatorName : split) {
+        if(dependsOnCalculatorName.isBlank()) {
+          continue;
+        }
+        Calculator dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
+        calculator.addDependsOn(dependsOncalculator);
+        
+        
+      }
+      
+    });
     
     return new FormulaInfoList(collect);
   }

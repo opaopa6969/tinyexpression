@@ -54,7 +54,7 @@ public class FormulaInfoElementParser extends LazyChain{
     public KeyValue(String key, String value) {
       super();
       this.key = key;
-      this.value = value;
+      this.value = value.stripTrailing();
     }
     public String getKey() {
       return key;

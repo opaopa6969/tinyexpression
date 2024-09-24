@@ -48,6 +48,14 @@ public interface CalculationContext {
     set(name, value);
     return getValue(name).get();
   }
+  
+  void set(String name, Number value);
+
+  default Number setAndGet(String name, Number value) {
+    set(name, value);
+    return getNumber(name).get();
+  }
+
 	
 
   default Optional<Float> getValue(Enum<?> name){
@@ -55,6 +63,13 @@ public interface CalculationContext {
   }
 
 	Optional<Float> getValue(String name);
+	
+  default Optional<? extends Number> getNumber(Enum<?> name){
+    return getNumber(name.name());
+  }
+
+  Optional<? extends Number> getNumber(String name);
+
 	
 	default void set(Enum<?> name, boolean value) {
 	  set(name.name(),value);

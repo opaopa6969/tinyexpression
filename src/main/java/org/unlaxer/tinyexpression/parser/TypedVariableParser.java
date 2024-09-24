@@ -9,18 +9,18 @@ public interface TypedVariableParser extends VariableParser{
   }
   
   public default RootVariableParser getRootVariableParer() {
+	  
+    ExpressionType type = type();
     
-    switch (type()) {
-    case string:
-      return Parser.get(StringVariableParser.class);
-    case bool:
-      return Parser.get(BooleanVariableParser.class);
-    case number:
-      return Parser.get(NumberVariableParser.class);
-      default:
-        break;
+    if(type.isString()) {
+    	return Parser.get(StringVariableParser.class);
+    }else if(type.isBoolean()) {
+    	return Parser.get(BooleanVariableParser.class);
+    }else if(type.isNumber()) {
+    	return Parser.get(NumberVariableParser.class);
     }
-    throw new IllegalArgumentException(type().toString());
+ 
+    throw new IllegalArgumentException(type.toString());
   }
   
 }

@@ -19,7 +19,8 @@ public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 	public static SideEffectStringExpressionBuilder SINGLETON = new SideEffectStringExpressionBuilder();
 
 	@Override
-	public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , 
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		MethodAndParameters methodAndParameters = 
 		    SideEffectStringExpressionParser.extract(token , tinyExpressionTokens);
@@ -55,7 +56,8 @@ public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 		builder
 			.append(")).orElse(");
 		// first parameter is default returning value
-		StringExpressionBuilder.SINGLETON.build(builder, methodAndParameters.parameterTokens.get(0) , tinyExpressionTokens);
+		StringExpressionBuilder.SINGLETON.build(builder, methodAndParameters.parameterTokens.get(0) , 
+		    tinyExpressionTokens);
 		
 		builder
 			.append(")");
@@ -87,7 +89,8 @@ public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 				}else if(parser instanceof BooleanExpression) {
 					BooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 				}else if (parser instanceof StringExpression) {
-					ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , tinyExpressionTokens);
+					ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(token , 
+					    tinyExpressionTokens);
 			    build.populateTo(builder, Kind.Function);
           builder.append(build.toString());
 				}else {

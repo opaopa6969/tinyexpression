@@ -20,8 +20,8 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
   }
 
   @Override
-  public ExpressionType type() {
-    return ExpressionType.number;
+  public ExpressionTypes type() {
+    return ExpressionTypes.number;
   }
   
 

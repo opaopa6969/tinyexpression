@@ -6,11 +6,12 @@ import org.unlaxer.parser.ChildOccurs;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 
+@SuppressWarnings("serial")
 public class StringVariableMatchedWithVariableDeclarationParser extends VariableDeclarationMatchedTokenParser
     implements StringExpression, VariableParser {
 
   public StringVariableMatchedWithVariableDeclarationParser() {
-    super(ExpressionType.string);
+    super(ExpressionTypes.string);
   }
 
   @Override
@@ -29,6 +30,6 @@ public class StringVariableMatchedWithVariableDeclarationParser extends Variable
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.string);
+    return Optional.of(ExpressionTypes.string);
   }
 }

@@ -14,7 +14,7 @@ public class CloseableClassLoader extends URLClassLoader {
   
   static {
     String property = System.getProperty("java.class.path");
-    System.out.println(property);
+//    System.out.println(property);
     String[] split = property.split(File.pathSeparator);
     classPaths = new URL[split.length];
     int index = 0;

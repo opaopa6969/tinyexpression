@@ -21,8 +21,10 @@ public class StringMethodClauseBuilder implements TokenCodeBuilder {
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		
-		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0),tinyExpressionTokens);
-		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1),tinyExpressionTokens);
+		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0),
+		    tinyExpressionTokens);
+		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1),
+		    tinyExpressionTokens);
 		
 		builder.append("(")
 			.append(left.toString());

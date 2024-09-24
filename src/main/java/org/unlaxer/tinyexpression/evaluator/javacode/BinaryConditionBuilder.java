@@ -20,8 +20,13 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 		Token factor1 = token.filteredChildren.get(0);
 		Token factor2 = token.filteredChildren.get(1);
 		
+		String className = tinyExpressionTokens.numberType().javaTypeAsString();
+		
 		builder
-			.append("(java.lang.Float.compare(");
+//    .append("(java.lang.Float.compare(");
+    .append("(")
+    .append(className)
+    .append(".compare(");
 		
 		NumberExpressionBuilder.SINGLETON.build(builder, factor1 , tinyExpressionTokens);
 		
@@ -30,8 +35,7 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 		NumberExpressionBuilder.SINGLETON.build(builder, factor2 , tinyExpressionTokens);
 		builder
 			.append(")");
-		
-		
+
 		
 		if(token.parser instanceof NumberEqualEqualExpressionParser) {
 			

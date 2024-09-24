@@ -25,7 +25,7 @@ public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.number);
+    return Optional.of(ExpressionTypes.number);
   }
 
 }

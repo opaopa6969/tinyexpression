@@ -75,104 +75,6 @@ public class FormulaInfoList {
     return output;
   }
   
-//  enum State{
-//    oneLine,
-//    formula,
-//    javaCode,
-//  }
-
-//  @Deprecated
-//  public static FormulaInfoList parseDeprecated(String text) {
-//    return parseDeprecated(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)));
-//  }
-//
-//  
-//  @Deprecated
-//  public static FormulaInfoList parseDeprecated(InputStream inputStream) {
-//    
-//    List<FormulaInfo> infos = new ArrayList<>();
-//    
-//    State state = State.oneLine;
-//    
-//    AtomicReference<FormulaInfo> formulaInfo = new AtomicReference<>(new FormulaInfo());
-//    
-//    try(InputStreamReader inputStreamReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-//        BufferedReader reader = new BufferedReader(inputStreamReader);){
-//      String line ;
-//      AtomicBoolean hasByteCode = new AtomicBoolean(false);
-//      
-//      while((line = reader.readLine()) != null) {
-//        
-//        boolean isEndOfPart = line.startsWith(END_MARK);
-//        
-//        if(line.startsWith("javaCode:")) {
-//          state = State.javaCode;
-//          continue;
-//        }
-//        
-//        if(state == State.javaCode) {
-//          if(line.startsWith("formula:")) {
-//            formulaInfo.get().updateJavaCode();
-//            state = State.formula;
-//          }else {
-//            formulaInfo.get().javaCode.add(line);
-//          }
-//        }
-//        
-//        if(line.startsWith("formula:")) {
-//          state = State.formula;
-//          continue;
-//        }
-//        if(state == State.formula) {
-//          if(isEndOfPart) {
-//            state = State.oneLine;
-//          }else {
-//            formulaInfo.get().formula.add(line);
-//            continue;
-//          }
-//        }
-//        
-//        
-//        if(isEndOfPart) {
-//          infos.add(formulaInfo.get());
-//          
-//          if(false == hasByteCode.get() || formulaInfo.get().needsUpdate()) {
-//            formulaInfo.get().updateFormula();
-//            formulaInfo.get().updateCalculatorFromFormula();
-//          }else {
-//            formulaInfo.get().updateFormula();
-//            formulaInfo.get().updateCalculatorWithByteCode();
-//          }
-//          formulaInfo.set(new FormulaInfo());
-//
-//          continue;
-//        }
-//        
-//        if(state != State.oneLine) {
-//          continue;
-//        }
-//        
-//        
-//        set(line, "periodStartInclusive", (value)->formulaInfo.get().periodStartInclusive = value);
-//        set(line, "periodEndExclusive", (value)->formulaInfo.get().periodEndExclusive = value);
-//        set(line, "siteId", (value)->formulaInfo.get().siteId = SiteId.of(value));
-//        set(line, "checkKind", (value)->formulaInfo.get().checkKind = new DynamicCheckKind(value));
-//        set(line, "hash", (value)->formulaInfo.get().hash = value);
-//        set(line, "byteCode", (value)->{
-//          formulaInfo.get().byteCodeAsHex = value;
-//          formulaInfo.get().byteCode = Unchecked.supplier(()->Hex.decodeHex(value.toCharArray())).get();
-//          hasByteCode.set(true);
-//        });
-//      }
-//      
-//      return new FormulaInfoList(infos);
-//      
-//    } catch (IOException e) {
-//      logger.error("failed to parse formulaIfno",e);
-//      return new FormulaInfoList();
-//    }
-//  }
-  
   
   public static Try<FormulaInfoList> parse(String text ,
       FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
@@ -217,7 +119,7 @@ public class FormulaInfoList {
   }
   
   public Stream<String> nameStream(){
-    return infos.stream().map(info->info.formulaName);
+    return infos.stream().map(FormulaInfo::getName);
   }
 
   public static Try<FormulaInfoList> parse(InputStream binaryStream , FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {

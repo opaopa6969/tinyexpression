@@ -8,33 +8,41 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
+import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.MethodParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.tinyexpression.parser.javalang.ImportParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 
 public class TinyExpressionTokens{
   
   final Token tinyExpressionToken;
+  final List<CodeBlock> codeBlocks;
   final List<Token> importTokens;
   final List<Token> variableDeclarationTokens;
   final List<Token> annotationTokens;
-  final Token expressionToken;
+  final TypedToken<ExpressionInterface> expressionToken;
   final Map<String,String> classNameByIdentifier;
   final Map<String,Token> variableDeclarationByVariableName;
   final Map<String,TypedToken<MethodParser>> methodDeclarationBymethodName;
   final List<Token> methodTokens;
-
+  final SpecifiedExpressionTypes specifiedExpressionTypes;
   
-  public TinyExpressionTokens(Token tinyExpressionToken) {
+  public TinyExpressionTokens(Token tinyExpressionToken ,  
+      SpecifiedExpressionTypes specifiedExpressionTypes) {
     super();
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     if(false ==tinyExpressionToken.parser instanceof TinyExpressionParser) {
       throw new IllegalArgumentException();
     }
     this.tinyExpressionToken = tinyExpressionToken;
+    codeBlocks = TinyExpressionParser.extractCodeBlocksAsModel(tinyExpressionToken);
     importTokens = TinyExpressionParser.extractImports(tinyExpressionToken);
-    expressionToken = TinyExpressionParser.extractNumberExpression(tinyExpressionToken);
+    expressionToken = TinyExpressionParser.extractExpressionWithAfterReduced(tinyExpressionToken);
     
     variableDeclarationTokens = TinyExpressionParser.extractVariables(tinyExpressionToken);
     annotationTokens = TinyExpressionParser.extractAnnotaions(tinyExpressionToken);
@@ -72,6 +80,16 @@ public class TinyExpressionTokens{
            Function.identity()
            )
        );
+  }
+  
+  public ExpressionType numberType() {
+    if(specifiedExpressionTypes.numberType() != null) {
+      return specifiedExpressionTypes.numberType();
+    }
+    if(specifiedExpressionTypes.resultType()!= null && specifiedExpressionTypes.resultType().isNumber()) {
+      return specifiedExpressionTypes.resultType();
+    }
+    return ExpressionTypes._float;
   }
   
   public Token getTinyExpressionToken() {

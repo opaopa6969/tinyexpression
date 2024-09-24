@@ -7,6 +7,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
+@SuppressWarnings("serial")
 public class BooleanVariableMethodParameterParser extends LazyChoice implements TypedVariableParser , BooleanExpression{
 
   static final SupplierBoundCache<BooleanVariableMethodParameterParser> SINGLETON = new SupplierBoundCache<>(BooleanVariableMethodParameterParser::new);
@@ -27,7 +28,7 @@ public class BooleanVariableMethodParameterParser extends LazyChoice implements 
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.bool);
+  return Optional.of(ExpressionTypes._boolean);
   }
   
 }

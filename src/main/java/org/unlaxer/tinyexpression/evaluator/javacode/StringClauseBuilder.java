@@ -58,7 +58,8 @@ public class StringClauseBuilder {
 //        Token booleanExpression = BooleanCaseFactorParser.getBooleanExpression(caseFactor);
 //        Token expression = BooleanCaseFactorParser.getExpression(caseFactor);
         
-        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+        BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , 
+            tinyExpressionTokens);
         builder.append(" ? ");
         StringExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
         builder
@@ -260,7 +261,8 @@ public class StringClauseBuilder {
 
       builder.append("(");
 
-      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , tinyExpressionTokens);
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , 
+          tinyExpressionTokens);
 
       builder.append(" ? ").n().incTab();
       
@@ -293,7 +295,8 @@ public class StringClauseBuilder {
 
       builder.append("(");
 
-      StringCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , tinyExpressionTokens);
+      StringCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , 
+          tinyExpressionTokens);
       builder.n();
       builder.append(defaultFactor.toString());
 

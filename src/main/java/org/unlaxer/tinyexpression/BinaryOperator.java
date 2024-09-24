@@ -1,5 +1,5 @@
 package org.unlaxer.tinyexpression;
 
-public interface BinaryOperator<C,T> extends TokenBaseOperator<C,T>{
+public interface BinaryOperator<C> extends TokenBaseOperator<C>{
 
 }

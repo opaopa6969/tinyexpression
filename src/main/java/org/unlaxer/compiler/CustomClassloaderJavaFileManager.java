@@ -3,7 +3,9 @@ package org.unlaxer.compiler;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.tools.FileObject;
 import javax.tools.JavaFileManager;
@@ -25,10 +27,6 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	private final PackageInternalsFinder finder;
 	private final JavaFileManagerContext javaFileManagerContext;
 
-	public CustomClassloaderJavaFileManager(ClassLoader classLoader, StandardJavaFileManager standardFileManager) {
-		this(classLoader, standardFileManager, new JavaFileManagerContext());
-	}
-
 	public CustomClassloaderJavaFileManager(ClassLoader classLoader, StandardJavaFileManager standardFileManager,
 			JavaFileManagerContext javaFileManagerContext) {
 		this.classLoader = classLoader;
@@ -47,6 +45,7 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 		if (file instanceof CustomJavaFileObject) {
 			return ((CustomJavaFileObject) file).binaryName();
 		}
+		// standard expects PathFileObject
 		return standardFileManager.inferBinaryName(location, file);
 	}
 
@@ -99,16 +98,23 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 	@Override
 	public Iterable<JavaFileObject> list(Location location, String packageName, Set<JavaFileObject.Kind> kinds,
 			boolean recurse) throws IOException {
+	  
+//    System.out.println(location.getName());
 
 		if (javaFileManagerContext.matchForStandardFileManager.test(location)) {
 
-			return standardFileManager.list(location, packageName, kinds, recurse);
+			Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
+			
+			return list;
 
 		} else if (location == StandardLocation.CLASS_PATH && kinds.contains(JavaFileObject.Kind.CLASS)) {
 			if (packageName.startsWith("java.")) {// a hack to let standard manager handle locations like "java.lang" or "java.util". Prob would make
-				return standardFileManager.list(location, packageName, kinds, recurse);
+			  Iterable<JavaFileObject> list = standardFileManager.list(location, packageName, kinds, recurse);
+			  return list;
 			} else {
-				return finder.find(packageName);
+//			  System.out.println("pacakge:" + packageName + "→" + location);
+				List<JavaFileObject> list = finder.find(packageName);
+        return list;
 			}
 		}
 		return Collections.emptyList();
@@ -134,5 +140,12 @@ public class CustomClassloaderJavaFileManager implements JavaFileManager {
 
 	public String inferModuleName(Location location) throws IOException {
 		return standardFileManager.inferModuleName(location);
+	}
+	
+	static String toString(List<JavaFileObject> javaFiles) {
+	  String collect = javaFiles.stream()
+	    .map(JavaFileObject::getName)
+	    .collect(Collectors.joining("\n"));
+	  return collect;
 	}
 }

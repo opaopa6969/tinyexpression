@@ -11,6 +11,7 @@ import org.unlaxer.StringSource;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public abstract class BackTrackingStressTest extends ParserTestBase{
 	
@@ -30,17 +31,17 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
-			Calculator<?> calculator = calculator(formula.toString());
+			Calculator calculator = calculator(formula.toString());
 			assertTrue(calc(calculator,context,formula.toString(),new BigDecimal("1")));
 		}
 		
 	}
 	
-	boolean calc(Calculator<?> calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
+	boolean calc(Calculator calculator , CalculationContext calculationContext , String formula , BigDecimal expected){
 		long start = System.nanoTime();
 		testAllMatch(calculator.getParser(), formula);
-		CalculateResult calculateResult = calculator.calculate(calculationContext,formula);
-		BigDecimal x = calculateResult.answer.get();
+		CalculateResult calculateResult = calculator.calculate(calculationContext,formula,ExpressionTypes._float);
+		BigDecimal x = new BigDecimal(calculateResult.get(Float.class));
 //		System.out.println(formula+":" + (System.nanoTime()-start)+"nsec");
 		System.out.println((System.nanoTime()-start));
 //		System.out.format(" %s = %s \n" , formula , x.toString());
@@ -62,14 +63,14 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 			for(int r = 0 ; r < i;r++){
 				formula.append(")");
 			}
-			Calculator<?> calculator = calculator(formula.toString());
+			Calculator calculator = calculator(formula.toString());
 			parse(calculator,formula.toString());
 		}
 		System.out.println();
 		
 	}
 	
-	void parse(Calculator<?> calculator , String formula ){
+	void parse(Calculator calculator , String formula ){
 		long start = System.nanoTime();
 		StringSource stringSource ;
 		for(int i =0 ; i < 1000;i++){
@@ -79,6 +80,6 @@ public abstract class BackTrackingStressTest extends ParserTestBase{
 		System.out.println((System.nanoTime()-start));
 	}
 	
-	public abstract Calculator<?> calculator(String formula);
+	public abstract Calculator calculator(String formula);
 
 }

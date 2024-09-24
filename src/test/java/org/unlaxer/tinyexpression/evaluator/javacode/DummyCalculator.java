@@ -4,10 +4,10 @@ import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 
-public class DummyCalculator implements TokenBaseOperator<CalculationContext, Float> {
+public class DummyCalculator implements TokenBaseOperator<CalculationContext> {
 
 	@Override
-	public Float evaluate(CalculationContext calculateContext, Token token) {
+	public Object evaluate(CalculationContext calculateContext, Token token) {
 		float answer =(float)
 
 				(((((calculateContext.getValue("number_accessCountByIPAddressInShortPeriod").orElse(0f) >= 15.0)

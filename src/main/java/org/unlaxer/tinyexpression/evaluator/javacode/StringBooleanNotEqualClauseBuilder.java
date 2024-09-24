@@ -10,12 +10,15 @@ public class StringBooleanNotEqualClauseBuilder implements TokenCodeBuilder {
 	public static final StringBooleanNotEqualClauseBuilder SINGLETON = new StringBooleanNotEqualClauseBuilder();
 
 	@Override
-	public void build(SimpleJavaCodeBuilder builder, Token token , TinyExpressionTokens tinyExpressionTokens) {
+	public void build(SimpleJavaCodeBuilder builder, Token token , 
+	    TinyExpressionTokens tinyExpressionTokens) {
 		
 		List<Token> filteredChildren = token.filteredChildren;
 		
-		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0) , tinyExpressionTokens);
-		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1) , tinyExpressionTokens);
+		ExpressionOrLiteral left = StringClauseBuilder.SINGLETON.build(filteredChildren.get(0) , 
+		    tinyExpressionTokens);
+		ExpressionOrLiteral right = StringClauseBuilder.SINGLETON.build(filteredChildren.get(1) , 
+		    tinyExpressionTokens);
 		
 		builder.append("(false==")
 			.append(left.toString())

@@ -5,15 +5,15 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.unlaxer</groupId>
 	<artifactId>tinyExpression</artifactId>
-	<version>1.3.4</version>
+	<version>1.4.3</version>
 	<name>tinyExpression</name>
 	<packaging>jar</packaging>
 	<!-- FIXME change it to the project's website -->
 	<url>https://bitbucket.org/opaopa6969/unlaxer/src/master/</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>11</maven.compiler.source>
-		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
 		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
 	</properties>
 	<description>TinyExpression implemented with Unlaxer</description>

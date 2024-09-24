@@ -8,9 +8,8 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
+@SuppressWarnings("serial")
 public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain implements StringExpression , VariableParser {
-
-  private static final long serialVersionUID = -663588538210309122L;
 
   public StringPrefixedVariableParser() {
     super();
@@ -32,7 +31,7 @@ public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.string);
+    return Optional.of(ExpressionTypes.string);
   }
 
 }

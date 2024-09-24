@@ -14,7 +14,6 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.combinator.LazyZeroOrMore;
 import org.unlaxer.parser.combinator.MatchOnly;
 import org.unlaxer.parser.combinator.ParserWrapper;
-import org.unlaxer.util.annotation.TokenExtractor;
 
 /*
  * sample->
@@ -79,16 +78,6 @@ public class StartAndEndQuotedParser extends LazyChain {
 		);
 	}
 	
-	public static class SchemeAndIdentifier{
-	  public final String scheme;
-	  public final String idenitifier;
-    public SchemeAndIdentifier(String scheme, String idenitifier) {
-      super();
-      this.scheme = scheme;
-      this.idenitifier = idenitifier;
-    }
-	}
-  
 	public static class QuotedContentsParser extends LazyZeroOrMore{
 
 

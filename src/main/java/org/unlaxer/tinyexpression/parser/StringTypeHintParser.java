@@ -21,7 +21,7 @@ public class StringTypeHintParser extends LazyChoice implements TypeHint{
   }
 
   @Override
-  public ExpressionType type() {
-    return ExpressionType.string;
+  public ExpressionTypes type() {
+    return ExpressionTypes.string;
   }
 }

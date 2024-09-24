@@ -17,8 +17,8 @@ public class StringFactorParser extends AbstractStringFactorParser implements Ty
   }
 
   @Override
-  public ExpressionType type() {
-    return ExpressionType.string;
+  public ExpressionTypes type() {
+    return ExpressionTypes.string;
   }
 
   @Override

@@ -22,7 +22,7 @@ public class BooleanTypeHintParser extends LazyChoice implements TypeHint{
   }
 
   @Override
-  public ExpressionType type() {
-    return ExpressionType.bool;
+  public ExpressionTypes type() {
+    return ExpressionTypes._boolean;
   }
 }

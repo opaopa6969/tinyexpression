@@ -6,7 +6,9 @@ import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
+@SuppressWarnings("serial")
 public class BooleanVariableDeclarationParser extends AbstractVariableDeclarationParser {
 
   @Override
@@ -31,7 +33,7 @@ public class BooleanVariableDeclarationParser extends AbstractVariableDeclaratio
 
   @Override
   public Optional<ExpressionType> type() {
-    return Optional.of(ExpressionType.bool);
+    return Optional.of(ExpressionTypes._boolean);
   }
 
 }

@@ -3,7 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 public interface BooleanExpression extends ExpressionInterface{
 
   @Override
-  default ExpressionType expressionType() {
-    return ExpressionType.bool;
+  default ExpressionTypes expressionType() {
+    return ExpressionTypes._boolean;
   }
 }

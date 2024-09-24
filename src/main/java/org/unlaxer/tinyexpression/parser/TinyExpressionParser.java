@@ -17,9 +17,11 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.RootParserIndicator;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodesParser;
 import org.unlaxer.tinyexpression.parser.javalang.ImportsParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeParser.CodeBlock;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
@@ -30,11 +32,12 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
+        Parser.get(CodesParser.class),
         Parser.get(ImportsParser.class),
         Parser.get(VariableDeclarationsParser.class),
         Parser.get(AnnotationsParser.class),
         new org.unlaxer.parser.combinator.Optional(
-            NumberExpressionParser.class
+            ExpressionsParser.class
         ),
         Parser.get(MethodsParser.class)
     );
@@ -57,7 +60,7 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   public Parsed afterParse(ParseContext parseContext, Parsed parsed, TokenKind tokenKind, boolean invertMatch) {
     if(parsed.isSucceeded()) {
      Token rootToken = parsed.getRootToken(true);
-     Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(NumberExpressionParser.class));
+     Optional<Token> child1 = rootToken.getChildAsOptional(TokenPredicators.parsers(ExpressionsParser.class));
      Optional<Token> child2 = rootToken.getChildAsOptional(TokenPredicators.parsers(MethodsParser.class));
      if(child1.isEmpty() && child2.isEmpty()) {
        parsed = parsed.negate().setMessage("specify method or expression");
@@ -66,6 +69,47 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
     }
     return parsed;
   }
+  
+  /**
+   * @param thisParserParsed
+   * @return CodeBlock List
+   */
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List<CodeBlock> extractCodeBlocksAsModel(Token thisParserParsed){
+    
+    Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(CodesParser.class);
+    
+    List<CodeBlock> codeBlocks = childWithParserAsOptional
+      .map(CodesParser::extractCodeBlocksAsModel)
+      .orElseGet(List::of);
+    
+    return codeBlocks;
+  }
+  
+  /**
+   * @param thisParserParsed
+   * @return CodeBlock List
+   */
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static List<Token> extractCodes(Token thisParserParsed){
+    
+    Optional<Token> childWithParserAsOptional = thisParserParsed.getChildWithParserAsOptional(CodesParser.class);
+    
+    List<Token> importChildren = childWithParserAsOptional
+      .map(CodesParser::extractCodeBlocks)
+      .orElseGet(List::of);
+    
+    return importChildren;
+  }
+  
+  @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
+  public static Token extractCodesToken(Token thisParserParsed){
+    
+    List<Token> codesChildren = extractCodes(thisParserParsed);
+    Token codes = new Token(TokenKind.consumed, codesChildren, Parser.get(CodesParser.class),0);
+    return codes;
+  }
+
   
   /**
    * @param thisParserParsed
@@ -93,12 +137,25 @@ public class TinyExpressionParser extends JavaStyleDelimitedLazyChain implements
   }
   
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
-  public static Token extractNumberExpression(Token thisParserParsed){
+  public static Token extractExpression(Token thisParserParsed){
     
-    Token childWithParser = thisParserParsed.getChildWithParser(NumberExpressionParser.class);
-    return childWithParser;
+    Token childWithParser = thisParserParsed.getChildWithParser(ExpressionsParser.class);
+    Token extractExpressionToken = ExpressionsParser.extractExpressionToken(childWithParser);
+    return extractExpressionToken;
     
   }
+  
+  @TokenExtractor(timings = Timing.UseOperatorOperandTree)
+  public static TypedToken<ExpressionInterface> extractExpressionWithAfterReduced(Token thisParserParsed){
+    
+    TypedToken<ExpressionInterface> extractExpressionToken = thisParserParsed.getChildWithParser(
+        _parser->_parser instanceof ExpressionInterface)
+        .typed(ExpressionInterface.class);
+    
+    return extractExpressionToken;
+    
+  }
+
 
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)
   public static List<Token> extractVariables(Token tinyExpressionToken) {

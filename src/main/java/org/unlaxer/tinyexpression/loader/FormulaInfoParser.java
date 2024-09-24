@@ -14,13 +14,20 @@ import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
+import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
+import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
+import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.digest.HEX;
 import org.unlaxer.util.function.Unchecked;
 
+@SuppressWarnings("serial")
 public class FormulaInfoParser extends LazyOneOrMore{
   
   public enum Kind{
@@ -48,7 +55,25 @@ public class FormulaInfoParser extends LazyOneOrMore{
   public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed , 
       FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
     
-    FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields);
+    CalculatorCreator calculatorCreator = new CalculatorCreator() {
+      
+      @Override
+      public Calculator create(String formulaText, String className, 
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        return new JavaCodeCalculatorV3(formulaText, className, 
+            specifiedExpressionTypes, classLoader);
+      }
+
+      @Override
+      public Calculator create(String formula, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        return new JavaCodeCalculatorV3(formula, javaCode, className, specifiedExpressionTypes,
+            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+      }
+    };
+    
+    FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields , calculatorCreator);
     List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
     
     AtomicBoolean hasByteCode = new AtomicBoolean(false);
@@ -67,14 +92,17 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "description", (value)->formulaInfo.description = value);
         match |= set(keyValue, "periodStartInclusive", (value)->formulaInfo.periodStartInclusive = value);
         match |= set(keyValue, "periodEndExclusive", (value)->formulaInfo.periodEndExclusive = value);
+        match |= set(keyValue, "calculatorName", (value)->formulaInfo.calculatorName = value);
+        match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
+        match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = new ResultType(value));
+        match |= set(keyValue, "numberType", (value)->formulaInfo.numberType = new ResultType(value));
+//        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
         
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
-          match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, (value)->formulaInfo.multiTenancyId = Optional.of(value));
+          match |= set(keyValue, formulaInfoAdditionalFields.multiTenancyAttributeName().get() /* "siteId" */, 
+              (value)->formulaInfo.multiTenancyId = Optional.of(value));
           
         }
-        
-        match |= set(keyValue, formulaInfoAdditionalFields.formulaNameAttributeName()/*"checkKind"*/, 
-            (value)->formulaInfo.formulaName = value /*CheckKinds.ofWithDynamicIfNotMatched(value)*/);
         
         for(String additional : formulaInfoAdditionalFields.additionalAttributeNames()) {
           
@@ -91,11 +119,28 @@ public class FormulaInfoParser extends LazyOneOrMore{
           formulaInfo.byteCode = Unchecked.supplier(()->HEX.decode(value)).get();
           hasByteCode.set(true);
         });
+        
+        match |= setStartsWith(keyValue, "byteCode_", (value)->{
+          String className = keyValue.key.substring("byteCode_".length());
+          ClassNameAndByteCode classNameAndByteCode = 
+              ClassNameAndByteCode.of(
+                  className,
+                  Unchecked.supplier(()->HEX.decode(value)).get()
+              );
+          
+          formulaInfo.classNameAndByteCodeList.add(classNameAndByteCode);
+        });
+
+        
         if(match == false ) {
-          formulaInfo.extraValueByKey.put(keyValue.getKey(), keyValue.getValue());
+          formulaInfo.addAdditional(keyValue.getKey(), keyValue.getValue());
         }
       }
     }
+    if(formulaInfo.resultType == null) {
+      formulaInfo.resultType = new ResultType("float");
+    }
+    
     boolean formulaExists = StringUtils.isNoneBlank(formulaInfo.formulaText);
     boolean needsUpdate = formulaInfo.needsUpdate();
     if(needsUpdate && formulaExists) {
@@ -114,6 +159,13 @@ public class FormulaInfoParser extends LazyOneOrMore{
   
   static boolean set(KeyValue keyValue , String targetKey , Consumer<String> valueConsumer) {
     if(keyValue.getKey().equals(targetKey)) {
+      valueConsumer.accept(keyValue.getValue());
+      return true;
+    }
+    return false;
+  }
+  static boolean setStartsWith(KeyValue keyValue , String targetKey , Consumer<String> valueConsumer) {
+    if(keyValue.getKey().startsWith(targetKey)) {
       valueConsumer.accept(keyValue.getValue());
       return true;
     }

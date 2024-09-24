@@ -2,7 +2,6 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.Optional;
 
-import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -29,7 +28,7 @@ public class StringVariableParser extends LazyChoice implements RootVariablePars
  
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionType.string);
+    return Optional.of(ExpressionTypes.string);
   }
     
   public static StringVariableParser get() {

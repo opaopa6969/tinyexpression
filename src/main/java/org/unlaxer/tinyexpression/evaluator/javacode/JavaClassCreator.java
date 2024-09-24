@@ -19,8 +19,13 @@ import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public interface JavaClassCreator{
-  default String createJavaClass(String className, TinyExpressionTokens tinyExpressionToken) {
-
+  default String createJavaClass(String className, 
+      TinyExpressionTokens tinyExpressionToken) {
+    
+    TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
+    ExpressionInterface parser = expressionToken.getParser();
+    String returningType = parser.expressionType().javaType().getSimpleName();
+    
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
     String calculationContextName = CalculationContext.class.getName();
@@ -33,7 +38,8 @@ public interface JavaClassCreator{
       .n()
       .append("public class ")
       .append(className)
-    .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
+      .append(" implements org.unlaxer.tinyexpression.TokenBaseCalculator{")
+    
 //    .append(" implements TokenBaseOperator<"+calculationContextName+", Float>{")
 //      .append(" implements ContextCalculator {")
       
@@ -42,14 +48,19 @@ public interface JavaClassCreator{
       .setKind(Kind.Function)
       .incTab()
       .line("@Override")
-      .line("public Float evaluate("+calculationContextName+" calculateContext , Token token) {")
+      .append("public ")
+      .append(returningType)
+      .line(" evaluate("+calculationContextName+" calculateContext , Token token) {")
 //      .line("public Float apply(org.unlaxer.tinyexpression.CalculationContext calculateContext){")
       .setKind(Kind.Calculation)
       .incTab()
-      .line("float answer = (float) ")
+      .append(returningType)
+      .append(" answer = (")
+      .append(returningType)
+      .line(") ")
       .n();
 
-    NumberExpressionBuilder.SINGLETON.build(builder, tinyExpressionToken.expressionToken, tinyExpressionToken);
+    NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
     builder
       .setKind(Kind.Calculation)
@@ -71,13 +82,14 @@ public interface JavaClassCreator{
     return code;
   }
   
-  default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens , String calculationContextName) {
+  default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens ,
+      String calculationContextName) {
     List<Token> methodTokens = tinyExpressionTokens.getMethodTokens();
     for (Token token : methodTokens) {
       
       Token typeHintToken = token.getChild(TokenPredicators.parserImplements(TypeHint.class));
       TypeHint typeHintParser = typeHintToken.getParser(TypeHint.class);
-      String javaType = typeHintParser.type().javaType();
+      String javaType = typeHintParser.type().javaType().getSimpleName();
       
       Token methodNameToken = token.getChild(TokenPredicators.parsers(IdentifierParser.class));
       String methodName = methodNameToken.tokenString.get();
@@ -120,7 +132,8 @@ public interface JavaClassCreator{
       }else if(expressionType.isBoolean()) {
         BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else {
-        ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , tinyExpressionTokens);
+        ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , 
+            tinyExpressionTokens);
         build.populateTo(builder, Kind.Function);
         builder.append(build.toString());
       }
@@ -151,7 +164,7 @@ public interface JavaClassCreator{
         ExpressionType variableType = parser.typeAsOptional().get();
         String variableName = parser.getVariableName(typed);
         builder
-          .append(variableType.javaType())
+          .append(variableType.javaType().getSimpleName())
           .append(" ")
           .append(variableName);
         

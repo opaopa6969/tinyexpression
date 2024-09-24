@@ -20,7 +20,5 @@ public class NumberExpressionParser extends AbstractNumberExpressionParser{
   public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
     return super.parse(parseContext, tokenKind, invertMatch);
   }
-  
-  
-  
+ 
 }
