@@ -14,6 +14,20 @@ Tiny Expression is UDF(user defined function) for your application.
 # usage
 
 ```java
+
+// create context
+CalculationContext context = CalculationContext.newConcurrentContext();
+context.put("sex","male")
+
+// create UDF
+String sex="if($sex=='male'){500}else{1000}";
+
+// create calculator
+PreConstructedCalculator calculator = JavaCodeCalculatorV3(Name.of("Test") , formula ,
+		    new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
+		    Thread.currentThread().getContextClassLoader());
+
+
 ```
 
 # samples
