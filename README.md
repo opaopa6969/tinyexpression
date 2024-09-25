@@ -15,18 +15,53 @@ Tiny Expression is UDF(user defined function) for your application.
 
 ```java
 
-// create context
-CalculationContext context = CalculationContext.newConcurrentContext();
-context.put("sex","male")
+package org.unlaxer.tinyexpression;
 
-// create UDF
-String sex="if($sex=='male'){500}else{1000}";
+import static org.junit.Assert.assertEquals;
 
-// create calculator
-PreConstructedCalculator calculator = JavaCodeCalculatorV3(Name.of("Test") , formula ,
-		    new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
-		    Thread.currentThread().getContextClassLoader());
+import org.junit.Test;
+import org.unlaxer.Name;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
+public class SimpleUDFTest {
+
+  @Test
+  public void testSimple() {
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.set("sex", "male");
+
+    // create UDF
+    String udf = "if($sex=='male'){500}else{1000}";
+
+    // create calculator
+    PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
+        Name.of("Test"), // name for identifier
+        udf, // user define function
+        new SpecifiedExpressionTypes(
+            ExpressionTypes._float, // result type of this udf returning
+            ExpressionTypes._float // default number type. eg. float,double,integer,short...
+        ),
+        Thread.currentThread().getContextClassLoader());// classloader for generated class from udf
+    
+    
+    {
+      // test with male
+      float apply = (float)calculator.apply(context);
+      assertEquals(500.0f, apply , 0.1);
+    }
+
+    
+    {
+      // test with female
+      context.set("sex", "female");
+      float apply = (float)calculator.apply(context);
+      assertEquals(1000.0f, apply , 0.1);
+    }
+  }
+
+}
 
 ```
 
@@ -101,7 +136,7 @@ StringCaseFactor = BooleanExpression '->' StringExpression;
 StringCaseExpression = { CaseBooleanFactor ',' };
 StringDefaultCaseFactor = 'default' '->' StringExpression;
 IsPresentBoolean = 'isPresent' '(' NakedVariable ')';
-BooleanExpression = BooleanExpression { ( '==' | '!=' | '&' | 'b' | '^' ) BooleanExpression };
+BooleanExpression = BooleanExpression { ( '==' | '!=' | '&' | 'ï¿½b' | '^' ) BooleanExpression };
 BooleanFactor = BooleanSideEffectExpression | BooleanMethodInvocation | 'true' | 'false' | 'not' '(' BooleanExpression ')' | '(' BooleanExpression ')' | IsPresentBoolean | NumberExpression '==' NumberExpression | NumberExpression '!=' NumberExpression | NumberExpression '>=' NumberExpression | NumberExpression '<=' NumberExpression | NumberExpression '>' NumberExpression | NumberExpression '<' NumberExpression | BooleanVariable | NakedVariable | GetBooleanVariable | BooleanExpressionOfString;
 Number = [ '-' ] ( Digits '.' Digits | Digits '.' | Digits | '.' Digits ) [ Exponent ];
 Exponent = ( 'e' | 'E' ) [ '-' ] ( Digit { Digit } );
