@@ -8,7 +8,7 @@ public abstract class StringMethodExpressionParser extends JavaStyleDelimitedLaz
 	
 	private static final long serialVersionUID = 1992822145990889756L;
 
-	@TokenExtractor
+	@TokenExtractor // 何これ
 	public static Token getLeftExpression(Token thisParserParsed) {
 		return thisParserParsed.filteredChildren.get(0);
 	}
