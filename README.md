@@ -13,6 +13,8 @@ Tiny Expression is UDF(user defined function) for your application.
 
 # usage
 
+## simple
+
 ```java
 
 package org.unlaxer.tinyexpression;
@@ -60,10 +62,29 @@ public class SimpleUDFTest {
       assertEquals(1000.0f, apply , 0.1);
     }
   }
-
 }
 
 ```
+
+## TinyExpressionEexcutor
+
+this sample for managed the udf codes with multitenancy.
+
+
+```java
+```
+
+
+```java
+```
+
+
+```java
+```
+
+
+
+
 
 # samples
 
