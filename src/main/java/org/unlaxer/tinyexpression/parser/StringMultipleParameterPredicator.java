@@ -11,6 +11,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.StringClauseBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.evaluator.javacode.TokenCodeBuilder;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public interface StringMultipleParameterPredicator extends TokenCodeBuilder{
@@ -31,7 +32,8 @@ public interface StringMultipleParameterPredicator extends TokenCodeBuilder{
   
   static List<Token> getStringExpressions(Token parameterParser){
     
-    Token stringExpressions = InMethodParser.getStringExpressions(parameterParser);
+    Token stringExpressions =
+          JavaStyleNamedParenthesesParser.getInnerParserParsed(parameterParser);
     List<Token> expressions = stringExpressions.filteredChildren.stream()
       .filter(token->token.parser instanceof StringExpressionParser)
       .collect(Collectors.toList());

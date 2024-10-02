@@ -813,13 +813,4 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     token.filteredChildren.clear();
     return token;
   }
-  
-  static List<Token> getStringExpressions(Token inMethod){
-    
-    Token stringExpressions = InMethodParser.getStringExpressions(inMethod);
-    List<Token> expressions = stringExpressions.filteredChildren.stream()
-      .filter(token->token.parser instanceof StringExpressionParser)
-      .collect(Collectors.toList());
-    return expressions;
-  }
 }
