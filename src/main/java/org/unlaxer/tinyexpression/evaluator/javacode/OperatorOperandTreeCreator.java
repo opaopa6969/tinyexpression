@@ -771,7 +771,6 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
         );
         
       }else if(
-          operatorWithString.parser instanceof StringStartsWithParser||
           operatorWithString.parser instanceof StringEndsWithParser||
           operatorWithString.parser instanceof StringContainsParser
       ) {
@@ -782,9 +781,10 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           apply(leftExpression),
           apply(argument)
         );
-        
-      }else if(operatorWithString.parser instanceof StringInParser) {
-        
+
+      }else if(
+              operatorWithString.parser instanceof StringInParser) {
+
         
         List<Token> stringExpressions = new ArrayList<>();
         Token leftExpression = StringInParser.getLeftExpression(operatorWithString);
@@ -798,7 +798,24 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           .collect(Collectors.toList());
       
         return operatorWithString.newCreatesOf(appliedExpressions);
-      }
+
+      }else if(
+              operatorWithString.parser instanceof StringStartsWithParser) {
+
+
+      List<Token> stringExpressions = new ArrayList<>();
+      Token leftExpression = StringStartsWithParser.getLeftExpression(operatorWithString);
+      Token inMethod = StringStartsWithParser.getInMethod(operatorWithString);
+
+      stringExpressions.add(leftExpression);
+      stringExpressions.addAll(getStringExpressions(inMethod));
+
+      List<Token> appliedExpressions = stringExpressions.stream()
+              .map(this::apply)
+              .collect(Collectors.toList());
+
+      return operatorWithString.newCreatesOf(appliedExpressions);
+    }
       
     }else if(parser instanceof MethodInvocationParser){
       
