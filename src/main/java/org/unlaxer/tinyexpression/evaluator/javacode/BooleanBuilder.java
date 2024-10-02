@@ -149,7 +149,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 
 		}else if(
-			parser instanceof StringStartsWithParser||
+//			parser instanceof StringStartsWithParser||
 			parser instanceof StringEndsWithParser||
 			parser instanceof StringContainsParser
 		){
@@ -160,9 +160,9 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 			
-	   } else if (parser instanceof StringStartsWithParser) {
+    } else if (parser instanceof StringStartsWithParser) {
 
-	     StringStratsWithBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+      StringStratsWithBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
