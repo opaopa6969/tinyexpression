@@ -210,7 +210,9 @@ public class TinyExpressionsExecutorTest {
         new FormulaInfoAdditionalFields("siteId",
             //formulaInfoからnameを取得するfunction。calculatorNameがあればそれをnameになぇればcheckKindを使用する
             formulaInfo->{
-              return formulaInfo.calculatorName != null ? formulaInfo.calculatorName : formulaInfo.extraValueByKey.get("checkKind");
+              
+              String checkKind = formulaInfo.extraValueByKey.get("checkKind");
+              return checkKind != null ? checkKind : formulaInfo.calculatorName;
             }
         );
     

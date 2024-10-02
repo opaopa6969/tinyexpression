@@ -599,6 +599,8 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 		CalculationContext context = new ConcurrentCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
 		context.set("message", "I even lost my cat.");
 		
+    assertTrue(calc(context,"if($message.startsWith('niku','I even','test for multiple arguments')){1}else{0}",new BigDecimal("1")));
+    assertTrue(calc(context,"if($message.startsWith('niku','i even','test for multiple arguments')){1}else{0}",new BigDecimal("0")));
 		assertTrue(calc(context,"if($message.startsWith('I even')){1}else{0}",new BigDecimal("1")));
 		assertTrue(calc(context,"if($message.startsWith('i even')){1}else{0}",new BigDecimal("0")));
 		assertTrue(calc(context,"if($message.endsWith('my cat.')){1}else{0}",new BigDecimal("1")));
