@@ -2,13 +2,12 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.List;
 
-import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.util.annotation.TokenExtractor;
 
-public class StringInParser extends JavaStyleDelimitedLazyChain implements BooleanExpression{
+public class StringInParser extends JavaStyleDelimitedLazyChain 
+  implements BooleanExpression , StringMultipleParameterPredicator{
 
 	private static final long serialVersionUID = -6734066553844884039L;
 	
@@ -29,13 +28,14 @@ public class StringInParser extends JavaStyleDelimitedLazyChain implements Boole
 
 	}
 
-	@TokenExtractor
-	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(StringExpressionParser.class);
-	}
-	
-  @TokenExtractor
-	public static Token getInMethod(Token thisParserParsed) {
-    return thisParserParsed.getChildWithParser(InMethodParser.class);
-	}
+  @Override
+  public Class<? extends Parser> parameterParserClass() {
+    return InMethodParser.class;
+  }
+  
+  @Override
+  public String predicateMethodString() {
+    return "org.unlaxer.util.MultipleParamterStringPredicators.in(";
+  }
+
 }

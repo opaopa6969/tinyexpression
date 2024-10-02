@@ -28,12 +28,9 @@ import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringContainsParser;
-import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringInParser;
+import org.unlaxer.tinyexpression.parser.StringMultipleParameterPredicator;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
@@ -148,21 +145,10 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 
-		}else if(
-//			parser instanceof StringStartsWithParser||
-			parser instanceof StringEndsWithParser||
-			parser instanceof StringContainsParser
-		){
-			
-			StringMethodClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-			
-		} else if (parser instanceof StringInParser) {
-
-			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-			
-    } else if (parser instanceof StringStartsWithParser) {
-
-      StringStratsWithBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+		} else if (parser instanceof StringMultipleParameterPredicator) {
+		  
+		  StringMultipleParameterPredicator.class.cast(parser)
+		    .build(builder, token, tinyExpressionTokens);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			

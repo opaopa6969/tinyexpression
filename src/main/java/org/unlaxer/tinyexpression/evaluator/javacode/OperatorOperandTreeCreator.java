@@ -73,23 +73,18 @@ import org.unlaxer.tinyexpression.parser.StrictTypedStringFactorParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringTermParser;
 import org.unlaxer.tinyexpression.parser.StringCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringDefaultCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
-import org.unlaxer.tinyexpression.parser.StringExpressionMethodParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
+import org.unlaxer.tinyexpression.parser.StringMultipleParameterPredicator;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
-import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
@@ -770,52 +765,26 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           apply(StringNotEqualsExpressionParser.getRightExpression(operatorWithString))
         );
         
-      }else if(
-          operatorWithString.parser instanceof StringEndsWithParser||
-          operatorWithString.parser instanceof StringContainsParser
-      ) {
 
-        Token leftExpression = StringMethodExpressionParser.getLeftExpression(operatorWithString);
-        Token argument = StringExpressionMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
-        return operatorWithString.newCreatesOf(
-          apply(leftExpression),
-          apply(argument)
-        );
-
-      }else if(
-              operatorWithString.parser instanceof StringInParser) {
-
+      }else if(operatorWithString.parser instanceof StringMultipleParameterPredicator) {
+        
+        StringMultipleParameterPredicator stringMultipleParameterPredicator =
+            (StringMultipleParameterPredicator) operatorWithString.parser;
+        
+        Token leftExpression = stringMultipleParameterPredicator.getLeftExpression(operatorWithString);
+        
+        List<Token> parameters = stringMultipleParameterPredicator.getParameters(operatorWithString);
         
         List<Token> stringExpressions = new ArrayList<>();
-        Token leftExpression = StringInParser.getLeftExpression(operatorWithString);
-        Token inMethod = StringInParser.getInMethod(operatorWithString);
-        
         stringExpressions.add(leftExpression);
-        stringExpressions.addAll(getStringExpressions(inMethod));
+        stringExpressions.addAll(parameters);
         
         List<Token> appliedExpressions = stringExpressions.stream()
           .map(this::apply)
           .collect(Collectors.toList());
       
         return operatorWithString.newCreatesOf(appliedExpressions);
-
-      }else if(
-              operatorWithString.parser instanceof StringStartsWithParser) {
-
-
-      List<Token> stringExpressions = new ArrayList<>();
-      Token leftExpression = StringStartsWithParser.getLeftExpression(operatorWithString);
-      Token inMethod = StringStartsWithParser.getInMethod(operatorWithString);
-
-      stringExpressions.add(leftExpression);
-      stringExpressions.addAll(getStringExpressions(inMethod));
-
-      List<Token> appliedExpressions = stringExpressions.stream()
-              .map(this::apply)
-              .collect(Collectors.toList());
-
-      return operatorWithString.newCreatesOf(appliedExpressions);
-    }
+      }
       
     }else if(parser instanceof MethodInvocationParser){
       
