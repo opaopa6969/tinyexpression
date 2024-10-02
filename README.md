@@ -70,9 +70,20 @@ public class SimpleUDFTest {
 
 this sample for managed the udf codes with multitenancy.
 
+```text
+ ```java
+ ```
+```
 
+````text
 ```java
 ```
+````
+~~~text
+```java
+```
+~~~
+
 
 
 ```java
