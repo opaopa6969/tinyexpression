@@ -5,7 +5,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.unlaxer</groupId>
 	<artifactId>tinyExpression</artifactId>
-	<version>1.4.3</version>
+	<version>1.4.4</version>
 	<name>tinyExpression</name>
 	<packaging>jar</packaging>
 	<!-- FIXME change it to the project's website -->
@@ -14,7 +14,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<maven.compiler.source>17</maven.compiler.source>
 		<maven.compiler.target>17</maven.compiler.target>
-		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED</argLine>
+		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
 	</properties>
 	<description>TinyExpression implemented with Unlaxer</description>
 	<licenses>

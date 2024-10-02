@@ -159,6 +159,10 @@ public class BooleanBuilder implements TokenCodeBuilder {
 		} else if (parser instanceof StringInParser) {
 
 			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+			
+	   } else if (parser instanceof StringStartsWithParser) {
+
+	     StringStratsWithBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			
