@@ -34,6 +34,7 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     
     parsers.add(TrueTokenParser.class);
     parsers.add(FalseTokenParser.class);
+    parsers.add(InDayTimeRangeParser.class);
     parsers.add(InTimeRangeParser.class);
     parsers.add(BooleanSideEffectExpressionParser.class);
     parsers.add(BooleanIfExpressionParser.class);

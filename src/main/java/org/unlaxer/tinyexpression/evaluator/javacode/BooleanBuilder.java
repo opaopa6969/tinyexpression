@@ -17,6 +17,7 @@ import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.InDayTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
@@ -28,12 +29,9 @@ import org.unlaxer.tinyexpression.parser.NumberGreaterOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberLessExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberLessOrEqualExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberNotEqualExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringContainsParser;
-import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringInParser;
+import org.unlaxer.tinyexpression.parser.StringMultipleParameterPredicator;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.TrueTokenParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
@@ -107,7 +105,23 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 			parserValuesValidator.validateTimeRangeValues(fromHour, toHour);
 			builder.append("org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,").append(fromHour).append("f,")
-					.append(toHour).append("f)");
+					.append(toHour).append("f)");//TODO apply another number type for 'f'
+			
+		} else if (parser instanceof InDayTimeRangeParser) {
+      String fromDay = token.filteredChildren.get(0).tokenString.get();
+      String fromHour = token.filteredChildren.get(1).tokenString.get();
+      String toDay = token.filteredChildren.get(2).tokenString.get();
+      String toHour = token.filteredChildren.get(3).tokenString.get();
+
+      parserValuesValidator.validateTimeRangeValues(fromHour, toHour);
+      builder
+          .append("calculateContext.inDayTimeRange(")
+          .append("java.time.DayOfWeek.").append(fromDay).append(",")
+          .append(fromHour).append("f,")
+          .append("java.time.DayOfWeek.").append(toDay).append(",")
+          .append(toHour).append("f")
+          .append(")");
+			
 					
 		}else if(parser instanceof BooleanVariableParser || parser instanceof NakedVariableParser) {
 		  TypedToken<VariableParser> typed = token.typed(VariableParser.class);
@@ -148,17 +162,10 @@ public class BooleanBuilder implements TokenCodeBuilder {
 
 			StringBooleanNotEqualClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
 
-		}else if(
-			parser instanceof StringStartsWithParser||
-			parser instanceof StringEndsWithParser||
-			parser instanceof StringContainsParser
-		){
-			
-			StringMethodClauseBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-			
-		} else if (parser instanceof StringInParser) {
-
-			StringInBooleanExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
+		} else if (parser instanceof StringMultipleParameterPredicator) {
+		  
+		  StringMultipleParameterPredicator.class.cast(parser)
+		    .build(builder, token, tinyExpressionTokens);
 
 		} else if (parser instanceof BooleanSideEffectExpressionParser) {
 			

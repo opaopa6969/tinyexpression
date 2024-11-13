@@ -208,8 +208,9 @@ public class TinyExpressionsExecutorTest {
     // MultiTenancyで使用されるIDと結果の出力の項目名を指定する
     FormulaInfoAdditionalFields formulaInfoAdditionalFields = 
         new FormulaInfoAdditionalFields("siteId",
-            //formulaInfoからnameを取得するfunction。checkKindがあればそれをnameになぇればcalculatorNameを使用する
+            //formulaInfoからnameを取得するfunction。calculatorNameがあればそれをnameになぇればcheckKindを使用する
             formulaInfo->{
+              
               String checkKind = formulaInfo.extraValueByKey.get("checkKind");
               return checkKind != null ? checkKind : formulaInfo.calculatorName;
             }

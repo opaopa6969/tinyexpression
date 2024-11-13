@@ -32,12 +32,13 @@ import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.DayOfWeekEnumParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.InMethodParser;
+import org.unlaxer.tinyexpression.parser.InDayTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
@@ -73,23 +74,18 @@ import org.unlaxer.tinyexpression.parser.StrictTypedStringFactorParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedStringTermParser;
 import org.unlaxer.tinyexpression.parser.StringCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.StringContainsParser;
 import org.unlaxer.tinyexpression.parser.StringDefaultCaseFactorParser;
-import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
 import org.unlaxer.tinyexpression.parser.StringEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
-import org.unlaxer.tinyexpression.parser.StringExpressionMethodParser;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringFactorParser;
 import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringInParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringMethodExpressionParser;
+import org.unlaxer.tinyexpression.parser.StringMultipleParameterPredicator;
 import org.unlaxer.tinyexpression.parser.StringNotEqualsExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringSetterParser;
-import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 import org.unlaxer.tinyexpression.parser.StringTermParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
@@ -374,10 +370,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       return token;
       
+    } else if (parser instanceof DayOfWeekEnumParser) {
+      return token;
     }
-
     
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException("no match for " + parser);
       
   }
 
@@ -693,6 +690,14 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           apply(InTimeRangeParser.getLeftExpression(operator)),
           apply(InTimeRangeParser.getRightExpression(operator))
       );
+      
+    } else if(parser instanceof InDayTimeRangeParser) {
+      return operator.newCreatesOf(
+          apply(InDayTimeRangeParser.getFromDayOfWeek(operator)),
+          apply(InDayTimeRangeParser.getFromHour(operator)),
+          apply(InDayTimeRangeParser.getToDayOfWeek(operator)),
+          apply(InDayTimeRangeParser.getToHour(operator))
+      );
 
     }else if(parser instanceof NumberEqualEqualExpressionParser) {
       
@@ -770,28 +775,19 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
           apply(StringNotEqualsExpressionParser.getRightExpression(operatorWithString))
         );
         
-      }else if(
-          operatorWithString.parser instanceof StringStartsWithParser||
-          operatorWithString.parser instanceof StringEndsWithParser||
-          operatorWithString.parser instanceof StringContainsParser
-      ) {
 
-        Token leftExpression = StringMethodExpressionParser.getLeftExpression(operatorWithString);
-        Token argument = StringExpressionMethodParser.getStringExpressions(StringMethodExpressionParser.getMethod(operatorWithString));
-        return operatorWithString.newCreatesOf(
-          apply(leftExpression),
-          apply(argument)
-        );
+      }else if(operatorWithString.parser instanceof StringMultipleParameterPredicator) {
         
-      }else if(operatorWithString.parser instanceof StringInParser) {
+        StringMultipleParameterPredicator stringMultipleParameterPredicator =
+            (StringMultipleParameterPredicator) operatorWithString.parser;
         
+        Token leftExpression = stringMultipleParameterPredicator.getLeftExpression(operatorWithString);
+        
+        List<Token> parameters = stringMultipleParameterPredicator.getParameters(operatorWithString);
         
         List<Token> stringExpressions = new ArrayList<>();
-        Token leftExpression = StringInParser.getLeftExpression(operatorWithString);
-        Token inMethod = StringInParser.getInMethod(operatorWithString);
-        
         stringExpressions.add(leftExpression);
-        stringExpressions.addAll(getStringExpressions(inMethod));
+        stringExpressions.addAll(parameters);
         
         List<Token> appliedExpressions = stringExpressions.stream()
           .map(this::apply)
@@ -826,14 +822,5 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
   Token clearChildren(Token token) {
     token.filteredChildren.clear();
     return token;
-  }
-  
-  static List<Token> getStringExpressions(Token inMethod){
-    
-    Token stringExpressions = InMethodParser.getStringExpressions(inMethod);
-    List<Token> expressions = stringExpressions.filteredChildren.stream()
-      .filter(token->token.parser instanceof StringExpressionParser)
-      .collect(Collectors.toList());
-    return expressions;
   }
 }
