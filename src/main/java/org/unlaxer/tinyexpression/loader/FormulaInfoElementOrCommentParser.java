@@ -2,9 +2,9 @@ package org.unlaxer.tinyexpression.loader;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
-import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
@@ -27,7 +27,8 @@ public class FormulaInfoElementOrCommentParser extends LazyChoice{
   
   public static List<Token> elements(Token ancestorOfThisParseParsed){
     List<Token> collect = ancestorOfThisParseParsed.flatten().stream()
-      .filter(TokenPredicators.hasTag(formulaInfoElementTag))
+        // enable comment and empty lines
+//      .filter(TokenPredicators.hasTag(formulaInfoElementTag))
       .collect(Collectors.toList());
     
     return collect;
