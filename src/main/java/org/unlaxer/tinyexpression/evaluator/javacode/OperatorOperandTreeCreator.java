@@ -32,11 +32,13 @@ import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.DayOfWeekEnumParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.FalseTokenParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.InDayTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.InMethodParser;
 import org.unlaxer.tinyexpression.parser.InTimeRangeParser;
 import org.unlaxer.tinyexpression.parser.IsPresentParser;
@@ -372,10 +374,11 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       return token;
       
+    } else if (parser instanceof DayOfWeekEnumParser) {
+      return token;
     }
-
     
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException("no match for " + parser);
       
   }
 
@@ -690,6 +693,14 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       return operator.newCreatesOf(
           apply(InTimeRangeParser.getLeftExpression(operator)),
           apply(InTimeRangeParser.getRightExpression(operator))
+      );
+      
+    } else if(parser instanceof InDayTimeRangeParser) {
+      return operator.newCreatesOf(
+          apply(InDayTimeRangeParser.getFromDayOfWeek(operator)),
+          apply(InDayTimeRangeParser.getFromHour(operator)),
+          apply(InDayTimeRangeParser.getToDayOfWeek(operator)),
+          apply(InDayTimeRangeParser.getToHour(operator))
       );
 
     }else if(parser instanceof NumberEqualEqualExpressionParser) {

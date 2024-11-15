@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression;
 
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.util.Optional;
 
 public interface CalculationContext {
@@ -160,4 +161,7 @@ public interface CalculationContext {
     }
     return null;
 	}
+
+  boolean inDayTimeRange(DayOfWeek fromDayInclusive, float fromDayHourInclusive, DayOfWeek toDayInclusive,
+      float toDayHourExclusive);
 }

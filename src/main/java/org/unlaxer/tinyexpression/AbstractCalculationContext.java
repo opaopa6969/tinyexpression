@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression;
 
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
@@ -143,4 +144,46 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 
 	public abstract <T> Map<String,T> newMap();
 
+  @Override
+  public boolean inDayTimeRange(
+      DayOfWeek fromDayInclusive, float fromDayHourInclusive,
+      DayOfWeek toDayInclusive, float toDayHourExclusive) {
+
+    Optional<Float> nowHourOpt = getValue("nowHour");
+    Optional<Float> nowDayOfWeekOpt = getValue("nowDayOfWeek");
+
+    if (nowHourOpt.isEmpty() || nowDayOfWeekOpt.isEmpty()) {
+      return false;
+    }
+
+    float nowHour = nowHourOpt.get();
+    float nowDayOfWeek = nowDayOfWeekOpt.get();
+
+    boolean spansWeek = fromDayInclusive.getValue() > toDayInclusive.getValue();
+
+    boolean withinDayOfWeek = false;
+    if (spansWeek) {
+      withinDayOfWeek = (nowDayOfWeek >= fromDayInclusive.getValue())
+          || (nowDayOfWeek <= toDayInclusive.getValue());
+    } else {
+      withinDayOfWeek = (nowDayOfWeek >= fromDayInclusive.getValue())
+          && (nowDayOfWeek <= toDayInclusive.getValue());
+    }
+
+    if (! withinDayOfWeek) return false;
+
+    boolean withinTime = false;
+    if (fromDayInclusive.getValue() == toDayInclusive.getValue()) {
+      withinTime = nowHour >= fromDayHourInclusive && nowHour < toDayHourExclusive;
+    } else if (fromDayInclusive.getValue() == nowDayOfWeek) {
+      withinTime = nowHour >= fromDayHourInclusive;
+    } else if (toDayInclusive.getValue() == nowDayOfWeek) {
+      withinTime = nowHour < toDayHourExclusive;
+    } else {
+      // If we're on any day between to from and to day then we're definitely within the time range
+      withinTime = true;
+    }
+
+    return withinTime;
+  }
 }

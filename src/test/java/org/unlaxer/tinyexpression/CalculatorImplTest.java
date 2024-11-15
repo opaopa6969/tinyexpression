@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.DayOfWeek;
 import java.util.Optional;
 
 import org.junit.Ignore;
@@ -1541,6 +1542,24 @@ if ($endpoint == 'withdrawal'
     
     System.out.println(simpleBuilder.toString());
 
+  }
+  
+  @Test
+  public void testInDayTimeRange() {
+    setLevel(OutputLevel.detail);
+
+    CalculationContext context = new NormalCalculationContext(2,RoundingMode.HALF_UP,Angle.DEGREE);
+    context.set("count", 10);
+
+    // Check within range
+    context.set("nowHour", 12);
+    context.set("nowDayOfWeek", DayOfWeek.WEDNESDAY.getValue());
+    assertTrue(calc(context,"if (inDayTimeRange(MONDAY, 10, FRIDAY, 23) == true) {1} else {0}", new BigDecimal("1")));
+
+    // Check outside range
+    context.set("nowHour", 12);
+    context.set("nowDayOfWeek", DayOfWeek.SATURDAY.getValue());
+    assertTrue(calc(context,"if (inDayTimeRange(MONDAY, 10, FRIDAY, 23) == true) {1} else {0}", new BigDecimal("0")));
   }
   
   
