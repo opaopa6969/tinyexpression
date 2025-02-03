@@ -28,13 +28,13 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
   }
 
   @TokenExtractor
-  public FormulaInfoList extract(TypedToken<FormulaInfoBlocksParser> typedToken , 
+  public FormulaInfoList extract(String text, TypedToken<FormulaInfoBlocksParser> typedToken ,
       FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
-    List<TypedToken<FormulaInfoBlockParser>> childrenWithParserAsListTyped = 
+    List<TypedToken<FormulaInfoBlockParser>> childrenWithParserAsListTyped =
         typedToken.getChildrenWithParserAsListTyped(FormulaInfoBlockParser.class);
-    
+
     Map<String,Calculator> calculatorByName = new HashMap<>();
-    
+
     List<FormulaInfo> collect = childrenWithParserAsListTyped.stream()
       .filter(_typeToken->{
         boolean hasElement = _typeToken.flatten().stream()
@@ -50,7 +50,7 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
           calculatorByName.put(name,calculator);
       })
       .collect(Collectors.toList());
-    
+
     collect.forEach(formulaInfo->{
       Calculator calculator = formulaInfo.calculator();
       String[] split = formulaInfo.dependsOn.split(",");
@@ -60,13 +60,13 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
         }
         Calculator dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
         calculator.addDependsOn(dependsOncalculator);
-        
-        
+
+
       }
-      
+
     });
-    
-    return new FormulaInfoList(collect);
+
+    return new FormulaInfoList(text,collect);
   }
 
 }
