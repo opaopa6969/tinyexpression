@@ -24,7 +24,7 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
 
 public class VariableTypeResolver {
-  
+
   static final Map<ExpressionType, ? extends VariableParser> variableParserByExpressionType = Map.of(
       ExpressionTypes._boolean, BooleanVariableParser.get(),
       ExpressionTypes.string, StringVariableParser.get(),
@@ -68,7 +68,7 @@ public class VariableTypeResolver {
     // 2. 比較演算の他方の型から解決する。method callや == や -1等
     // 3. methodの実パラメータの場合仮引数の型から解決する
     // 4. not等のunary operatorの型から解決する
-    
+
 
     // 5. VariableDeclarationの型から解決する <-これは VariableDeclarationMatchedTokenParserで解決したのでいらない
 //    Token declarationToken = variableDeclarationByName.get(variableName);
@@ -77,13 +77,13 @@ public class VariableTypeResolver {
 //
 //      TypedToken<VariableDeclaration> typed = declarationToken.typed(VariableDeclaration.class);
 //      Optional<ExpressionType> type = typed.getParser().type();
-//      
+//
 //      return type.map(variableParserByExpressionType::get);
 //    }
     return Optional.empty();
   }
-  
-  
+
+
 
 
   /**
@@ -101,7 +101,7 @@ public class VariableTypeResolver {
         TypedToken<ExclusiveNakedVariableParser> typed = _token.typed(ExclusiveNakedVariableParser.class);
         Optional<VariableParser> resolveTypedVariable = VariableTypeResolver
             .resolveTypedVariable(typed, variableDeclarationByName);
-        
+
         resolveTypedVariable.ifPresent(parser->{
           if (parser.getClass() != ExclusiveNakedVariableParser.class) {
             _token.replace(parser);

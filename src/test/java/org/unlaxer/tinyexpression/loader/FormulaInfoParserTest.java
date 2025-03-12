@@ -1,15 +1,13 @@
 package org.unlaxer.tinyexpression.loader;
 
-import static org.junit.Assert.*;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.instances.FileBaseTinyExpressionInstancesCache;
 import org.unlaxer.tinyexpression.instances.TenantID;
-import org.unlaxer.tinyexpression.instances.TinyExpressionInstancesCacheTest.FileBaseTinyExpressionInstancesCache;
 import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutorTest.NameAndDependsOnComparator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
@@ -42,7 +40,7 @@ public class FormulaInfoParserTest {
     );
 
     for (Calculator calculator : list) {
-      FormulaInfo formulaInfo = calculator.formulaInfo().get();
+      FormulaInfo formulaInfo = calculator.formulaInfo();
       System.out.println( formulaInfo.toString());
     }
 

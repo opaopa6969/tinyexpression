@@ -1,11 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
-import junit.framework.TestCase;
 import org.junit.Test;
-import org.unlaxer.Parsed;
 import org.unlaxer.ParserTestBase;
-import org.unlaxer.StringSource;
-import org.unlaxer.context.ParseContext;
 import org.unlaxer.listener.OutputLevel;
 
 public class StringStartsWithParserTest extends ParserTestBase {
