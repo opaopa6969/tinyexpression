@@ -25,8 +25,8 @@ public interface Calculator {
     return (Class<?>) getReturningTypeFromImplements();
   }
 
-  public ExpressionType resultType(); 
-  
+  public ExpressionType resultType();
+
   public Parser getParser();
 
   public TokenBaseOperator<CalculationContext> getCalculatorOperator();
@@ -34,7 +34,7 @@ public interface Calculator {
   public default UnaryOperator<Token> tokenReduer() {
     return UnaryOperator.identity();
   }
-  
+
   public String returningTypeAsString();
 
   public String javaCode();
@@ -46,9 +46,9 @@ public interface Calculator {
   public String formulaHash();
 
   public String byteCodeHash();
-  
+
   public List<Calculator> dependsOns();
-  
+
   public Optional<Calculator> dependsOnBy();
 
   public default int dependsOnByNestLevel(){
@@ -63,7 +63,7 @@ public interface Calculator {
     }
     return nestLevel;
   }
-  
+
   public default Calculator rootDependsOnBy(){
     Calculator current = this;
     while(true) {
@@ -78,17 +78,17 @@ public interface Calculator {
   public void before(CalculationContext calculationContext);
 
   public Object apply(CalculationContext calculationContext);
-  
+
   public void after(CalculationContext calculationContext);
 
   public void setObject(String key, Object object);
 
   public <X> X getObject(String key, Class<X> objectClass);
-  
-  public default Optional<FormulaInfo> formulaInfo(){
-    return Optional.of(getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class));
+
+  public default FormulaInfo formulaInfo(){
+    return getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class);
   }
-  
+
   public default void setFormulaInfo(FormulaInfo formulaInfo){
     setObject(FormulaInfo.class.getSimpleName(), formulaInfo);
   }
@@ -98,7 +98,7 @@ public interface Calculator {
   }
 
   public CreatedFrom createdFrom();
-  
+
   public enum CreatedFrom{
     formula,
     byteCode
@@ -108,9 +108,9 @@ public interface Calculator {
     dependsOns().add(dependsOncalculator);
     dependsOncalculator.setDependsOnBy(this);
   }
-  
+
   public void setDependsOnBy(Calculator calculator);
-  
+
   public default CalculateResult calculate(CalculationContext calculateContext,
       String formula , ExpressionType resultType) {
     ParseContext parseContext = new ParseContext(new StringSource(formula));
