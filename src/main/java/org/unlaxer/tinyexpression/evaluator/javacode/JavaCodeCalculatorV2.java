@@ -44,6 +44,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.PreConstructedCalculator;
+import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.TokenBaseCalculator;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -70,7 +71,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
 
 
   TokenBaseOperator<CalculationContext> operator;
-  
+
 
   /**
    * from formula
@@ -154,13 +155,13 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
     super(formula, className,
         new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
         true);
-    
-    SpecifiedExpressionTypes specifiedExpressionTypes = 
+
+    SpecifiedExpressionTypes specifiedExpressionTypes =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
 
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
-    
+
     StringWriter output = new StringWriter();
 
     try {
@@ -172,7 +173,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       this.returningClass = tinyExpressionTokens.expressionToken.getParser().expressionType().javaType();
 
       classNameWithHash = className + "_" + formulaHash;
-      
+
       javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens);
 
       JavaFileObject javaFileObject = new SimpleJavaFileObject(
@@ -229,7 +230,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
 
   /**
    * from bytecode
-   * 
+   *
    * @param formula
    * @param javaCode
    * @param className
@@ -238,7 +239,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
    * @param classLoader
    */
   @SuppressWarnings("unchecked")
-  public JavaCodeCalculatorV2(String formula, String javaCode, String className, 
+  public JavaCodeCalculatorV2(String formula, String javaCode, String className,
       byte[] byteCode, String byteCodeHash,
       ClassLoader classLoader) {
     super(formula, className,
@@ -249,7 +250,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
     this.javaCode = javaCode;
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
-    
+
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
 
@@ -279,7 +280,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       }
       Method method = calculatorClass.getMethod("evaluate", CalculationContext.class,Token.class);
       this.returningClass = method.getReturnType();
-      
+
       operator = (TokenBaseOperator<CalculationContext>) calculatorClass.getDeclaredConstructor()
           .newInstance();
 
@@ -300,10 +301,10 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
    * @param calculatorClass
    * @param classLoader
    */
-  public JavaCodeCalculatorV2(String formula, String javaCode, String className, 
+  public JavaCodeCalculatorV2(String formula, String javaCode, String className,
       byte[] byteCode, String byteCodeHash,
       Class<TokenBaseOperator<CalculationContext>> calculatorClass, ClassLoader classLoader) {
-    super(formula, className, 
+    super(formula, className,
         new SpecifiedExpressionTypes(ExpressionTypes._float,ExpressionTypes._float),
         false);
     this.className = className;
@@ -311,7 +312,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
     this.byteCode = byteCode;
     this.byteCodeHash = byteCodeHash;
     this.classNameWithHash = "";
-    
+
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
 
@@ -328,10 +329,10 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       throw new RuntimeException(e);
     }
   }
-  
-  
 
-  
+
+
+
 //private static final Method DEFINE_CLASS_METHOD;
 //static {
 //    try {
@@ -370,7 +371,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
     }
   }
 
-  
+
   @SuppressWarnings("rawtypes")
   public static Class defineClass(@NotNull String className, @NotNull byte[] bytes) {
     return defineClass(Thread.currentThread().getContextClassLoader(), className, bytes);
@@ -444,7 +445,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
   public String byteCodeHash() {
     return byteCodeHash;
   }
-  
+
 
   @Override
   public String className() {
@@ -460,7 +461,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
   public Collection<TransactionListener> transactionListeners() {
     return Set.of(Parser.get(VariableDeclarationParser.class));
   }
-  
+
   @SuppressWarnings("rawtypes")
   public static Class defineClass(ClassLoader classLoader, String className, byte[] byteCode) {
     Method defineClassMethod;
@@ -468,17 +469,17 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       defineClassMethod = ClassLoader.class.getDeclaredMethod("defineClass", String.class, byte[].class, int.class,
           int.class);
       defineClassMethod.setAccessible(true);
-  
+
       return (Class) defineClassMethod.invoke(classLoader, className, byteCode, 0, byteCode.length);
     } catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
         | InvocationTargetException e) {
       throw new RuntimeException(e);
     }
   }
-  
+
   @SuppressWarnings("rawtypes")
   public static Class defineClassWithMethodHandle(ClassLoader classLoader, String className, byte[] byteCode) {
-    
+
     try {
       MethodHandles.Lookup lookup = MethodHandles.lookup();
       MethodType methodType = MethodType.methodType(Class.class, String.class, byte[].class, int.class,
@@ -489,7 +490,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       throw new RuntimeException(e);
     }
   }
-  
+
   @Override
   public void setDependsOnBy(Calculator calculator) {
     dependsOnBy = Optional.of(calculator);
@@ -521,5 +522,15 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
 
   @Override
   public void after(CalculationContext calculationContext) {
+  }
+
+  @Override
+  public InstanceKind instanceKind() {
+    return InstanceKind.fromSource;
+  }
+
+  @Override
+  public Source source() {
+    return new Source(formula);
   }
 }

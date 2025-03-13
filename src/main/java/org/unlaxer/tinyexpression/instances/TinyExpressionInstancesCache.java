@@ -7,12 +7,17 @@ import java.util.function.Predicate;
 import org.unlaxer.tinyexpression.Calculator;
 
 public interface TinyExpressionInstancesCache extends TinyExpressionInstances{
-  
-  boolean clearCache(TenantID tenantID);
-  
-  List<Calculator> get(
+
+  default List<Calculator> get(
       TenantID tenantID,
-      Comparator<Calculator> comparator , 
-      Predicate<Calculator> passFilter , 
-      ClassLoader classLoader);
+      Comparator<Calculator> comparator ,
+      Predicate<Calculator> passFilter ,
+      ClassLoader classLoader){
+
+    return cache(tenantID, comparator, classLoader)
+        .stream()
+        .filter(passFilter)
+        .toList();
+  }
+
 }

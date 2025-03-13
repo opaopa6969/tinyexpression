@@ -24,15 +24,26 @@ import org.unlaxer.util.Tuple2;
 @V2CustomFunction
 public class FormulaInfoList {
 
+  public enum InstanceKind{
+    empty,
+    fromSource,
+    fromFormulaInfoObjects
+    ;
+  }
+
+
+  public final InstanceKind instanceKind;
+
   List<FormulaInfo> infos;
 
   String input;
   String output;
 
-  private FormulaInfoList() {
+  public FormulaInfoList() {
     super();
     this.infos = Collections.emptyList();
     this.output = "";
+    instanceKind = InstanceKind.empty;
   }
 
   public FormulaInfoList(String input , List<FormulaInfo> infos) {
@@ -43,6 +54,18 @@ public class FormulaInfoList {
     output = infos.stream()
       .map(FormulaInfo::output)
       .collect(Collectors.joining("\n"));
+    instanceKind = InstanceKind.fromSource;
+  }
+
+  public FormulaInfoList(List<FormulaInfo> infos) {
+    super();
+    this.infos = infos;
+
+    output = infos.stream()
+      .map(FormulaInfo::output)
+      .collect(Collectors.joining("\n"));
+    this.input = output;
+    instanceKind = InstanceKind.fromFormulaInfoObjects;
   }
 
 //  public FormulaInfoList add(FormulaInfoList addingInfos) {
@@ -133,6 +156,10 @@ public class FormulaInfoList {
 
   public static Try<FormulaInfoList> parse(InputStream binaryStream , FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
       return parse(StringUtils.from(binaryStream, StandardCharsets.UTF_8) , additionalFields, classLoader);
+  }
+
+  public InstanceKind instanceKind() {
+    return instanceKind;
   }
 
 }

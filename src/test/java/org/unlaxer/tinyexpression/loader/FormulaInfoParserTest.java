@@ -33,7 +33,7 @@ public class FormulaInfoParserTest {
     FileBaseTinyExpressionInstancesCache fileBaseTinyExpressionInstancesCache =
         new FileBaseTinyExpressionInstancesCache(rootPath,formulaInfoAdditionalFields);
 
-    List<Calculator> list = fileBaseTinyExpressionInstancesCache.get(
+    List<Calculator> list = fileBaseTinyExpressionInstancesCache.cache(
         TenantID.create(69),
         NameAndDependsOnComparator.SINGLETON,
         Thread.currentThread().getContextClassLoader()

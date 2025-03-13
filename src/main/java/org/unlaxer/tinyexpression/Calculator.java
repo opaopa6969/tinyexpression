@@ -17,6 +17,13 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public interface Calculator {
 
+  public enum InstanceKind{
+    fromFormulaInfo,
+    fromSource
+  }
+
+  public InstanceKind instanceKind();
+
   public default Type getReturningTypeFromImplements() {
     return ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
   }
@@ -34,6 +41,8 @@ public interface Calculator {
   public default UnaryOperator<Token> tokenReduer() {
     return UnaryOperator.identity();
   }
+
+  public Source source();
 
   public String returningTypeAsString();
 
@@ -86,6 +95,9 @@ public interface Calculator {
   public <X> X getObject(String key, Class<X> objectClass);
 
   public default FormulaInfo formulaInfo(){
+    if(instanceKind() != InstanceKind.fromFormulaInfo) {
+      throw new RuntimeException("no formulaInfo present");
+    }
     return getObject(FormulaInfo.class.getSimpleName(), FormulaInfo.class);
   }
 

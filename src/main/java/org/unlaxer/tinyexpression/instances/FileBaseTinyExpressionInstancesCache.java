@@ -9,8 +9,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
@@ -25,16 +23,16 @@ import org.unlaxer.util.Try;
  *
  */
 public class FileBaseTinyExpressionInstancesCache implements TinyExpressionInstancesCache{
-  
-  public static final String FILENAME = "formulaInfo.txt"; 
+
+  public static final String FILENAME = "formulaInfo.txt";
   static FormulaInfoBlocksParser formulaInfoBlocksParser = new FormulaInfoBlocksParser();
-  
+
   Path rootFolder;
   FormulaInfoAdditionalFields formulaInfoAdditionalFields;
   Map<TenantID,List<Calculator>> calculatorsByTenantId = new ConcurrentHashMap<>();
-  
-  
-  public FileBaseTinyExpressionInstancesCache(Path rootFolder , 
+
+
+  public FileBaseTinyExpressionInstancesCache(Path rootFolder ,
       FormulaInfoAdditionalFields formulaInfoAdditionalFields) {
     super();
     this.rootFolder = rootFolder;
@@ -49,34 +47,26 @@ public class FileBaseTinyExpressionInstancesCache implements TinyExpressionInsta
 
 
   @Override
-  public List<Calculator> get(TenantID tenantID, Comparator<Calculator> comparator, ClassLoader classLoader) {
-    return get(tenantID, comparator, x->true , classLoader);
-  }
+  public List<Calculator> cache(TenantID tenantID, Comparator<Calculator> comparator, ClassLoader classLoader) {
+    List<Calculator> cache =
+        calculatorsByTenantId.computeIfAbsent(tenantID,
+            tenantId->{
+              Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
+              try(InputStream inputStream = Files.newInputStream(resolve);){
+                Try<FormulaInfoList> parse =
+                    FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
 
-  @Override
-  public List<Calculator> get(TenantID tenantID, Comparator<Calculator> comparator,
-      Predicate<Calculator> passFilter, ClassLoader classLoader) {
-    
-      List<Calculator> matchedCalculators = 
-          calculatorsByTenantId.computeIfAbsent(tenantID, 
-              tenantId->{
-                Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
-                try(InputStream inputStream = Files.newInputStream(resolve);){
-                  Try<FormulaInfoList> parse = 
-                      FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);
-                  
-                  parse.throwIfMatch();
-                  List<Calculator> list = parse.right().get().get().stream()
-                    .map(FormulaInfo::calculator)
-                    .filter(passFilter)
-                    .sorted(comparator)
-                    .collect(Collectors.toList());
-                  return list; 
-                } catch (IOException e) {
-                  throw new UncheckedIOException(e);
-                }
+                parse.throwIfMatch();
+                List<Calculator> list = parse.right().get().get().stream()
+                  .map(FormulaInfo::calculator)
+                  .sorted(comparator)
+                  .toList();
+                return list;
+              } catch (IOException e) {
+                throw new UncheckedIOException(e);
               }
-          );
-      return matchedCalculators;
-    }
+            }
+        );
+    return cache;
+  }
 }

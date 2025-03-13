@@ -21,21 +21,21 @@ public class SimpleUDFTest {
     // create calculator
     PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
         Name.of("Test"), // name for identifier
-        udf, // user define function
+        new Source(udf), // user define function
         new SpecifiedExpressionTypes(
             ExpressionTypes._float, // result type of this udf returning
             ExpressionTypes._float // default number type. eg. float,double,integer,short...
         ),
         Thread.currentThread().getContextClassLoader());// classloader for generated class from udf
-    
-    
+
+
     {
       // test with male
       float apply = (float)calculator.apply(context);
       assertEquals(500.0f, apply , 0.1);
     }
 
-    
+
     {
       // test with female
       context.set("sex", "female");

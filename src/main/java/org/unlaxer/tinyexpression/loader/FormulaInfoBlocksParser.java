@@ -53,6 +53,9 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
 
     collect.forEach(formulaInfo->{
       Calculator calculator = formulaInfo.calculator();
+      if(formulaInfo.dependsOn==null) {
+        return;
+      }
       String[] split = formulaInfo.dependsOn.split(",");
       for (String dependsOnCalculatorName : split) {
         if(dependsOnCalculatorName.isBlank()) {
@@ -60,10 +63,7 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
         }
         Calculator dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
         calculator.addDependsOn(dependsOncalculator);
-
-
       }
-
     });
 
     return new FormulaInfoList(text,collect);
