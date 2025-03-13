@@ -463,6 +463,6 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
 
   @Override
   public Source source() {
-    return null;
+    return source;
   }
 }
