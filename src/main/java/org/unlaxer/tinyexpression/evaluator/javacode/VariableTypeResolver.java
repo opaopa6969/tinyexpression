@@ -10,18 +10,18 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExclusiveNakedVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.MethodParser;
-import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 
 public class VariableTypeResolver {
 

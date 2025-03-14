@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 
 public class XorParser extends WordParser implements BooleanExpression{
 

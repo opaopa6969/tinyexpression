@@ -7,6 +7,8 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class ToNumParser extends JavaStyleDelimitedLazyChain {

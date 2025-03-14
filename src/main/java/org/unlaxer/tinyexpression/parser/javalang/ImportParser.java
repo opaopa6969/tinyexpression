@@ -9,8 +9,8 @@ import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser;
-import org.unlaxer.tinyexpression.parser.JavaClassNameParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 

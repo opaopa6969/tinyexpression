@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringLengthParser;
 
 public class FactorOfStringParser extends LazyChoice implements NumberExpression{
 	

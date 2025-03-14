@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringFactorParser;
 
 public class ToLowerCaseParser extends JavaStyleNamedParenthesesParser implements StringExpression{
 

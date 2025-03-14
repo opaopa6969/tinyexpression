@@ -10,6 +10,7 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeHintSuffixParser;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
 public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implements Returning {

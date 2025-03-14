@@ -5,9 +5,9 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.EqualParser;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
-import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringExpressionParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 
 public class AnnotationParameterParser extends JavaStyleDelimitedLazyChain{
 

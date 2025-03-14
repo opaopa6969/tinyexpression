@@ -4,9 +4,9 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanSetterParser;
 
 @SuppressWarnings("serial")
 public class BooleanVariableDeclarationParser extends AbstractVariableDeclarationParser {

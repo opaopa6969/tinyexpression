@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.tinyexpression.parser.stringtype.StringSetterParser;
 
 public class StringSetterParserTest extends ParserTestBase{
 

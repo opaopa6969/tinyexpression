@@ -6,7 +6,7 @@ import org.unlaxer.Tag;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.StringSetterParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringSetterParser;
 
 @SuppressWarnings("serial")
 public class StringVariableDeclarationParser extends AbstractVariableDeclarationParser {

@@ -11,6 +11,12 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberSideEffectExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
 
 public abstract class AbstractNumberFactorParser extends LazyChoice implements NumberExpression  , VariableTypeSelectable{
 	

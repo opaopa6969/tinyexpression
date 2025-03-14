@@ -10,13 +10,13 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.BooleanVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.NumberVariableMethodParameterParser;
-import org.unlaxer.tinyexpression.parser.StringVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableMethodParameterParser;
 
 public interface JavaClassCreator{
   default String createJavaClass(String className, 

@@ -6,6 +6,8 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{

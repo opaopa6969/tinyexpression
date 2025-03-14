@@ -9,6 +9,7 @@ import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableMatchedWithVariableDeclarationParser;
 
 public class StringVariableDeclarationMatchedTokenParserTest extends ParserTestBase{
 

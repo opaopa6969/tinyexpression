@@ -6,6 +6,8 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
 
 public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyChain implements NumberExpression , VariableTypeSelectable{
 	

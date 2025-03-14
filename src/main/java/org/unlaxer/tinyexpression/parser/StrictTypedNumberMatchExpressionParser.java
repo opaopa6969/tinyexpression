@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.PredicateAnyMatchForParsedParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberMatchExpressionParser;
 
 public class StrictTypedNumberMatchExpressionParser extends PredicateAnyMatchForParsedParser implements NumberExpression{
 
