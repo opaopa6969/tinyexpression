@@ -24,7 +24,7 @@ public interface JavaClassCreator{
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
-    String returningType = parser.expressionType().javaType().getSimpleName();
+    String returningType = parser.expressionType(expressionToken).javaType().getSimpleName();
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
@@ -103,7 +103,7 @@ public interface JavaClassCreator{
       
       Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
       ExpressionInterface expressionParser = expression.getParser(ExpressionInterface.class);
-      ExpressionType expressionType = expressionParser.expressionType();
+      ExpressionType expressionType = expressionParser.expressionType(expression);
       
       builder
         .n()

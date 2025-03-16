@@ -4,6 +4,7 @@ import org.unlaxer.parser.Parser;
 
 public interface ExpressionInterface extends Parser{
   
-  public ExpressionTypes expressionType();
+//  public ExpressionType expressionType(Token thisParserParsed);
+  public ExpressionType expressionType();
   
 }

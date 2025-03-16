@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.javalang;
+package org.unlaxer.tinyexpression.parser.stringtype;
 
 import java.util.Optional;
 
@@ -7,34 +7,35 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanSetterParser;
+import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 
 @SuppressWarnings("serial")
-public class BooleanVariableDeclarationParser extends AbstractVariableDeclarationParser {
-
+public class StringVariableDeclarationParser extends AbstractVariableDeclarationParser {
+  
   @Override
   public java.util.Optional<Parser> typeDeclaration() {
     return java.util.Optional.of(
-        Parser.newInstance(BooleanTypeDeclarationParser.class).addTag(typed, typeTag()));
+        Parser.newInstance(StringTypeDeclarationParser.class).addTag(typed, typeTag()));
   }
 
   @Override
   public Tag typeTag() {
-    return Tag.of(BooleanVariableDeclarationParser.class);
+    return Tag.of(StringVariableDeclarationParser.class);
   }
 
   @Override
   public Optional<Parser> setter() {
     return Optional.of(
         new org.unlaxer.parser.combinator.Optional(
-            BooleanSetterParser.class
+            StringSetterParser.class
         )
     );
   }
 
   @Override
   public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
-    return Optional.of(ExpressionTypes._boolean);
+    return Optional.of(ExpressionTypes.string);
   }
 
 }

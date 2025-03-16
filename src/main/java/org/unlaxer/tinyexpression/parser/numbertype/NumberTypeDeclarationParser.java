@@ -1,13 +1,12 @@
-package org.unlaxer.tinyexpression.parser.javalang;
+package org.unlaxer.tinyexpression.parser.numbertype;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringTypeHintParser;
 
-public class StringTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
+public class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
@@ -15,7 +14,7 @@ public class StringTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
         new Optional(
             new WordParser("as")
         ),
-        Parser.get(StringTypeHintParser.class)
+        Parser.get(NumberTypeHintParser.class)
     );
   }
 }

@@ -170,7 +170,7 @@ public class JavaCodeCalculatorV2 extends PreConstructedCalculator
       formulaHash = MD5.toHex(formula);
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken,specifiedExpressionTypes);
-      this.returningClass = tinyExpressionTokens.expressionToken.getParser().expressionType().javaType();
+      this.returningClass = tinyExpressionTokens.expressionToken.getParser().expressionType(tinyExpressionTokens.expressionToken).javaType();
 
       classNameWithHash = className + "_" + formulaHash;
 

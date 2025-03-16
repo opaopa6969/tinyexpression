@@ -26,25 +26,38 @@ public enum ExpressionTypes implements ExpressionType{
   final Class<?> javaTypePrimitive;
   final Class<?> javaType;
   final String javaLiteralSuffix;
+  final String lowerCaseTypeName;
   
   private ExpressionTypes(Class<?> javaType  , Class<?> javaTypePrimitive , String javaLiteralSuffix) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
     this.javaTypePrimitive = javaTypePrimitive;
     this.javaLiteralSuffix = javaLiteralSuffix;
+    lowerCaseTypeName=null;
   }
   private ExpressionTypes(Class<?> javaType  , Class<?> javaTypePrimitive) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
     this.javaTypePrimitive = javaTypePrimitive;
     this.javaLiteralSuffix = "";
+    lowerCaseTypeName=null;
   }
+  
+  private ExpressionTypes(Class<?> javaType  , String lowerCaseTypeName) {
+    this.tag = Tag.of(this);
+    this.javaType = javaType;
+    this.javaTypePrimitive = null;
+    this.javaLiteralSuffix = "";
+    this.lowerCaseTypeName=lowerCaseTypeName;
+  }
+
   
   private ExpressionTypes(Class<?> javaType) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
     this.javaTypePrimitive = null;
     this.javaLiteralSuffix = "";
+    lowerCaseTypeName=null;
   }
   
   public Tag asTag() {
@@ -131,8 +144,8 @@ public enum ExpressionTypes implements ExpressionType{
   public static ExpressionType of(String typeString){
       
     for(ExpressionTypes expressionType : values()) {
-      if(expressionType.javaType.toString().equals(typeString) || 
-          (expressionType.javaTypePrimitive != null && expressionType.javaTypePrimitive.toString().equals(typeString))){
+      if(expressionType.javaType.getSimpleName().equals(typeString) || 
+          (expressionType.javaTypePrimitive != null && expressionType.javaTypePrimitive.getSimpleName().equals(typeString))){
         return expressionType;
       }
     }
@@ -146,5 +159,13 @@ public enum ExpressionTypes implements ExpressionType{
   @Override
   public boolean isExternalJavaType() {
     return isObject(); 
+  }
+  @Override
+  public Optional<String> lowerCaseTypeName() {
+    return Optional.ofNullable(
+        javaTypePrimitive != null ?
+          javaTypePrimitive.getSimpleName() : 
+          lowerCaseTypeName
+    );
   }
 }

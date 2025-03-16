@@ -1,13 +1,12 @@
-package org.unlaxer.tinyexpression.parser.javalang;
+package org.unlaxer.tinyexpression.parser.stringtype;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanTypeHintParser;
 
-public class BooleanTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
+public class StringTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
@@ -15,7 +14,7 @@ public class BooleanTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
         new Optional(
             new WordParser("as")
         ),
-        Parser.get(BooleanTypeHintParser.class)
+        Parser.get(StringTypeHintParser.class)
     );
   }
 }

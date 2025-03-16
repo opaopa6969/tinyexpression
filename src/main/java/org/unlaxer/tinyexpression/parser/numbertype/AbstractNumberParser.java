@@ -14,7 +14,7 @@ import org.unlaxer.parser.elementary.ExponentParser;
 import org.unlaxer.parser.elementary.SignParser;
 import org.unlaxer.parser.posix.DigitParser;
 
-public class NumberParser extends LazyChain implements StaticParser , NumberExpression{
+public abstract class AbstractNumberParser extends LazyChain implements StaticParser , NumberExpression{
 	
 	private static final long serialVersionUID = -7768486767795358533L;
 	
@@ -23,15 +23,17 @@ public class NumberParser extends LazyChain implements StaticParser , NumberExpr
 	static final Parser pointParser = new PointParser();
 	static final OneOrMore digitsParser = new OneOrMore(Name.of("any-digit"),digitParser);
 	
-	public NumberParser() {
+	public AbstractNumberParser() {
 		super();
 	}
 
 	@Override
 	public org.unlaxer.parser.Parsers getLazyParsers() {
-		return new Parsers(				
-				// + or -
-				new Optional(Name.of("optional-signParser"),signParser),
+		Parsers parsers = new Parsers();
+		
+		// + or -
+		parsers.add(new Optional(Name.of("optional-signParser"),signParser));
+		parsers.add(
 				new Choice(
 					// 12.3
 					new Chain(Name.of("digits-point-degits"),
@@ -53,10 +55,18 @@ public class NumberParser extends LazyChain implements StaticParser , NumberExpr
 						pointParser,
 						digitsParser
 					)
-				),
-				// e-3
-				new Optional(ExponentParser.class)
+				)
 		);
+		
+		// e-3
+		parsers.add(
+		    new Optional(ExponentParser.class)
+		);
+		
+		typeSuffix().ifPresent(parsers::add);
+		return parsers;
 	}
 
+  abstract java.util.Optional<Parser> typeSuffix();
+  abstract java.util.Optional<Parser> typePrefix();
 }

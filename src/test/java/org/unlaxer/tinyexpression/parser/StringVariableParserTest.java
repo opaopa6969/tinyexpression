@@ -8,8 +8,8 @@ import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.listener.TransactionListener;
 import org.unlaxer.parser.combinator.Chain;
-import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 
 public class StringVariableParserTest extends ParserTestBase{

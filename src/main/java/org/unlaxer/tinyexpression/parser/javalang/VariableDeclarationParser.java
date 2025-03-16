@@ -17,11 +17,15 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -73,8 +77,13 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         .filter(TokenPredicators.parserImplements(TypeHint.class))//
         .findFirst().get()
         .typed(TypeHint.class);
-        
-    ExpressionTypes expressionType = typed.getParser().type();
+    
+    ExpressionType expressionType = typed.getParser().type();
+    
+    if(expressionType.isNumber()) {
+      expressionType = ExpressionTypes.of(typed.tokenString.get()); 
+    }
+      
     String variableName = parser.getVariableName(variableParserToken);
     return new VariableInfo(expressionType, variableName);
   }
@@ -83,9 +92,9 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
   
   public static class VariableInfo{
     
-    public final ExpressionTypes expressionType;
+    public final ExpressionType expressionType;
     public String name;
-    public VariableInfo(ExpressionTypes expressionType, String name) {
+    public VariableInfo(ExpressionType expressionType, String name) {
       super();
       this.expressionType = expressionType;
       this.name = name;
@@ -93,18 +102,17 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     
     public VariableParser matchedVariableParser() {
       
-      switch (expressionType) {
-        case _boolean:
-          return Parser.get(BooleanVariableParser.class);
-        case number:
-          return Parser.get(NumberVariableParser.class);
-        case string:
-          return Parser.get(StringVariableParser.class);
-        case object:
-        default:
-          throw new IllegalArgumentException();
-      }
       
+      if(expressionType.isBoolean()) {
+        return Parser.get(BooleanVariableParser.class);
+      }
+      if(expressionType.isNumber()) {
+        return Parser.get(NumberVariableParser.class);
+      }
+      if(expressionType.isString()) {
+        return Parser.get(StringVariableParser.class);
+      }
+      throw new IllegalArgumentException();
     }
   }
 

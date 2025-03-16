@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.javalang;
+package org.unlaxer.tinyexpression.parser.numbertype;
 
 import java.util.Optional;
 
@@ -9,8 +9,8 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberSetterParser;
-import org.unlaxer.tinyexpression.parser.NumberTypeHintParser;
+import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 
 @SuppressWarnings("serial")
 public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
@@ -38,8 +38,11 @@ public class NumberVariableDeclarationParser extends AbstractVariableDeclaration
   @Override
   public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
     
-    Token typeHintToken = thisParserParsed.getChild(TokenPredicators.parsers(NumberTypeHintParser.class));
+    Token typeHintToken = thisParserParsed.flatten().stream()
+        .filter(TokenPredicators.parsers(NumberTypeHintParser.class))
+        .findFirst()
+        .get();
     String string = typeHintToken.getToken().get();
-    return Optional.of(ExpressionTypes.valueOf(string));
+    return Optional.of(ExpressionTypes.of(string));
   }
 }

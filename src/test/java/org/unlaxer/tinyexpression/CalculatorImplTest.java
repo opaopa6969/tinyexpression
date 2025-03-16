@@ -1483,7 +1483,9 @@ if ($endpoint == 'withdrawal'
   }
 
   public static void main(String[] args) {
-
+    double a = 0.005e10d;
+    Long b = 1010L;
+    byte c=0x1c;
 	  System.out.println("0f == 0f:" + (0f == 0f));
 
 	  V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA calculator = new V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA();

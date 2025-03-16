@@ -16,7 +16,7 @@ import org.unlaxer.tinyexpression.parser.VariableTypeSelectable;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
 
-public class JavaExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , JavaExpression , VariableTypeSelectable{
+public class JavaExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , ExternalJavaClassExpression , VariableTypeSelectable{
 
   @Override
   public boolean hasNakedVariableParser() {

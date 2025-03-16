@@ -40,6 +40,9 @@ public interface ExpressionType{
   public default String javaTypeAsString() {
     return javaType().getTypeName();
   }
+  
+  public Optional<String> lowerCaseTypeName();
+  
 //    public static Optional<ExpressionType> of(Class<?> clazz);
     
   public Optional<Class<?>> javaTypePrimitive();

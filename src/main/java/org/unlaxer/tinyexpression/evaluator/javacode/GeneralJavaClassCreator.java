@@ -122,7 +122,7 @@ public interface GeneralJavaClassCreator{
       
       Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
       ExpressionInterface expressionParser = expression.getParser(ExpressionInterface.class);
-      ExpressionType expressionType = expressionParser.expressionType();
+      ExpressionType expressionType = expressionParser.expressionType(expression);
       
       builder
         .n()

@@ -13,11 +13,11 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Not;
-import org.unlaxer.tinyexpression.parser.javalang.BooleanTypeDeclarationParser;
-import org.unlaxer.tinyexpression.parser.javalang.NumberTypeDeclarationParser;
-import org.unlaxer.tinyexpression.parser.javalang.StringTypeDeclarationParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanTypeDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableDeclarations;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeDeclarationParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringTypeDeclarationParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
