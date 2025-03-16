@@ -155,8 +155,8 @@ public class VariableTypeResolver {
           .matchedTypeFromVariableDeclaration(variableName);
 
       Optional<ExpressionType> expressionType = matchedTypeFromVariableDeclaration
-          .map(_token -> _token.typed(VariableDeclaration.class)).map(TypedToken::getParser)
-          .flatMap(VariableDeclaration::type);
+          .map(_token -> _token.typed(VariableDeclaration.class))
+          .flatMap(_typedToken->_typedToken.getParser().type(_typedToken));
 
       return expressionType;
     }

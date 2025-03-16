@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import java.util.Optional;
 
 import org.unlaxer.Tag;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 
@@ -25,7 +26,7 @@ public class NakedVariableDeclarationParser extends AbstractVariableDeclarationP
   }
 
   @Override
-  public Optional<ExpressionType> type() {
+  public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
     return Optional.empty();
   }
   

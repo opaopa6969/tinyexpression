@@ -69,7 +69,9 @@ public class VariableBuilder {
      }
      
      if(variableType.isNumber() && isOptional) {
-    	 builder.append(".floatValue()");
+       if(false == variableType.isBigNumber()) {
+         builder.append(".").append(variableType.valueMethod());
+       }
      }
    }
 

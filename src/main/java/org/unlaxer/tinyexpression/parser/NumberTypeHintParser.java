@@ -26,7 +26,19 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
           new WordParser("Number"), //
           numberWordParser, //
           new WordParser("Float"), //
-          new WordParser("float")
+          new WordParser("float"),
+          new WordParser("Long"),
+          new WordParser("long"),
+          new WordParser("Double"),
+          new WordParser("double"),
+          new WordParser("Integer"),
+          new WordParser("int"),
+          new WordParser("Byte"),
+          new WordParser("byte"),
+          new WordParser("Short"),
+          new WordParser("short"),
+          new WordParser("BigInteger"),
+          new WordParser("BigDecimal")
       );
   }
   

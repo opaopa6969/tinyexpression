@@ -1559,7 +1559,6 @@ if ($endpoint == 'withdrawal'
       ;
 
     System.out.println(simpleBuilder.toString());
-
   }
 
   @Test

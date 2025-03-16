@@ -1,4 +1,28 @@
 tags:NORMAL
+periodStartInclusive:2021-01-25_00:00:00
+periodEndExclusive:2029-06-09_00:00:00
+siteId:69
+tags:NORMAL
+checkKind:POST_PROCESS_testCFjavacodeblock
+formula:
+```java:sample.v1.CheckTime
+package sample.v1;
+import org.unlaxer.tinyexpression.CalculationContext;
+public class CheckTime {
+    public boolean check(CalculationContext calculationContext, Long timestamp){
+        return timestamp > System.currentTimeMillis();
+    }
+}
+```
+import sample.v1.CheckTime#check as check;
+var $withdrawalStatsLastTime as Long description='入力値';
+if(isPresent($withdrawalStatsLastTime) & external returning as boolean check($withdrawalStatsLastTime)){
+  1
+}else{
+  0
+}
+---END_OF_PART---
+tags:NORMAL
 description:JavaCodeBlockで呼び出しをします
 periodStartInclusive:2018-05-01_00:00:00
 periodEndExclusive:2037-05-01_00:00:00

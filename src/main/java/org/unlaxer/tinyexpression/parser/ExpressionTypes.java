@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.Optional;
 
 import org.unlaxer.Tag;
+import org.unlaxer.compiler.CompileError;
 
 public enum ExpressionTypes implements ExpressionType{
   _byte(Byte.class,byte.class),
@@ -111,19 +112,39 @@ public enum ExpressionTypes implements ExpressionType{
     return Optional.ofNullable(javaTypePrimitive);
   }
   
-  public static Optional<ExpressionTypes> of(Class<?> clazz){
+  public static ExpressionType of(Class<?> clazz){
     
     for(ExpressionTypes expressionType : values()) {
       
       if(expressionType.javaType() == clazz || expressionType.javaTypePrimitive().map(x-> x==clazz).orElse(false)) {
-        return  Optional.of(expressionType);
+        return  expressionType;
       }
     }
-    return Optional.empty();
+    return new JavaExpressionType(clazz);
   }
   @Override
 
   public String javaLiteralSuffix() {
     return javaLiteralSuffix;
+  }
+  
+  public static ExpressionType of(String typeString){
+      
+    for(ExpressionTypes expressionType : values()) {
+      if(expressionType.javaType.toString().equals(typeString) || 
+          (expressionType.javaTypePrimitive != null && expressionType.javaTypePrimitive.toString().equals(typeString))){
+        return expressionType;
+      }
+    }
+    try {
+      return new JavaExpressionType(Class.forName(typeString));
+    } catch (ClassNotFoundException e) {
+      throw new CompileError(typeString+" not found.", e);
+    }
+  }
+  
+  @Override
+  public boolean isExternalJavaType() {
+    return isObject(); 
   }
 }

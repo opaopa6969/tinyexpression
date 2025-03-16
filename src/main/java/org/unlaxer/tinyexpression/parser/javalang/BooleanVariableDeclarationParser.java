@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import java.util.Optional;
 
 import org.unlaxer.Tag;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.BooleanSetterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -32,7 +33,7 @@ public class BooleanVariableDeclarationParser extends AbstractVariableDeclaratio
   }
 
   @Override
-  public Optional<ExpressionType> type() {
+  public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
     return Optional.of(ExpressionTypes._boolean);
   }
 

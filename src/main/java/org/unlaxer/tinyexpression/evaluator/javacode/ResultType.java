@@ -14,7 +14,7 @@ public class ResultType implements ExpressionType{
   private final String resulTypeAsString;
   private final Class<?> resulTypeClass;
   private final Tag tag;
-  private final Optional<ExpressionTypes> expressionTypes;
+  private final ExpressionType expressionType;
 
   public ResultType(String resulTypeAsString) {
     super();
@@ -30,11 +30,11 @@ public class ResultType implements ExpressionType{
     });
     resulTypeClass = classByName.get(resulTypeAsString);
     tag = Tag.of(resulTypeClass);
-    expressionTypes = ExpressionTypes.of(resulTypeClass);
+    expressionType = ExpressionTypes.of(resulTypeClass);
   }
   
-  public Optional<ExpressionTypes> expressionType(){
-    return ExpressionTypes.of(resulTypeClass);
+  public ExpressionType expressionType(){
+    return expressionType;
   }
   
   static Map<String,Class<?>> classByName = new HashMap<>();
@@ -75,77 +75,77 @@ public class ResultType implements ExpressionType{
 
   @Override
   public boolean isBoolean() {
-    return expressionTypes.map(ExpressionType::isBoolean).orElse(false);
+    return expressionType.isBoolean();
   }
 
   @Override
   public boolean isShort() {
-    return expressionTypes.map(ExpressionType::isShort).orElse(false);
+    return expressionType.isShort();
   }
 
   @Override
   public boolean isByte() {
-    return expressionTypes.map(ExpressionType::isByte).orElse(false);
+    return expressionType.isByte();
   }
 
   @Override
   public boolean isInt() {
-    return expressionTypes.map(ExpressionType::isInt).orElse(false);
+    return expressionType.isInt();
   }
 
   @Override
   public boolean isFloat() {
-    return expressionTypes.map(ExpressionType::isFloat).orElse(false);
+    return expressionType.isFloat();
   }
 
   @Override
   public boolean isLong() {
-    return expressionTypes.map(ExpressionType::isLong).orElse(false);
+    return expressionType.isLong();
   }
 
   @Override
   public boolean isDouble() {
-    return expressionTypes.map(ExpressionType::isDouble).orElse(false);
+    return expressionType.isDouble();
   }
 
   @Override
   public boolean isBigInteger() {
-    return expressionTypes.map(ExpressionType::isBigInteger).orElse(false);
+    return expressionType.isBigInteger();
   }
 
   @Override
   public boolean isBigDecimal() {
-    return expressionTypes.map(ExpressionType::isBigDecimal).orElse(false);
+    return expressionType.isBigDecimal();
   }
 
   @Override
   public boolean isNumber() {
-    return expressionTypes.map(ExpressionType::isNumber).orElse(false);
+    return expressionType.isNumber();
   }
 
   @Override
   public boolean isBigNumber() {
-    return expressionTypes.map(ExpressionType::isBigNumber).orElse(false);
+    return expressionType.isBigNumber();
   }
 
   @Override
   public boolean isPrimitiveNumber() {
-    return expressionTypes.map(ExpressionType::isPrimitiveNumber).orElse(false);
+    return expressionType.isPrimitiveNumber();
   }
 
   @Override
   public boolean isVoid() {
-    return expressionTypes.map(ExpressionType::isVoid).orElse(false);
+    return expressionType.isVoid();
   }
 
   @Override
   public boolean isObject() {
-    return expressionTypes.map(ExpressionType::isObject).orElse(false);
+    return expressionType.isObject();
   }
 
   @Override
   public boolean isString() {
-    return expressionTypes.map(ExpressionType::isString).orElse(false);
+    return expressionType.isString();
   }
 
   @Override
@@ -161,19 +161,21 @@ public class ResultType implements ExpressionType{
 
   @Override
   public boolean isTimestamp() {
-    return expressionTypes.map(ExpressionType::isTimestamp).orElse(false);
+    return expressionType.isTimestamp();
   }
 
   @Override
   public Optional<Class<?>> javaTypePrimitive() {
-    return expressionTypes.flatMap(ExpressionType::javaTypePrimitive);
+    return expressionType.javaTypePrimitive();
   }
 
-@Override
-public String javaLiteralSuffix() {
-	return expressionTypes.map(ExpressionType::javaLiteralSuffix)
-			.orElse(ExpressionType.super.javaLiteralSuffix());
-}
-  
-  
+  @Override
+  public String javaLiteralSuffix() {
+  	return expressionType.javaLiteralSuffix();
+  }
+
+  @Override
+  public boolean isExternalJavaType() {
+    return expressionType.isExternalJavaType();
+  }
 }

@@ -34,6 +34,7 @@ public interface ExpressionType{
   public boolean isObject();
   public boolean isString();
   public boolean isTimestamp();
+  public boolean isExternalJavaType();
   
   public Class<?> javaType();
   public default String javaTypeAsString() {
@@ -128,6 +129,34 @@ public interface ExpressionType{
   public default String numberWithSuffix(String numberToken) {
     
     return String.valueOf(parseNumber(numberToken))+javaLiteralSuffix();
+  }
+  
+  public default String valueMethod() {
+    if(isInt()) {
+      return "intValue()";
+    }
+    if(isShort()) {
+      return "shortValue()";
+    }
+    if(isByte()) {
+      return "byteValue()";
+    }
+    if(isFloat()) {
+      return "floatValue()";
+    }
+    if(isLong()) {
+      return "longValue()";
+    }
+    if(isDouble()) {
+      return "douleValue()";
+    }
+    if(isBigInteger()) {
+      return "";
+    }
+    if(isBigDecimal()) {
+      return "";
+    }
+    throw new IllegalArgumentException();
   }
   
 }

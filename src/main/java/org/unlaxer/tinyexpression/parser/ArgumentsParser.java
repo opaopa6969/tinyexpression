@@ -63,7 +63,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		            Token token = matchedVariableDeclaration.get();
 		            
 		            VariableDeclaration parser = token.getParser(VariableDeclaration.class);
-		            type = parser.type();
+		            type = parser.type(token.typed(VariableDeclaration.class));
 		          }
 		          if(type.isEmpty()) {
 		            
