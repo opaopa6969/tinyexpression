@@ -4,6 +4,12 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringLiteralParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringSideEffectExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 
 public abstract class AbstractStringFactorParser extends LazyChoice implements StringExpression , VariableTypeSelectable{
 	

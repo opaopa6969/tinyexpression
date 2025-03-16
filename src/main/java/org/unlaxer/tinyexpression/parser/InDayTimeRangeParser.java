@@ -6,6 +6,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 

@@ -15,22 +15,29 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.JavaMethodParser;
 import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser.JavaMethodParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
 public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyChain implements ExpressionInterface{
-  
+
   private static final long serialVersionUID = 8228933717392969866L;
-	
+
   static final Tag classMethodOrMethod = Tag.of("classMethodOrMethod");
-	
+
 	public SideEffectExpressionParser() {
 		super();
 	}
-	
+
 	@Override
 	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
@@ -50,8 +57,8 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
         Parser.get(RightParenthesisParser.class)
       );
 	}
-	
-	abstract Parser typedReturningParser();
+
+	public abstract Parser typedReturningParser();
 
 //	@TokenExtractor
 //  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {
@@ -64,7 +71,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
         .orElseGet(()->ReturningParser.getReturningParserWhenNotSpecifiedReturingClause(
             getReturningPosition(thisParserParsed),firstParameter));
   }
-  
+
   static int getReturningPosition(Token thisParserParsed) {
     Token childWithParser = thisParserParsed.getChildWithParser(SideEffectNameParser.class);
     return childWithParser.tokenRange.endIndexExclusive;
@@ -74,41 +81,41 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
 	public static Token getMethodClause(Token thisParserParsed) {
 		return thisParserParsed.getChild(TokenPredicators.hasTag(classMethodOrMethod)); //2
 	}
-	
+
   @TokenExtractor
 	public static Token getParametersClause(Token thisParserParsed) {
     return thisParserParsed.getChildWithParser(ArgumentsParser.class); //4
 	}
-  
+
   @TokenExtractor
 	public static MethodAndParameters extract(Token token , TinyExpressionTokens tinyExpressionTokens) {
-    
+
     Token returning = token.getChildFromAstNodes(0);
     Parser parser = ChoiceInterface.choiced(token).parser;
     if(parser instanceof ReturningParser) {
       parser = ChoiceInterface.choiced(returning).parser;
     }
-    
+
     Returning returnParser =  (Returning) parser;
-    
-    Class<?> returningType = returnParser.returningType(); 
-        
-	  
+
+    Class<?> returningType = returnParser.returningType();
+
+
 	  Token classMethodToken = getMethodClause(token);
 	  ClassNameAndIdentifier extract = ((ClassNameAndIdentifierExtractor)classMethodToken.parser)
 	    .extractClassNameAndIdentifier(classMethodToken, tinyExpressionTokens);
-		
+
 		Token parametersClause = getParametersClause(token);
-		
+
 		List<Token> parameterTokens = ArgumentsParser.parameterTokens(extract.getIdentifier(), parametersClause , tinyExpressionTokens);
-		
+
 		return new MethodAndParameters(returning , returningType, extract, parameterTokens);
 	}
-	
+
 	public static class MethodAndParameters{
 	  public final Token returningToken;
 	  public final Class<?> returningType;
-	  
+
 		public final ClassNameAndIdentifier classNameAndIdentifier;
 		public final List<Token> parameterTokens;
 		public final Class<?>[] parameterTypes;

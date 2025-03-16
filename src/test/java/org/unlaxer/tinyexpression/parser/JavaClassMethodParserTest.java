@@ -9,6 +9,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
 
 public class JavaClassMethodParserTest extends ParserTestBase{
 

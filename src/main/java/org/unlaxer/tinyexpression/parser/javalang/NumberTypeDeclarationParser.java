@@ -5,7 +5,7 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.NumberTypeHintParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeHintParser;
 
 public class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 

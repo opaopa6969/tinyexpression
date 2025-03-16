@@ -11,7 +11,13 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.posix.CommaParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class SideEffectStringExpressionParameterParser extends JavaStyleDelimitedLazyChain {

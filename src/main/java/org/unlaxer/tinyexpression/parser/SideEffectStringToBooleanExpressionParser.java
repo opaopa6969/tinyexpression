@@ -11,7 +11,11 @@ import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class SideEffectStringToBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements NumberExpression {

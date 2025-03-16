@@ -17,12 +17,12 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 @SuppressWarnings("serial")

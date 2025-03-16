@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 
 public class IndexOfMethodParser extends JavaStyleNamedParenthesesParser{
 
