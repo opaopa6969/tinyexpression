@@ -5,7 +5,9 @@ import java.util.Set;
 import org.unlaxer.Parsed;
 import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.AbstractNumberFactorParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TypedParser;
 import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
@@ -13,6 +15,11 @@ import org.unlaxer.tinyexpression.parser.stringtype.StringFactorParser;
 import org.unlaxer.util.Singletons;
 
 public class NumberFactorParser extends AbstractNumberFactorParser implements TypedParser{
+
+  public NumberFactorParser(SpecifiedExpressionTypes specifiedExpressionType) {
+    super(specifiedExpressionType);
+    //TODO Auto-generated constructor stub
+  }
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
@@ -55,5 +62,11 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
   @Override
   public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
     return super.parse(parseContext, tokenKind, invertMatch);
+  }
+
+  @Override
+  public ExpressionType expressionType() {
+    // TODO Auto-generated method stub
+    throw new UnsupportedOperationException("Unimplemented method 'expressionType'");
   }
 }

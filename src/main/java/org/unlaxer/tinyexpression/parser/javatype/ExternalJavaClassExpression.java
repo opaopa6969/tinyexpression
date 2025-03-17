@@ -1,12 +1,11 @@
 package org.unlaxer.tinyexpression.parser.javatype;
 
+import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public interface ExternalJavaClassExpression extends ExpressionInterface{
 
-//  @Override
-//  default ExpressionType expressionType(Token thisParserParsed) {
-//    return ExpressionTypes.object;
-//  }
+  ExpressionType expressionType(Token thisParserParsed);
 
 }

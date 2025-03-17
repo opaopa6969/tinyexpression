@@ -6,7 +6,7 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.parser.elementary.WordParser;
 
-public class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
+public abstract class NumberTypeDeclarationParser extends WhiteSpaceDelimitedLazyChain{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {

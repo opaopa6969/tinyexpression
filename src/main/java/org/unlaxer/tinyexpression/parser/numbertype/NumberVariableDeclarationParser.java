@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationPar
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 
 @SuppressWarnings("serial")
-public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
+public abstract class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
   @Override
   public java.util.Optional<Parser> typeDeclaration() {

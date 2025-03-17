@@ -8,7 +8,7 @@ import org.unlaxer.Tag;
 
 public interface ExpressionType{
   public Tag asTag();
-  
+  public String name();
   public boolean isBoolean();
   public boolean isShort();
   public boolean isByte();

@@ -10,7 +10,7 @@ import org.unlaxer.tinyexpression.parser.SetWordParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedNumberExpressionParser;
 
-public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/
+public abstract class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/
   implements NumberExpression , SetterParser{
 
   @Override

@@ -15,9 +15,9 @@ import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.Vari
 
 public class VariableDeclarationMatchedTokenParser extends AbstractParser{
   
-  ExpressionTypes expressionType;
+  ExpressionType expressionType;
   
-  public VariableDeclarationMatchedTokenParser(ExpressionTypes expressionType) {
+  public VariableDeclarationMatchedTokenParser(ExpressionType expressionType) {
     super();
     this.expressionType = expressionType;
   }

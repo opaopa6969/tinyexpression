@@ -5,7 +5,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.tinyexpression.parser.AbstractNumberTermParser;
 
-public class NumberTermParser extends AbstractNumberTermParser{
+public abstract class NumberTermParser extends AbstractNumberTermParser{
 
   @Override
   public boolean hasNakedVariableParser() {

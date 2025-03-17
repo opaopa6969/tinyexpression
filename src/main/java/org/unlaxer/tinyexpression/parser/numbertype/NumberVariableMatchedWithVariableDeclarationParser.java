@@ -11,7 +11,7 @@ import org.unlaxer.tinyexpression.parser.VariableDeclarationMatchedTokenParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 
 @SuppressWarnings("serial")
-public class NumberVariableMatchedWithVariableDeclarationParser extends VariableDeclarationMatchedTokenParser
+public abstract class NumberVariableMatchedWithVariableDeclarationParser extends VariableDeclarationMatchedTokenParser
     implements NumberExpression, VariableParser {
 
   public NumberVariableMatchedWithVariableDeclarationParser() {
