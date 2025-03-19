@@ -17,7 +17,7 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
   public NumberTypeHintSuffixParser() {
     super();
   }
-  
+
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return
@@ -28,15 +28,14 @@ public class NumberTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {
           Parser.get(NumberTypeHintParser.class)//
       );
   }
-  
+
   public static Token createToken(int position,TokenKind tokenKind) {
-    
-    
+
     Token asToken = AsParser.createToken(position, tokenKind);
     position += asToken.tokenRange.endIndexExclusive;
     Token numberTypeHintToken = NumberTypeHintParser.createToken(position, tokenKind);
     List<Token> children = List.of(asToken,numberTypeHintToken);
-    
+
     return new Token(tokenKind, children, Parser.get(NumberTypeHintSuffixParser.class),position);
   }
 }

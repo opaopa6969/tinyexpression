@@ -1,16 +1,18 @@
-package org.unlaxer.tinyexpression.parser;
+package org.unlaxer.tinyexpression.parser.numbertype;
 
 import org.unlaxer.parser.elementary.SingleCharacterParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
 
 public class PlusParser extends SingleCharacterParser implements NumberExpression {
-	
+
 	private static final long serialVersionUID = -2284625778872306935L;
-	
+
 	public static PlusParser SINGLETON = new PlusParser();
 
 	@Override
 	public boolean isMatch(char target) {
-		return '+' == target; 
+		return '+' == target;
 	}
+
 }

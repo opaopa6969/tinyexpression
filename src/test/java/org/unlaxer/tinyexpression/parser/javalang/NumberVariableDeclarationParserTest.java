@@ -10,17 +10,17 @@ public class NumberVariableDeclarationParserTest extends ParserTestBase{
   @Test
   public void test() {
     setLevel(OutputLevel.detail);
-    
+
     var variableDeclarationParser = new NumberVariableDeclarationParser();
-    
+
     testAllMatch(variableDeclarationParser, "variable $age as number set if not exists 18 description='年齢をセットします。';");
     testAllMatch(variableDeclarationParser, "variable $age as number set 18 description='年齢をセットします。';");
     testAllMatch(variableDeclarationParser, "variable $age as number description='年齢をセットします。';");
     testAllMatch(variableDeclarationParser, "variable $age number description='年齢をセットします。';");
     testAllMatch(variableDeclarationParser, "var $withdrawalStatsLastTime as long description='入力値';");
 
-    
-    
+
+
     testUnMatch(variableDeclarationParser, "variable $isMale as boolean set if not exists 1==1 description='maleかどうかをセットします。';");
 
     //description is not exists

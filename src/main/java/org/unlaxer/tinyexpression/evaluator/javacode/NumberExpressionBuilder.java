@@ -8,6 +8,8 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.ascii.PlusParser;
+import org.unlaxer.parser.elementary.NumberParser;
 import org.unlaxer.tinyexpression.parser.DivisionParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionType.PrePost;
@@ -17,7 +19,6 @@ import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.MinusParser;
 import org.unlaxer.tinyexpression.parser.MultipleParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.PlusParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
@@ -28,13 +29,13 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.parser.numbertype.MultipleTypeNumberParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberCaseExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberMatchExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
@@ -60,7 +61,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
         BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression ,
             tinyExpressionTokens);
         builder.append(" ? ");
-        NumberExpressionBuilder.SINGLETON.build(builder, expression , 
+        NumberExpressionBuilder.SINGLETON.build(builder, expression ,
             tinyExpressionTokens);
         builder
           .append(":")
@@ -68,35 +69,35 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       }
     }
   }
-  
+
   public static NumberExpressionBuilder SINGLETON = new NumberExpressionBuilder();
 
-  public void build(SimpleJavaCodeBuilder builder, Token token , 
+  public void build(SimpleJavaCodeBuilder builder, Token token ,
 		  TinyExpressionTokens tinyExpressionTokens) {
-    
+
     ExpressionType numberType = tinyExpressionTokens.numberType();
     PrePost wrapNumber = numberType.wrapNumber();
 
     Parser parser = token.parser;
-    
+
     if(parser instanceof NumberExpressionParser) {
-      
+
       token = token.filteredChildren.get(0);
       parser = token.parser;
-      
+
       if (parser instanceof NumberTermParser) {
-        
+
         token = token.filteredChildren.get(0);
         parser = token.parser;
-        
+
         if(parser instanceof NumberFactorParser) {
           token = token.filteredChildren.get(0);
           parser = token.parser;
-          
+
         }
       }
     }
-    
+
     if (parser instanceof PlusParser) {
 
       binaryOperate(builder, token, "+" , tinyExpressionTokens);
@@ -113,36 +114,36 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       binaryOperate(builder, token, "/" , tinyExpressionTokens);
 
-    } else if (parser instanceof NumberParser) {
-      
+    } else if (parser instanceof MultipleTypeNumberParser) {
+
       String numberWithSuffix = numberType.numberWithSuffix(token.tokenString.get());
 
       builder.append(numberWithSuffix);
 
     } else if (parser instanceof NakedVariableParser || parser instanceof NumberVariableParser) {
 
-      Optional<ExpressionType> fromVariableParserToken = 
+      Optional<ExpressionType> fromVariableParserToken =
           VariableTypeResolver.resolveFromVariableParserToken(token, tinyExpressionTokens);
 
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
-      
+
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
           numberType.zeroNumber(),"getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes.number));
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
-//      
-//      
+//
+//
 ////      上のリストが入っているのでこれを利用してsetをする
-//      
-//      String variableName = 
-//          parser instanceof NakedVariableParser ? 
+//
+//      String variableName =
+//          parser instanceof NakedVariableParser ?
 //            NakedVariableParser.getVariableName(token):
 //            NumberVariableParser.getVariableName(token);
-//      
+//
 //      boolean isMatch =false;
 //      for (Token declarationTtoken : variableDeclarationsTokens) {
 //        Token nakedVariableToken = declarationTtoken.getChildWithParser(NakedVariableParser.class);
 //        String _variableName = NakedVariableParser.getVariableName(nakedVariableToken);
-//        
+//
 //        if(_variableName.equals(variableName)) {
 //          Optional<Token> numberSetterToken = declarationTtoken.getChildWithParserAsOptional(NumberSetterParser.class);
 //          if(numberSetterToken.isEmpty()) {
@@ -151,14 +152,14 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 //          Token _numberSetterToken = numberSetterToken.get();
 //          Token expression = _numberSetterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
 //          Optional<Token> ifNotExists = _numberSetterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
-//          
+//
 //          SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
 //          build(simpleJavaCodeBuilder, expression, tinyExpressionTokens);
 //          String expseeionString = simpleJavaCodeBuilder.builder.toString();
 ////          String expseeionString = expression.getToken().orElseThrow();
-//          
+//
 //          if(ifNotExists.isPresent()) {
-//            
+//
 //            builder.append("calculateContext.getValue(").w(variableName).append(").orElse("+expseeionString+")");
 //          }else {
 //            builder.append("calculateContext.setAndGet(").w(variableName).append(","+expseeionString+")");
@@ -184,7 +185,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression , 
+      BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression ,
           tinyExpressionTokens);
 
       builder.append(" ? ").n().incTab();
@@ -207,7 +208,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       builder.append("(");
 
-      NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression , 
+      NumberCaseExpressionBuilder.SINGLETON.build(builder, caseExpression ,
           tinyExpressionTokens);
       builder.n();
       build(builder, defaultCaseFactor , tinyExpressionTokens);
@@ -216,7 +217,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       builder.decTab();
 
     } else if (parser instanceof SinParser) {
-      
+
       Token value = token.filteredChildren.get(0);
       builder.append(wrapNumber.pre());
       builder.append(" Math.sin(calculateContext.radianAngle(");
@@ -234,7 +235,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       builder.append("))");
 
     } else if (parser instanceof TanParser) {
-      
+
       Token value = token.filteredChildren.get(0);
       builder.append(wrapNumber.pre());
       builder.append(" Math.tan(calculateContext.radianAngle(");
@@ -252,8 +253,8 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       builder.append(wrapNumber.post());
 
     } else if (parser instanceof MinParser) {
-      
-      
+
+
       builder.append(wrapNumber.pre());
       builder.append(" Math.min(");
       build(builder, token.filteredChildren.get(0) , tinyExpressionTokens);
@@ -302,14 +303,14 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
         .append(".length()");
 
     }else if (parser instanceof SideEffectExpressionParser) {
-      
+
       SideEffectExpressionBuilder.SINGLETON.build(builder, token , tinyExpressionTokens);
-      
+
 //    } else if (parser instanceof StringIndexOfParser) {
 //
 //      return StringIndexOfOperator.SINGLETON.evaluate(calculateContext, token);
     }else if (parser instanceof MethodInvocationParser) {
-      
+
       MethodInvocationBuilder.SINGLETON.build(builder, token, tinyExpressionTokens);
     }else {
       throw new IllegalArgumentException();

@@ -1,8 +1,10 @@
-package org.unlaxer.tinyexpression.parser;
+package org.unlaxer.tinyexpression.parser.numbertype;
+
+import org.unlaxer.tinyexpression.parser.StrictTyped;
 
 public class StrictTypedNumberExpressionParser extends AbstractNumberExpressionParser{
-  
-  
+
+
   public StrictTypedNumberExpressionParser() {
     super();
     addTag(StrictTyped.get());
@@ -17,5 +19,5 @@ public class StrictTypedNumberExpressionParser extends AbstractNumberExpressionP
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(false);
   }
-  
+
 }

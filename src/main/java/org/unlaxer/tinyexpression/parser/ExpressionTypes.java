@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.compiler.CompileError;
-import org.unlaxer.tinyexpression.UnifiedNumber;
 
 public enum ExpressionTypes implements ExpressionType{
   _byte(Byte.class,byte.class),
@@ -14,9 +13,9 @@ public enum ExpressionTypes implements ExpressionType{
   _float(Float.class,float.class,"f"),
   _double(Double.class,double.class,"d"),
   _long(Long.class,long.class,"L"),
-  bigDecimal(java.math.BigDecimal.class),
   bigInteger(java.math.BigInteger.class),
-  number(UnifiedNumber.class),
+  bigDecimal(java.math.BigDecimal.class),
+//  number(UnifiedNumber.class),
   string(String.class),
   _boolean(Boolean.class,boolean.class),
   object(Object.class),
@@ -28,7 +27,7 @@ public enum ExpressionTypes implements ExpressionType{
   final Class<?> javaType;
   final String javaLiteralSuffix;
   final String lowerCaseTypeName;
-  
+
   private ExpressionTypes(Class<?> javaType  , Class<?> javaTypePrimitive , String javaLiteralSuffix) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
@@ -43,7 +42,7 @@ public enum ExpressionTypes implements ExpressionType{
     this.javaLiteralSuffix = "";
     lowerCaseTypeName=null;
   }
-  
+
   private ExpressionTypes(Class<?> javaType  , String lowerCaseTypeName) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
@@ -52,7 +51,7 @@ public enum ExpressionTypes implements ExpressionType{
     this.lowerCaseTypeName=lowerCaseTypeName;
   }
 
-  
+
   private ExpressionTypes(Class<?> javaType) {
     this.tag = Tag.of(this);
     this.javaType = javaType;
@@ -60,11 +59,11 @@ public enum ExpressionTypes implements ExpressionType{
     this.javaLiteralSuffix = "";
     lowerCaseTypeName=null;
   }
-  
+
   public Tag asTag() {
     return tag;
   }
-  
+
   public boolean isBoolean() {
     return this == _boolean;
   }
@@ -93,17 +92,17 @@ public enum ExpressionTypes implements ExpressionType{
     return this == bigDecimal;
   }
   public boolean isNumber() {
-    return this == number ||  isByte() || isShort() ||
-        isInt() || isFloat() || isLong() || isDouble() || 
+    return isByte() || isShort() ||
+        isInt() || isFloat() || isLong() || isDouble() ||
         isBigInteger() || isBigDecimal();
   }
-  
+
   public boolean isBigNumber() {
     return isBigInteger() || isBigDecimal();
   }
-  
+
   public boolean isPrimitiveNumber() {
-    return   isByte() || isShort() ||
+    return  isByte() || isShort() ||
         isInt() || isFloat() || isLong() || isDouble();
   }
   public boolean isVoid(){
@@ -121,15 +120,15 @@ public enum ExpressionTypes implements ExpressionType{
   public boolean isTimestamp() {
     return this == timestamp;
   }
-  
+
   public Optional<Class<?>> javaTypePrimitive() {
     return Optional.ofNullable(javaTypePrimitive);
   }
-  
+
   public static ExpressionType of(Class<?> clazz){
-    
+
     for(ExpressionTypes expressionType : values()) {
-      
+
       if(expressionType.javaType() == clazz || expressionType.javaTypePrimitive().map(x-> x==clazz).orElse(false)) {
         return  expressionType;
       }
@@ -141,11 +140,11 @@ public enum ExpressionTypes implements ExpressionType{
   public String javaLiteralSuffix() {
     return javaLiteralSuffix;
   }
-  
+
   public static ExpressionType of(String typeString){
-      
+
     for(ExpressionTypes expressionType : values()) {
-      if(expressionType.javaType.getSimpleName().equals(typeString) || 
+      if(expressionType.javaType.getSimpleName().equals(typeString) ||
           (expressionType.javaTypePrimitive != null && expressionType.javaTypePrimitive.getSimpleName().equals(typeString))){
         return expressionType;
       }
@@ -156,16 +155,16 @@ public enum ExpressionTypes implements ExpressionType{
       throw new CompileError(typeString+" not found.", e);
     }
   }
-  
+
   @Override
   public boolean isExternalJavaType() {
-    return isObject(); 
+    return isObject();
   }
   @Override
   public Optional<String> lowerCaseTypeName() {
     return Optional.ofNullable(
         javaTypePrimitive != null ?
-          javaTypePrimitive.getSimpleName() : 
+          javaTypePrimitive.getSimpleName() :
           lowerCaseTypeName
     );
   }

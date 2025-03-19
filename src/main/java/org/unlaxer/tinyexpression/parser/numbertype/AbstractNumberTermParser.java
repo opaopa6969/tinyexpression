@@ -1,38 +1,40 @@
-package org.unlaxer.tinyexpression.parser;
+package org.unlaxer.tinyexpression.parser.numbertype;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
+import org.unlaxer.tinyexpression.parser.DivisionParser;
+import org.unlaxer.tinyexpression.parser.MultipleParser;
+import org.unlaxer.tinyexpression.parser.StrictTypedNumberFactorParser;
+import org.unlaxer.tinyexpression.parser.VariableTypeSelectable;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
 
 public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyChain implements NumberExpression , VariableTypeSelectable{
-	
+
 	private static final long serialVersionUID = 1430560948407993197L;
-	
+
 	public AbstractNumberTermParser() {
 		super();
 	}
-	
+
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
-    
+
     // <term>::= <factor>[('*'|'/')<factor>]*
     Parsers parsers = new Parsers();
-    
+
     Parser.get(StrictTypedNumberFactorParser.class);
-    
+
     Class<? extends Parser> factorParserClazz = withNakedVariable ?
        NumberFactorParser.class:
        StrictTypedNumberFactorParser.class;
-    
+
     parsers.add(
         Parser.get(
-            factorParserClazz 
+            factorParserClazz
         )
     );
     parsers.add(new ZeroOrMore(
@@ -45,8 +47,8 @@ public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyCha
           )
         )
    );
-    
-    
+
+
     return parsers;
   }
 

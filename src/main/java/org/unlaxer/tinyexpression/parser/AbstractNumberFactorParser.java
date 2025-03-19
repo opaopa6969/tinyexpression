@@ -29,13 +29,14 @@ import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberSideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.numbertype.ShortPrefixNumberParser;
+import org.unlaxer.tinyexpression.parser.numbertype.StrictTypedNumberExpressionParser;
 
 public abstract class AbstractNumberFactorParser extends LazyChoice implements NumberExpression  , VariableTypeSelectable{
-	
+
 	private static final long serialVersionUID = 3521391436954908685L;
-	
+
 	SpecifiedExpressionTypes specifiedExpressionType;
-	
+
 	public AbstractNumberFactorParser(SpecifiedExpressionTypes specifiedExpressionType) {
 		super();
 	}
@@ -50,7 +51,7 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     Parsers parsers = new Parsers();
-    
+
     parsers.add(NumberSideEffectExpressionParser.class);
     parsers.add(NumberIfExpressionParser.class);
     parsers.add(StrictTypedNumberMatchExpressionParser.class);
@@ -68,18 +69,18 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
     parsers.add(DoubleSuffixNumberParser.class);
     parsers.add(BigDecimalPrefixNumberParser.class);
     parsers.add(new NoSuffixNumberParser(specifiedExpressionType));
-    
-    
-    
+
+
+
     parsers.add(NumberVariableParser.class);
     if(withNakedVariable) {
       parsers.add(ExclusiveNakedVariableParser.class);
     }
-    
-    Class<? extends Parser> expresionParserClazz = withNakedVariable ? 
+
+    Class<? extends Parser> expresionParserClazz = withNakedVariable ?
         NumberExpressionParser.class:
           StrictTypedNumberExpressionParser.class;
-    
+
     parsers.add(new ParenthesesParser(
         Parser.newInstance(
             expresionParserClazz)
@@ -98,7 +99,7 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
       parsers.add(MethodInvocationParser.class);
     }
     return parsers;
-    
+
   }
 
 }

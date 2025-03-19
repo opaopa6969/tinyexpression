@@ -8,12 +8,11 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeHintSuffixParser;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
 
-public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implements Returning {
+public class ReturningNumberParser extends JavaStyleDelimitedLazyChain  {
 
 //  static final String word = "returning";
 //  static final WordParser wordParser = new WordParser(word);
@@ -26,30 +25,26 @@ public class ReturningNumberParser extends JavaStyleDelimitedLazyChain implement
         Parser.get(NumberTypeHintSuffixParser.class)
     );
   }
-  
+
   @VirtualTokenCreator
   public static Token getReturningNumberParserWhenNotSpecifiedReturingClause(int position,
       Token sideEffectFirstParameter) {
-    
+
     int current = position;
 //    Token wordToken = new Token(TokenKind.virtualTokenConsumed, new RangedString(position, word), wordParser);
 //    current += wordToken.tokenRange.endIndexExclusive;
-    
-    Token numberTypeHintSuffixToken = 
+
+    Token numberTypeHintSuffixToken =
         NumberTypeHintSuffixParser.createToken(current, TokenKind.virtualTokenConsumed);
     current += numberTypeHintSuffixToken.tokenRange.endIndexExclusive;
-    
+
 //    Token defaultClauseToken = DefaultClauseParser.createToken(current, TokenKind.virtualTokenConsumed);
 //    current += defaultClauseToken.tokenRange.endIndexExclusive;
- 
+
     List<Token> children = List.of(/*wordToken , */ numberTypeHintSuffixToken /*defaultClauseToken*/, sideEffectFirstParameter);
-    
-    return new Token(TokenKind.virtualTokenConsumed, children, 
+
+    return new Token(TokenKind.virtualTokenConsumed, children,
         Parser.get(ReturningNumberParser.class), position);
   }
 
-  @Override
-  public Class<?> returningType() {
-    return float.class;
-  }
 }

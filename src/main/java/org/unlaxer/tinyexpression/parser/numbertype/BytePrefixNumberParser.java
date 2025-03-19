@@ -5,12 +5,11 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class BytePrefixNumberParser extends AbstractNumberParser{
-  
+
   public BytePrefixNumberParser() {
     super();
   }
 
-  @Override
   public ExpressionType expressionType() {
     return ExpressionTypes._byte;
   }

@@ -7,11 +7,11 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.StringOrBooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.VariableDeclarationMatchedTokenParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 
 public class BooleanVariableMatchedWithVariableDeclarationParser extends VariableDeclarationMatchedTokenParser
-    implements BooleanExpression, VariableParser {
+    implements BooleanExpression, StringOrBooleanVariableParser {
 
   public BooleanVariableMatchedWithVariableDeclarationParser() {
     super(ExpressionTypes._boolean);

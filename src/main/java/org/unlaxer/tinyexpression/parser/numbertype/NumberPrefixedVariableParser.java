@@ -20,16 +20,11 @@ public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    return 
+    return
       new Parsers(//
           Parser.get(NumberTypeHintPrefixParser.class), //0
           Parser.get(NakedVariableParser.class)//1
       );
-  }
-
-  @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionTypes.number);
   }
 
 }

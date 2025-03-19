@@ -25,7 +25,7 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return getLazyParsers(true);
   }
-  
+
   @Override
   public boolean hasNakedVariableParser() {
     return true;
@@ -35,14 +35,14 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
   public ExpressionTypes type() {
     return ExpressionTypes.number;
   }
-  
+
 
   @Override
   public Set<TypedParser> allTypes() {
-    
+
     return allTypes;
   }
-  
+
   static Set<TypedParser> allTypes = Set.of(
       Singletons.get(NumberFactorParser.class),
       Singletons.get(StringFactorParser.class),
@@ -53,7 +53,7 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
   public Set<TypedParser> otherTypes() {
     return otherTypes;
   }
-  
+
   static Set<TypedParser> otherTypes = Set.of(
       Singletons.get(StringFactorParser.class),
       Singletons.get(BooleanFactorParser.class)
@@ -64,9 +64,4 @@ public class NumberFactorParser extends AbstractNumberFactorParser implements Ty
     return super.parse(parseContext, tokenKind, invertMatch);
   }
 
-  @Override
-  public ExpressionType expressionType() {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'expressionType'");
-  }
 }

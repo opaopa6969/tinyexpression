@@ -8,9 +8,8 @@ import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.SetWordParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
-import org.unlaxer.tinyexpression.parser.StrictTypedNumberExpressionParser;
 
-public abstract class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/
+public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/
   implements NumberExpression , SetterParser{
 
   @Override

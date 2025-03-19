@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationPar
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
 
 @SuppressWarnings("serial")
-public abstract class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
+public class NumberVariableDeclarationParser extends AbstractVariableDeclarationParser{
 
   @Override
   public java.util.Optional<Parser> typeDeclaration() {
@@ -37,7 +37,7 @@ public abstract class NumberVariableDeclarationParser extends AbstractVariableDe
 
   @Override
   public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
-    
+
     Token typeHintToken = thisParserParsed.flatten().stream()
         .filter(TokenPredicators.parsers(NumberTypeHintParser.class))
         .findFirst()

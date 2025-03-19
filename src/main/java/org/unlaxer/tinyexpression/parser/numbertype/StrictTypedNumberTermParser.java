@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser;
+package org.unlaxer.tinyexpression.parser.numbertype;
 
 public class StrictTypedNumberTermParser extends AbstractNumberTermParser{
 
@@ -11,7 +11,7 @@ public class StrictTypedNumberTermParser extends AbstractNumberTermParser{
   public boolean hasNakedVariableParser() {
     return false;
   }
-  
+
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(){
     return getLazyParsers(false);

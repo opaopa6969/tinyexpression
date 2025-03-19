@@ -3,7 +3,6 @@ package org.unlaxer.tinyexpression.parser.numbertype;
 import org.unlaxer.Parsed;
 import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.tinyexpression.parser.AbstractNumberExpressionParser;
 
 public class NumberExpressionParser extends AbstractNumberExpressionParser{
 
