@@ -31,9 +31,9 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
           new WordParser("float")
       );
   }
-  
+
   public static Token createToken(int position,TokenKind tokenKind) {
-    
+
     Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
     List<Token> children = List.of(token);
     return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
@@ -43,6 +43,4 @@ public class NumberTypeHintParser extends LazyChoice implements TypeHint{
   public ExpressionTypes type() {
     return ExpressionTypes.number;
   }
-    
-
 }

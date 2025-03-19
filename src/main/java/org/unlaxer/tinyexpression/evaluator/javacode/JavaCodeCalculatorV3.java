@@ -179,7 +179,7 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
       byte[] byteCode, String byteCodeHash, List<ClassNameAndByteCode> classNameAndByteCodeList,
       ClassLoader classLoader) {
     super(source.source(), className, specifiedExpressionTypes , false);
-    this.source = source();
+    this.source = source;
     this.className = className;
     this.classNameWithHash = null;
     this.javaCode = javaCode;
