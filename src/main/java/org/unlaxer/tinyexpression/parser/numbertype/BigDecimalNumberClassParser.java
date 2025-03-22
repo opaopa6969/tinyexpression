@@ -11,13 +11,13 @@ public class BigDecimalNumberClassParser extends NumberClassParser {
 
   @Override
   public ExpressionType type() {
-    return ExpressionTypes.bigDecimal;
+    return ExpressionTypes._bigDecimal;
   }
 
   @Override
   public List<NumberClassName> numberClassNames() {
     return List.of(
-        new NumberClassName("BigDecimal", false , ExpressionTypes.bigDecimal , BigDecimal.class)
+        new NumberClassName("BigDecimal", false , ExpressionTypes._bigDecimal , BigDecimal.class)
     );
   }
 

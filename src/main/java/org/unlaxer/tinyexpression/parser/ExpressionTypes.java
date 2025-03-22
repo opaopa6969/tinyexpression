@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.unlaxer.Tag;
 import org.unlaxer.compiler.CompileError;
+import org.unlaxer.tinyexpression.UnifiedNumber;
 
 public enum ExpressionTypes implements ExpressionType{
   _byte(Byte.class,byte.class),
@@ -13,13 +14,13 @@ public enum ExpressionTypes implements ExpressionType{
   _float(Float.class,float.class,"f"),
   _double(Double.class,double.class,"d"),
   _long(Long.class,long.class,"L"),
-  bigInteger(java.math.BigInteger.class),
-  bigDecimal(java.math.BigDecimal.class),
-//  number(UnifiedNumber.class),
-  string(String.class),
+  _bigInteger(java.math.BigInteger.class),
+  _bigDecimal(java.math.BigDecimal.class),
+  number(UnifiedNumber.class),
+  _string(String.class),
   _boolean(Boolean.class,boolean.class),
-  object(Object.class),
-  timestamp(Timestamp.class),
+  _object(Object.class),
+  _timestamp(Timestamp.class),
   _void(Void.class , void.class)
   ;
   final Tag tag;
@@ -86,10 +87,10 @@ public enum ExpressionTypes implements ExpressionType{
     return this == _double;
   }
   public boolean isBigInteger() {
-    return this == bigInteger;
+    return this == _bigInteger;
   }
   public boolean isBigDecimal() {
-    return this == bigDecimal;
+    return this == _bigDecimal;
   }
   public boolean isNumber() {
     return isByte() || isShort() ||
@@ -109,16 +110,16 @@ public enum ExpressionTypes implements ExpressionType{
     return this == _void;
   }
   public boolean isObject(){
-    return this == object;
+    return this == _object;
   }
   public boolean isString() {
-    return this == string;
+    return this == _string;
   }
   public Class<?> javaType() {
     return javaType;
   }
   public boolean isTimestamp() {
-    return this == timestamp;
+    return this == _timestamp;
   }
 
   public Optional<Class<?>> javaTypePrimitive() {

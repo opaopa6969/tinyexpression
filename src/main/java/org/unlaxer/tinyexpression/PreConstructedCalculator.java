@@ -17,34 +17,34 @@ import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public abstract class PreConstructedCalculator implements Calculator {
-  
+
   public final String name;
   public final String formula;
   public final Token rootToken;
   final ParseContext parseContext;
   final Parsed parsed;
   Map<String,Object> objectByKey;
-  
+
   final SpecifiedExpressionTypes specifiedExpressionTypes;
 
 //	public PreConstructedCalculator(String formula , boolean randomize) {
 //		this(formula , "_CalculatorClass"  + (randomize ? String.valueOf(Math.abs(new Random().nextLong())) :"" ));
 //	}
 
-  public PreConstructedCalculator(String formula, String name , 
+  public PreConstructedCalculator(String formula, String name ,
       SpecifiedExpressionTypes specifiedExpressionTypes , boolean createToken) {
     super();
     this.formula = formula;
     this.name = name;
     this.specifiedExpressionTypes = specifiedExpressionTypes;
     objectByKey = new HashMap<>();
-    
+
 
     // tokenを作成するのはtokenを捜査して計算する実装もあったため。現在はその実装を無くしたのでparseする意味がない
     // 言語の拡張されてparse時間も無視できなくなったのでparseしないようにした。
     //　互換性のためTokenBaseCalculatorがあるが、ContextCalculatorにした方が良い（現在消してしまったので後で復活させる）
     if(createToken) {
-      
+
       parseContext = new ParseContext(new StringSource(formula));
       transactionListeners().forEach(listenser->{
           parseContext.addTransactionListener(Name.of(listenser.getClass()), listenser);
@@ -53,15 +53,15 @@ public abstract class PreConstructedCalculator implements Calculator {
       try (parseContext) {
         parsed = getParser().parse(parseContext);
         if (false == parsed.isSucceeded()) {
-          throw new ParseException("failed to parse:" + formula);
+          throw new ParseException("failed to parse:" + formula + "\n" + parsed.getMessage());
         }
         Token parsedToken = parsed.getRootToken(true);
-        
+
 //			String parsedTokenOutput = TokenPrinter.get(parsedToken);
 //			System.out.println(parsedTokenOutput);
-        
-        parsedToken = VariableTypeResolver.resolveVariableType(parsedToken);
-        
+
+        VariableTypeResolver.resolveVariableType(parsedToken , specifiedExpressionTypes);
+
         rootToken = tokenReduer().apply(parsedToken);
 //      String rootTokenOutput = TokenPrinter.get(parsedToken);
 //      System.out.println(rootTokenOutput);
@@ -116,7 +116,7 @@ public abstract class PreConstructedCalculator implements Calculator {
   public <X> X getObject(String key, Class<X> objectClass) {
     return (X) objectByKey.get(key);
   }
-  
+
 	public abstract String className();
 	public abstract String javaCode();
 	public abstract String classNameWithHash();
@@ -124,14 +124,14 @@ public abstract class PreConstructedCalculator implements Calculator {
 	public abstract byte[] byteCode();
 	public abstract String formulaHash();
 	public abstract String byteCodeHash();
-	
+
 	public abstract Collection<TransactionListener> transactionListeners();
-	
+
   @Override
   public CreatedFrom createdFrom() {
     return parsed == null ? CreatedFrom.byteCode : CreatedFrom.formula;
   }
-  
+
   @Override
   public ExpressionType resultType() {
     return specifiedExpressionTypes.resultType();

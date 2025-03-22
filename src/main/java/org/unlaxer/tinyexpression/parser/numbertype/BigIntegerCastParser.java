@@ -5,6 +5,6 @@ import org.unlaxer.tinyexpression.parser.TypeCastParser;
 
 public class BigIntegerCastParser extends TypeCastParser{
   public BigIntegerCastParser() {
-    super(ExpressionTypes.bigInteger);
+    super(ExpressionTypes._bigInteger);
   }
 }

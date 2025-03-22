@@ -35,7 +35,7 @@ public class StringVariableDeclarationParser extends AbstractVariableDeclaration
 
   @Override
   public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
-    return Optional.of(ExpressionTypes.string);
+    return Optional.of(ExpressionTypes._string);
   }
 
 }

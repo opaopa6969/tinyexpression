@@ -19,9 +19,9 @@ public class ResultType implements ExpressionType{
   public ResultType(String resulTypeAsString) {
     super();
     this.resulTypeAsString = resulTypeAsString;
-    
+
     classByName.computeIfAbsent(resulTypeAsString, name->{
-      
+
       try {
         return Class.forName(resulTypeAsString);
       } catch (ClassNotFoundException e) {
@@ -32,13 +32,13 @@ public class ResultType implements ExpressionType{
     tag = Tag.of(resulTypeClass);
     expressionType = ExpressionTypes.of(resulTypeClass);
   }
-  
+
   public ExpressionType expressionType(){
     return expressionType;
   }
-  
+
   static Map<String,Class<?>> classByName = new HashMap<>();
-  
+
   static {
 
     classByName.put("float",Float.class);
@@ -54,13 +54,13 @@ public class ResultType implements ExpressionType{
     classByName.put("double",Double.class);
     classByName.put("BigDecimal",BigDecimal.class);
     classByName.put("bigDecimal",BigDecimal.class);
-        
+
     classByName.put("boolean",Boolean.class);
     classByName.put("Boolean",Boolean.class);
-        
+
     classByName.put("string",String.class);
     classByName.put("String",String.class);
-        
+
     classByName.put("timestamp",Timestamp.class);
     classByName.put("Timestamp",Timestamp.class);
 
@@ -152,7 +152,7 @@ public class ResultType implements ExpressionType{
   public Class<?> javaType() {
     return resulTypeClass;
   }
-  
+
   @Override
   public String javaTypeAsString() {
     return resulTypeClass.getTypeName();
@@ -178,4 +178,5 @@ public class ResultType implements ExpressionType{
   public boolean isExternalJavaType() {
     return expressionType.isExternalJavaType();
   }
+
 }

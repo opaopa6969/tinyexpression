@@ -7,14 +7,13 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.ExpressionTags;
-import org.unlaxer.tinyexpression.parser.StrictTypedNumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
-	
+
 	private static final long serialVersionUID = -475039384168549876L;
 
 	public NumberCaseFactorParser() {
@@ -24,7 +23,7 @@ public class NumberCaseFactorParser extends JavaStyleDelimitedLazyChain{
 
 	@Override
 	public org.unlaxer.parser.Parsers getLazyParsers() {
-	  return 
+	  return
       new Parsers(
         Parser.get(BooleanExpressionParser.class),//0
         new WordParser("->"),

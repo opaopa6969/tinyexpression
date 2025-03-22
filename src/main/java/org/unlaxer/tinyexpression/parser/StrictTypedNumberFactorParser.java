@@ -19,4 +19,9 @@ public class StrictTypedNumberFactorParser extends AbstractNumberFactorParser{
   public boolean hasNakedVariableParser() {
     return false;
   }
+
+  @Override
+  public ExpressionType expressionType() {
+    return ExpressionTypes.number;
+  }
 }

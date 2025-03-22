@@ -9,11 +9,12 @@ import org.unlaxer.parser.RootParserIndicator;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.tinyexpression.parser.MinusParser;
+import org.unlaxer.tinyexpression.parser.LeftAndOperatorPlusRights;
 import org.unlaxer.tinyexpression.parser.VariableTypeSelectable;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractNumberExpressionParser extends JavaStyleDelimitedLazyChain implements RootParserIndicator , NumberExpression , VariableTypeSelectable{
+public abstract class AbstractNumberExpressionParser extends JavaStyleDelimitedLazyChain implements
+  RootParserIndicator , NumberExpression , VariableTypeSelectable , LeftAndOperatorPlusRights{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {

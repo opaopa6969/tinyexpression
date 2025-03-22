@@ -5,11 +5,10 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.ExpressionTags;
-import org.unlaxer.tinyexpression.parser.StrictTypedNumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class NumberDefaultCaseFactorParser extends JavaStyleDelimitedLazyChain{
-	
+
 	private static final long serialVersionUID = -955174558962757636L;
 
 

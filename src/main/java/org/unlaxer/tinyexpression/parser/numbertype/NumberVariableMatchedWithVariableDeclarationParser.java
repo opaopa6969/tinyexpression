@@ -1,11 +1,8 @@
 package org.unlaxer.tinyexpression.parser.numbertype;
 
-import java.util.Optional;
-
 import org.unlaxer.parser.ChildOccurs;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.VariableDeclarationMatchedTokenParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
@@ -32,8 +29,8 @@ public abstract class NumberVariableMatchedWithVariableDeclarationParser extends
     return this;
   }
 
-  @Override
-  public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionTypes.number);
-  }
+//  @Override
+//  public Optional<ExpressionType> typeAsOptional() {
+//    return Optional.of(ExpressionTypes.number);
+//  }
 }

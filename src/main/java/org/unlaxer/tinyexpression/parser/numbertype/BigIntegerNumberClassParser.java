@@ -11,13 +11,13 @@ public class BigIntegerNumberClassParser extends NumberClassParser {
 
   @Override
   public ExpressionType type() {
-    return ExpressionTypes.bigInteger;
+    return ExpressionTypes._bigInteger;
   }
 
   @Override
   public List<NumberClassName> numberClassNames() {
     return List.of(
-        new NumberClassName("BigInteger", false , ExpressionTypes.bigInteger , BigInteger.class)
+        new NumberClassName("BigInteger", false , ExpressionTypes._bigInteger , BigInteger.class)
     );
   }
 

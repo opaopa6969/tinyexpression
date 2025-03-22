@@ -13,7 +13,6 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.ExponentParser;
 import org.unlaxer.parser.elementary.SignParser;
 import org.unlaxer.parser.posix.DigitParser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public abstract class AbstractNumberParser extends LazyChain implements StaticParser , NumberExpression{
 
@@ -70,9 +69,5 @@ public abstract class AbstractNumberParser extends LazyChain implements StaticPa
 
   abstract java.util.Optional<Parser> typeSuffix();
   abstract java.util.Optional<Parser> typePrefix();
-
-  abstract ExpressionType expressionType();
-
-
 
 }

@@ -19,8 +19,8 @@ public class UnifiedNumber extends Number {
     _long(ExpressionTypes._long),
     _float(ExpressionTypes._float),
     _double(ExpressionTypes._double),
-    _bigInteger(ExpressionTypes.bigInteger),
-    _bigDecimal(ExpressionTypes.bigDecimal),
+    _bigInteger(ExpressionTypes._bigInteger),
+    _bigDecimal(ExpressionTypes._bigDecimal),
     ;
     
     private Kind(ExpressionType expressionType) {

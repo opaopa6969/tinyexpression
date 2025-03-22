@@ -35,7 +35,7 @@ public class TokenProcessorTest {
 
     Token token = new Token(TokenKind.consumed, rangedString, abcParser);
 
-    token.consume(ABCParser::save);
+//    token.consume(ABCParser::save);
 
     ;
   }

@@ -7,6 +7,6 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 public interface StringExpression extends ExpressionInterface{
   
   default ExpressionType expressionType() {
-    return ExpressionTypes.string;
+    return ExpressionTypes._string;
   }
 }

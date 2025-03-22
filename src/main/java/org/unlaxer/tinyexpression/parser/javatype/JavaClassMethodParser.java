@@ -23,7 +23,7 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
 	public JavaClassMethodParser(Name name) {
 		super(name);
 	}
-	
+
 	@Override
 	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
@@ -35,12 +35,12 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
       );
 
 	}
-	
+
 	@TokenExtractor
 	static Token javaClassAndHash(Token thisParserParsed) {
 	  return thisParserParsed.getChildWithParser(JavaClassAndHashParser.class);
 	}
-	
+
   @TokenExtractor
   static Token identifier(Token thisParserParsed) {
     return thisParserParsed.getChildWithParser(IdentifierParser.class);
@@ -50,21 +50,21 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
    static Token javaClassName(Token javaClassAndHashToken) {
      return JavaClassAndHashParser.getJavaClass(javaClassAndHashToken);
    }
-	
+
   @Override
 	public ClassNameAndIdentifier extractClassNameAndIdentifier(Token token , TinyExpressionTokens tinyExpressionTokens) {
-		
+
 		if(false == token.parser instanceof JavaClassMethodParser) {
 			throw new IllegalArgumentException();
 		}
-		
+
 		Token javaClassAndHash = javaClassAndHash(token);
 		String identifier = identifier(token).getToken().orElse("");
 		String javaClass = javaClassName(javaClassAndHash).getToken().orElse("");
-		
+
 		return new ClassNameAndIdentifier(javaClass, identifier);
 	}
-	
+
 	public static class JavaMethodParser extends IdentifierParser implements ClassNameAndIdentifierExtractor{
 
     public JavaMethodParser() {
@@ -78,17 +78,17 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
     @Override
     public ClassNameAndIdentifier extractClassNameAndIdentifier(Token token,
         TinyExpressionTokens tinyExpressionTokens) {
-  
+
       try {
         String methodName = token.tokenString.get();
         String resolveJavaClass = tinyExpressionTokens.resolveJavaClass(methodName);
         String[] split = resolveJavaClass.split("#");
-        
+
         return new ClassNameAndIdentifier(split[0],split[1]);
       }catch (Exception e) {
         throw new ParseException("faild to extract class method from " + token ,e);
       }
     }
-	  
+
 	}
 }

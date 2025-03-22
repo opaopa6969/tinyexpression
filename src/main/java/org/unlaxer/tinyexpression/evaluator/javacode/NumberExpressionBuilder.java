@@ -106,11 +106,11 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
       binaryOperate(builder, token, "-" , tinyExpressionTokens);
 
-    } else if (parser instanceof MultipleParser) {
+    } else if (parser instanceof NumberMultipleParser) {
 
       binaryOperate(builder, token, "*" , tinyExpressionTokens);
 
-    } else if (parser instanceof DivisionParser) {
+    } else if (parser instanceof NumberDivisionParser) {
 
       binaryOperate(builder, token, "/" , tinyExpressionTokens);
 
@@ -128,7 +128,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TypedToken<VariableParser> typed = token.typed(VariableParser.class);
 
       VariableBuilder.build(this, builder, typed, tinyExpressionTokens, NumberSetterParser.class,
-          numberType.zeroNumber(),"getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes.number));
+          numberType.zeroNumber(),"getValue","setAndGet",fromVariableParserToken.orElse(ExpressionTypes._float));
 //      List<Token> variableDeclarationsTokens = tinyExpressionTokens.getVariableDeclarationTokens();
 //
 //

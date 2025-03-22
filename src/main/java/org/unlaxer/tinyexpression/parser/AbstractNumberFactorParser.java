@@ -41,13 +41,6 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
 		super();
 	}
 
-
-  @Override
-  public boolean hasNakedVariableParser() {
-    // TODO Auto-generated method stub
-    return false;
-  }
-
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     Parsers parsers = new Parsers();

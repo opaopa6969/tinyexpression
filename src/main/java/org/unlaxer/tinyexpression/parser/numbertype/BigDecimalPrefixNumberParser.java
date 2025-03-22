@@ -12,7 +12,7 @@ public class BigDecimalPrefixNumberParser extends AbstractNumberParser{
 
   @Override
   public ExpressionType expressionType() {
-    return ExpressionTypes.bigDecimal;
+    return ExpressionTypes._bigDecimal;
   }
 
   @Override

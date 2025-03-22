@@ -5,6 +5,6 @@ import org.unlaxer.tinyexpression.parser.TypeCastParser;
 
 public class BigDecimalCastParser extends TypeCastParser{
   public BigDecimalCastParser() {
-    super(ExpressionTypes.bigDecimal);
+    super(ExpressionTypes._bigDecimal);
   }
 }

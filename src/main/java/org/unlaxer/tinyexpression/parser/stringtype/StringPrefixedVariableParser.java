@@ -35,7 +35,7 @@ public class StringPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
 
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionTypes.string);
+    return Optional.of(ExpressionTypes._string);
   }
 
 }

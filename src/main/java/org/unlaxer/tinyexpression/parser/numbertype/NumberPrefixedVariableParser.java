@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser.numbertype;
 
-import java.util.Optional;
-
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -25,6 +23,11 @@ public class NumberPrefixedVariableParser extends JavaStyleDelimitedLazyChain im
           Parser.get(NumberTypeHintPrefixParser.class), //0
           Parser.get(NakedVariableParser.class)//1
       );
+  }
+
+  @Override
+  public ExpressionType expressionType() {
+    return ExpressionTypes.number;
   }
 
 }

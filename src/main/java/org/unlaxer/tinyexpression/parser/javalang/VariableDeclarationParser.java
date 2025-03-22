@@ -40,58 +40,58 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         Parser.get(BooleanVariableDeclarationParser.class)
     );
   }
-  
+
   public VariableDeclarationParser() {
     super();
     variableDeclarations = new VariableDeclarations();
   }
-  
+
   VariableDeclarations variableDeclarations;
-  
+
   @TokenExtractor
   public static TypedToken<VariableParser> extractVariableParserToken(Token thisParserParsed) {
-    
+
     Token choiced = thisParserParsed;
     Parser parser = thisParserParsed.getParser();
     if(parser instanceof Choice) {
-      
+
       choiced = ChoiceInterface.choiced(thisParserParsed);
     }
-    
+
     parser = choiced.getParser();
-      
+
     if(parser instanceof AbstractVariableDeclarationParser) {
-      
+
       return choiced.getChild(TokenPredicators.parserImplements(VariableParser.class))
           .typed(VariableParser.class);
     }
     throw new IllegalArgumentException();
   }
-  
+
   @TokenExtractor
   public static VariableInfo extractVariableInfo(Token thisParserParsed) {
-    
+
     TypedToken<VariableParser> variableParserToken = extractVariableParserToken(thisParserParsed);
     VariableParser parser = variableParserToken.getParser();
     TypedToken<TypeHint> typed = thisParserParsed.flatten().stream()
         .filter(TokenPredicators.parserImplements(TypeHint.class))//
         .findFirst().get()
         .typed(TypeHint.class);
-    
+
     ExpressionType expressionType = typed.getParser().type();
-    
+
     if(expressionType.isNumber()) {
-      expressionType = ExpressionTypes.of(typed.tokenString.get()); 
+      expressionType = ExpressionTypes.of(typed.tokenString.get());
     }
-      
+
     String variableName = parser.getVariableName(variableParserToken);
-    return new VariableInfo(expressionType, variableName);
+    VariableInfo variableInfo = new VariableInfo(expressionType, variableName);
+    thisParserParsed.putRelatedToken(Name.of(VariableInfo.class), typed);
+    return variableInfo;
   }
-  
-  
-  
+
   public static class VariableInfo{
-    
+
     public final ExpressionType expressionType;
     public String name;
     public VariableInfo(ExpressionType expressionType, String name) {
@@ -99,10 +99,10 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
       this.expressionType = expressionType;
       this.name = name;
     }
-    
+
     public VariableParser matchedVariableParser() {
-      
-      
+
+
       if(expressionType.isBoolean()) {
         return Parser.get(BooleanVariableParser.class);
       }
@@ -130,71 +130,71 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
 
   @Override
   public void onCommit(ParseContext parseContext, Parser parser, List<Token> committedTokens) {
-    
+
     if(false == parser instanceof AbstractVariableDeclarationParser) {
       return ;
     }
-    
+
     //Number or String or boolean VariableDeclararionParser
     Token token = committedTokens.get(0);
-    
+
     VariableInfo variableInfo = extractVariableInfo(token);
     variableDeclarations.set(parseContext, variableInfo);
   }
 
   @Override
   public void onRollback(ParseContext parseContext, Parser parser, List<Token> rollbackedTokens) {
-    
+
 //    if(false == parser instanceof AbstractVariableDeclarationParser) {
 //      return ;
 //    }
-//    
+//
 //    Token token = rollbackedTokens.get(0);
-//    
+//
 //    VariableInfo variableInfo = extractVariableInfo(token);
 //    variableDeclarations.remove(parseContext, variableInfo.name);
-    
+
   }
 
   @Override
   public void onClose(ParseContext parseContext) {
   }
-  
+
   public static class VariableDeclarations{
-    
+
     public static final VariableDeclarations SINGLETON = new VariableDeclarations();
-    
+
     public static final Name STORES = Name.of(VariableDeclarations.class , "Stores");
-    
+
     @SuppressWarnings("unchecked")
     Map<String, VariableInfo> infoByName(ParseContext parseContext){
       Map<Name, Object> globalScopeTreeMap = parseContext.getGlobalScopeTreeMap();
       Map<String, VariableInfo> infoByName = (Map<String, VariableInfo>) globalScopeTreeMap
           .computeIfAbsent(STORES,name->new HashMap<>());
       return infoByName;
-      
+
     }
-    
+
     public void set(ParseContext parseContext , VariableInfo variableInfo) {
-      
-      infoByName(parseContext).put(variableInfo.name, variableInfo); 
+
+      infoByName(parseContext).put(variableInfo.name, variableInfo);
     }
-    
+
     /**
      * @param parseContext
      * @param variableName
      * @return VariableInfo removed
      */
     public VariableInfo remove(ParseContext parseContext , String variableName) {
-      
-      
+
+
       return infoByName(parseContext).remove(variableName);
     }
-    
+
     public Optional<VariableInfo> get(ParseContext parseContext , String variableName) {
-      
+
       return Optional.ofNullable(infoByName(parseContext).get(variableName));
     }
   }
-  
+
 }

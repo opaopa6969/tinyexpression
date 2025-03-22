@@ -5,13 +5,13 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
-import org.unlaxer.tinyexpression.parser.DivisionParser;
-import org.unlaxer.tinyexpression.parser.MultipleParser;
+import org.unlaxer.tinyexpression.parser.LeftAndOperatorPlusRights;
 import org.unlaxer.tinyexpression.parser.StrictTypedNumberFactorParser;
 import org.unlaxer.tinyexpression.parser.VariableTypeSelectable;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyChain implements NumberExpression , VariableTypeSelectable{
+public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyChain implements
+  NumberExpression , VariableTypeSelectable , LeftAndOperatorPlusRights{
 
 	private static final long serialVersionUID = 1430560948407993197L;
 
@@ -40,8 +40,8 @@ public abstract class AbstractNumberTermParser extends JavaStyleDelimitedLazyCha
     parsers.add(new ZeroOrMore(
           new WhiteSpaceDelimitedChain(
             new Choice(
-              Parser.get(MultipleParser.class),
-              Parser.get(DivisionParser.class)
+              Parser.get(NumberMultipleParser.class),
+              Parser.get(NumberDivisionParser.class)
             ),
             Parser.get(factorParserClazz)
           )
