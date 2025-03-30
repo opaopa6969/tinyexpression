@@ -168,7 +168,10 @@ public class ExpressionModelCreator {
       TypedToken<BooleanExpression> booleanExpression = IfExpressionParser.getBooleanExpression(operator);
 
 
-      return new ExpressionModel(Opecodes.numberIf, null)
+      return new ExpressionModel(
+          Opecodes.numberIf,
+          applyBoolean(booleanExpression),
+          )
         apply(booleanExpression),
         apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanExpression)),
         apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanExpression))
