@@ -21,7 +21,8 @@ public enum ExpressionTypes implements ExpressionType{
   _boolean(Boolean.class,boolean.class),
   _object(Object.class),
   _timestamp(Timestamp.class),
-  _void(Void.class , void.class)
+  _void(Void.class , void.class),
+  undefined(Undefined.class),
   ;
   final Tag tag;
   final Class<?> javaTypePrimitive;
@@ -168,5 +169,9 @@ public enum ExpressionTypes implements ExpressionType{
           javaTypePrimitive.getSimpleName() :
           lowerCaseTypeName
     );
+  }
+  @Override
+  public boolean isUndefined() {
+    return this == undefined;
   }
 }

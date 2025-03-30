@@ -2,13 +2,14 @@ package org.unlaxer.tinyexpression.parser.numbertype;
 
 import java.util.List;
 
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;
-import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 
 public abstract class NumberClassParser extends LazyChoice implements TypeHint , Returning ,TypeHintVariableParser{
 
@@ -24,6 +25,10 @@ public abstract class NumberClassParser extends LazyChoice implements TypeHint ,
     return parsers;
   }
 
+  public static ExpressionType expressionType(TypedToken<? extends NumberClassParser> token) {
+    NumberClassParser parser = token.getParser();
+    return parser.type();
+  }
 
   public static class NumberWordParser extends WordParser implements TypeHint{
 

@@ -12,7 +12,7 @@ public interface VariableParser extends Parser {
 
   public static Tag variableNameTag = new Tag("variableName");
 
-  public default String getVariableName(TypedToken<? extends VariableParser> token) {
+  public static String getVariableName(TypedToken<? extends VariableParser> token) {
     Token identifierToken = token.flatten().stream()
         .filter(TokenPredicators.hasTag(variableNameTag))
         .findFirst().get();

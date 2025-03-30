@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.unlaxer.Token;
 import org.unlaxer.TypedToken;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
@@ -25,6 +26,9 @@ import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedNumberFactorParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
+import org.unlaxer.tinyexpression.parser.VariableDeclarationMatchedTokenParser;
+import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
@@ -33,13 +37,18 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
 import org.unlaxer.tinyexpression.parser.numbertype.AbstractNumberParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberPrefixedVariableParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberSuffixedVariableParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeHintParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
 import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 import org.unlaxer.tinyexpression.parser.stringtype.StringLengthParser;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -83,8 +92,7 @@ public class ExpressionModelCreator {
     if(parser instanceof StrictTypedNumberFactorParser ||
         parser instanceof NumberFactorParser) {
 
-
-      return factor(typedToken);
+      return numberFactor(typedToken.typed(NumberFactorParser.class),specifiedExpressionTypes);
     }
 
 
@@ -101,9 +109,10 @@ public class ExpressionModelCreator {
   }
 
 
-  private static ExpressionModel factor(TypedToken<ExpressionInterface> token) {
+  private static ExpressionModel numberFactor(TypedToken<NumberFactorParser> typedToken,
+      SpecifiedExpressionTypes specifiedExpressionTypes) {
 
-    Token operator = ChoiceInterface.choiced(token);
+    Token operator = ChoiceInterface.choiced(typedToken);
     Parser parser = operator.parser;
 
 //    if(parser instanceof ExclusiveNakedVariableParser) {
@@ -116,7 +125,7 @@ public class ExpressionModelCreator {
 
     if(parser instanceof AbstractNumberParser){
 
-      String number = token.getToken().get();
+      String number = typedToken.getToken().get();
       ExpressionType expressionType = ((AbstractNumberParser) parser).expressionType();
 
       return new ExpressionModel(Opecodes.numberValue, expressionType , number);
@@ -124,16 +133,42 @@ public class ExpressionModelCreator {
 
     }else if(parser instanceof NakedVariableParser ){
 
-      return clearChildren(operator);
+      TypedToken<NakedVariableParser> token = operator.typed(NakedVariableParser.class);
+      String variableName = token.apply(VariableParser::getVariableName);
+
+      ExpressionType nakedVariableType = specifiedExpressionTypes.nakedVariableType();
+//      return nakedVariableType.isNumber() ?
+//           new ExpressionModel(Opecodes.numberVariable, nakedVariableType , variableName):
+        return new ExpressionModel(Opecodes.numberVariable, nakedVariableType , variableName);
 
     }else if(parser instanceof NumberVariableParser){
-//      Token choiced = ChoiceInterface.choiced(operator);
-      return operator;
+      TypedToken<VariableParser> choiced = ChoiceInterface.choiced(operator).typed(VariableParser.class);
+
+      if(choiced.getParser() instanceof VariableDeclarationMatchedTokenParser) {
+        VariableInfo variableInfo = choiced
+             .typed(VariableDeclarationMatchedTokenParser.class)
+             .apply(VariableDeclarationMatchedTokenParser::variableInfo);
+        return new ExpressionModel(Opecodes.numberVariable, variableInfo.expressionType , variableInfo.name);
+      }else if(choiced.getParser() instanceof NumberPrefixedVariableParser ||
+          choiced.getParser() instanceof NumberSuffixedVariableParser ) {
+
+        TypedToken<NumberTypeHintParser> childWithParserTyped = choiced.getChildWithParserTyped(NumberTypeHintParser.class);
+
+        ExpressionType expressionType = childWithParserTyped.apply(NumberTypeHintParser::expressionType);
+        String varName = choiced.apply(VariableParser::getVariableName);
+
+        return new ExpressionModel(Opecodes.numberVariable, expressionType , varName);
+
+      }else {
+          throw new ParseException();
+      }
 
     }else if(parser instanceof NumberIfExpressionParser){
 
-      Token booleanExpression = IfExpressionParser.getBooleanExpression(operator);
-      return operator.newCreatesOf(
+      TypedToken<BooleanExpression> booleanExpression = IfExpressionParser.getBooleanExpression(operator);
+
+
+      return new ExpressionModel(Opecodes.numberIf, null)
         apply(booleanExpression),
         apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanExpression)),
         apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanExpression))
@@ -221,7 +256,7 @@ public class ExpressionModelCreator {
       );
 
     }else if(parser instanceof MethodInvocationParser){
-      String path = token.getPath();
+      String path = typedToken.getPath();
       return extracteMethodInvocation(operator);
 
     }
@@ -230,7 +265,7 @@ public class ExpressionModelCreator {
 
 
 
-  public static ExpressionModel applyBoolean(TypedToken<BooleanExpressionParser> typedToken ) {
+  public static ExpressionModel applyBoolean(TypedToken<BooleanExpression> typedToken ) {
 
 
         ;
@@ -238,7 +273,7 @@ public class ExpressionModelCreator {
         return null;
   }
 
-  public static ExpressionModel applyString(TypedToken<BooleanExpressionParser> typedToken ) {
+  public static ExpressionModel applyString(TypedToken<StringExpression> typedToken ) {
 
 
     ;

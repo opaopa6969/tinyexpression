@@ -1,14 +1,10 @@
 package org.unlaxer.tinyexpression.parser.numbertype;
 
-import java.util.List;
-
-import org.unlaxer.RangedString;
-import org.unlaxer.Token;
-import org.unlaxer.TokenKind;
-import org.unlaxer.parser.Parser;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 
 public class NumberTypeHintParser extends LazyChoice {
 
@@ -18,7 +14,7 @@ public class NumberTypeHintParser extends LazyChoice {
     super();
   }
 
-  static final WordParser numberWordParser = new WordParser("number");
+//  static final WordParser numberWordParser = new WordParser("number");
 
 
   @Override
@@ -38,12 +34,19 @@ public class NumberTypeHintParser extends LazyChoice {
       );
   }
 
-  public static Token createToken(int position,TokenKind tokenKind) {
+  public static ExpressionType expressionType(TypedToken<NumberTypeHintParser> token) {
 
-    Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
-    List<Token> children = List.of(token);
-    return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
+    return ChoiceInterface.choiced(token)
+        .typed(NumberClassParser.class)
+        .apply(NumberClassParser::expressionType);
   }
+
+//  public static Token createToken(int position,TokenKind tokenKind) {
+//
+//    Token token = new Token(tokenKind, new RangedString(position, " number "), numberWordParser);
+//    List<Token> children = List.of(token);
+//    return new Token(tokenKind, children, Parser.get(NumberTypeHintParser.class),position);
+//  }
 
 
 //  public Token createToken(int position,TokenKind tokenKind) {

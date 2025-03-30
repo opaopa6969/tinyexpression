@@ -39,6 +39,7 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
 
 	public AbstractNumberFactorParser(SpecifiedExpressionTypes specifiedExpressionType) {
 		super();
+		this.specifiedExpressionType = specifiedExpressionType;
 	}
 
   @Override

@@ -30,8 +30,7 @@ public class NumberVariableParser extends LazyChoice implements /*RootVariablePa
 
   public String getVariableName(Token thisParserParsed) {
     TypedToken<VariableParser> typed = thisParserParsed.typed(VariableParser.class);
-    VariableParser parser = typed.getParser();
-    return parser.getVariableName(typed);
+    return typed.apply(VariableParser::getVariableName);
   }
 
 

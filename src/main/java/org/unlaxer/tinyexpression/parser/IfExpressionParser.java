@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
+import org.unlaxer.TypedToken;
 import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
@@ -21,14 +22,14 @@ import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
-    
+
   private static final long serialVersionUID = 8228933717392969866L;
-  
-  
+
+
   public IfExpressionParser() {
     super();
   }
-  
+
   public static class IfFuctionNameParser extends SuggestableParser{
 
     private static final long serialVersionUID = -6045428101193616423L;
@@ -36,16 +37,16 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     public IfFuctionNameParser() {
       super(true, "if");
     }
-  
+
     @Override
     public String getSuggestString(String matchedString) {
       return "(".concat(matchedString).concat("){ }else{ }");
     }
   }
-  
+
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
-    
+
     Parsers parsers = new Parsers(
       Parser.get(IfFuctionNameParser.class),
       Parser.get(LeftParenthesisParser.class),
@@ -88,45 +89,46 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
       ),
       Parser.get(RightCurlyBraceParser.class)
     );
-    
+
     return parsers;
   }
-  
-  
-  /* 
+
+
+  /*
    */
-  public abstract Class<? extends Parser> strictTypedReturning(); 
-  public abstract Class<? extends Parser> nonStrictTypedReturning(); 
-  
+  public abstract Class<? extends Parser> strictTypedReturning();
+  public abstract Class<? extends Parser> nonStrictTypedReturning();
+
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
-  public static Token getBooleanExpression(Token thisParserParsed) {
-    return thisParserParsed.getChild(
-        TokenPredicators.parserImplements(BooleanExpression.class , VariableParser.class)
-    );
+  public static TypedToken<BooleanExpression> getBooleanExpression(Token thisParserParsed) {
+    return thisParserParsed.getChildWithParserTyped(BooleanExpression.class);
+//    return thisParserParsed.getChild(
+//        TokenPredicators.parserImplements(BooleanExpression.class , VariableParser.class)
+//    );
   }
-  
+
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
-  public static Token getThenExpression(Token thisParserParsed , 
+  public static Token getThenExpression(Token thisParserParsed ,
       Class<? extends ExpressionInterface> expressionInterfaceClass , Token conditionToken) {
-    
-    
-    Predicate<Token> expressionFilter = 
+
+
+    Predicate<Token> expressionFilter =
         TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
           .and(TokenPredicators.afterToken(conditionToken));
-    
+
     List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
       .filter(expressionFilter)
       .limit(2)
       .collect(Collectors.toList());
-    
+
     return returning.get(0);
   }
-  
+
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
-  public static Token getElseExpression(Token thisParserParsed , 
+  public static Token getElseExpression(Token thisParserParsed ,
       Class<? extends ExpressionInterface> expressionInterfaceClass, Token conditionToken) {
-    
-    Predicate<Token> expressionFilter = 
+
+    Predicate<Token> expressionFilter =
         TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
           .and(TokenPredicators.afterToken(conditionToken));
 
@@ -134,10 +136,7 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
         .filter(expressionFilter)
         .limit(2)
         .collect(Collectors.toList());
-    
+
     return returning.get(1);
   }
-  
-  
-  
 }

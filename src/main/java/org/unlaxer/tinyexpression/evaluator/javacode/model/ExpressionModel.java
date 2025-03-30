@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.javacode.model;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -9,8 +11,10 @@ public class ExpressionModel {
 //    public final ExpressionModel parent;
   final Opecode opecode;
   final ExpressionType expressionType;
+  final ExpressionModel conditionOperand;
   final ExpressionModel leftOperand;
   final ExpressionModel rightOperand;
+  final List<ExpressionModel> operands = new ArrayList<>();
   final String value;
 
   public ExpressionModel(/* ExpressionModel parent , */Opecode opecode,
@@ -19,6 +23,7 @@ public class ExpressionModel {
 //      this.parent = parent;
     this.opecode = opecode;
     this.expressionType = opecode.expressionType();
+    conditionOperand = null;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
     value = null;
@@ -30,6 +35,7 @@ public class ExpressionModel {
 //      this.parent = parent;
     this.opecode = opecode;
     this.expressionType = opecode.expressionType();
+    conditionOperand = null;
     this.leftOperand = leftOperand;
     this.rightOperand = null;
     value = null;
@@ -41,6 +47,7 @@ public class ExpressionModel {
 //      this.parent = parent;
     this.opecode = opecode;
     this.expressionType = expressionType;
+    conditionOperand = null;
     this.leftOperand = null;
     this.rightOperand = null;
     this.value = value;
@@ -51,10 +58,25 @@ public class ExpressionModel {
     super();
     this.opecode = opecode;
     this.expressionType = expressionType;
+    conditionOperand = null;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
     this.value = value;
   }
+
+
+  public ExpressionModel(Opecode opecode, ExpressionType expressionType,
+      ExpressionModel conditionOperand,
+      ExpressionModel leftOperand,ExpressionModel rightOperand) {
+    super();
+    this.opecode = opecode;
+    this.expressionType = expressionType;
+    this.conditionOperand = conditionOperand;
+    this.leftOperand = leftOperand;
+    this.rightOperand = rightOperand;
+    this.value = null;
+  }
+
 
   public Opecode opecode() {
     return opecode;
@@ -62,6 +84,10 @@ public class ExpressionModel {
 
   public ExpressionType expressionType() {
     return expressionType;
+  }
+
+  public Optional<ExpressionModel> conditionOperand() {
+    return Optional.ofNullable(conditionOperand);
   }
 
   public Optional<ExpressionModel> leftOperand() {

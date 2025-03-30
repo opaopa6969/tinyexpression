@@ -15,7 +15,7 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
   public static boolean enabled1 = true;
   public static boolean enabled2 = true;
   public static boolean enabled3 = true;
-  
+
   @Override
   public Parsers getLazyParsers() {
     return new Parsers(
@@ -31,27 +31,27 @@ public class MethodInvocationParser extends JavaStyleDelimitedLazyChain{
         Parser.get(RightParenthesisParser.class)
     );
   }
-  
+
   @TokenExtractor
   public static java.util.Optional<Token> getParametersClause(Token thisParserParsed) {
-    
+
     Parser.checkTokenParsedBySpecifiedParser(thisParserParsed, MethodInvocationParser.class);
-    
+
     return thisParserParsed.getChildWithParserAsOptional(ArgumentsParser.class); //4
   }
-  
+
   @TokenExtractor
   public static Token getMethodName(Token thisParserParsed) {
-    
+
     Parser.checkTokenParsedBySpecifiedParser(thisParserParsed, MethodInvocationParser.class);
-    
+
     return thisParserParsed.getChildWithParser(IdentifierParser.class); //4
   }
-  
+
   public static String getMethodNameAsString(Token thisParserParsed) {
-    
+
     return getMethodName(thisParserParsed).getToken().get();
-    
+
   }
 
 }

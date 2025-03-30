@@ -2,7 +2,7 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 
-public record SpecifiedExpressionTypes(ExpressionType resultType,ExpressionType numberType ) {
+public record SpecifiedExpressionTypes(ExpressionType resultType,ExpressionType numberType,ExpressionType nakedVariableType) {
 //  public SpecifiedExpressionTypes{
 //    if(resultType == null) {
 //      resultType = ExpressionTypes._float;
