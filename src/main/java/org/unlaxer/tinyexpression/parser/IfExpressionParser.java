@@ -5,9 +5,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
+import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
-import org.unlaxer.Token.ScanDirection;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -139,4 +139,25 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
 
     return returning.get(1);
   }
+  
+  @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
+  public static ThenAndElse getThenAndElse(TypedToken<IfExpressionParser> thisParserParsed ,
+      Class<? extends ExpressionInterface> expressionInterfaceClass , Token conditionToken) {
+
+
+    Predicate<Token> expressionFilter =
+        TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
+          .and(TokenPredicators.afterToken(conditionToken));
+
+    List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
+      .filter(expressionFilter)
+      .limit(2)
+      .collect(Collectors.toList());
+    
+    return new ThenAndElse(returning.get(0).typed(expressionInterfaceClass), returning.get(1).typed(expressionInterfaceClass));
+  }
+  
+  public static record ThenAndElse(TypedToken<? extends ExpressionInterface> thenToken , TypedToken<? extends ExpressionInterface> elseToken) {}
+    
+
 }

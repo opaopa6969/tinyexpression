@@ -3,8 +3,9 @@ package org.unlaxer.tinyexpression.parser.numbertype;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.ConcreteNumberType;
 
-public class BytePrefixNumberParser extends AbstractNumberParser{
+public class BytePrefixNumberParser extends AbstractNumberParser implements ConcreteNumberType{
 
   public BytePrefixNumberParser() {
     super();

@@ -8,7 +8,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.Opecode;
 
 public class ExpressionModel {
-//    public final ExpressionModel parent;
+  ExpressionModel parent;
   final Opecode opecode;
   final ExpressionType expressionType;
   final ExpressionModel conditionOperand;
@@ -17,34 +17,37 @@ public class ExpressionModel {
   final List<ExpressionModel> operands = new ArrayList<>();
   final String value;
 
-  public ExpressionModel(/* ExpressionModel parent , */Opecode opecode,
+  public ExpressionModel(ExpressionModel parent , Opecode opecode,
       ExpressionModel leftOperand, ExpressionModel rightOperand) {
     super();
-//      this.parent = parent;
+    this.parent = parent;
     this.opecode = opecode;
     this.expressionType = opecode.expressionType();
     conditionOperand = null;
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
+    leftOperand.setParent(this);
+    rightOperand.setParent(this);
     value = null;
   }
 
-  public ExpressionModel(/* ExpressionModel parent , */Opecode opecode,
+  public ExpressionModel(ExpressionModel parent ,Opecode opecode,
       ExpressionModel leftOperand) {
     super();
-//      this.parent = parent;
+    this.parent = parent;
     this.opecode = opecode;
     this.expressionType = opecode.expressionType();
     conditionOperand = null;
     this.leftOperand = leftOperand;
     this.rightOperand = null;
+    leftOperand.setParent(this);
     value = null;
   }
 
-  public ExpressionModel(/* ExpressionModel parent , */Opecode opecode, ExpressionType expressionType,
+  public ExpressionModel(ExpressionModel parent ,Opecode opecode, ExpressionType expressionType,
       String value) {
     super();
-//      this.parent = parent;
+    this.parent = parent;
     this.opecode = opecode;
     this.expressionType = expressionType;
     conditionOperand = null;
@@ -52,6 +55,46 @@ public class ExpressionModel {
     this.rightOperand = null;
     this.value = value;
   }
+  
+  public ExpressionModel(Opecode opecode,
+      ExpressionModel leftOperand, ExpressionModel rightOperand) {
+    super();
+    this.parent = null;
+    this.opecode = opecode;
+    this.expressionType = opecode.expressionType();
+    conditionOperand = null;
+    this.leftOperand = leftOperand;
+    this.rightOperand = rightOperand;
+    value = null;
+    leftOperand.setParent(this);
+    rightOperand.setParent(this);
+  }
+
+  public ExpressionModel(Opecode opecode,
+      ExpressionModel leftOperand) {
+    super();
+    this.parent = null;
+    this.opecode = opecode;
+    this.expressionType = opecode.expressionType();
+    conditionOperand = null;
+    this.leftOperand = leftOperand;
+    this.rightOperand = null;
+    value = null;
+    leftOperand.setParent(this);
+  }
+
+  public ExpressionModel(Opecode opecode, ExpressionType expressionType,
+      String value) {
+    super();
+    this.parent = null;
+    this.opecode = opecode;
+    this.expressionType = expressionType;
+    conditionOperand = null;
+    this.leftOperand = null;
+    this.rightOperand = null;
+    this.value = value;
+  }
+
 
   public ExpressionModel(Opecode opecode, ExpressionType expressionType, ExpressionModel leftOperand,
       ExpressionModel rightOperand, String value) {
@@ -62,6 +105,8 @@ public class ExpressionModel {
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
     this.value = value;
+    leftOperand.setParent(this);
+    rightOperand.setParent(this);
   }
 
 
@@ -75,6 +120,9 @@ public class ExpressionModel {
     this.leftOperand = leftOperand;
     this.rightOperand = rightOperand;
     this.value = null;
+    conditionOperand.setParent(this);
+    leftOperand.setParent(this);
+    rightOperand.setParent(this);
   }
 
 
@@ -100,5 +148,13 @@ public class ExpressionModel {
 
   public Optional<String> getValue() {
     return Optional.of(value);
+  }
+  
+  public Optional<ExpressionModel> parent() {
+    return Optional.ofNullable(parent);
+  }
+  
+  public void setParent(ExpressionModel parent) {
+    this.parent = parent;
   }
 }

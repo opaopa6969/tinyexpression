@@ -16,6 +16,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionsParser;
 import org.unlaxer.tinyexpression.parser.FactorOfStringParser;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
+import org.unlaxer.tinyexpression.parser.IfExpressionParser.ThenAndElse;
 import org.unlaxer.tinyexpression.parser.LeftAndOperatorPlusRights;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -65,7 +66,7 @@ public class ExpressionModelCreator {
     return apply(typed , specifiedExpressionTypes);
   }
 
-  public static ExpressionModel apply(TypedToken<ExpressionInterface> typedToken ,SpecifiedExpressionTypes specifiedExpressionTypes) {
+  public static ExpressionModel apply(TypedToken<? extends ExpressionInterface> typedToken ,SpecifiedExpressionTypes specifiedExpressionTypes) {
 
     ExpressionInterface parser = typedToken.getParser();
     if(parser instanceof LeftAndOperatorPlusRights) {
@@ -167,14 +168,19 @@ public class ExpressionModelCreator {
 
       TypedToken<BooleanExpression> booleanExpression = IfExpressionParser.getBooleanExpression(operator);
 
-
+      ThenAndElse thenAndElse = 
+          IfExpressionParser.getThenAndElse(operator.typed(IfExpressionParser.class), NumberExpression.class, booleanExpression);
+      
+      ExpressionType concreteNumberType = NumberExpression.resolveConcreteType(thenAndElse.thenToken().typed(NumberExpression.class))
+        .or(()->NumberExpression.resolveConcreteType(thenAndElse.elseToken().typed(NumberExpression.class)))
+        .orElse(specifiedExpressionTypes.numberType());
+      
       return new ExpressionModel(
           Opecodes.numberIf,
+          concreteNumberType,
           applyBoolean(booleanExpression),
-          )
-        apply(booleanExpression),
-        apply(IfExpressionParser.getThenExpression(operator , NumberExpression.class , booleanExpression)),
-        apply(IfExpressionParser.getElseExpression(operator , NumberExpression.class , booleanExpression))
+          apply(thenAndElse.thenToken(), specifiedExpressionTypes),
+          apply(thenAndElse.elseToken(), specifiedExpressionTypes)
       );
 
     }else if(parser instanceof NumberMatchExpressionParser){

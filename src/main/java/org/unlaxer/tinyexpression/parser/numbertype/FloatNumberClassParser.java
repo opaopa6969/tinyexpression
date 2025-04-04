@@ -6,7 +6,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 
-public class FloatNumberClassParser extends NumberClassParser {
+public class FloatNumberClassParser extends NumberClassParser{
 
   @Override
   public ExpressionType type() {
@@ -30,4 +30,5 @@ public class FloatNumberClassParser extends NumberClassParser {
   public Class<? extends TypeHint> typeHint() {
     return FloatNumberClassParser.class;
   }
+
 }

@@ -6,12 +6,13 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.tinyexpression.parser.ConcreteNumberType;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;
 
-public abstract class NumberClassParser extends LazyChoice implements TypeHint , Returning ,TypeHintVariableParser{
+public abstract class NumberClassParser extends LazyChoice implements TypeHint , Returning ,TypeHintVariableParser , ConcreteNumberType{
 
   public abstract List<NumberClassName> numberClassNames();
   @Override
@@ -46,5 +47,8 @@ public abstract class NumberClassParser extends LazyChoice implements TypeHint ,
 
   }
 
-
+  @Override
+  public ExpressionType expressionType() {
+    return type();
+  }
 }
