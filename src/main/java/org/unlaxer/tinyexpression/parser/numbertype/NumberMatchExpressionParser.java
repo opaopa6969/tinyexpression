@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser.numbertype;
 
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
+import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
@@ -51,13 +52,17 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 	}
 	
 	@TokenExtractor
-	public static Token getCaseExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(NumberCaseExpressionParser.class); //2
+	public static TypedToken<NumberCaseExpressionParser> getCaseExpression(Token thisParserParsed) {
+		TypedToken<NumberCaseExpressionParser> childWithParserTyped = 
+		    thisParserParsed.getChildWithParserTyped(NumberCaseExpressionParser.class); //2
+		return childWithParserTyped;
 	}
 	
   @TokenExtractor
-	public static Token getDefaultExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildWithParser(NumberDefaultCaseFactorParser.class); //3
+	public static TypedToken<NumberDefaultCaseFactorParser> getDefaultExpression(Token thisParserParsed) {
+		TypedToken<NumberDefaultCaseFactorParser> childWithParserTyped = 
+		    thisParserParsed.getChildWithParserTyped(NumberDefaultCaseFactorParser.class); //3
+		return childWithParserTyped;
 	}
   
 }

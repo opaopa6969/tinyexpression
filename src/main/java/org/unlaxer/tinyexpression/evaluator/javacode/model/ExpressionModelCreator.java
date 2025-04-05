@@ -184,6 +184,8 @@ public class ExpressionModelCreator {
       );
 
     }else if(parser instanceof NumberMatchExpressionParser){
+      
+      new ExpressionModel(Opecodes.numberCase, null);
 
       return operator.newCreatesOf(
         apply(NumberMatchExpressionParser.getCaseExpression(operator)),
