@@ -1,7 +1,6 @@
 package org.unlaxer;
 
 import java.io.Serializable;
-import java.lang.reflect.Type;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +16,11 @@ import java.util.stream.Stream;
 import org.unlaxer.ParserHierarchy.NameKind;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.combinator.BasicCombinator;
+import org.unlaxer.parser.combinator.ChainInterface;
+import org.unlaxer.parser.combinator.ChoiceInterface;
+import org.unlaxer.parser.combinator.ConstructedCombinatorParser;
+import org.unlaxer.parser.combinator.Occurs;
 import org.unlaxer.reducer.TagBasedReducer.NodeKind;
 import org.unlaxer.util.FactoryBoundCache;
 import org.unlaxer.util.NullSafetyConcurrentHashMap;
@@ -85,6 +89,10 @@ public class Token implements Serializable{
 		this.filteredChildren = children.stream()
 			.filter(AST_NODES)
 			.collect(Collectors.toList());
+	}
+
+	public Token copy() {
+	  return new Token(tokenKind, getRangedString(), parser , originalChildren);
 	}
 
 	public Token setParent(Token parentToken) {
@@ -202,6 +210,24 @@ public class Token implements Serializable{
 		}
 		return list;
 	}
+
+	 public List<Token> flattenBreadth(ChildrenKind childrenKind , int level){
+	    List<Token> list = new ArrayList<Token>();
+	    Deque<Token> deque = new ArrayDeque<Token>();
+	    deque.add(this);
+	    while (false == deque.isEmpty()) {
+	      Token poll = deque.poll();
+	      list.add(poll);
+	      if(false ==poll.children(childrenKind).isEmpty()) {
+	        deque.addAll(poll.children(childrenKind));
+	      }
+	      if(--level==0){
+	        break;
+	      }
+	    }
+	    return list;
+	  }
+
 
 
 	public enum ScanDirection{
@@ -615,8 +641,32 @@ public class Token implements Serializable{
 
 
 
+  public static Token reduceBasicCombinator(Token token) {
 
+    List<Token> newChildren = extractCombinator(token);
+    return new Token(token.tokenKind, token.getRangedString(), token.parser, newChildren);
+  }
 
+  public static List<Token> extractCombinator(Token token) {
+    List<Token> newChildren = new ArrayList<>();
+    List<Token> originalChildren2 = token.getOriginalChildren();
+    for (Token child : originalChildren2) {
+      Parser parser_ = child.parser;
+      if (parser_ instanceof BasicCombinator) {
+        List<Token> combinatorsChildren = extractCombinator(child);
+        if (combinatorsChildren.isEmpty()) {
+          continue;
+        }
+        newChildren.addAll(combinatorsChildren);
+      } else {
+        Token reduceBasicCombinator = reduceBasicCombinator(child);
+        if (reduceBasicCombinator.getToken().isPresent() && false == reduceBasicCombinator.getToken().get().isEmpty()) {
+          newChildren.add(reduceBasicCombinator);
+        }
+      }
+    }
+    return newChildren;
+  }
 
 	public List<Token> getOriginalChildren() {
 		return originalChildren;

@@ -40,6 +40,8 @@ import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
 import org.unlaxer.tinyexpression.parser.numbertype.AbstractNumberParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberCaseExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberDefaultCaseFactorParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
@@ -168,13 +170,13 @@ public class ExpressionModelCreator {
 
       TypedToken<BooleanExpression> booleanExpression = IfExpressionParser.getBooleanExpression(operator);
 
-      ThenAndElse thenAndElse = 
+      ThenAndElse thenAndElse =
           IfExpressionParser.getThenAndElse(operator.typed(IfExpressionParser.class), NumberExpression.class, booleanExpression);
-      
+
       ExpressionType concreteNumberType = NumberExpression.resolveConcreteType(thenAndElse.thenToken().typed(NumberExpression.class))
         .or(()->NumberExpression.resolveConcreteType(thenAndElse.elseToken().typed(NumberExpression.class)))
         .orElse(specifiedExpressionTypes.numberType());
-      
+
       return new ExpressionModel(
           Opecodes.numberIf,
           concreteNumberType,
@@ -184,12 +186,24 @@ public class ExpressionModelCreator {
       );
 
     }else if(parser instanceof NumberMatchExpressionParser){
+
+      TypedToken<NumberCaseExpressionParser> caseExpressionToken = NumberMatchExpressionParser.getCaseExpression(operator);
+      TypedToken<NumberDefaultCaseFactorParser> defaultExpressionToken = NumberMatchExpressionParser.getDefaultExpression(operator);
       
+      caseExpressionToken.
+
+
+
+      ExpressionType concreteNumberType = NumberExpression.resolveConcreteType(thenAndElse.thenToken().typed(NumberExpression.class))
+          .or(()->NumberExpression.resolveConcreteType(thenAndElse.elseToken().typed(NumberExpression.class)))
+          .orElse(specifiedExpressionTypes.numberType());
+
+
       new ExpressionModel(Opecodes.numberCase, null);
 
       return operator.newCreatesOf(
-        apply(NumberMatchExpressionParser.getCaseExpression(operator)),
-        apply(NumberMatchExpressionParser.getDefaultExpression(operator))
+        apply(caseExpression),
+        apply(defaultExpression)
       );
 
     }else if(parser instanceof ParenthesesParser){
@@ -273,7 +287,6 @@ public class ExpressionModelCreator {
     }
     throw new IllegalArgumentException();
   }
-
 
 
   public static ExpressionModel applyBoolean(TypedToken<BooleanExpression> typedToken ) {
