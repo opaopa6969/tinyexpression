@@ -639,7 +639,9 @@ public class Token implements Serializable{
 //		return getChildrenWithParserAsList(parser -> parser.getClass() == parserClass);
 //	}
 
-
+	public Token reduceBasicCombinator() {
+	  return reduceBasicCombinator(this);
+	}
 
   public static Token reduceBasicCombinator(Token token) {
 
