@@ -15,8 +15,8 @@ import org.unlaxer.Name;
 import org.unlaxer.Parsed;
 import org.unlaxer.Tag;
 import org.unlaxer.TokenKind;
-import org.unlaxer.ast.ASTNodeKind;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
 
 public abstract class AbstractParser implements Parser {
 	
@@ -40,14 +40,14 @@ public abstract class AbstractParser implements Parser {
 	
   Map<String,Object> objectByName = new HashMap<>();
   
-  Map<Name,List<ASTNodeKindAndParser>> astNodeKindAndParsersByName = new HashMap<>();
+  Map<Name,List<ASTNodeMappingAndParser>> astNodeMappingAndParsersByName = new HashMap<>();
 
 
   boolean donePrepareChildren = false;
 	
 	NodeReduceMarker nodeReduceMarker;
 	
-	ASTNodeKind astNodeKind;
+	ASTNodeMapping astNodeMapping;
 	
 	public AbstractParser() {
 		this(null, new Parsers());
@@ -178,28 +178,50 @@ public abstract class AbstractParser implements Parser {
 	public NodeReduceMarker getNodeReduceMarker() {
 		return nodeReduceMarker;
 	}
+	
+	
+
+//  @Override
+//  public ASTNodeKind astNodeKind() {
+//    
+//    if(astNodeKind == null) {
+//      return ASTNodeKind.NotSpecified;
+//    }
+//    return astNodeKind;
+//  }
+//  
+//
+//  @Override
+//  public Parser setASTNodeKind(Name name, ASTNodeKind astNodeKind) {
+//    Parser parser2 = getParser();
+//    astNodeKindAndParsersByName.computeIfAbsent(name, name_->new ArrayList<>())
+//      .add(new ASTNodeKindAndParser(astNodeKind, parser2));
+//    this.astNodeKind = astNodeKind;
+//    return parser2;
+//  }
+//
+//  @Override
+//  public List<ASTNodeKindAndParser> astNodeKind(Name name) {
+//    return astNodeKindAndParsersByName.get(name);
+//  }
 
   @Override
-  public ASTNodeKind astNodeKind() {
-    
-    if(astNodeKind == null) {
-      return ASTNodeKind.NotSpecified;
-    }
-    return astNodeKind;
-  }
-  
-
-  @Override
-  public Parser setASTNodeKind(Name name, ASTNodeKind astNodeKind) {
+  public Parser setASTNodeMapping(ASTNodeMapping astNodeMapping) {
     Parser parser2 = getParser();
-    astNodeKindAndParsersByName.computeIfAbsent(name, name_->new ArrayList<>())
-      .add(new ASTNodeKindAndParser(astNodeKind, parser2));
+    astNodeMappingAndParsersByName.computeIfAbsent(name, name_->new ArrayList<>())
+      .add(new ASTNodeMappingAndParser(astNodeMapping, parser2));
+    this.astNodeMapping = astNodeMapping;
     return parser2;
   }
 
   @Override
-  public List<ASTNodeKindAndParser> astNodeKind(Name name) {
-    return astNodeKindAndParsersByName.get(name);
+  public ASTNodeMapping astNodeMapping() {
+    return astNodeMapping;
+  }
+
+  @Override
+  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name) {
+    return astNodeMappingAndParsersByName.get(name);
   }
 
   @Override
