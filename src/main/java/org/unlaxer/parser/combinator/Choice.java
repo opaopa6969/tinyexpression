@@ -81,4 +81,24 @@ public class Choice extends ConstructedCombinatorParser implements ChoiceInterfa
 	public HasChildrenParser createWith(Parsers children) {
 		return new Choice(getName() , children);
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return false;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return false;
+  }
 }

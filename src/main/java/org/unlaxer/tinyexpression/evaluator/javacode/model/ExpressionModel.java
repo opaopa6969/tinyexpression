@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.Opecode;
 
@@ -11,9 +12,9 @@ public class ExpressionModel {
   ExpressionModel parent;
   final Opecode opecode;
   final ExpressionType expressionType;
-  final ExpressionModel conditionOperand;
-  final ExpressionModel leftOperand;
-  final ExpressionModel rightOperand;
+  ExpressionModel conditionOperand;
+  ExpressionModel leftOperand;
+  ExpressionModel rightOperand;
   final List<ExpressionModel> operands = new ArrayList<>();
   final String value;
 
@@ -55,7 +56,7 @@ public class ExpressionModel {
     this.rightOperand = null;
     this.value = value;
   }
-  
+
   public ExpressionModel(Opecode opecode,
       ExpressionModel leftOperand, ExpressionModel rightOperand) {
     super();
@@ -125,6 +126,18 @@ public class ExpressionModel {
     rightOperand.setParent(this);
   }
 
+  public ExpressionModel(ASTNodeMapping astNodeMapping,String value) {
+    super();
+    this.opecode = astNodeMapping.opecode;
+    this.expressionType = astNodeMapping.opecode.expressionType();
+    this.conditionOperand = null;
+    this.leftOperand = null;
+    this.rightOperand = null;
+    this.value = value;
+//    conditionOperand.setParent(this);
+//    leftOperand.setParent(this);
+//    rightOperand.setParent(this);
+  }
 
   public Opecode opecode() {
     return opecode;
@@ -149,12 +162,27 @@ public class ExpressionModel {
   public Optional<String> getValue() {
     return Optional.of(value);
   }
-  
+
   public Optional<ExpressionModel> parent() {
     return Optional.ofNullable(parent);
   }
-  
+
   public void setParent(ExpressionModel parent) {
     this.parent = parent;
+  }
+  public List<ExpressionModel> operands(){
+    return operands;
+  }
+
+  public void setConditionOperand(ExpressionModel conditionOperand) {
+    this.conditionOperand = conditionOperand;
+  }
+
+  public void setLeftOperand(ExpressionModel leftOperand) {
+    this.leftOperand = leftOperand;
+  }
+
+  public void setRightOperand(ExpressionModel rightOperand) {
+    this.rightOperand = rightOperand;
   }
 }

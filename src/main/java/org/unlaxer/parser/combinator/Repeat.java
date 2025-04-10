@@ -93,4 +93,24 @@ public class Repeat extends ChildOccursWithTerminator implements  BasicCombinato
 	public int max() {
 		return maxInclusive;
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
 }

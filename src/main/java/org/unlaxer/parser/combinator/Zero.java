@@ -57,4 +57,24 @@ public class Zero extends ChildOccursWithTerminator implements BasicCombinator{
 	public int max() {
 		return 0;
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return false;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
 }

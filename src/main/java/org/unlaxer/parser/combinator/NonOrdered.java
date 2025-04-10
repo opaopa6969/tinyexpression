@@ -118,4 +118,24 @@ public class NonOrdered extends ConstructedCombinatorParser implements BasicComb
 	public HasChildrenParser createWith(Parsers children) {
 		return new NonOrdered(children);
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
 }

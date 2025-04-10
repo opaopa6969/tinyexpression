@@ -66,4 +66,23 @@ public class OneOrMore extends ChildOccursWithTerminator implements BasicCombina
 		return Integer.MAX_VALUE;
 	}
 
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
 }

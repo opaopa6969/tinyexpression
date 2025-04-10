@@ -54,4 +54,24 @@ public class Optional extends ChildOccursWithTerminator implements BasicCombinat
 	public int max() {
 		return 1;
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
 }

@@ -19,13 +19,13 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
 
 public abstract class AbstractParser implements Parser {
-	
+
 	private static final long serialVersionUID = -7497886240652402031L;
-	
+
 	Set<Tag> tags = new HashSet<>();
 
 	Name name;
-	
+
 	Name specifiedName;
 
 	Parser parser;
@@ -33,37 +33,37 @@ public abstract class AbstractParser implements Parser {
 	Parsers children;
 
 	public Optional<Parser> parent;
-	
+
 	Optional<Parser> root = Optional.empty();
-	
+
 	Map<Name,Parser> parserByName = new HashMap<>();
-	
+
   Map<String,Object> objectByName = new HashMap<>();
-  
+
   Map<Name,List<ASTNodeMappingAndParser>> astNodeMappingAndParsersByName = new HashMap<>();
 
 
   boolean donePrepareChildren = false;
-	
+
 	NodeReduceMarker nodeReduceMarker;
-	
+
 	ASTNodeMapping astNodeMapping;
-	
+
 	public AbstractParser() {
 		this(null, new Parsers());
 	}
-	
+
 	public AbstractParser(Name name) {
 		this(name,new Parsers());
 	}
-	
+
 	public AbstractParser(Parsers children) {
 		this(null,children);
 	}
-	
+
 	public AbstractParser(Name name , Parsers children) {
 		super();
-		this.specifiedName = name == null ? Name.of(getClass()) : name; 
+		this.specifiedName = name == null ? Name.of(getClass()) : name;
 		this.name = name == null ? Name.of(getClass()) : Name.of(getClass(),name);
 		this.parent = Optional.empty();
 		this.children = children;
@@ -71,15 +71,15 @@ public abstract class AbstractParser implements Parser {
 			.forEach(child->child.setParent(this));
 		nodeReduceMarker = new NodeReduceMarker();
 	}
-	
+
 	@Override
 	public Parsed parse(ParseContext parseContext , TokenKind tokenKind ,boolean invertMatch) {
-		
+
 		parseContext.startParse(this, parseContext, tokenKind, invertMatch);
-		
+
 		parseContext.begin(this);
 		Parsed parsed = getParser().parse(parseContext,tokenKind,invertMatch);
-		
+
 		if(parsed.isSucceeded()){
 			Committed commited = parseContext.commit(this , tokenKind);
 
@@ -87,14 +87,14 @@ public abstract class AbstractParser implements Parser {
 			parseContext.endParse(this, succeededParsed , parseContext, tokenKind, invertMatch);
 			return succeededParsed;
 		}
-		
+
 		parseContext.rollback(this);
 		parseContext.endParse(this, Parsed.FAILED , parseContext, tokenKind, invertMatch);
 		return Parsed.FAILED;
 	}
 
 	public Parser getParser() {
-		
+
 		if (parser == null) {
 			parser = createParser();
 			if(this != parser){
@@ -110,16 +110,16 @@ public abstract class AbstractParser implements Parser {
 	}
 
 	public void createParserAndThen(Parser createdParser){
-		
+
 	}
-	
+
 	public abstract Parser createParser();
 
 	@Override
 	public Optional<Parser> getParent() {
 		return parent;
 	}
-	
+
 	@Override
 	public Parser getRoot(){
 		if(false == root.isPresent()){
@@ -155,7 +155,7 @@ public abstract class AbstractParser implements Parser {
 
 	@Override
 	public Optional<Parser> getParser(Name name) {
-		
+
 		Parser matched = parserByName.get(name);
 		if(matched == null ){
 			Optional<Parser> findFirstFromRoot = findFirstFromRoot(parser->parser.getName().equals(name));
@@ -164,13 +164,13 @@ public abstract class AbstractParser implements Parser {
 		}
 		return Optional.of(matched);
 	}
-	
-	
+
+
 	@Override
 	public Stream<Parser> getPathStream(boolean containCallerParser){
 		List<Parser> describeParents = findParents(Parser.isRoot,containCallerParser);
 		Collections.reverse(describeParents);
-		
+
 		return describeParents.stream();
 	}
 
@@ -178,18 +178,18 @@ public abstract class AbstractParser implements Parser {
 	public NodeReduceMarker getNodeReduceMarker() {
 		return nodeReduceMarker;
 	}
-	
-	
+
+
 
 //  @Override
 //  public ASTNodeKind astNodeKind() {
-//    
+//
 //    if(astNodeKind == null) {
 //      return ASTNodeKind.NotSpecified;
 //    }
 //    return astNodeKind;
 //  }
-//  
+//
 //
 //  @Override
 //  public Parser setASTNodeKind(Name name, ASTNodeKind astNodeKind) {
@@ -215,8 +215,8 @@ public abstract class AbstractParser implements Parser {
   }
 
   @Override
-  public ASTNodeMapping astNodeMapping() {
-    return astNodeMapping;
+  public Optional<ASTNodeMapping> astNodeMapping() {
+    return Optional.ofNullable(astNodeMapping);
   }
 
   @Override

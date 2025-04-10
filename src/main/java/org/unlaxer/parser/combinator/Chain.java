@@ -53,4 +53,24 @@ public class Chain extends ConstructedCombinatorParser implements ChainInterface
 	public HasChildrenParser createWith(Parsers children) {
 		return new Chain(getName() , children);
 	}
+
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return false;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return false;
+  }
 }

@@ -67,4 +67,24 @@ public class ZeroOrMore extends ChildOccursWithTerminator implements BasicCombin
     return Integer.MAX_VALUE;
   }
 
+  @Override
+  public boolean acceptsMulti() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsZero() {
+    return true;
+  }
+
+  @Override
+  public boolean acceptsOne() {
+    return true;
+  }
+
+  @Override
+  public boolean isQquantifier() {
+    return true;
+  }
+
 }
