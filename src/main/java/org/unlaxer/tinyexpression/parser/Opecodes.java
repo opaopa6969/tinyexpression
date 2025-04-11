@@ -4,6 +4,8 @@ import java.util.List;
 
 public enum Opecodes implements Opecode{
 
+  numberExpression(ExpressionTypes.number,Arity.nullary),
+  numberExpressions(ExpressionTypes.number,Arity.multiary),
   numberValue(ExpressionTypes.number,Arity.nullary),
   numberVariable(ExpressionTypes.number,Arity.unary,ExpressionTypes._string),
   numberPlus(ExpressionTypes.number,Arity.binary,ExpressionTypes.number,ExpressionTypes.number),

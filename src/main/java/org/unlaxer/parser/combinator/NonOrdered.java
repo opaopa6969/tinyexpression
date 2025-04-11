@@ -136,6 +136,16 @@ public class NonOrdered extends ConstructedCombinatorParser implements BasicComb
 
   @Override
   public boolean isQquantifier() {
+    return false;
+  }
+
+  @Override
+  public boolean isChain() {
     return true;
+  }
+
+  @Override
+  public boolean isChoice() {
+    return false;
   }
 }

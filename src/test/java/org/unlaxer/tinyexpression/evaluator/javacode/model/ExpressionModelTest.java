@@ -2,11 +2,20 @@ package org.unlaxer.tinyexpression.evaluator.javacode.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.function.Consumer;
+import java.util.function.IntFunction;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.unlaxer.Name;
@@ -28,37 +37,34 @@ import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.DigitParser;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.Opecode;
 import org.unlaxer.tinyexpression.parser.Opecodes;
 
 public class ExpressionModelTest {
 
-  public enum ASTNode{
-
-  }
-
 
   // <expression> ::= <term>[('+'|'-')<term>]*
   public static class NExpressionParser extends LazyChain{
 
-    public enum TokenKind{
-      LeftOperand,
-      OperatorPlus,
-      OperatorMinus,
-      RightOperand
-      ;
-      public Name get() {
-        return Name.of(this);
-      }
-    }
-
-    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
-        new ASTNodeMapping(TokenKind.LeftOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue, false),
-        new ASTNodeMapping(TokenKind.OperatorPlus.get(), ASTNodeKind.Operator,Opecodes.numberPlus,true),
-        new ASTNodeMapping(TokenKind.OperatorMinus.get(), ASTNodeKind.Operator,Opecodes.numberMinus,true),
-        new ASTNodeMapping(TokenKind.RightOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false)
-    );
+//    public enum TokenKind{
+//      LeftOperand,
+//      List,
+//      OperatorPlus,
+//      OperatorMinus,
+//      RightOperand
+//      ;
+//      public Name get() {
+//        return Name.of(this);
+//      }
+//    }
+//
+//    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
+//        new ASTNodeMapping(TokenKind.LeftOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue, false),
+//        new ASTNodeMapping(TokenKind.List.get(), ASTNodeKind.FoldLeft,Opecodes.numberValue, false),
+//        new ASTNodeMapping(TokenKind.OperatorPlus.get(), ASTNodeKind.Operator,Opecodes.numberPlus,true),
+//        new ASTNodeMapping(TokenKind.OperatorMinus.get(), ASTNodeKind.Operator,Opecodes.numberMinus,true),
+//        new ASTNodeMapping(TokenKind.RightOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false)
+//    );
 
     public NExpressionParser() {
       super();
@@ -72,21 +78,27 @@ public class ExpressionModelTest {
 
     @Override
     public Parsers getLazyParsers() {
-      return new Parsers(
-          Parser.get(NTermParser.class)
-            .setASTNodeMapping(nodeMapping.get(TokenKind.LeftOperand.get())),
-          new ZeroOrMore(
-              new Chain(
-                  new Choice(
-                      new WordParser("+")
-                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorPlus.get())),
-                      new WordParser("-")
-                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorMinus.get()))
-                  ),
-                  Parser.get(NTermParser.class)
-                    .setASTNodeMapping(nodeMapping.get(TokenKind.RightOperand.get()))
-              )
-          )
+      return Parsers.of(
+          new AstNodeMapper(
+            Parser.get(NTermParser.class)
+              .setOperand(Opecodes.numberPlus,Opecodes.numberMinus),
+  //            .setASTNodeMapping(nodeMapping.get(TokenKind.LeftOperand.get())),
+            new ZeroOrMore(
+                new Chain(
+                    new Choice(
+                        new WordParser("+")
+                          .setOperator(Opecodes.numberPlus),
+  //                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorPlus.get())),
+                        new WordParser("-")
+                          .setOperator(Opecodes.numberMinus)
+  //                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorMinus.get()))
+                    ),
+                    Parser.get(NTermParser.class)
+                      .setOperand()
+  //                    .setASTNodeMapping(nodeMapping.get(TokenKind.RightOperand.get()))
+                )
+            ).setASTNodeKind(ASTNodeKind.FoldLeft)
+         )
       );
     }
   }
@@ -96,41 +108,46 @@ public class ExpressionModelTest {
   // <term>::= <factor>[('*'|'/')<factor>]*
   public static class NTermParser extends LazyChain{
 
-    public enum TokenKind{
-      LeftOperand,
-      OperatorMultiple,
-      OperatorDivide,
-      RightOperand
-      ;
-      public Name get() {
-        return Name.of(this);
-      }
-    }
-
-    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
-        new ASTNodeMapping(TokenKind.LeftOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false),
-        new ASTNodeMapping(TokenKind.OperatorMultiple.get(), ASTNodeKind.Operator,Opecodes.numberMultiple,true),
-        new ASTNodeMapping(TokenKind.OperatorDivide.get(), ASTNodeKind.Operator,Opecodes.numberDivide,true),
-        new ASTNodeMapping(TokenKind.RightOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false)
-    );
-
+//    public enum TokenKind{
+//      LeftOperand,
+//      OperatorMultiple,
+//      OperatorDivide,
+//      RightOperand
+//      ;
+//      public Name get() {
+//        return Name.of(this);
+//      }
+//    }
+//
+//    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
+//        new ASTNodeMapping(TokenKind.LeftOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false),
+//        new ASTNodeMapping(TokenKind.OperatorMultiple.get(), ASTNodeKind.Operator,Opecodes.numberMultiple,true),
+//        new ASTNodeMapping(TokenKind.OperatorDivide.get(), ASTNodeKind.Operator,Opecodes.numberDivide,true),
+//        new ASTNodeMapping(TokenKind.RightOperand.get(), ASTNodeKind.Operand,Opecodes.numberValue,false)
+//    );
 
     @Override
     public Parsers getLazyParsers() {
-      return new Parsers(
-          Parser.get(NFactorParser.class)
-            .setASTNodeMapping(nodeMapping.get(TokenKind.LeftOperand.get())),
-          new ZeroOrMore(
-              new Chain(
-                  new Choice(
-                      new WordParser("*")
-                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorMultiple.get())),
-                      new WordParser("/")
-                        .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorDivide.get()))
-                  ),
-                  Parser.get(NFactorParser.class)
-                    .setASTNodeMapping(nodeMapping.get(TokenKind.RightOperand.get()))
-              )
+      return Parsers.of(
+          new AstNodeMapper(
+            Parser.get(NFactorParser.class)
+              .setOperand(),
+//              .setASTNodeMapping(nodeMapping.get(TokenKind.LeftOperand.get())),
+            new ZeroOrMore(
+                new Chain(
+                    new Choice(
+                        new WordParser("*")
+                          .setOperator(Opecodes.numberMultiple),
+//                          .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorMultiple.get())),
+                        new WordParser("/")
+                          .setOperator(Opecodes.numberDivide)
+//                          .setASTNodeMapping(nodeMapping.get(TokenKind.OperatorDivide.get()))
+                    ),
+                    Parser.get(NFactorParser.class)
+                      .setOperand()
+//                      .setASTNodeMapping(nodeMapping.get(TokenKind.RightOperand.get()))
+                )
+            ).setASTNodeKind(ASTNodeKind.FoldLeft)
           )
       );
     }
@@ -140,34 +157,34 @@ public class ExpressionModelTest {
   // <factor>::= (<numberLiteral>|'(' <expression>')' )
   public static class NFactorParser extends LazyChoice{
 
-    public enum TokenKind{
-      Literal,
-      ParenthesesExpression,
-      ;
-      public Name get() {
-        return Name.of(this);
-      }
-    }
-
-    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
-        new ASTNodeMapping(TokenKind.Literal.get(), ASTNodeKind.Operand,Opecodes.numberValue,true),
-        new ASTNodeMapping(TokenKind.ParenthesesExpression.get(), ASTNodeKind.Operand,Opecodes.numberValue,true)
-    );
-
+//    public enum TokenKind{
+//      Literal,
+//      ParenthesesExpression,
+//      ;
+//      public Name get() {
+//        return Name.of(this);
+//      }
+//    }
+//
+//    static ASTNodeMappings nodeMapping = new ASTNodeMappings(
+//        new ASTNodeMapping(TokenKind.Literal.get(), ASTNodeKind.Operand,Opecodes.numberValue,true),
+//        new ASTNodeMapping(TokenKind.ParenthesesExpression.get(), ASTNodeKind.Operand,Opecodes.numberValue,true)
+//    );
+//
 
     @Override
     public Parsers getLazyParsers() {
       return new Parsers(
           new NumberLiteralParser()
+            .setOperand()
             /*.setASTNodeKind(Name.classBaseOf(this),ASTNodeKind.Operand)*/,
           new ParenthesesParser(
               Parser.newInstance(NExpressionParser.class)
+                .setOperand()
             /*  .setASTNodeKind(Name.classBaseOf(this),ASTNodeKind.Operand)*/
           )
       );
     }
-
-
   }
 
   public static class NumberLiteralParser extends OneOrMore{
@@ -175,6 +192,212 @@ public class ExpressionModelTest {
     public NumberLiteralParser() {
       super(new DigitParser());
     }
+  }
+  
+  public static class AstNodeMapper implements List<Parser>{
+    
+    List<Parser> inner;
+    
+    public AstNodeMapper(Parser... inner) {
+      this(List.of(inner));
+    }
+
+    public AstNodeMapper(List<Parser> inner) {
+      super();
+      this.inner = inner;
+    }
+
+    public void forEach(Consumer<? super Parser> action) {
+      inner.forEach(action);
+    }
+
+    public int size() {
+      return inner.size();
+    }
+
+    public boolean isEmpty() {
+      return inner.isEmpty();
+    }
+
+    public boolean contains(Object o) {
+      return inner.contains(o);
+    }
+
+    public Iterator<Parser> iterator() {
+      return inner.iterator();
+    }
+
+    public Object[] toArray() {
+      return inner.toArray();
+    }
+
+    public <T> T[] toArray(T[] a) {
+      return inner.toArray(a);
+    }
+
+    public boolean add(Parser e) {
+      return inner.add(e);
+    }
+
+    public boolean remove(Object o) {
+      return inner.remove(o);
+    }
+
+    public boolean containsAll(Collection<?> c) {
+      return inner.containsAll(c);
+    }
+
+    public boolean addAll(Collection<? extends Parser> c) {
+      return inner.addAll(c);
+    }
+
+    public boolean addAll(int index, Collection<? extends Parser> c) {
+      return inner.addAll(index, c);
+    }
+
+    public boolean removeAll(Collection<?> c) {
+      return inner.removeAll(c);
+    }
+
+    public boolean retainAll(Collection<?> c) {
+      return inner.retainAll(c);
+    }
+
+    public void replaceAll(UnaryOperator<Parser> operator) {
+      inner.replaceAll(operator);
+    }
+
+    public <T> T[] toArray(IntFunction<T[]> generator) {
+      return inner.toArray(generator);
+    }
+
+    public void sort(Comparator<? super Parser> c) {
+      inner.sort(c);
+    }
+
+    public void clear() {
+      inner.clear();
+    }
+
+    public boolean equals(Object o) {
+      return inner.equals(o);
+    }
+
+    public int hashCode() {
+      return inner.hashCode();
+    }
+
+    public Parser get(int index) {
+      return inner.get(index);
+    }
+
+    public Parser set(int index, Parser element) {
+      return inner.set(index, element);
+    }
+
+    public void add(int index, Parser element) {
+      inner.add(index, element);
+    }
+
+    public boolean removeIf(Predicate<? super Parser> filter) {
+      return inner.removeIf(filter);
+    }
+
+    public Parser remove(int index) {
+      return inner.remove(index);
+    }
+
+    public int indexOf(Object o) {
+      return inner.indexOf(o);
+    }
+
+    public int lastIndexOf(Object o) {
+      return inner.lastIndexOf(o);
+    }
+
+    public ListIterator<Parser> listIterator() {
+      return inner.listIterator();
+    }
+
+    public ListIterator<Parser> listIterator(int index) {
+      return inner.listIterator(index);
+    }
+
+    public List<Parser> subList(int fromIndex, int toIndex) {
+      return inner.subList(fromIndex, toIndex);
+    }
+
+    public Spliterator<Parser> spliterator() {
+      return inner.spliterator();
+    }
+
+    public Stream<Parser> stream() {
+      return inner.stream();
+    }
+
+    public Stream<Parser> parallelStream() {
+      return inner.parallelStream();
+    }
+    
+  }
+  
+  public static class ASTCreator{
+    
+    Optional<ExpressionModel> extractExpressionModel(Token enclosureToken) {
+
+      //rootは0か1つ
+      ExpressionModel root = null;
+      Token rootToken = null;
+      
+      List<ExpressionModel> operands = new ArrayList<>();
+      
+      List<Token> flatten = enclosureToken.flatten(ScanDirection.Breadth);
+      for (Token token : flatten) {
+
+        Parser parser = token.getParser();
+        ASTNodeKind astNodeKind = parser.astNodeKind();
+        
+        if(astNodeKind.isOperand()) {
+          operands.add( extractExpressionModel(token).orElseThrow());
+          continue;
+        }
+        if(astNodeKind.isOperator()) {
+          
+        }
+        
+        
+        
+        
+        Optional<ASTNodeMapping> astNodeMapping = parser.astNodeMapping();
+        if(astNodeMapping.isPresent() &&astNodeMapping.get().isRoot()){
+          root = new ExpressionModel(astNodeMapping.get(), token.getToken().orElseThrow());
+          rootToken = token;
+          break;
+        }
+      }
+      if(root == null) {
+        return Optional.empty();
+      }
+
+      for (Token token : flatten) {
+
+        Parser parser = token.getParser();
+        Optional<ASTNodeMapping> astNodeMapping = parser.astNodeMapping();
+
+        if(astNodeMapping.isPresent() && false==astNodeMapping.get().isRoot() && isSameGroup(rootToken , token)){
+
+
+        }
+      }
+
+
+
+
+
+
+    }
+
+    
   }
 
   public static class ASTNodeMappings{
@@ -313,7 +536,7 @@ public class ExpressionModelTest {
   public void test() {
 
     NExpressionParser nExpressionParser = new NExpressionParser();
-    StringSource stringSource = new StringSource("1*3+4/5-(6+(0+7))*8/9)");
+    StringSource stringSource = new StringSource("1*3+4/5-(6+(0+7))*8/5)");
 //    StringSource stringSource = new StringSource("(1)");
     ParseContext parseContext = new ParseContext(stringSource);
     Parsed parsed = nExpressionParser.parse(parseContext);

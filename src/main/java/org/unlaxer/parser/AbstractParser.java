@@ -1,6 +1,5 @@
 package org.unlaxer.parser;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,8 +14,9 @@ import org.unlaxer.Name;
 import org.unlaxer.Parsed;
 import org.unlaxer.Tag;
 import org.unlaxer.TokenKind;
+import org.unlaxer.ast.ASTNodeKind;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
+import org.unlaxer.tinyexpression.parser.Opecode;
 
 public abstract class AbstractParser implements Parser {
 
@@ -40,14 +40,16 @@ public abstract class AbstractParser implements Parser {
 
   Map<String,Object> objectByName = new HashMap<>();
 
-  Map<Name,List<ASTNodeMappingAndParser>> astNodeMappingAndParsersByName = new HashMap<>();
-
+//  Map<Name,List<ASTNodeMappingAndParser>> astNodeMappingAndParsersByName = new HashMap<>();
+  
+  ASTNodeKind astNodeKind;
+  Opecode opecode;
 
   boolean donePrepareChildren = false;
 
 	NodeReduceMarker nodeReduceMarker;
 
-	ASTNodeMapping astNodeMapping;
+//	ASTNodeMapping astNodeMapping;
 
 	public AbstractParser() {
 		this(null, new Parsers());
@@ -181,14 +183,16 @@ public abstract class AbstractParser implements Parser {
 
 
 
-//  @Override
-//  public ASTNodeKind astNodeKind() {
-//
-//    if(astNodeKind == null) {
-//      return ASTNodeKind.NotSpecified;
-//    }
-//    return astNodeKind;
-//  }
+  @Override
+  public ASTNodeKind astNodeKind() {
+
+    if(astNodeKind == null) {
+      return ASTNodeKind.NotSpecified;
+    }
+    return astNodeKind;
+  }
+  
+  
 //
 //
 //  @Override
@@ -205,27 +209,47 @@ public abstract class AbstractParser implements Parser {
 //    return astNodeKindAndParsersByName.get(name);
 //  }
 
-  @Override
-  public Parser setASTNodeMapping(ASTNodeMapping astNodeMapping) {
-    Parser parser2 = getParser();
-    astNodeMappingAndParsersByName.computeIfAbsent(name, name_->new ArrayList<>())
-      .add(new ASTNodeMappingAndParser(astNodeMapping, parser2));
-    this.astNodeMapping = astNodeMapping;
-    return parser2;
-  }
+//  @Override
+//  public Parser setASTNodeMapping(ASTNodeMapping astNodeMapping) {
+//    Parser parser2 = getParser();
+//    astNodeMappingAndParsersByName.computeIfAbsent(name, name_->new ArrayList<>())
+//      .add(new ASTNodeMappingAndParser(astNodeMapping, parser2));
+//    this.astNodeMapping = astNodeMapping;
+//    return parser2;
+//  }
+//
+//  @Override
+//  public Optional<ASTNodeMapping> astNodeMapping() {
+//    return Optional.ofNullable(astNodeMapping);
+//  }
+//
+//  @Override
+//  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name) {
+//    return astNodeMappingAndParsersByName.get(name);
+//  }
 
   @Override
-  public Optional<ASTNodeMapping> astNodeMapping() {
-    return Optional.ofNullable(astNodeMapping);
-  }
-
-  @Override
-  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name) {
-    return astNodeMappingAndParsersByName.get(name);
+  public Parser setASTNodeKind(ASTNodeKind astNodeKind) {
+    this.astNodeKind = astNodeKind;
+    return this;
   }
 
   @Override
   public Map<String, Object> objectByName() {
     return objectByName;
   }
+
+  @Override
+  public Parser setOperator(Opecode opecode) {
+    astNodeKind = ASTNodeKind.Operator;
+    this.opecode = opecode;
+    return this;
+  }
+
+  @Override
+  public Optional<Opecode> opecode() {
+    return Optional.ofNullable(opecode);
+  }
+  
+  
 }

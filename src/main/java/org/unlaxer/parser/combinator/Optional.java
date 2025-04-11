@@ -4,7 +4,7 @@ import org.unlaxer.Name;
 import org.unlaxer.ast.ASTNodeKind;
 import org.unlaxer.parser.Parser;
 
-public class Optional extends ChildOccursWithTerminator implements BasicCombinator{
+public class Optional extends ChildOccursWithTerminator {
 
 	private static final long serialVersionUID = 9178853471703766611L;
 
@@ -70,8 +70,4 @@ public class Optional extends ChildOccursWithTerminator implements BasicCombinat
     return true;
   }
 
-  @Override
-  public boolean isQquantifier() {
-    return true;
-  }
 }

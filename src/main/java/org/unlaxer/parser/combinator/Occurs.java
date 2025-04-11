@@ -71,5 +71,19 @@ public interface Occurs extends MetaFunctionParser , NonTerminallSymbol , BasicC
 	public int max();
 
 	public Optional<Parser> getTerminator();
+	
+  @Override
+  public default boolean isQquantifier() {
+    return true;
+  }
 
+  @Override
+  public default boolean isChain() {
+    return false;
+  }
+
+  @Override
+  public default boolean isChoice() {
+    return true;
+  }
 }

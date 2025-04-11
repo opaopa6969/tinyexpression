@@ -1,12 +1,28 @@
 package org.unlaxer;
 
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import org.unlaxer.ast.ASTNodeKind;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
+import org.unlaxer.tinyexpression.parser.Opecode;
+import org.unlaxer.tinyexpression.parser.Opecodes;
 
-public interface ASTNodeContainer{
+public interface ASTNodeContainer {
+
+  public Parser setASTNodeKind(ASTNodeKind astNodeKind, Opecodes... targetOpecodes);
+
+  public ASTNodeKind astNodeKind();
+  
+  public Parser setOperator(Opecode opecode);
+  
+  public default Parser setOperand(Opecodes... targetOpecodes) {
+    return setASTNodeKind(ASTNodeKind.Operand , targetOpecodes);
+  }
+
+  public Optional<Opecode> opecode();
+  
+  public Set<Opecode> targetOpecodes();
 
 //  public Parser setASTNodeKind(Name name ,ASTNodeKind astNodeKind);
 //
@@ -16,12 +32,12 @@ public interface ASTNodeContainer{
 //
 //  public static record ASTNodeKindAndParser(ASTNodeKind astNodeKind,Parser parser) {}
 
-  public Parser setASTNodeMapping(ASTNodeMapping astNodeMapping);
-
-  public Optional<ASTNodeMapping> astNodeMapping();
-
-  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name);
-
-  public static record ASTNodeMappingAndParser(ASTNodeMapping astNodeMapping,Parser parser) {}
+//  public Parser setASTNodeMapping(ASTNodeMapping astNodeMapping);
+//
+//  public Optional<ASTNodeMapping> astNodeMapping();
+//
+//  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name);
+//
+//  public static record ASTNodeMappingAndParser(ASTNodeMapping astNodeMapping,Parser parser) {}
 
 }

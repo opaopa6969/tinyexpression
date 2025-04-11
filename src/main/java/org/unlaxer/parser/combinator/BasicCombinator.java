@@ -10,5 +10,7 @@ public interface BasicCombinator{
   public default boolean isStructure() {
     return false == isQquantifier();
   }
+  public boolean isChain();
+  public boolean isChoice();
 
 }

@@ -27,10 +27,12 @@ public enum ASTNodeKind{
 	AnnotationAttribute,
 	Other,
 	NotSpecified,
+	FoldLeft,
+	FoldRight,
 	;
   
   Tag tag;
-  String description;
+//  String description;
 //  boolean operator;
 //  boolean operand;
 //  boolean choiced;
@@ -72,10 +74,10 @@ public enum ASTNodeKind{
     return tag;
 	}
   
-  public String description() {
-    return description;
-  }
-
+//  public String description() {
+//    return description;
+//  }
+//
   public boolean isOperator() {
     return this == Operator;
   }

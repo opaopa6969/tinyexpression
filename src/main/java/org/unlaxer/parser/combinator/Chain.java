@@ -73,4 +73,14 @@ public class Chain extends ConstructedCombinatorParser implements ChainInterface
   public boolean isQquantifier() {
     return false;
   }
+
+  @Override
+  public boolean isChain() {
+    return true;
+  }
+
+  @Override
+  public boolean isChoice() {
+    return false;
+  }
 }

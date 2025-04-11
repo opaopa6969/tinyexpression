@@ -65,5 +65,13 @@ public abstract class LazyOccurs extends LazyAbstractParser
     return true;
   }
 
+  @Override
+  public boolean isChain() {
+    return false;
+  }
 
+  @Override
+  public boolean isChoice() {
+    return false;
+  }
 }

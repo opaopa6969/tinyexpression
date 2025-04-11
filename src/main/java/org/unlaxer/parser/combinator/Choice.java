@@ -101,4 +101,14 @@ public class Choice extends ConstructedCombinatorParser implements ChoiceInterfa
   public boolean isQquantifier() {
     return false;
   }
+
+  @Override
+  public boolean isChain() {
+    return false;
+  }
+
+  @Override
+  public boolean isChoice() {
+    return true;
+  }
 }
