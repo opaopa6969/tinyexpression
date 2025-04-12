@@ -6,17 +6,16 @@ import java.util.Set;
 import org.unlaxer.ast.ASTNodeKind;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.Opecode;
-import org.unlaxer.tinyexpression.parser.Opecodes;
 
 public interface ASTNodeContainer {
 
-  public Parser setASTNodeKind(ASTNodeKind astNodeKind, Opecodes... targetOpecodes);
+  public Parser setASTNodeKind(ASTNodeKind astNodeKind, Opecode... targetOpecodes);
 
   public ASTNodeKind astNodeKind();
   
   public Parser setOperator(Opecode opecode);
   
-  public default Parser setOperand(Opecodes... targetOpecodes) {
+  public default Parser setOperand(Opecode... targetOpecodes) {
     return setASTNodeKind(ASTNodeKind.Operand , targetOpecodes);
   }
 

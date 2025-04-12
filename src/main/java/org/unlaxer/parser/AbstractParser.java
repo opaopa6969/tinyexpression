@@ -49,6 +49,8 @@ public abstract class AbstractParser implements Parser {
 
 	NodeReduceMarker nodeReduceMarker;
 
+  Set<Opecode> targetOpecodes = new HashSet<>();
+
 //	ASTNodeMapping astNodeMapping;
 
 	public AbstractParser() {
@@ -227,11 +229,26 @@ public abstract class AbstractParser implements Parser {
 //  public List<ASTNodeMappingAndParser> astNodeMappingAndParsers(Name name) {
 //    return astNodeMappingAndParsersByName.get(name);
 //  }
+  
+  
+
 
   @Override
-  public Parser setASTNodeKind(ASTNodeKind astNodeKind) {
+  public Parser setASTNodeKind(ASTNodeKind astNodeKind, Opecode... targetOpecodes) {
     this.astNodeKind = astNodeKind;
+    this.targetOpecodes = Set.of(targetOpecodes); 
     return this;
+  }
+
+  @Override
+  public Parser setOperand(Opecode... targetOpecodes) {
+    this.targetOpecodes = Set.of(targetOpecodes);
+    return this;
+  }
+
+  @Override
+  public Set<Opecode> targetOpecodes() {
+    return targetOpecodes;
   }
 
   @Override

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import org.unlaxer.tinyexpression.evaluator.javacode.model.ExpressionModelTest.ASTNodeMapping;
+import org.unlaxer.ast.ASTNodeMapping;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.Opecode;
 
