@@ -150,12 +150,9 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
   }
 
   private Token dispatchPreRules(Token token, Parser parser) {
-    for (Map.Entry<Class<?>, BiFunction<OperatorOperandTreeCreator, Token, Token>> entry : PRE_RULES.entrySet()) {
-      if (entry.getKey().isInstance(parser)) {
-        return entry.getValue().apply(this, token);
-      }
-    }
-    return null;
+    BiFunction<OperatorOperandTreeCreator, Token, Token> rule =
+        ParserDispatch.findHandler(PRE_RULES, parser);
+    return rule == null ? null : rule.apply(this, token);
   }
 
   private Token rebuildTinyExpressionRoot(Token token) {
