@@ -37,7 +37,8 @@ public class StringMethodClauseBuilder implements TokenCodeBuilder {
 		}else if(parser instanceof StringContainsParser) {
 			builder.append(".contains(");
 		}else {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(
+			    "Unsupported string method clause parser: " + parser.getClass().getName());
 		}
 		builder
 			.append(right.toString())

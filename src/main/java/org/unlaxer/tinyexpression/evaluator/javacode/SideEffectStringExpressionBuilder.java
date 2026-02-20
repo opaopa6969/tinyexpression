@@ -94,7 +94,10 @@ public class SideEffectStringExpressionBuilder implements TokenCodeBuilder {
 			    build.populateTo(builder, Kind.Function);
           builder.append(build.toString());
 				}else {
-					throw new IllegalArgumentException();
+					throw new IllegalArgumentException(
+					    "Unsupported side-effect string parameter parser: "
+					        + parser.getClass().getName()
+					        + " (tokenPath=" + token.getPath() + ")");
 				}
 				if(iterator.hasNext()) {
 					builder.append(" , ");

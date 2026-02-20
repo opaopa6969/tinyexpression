@@ -71,7 +71,8 @@ public class BinaryConditionBuilder implements TokenCodeBuilder{
 			builder.append(" < 0");
 
 		}else {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(
+			    "Unsupported binary condition parser: " + token.parser.getClass().getName());
 		}
 		builder
 			.append(")");

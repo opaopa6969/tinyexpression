@@ -61,7 +61,10 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
       return choiced.getChild(TokenPredicators.parserImplements(VariableParser.class))
           .typed(VariableParser.class);
     }
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException(
+        "Expected AbstractVariableDeclarationParser choice but got: "
+            + parser.getClass().getName()
+            + " (tokenPath=" + thisParserParsed.getPath() + ")");
   }
   
   @TokenExtractor
@@ -102,7 +105,8 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
           return Parser.get(StringVariableParser.class);
         case object:
         default:
-          throw new IllegalArgumentException();
+          throw new IllegalArgumentException(
+              "Unsupported variable declaration type for parser mapping: " + expressionType);
       }
       
     }

@@ -44,6 +44,11 @@ public interface ExpressionType{
   public Optional<Class<?>> javaTypePrimitive();
   
   public static record PrePost(String pre,String post) {};
+
+  private IllegalArgumentException unsupportedNumberOperation(String operation) {
+    return new IllegalArgumentException(
+        "ExpressionType " + this + " does not support operation: " + operation);
+  }
   
   public default PrePost wrapNumber() {
     if(isInt()) {
@@ -70,7 +75,7 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return new PrePost("BigDecimal.valueOf(" ,")");
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("wrapNumber");
   }
   
   public default String zeroNumber() {
@@ -93,7 +98,7 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return "new BigDecimal(\"0\")";
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("zeroNumber");
   }
   
   public default Number parseNumber(String numberToken) {
@@ -122,7 +127,7 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return new BigDecimal(numberToken);
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("parseNumber");
   }
   
   public default String numberWithSuffix(String numberToken) {

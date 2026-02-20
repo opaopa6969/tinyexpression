@@ -73,7 +73,7 @@ public abstract class PreConstructedCalculator_ implements Calculator {
   @SuppressWarnings("unused")
   private PreConstructedCalculator_() {
     super();
-    throw new IllegalArgumentException();
+    throw new IllegalArgumentException("Default constructor is not supported");
   }
 
   public UnaryOperator<Token> tokenReduer() {

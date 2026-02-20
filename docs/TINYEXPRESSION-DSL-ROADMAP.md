@@ -154,6 +154,30 @@ Non-goal (for Stage 1):
 2. draft shared spec for tinyexpression-codex collaboration,
 3. validate `interleave`, `backreference`, and `scope tree` semantics against real parser cases.
 
+## Progress Snapshot (2026-02-20)
+
+Status:
+
+1. P0: partially done (TinyExpressionTokens side is stabilized in current branch context),
+2. P1: not started,
+3. P2: partially done,
+4. P3: not started (`TypeSystemRoadmapTest` keeps `@Ignore`),
+5. P4: not started.
+
+Completed in this session (P2):
+
+1. replaced bare `IllegalArgumentException()` with contextual messages across key `javacode` and parser paths,
+2. added focused roadmap tests for diagnosability:
+   - `src/test/java/org/unlaxer/tinyexpression/roadmap/ErrorDiagnosabilityRoadmapTest.java`
+3. verified focused tests:
+   - `./mvnw -q -Dtest=ErrorDiagnosabilityRoadmapTest test`
+   - `./mvnw -q -Dtest=ParserDispatchTest,TinyExpressionTokensTest test`
+
+Remaining P2 items:
+
+1. review if additional contextual diagnostics are needed inside `OperatorOperandTreeCreator` paths beyond current coverage,
+2. add one targeted failure-path test if a concrete uncovered branch is found.
+
 ## Execution Policy
 
 Priority order:

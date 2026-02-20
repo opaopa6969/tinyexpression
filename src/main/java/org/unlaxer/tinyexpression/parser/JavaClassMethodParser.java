@@ -49,11 +49,14 @@ public class JavaClassMethodParser extends LazyChain implements ClassNameAndIden
      return JavaClassAndHashParser.getJavaClass(javaClassAndHashToken);
    }
 	
-  @Override
+	@Override
 	public ClassNameAndIdentifier extractClassNameAndIdentifier(Token token , TinyExpressionTokens tinyExpressionTokens) {
 		
 		if(false == token.parser instanceof JavaClassMethodParser) {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(
+			    "Expected JavaClassMethodParser token but got: "
+			        + token.parser.getClass().getName()
+			        + " (tokenPath=" + token.getPath() + ")");
 		}
 		
 		Token javaClassAndHash = javaClassAndHash(token);
