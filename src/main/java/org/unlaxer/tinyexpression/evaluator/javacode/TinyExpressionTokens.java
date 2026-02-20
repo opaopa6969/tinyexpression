@@ -36,8 +36,13 @@ public class TinyExpressionTokens{
       SpecifiedExpressionTypes specifiedExpressionTypes) {
     super();
     this.specifiedExpressionTypes = specifiedExpressionTypes;
-    if(false ==tinyExpressionToken.parser instanceof TinyExpressionParser) {
-      throw new IllegalArgumentException();
+    if (tinyExpressionToken == null) {
+      throw new IllegalArgumentException("tinyExpressionToken must not be null");
+    }
+    if (!(tinyExpressionToken.parser instanceof TinyExpressionParser)) {
+      throw new IllegalArgumentException(
+          "tinyExpressionToken parser must be TinyExpressionParser but was "
+              + tinyExpressionToken.parser.getClass().getName());
     }
     this.tinyExpressionToken = tinyExpressionToken;
     codeBlocks = TinyExpressionParser.extractCodeBlocksAsModel(tinyExpressionToken);

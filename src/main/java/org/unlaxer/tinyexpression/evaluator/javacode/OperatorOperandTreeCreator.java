@@ -455,7 +455,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       );
 
     }
-    throw new IllegalArgumentException();
+    throw unsupportedParser("stringFactor", token, parser);
   }
 
   private Token factor(Token token) {
@@ -578,7 +578,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       return extracteMethodInvocation(operator);
 
     }
-    throw new IllegalArgumentException();
+    throw unsupportedParser("factor", token, parser);
   }
 
   private Token extracteMethodInvocation(Token operator) {
@@ -821,7 +821,14 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       );
     }
 
-    throw new IllegalArgumentException();
+    throw unsupportedParser("booleanExpression", token, parser);
+  }
+
+  private IllegalArgumentException unsupportedParser(String owner, Token sourceToken, Parser parser) {
+    String parserName = parser == null ? "<null>" : parser.getClass().getName();
+    String tokenPath = sourceToken == null ? "<null>" : sourceToken.getPath();
+    return new IllegalArgumentException(
+        "Unsupported parser in " + owner + ": " + parserName + " (tokenPath=" + tokenPath + ")");
   }
   
   Token clearChildren(Token token) {

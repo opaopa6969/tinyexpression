@@ -103,6 +103,57 @@ Reference placeholder test:
 2. isolate code-building configuration from parser definitions,
 3. reduce hidden coupling in evaluators.
 
+### Track E: Annotation-Driven AST Generation (new)
+
+Purpose:
+
+1. reduce hand-written AST mapper cost,
+2. keep existing parser definitions while adding generation metadata,
+3. create a migration bridge from parser-token world to generated AST world.
+
+Scope:
+
+1. add annotation metadata to existing parser definitions (TinyExpression side),
+2. implement an annotation-reader pipeline that generates AST/model classes,
+3. provide adapter points so existing builders can consume generated AST incrementally,
+4. verify one end-to-end path: annotated parser -> generated AST -> existing evaluator.
+
+Non-goal (for Stage 1):
+
+1. full parser replacement with UBNF grammar.
+
+## Rebuilt Task Backlog (Priority Order)
+
+### P0: In-flight stabilization
+
+1. finalize current `TinyExpressionTokens` input validation change and push,
+2. keep focused regression tests green for `javacode` core path.
+
+### P1: Annotation-AST minimum viable path
+
+1. define minimal annotation contract for AST generation (node kind, field mapping, operator metadata),
+2. annotate a narrow grammar slice (number binary expression path),
+3. generate AST/model for that slice,
+4. add adapter so `NumberExpressionBuilder` can accept generated AST nodes,
+5. add minimal tests (`1 fail + 1 success`) for generated path.
+
+### P2: Error diagnosability hardening (javacode)
+
+1. replace bare `IllegalArgumentException()` with contextual messages,
+2. cover `OperatorOperandTreeCreator` remaining bare-throw points,
+3. keep tests focused to prevent regressions in failure diagnostics.
+
+### P3: Type roadmap activation
+
+1. remove one `@Ignore` by implementing first concrete flow for unified numeric types,
+2. define first concrete javaType flow (declaration + inference + codegen).
+
+### P4: UBNF extension design merge
+
+1. map TinyExpression requirements into BNF-level vs annotation-level decisions,
+2. draft shared spec for tinyexpression-codex collaboration,
+3. validate `interleave`, `backreference`, and `scope tree` semantics against real parser cases.
+
 ## Execution Policy
 
 Priority order:
