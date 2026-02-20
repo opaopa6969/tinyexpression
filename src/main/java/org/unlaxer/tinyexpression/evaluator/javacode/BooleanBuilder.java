@@ -113,12 +113,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
   }
 
   private static NodeHandler findHandler(Parser parser) {
-    for (Map.Entry<Class<?>, NodeHandler> entry : HANDLERS.entrySet()) {
-      if (entry.getKey().isInstance(parser)) {
-        return entry.getValue();
-      }
-    }
-    return null;
+    return ParserDispatch.findHandler(HANDLERS, parser);
   }
 
 	@Override

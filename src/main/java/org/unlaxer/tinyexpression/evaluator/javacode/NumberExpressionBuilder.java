@@ -122,12 +122,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
   }
 
   private static NodeHandler findSimpleHandler(Parser parser) {
-    for (Map.Entry<Class<?>, NodeHandler> entry : SIMPLE_HANDLERS.entrySet()) {
-      if (entry.getKey().isInstance(parser)) {
-        return entry.getValue();
-      }
-    }
-    return null;
+    return ParserDispatch.findHandler(SIMPLE_HANDLERS, parser);
   }
 
   public void build(SimpleJavaCodeBuilder builder, Token token , 
