@@ -113,7 +113,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
   }
 
   private static NodeHandler findHandler(Parser parser) {
-    return ParserDispatch.findHandler(HANDLERS, parser);
+    return ParserDispatch.requireHandler(HANDLERS, parser, "BooleanBuilder");
   }
 
 	@Override
@@ -121,14 +121,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
 	    TinyExpressionTokens tinyExpressionTokens) {
 			Parser parser = token.parser;
 
-      NodeHandler handler = findHandler(parser);
-      if (handler != null) {
-        handler.build(this, builder, token, tinyExpressionTokens);
-        return;
-      }
-
-      // ここでエラーが発生するのはOperatorOperandTreeCreator側で再構成が崩れている時
-      throw new IllegalArgumentException("Unsupported parser for BooleanBuilder: " + parser.getClass().getName());
+      findHandler(parser).build(this, builder, token, tinyExpressionTokens);
 		}
 
   private void buildNotExpression(SimpleJavaCodeBuilder builder, Token token,

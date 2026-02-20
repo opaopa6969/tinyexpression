@@ -122,7 +122,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
   }
 
   private static NodeHandler findSimpleHandler(Parser parser) {
-    return ParserDispatch.findHandler(SIMPLE_HANDLERS, parser);
+    return ParserDispatch.requireHandler(SIMPLE_HANDLERS, parser, "NumberExpressionBuilder");
   }
 
   public void build(SimpleJavaCodeBuilder builder, Token token , 
@@ -151,13 +151,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       }
     }
 
-    NodeHandler simpleHandler = findSimpleHandler(parser);
-    if (simpleHandler != null) {
-      simpleHandler.build(this, builder, token, tinyExpressionTokens, numberType, wrapNumber);
-      return;
-    }
-
-    throw new IllegalArgumentException("Unsupported parser for NumberExpressionBuilder: " + parser.getClass().getName());
+    findSimpleHandler(parser).build(this, builder, token, tinyExpressionTokens, numberType, wrapNumber);
   }
 
   void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,

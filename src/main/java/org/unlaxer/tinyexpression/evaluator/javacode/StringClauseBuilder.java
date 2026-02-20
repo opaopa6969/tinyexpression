@@ -106,19 +106,14 @@ public class StringClauseBuilder {
   }
 
   private static NodeHandler findHandler(Parser parser) {
-    return ParserDispatch.findHandler(HANDLERS, parser);
+    return ParserDispatch.requireHandler(HANDLERS, parser, "StringClauseBuilder");
   }
 
 	public ExpressionOrLiteral build(Token token , TinyExpressionTokens tinyExpressionTokens) {
 
 			Parser parser = token.parser;
 
-      NodeHandler handler = findHandler(parser);
-      if (handler != null) {
-        return handler.build(this, token, tinyExpressionTokens);
-      }
-
-			throw new IllegalArgumentException("Unsupported parser for StringClauseBuilder: " + parser.getClass().getName());
+      return findHandler(parser).build(this, token, tinyExpressionTokens);
 		}
 
   private ExpressionOrLiteral buildStringExpression(Token token, TinyExpressionTokens tinyExpressionTokens) {
