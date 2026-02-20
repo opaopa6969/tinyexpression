@@ -12,8 +12,8 @@
 	<url>https://bitbucket.org/opaopa6969/unlaxer/src/master/</url>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>17</maven.compiler.source>
-		<maven.compiler.target>17</maven.compiler.target>
+		<maven.compiler.source>21</maven.compiler.source>
+		<maven.compiler.target>21</maven.compiler.target>
 		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
 	</properties>
 	<description>TinyExpression implemented with Unlaxer</description>
