@@ -2,8 +2,11 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
@@ -102,7 +105,6 @@ import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationParameterParser;
-import org.unlaxer.tinyexpression.parser.javalang.AnnotationParametersParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanVariableDeclarationParser;
@@ -116,6 +118,118 @@ import org.unlaxer.util.annotation.TokenReConstructor.TokenReConstructorInterfac
 public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
   
   public static OperatorOperandTreeCreator SINGLETON = new OperatorOperandTreeCreator();
+
+  private static final LinkedHashMap<Class<?>, BiFunction<OperatorOperandTreeCreator, Token, Token>> PRE_RULES = new LinkedHashMap<>();
+
+  static {
+    registerPreRule(TinyExpressionParser.class, OperatorOperandTreeCreator::rebuildTinyExpressionRoot);
+
+    registerPreRule(NumberVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(BooleanVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(StringVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+
+    registerPreRule(VariableDeclarationsParser.class, OperatorOperandTreeCreator::rebuildAllChildren);
+    registerPreRule(AnnotationsParser.class, OperatorOperandTreeCreator::rebuildAllChildren);
+
+    registerPreRule(BooleanSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(StringSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(NumberSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+
+    registerPreRule(AnnotationParser.class, OperatorOperandTreeCreator::rebuildAnnotation);
+    registerPreRule(AnnotationParameterParser.class, OperatorOperandTreeCreator::rebuildAnnotationParameter);
+
+    registerPreRule(ArgumentSuccessorParser.class,
+        (creator, token) -> creator.apply(ArgumentSuccessorParser.extractParameter(token)));
+    registerPreRule(ArgumentChoiceParser.class,
+        (creator, token) -> creator.apply(ChoiceInterface.choiced(token)));
+  }
+
+  private static void registerPreRule(Class<?> parserType,
+      BiFunction<OperatorOperandTreeCreator, Token, Token> rule) {
+    PRE_RULES.put(parserType, rule);
+  }
+
+  private Token dispatchPreRules(Token token, Parser parser) {
+    for (Map.Entry<Class<?>, BiFunction<OperatorOperandTreeCreator, Token, Token>> entry : PRE_RULES.entrySet()) {
+      if (entry.getKey().isInstance(parser)) {
+        return entry.getValue().apply(this, token);
+      }
+    }
+    return null;
+  }
+
+  private Token rebuildTinyExpressionRoot(Token token) {
+    TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
+
+    Token extractCodes = TinyExpressionParser.extractCodesToken(token);
+    Token extractImports = TinyExpressionParser.extractImportsToken(token);
+
+    Token extractNumberExpression = TinyExpressionParser.extractExpression(token);
+    Token appliedNumberExpression = apply(extractNumberExpression);
+    extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
+
+    Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
+    Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
+    List<Token> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
+
+    extractMethodsTokens = extractMethodsTokens.stream()
+        .map(methodToken -> methodToken.newCreatesOf(
+            new TokenEffecterWithMatcher(
+                TokenPredicators.parserImplements(ExpressionInterface.class),
+                this::apply
+            )
+        )).collect(Collectors.toList());
+
+    Token extractMethodsToken = new Token(
+        TokenKind.consumed,
+        extractMethodsTokens,
+        Parser.get(MethodsParser.class),
+        0
+    );
+
+    return token.newCreatesOf(
+        extractCodes,
+        extractImports,
+        extractVariables,
+        extractAnnotaions,
+        extractNumberExpression,
+        extractMethodsToken
+    );
+  }
+
+  private Token rebuildExpressionChildren(Token token) {
+    return token.newCreatesOf(
+        new TokenEffecterWithMatcher(
+            TokenPredicators.parserImplements(ExpressionInterface.class),
+            this::apply
+        )
+    );
+  }
+
+  private Token rebuildAllChildren(Token token) {
+    return token.newCreatesOf(
+        new TokenEffecterWithMatcher(
+            TokenPredicators.allMatch(),
+            this::apply
+        )
+    );
+  }
+
+  private Token rebuildAnnotation(Token token) {
+    List<Token> collect = token.flatten().stream()
+        .filter(TokenPredicators.parsers(AnnotationParameterParser.class))
+        .map(this::apply)
+        .collect(Collectors.toList());
+
+    return token.newCreatesOf(collect);
+  }
+
+  private Token rebuildAnnotationParameter(Token token) {
+    return token.newCreatesOf(
+        token.getChild(TokenPredicators.parsers(IdentifierParser.class)),
+        apply(token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class)))
+    );
+  }
   
   @Override
   public Token apply(Token token) {
@@ -130,118 +244,12 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
 //      parser = resolveTypedVariable.getParser();
 //    }
     
-    if(parser instanceof TinyExpressionParser) {
-      
-      TypedToken<TinyExpressionParser> tinyExpressionToken = token.typed(TinyExpressionParser.class);
-      
-      Token extractCodes = TinyExpressionParser.extractCodesToken(token);
-      
-      Token extractImports = TinyExpressionParser.extractImportsToken(token);
-      
-      Token extractNumberExpression = TinyExpressionParser.extractExpression(token);
-      Token appliedNumberExpression = apply(extractNumberExpression);
-      extractNumberExpression = extractNumberExpression.newCreatesOf(appliedNumberExpression);
-      
-      Token extractAnnotaions = apply(TinyExpressionParser.extractAnnotaionsToken(token));
-      Token extractVariables = apply(TinyExpressionParser.extractVariablesToken(token));
-      List</*Typed*/Token/*<MethodParser>*/> extractMethodsTokens = TinyExpressionParser.extractMethods(tinyExpressionToken);
-      
-      extractMethodsTokens = extractMethodsTokens.stream()
-        .map(methodToken->{
-          return methodToken.newCreatesOf(
-              new TokenEffecterWithMatcher(
-                TokenPredicators.parserImplements(ExpressionInterface.class),
-                this::apply
-              )
-            );   
-        }).collect(Collectors.toList());
-      Token extractMethodsToken = new Token(TokenKind.consumed, extractMethodsTokens, Parser.get(MethodsParser.class),0);
-//      extractMethodsToken = extractMethodsToken.newCreatesOf(
-//        new TokenEffecterWithMatcher(
-//          TokenPredicators.parserImplements(ExpressionInterface.class),
-//          this::apply
-//        )
-//      );
-      
-      
-//      System.out.println(extractMethodsToken.getPath()); 
-      Token newCreatesOf = token.newCreatesOf(extractCodes,extractImports,extractVariables,extractAnnotaions,extractNumberExpression, extractMethodsToken);
-//      String path = newCreatesOf.getPath();
-//      System.out.println(path);
-      return newCreatesOf;
-    }
-    
-    if(parser instanceof NumberVariableDeclarationParser ||
-        parser instanceof BooleanVariableDeclarationParser ||
-        parser instanceof StringVariableDeclarationParser) {
-      
-      return token.newCreatesOf(
-        new TokenEffecterWithMatcher(
-          TokenPredicators.parserImplements(ExpressionInterface.class),
-          this::apply
-        )
-      );
-    }
-    
-    if(parser instanceof VariableDeclarationsParser || 
-        parser instanceof AnnotationsParser) {
-      return token.newCreatesOf(
-          new TokenEffecterWithMatcher(
-              TokenPredicators.allMatch(),
-              this::apply
-          )
-      );
-    }
-    
-    if(parser instanceof BooleanSetterParser||
-        parser instanceof StringSetterParser||
-        parser instanceof NumberSetterParser) {
-      
-      return token.newCreatesOf(
-          new TokenEffecterWithMatcher(
-            TokenPredicators.parserImplements(ExpressionInterface.class),
-            this::apply
-      ));
-    }
-    
-    if(parser instanceof AnnotationsParser) {
-      return token.newCreatesOf(
-          new TokenEffecterWithMatcher(
-              TokenPredicators.parsers(AnnotationParametersParser.class),
-              this::apply
-          )
-      );
-    }
-    
-    if(parser instanceof AnnotationParser) {
-        List<Token> collect = token.flatten().stream()
-          .filter(TokenPredicators.parsers(AnnotationParameterParser.class))
-          .map(this::apply)
-          .collect(Collectors.toList());
-        
-        return token.newCreatesOf(collect);
-    }
-    
-    if(parser instanceof AnnotationParameterParser) {
-      
-      return token.newCreatesOf(
-          token.getChild(TokenPredicators.parsers(IdentifierParser.class)),
-          apply(token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class)))
-      );
+
+    Token preDispatched = dispatchPreRules(token, parser);
+    if(preDispatched != null) {
+      return preDispatched;
     }
 
-
-    
-    if(parser instanceof ArgumentSuccessorParser) {
-      token = ArgumentSuccessorParser.extractParameter(token);
-      return apply(token);
-    }
-    
-    if(parser instanceof ArgumentChoiceParser) {
-      token = ChoiceInterface.choiced(token);
-      return apply(token);
-    }
-    
     if(
       parser instanceof StrictTypedNumberExpressionParser || 
       parser instanceof NumberExpressionParser || 
