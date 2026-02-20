@@ -1,6 +1,8 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -32,5 +34,15 @@ public class ParserDispatchTest {
 
     String handler = ParserDispatch.findHandler(handlers, parser);
     assertEquals("generic", handler);
+  }
+
+  @Test
+  public void testRequireHandlerRejectsNullParser() {
+    try {
+      ParserDispatch.requireHandler(Map.of(), null, "SampleBuilder");
+      fail("expected null parser failure");
+    } catch (IllegalArgumentException expected) {
+      assertTrue(expected.getMessage().contains("<null>"));
+    }
   }
 }

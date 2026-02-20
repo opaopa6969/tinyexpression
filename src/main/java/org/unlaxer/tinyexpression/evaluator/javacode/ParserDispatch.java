@@ -28,6 +28,9 @@ final class ParserDispatch {
   }
 
   static <H> H requireHandler(Map<Class<?>, H> handlers, Parser parser, String owner) {
+    if (parser == null) {
+      throw new IllegalArgumentException("Unsupported parser for " + owner + ": <null>");
+    }
     H handler = findHandler(handlers, parser);
     if (handler == null) {
       throw new IllegalArgumentException("Unsupported parser for " + owner + ": " + parser.getClass().getName());
