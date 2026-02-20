@@ -10,6 +10,15 @@ final class ParserDispatch {
   }
 
   static <H> H findHandler(Map<Class<?>, H> handlers, Parser parser) {
+    if (parser == null || handlers.isEmpty()) {
+      return null;
+    }
+
+    H exact = handlers.get(parser.getClass());
+    if (exact != null) {
+      return exact;
+    }
+
     for (Map.Entry<Class<?>, H> entry : handlers.entrySet()) {
       if (entry.getKey().isInstance(parser)) {
         return entry.getValue();
