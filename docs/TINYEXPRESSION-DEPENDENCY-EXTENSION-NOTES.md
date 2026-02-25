@@ -145,6 +145,8 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
    - `getToken()` / `tokenString` / `source.sourceAsString()` を順に fallback
 3. generated `Parsers` の synthetic scope event builder から `org.unlaxer.dsl.ir` 直接参照を除去
    - 互換 no-op 実装へ置換
+4. generated `Mapper` の assoc mapping に leaf fallback ノード生成を追加
+   - 非 mapped 末端（例: number literal）でも `BinaryExpr` 形に畳み込めるようにした
 
 検証結果:
 

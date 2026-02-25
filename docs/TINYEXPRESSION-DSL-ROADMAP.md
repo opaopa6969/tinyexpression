@@ -311,6 +311,12 @@ Completed in this session (P3 follow-up):
    - `AstEvaluatorCalculator` now runs AST-first (`AstNumberExpressionEvaluator`) and only initializes JavaCode runtime on fallback,
    - backend metadata (`_astEvaluatorRuntime`, mapper probe flags) is tracked without forcing JavaCode delegate instantiation,
    - `FormulaInfo.updateCalculatorFromFormula` now treats `AST_EVALUATOR` as non-bytecode-first path (`byteCode` empty, marker JavaCode text).
+32. connected generated mapper AST evaluation as preferred AST runtime path:
+   - added `GeneratedP4NumberAstEvaluator` to evaluate generated `BinaryExpr` node shape reflectively,
+   - `AstEvaluatorCalculator` runtime order is now:
+     1) `generated-ast` (when mapper output is evaluable),
+     2) `token-ast`,
+     3) `javacode-fallback`.
 
 Verified tests:
 

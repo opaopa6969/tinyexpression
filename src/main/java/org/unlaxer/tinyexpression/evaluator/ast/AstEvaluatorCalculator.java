@@ -192,17 +192,25 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public Object apply(CalculationContext calculationContext) {
-    Optional<Object> astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
-        source.source(), specifiedExpressionTypes, calculationContext);
-
     if (generatedAstRuntimeAvailable) {
       Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
-      mapped.ifPresent(value -> setObject("_astEvaluatorMappedAst", value));
+      if (mapped.isPresent()) {
+        setObject("_astEvaluatorMappedAst", mapped.get());
+        Optional<Object> generatedAstEvaluated = GeneratedP4NumberAstEvaluator.tryEvaluate(
+            mapped.get(), specifiedExpressionTypes, calculationContext);
+        if (generatedAstEvaluated.isPresent()) {
+          setObject("_astEvaluatorRuntime", "generated-ast");
+          setObject("_astEvaluatorMapperAvailable", true);
+          return generatedAstEvaluated.get();
+        }
+      }
       setObject("_astEvaluatorMapperAvailable", true);
     } else {
       setObject("_astEvaluatorMapperAvailable", false);
     }
 
+    Optional<Object> astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+        source.source(), specifiedExpressionTypes, calculationContext);
     if (astEvaluated.isPresent()) {
       setObject("_astEvaluatorRuntime", "token-ast");
       return astEvaluated.get();
