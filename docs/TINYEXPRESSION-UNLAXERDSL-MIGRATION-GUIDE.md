@@ -290,6 +290,25 @@ AST 化は 2 通りある。
 2. boolean/string を追加
 3. side effect / scope / annotations を取り込む
 
+### 7.3 Dual backend 実行（併存運用）
+
+移行期間は実行バックエンドを併存させる。
+
+1. `JAVA_CODE`: 既存 `JavaCodeCalculatorV3` 経路
+2. `AST_EVALUATOR`: 生成AST/evaluator を使う経路（段階実装）
+
+現在は以下を実装済み。
+
+1. `ExecutionBackend` enum 追加:
+   - `src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java`
+2. backend 別 `CalculatorCreator` を選択する registry 追加:
+   - `src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java`
+3. `FormulaInfoAdditionalFields` に backend 指定を追加し、
+   `FormulaInfoParser` で backend 経路を選択するよう変更。
+
+注: `AST_EVALUATOR` の実体は現時点では compatibility fallback として JavaCode 経路を利用し、
+後続で generated mapper/evaluator 実装へ差し替える。
+
 ---
 
 ## 8. LSP / DAP とつなげる方法

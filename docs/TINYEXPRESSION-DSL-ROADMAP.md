@@ -277,6 +277,10 @@ Completed in this session (P3 follow-up):
    - split `VariableDeclaration` into number/string/boolean/object declaration rules with typed setter rules,
    - split `MethodDeclaration` into number/string/boolean/object method declaration rules with typed return aliases,
    - re-validated draft and refreshed parser-ir artifact (`ok` for validate-only and parser-ir validation).
+23. introduced dual-backend runtime wiring for migration safety:
+   - added `ExecutionBackend` (`JAVA_CODE` / `AST_EVALUATOR`),
+   - added `CalculatorCreatorRegistry` and switched `FormulaInfoParser` to backend-based creator selection,
+   - kept `AST_EVALUATOR` as compatibility fallback path while generated evaluator runtime is being integrated.
 
 Verified tests:
 

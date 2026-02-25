@@ -89,6 +89,10 @@ Implemented for P3 (follow-up):
     - split variable declaration grammar into number/string/boolean/object rules with typed setters,
     - split method declaration grammar into number/string/boolean/object rules with typed return aliases,
     - re-validated grammar and parser-ir export/validation successfully.
+20. introduced dual-backend runtime wiring in tinyexpression loader path:
+    - added `ExecutionBackend` enum (`JAVA_CODE`, `AST_EVALUATOR`),
+    - added `CalculatorCreatorRegistry` and switched `FormulaInfoParser` creator selection to backend-based wiring,
+    - set `AST_EVALUATOR` as migration fallback path (currently delegates to JavaCode path until generated evaluator runtime is integrated).
 
 ## Files Changed
 

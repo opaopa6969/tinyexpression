@@ -6,12 +6,14 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
 public class FormulaInfoAdditionalFields{
   
   private final String multiTenancyAttributeName;
   private final LinkedHashSet<String> additionalAttributeNames;
   private final Function<FormulaInfo,String> nameExtractor;
+  private volatile ExecutionBackend executionBackend = ExecutionBackend.JAVA_CODE;
 
   public FormulaInfoAdditionalFields(String multiTenancyAttributeName,Function<FormulaInfo,String> nameExtractor) {
     super();
@@ -46,6 +48,15 @@ public class FormulaInfoAdditionalFields{
 //    String checkKind = formulaInfo.extraValueByKey.get("checkKind");
 //    return checkKind != null ? checkKind : formulaInfo.calculatorName;
     return nameExtractor.apply(formulaInfo);
+  }
+
+  public ExecutionBackend executionBackend() {
+    return executionBackend;
+  }
+
+  public FormulaInfoAdditionalFields setExecutionBackend(ExecutionBackend executionBackend) {
+    this.executionBackend = executionBackend == null ? ExecutionBackend.JAVA_CODE : executionBackend;
+    return this;
   }
 //  public String formulaNameAttributeName() {
 //    return formulaNameAttributeName;

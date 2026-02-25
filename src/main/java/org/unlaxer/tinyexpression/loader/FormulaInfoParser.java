@@ -17,11 +17,11 @@ import org.unlaxer.parser.combinator.LazyOneOrMore;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
-import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.ResultType;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
+import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -55,24 +55,8 @@ public class FormulaInfoParser extends LazyOneOrMore{
   @TokenExtractor
   public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed ,
       FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
-
-    CalculatorCreator calculatorCreator = new CalculatorCreator() {
-
-      @Override
-      public Calculator create(Source source, String className,
-          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(source, className,
-            specifiedExpressionTypes, classLoader);
-      }
-
-      @Override
-      public Calculator create(Source source, String javaCode, String className,
-          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
-          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
-            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
-      }
-    };
+    CalculatorCreator calculatorCreator =
+        CalculatorCreatorRegistry.forBackend(formulaInfoAdditionalFields.executionBackend());
 
     FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields , calculatorCreator);
     List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
