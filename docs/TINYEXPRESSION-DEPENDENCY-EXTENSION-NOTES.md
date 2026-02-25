@@ -80,6 +80,8 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 1. generated mapper を受ける AST evaluator 実行器を追加
 2. 既存 Java codegen 実行器との mode 切替を導入
 3. DAP を mode 別に接続する
+4. generated mapper runtime probe を `AstEvaluatorCalculator` に統合し、
+   AST path 接続進捗を context object で可視化する
 
 ---
 

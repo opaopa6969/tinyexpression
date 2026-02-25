@@ -46,6 +46,12 @@
 現時点の `ast` は token stepping fallback 実装で、
 後続で mapper/evaluator runtime 接続時に AST ノードステップへ差し替える。
 
+また、tinyexpression 側の `AstEvaluatorCalculator` は generated mapper runtime が存在する場合に
+`parse -> mapper.parse()` を probe し、次を context object に記録する。
+
+1. `_astEvaluatorMapperAvailable` (boolean)
+2. `_astEvaluatorMappedAst` (mapped AST object, present when mapping succeeds)
+
 ## Verification policy
 
 1. 同じ式を 2 経路で実行し、結果一致を検証する

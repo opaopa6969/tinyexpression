@@ -27,9 +27,13 @@ public class AstEvaluatorCalculator implements Calculator {
 
   private final Calculator delegate;
   private final boolean generatedAstRuntimeAvailable;
+  private final ClassLoader classLoader;
+  private final Source source;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+    this.source = source;
+    this.classLoader = classLoader;
     this.delegate = new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
   }
@@ -37,6 +41,8 @@ public class AstEvaluatorCalculator implements Calculator {
   public AstEvaluatorCalculator(Source source, String javaCode, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+    this.source = source;
+    this.classLoader = classLoader;
     this.delegate = new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
         byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
@@ -123,6 +129,14 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public Object apply(CalculationContext calculationContext) {
+    if (generatedAstRuntimeAvailable) {
+      // Probe generated mapper runtime path; execution still delegates to JavaCode path for compatibility.
+      Optional<Object> ast = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
+      ast.ifPresent(mapped -> setObject("_astEvaluatorMappedAst", mapped));
+      setObject("_astEvaluatorMapperAvailable", true);
+    } else {
+      setObject("_astEvaluatorMapperAvailable", false);
+    }
     return delegate.apply(calculationContext);
   }
 
@@ -161,4 +175,3 @@ public class AstEvaluatorCalculator implements Calculator {
     return delegate.calculate(calculateContext, formula, resultType);
   }
 }
-
