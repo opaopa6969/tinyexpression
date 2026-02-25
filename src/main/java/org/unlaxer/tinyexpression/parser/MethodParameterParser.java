@@ -9,6 +9,7 @@ public class MethodParameterParser extends LazyChoice{
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return new Parsers(
+        Parser.get(ObjectVariableMethodParameterParser.class),
         Parser.get(NumberVariableMethodParameterParser.class),
         Parser.get(StringVariableMethodParameterParser.class),
         Parser.get(BooleanVariableMethodParameterParser.class)

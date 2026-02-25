@@ -18,6 +18,8 @@ public interface TypedVariableParser extends VariableParser{
     	return Parser.get(BooleanVariableParser.class);
     }else if(type.isNumber()) {
     	return Parser.get(NumberVariableParser.class);
+    }else if(type.isObject()) {
+      return Parser.get(ObjectVariableParser.class);
     }
  
     throw new IllegalArgumentException(type.toString());

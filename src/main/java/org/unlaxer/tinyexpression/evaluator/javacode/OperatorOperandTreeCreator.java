@@ -66,6 +66,9 @@ import org.unlaxer.tinyexpression.parser.NumberParser;
 import org.unlaxer.tinyexpression.parser.NumberSetterParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.ObjectSetterParser;
+import org.unlaxer.tinyexpression.parser.ObjectExpressionParser;
+import org.unlaxer.tinyexpression.parser.ObjectVariableParser;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.StrictTypedBooleanFactorParser;
@@ -108,6 +111,7 @@ import org.unlaxer.tinyexpression.parser.javalang.AnnotationParameterParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.NakedVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.NumberVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationsParser;
@@ -127,6 +131,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     registerPreRule(NumberVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
     registerPreRule(BooleanVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
     registerPreRule(StringVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(NakedVariableDeclarationParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
 
     registerPreRule(VariableDeclarationsParser.class, OperatorOperandTreeCreator::rebuildAllChildren);
     registerPreRule(AnnotationsParser.class, OperatorOperandTreeCreator::rebuildAllChildren);
@@ -134,6 +139,8 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
     registerPreRule(BooleanSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
     registerPreRule(StringSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
     registerPreRule(NumberSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(ObjectSetterParser.class, OperatorOperandTreeCreator::rebuildExpressionChildren);
+    registerPreRule(ObjectVariableParser.class, (creator, token) -> token);
 
     registerPreRule(AnnotationParser.class, OperatorOperandTreeCreator::rebuildAnnotation);
     registerPreRule(AnnotationParameterParser.class, OperatorOperandTreeCreator::rebuildAnnotationParameter);
@@ -255,7 +262,8 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       parser instanceof StrictTypedBooleanExpressionParser ||
       parser instanceof BooleanExpressionParser ||
       parser instanceof StrictTypedStringExpressionParser || 
-      parser instanceof StringExpressionParser
+      parser instanceof StringExpressionParser ||
+      parser instanceof ObjectExpressionParser
       ) {
       
       List<Token> originalTokens = token.filteredChildren;
@@ -379,7 +387,7 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       return token;
     }
     
-    throw new IllegalArgumentException("no match for " + parser);
+    throw unsupportedParser("apply", token, parser);
       
   }
 

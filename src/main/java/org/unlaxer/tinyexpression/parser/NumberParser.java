@@ -13,7 +13,13 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.ExponentParser;
 import org.unlaxer.parser.elementary.SignParser;
 import org.unlaxer.parser.posix.DigitParser;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstField;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstFieldSource;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstNode;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstNodeKind;
 
+@TinyAstNode(kind = TinyAstNodeKind.NUMBER_LITERAL)
+@TinyAstField(name = "literal", source = TinyAstFieldSource.TOKEN_TEXT)
 public class NumberParser extends LazyChain implements StaticParser , NumberExpression{
 	
 	private static final long serialVersionUID = -7768486767795358533L;

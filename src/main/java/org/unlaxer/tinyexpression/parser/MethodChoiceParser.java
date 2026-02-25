@@ -11,7 +11,8 @@ public class MethodChoiceParser extends LazyChoice{
     return new Parsers(
         Parser.get(NumberMethodParser.class),
         Parser.get(StringMethodParser.class),
-        Parser.get(BooleanMethodParser.class)
+        Parser.get(BooleanMethodParser.class),
+        Parser.get(ObjectMethodParser.class)
     );
   }
   

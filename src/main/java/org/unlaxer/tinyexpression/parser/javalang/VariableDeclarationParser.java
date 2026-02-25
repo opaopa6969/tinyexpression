@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.NumberVariableParser;
 import org.unlaxer.tinyexpression.parser.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 @SuppressWarnings("serial")
@@ -33,7 +34,8 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     return new Parsers(
         Parser.get(NumberVariableDeclarationParser.class),
         Parser.get(StringVariableDeclarationParser.class),
-        Parser.get(BooleanVariableDeclarationParser.class)
+        Parser.get(BooleanVariableDeclarationParser.class),
+        Parser.get(NakedVariableDeclarationParser.class)
     );
   }
   
@@ -72,12 +74,13 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
     
     TypedToken<VariableParser> variableParserToken = extractVariableParserToken(thisParserParsed);
     VariableParser parser = variableParserToken.getParser();
-    TypedToken<TypeHint> typed = thisParserParsed.flatten().stream()
+    Optional<TypedToken<TypeHint>> typed = thisParserParsed.flatten().stream()
         .filter(TokenPredicators.parserImplements(TypeHint.class))//
-        .findFirst().get()
-        .typed(TypeHint.class);
-        
-    ExpressionTypes expressionType = typed.getParser().type();
+        .findFirst()
+        .map(token -> token.typed(TypeHint.class));
+
+    ExpressionTypes expressionType = typed.map(_typed -> _typed.getParser().type())
+        .orElse(ExpressionTypes.object);
     String variableName = parser.getVariableName(variableParserToken);
     return new VariableInfo(expressionType, variableName);
   }
@@ -104,9 +107,9 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         case string:
           return Parser.get(StringVariableParser.class);
         case object:
+          return Parser.get(NakedVariableParser.class);
         default:
-          throw new IllegalArgumentException(
-              "Unsupported variable declaration type for parser mapping: " + expressionType);
+          throw new IllegalArgumentException("Unsupported variable declaration type for parser mapping: " + expressionType);
       }
       
     }

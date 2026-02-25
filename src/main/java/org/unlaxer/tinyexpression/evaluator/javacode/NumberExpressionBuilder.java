@@ -41,6 +41,10 @@ import org.unlaxer.tinyexpression.parser.function.RandomParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
+import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedAstAdapter;
+import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedAstNode;
+import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedBinaryAstNode;
+import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedLiteralAstNode;
 
 public class NumberExpressionBuilder implements TokenCodeBuilder {
 
@@ -67,7 +71,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
             self.binaryOperate(builder, token, "/", tinyExpressionTokens));
     registerSimpleHandler(NumberParser.class,
         (self, builder, token, tinyExpressionTokens, numberType, wrapNumber) ->
-            builder.append(numberType.numberWithSuffix(token.tokenString.get())));
+            builder.append(self.numberLiteral(numberType, token.tokenString.get())));
     registerSimpleHandler(NakedVariableParser.class, NumberExpressionBuilder::buildVariable);
     registerSimpleHandler(NumberVariableParser.class, NumberExpressionBuilder::buildVariable);
     registerSimpleHandler(SinParser.class, (self, builder, token, tinyExpressionTokens, numberType, wrapNumber) ->
@@ -131,39 +135,135 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     ExpressionType numberType = tinyExpressionTokens.numberType();
     PrePost wrapNumber = numberType.wrapNumber();
 
+    token = unwrapNumberExpressionToken(token);
     Parser parser = token.parser;
-    
-    if(parser instanceof NumberExpressionParser) {
-      
-      token = token.filteredChildren.get(0);
-      parser = token.parser;
-      
-      if (parser instanceof NumberTermParser) {
-        
-        token = token.filteredChildren.get(0);
-        parser = token.parser;
-        
-        if(parser instanceof NumberFactorParser) {
-          token = token.filteredChildren.get(0);
-          parser = token.parser;
-          
-        }
-      }
+
+    Optional<NumberGeneratedAstNode> generatedAst = NumberGeneratedAstAdapter.SINGLETON.tryGenerate(token);
+    if (generatedAst.isPresent()) {
+      build(builder, generatedAst.get(), tinyExpressionTokens);
+      return;
     }
 
     findSimpleHandler(parser).build(this, builder, token, tinyExpressionTokens, numberType, wrapNumber);
   }
 
+  public void build(SimpleJavaCodeBuilder builder, NumberGeneratedAstNode generatedAst,
+      TinyExpressionTokens tinyExpressionTokens) {
+    ExpressionType numberType = tinyExpressionTokens.numberType();
+
+    if (generatedAst instanceof NumberGeneratedLiteralAstNode literalNode) {
+      builder.append(numberLiteral(numberType, literalNode.literal()));
+      return;
+    }
+
+    if (generatedAst instanceof NumberGeneratedBinaryAstNode binaryNode) {
+      buildBinary(builder, binaryNode, tinyExpressionTokens, numberType);
+      return;
+    }
+
+    throw new IllegalArgumentException("Unsupported generated number AST node: " + generatedAst.getClass().getName());
+  }
+
+  Token unwrapNumberExpressionToken(Token token) {
+    Parser parser = token.parser;
+
+    if (parser instanceof NumberExpressionParser) {
+      token = token.filteredChildren.get(0);
+      parser = token.parser;
+
+      if (parser instanceof NumberTermParser) {
+        token = token.filteredChildren.get(0);
+        parser = token.parser;
+
+        if (parser instanceof NumberFactorParser) {
+          token = token.filteredChildren.get(0);
+        }
+      }
+    }
+    return token;
+  }
+
   void binaryOperate(SimpleJavaCodeBuilder builder, Token token, String operator ,
       TinyExpressionTokens tinyExpressionTokens) {
 
+    ExpressionType numberType = tinyExpressionTokens.numberType();
+    if (numberType.isBigInteger() || numberType.isBigDecimal()) {
+      if (!isSupportedBinaryOperator(operator)) {
+        throw new IllegalArgumentException("Unsupported operator for big-number expression: " + operator);
+      }
+      builder.append("(");
+      build(builder, token.filteredChildren.get(1), tinyExpressionTokens);
+      builder.append(".").append(bigNumberMethodName(operator)).append("(");
+      build(builder, token.filteredChildren.get(2), tinyExpressionTokens);
+      if (numberType.isBigDecimal() && "/".equals(operator)) {
+        builder.append(",calculateContext.scale(),calculateContext.roundingMode()");
+      }
+      builder.append("))");
+      return;
+    }
+
     builder.append("(");
-
-    build(builder, token.filteredChildren.get(1) , tinyExpressionTokens);
+    build(builder, token.filteredChildren.get(1), tinyExpressionTokens);
     builder.append(operator);
-    build(builder, token.filteredChildren.get(2) , tinyExpressionTokens);
-
+    build(builder, token.filteredChildren.get(2), tinyExpressionTokens);
     builder.append(")");
+  }
+
+  private void buildBinary(SimpleJavaCodeBuilder builder, NumberGeneratedBinaryAstNode binaryNode,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType) {
+    if (numberType.isBigInteger() || numberType.isBigDecimal()) {
+      if (!isSupportedBinaryOperator(binaryNode.operator())) {
+        throw new IllegalArgumentException(
+            "Unsupported operator for generated big-number expression: " + binaryNode.operator());
+      }
+      builder.append("(");
+      build(builder, binaryNode.left(), tinyExpressionTokens);
+      builder.append(".").append(bigNumberMethodName(binaryNode.operator())).append("(");
+      build(builder, binaryNode.right(), tinyExpressionTokens);
+      if (numberType.isBigDecimal() && "/".equals(binaryNode.operator())) {
+        builder.append(",calculateContext.scale(),calculateContext.roundingMode()");
+      }
+      builder.append("))");
+      return;
+    }
+
+    builder.append("(");
+    build(builder, binaryNode.left(), tinyExpressionTokens);
+    builder.append(binaryNode.operator());
+    build(builder, binaryNode.right(), tinyExpressionTokens);
+    builder.append(")");
+  }
+
+  private String numberLiteral(ExpressionType numberType, String literalToken) {
+    if (numberType.isBigInteger()) {
+      try {
+        numberType.parseNumber(literalToken);
+      } catch (RuntimeException e) {
+        throw new IllegalArgumentException("Invalid BigInteger literal: " + literalToken, e);
+      }
+      return "new java.math.BigInteger(\"" + literalToken + "\")";
+    }
+    if (numberType.isBigDecimal()) {
+      try {
+        numberType.parseNumber(literalToken);
+      } catch (RuntimeException e) {
+        throw new IllegalArgumentException("Invalid BigDecimal literal: " + literalToken, e);
+      }
+      return "new java.math.BigDecimal(\"" + literalToken + "\")";
+    }
+    return numberType.numberWithSuffix(literalToken);
+  }
+
+  private boolean isSupportedBinaryOperator(String operator) {
+    return "+".equals(operator) || "-".equals(operator) || "*".equals(operator) || "/".equals(operator);
+  }
+
+  private String bigNumberMethodName(String operator) {
+    return "+".equals(operator) ? "add"
+        : "-".equals(operator) ? "subtract"
+            : "*".equals(operator) ? "multiply"
+                : "/".equals(operator) ? "divide"
+                    : "";
   }
 
   private void buildVariable(SimpleJavaCodeBuilder builder, Token token,

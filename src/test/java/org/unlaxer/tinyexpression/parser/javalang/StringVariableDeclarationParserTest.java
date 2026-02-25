@@ -82,9 +82,12 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
 
       testUnMatch(variableDeclarationParser, "variable $isMale as boolean set if not exists 1==1 description='maleかどうかをセットします。';");
 
-      //description is not exists
-      testUnMatch(variableDeclarationParser, "variable $age as number set 18;");
-      testUnMatch(variableDeclarationParser, "variable $age set 18;");
+      testAllMatch(variableDeclarationParser, "variable $payload description='payload';");
+      testAllMatch(variableDeclarationParser, "variable $payload set if not exists 'fallback' description='payload';");
+      testAllMatch(variableDeclarationParser, "variable $payload set 18 description='payload';");
+
+      // description is required
+      testUnMatch(variableDeclarationParser, "variable $payload set 'fallback';");
 
     }
   }
