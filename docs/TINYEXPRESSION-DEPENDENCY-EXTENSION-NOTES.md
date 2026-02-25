@@ -147,6 +147,8 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
    - 互換 no-op 実装へ置換
 4. generated `Mapper` の assoc mapping に leaf fallback ノード生成を追加
    - 非 mapped 末端（例: number literal）でも `BinaryExpr` 形に畳み込めるようにした
+5. generated `Mapper` の non-assoc mapping で capture 抽出を実装
+   - placeholder default 値のみだった constructor 引数を、capture-based extraction へ移行
 
 検証結果:
 

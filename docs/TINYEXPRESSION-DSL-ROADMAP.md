@@ -324,6 +324,9 @@ Completed in this session (P3 follow-up):
 34. added migration handbook for follow-up implementers:
    - `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`
    - covers structure, type/function extension, AST mapping, executable conversion, LSP/DAP linkage.
+35. expanded mapper generation for non-associative mapping rules:
+   - `unlaxer-dsl` `MapperGenerator` now emits constructor-argument extraction for non-assoc captures,
+   - supports scalar/optional/list capture initialization paths instead of placeholder defaults.
 
 Verified tests:
 
