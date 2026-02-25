@@ -32,6 +32,14 @@ Last updated: 2026-02-25
 14. Embedded-expression detection now follows java-style delimiter assumptions (`if`/`match` head with variable whitespace/comments), reducing heuristic mismatch vs parser behavior.
 15. `MethodInvocation` now has explicit AST mapping (`MethodInvocationExpr`) and zero-arg method declarations can be resolved/evaluated on generated AST path without mandatory JavaCode fallback.
 16. Parity harness now includes a curated mixed-expression corpus (`AstEvaluatorParityCorpusTest`) with runtime fallback guard for the supported slice.
+17. Generated AST runtime now supports method invocation with arguments:
+   1. `MethodInvocationExpr` top-level root evaluation is supported for `number/string/boolean/object` result paths.
+   2. invocation argument expressions are resolved and bound to method parameters via scoped `CalculationContext` overlay before evaluating method body.
+18. Execution backend model is now explicitly 3-way:
+   1. `JAVA_CODE` (legacy hand-written JavaCode pipeline)
+   2. `AST_EVALUATOR` (generated AST walk + token-ast/java fallback)
+   3. `DSL_JAVA_CODE` (new backend slot; current implementation bridges to existing JavaCode runtime with dedicated backend identity marker)
+19. Added 3-way backend parity harness (`ThreeExecutionBackendParityTest`) over a supported mixed corpus, asserting value parity and AST non-fallback guard.
 
 ## Remaining Gaps
 
@@ -50,6 +58,10 @@ Last updated: 2026-02-25
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
+6. Full DSL-native Java code generation backend:
+   1. `DSL_JAVA_CODE` execution backend is present as integration seam
+   2. backend currently reuses legacy JavaCode compiler path (bridge mode)
+   3. dedicated DSL-generated Java emitter + runtime parity at scale are not complete
 
 ## Dependency-Side Needs (Potential Future)
 

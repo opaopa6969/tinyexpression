@@ -420,6 +420,13 @@ Completed in this session (P3 follow-up):
 65. added first curated parity corpus harness for mixed expression families:
    - added `AstEvaluatorParityCorpusTest` to compare `JAVA_CODE` vs `AST_EVALUATOR` across number/if/match/object/variable/method/declaration representative formulas,
    - corpus assertions include runtime guard (`_astEvaluatorRuntime != javacode-fallback`) for this supported subset.
+66. extended generated method invocation direct path to argument-bearing calls:
+   - `GeneratedP4ValueAstEvaluator` now supports top-level `MethodInvocationExpr` roots for all result families (`number/string/boolean/object`),
+   - method invocation evaluation now extracts invocation arguments, parses method parameter declarations, binds arguments into a scoped `CalculationContext`, and evaluates method body on generated AST path first.
+67. introduced explicit 3-backend execution model and parity harness:
+   - added `ExecutionBackend.DSL_JAVA_CODE` and registry creator seam (`CalculatorCreatorRegistry.dslJavaCodeCreator()`),
+   - current `DSL_JAVA_CODE` backend runs in bridge mode over existing JavaCode runtime while exposing backend marker (`_tinyExecutionMode=dsl-javacode`),
+   - added `ThreeExecutionBackendParityTest` to assert value parity across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` on supported mixed formulas.
 
 
 
@@ -453,6 +460,9 @@ Verified tests:
 26. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 27. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
 28. `./mvnw -q -Dtest=AstEvaluatorParityCorpusTest,AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
+29. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorParityCorpusTest test`
+30. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest test`
+31. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
 
 ## Execution Policy
 

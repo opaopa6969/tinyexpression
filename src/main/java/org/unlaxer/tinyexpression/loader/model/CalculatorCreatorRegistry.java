@@ -18,6 +18,9 @@ public final class CalculatorCreatorRegistry {
     if (backend == ExecutionBackend.AST_EVALUATOR) {
       return astEvaluatorCreator();
     }
+    if (backend == ExecutionBackend.DSL_JAVA_CODE) {
+      return dslJavaCodeCreator();
+    }
     return javaCodeCreator();
   }
 
@@ -55,6 +58,31 @@ public final class CalculatorCreatorRegistry {
           List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
         return new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
             byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+      }
+    };
+  }
+
+  public static CalculatorCreator dslJavaCodeCreator() {
+    return new CalculatorCreator() {
+
+      @Override
+      public Calculator create(Source source, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        JavaCodeCalculatorV3 calculator =
+            new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
+        calculator.setObject("_tinyExecutionMode", "dsl-javacode");
+        return calculator;
+      }
+
+      @Override
+      public Calculator create(Source source, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        JavaCodeCalculatorV3 calculator =
+            new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+        calculator.setObject("_tinyExecutionMode", "dsl-javacode");
+        return calculator;
       }
     };
   }
