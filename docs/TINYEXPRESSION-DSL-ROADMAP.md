@@ -292,6 +292,14 @@ Completed in this session (P3 follow-up):
 26. separated generated P4 outputs into runtime/tooling tracks to keep default compile stable:
    - updated `scripts/generate_tinyexpression_p4_from_ubnf.sh` to emit runtime (`AST,Parser,Mapper,Evaluator`) and tooling (`LSP,Launcher,DAP,DAPLauncher`) to separate directories,
    - updated `pom.xml` to auto-include only `target/generated-sources/tinyexpression-p4/runtime` as compile source.
+27. implemented first real AST traversal execution path for AST backend:
+   - added `AstNumberExpressionEvaluator` to evaluate generated number AST (`NumberGeneratedAstNode`) directly,
+   - `AstEvaluatorCalculator` now prefers token-AST runtime for supported number expressions and falls back to JavaCode otherwise,
+   - runtime mode marker is exposed via calculator context object: `_astEvaluatorRuntime`.
+28. recorded and isolated generated runtime compatibility gap:
+   - observed compile break between generated runtime code and current tinyexpression dependency APIs,
+   - disabled default `pom.xml` auto-include for generated runtime sources,
+   - moved dependency-side follow-up to `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md`.
 
 Verified tests:
 

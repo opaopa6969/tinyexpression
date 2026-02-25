@@ -104,3 +104,33 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 - `runtimeMode=ast` は現時点では token stepping fallback。
 - mapper/evaluator runtime が接続された段階で AST ノードステップへ差し替える。
+
+---
+
+## 2026-02-25: generated runtime compile compatibility gap
+
+### Context
+
+- `scripts/generate_tinyexpression_p4_from_ubnf.sh` で生成した runtime コードを tinyexpression compile に取り込むと、
+  現行依存 (`org.unlaxer:unlaxer-common:1.2.7`) と API 不整合でビルド失敗する。
+
+### Observed compile errors
+
+1. `org.unlaxer.StringSource#createRootSource(String)` が未提供
+2. generated mapper が `Token.source` フィールドを直接参照するが現行 `Token` API に存在しない
+3. generated parser が `org.unlaxer.dsl.ir` パッケージ型を参照するが tinyexpression 依存に未提供
+
+### Current decision
+
+1. tinyexpression 側は generated runtime source の自動 compile 取り込みを一旦無効化
+2. 生成物は `target/generated-sources/tinyexpression-p4/runtime|tooling` に出力し、検証用 artifact として保持
+3. dependency 拡張（`unlaxer-common` / `unlaxer-dsl`）が必要な項目として継続管理
+
+### Required extension candidates
+
+1. `unlaxer-common`:
+   - `StringSource#createRootSource(String)` 互換 API
+   - mapper generator と整合する token text/source access API
+2. `unlaxer-dsl`:
+   - parser generator が runtime で解決可能な package import を使うこと
+   - mapper generator が `Token` 公開 API のみを使うこと
