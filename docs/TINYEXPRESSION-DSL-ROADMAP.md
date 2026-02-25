@@ -343,6 +343,9 @@ Completed in this session (P3 follow-up):
 40. added backend parity smoke for numeric formulas:
    - introduced `AstEvaluatorBackendParityTest` to compare `JAVA_CODE` and `AST_EVALUATOR` results on representative arithmetic formulas,
    - asserts AST backend runtime remains AST path (`_astEvaluatorRuntime != javacode-fallback`) for these formulas.
+41. expanded generated numeric AST evaluator leaf resolution for context variables:
+   - `GeneratedP4NumberAstEvaluator` now resolves `$name` leaf literals from `CalculationContext` (`getNumber` / `getValue`) before numeric parse,
+   - keeps strict fallback behavior for unresolved/non-numeric leaves.
 
 Verified tests:
 

@@ -154,13 +154,13 @@ final class GeneratedP4NumberAstEvaluator {
     // Leaf encoding from mapper fallback: left=null, right=[], op=[literal]
     if (leftObj == null && rightList.isEmpty() && opList.size() == 1) {
       String literal = String.valueOf(opList.get(0));
-      return numberType.parseNumber(literal);
+      return resolveLeafLiteral(literal, numberType, calculationContext);
     }
 
     Number current;
     if (leftObj == null) {
       if (opList.size() == 1) {
-        return numberType.parseNumber(String.valueOf(opList.get(0)));
+        return resolveLeafLiteral(String.valueOf(opList.get(0)), numberType, calculationContext);
       }
       throw new IllegalArgumentException("left is null for non-leaf node");
     }
@@ -273,5 +273,43 @@ final class GeneratedP4NumberAstEvaluator {
       case "/" -> l / r;
       default -> throw new IllegalArgumentException("Unsupported operator: " + operator);
     };
+  }
+
+  private static Number resolveLeafLiteral(String rawLiteral, ExpressionType numberType,
+      CalculationContext calculationContext) {
+    String literal = rawLiteral == null ? "" : rawLiteral.strip();
+    if (literal.startsWith("$")) {
+      String variableName = extractVariableName(literal);
+      if (variableName != null && !variableName.isEmpty()) {
+        Optional<? extends Number> number = calculationContext.getNumber(variableName);
+        if (number.isPresent()) {
+          return number.get();
+        }
+        Optional<Float> value = calculationContext.getValue(variableName);
+        if (value.isPresent()) {
+          return value.get();
+        }
+      }
+    }
+    return numberType.parseNumber(literal);
+  }
+
+  private static String extractVariableName(String literal) {
+    if (literal == null || literal.isEmpty() || literal.charAt(0) != '$') {
+      return null;
+    }
+    int end = 1;
+    while (end < literal.length()) {
+      char c = literal.charAt(end);
+      if (Character.isLetterOrDigit(c) || c == '_') {
+        end++;
+        continue;
+      }
+      break;
+    }
+    if (end <= 1) {
+      return null;
+    }
+    return literal.substring(1, end);
   }
 }

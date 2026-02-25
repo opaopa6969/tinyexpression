@@ -76,6 +76,7 @@ TinyExpression では次の3段階で実行:
 
 1. `GeneratedAstRuntimeProbe.tryMapAst(...)` で generated mapper 実行
 2. `GeneratedP4NumberAstEvaluator` で generated AST を直接評価（対応範囲）
+3. 数値 leaf が `$name` の場合は `CalculationContext` から数値を解決して評価
 3. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
 
 要点:
