@@ -305,6 +305,11 @@ AST 化は 2 通りある。
    - `src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java`
 3. `FormulaInfoAdditionalFields` に backend 指定を追加し、
    `FormulaInfoParser` で backend 経路を選択するよう変更。
+4. `AST_EVALUATOR` 用の専用 calculator エントリを追加:
+   - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/AstEvaluatorCalculator.java`
+   - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/GeneratedAstRuntimeProbe.java`
+   - generated runtime (`TinyExpressionP4Parsers`, `TinyExpressionP4Mapper`) の存在を probe しつつ、
+     実行結果互換のため現時点は JavaCode delegate で動作。
 
 注: `AST_EVALUATOR` の実体は現時点では compatibility fallback として JavaCode 経路を利用し、
 後続で generated mapper/evaluator 実装へ差し替える。

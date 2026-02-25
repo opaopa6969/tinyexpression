@@ -97,6 +97,10 @@ Implemented for P3 (follow-up):
     - `MapperGenerator`: parse entry, rule dispatch, and assoc mapping extraction are now generated as executable code,
     - updated mapper snapshot goldens,
     - `DAPGenerator`: added `runtimeMode` launch hook (`token`/`ast`) and mode-aware step collection dispatch (currently `ast` uses token fallback).
+22. introduced dedicated AST backend calculator class in tinyexpression:
+    - added `AstEvaluatorCalculator` and `GeneratedAstRuntimeProbe`,
+    - switched AST backend creator wiring to return `AstEvaluatorCalculator` instead of direct JavaCode implementation,
+    - kept execution compatibility by delegating to JavaCode path while preserving AST backend integration seam.
 
 ## Files Changed
 

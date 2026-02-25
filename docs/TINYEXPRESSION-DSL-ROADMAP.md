@@ -285,6 +285,10 @@ Completed in this session (P3 follow-up):
    - implemented executable `MapperGenerator` parse entry + mapping dispatch + assoc extraction in `unlaxer-dsl`,
    - refreshed mapper snapshot goldens in `unlaxer-dsl`,
    - added `runtimeMode` (`token`/`ast`) hook to generated DAP adapter and refreshed DAP snapshot golden.
+25. introduced concrete `AST_EVALUATOR` calculator entry class in tinyexpression:
+   - added `AstEvaluatorCalculator` as runtime backend surface for generated AST/evaluator integration,
+   - added `GeneratedAstRuntimeProbe` to detect generated parser/mapper runtime availability,
+   - switched `CalculatorCreatorRegistry` AST backend from direct JavaCode return to dedicated AST backend class.
 
 Verified tests:
 

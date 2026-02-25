@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
+import org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -45,19 +46,16 @@ public final class CalculatorCreatorRegistry {
       @Override
       public Calculator create(Source source, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        // TODO: replace with generated AST mapper/evaluator runtime path.
-        return new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
+        return new AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader);
       }
 
       @Override
       public Calculator create(Source source, String javaCode, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
           List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
-        // TODO: once AST-evaluator bytecode/package format is defined, decode from AST runtime artifacts.
-        return new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
+        return new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
             byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
       }
     };
   }
 }
-
