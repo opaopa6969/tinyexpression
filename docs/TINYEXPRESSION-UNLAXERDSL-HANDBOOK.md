@@ -78,6 +78,7 @@ TinyExpression では次の3段階で実行:
 2. `GeneratedP4NumberAstEvaluator` で generated AST を直接評価（対応範囲）
 3. 数値 leaf が `$name` の場合は `CalculationContext` から数値を解決して評価
 4. P4 draft では `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` の mapping を追加済み（評価器側は段階実装中）
+5. choice capture は生成mapper側で複数候補探索 + 型互換ガードにより constructor型不整合を抑制
 3. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
 
 要点:

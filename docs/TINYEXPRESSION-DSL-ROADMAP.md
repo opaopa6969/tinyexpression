@@ -355,6 +355,9 @@ Completed in this session (P3 follow-up):
 44. expanded P4 mapping coverage for non-numeric expression families:
    - added `@mapping` for `StringExpression`, `BooleanExpression`, `ObjectExpression`, and `VariableRef` in `docs/ubnf/tinyexpression-p4-draft.ubnf`,
    - regenerated runtime/tooling artifacts now include `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` AST records.
+45. hardened generated mapper for multi-choice captures under strict constructor typing:
+   - `unlaxer-dsl` `MapperGenerator` now explores all capture candidates for non-assoc mappings,
+   - added type-compatibility guard per constructor target type and `String` text fallback for heterogeneous alternatives.
 
 Verified tests:
 

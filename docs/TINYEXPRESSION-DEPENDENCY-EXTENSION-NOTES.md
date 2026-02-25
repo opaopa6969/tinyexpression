@@ -161,6 +161,10 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 9. generated `Mapper` の root未mapping時ノード選択を改善
    - 「最初のmappedノード」固定を廃止
    - `depth asc` + `startOffset desc` ヒューリスティックで主式候補を選択
+10. generated `Mapper` の choice capture 解決を複数候補対応へ拡張
+   - 同一 capture 名を持つ選択肢を順に探索
+   - target constructor 型との互換性ガードを追加（不一致候補は生成時にスキップ）
+   - `String` target は token text 抽出へフォールバック
 
 検証結果:
 
