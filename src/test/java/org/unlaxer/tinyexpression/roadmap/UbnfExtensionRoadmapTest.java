@@ -47,6 +47,18 @@ public class UbnfExtensionRoadmapTest {
   }
 
   @Test
+  public void testBackreferenceSemanticsMethodInvocationWithDeclarationSucceeds() {
+    PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
+        Name.of("RoadmapBackrefDeclaredMethod"),
+        new Source("call provide()\nobject provide(){\n 'ok'\n}"),
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
+        Thread.currentThread().getContextClassLoader());
+
+    Object result = calculator.apply(CalculationContext.newConcurrentContext());
+    assertEquals("ok", result);
+  }
+
+  @Test
   public void testScopeTreeLexicalSemanticsMethodParameterShadowsGlobalNumberVariable() {
     PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
         Name.of("RoadmapScopeTree"),
@@ -61,6 +73,25 @@ public class UbnfExtensionRoadmapTest {
 
     Object result = calculator.apply(CalculationContext.newConcurrentContext());
     assertEquals(1.0f, ((Number) result).floatValue(), 0.0001f);
+  }
+
+  @Test
+  public void testScopeTreeLexicalSemanticsMethodParameterShadowsGlobalObjectVariable() {
+    PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
+        Name.of("RoadmapScopeTreeObject"),
+        new Source(
+            "var $payload description='payload';\n"
+                + "call identity('local')\n"
+                + "object identity($payload as object){\n"
+                + " $payload\n"
+                + "}"),
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
+        Thread.currentThread().getContextClassLoader());
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.setObject("payload", "global");
+    Object result = calculator.apply(context);
+    assertEquals("local", result);
   }
 
 }

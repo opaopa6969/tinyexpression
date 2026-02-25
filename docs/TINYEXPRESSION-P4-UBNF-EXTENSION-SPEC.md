@@ -145,6 +145,14 @@ Expectation:
 
 - parse phase fails with message containing `missing is not declared`
 
+Additional case:
+
+- `call provide()` with `object provide(){ 'ok' }`
+
+Result:
+
+- declared method reference resolves and executes successfully (`"ok"`).
+
 ### 4.3 scope tree semantics snapshot
 
 Case:
@@ -156,6 +164,9 @@ Case:
 Result:
 
 - method parameter shadowing is respected on this path (returns argument value `1.0f`)
+- object path lexical shadowing is also validated:
+  - global `$payload` is ignored when method parameter `$payload` exists,
+  - runtime result returns method argument (`"local"`).
 
 ---
 
@@ -167,5 +178,5 @@ Result:
 
 ## 6. Next P4 Implementation Steps
 
-1. Extend lexical-scope conformance tests across string/object method paths as well.
-2. Expand UBNF draft from core subset to full TinyExpression syntax (match/if/setter/method/annotation).
+1. Extend lexical-scope conformance tests across string method paths as well.
+2. Expand UBNF draft from core subset to full TinyExpression syntax (setter/method declaration variants).

@@ -265,6 +265,10 @@ Completed in this session (P3 follow-up):
    - added annotation grammar (`Annotation`, `AnnotationParameters`, `AnnotationParameter`),
    - added `StringMatchExpression` / `BooleanMatchExpression` and their case/default rules,
    - refreshed parser-ir artifact and re-validated (`ok`).
+20. strengthened P4 semantic snapshot coverage in runtime tests:
+   - added successful backreference case (`call provide()` with declared method),
+   - added lexical scope-tree object shadowing case (`global $payload` vs method parameter `$payload`),
+   - verified both in `UbnfExtensionRoadmapTest`.
 
 Verified tests:
 
@@ -277,6 +281,7 @@ Verified tests:
 7. `./mvnw -q -Dtest=TypeSystemRoadmapTest,ErrorDiagnosabilityRoadmapTest test`
 8. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
 9. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --validate-only --report-format json\"`
+10. `./mvnw -q -Dtest=UbnfExtensionRoadmapTest test`
 
 ## Execution Policy
 

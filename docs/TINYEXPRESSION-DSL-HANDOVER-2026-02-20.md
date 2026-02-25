@@ -77,6 +77,10 @@ Implemented for P3 (follow-up):
     - added annotation syntax block (`@name(k=v,...)`) into formula path,
     - added string/boolean match expressions with case/default forms,
     - regenerated parser-ir and validated it successfully.
+17. strengthened P4 semantic snapshot tests:
+    - added declared-method backreference success case (`call provide()`),
+    - added object lexical shadowing case (method parameter `$payload` shadows global `$payload`),
+    - re-ran `UbnfExtensionRoadmapTest` successfully.
 
 ## Files Changed
 
@@ -150,10 +154,10 @@ Not executed in this round:
 
 ## Recommended Next Step (Immediate)
 
-Continue with `P3` in this order:
+Continue with `P4` in this order:
 
-1. harden unified numeric flow for edge cases (rounding/divide semantics for big numbers),
-2. harden javaType flow beyond object return type (declaration/inference for object variables/methods),
+1. add string lexical-scope snapshot in `UbnfExtensionRoadmapTest`,
+2. extend UBNF draft for remaining setter/method declaration variants,
 3. keep test policy minimal (`1 fail + 1 success`).
 
 ## Guardrails / Collaboration Rules
