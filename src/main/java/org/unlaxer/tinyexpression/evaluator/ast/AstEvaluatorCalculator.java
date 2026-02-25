@@ -29,11 +29,13 @@ public class AstEvaluatorCalculator implements Calculator {
   private final boolean generatedAstRuntimeAvailable;
   private final ClassLoader classLoader;
   private final Source source;
+  private final SpecifiedExpressionTypes specifiedExpressionTypes;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     this.source = source;
     this.classLoader = classLoader;
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     this.delegate = new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
   }
@@ -43,6 +45,7 @@ public class AstEvaluatorCalculator implements Calculator {
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     this.source = source;
     this.classLoader = classLoader;
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
     this.delegate = new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
         byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
@@ -129,6 +132,8 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public Object apply(CalculationContext calculationContext) {
+    Optional<Object> astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+        source.source(), specifiedExpressionTypes, calculationContext);
     if (generatedAstRuntimeAvailable) {
       // Probe generated mapper runtime path; execution still delegates to JavaCode path for compatibility.
       Optional<Object> ast = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
@@ -137,6 +142,11 @@ public class AstEvaluatorCalculator implements Calculator {
     } else {
       setObject("_astEvaluatorMapperAvailable", false);
     }
+    if (astEvaluated.isPresent()) {
+      setObject("_astEvaluatorRuntime", "token-ast");
+      return astEvaluated.get();
+    }
+    setObject("_astEvaluatorRuntime", "javacode-fallback");
     return delegate.apply(calculationContext);
   }
 
