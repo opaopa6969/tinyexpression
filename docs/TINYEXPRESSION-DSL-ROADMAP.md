@@ -317,6 +317,10 @@ Completed in this session (P3 follow-up):
      1) `generated-ast` (when mapper output is evaluable),
      2) `token-ast`,
      3) `javacode-fallback`.
+33. improved generated DAP `ast` mode observability:
+   - `unlaxer-dsl` `DAPGenerator` now attempts mapper parse in `runtimeMode=ast`,
+   - exposes `astNodeCount` in DAP variables response,
+   - keeps existing token-step behavior as compatibility fallback.
 
 Verified tests:
 
