@@ -131,6 +131,22 @@ public class AstEvaluatorGeneratedValuePathTest {
     assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
   }
 
+  @Test
+  public void testNumberIfExpressionUsesGeneratedAstPath() {
+    String formula = "if(true){1}else{2}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstNumberIfGeneratedPath", types, classLoader);
+
+    Object value = ast.apply(CalculationContext.newConcurrentContext());
+
+    assertEquals(1f, ((Number) value).floatValue(), 0.0001f);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
   private void assertGeneratedDeclarationFormula(String formula, SpecifiedExpressionTypes types, Object expected) {
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(

@@ -26,6 +26,7 @@ Last updated: 2026-02-25
    2. unresolved expression-like text is rejected (no raw DSL snippet return),
    3. generated-path tests now cover string `match` and `call + method declaration`.
 10. Backend parity checkpoint now includes representative non-number formulas (`string/boolean match`, `call + method declaration`) and verifies AST backend avoids `javacode-fallback` in these slices.
+11. Numeric control-flow (`if(...)`) now also executes through generated runtime path via the embedded-expression bridge when direct generated-number AST evaluation is not available.
 
 ## Remaining Gaps
 

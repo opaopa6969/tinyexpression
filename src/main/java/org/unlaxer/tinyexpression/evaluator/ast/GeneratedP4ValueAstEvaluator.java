@@ -28,7 +28,13 @@ final class GeneratedP4ValueAstEvaluator {
     }
     ExpressionType resultType = resolveResultType(specifiedExpressionTypes);
     if (resultType.isNumber()) {
-      return GeneratedP4NumberAstEvaluator.tryEvaluate(mappedAst, specifiedExpressionTypes, calculationContext);
+      Optional<Object> number = GeneratedP4NumberAstEvaluator.tryEvaluate(
+          mappedAst, specifiedExpressionTypes, calculationContext);
+      if (number.isPresent()) {
+        return number;
+      }
+      return AstEmbeddedExpressionRuntime.tryEvaluate(
+          fallbackFormulaSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, null);
     }
     if (resultType.isString()) {
       return findFirstNode(mappedAst, "StringExpr")

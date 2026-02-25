@@ -397,6 +397,9 @@ Completed in this session (P3 follow-up):
 58. expanded backend parity checkpoint beyond numeric-only formulas:
    - `AstEvaluatorBackendParityTest` now compares `JAVA_CODE` vs `AST_EVALUATOR` on representative non-number cases (`string match`, `boolean match`, `call + method declaration`),
    - asserts these cases no longer hit `javacode-fallback` runtime.
+59. added generated-path coverage for numeric control-flow expressions:
+   - `GeneratedP4ValueAstEvaluator` now routes number-evaluation misses to embedded expression runtime bridge,
+   - `AstEvaluatorGeneratedValuePathTest` now verifies `if(true){1}else{2}` runs on `generated-ast` runtime.
 
 
 
