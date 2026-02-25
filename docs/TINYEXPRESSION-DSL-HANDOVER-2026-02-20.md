@@ -73,6 +73,10 @@ Implemented for P3 (follow-up):
 15. exported parser-ir from the current P4 draft and validated it:
     - output: `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
     - `unlaxer-dsl --validate-parser-ir` passed.
+16. expanded P4 draft grammar coverage:
+    - added annotation syntax block (`@name(k=v,...)`) into formula path,
+    - added string/boolean match expressions with case/default forms,
+    - regenerated parser-ir and validated it successfully.
 
 ## Files Changed
 

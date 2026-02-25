@@ -66,7 +66,10 @@ Draft file:
 - `docs/ubnf/tinyexpression-p4-draft.ubnf`
 - assoc/precedence repro file:
   - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`
-  - includes validator-compatible assoc rules and core control-flow subset (`if` / `match` for number flow)
+  - includes validator-compatible assoc rules and core control-flow subset:
+    - `if` expression
+    - `match` for number/string/boolean flow
+    - annotation parameter block (`@name(k=v,...)`)
 - parser-ir export artifact:
   - `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
 
@@ -105,6 +108,7 @@ Result:
 
 - parser-ir export succeeded
 - parser-ir validation succeeded
+- updated parser-ir reflects annotation and multi-type match additions
 
 Assoc/precedence repro validation:
 

@@ -261,6 +261,10 @@ Completed in this session (P3 follow-up):
 18. exported and validated parser-ir artifact for the P4 draft:
    - `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
    - validated with `--validate-parser-ir` (`ok`).
+19. expanded P4 draft grammar beyond number-only control flow:
+   - added annotation grammar (`Annotation`, `AnnotationParameters`, `AnnotationParameter`),
+   - added `StringMatchExpression` / `BooleanMatchExpression` and their case/default rules,
+   - refreshed parser-ir artifact and re-validated (`ok`).
 
 Verified tests:
 

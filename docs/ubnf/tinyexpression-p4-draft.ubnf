@@ -9,7 +9,7 @@ grammar TinyExpressionP4 {
   token STRING     = SingleQuotedParser
 
   @root
-  Formula ::= { VariableDeclaration } Expression { MethodDeclaration } ;
+  Formula ::= { VariableDeclaration } { Annotation } Expression { MethodDeclaration } ;
 
   @interleave(profile=javaStyle)
   VariableDeclaration ::=
@@ -25,6 +25,10 @@ grammar TinyExpressionP4 {
   Setter ::= 'set' [ 'if' 'not' 'exists' ] Expression ;
 
   Description ::= 'description' '=' STRING ;
+
+  Annotation ::= '@' IDENTIFIER '(' [ AnnotationParameters ] ')' ;
+  AnnotationParameters ::= AnnotationParameter { ',' AnnotationParameter } ;
+  AnnotationParameter ::= IDENTIFIER '=' Expression ;
 
   @scopeTree(mode=lexical)
   MethodDeclaration ::=
@@ -68,9 +72,18 @@ grammar TinyExpressionP4 {
     | MethodInvocation
     | '(' NumberExpression ')' ;
 
-  StringExpression ::= STRING | VariableRef | MethodInvocation ;
+  StringExpression ::=
+      StringMatchExpression
+    | STRING
+    | VariableRef
+    | MethodInvocation ;
 
-  BooleanExpression ::= 'true' | 'false' | VariableRef | MethodInvocation ;
+  BooleanExpression ::=
+      BooleanMatchExpression
+    | 'true'
+    | 'false'
+    | VariableRef
+    | MethodInvocation ;
 
   ObjectExpression ::= NumberExpression | StringExpression | BooleanExpression | VariableRef | MethodInvocation ;
 
@@ -88,6 +101,24 @@ grammar TinyExpressionP4 {
 
   NumberCase ::= BooleanExpression '->' NumberExpression ;
   NumberDefaultCase ::= 'default' '->' NumberExpression ;
+
+  StringMatchExpression ::=
+    'match' '{'
+      StringCase { ',' StringCase }
+      ',' StringDefaultCase
+    '}' ;
+
+  StringCase ::= BooleanExpression '->' StringExpression ;
+  StringDefaultCase ::= 'default' '->' StringExpression ;
+
+  BooleanMatchExpression ::=
+    'match' '{'
+      BooleanCase { ',' BooleanCase }
+      ',' BooleanDefaultCase
+    '}' ;
+
+  BooleanCase ::= BooleanExpression '->' BooleanExpression ;
+  BooleanDefaultCase ::= 'default' '->' BooleanExpression ;
 
   VariableRef ::= '$' IDENTIFIER [ TypeHint ] ;
 
