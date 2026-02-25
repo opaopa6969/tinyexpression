@@ -67,6 +67,8 @@ Draft file:
 - assoc/precedence repro file:
   - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`
   - includes validator-compatible assoc rules and core control-flow subset (`if` / `match` for number flow)
+- parser-ir export artifact:
+  - `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
 
 Notes:
 
@@ -87,6 +89,22 @@ Result snapshot:
 - `ok=true`
 - `grammarCount=1`
 - `warningsCount=0`
+
+Parser IR export and validation:
+
+```bash
+cd /mnt/c/var/unlaxer-temp/unlaxer-dsl
+mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
+  -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"
+
+mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
+  -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"
+```
+
+Result:
+
+- parser-ir export succeeded
+- parser-ir validation succeeded
 
 Assoc/precedence repro validation:
 

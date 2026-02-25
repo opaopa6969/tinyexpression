@@ -70,6 +70,9 @@ Implemented for P3 (follow-up):
     - added `if(...) { ... } else { ... }` and `match{...}` (number path),
     - wired these into `NumberFactor`,
     - re-validated draft with `unlaxer-dsl` (`ok=true`).
+15. exported parser-ir from the current P4 draft and validated it:
+    - output: `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
+    - `unlaxer-dsl --validate-parser-ir` passed.
 
 ## Files Changed
 

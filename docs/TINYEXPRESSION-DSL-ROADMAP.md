@@ -258,6 +258,9 @@ Completed in this session (P3 follow-up):
    - added `IfExpression`, `NumberMatchExpression`, `NumberCase`, `NumberDefaultCase`
    - integrated into `NumberFactor`
    - kept validator pass on updated draft (`ok=true`).
+18. exported and validated parser-ir artifact for the P4 draft:
+   - `docs/ubnf/tinyexpression-p4-draft.parser-ir.json`
+   - validated with `--validate-parser-ir` (`ok`).
 
 Verified tests:
 
