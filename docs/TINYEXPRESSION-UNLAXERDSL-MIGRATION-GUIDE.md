@@ -144,6 +144,14 @@ java --enable-preview -cp target/classes \
 
 この草案は `unlaxer-dsl` で validate-only / parser-ir export / parser-ir validation 済み。
 
+### 3.6 生成コード再現手順（ローカル）
+
+次のスクリプトで、P4草案から generated code 一式を再生成できる。
+
+1. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
+2. 出力先: `target/generated-sources/tinyexpression-p4`
+3. 使用 generator: `AST,Parser,Mapper,Evaluator,LSP,Launcher,DAP,DAPLauncher`
+
 ### 3.4 Parser IR を中間契約として使う
 
 移行時は Parser IR を出力・検証して差分管理すると事故が減る。
