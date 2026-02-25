@@ -330,6 +330,9 @@ Completed in this session (P3 follow-up):
 36. added generated-AST observability on AST backend runtime:
    - `AstEvaluatorCalculator` now stores `_astEvaluatorGeneratedAstNodeCount`,
    - allows DAP/diagnostics layer to inspect generated AST size without token traversal.
+37. raised generated DAP `ast` stepping fidelity:
+   - `unlaxer-dsl` generated DAP now uses AST-node count as step limit in `runtimeMode=ast`,
+   - stack frame label follows AST node label while preserving token-based source coordinates for compatibility.
 
 Verified tests:
 

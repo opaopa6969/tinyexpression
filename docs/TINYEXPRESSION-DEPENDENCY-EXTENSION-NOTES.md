@@ -149,6 +149,9 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
    - 非 mapped 末端（例: number literal）でも `BinaryExpr` 形に畳み込めるようにした
 5. generated `Mapper` の non-assoc mapping で capture 抽出を実装
    - placeholder default 値のみだった constructor 引数を、capture-based extraction へ移行
+6. generated `DAP` の `runtimeMode=ast` stepping を AST件数基準へ改善
+   - step数は `astNodeTypes` 件数で管理
+   - source座標は token 由来を維持（移行期互換）
 
 検証結果:
 
@@ -158,5 +161,5 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 残タスク:
 
 1. generated runtime を使った実評価経路（mapper/evaluator）を AST backend 本体へ段階的に接続
-2. DAP runtimeMode の `ast` 分岐で AST ノード単位 stepping へ切替
+2. DAP runtimeMode の `ast` 分岐で source座標も AST node 由来に置換
 3. AST backend の対応演算子/式カテゴリを number-only から段階拡張
