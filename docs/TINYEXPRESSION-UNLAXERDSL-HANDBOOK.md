@@ -80,7 +80,8 @@ TinyExpression では次の3段階で実行:
 4. P4 draft では `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` の mapping を追加済み（評価器側は段階実装中）
 5. choice capture は生成mapper側で複数候補探索 + 型互換ガードにより constructor型不整合を抑制
 6. `GeneratedP4ValueAstEvaluator` で `string`/`boolean`/`object` の単純式評価を generated AST 経路に追加
-3. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
+7. `AstEvaluatorGeneratedValuePathTest` で `boolean`/`object` の generated-path 実行を検証
+8. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
 
 要点:
 

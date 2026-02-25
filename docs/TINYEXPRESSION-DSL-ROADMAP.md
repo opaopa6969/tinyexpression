@@ -361,6 +361,9 @@ Completed in this session (P3 follow-up):
 46. expanded generated AST runtime evaluator beyond number-only output:
    - added `GeneratedP4ValueAstEvaluator` and switched `AstEvaluatorCalculator` generated path dispatch to it,
    - supports `string`/`boolean`/`object` simple expressions via generated AST node inspection and `CalculationContext` variable resolution.
+47. added generated-path runtime tests for non-number simple values:
+   - `AstEvaluatorGeneratedValuePathTest` verifies `boolean` literal and `object`(string literal) evaluation on `generated-ast` runtime.
+
 
 
 Verified tests:

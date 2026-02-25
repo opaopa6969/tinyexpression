@@ -2,8 +2,10 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -67,17 +69,19 @@ final class GeneratedP4ValueAstEvaluator {
 
   private static Optional<Object> findFirstNode(Object root, String simpleName) {
     ArrayDeque<Object> queue = new ArrayDeque<>();
+    Set<Object> visited = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
     queue.add(root);
     while (!queue.isEmpty()) {
       Object current = queue.removeFirst();
-      if (current == null) {
+      if (current == null || visited.contains(current)) {
         continue;
       }
+      visited.add(current);
       if (simpleName.equals(current.getClass().getSimpleName())) {
         return Optional.of(current);
       }
       for (Object child : reflectiveChildren(current)) {
-        if (child != null) {
+        if (child != null && isAstNodeCandidate(child)) {
           queue.addLast(child);
         }
       }
@@ -197,14 +201,27 @@ final class GeneratedP4ValueAstEvaluator {
           continue;
         }
         if (value instanceof List<?> list) {
-          children.addAll(list);
+          for (Object element : list) {
+            if (isAstNodeCandidate(element)) {
+              children.add(element);
+            }
+          }
           continue;
         }
-        children.add(value);
+        if (isAstNodeCandidate(value)) {
+          children.add(value);
+        }
       } catch (Throwable ignored) {
       }
     }
     return children;
+  }
+
+  private static boolean isAstNodeCandidate(Object value) {
+    if (value == null) {
+      return false;
+    }
+    return value.getClass().getName().contains("TinyExpressionP4AST");
   }
 
   private static String extractVariableName(String raw) {
