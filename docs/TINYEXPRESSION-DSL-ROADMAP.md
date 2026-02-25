@@ -340,6 +340,9 @@ Completed in this session (P3 follow-up):
    - `unlaxer-dsl` `MapperGenerator` now emits per-node source span registration and `sourceSpanOf(Object)` lookup,
    - generated DAP `runtimeMode=ast` now computes stack frame location and breakpoint hit lines from AST node spans,
    - generated DAP variable primary entry now switches to AST node snippet (`type=ASTNode`) in ast mode.
+40. added backend parity smoke for numeric formulas:
+   - introduced `AstEvaluatorBackendParityTest` to compare `JAVA_CODE` and `AST_EVALUATOR` results on representative arithmetic formulas,
+   - asserts AST backend runtime remains AST path (`_astEvaluatorRuntime != javacode-fallback`) for these formulas.
 
 Verified tests:
 
