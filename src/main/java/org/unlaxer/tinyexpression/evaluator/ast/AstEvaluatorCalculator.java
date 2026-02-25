@@ -199,6 +199,11 @@ public class AstEvaluatorCalculator implements Calculator {
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext);
+        if (generatedAstEvaluated.isEmpty()) {
+          AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+          generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
+              mapped.get(), specifiedExpressionTypes, calculationContext);
+        }
         if (generatedAstEvaluated.isPresent()) {
           setObject("_astEvaluatorRuntime", "generated-ast");
           setObject("_astEvaluatorMapperAvailable", true);

@@ -18,18 +18,20 @@ Last updated: 2026-02-25
 3. Generated DAP `runtimeMode=ast` has AST node observability and AST-span-based source location.
 4. Generated mapper compatibility shims are in place for current `unlaxer-common`.
 5. Numeric AST path has basic parity and variable leaf resolution from `CalculationContext`.
+6. Object generated-path evaluation now covers variable reference and declaration setter defaulting (`if not exists`) in representative formulas.
+7. `unlaxer-dsl` capture-type inference now degrades heterogeneous captures to `Object`, preventing over-constrained generated AST fields in mixed alternatives.
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
-   1. `StringExpression`, `BooleanExpression`, `ObjectExpression`
+   1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）
    2. `IfExpression`, `match` families
    3. method invocation and declaration semantics in AST runtime
 2. Declaration semantics in generated AST runtime:
-   1. variable declaration setters/defaulting are not fully executed in AST path
+   1. variable declaration setters/defaulting are basic object pathで実装済みだが、number/string/booleanの網羅と複合式評価は未完
    2. dependency on fallback remains for declaration-heavy formulas
 3. Root mapping semantics for mixed grammars:
-   1. improved heuristic exists, but explicit semantic root mapping is not guaranteed for all patterns
+   1. improved heuristic + object fallback evaluator is in place, but explicit semantic root mapping is not guaranteed for all patterns
 4. Full parity harness:
    1. current parity tests cover representative numeric slices
    2. systematic formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
@@ -53,4 +55,3 @@ Last updated: 2026-02-25
 3. Add declaration/method runtime semantics in AST evaluator path.
 4. Build corpus-based parity runner and promote failing categories incrementally.
 5. Finalize DAP runtime parity checkpoints for evaluator-level behavior.
-

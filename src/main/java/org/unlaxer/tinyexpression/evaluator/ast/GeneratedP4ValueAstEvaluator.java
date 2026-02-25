@@ -51,8 +51,12 @@ final class GeneratedP4ValueAstEvaluator {
       if (booleanExpr.isPresent()) {
         return booleanExpr;
       }
-      return findFirstNode(mappedAst, "VariableRefExpr")
+      Optional<Object> variableRef = findFirstNode(mappedAst, "VariableRefExpr")
           .flatMap(node -> evaluateVariableRef(node, calculationContext));
+      if (variableRef.isPresent()) {
+        return variableRef;
+      }
+      return tryEvaluateBinaryAsObject(mappedAst, specifiedExpressionTypes, calculationContext);
     }
     return Optional.empty();
   }
@@ -141,7 +145,59 @@ final class GeneratedP4ValueAstEvaluator {
     if ("VariableRefExpr".equals(simpleName)) {
       return evaluateVariableRef(value, context);
     }
+    if ("BinaryExpr".equals(node.getClass().getSimpleName())) {
+      Optional<Object> binary = tryEvaluateBinaryAsObject(node, specifiedExpressionTypes, context);
+      if (binary.isPresent()) {
+        return binary;
+      }
+    }
     return Optional.of(value);
+  }
+
+  private static Optional<Object> tryEvaluateBinaryAsObject(Object mappedAst,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context) {
+    Optional<Object> binaryNode = "BinaryExpr".equals(mappedAst.getClass().getSimpleName())
+        ? Optional.of(mappedAst)
+        : findFirstNode(mappedAst, "BinaryExpr");
+    if (binaryNode.isEmpty()) {
+      return Optional.empty();
+    }
+
+    Optional<Object> literalLeaf = tryEvaluateBinaryLeafLiteral(binaryNode.get(), context);
+    if (literalLeaf.isPresent()) {
+      return literalLeaf;
+    }
+    return GeneratedP4NumberAstEvaluator.tryEvaluate(binaryNode.get(), specifiedExpressionTypes, context)
+        .map(value -> (Object) value);
+  }
+
+  private static Optional<Object> tryEvaluateBinaryLeafLiteral(Object binaryNode, CalculationContext context) {
+    Object left = invokeZeroArg(binaryNode, "left").orElse(null);
+    Object op = invokeZeroArg(binaryNode, "op").orElse(null);
+    Object right = invokeZeroArg(binaryNode, "right").orElse(null);
+    if (!(op instanceof List<?> opList) || !(right instanceof List<?> rightList)) {
+      return Optional.empty();
+    }
+    if (left != null && rightList.isEmpty() && opList.isEmpty()) {
+      return tryEvaluateBinaryLeafLiteral(left, context);
+    }
+    if (left != null || !rightList.isEmpty() || opList.size() != 1) {
+      return Optional.empty();
+    }
+    String text = String.valueOf(opList.get(0)).strip();
+    if (text.startsWith("$")) {
+      return resolveVariableAny(extractVariableName(text), context);
+    }
+    if (text.length() >= 2 && text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'') {
+      return Optional.of(text.substring(1, text.length() - 1));
+    }
+    if ("true".equalsIgnoreCase(text)) {
+      return Optional.of(true);
+    }
+    if ("false".equalsIgnoreCase(text)) {
+      return Optional.of(false);
+    }
+    return Optional.empty();
   }
 
   private static Optional<Object> evaluateVariableRef(Object variableRefNode, CalculationContext context) {

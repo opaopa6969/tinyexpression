@@ -331,11 +331,11 @@ AST 化は 2 通りある。
 4. `AST_EVALUATOR` 用の専用 calculator エントリを追加:
    - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/AstEvaluatorCalculator.java`
    - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/GeneratedAstRuntimeProbe.java`
-   - generated runtime (`TinyExpressionP4Parsers`, `TinyExpressionP4Mapper`) の存在を probe しつつ、
-     実行結果互換のため現時点は JavaCode delegate で動作。
+   - generated runtime (`TinyExpressionP4Parsers`, `TinyExpressionP4Mapper`) を probe し、
+     `generated-ast` -> `token-ast` -> `javacode-fallback` の順で段階実行。
 
-注: `AST_EVALUATOR` の実体は現時点では compatibility fallback として JavaCode 経路を利用し、
-後続で generated mapper/evaluator 実装へ差し替える。
+注: `AST_EVALUATOR` はすでに generated-path 実行を優先し、非対応式のみ JavaCode fallback を使う。
+宣言 setter 実行は `AstDeclarationRuntime` で段階導入済み（現在は基本 object path を主対象）。
 
 ---
 

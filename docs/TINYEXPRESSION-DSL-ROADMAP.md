@@ -363,6 +363,21 @@ Completed in this session (P3 follow-up):
    - supports `string`/`boolean`/`object` simple expressions via generated AST node inspection and `CalculationContext` variable resolution.
 47. added generated-path runtime tests for non-number simple values:
    - `AstEvaluatorGeneratedValuePathTest` verifies `boolean` literal and `object`(string literal) evaluation on `generated-ast` runtime.
+48. restored object mapping + generated-path declaration execution for object variables:
+   - restored `@mapping(ObjectExpr, params=[value])` in `docs/ubnf/tinyexpression-p4-draft.ubnf`,
+   - added `AstDeclarationRuntime` and wired `AstEvaluatorCalculator` to apply declaration setters before generated-path retry,
+   - supports `var $payload set if not exists 'fallback' ...; $payload` on `generated-ast` runtime.
+49. hardened generated value evaluator for mixed-root/object cases:
+   - `GeneratedP4ValueAstEvaluator` now resolves object outputs from binary-shaped roots (`BinaryExpr`) when mapper root selection lands on numeric-like nodes,
+   - handles variable leaf/object lookup and pass-through binary-left normalization.
+50. extended dependency-side mapper type inference for heterogeneous captures:
+   - `unlaxer-dsl` `ASTGenerator` / `MapperGenerator` now infer `Object` when a capture name can bind multiple mapped types across alternatives,
+   - prevents over-constrained generated AST fields (for example `ObjectExpr.value` fixed to `BinaryExpr`).
+51. improved dependency-side identifier capture mapping:
+   - `unlaxer-dsl` `MapperGenerator` now emits `identifierLikeText(...)` for `IdentifierParser`-backed token captures,
+   - avoids `$` capture loss in variable-reference mapping paths.
+52. expanded generated-path object tests:
+   - `AstEvaluatorGeneratedValuePathTest` now covers object variable reference and object declaration setter paths under `generated-ast`.
 
 
 
@@ -381,6 +396,10 @@ Verified tests:
 11. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --validate-only --report-format json\"`
 12. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json\"`
 13. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json\"`
+14. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
+15. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
+16. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest#testObjectVariableUsesGeneratedAstPath test`
+17. `./mvnw -q -DskipTests compile`
 
 ## Execution Policy
 

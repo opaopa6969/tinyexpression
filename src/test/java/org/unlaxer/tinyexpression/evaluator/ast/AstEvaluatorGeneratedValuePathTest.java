@@ -44,4 +44,42 @@ public class AstEvaluatorGeneratedValuePathTest {
     assertEquals("payload", value);
     assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
   }
+
+  @Test
+  public void testObjectVariableUsesGeneratedAstPath() {
+    String formula = "$payload";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstObjectVariableGeneratedPath", types, classLoader);
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.setObject("payload", "ctx-object");
+    Object value = ast.apply(context);
+
+    assertEquals("ctx-object", value);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
+  @Test
+  public void testObjectDeclarationSetterUsesGeneratedAstPath() {
+    String formula =
+        "var $payload set if not exists 'fallback' description='payload';\n"
+            + "$payload";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstObjectDeclarationGeneratedPath", types, classLoader);
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    Object value = ast.apply(context);
+
+    assertEquals("fallback", value);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertEquals("fallback", context.getObject("payload", Object.class).orElse(null));
+  }
 }

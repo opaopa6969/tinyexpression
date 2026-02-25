@@ -175,3 +175,45 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 1. generated runtime を使った実評価経路（mapper/evaluator）を AST backend 本体へ段階的に接続
 2. AST backend の対応演算子/式カテゴリを number-only から段階拡張
+
+---
+
+## 2026-02-25: heterogenous capture inference + identifier capture extraction
+
+### Context
+
+- Target repo: `unlaxer-dsl`
+- Target files:
+  - `src/main/java/org/unlaxer/dsl/codegen/ASTGenerator.java`
+  - `src/main/java/org/unlaxer/dsl/codegen/MapperGenerator.java`
+- Goal:
+  1. mixed choice capture（例: `ObjectExpression`）で generated AST field type が単一型に固定される問題を解消
+  2. `VariableRef` の `IDENTIFIER` capture が `$` に崩れる問題を解消
+
+### Observed issue
+
+1. `ObjectExpr.value` が `BinaryExpr` に固定推論され、`VariableRefExpr` / `StringExpr` 経路が mapper で型ガード除外される
+2. `VariableRefExpr.name` が `$` になるケースがあり、generated evaluator で context variable 解決に失敗する
+
+### Implemented
+
+1. capture 型推論を first-capture 固定から multi-capture 集約へ変更
+   - 同一 capture 名で複数型が出る場合は `Object` に degrade
+   - optional/repeat フラグは capture 群の OR 集約で推論
+2. string target capture の式生成を拡張
+   - `IdentifierParser` token capture は `identifierLikeText(...)` を使用
+   - fallback は従来どおり `stripQuotes(firstTokenText(...))`
+3. generated mapper utility に identifier 抽出ヘルパーを追加
+   - `identifierLikeText(Token)`
+   - `extractIdentifierLike(String)`
+
+### Compatibility impact
+
+1. generated AST field 型がより寛容（`Object`）になるため、mixed-choice grammar で compile/runtime 失敗を避けられる
+2. 既存の単一型 capture grammar には影響を与えない（単一型時は従来型を維持）
+3. mapper 出力差分が増えるため snapshot/golden の更新が必要
+
+### Follow-up in tinyexpression
+
+1. `ObjectExpression` mapping を有効化した generated runtime で `AST_EVALUATOR` object path を再接続
+2. declaration setter 実行と合わせて object variable formula の `generated-ast` 経路を確認
