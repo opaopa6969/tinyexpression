@@ -193,6 +193,10 @@ public class StringClauseBuilder {
     VariableParser variableParser = typed.getParser();
     String variableName = variableParser.getVariableName(typed);
 
+    if (VariableTypeResolver.resolveFromMethodParameter(token).isPresent()) {
+      return ExpressionOrLiteral.expressionOf(variableName);
+    }
+
     SimpleBuilder builder = new SimpleBuilder();
     boolean isMatch = false;
 

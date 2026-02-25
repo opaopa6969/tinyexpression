@@ -28,6 +28,12 @@ public class VariableBuilder {
      
 
      String variableName = variableParser.getVariableName(token);
+
+     Optional<ExpressionType> methodParameterType = VariableTypeResolver.resolveFromMethodParameter(token);
+     if (methodParameterType.isPresent()) {
+       builder.append(variableName);
+       return;
+     }
      
      boolean isMatch =false;
      for (Token declarationTtoken : variableDeclarationsTokens) {

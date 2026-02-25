@@ -159,12 +159,12 @@ Non-goal (for Stage 1):
 Status:
 
 1. P0: partially done (TinyExpressionTokens side is stabilized in current branch context),
-2. P1: not started,
-3. P2: partially done,
-4. P3: not started (`TypeSystemRoadmapTest` keeps `@Ignore`),
-5. P4: not started.
+2. P1: done (minimum viable path for number binary expression),
+3. P2: done (diagnosability hardening including OperatorOperandTreeCreator fallback path),
+4. P3: partially done (both roadmap tests activated with first concrete flows),
+5. P4: in progress (design merge + first semantic validation checkpoints completed).
 
-Completed in this session (P2):
+Completed in previous session (P2):
 
 1. replaced bare `IllegalArgumentException()` with contextual messages across key `javacode` and parser paths,
 2. added focused roadmap tests for diagnosability:
@@ -175,8 +175,92 @@ Completed in this session (P2):
 
 Remaining P2 items:
 
-1. review if additional contextual diagnostics are needed inside `OperatorOperandTreeCreator` paths beyond current coverage,
-2. add one targeted failure-path test if a concrete uncovered branch is found.
+1. monitor future parser-family additions and keep unsupported-path tests in sync.
+
+Completed in this session (P1):
+
+1. defined minimal annotation contract:
+   - `TinyAstNode` (node kind)
+   - `TinyAstField` (field mapping)
+   - `TinyAstOperator` (operator metadata)
+2. annotated narrow grammar slice:
+   - `PlusParser`, `MinusParser`, `MultipleParser`, `DivisionParser`, `NumberParser`
+3. implemented annotation-reader pipeline and generated number AST model:
+   - `NumberGeneratedAstAdapter`
+   - `NumberGeneratedAstNode` / `NumberGeneratedBinaryAstNode` / `NumberGeneratedLiteralAstNode`
+4. added adapter path in `NumberExpressionBuilder` to consume generated AST incrementally with fallback to existing token path,
+5. added minimal tests (`1 fail + 1 success`):
+   - `src/test/java/org/unlaxer/tinyexpression/evaluator/javacode/NumberGeneratedAstAdapterTest.java`
+
+Verified tests:
+
+1. `./mvnw -q -Dtest=NumberGeneratedAstAdapterTest,ExpressionBuilderTest test`
+2. `./mvnw -q -Dtest=ErrorDiagnosabilityRoadmapTest,NumberGeneratedAstAdapterTest,ParserDispatchTest,TinyExpressionTokensTest test`
+
+Completed in this session (P3 first step):
+
+1. removed one `@Ignore` from
+   - `src/test/java/org/unlaxer/tinyexpression/roadmap/TypeSystemRoadmapTest.java`
+2. implemented first concrete unified numeric flow (`parser -> AST -> codegen`) for primitive numeric families:
+   - `_short`, `_byte`, `_int`, `_long`, `_float`, `_double`
+3. kept `javaType` roadmap test ignored (still pending as planned).
+
+Completed in this session (P3 follow-up):
+
+1. extended unified numeric codegen flow for `bigInteger` / `bigDecimal`:
+   - literal generation: `new java.math.BigInteger("...")` / `new java.math.BigDecimal("...")`
+   - binary operations: `.add/.subtract/.multiply/.divide`
+2. added one failure-path test for invalid bigInteger literal (`1.5`),
+3. activated `javaType` roadmap test with first concrete declaration + codegen flow (`resultType=object`),
+4. fixed `GeneralJavaClassCreator` object-result branch so expression body is emitted for object return type.
+5. hardened `bigDecimal` division codegen to use `calculateContext.scale()` and `calculateContext.roundingMode()`.
+6. added runtime verification for bigDecimal division (`1/3`) to ensure evaluation obeys context scale/rounding and does not fail.
+7. enabled first object variable declaration/inference path:
+   - `var $payload description='...'; $payload`
+   - resolved as object declaration and emitted `calculateContext.getObject(..., Object.class)` in object result flow.
+8. added object setter support for naked variable declaration:
+   - `var $payload set if not exists 'fallback' description='...'; $payload`
+   - mapped to `getObject(...).orElse(...)` or `setAndGetObject(...)` depending on `if not exists`.
+9. aligned parser coverage for naked variable declaration with new object setter behavior.
+10. expanded javaType/object flow for object method parameters and object variable expression:
+   - added object type hint prefix/suffix parsers and object variable parser family,
+   - added `ObjectVariableMethodParameterParser` and wired it into method parameter parsing,
+   - updated object expression codegen to resolve local method parameters before context lookup,
+   - validated object pass-through method flow:
+     - `call identity('payload')`
+     - `object identity($payload as object){ $payload }`
+11. completed remaining P2 item for `OperatorOperandTreeCreator` fallback diagnosability:
+   - changed final fallback throw in `apply` from bare message to contextual unsupported-parser message,
+   - added targeted failure-path test using unsupported parser token to assert owner/parser/path details.
+12. started P4 UBNF extension design merge:
+   - created draft UBNF artifact with `@interleave`, `@backref`, `@scopeTree`:
+     - `docs/ubnf/tinyexpression-p4-draft.ubnf`
+   - validated draft with `unlaxer-dsl` validate-only (`ok=true`),
+   - added shared collaboration spec:
+     - `docs/TINYEXPRESSION-P4-UBNF-EXTENSION-SPEC.md`
+   - added roadmap semantic snapshot tests:
+     - `src/test/java/org/unlaxer/tinyexpression/roadmap/UbnfExtensionRoadmapTest.java`
+13. improved scope-tree semantics on runtime path:
+   - method parameter resolution is now prioritized in `VariableBuilder` via `VariableTypeResolver.resolveFromMethodParameter(...)`,
+   - added lexical shadowing roadmap assertion (`global $amount` vs method parameter `$amount`) in `UbnfExtensionRoadmapTest`.
+14. added dependency-extension memo for future `unlaxer-dsl` / `unlaxer-common` changes:
+   - `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md`
+   - recorded current P4 associativity/precedence validator gap and workaround.
+15. added P4 associativity/precedence minimal repro artifact:
+   - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`
+   - validate-only confirms reproducible failure codes for future dependency-side fix.
+
+Verified tests:
+
+1. `./mvnw -q -Dtest=TypeSystemRoadmapTest test`
+2. `./mvnw -q -Dtest=TypeSystemRoadmapTest,NumberGeneratedAstAdapterTest,ErrorDiagnosabilityRoadmapTest test`
+3. `./mvnw -q -Dtest=TypeSystemRoadmapTest,NumberGeneratedAstAdapterTest,ErrorDiagnosabilityRoadmapTest,ExpressionBuilderTest,SimpleUDFTest test`
+4. `./mvnw -q -Dtest=MethodsParserTest#testObjectMethodWithObjectParameter test`
+5. `./mvnw -q -Dtest=TypeSystemRoadmapTest,SimpleUDFTest,NumberGeneratedAstAdapterTest,ErrorDiagnosabilityRoadmapTest,ExpressionBuilderTest,StringVariableDeclarationParserTest test`
+6. `./mvnw -q -Dtest=UbnfExtensionRoadmapTest test`
+7. `./mvnw -q -Dtest=TypeSystemRoadmapTest,ErrorDiagnosabilityRoadmapTest test`
+8. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
+9. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --validate-only --report-format json\"`
 
 ## Execution Policy
 

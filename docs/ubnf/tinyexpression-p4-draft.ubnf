@@ -1,0 +1,77 @@
+grammar TinyExpressionP4 {
+
+  @package: org.unlaxer.tinyexpression.generated.p4
+  @whitespace: javaStyle
+  @comment: { line: '//' }
+
+  token NUMBER     = NumberParser
+  token IDENTIFIER = IdentifierParser
+  token STRING     = SingleQuotedParser
+
+  @root
+  Formula ::= { VariableDeclaration } Expression { MethodDeclaration } ;
+
+  @interleave(profile=javaStyle)
+  VariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ TypeHint ]
+    [ Setter ]
+    Description
+    ';' ;
+
+  TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
+
+  Setter ::= 'set' [ 'if' 'not' 'exists' ] Expression ;
+
+  Description ::= 'description' '=' STRING ;
+
+  @scopeTree(mode=lexical)
+  MethodDeclaration ::=
+    ReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      Expression
+    '}' ;
+
+  MethodParameters ::= MethodParameter { ',' MethodParameter } ;
+
+  MethodParameter ::= '$' IDENTIFIER [ 'as' ReturnType ] ;
+
+  ReturnType ::= 'number' | 'string' | 'boolean' | 'object' | 'float' ;
+
+  @backref(name=methodName)
+  MethodInvocation ::= 'call' IDENTIFIER '(' [ Arguments ] ')' ;
+
+  Arguments ::= Expression { ',' Expression } ;
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=10)
+  NumberExpression ::= NumberTerm @left { ( '+' @op | '-' @op ) NumberTerm @right } ;
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=20)
+  NumberTerm ::= NumberFactor @left { ( '*' @op | '/' @op ) NumberFactor @right } ;
+
+  NumberFactor ::= NUMBER | VariableRef | MethodInvocation | '(' NumberExpression ')' ;
+
+  StringExpression ::= STRING | VariableRef | MethodInvocation ;
+
+  BooleanExpression ::= 'true' | 'false' | VariableRef | MethodInvocation ;
+
+  ObjectExpression ::= NumberExpression | StringExpression | BooleanExpression | VariableRef | MethodInvocation ;
+
+  VariableRef ::= '$' IDENTIFIER [ TypeHint ] ;
+
+  Expression ::=
+      NumberExpression
+    | StringExpression
+    | BooleanExpression
+    | ObjectExpression
+    | MethodInvocation
+    | '(' Expression ')' ;
+}

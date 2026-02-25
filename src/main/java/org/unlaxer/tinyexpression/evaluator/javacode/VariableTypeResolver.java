@@ -162,4 +162,25 @@ public class VariableTypeResolver {
     }
     return Optional.empty();
   }
+
+  public static Optional<ExpressionType> resolveFromMethodParameter(Token variableToken) {
+    if (!(variableToken.getParser() instanceof VariableParser)) {
+      return Optional.empty();
+    }
+
+    TypedToken<VariableParser> typedVariable = variableToken.typed(VariableParser.class);
+    String variableName = typedVariable.getParser().getVariableName(typedVariable);
+
+    Optional<Token> methodToken = variableToken
+        .getAncestorAsOptional(TokenPredicators.parserImplements(MethodParser.class));
+    if (methodToken.isEmpty()) {
+      return Optional.empty();
+    }
+
+    TypedToken<MethodParser> typedMethod = methodToken.get().typed(MethodParser.class);
+    return typedMethod.getParser()
+        .typedVariableParser(typedMethod, variableName)
+        .map(TypedToken::getParser)
+        .flatMap(TypedVariableParser::typeAsOptional);
+  }
 }
