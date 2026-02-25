@@ -327,6 +327,9 @@ Completed in this session (P3 follow-up):
 35. expanded mapper generation for non-associative mapping rules:
    - `unlaxer-dsl` `MapperGenerator` now emits constructor-argument extraction for non-assoc captures,
    - supports scalar/optional/list capture initialization paths instead of placeholder defaults.
+36. added generated-AST observability on AST backend runtime:
+   - `AstEvaluatorCalculator` now stores `_astEvaluatorGeneratedAstNodeCount`,
+   - allows DAP/diagnostics layer to inspect generated AST size without token traversal.
 
 Verified tests:
 

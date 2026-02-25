@@ -29,6 +29,50 @@ final class GeneratedP4NumberAstEvaluator {
     }
   }
 
+  static int countAstNodes(Object node) {
+    if (node == null) {
+      return 0;
+    }
+    int count = 1;
+    Method[] methods = node.getClass().getMethods();
+    for (Method method : methods) {
+      if (method.getParameterCount() != 0) {
+        continue;
+      }
+      String name = method.getName();
+      if ("getClass".equals(name) || "hashCode".equals(name) || "toString".equals(name)) {
+        continue;
+      }
+      try {
+        Object value = method.invoke(node);
+        if (value == null) {
+          continue;
+        }
+        if (value instanceof List<?> list) {
+          for (Object element : list) {
+            if (isAstNodeCandidate(element)) {
+              count += countAstNodes(element);
+            }
+          }
+          continue;
+        }
+        if (isAstNodeCandidate(value)) {
+          count += countAstNodes(value);
+        }
+      } catch (Throwable ignored) {
+      }
+    }
+    return count;
+  }
+
+  private static boolean isAstNodeCandidate(Object value) {
+    if (value == null) {
+      return false;
+    }
+    String className = value.getClass().getName();
+    return className.contains("$") || className.endsWith("AST");
+  }
+
   private static Number evalNode(Object node, ExpressionType numberType, CalculationContext calculationContext)
       throws Exception {
     Method leftMethod = node.getClass().getMethod("left");

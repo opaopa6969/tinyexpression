@@ -196,6 +196,7 @@ public class AstEvaluatorCalculator implements Calculator {
       Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
       if (mapped.isPresent()) {
         setObject("_astEvaluatorMappedAst", mapped.get());
+        setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
         Optional<Object> generatedAstEvaluated = GeneratedP4NumberAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext);
         if (generatedAstEvaluated.isPresent()) {
