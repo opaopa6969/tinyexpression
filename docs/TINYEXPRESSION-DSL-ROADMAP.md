@@ -417,6 +417,9 @@ Completed in this session (P3 follow-up):
    - added `@mapping(MethodInvocationExpr, params=[name])` on `MethodInvocation`,
    - `GeneratedP4ValueAstEvaluator` now resolves `MethodInvocationExpr` by locating method declaration body from source and evaluating it through generated AST path first (bridge fallback only if needed),
    - `unlaxer-dsl` mapper generation now binds `IDENTIFIER` capture to `IdentifierParser.class` for accurate method-name extraction.
+65. added first curated parity corpus harness for mixed expression families:
+   - added `AstEvaluatorParityCorpusTest` to compare `JAVA_CODE` vs `AST_EVALUATOR` across number/if/match/object/variable/method/declaration representative formulas,
+   - corpus assertions include runtime guard (`_astEvaluatorRuntime != javacode-fallback`) for this supported subset.
 
 
 
@@ -449,6 +452,7 @@ Verified tests:
 25. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 26. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 27. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
+28. `./mvnw -q -Dtest=AstEvaluatorParityCorpusTest,AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
 
 ## Execution Policy
 

@@ -31,6 +31,7 @@ Last updated: 2026-02-25
 13. Comparison expressions now have explicit AST node mapping (`ComparisonExpr`) and are evaluated directly in generated AST runtime (bridge非依存) for boolean comparison semantics.
 14. Embedded-expression detection now follows java-style delimiter assumptions (`if`/`match` head with variable whitespace/comments), reducing heuristic mismatch vs parser behavior.
 15. `MethodInvocation` now has explicit AST mapping (`MethodInvocationExpr`) and zero-arg method declarations can be resolved/evaluated on generated AST path without mandatory JavaCode fallback.
+16. Parity harness now includes a curated mixed-expression corpus (`AstEvaluatorParityCorpusTest`) with runtime fallback guard for the supported slice.
 
 ## Remaining Gaps
 
@@ -44,8 +45,8 @@ Last updated: 2026-02-25
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:
-   1. current parity tests cover representative numeric slices
-   2. systematic formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
+   1. representative mixed corpus parity is available, but still curated/small
+   2. systematic large formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
