@@ -358,6 +358,10 @@ Completed in this session (P3 follow-up):
 45. hardened generated mapper for multi-choice captures under strict constructor typing:
    - `unlaxer-dsl` `MapperGenerator` now explores all capture candidates for non-assoc mappings,
    - added type-compatibility guard per constructor target type and `String` text fallback for heterogeneous alternatives.
+46. expanded generated AST runtime evaluator beyond number-only output:
+   - added `GeneratedP4ValueAstEvaluator` and switched `AstEvaluatorCalculator` generated path dispatch to it,
+   - supports `string`/`boolean`/`object` simple expressions via generated AST node inspection and `CalculationContext` variable resolution.
+
 
 Verified tests:
 

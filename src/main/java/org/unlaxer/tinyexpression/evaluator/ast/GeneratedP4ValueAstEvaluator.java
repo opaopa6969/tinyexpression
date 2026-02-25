@@ -1,0 +1,246 @@
+package org.unlaxer.tinyexpression.evaluator.ast;
+
+import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.List;
+import java.util.Optional;
+
+import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+
+final class GeneratedP4ValueAstEvaluator {
+
+  private GeneratedP4ValueAstEvaluator() {}
+
+  static Optional<Object> tryEvaluate(Object mappedAst, SpecifiedExpressionTypes specifiedExpressionTypes,
+      CalculationContext calculationContext) {
+    if (mappedAst == null) {
+      return Optional.empty();
+    }
+    ExpressionType resultType = resolveResultType(specifiedExpressionTypes);
+    if (resultType.isNumber()) {
+      return GeneratedP4NumberAstEvaluator.tryEvaluate(mappedAst, specifiedExpressionTypes, calculationContext);
+    }
+    if (resultType.isString()) {
+      return findFirstNode(mappedAst, "StringExpr")
+          .flatMap(node -> evaluateString(node, calculationContext));
+    }
+    if (resultType.isBoolean()) {
+      return findFirstNode(mappedAst, "BooleanExpr")
+          .flatMap(node -> evaluateBoolean(node, calculationContext));
+    }
+    if (resultType.isObject()) {
+      Optional<Object> objectExpr = findFirstNode(mappedAst, "ObjectExpr")
+          .flatMap(node -> evaluateObject(node, specifiedExpressionTypes, calculationContext));
+      if (objectExpr.isPresent()) {
+        return objectExpr;
+      }
+      Optional<Object> stringExpr = findFirstNode(mappedAst, "StringExpr")
+          .flatMap(node -> evaluateString(node, calculationContext))
+          .map(value -> (Object) value);
+      if (stringExpr.isPresent()) {
+        return stringExpr;
+      }
+      Optional<Object> booleanExpr = findFirstNode(mappedAst, "BooleanExpr")
+          .flatMap(node -> evaluateBoolean(node, calculationContext))
+          .map(value -> (Object) value);
+      if (booleanExpr.isPresent()) {
+        return booleanExpr;
+      }
+      return findFirstNode(mappedAst, "VariableRefExpr")
+          .flatMap(node -> evaluateVariableRef(node, calculationContext));
+    }
+    return Optional.empty();
+  }
+
+  private static ExpressionType resolveResultType(SpecifiedExpressionTypes specifiedExpressionTypes) {
+    if (specifiedExpressionTypes.resultType() != null) {
+      return specifiedExpressionTypes.resultType();
+    }
+    if (specifiedExpressionTypes.numberType() != null) {
+      return specifiedExpressionTypes.numberType();
+    }
+    return ExpressionTypes.object;
+  }
+
+  private static Optional<Object> findFirstNode(Object root, String simpleName) {
+    ArrayDeque<Object> queue = new ArrayDeque<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+      Object current = queue.removeFirst();
+      if (current == null) {
+        continue;
+      }
+      if (simpleName.equals(current.getClass().getSimpleName())) {
+        return Optional.of(current);
+      }
+      for (Object child : reflectiveChildren(current)) {
+        if (child != null) {
+          queue.addLast(child);
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<String> evaluateString(Object node, CalculationContext context) {
+    Object value = invokeZeroArg(node, "value").orElse(null);
+    if (value == null) {
+      return Optional.empty();
+    }
+    if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
+      return evaluateVariableRef(value, context).map(String::valueOf);
+    }
+    String text = String.valueOf(value);
+    if (text.startsWith("$")) {
+      Optional<Object> fromContext = resolveVariableAny(extractVariableName(text), context);
+      if (fromContext.isPresent()) {
+        return Optional.of(String.valueOf(fromContext.get()));
+      }
+    }
+    return Optional.of(text);
+  }
+
+  private static Optional<Boolean> evaluateBoolean(Object node, CalculationContext context) {
+    Object value = invokeZeroArg(node, "value").orElse(null);
+    if (value == null) {
+      return Optional.empty();
+    }
+    if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
+      return evaluateVariableRef(value, context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+    }
+    String text = String.valueOf(value).strip();
+    if (text.startsWith("$")) {
+      return resolveVariableAny(extractVariableName(text), context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+    }
+    return toBoolean(text);
+  }
+
+  private static Optional<Object> evaluateObject(Object node, SpecifiedExpressionTypes specifiedExpressionTypes,
+      CalculationContext context) {
+    Object value = invokeZeroArg(node, "value").orElse(null);
+    if (value == null) {
+      return Optional.empty();
+    }
+    String simpleName = value.getClass().getSimpleName();
+    if ("BinaryExpr".equals(simpleName)) {
+      return GeneratedP4NumberAstEvaluator.tryEvaluate(value, specifiedExpressionTypes, context);
+    }
+    if ("StringExpr".equals(simpleName)) {
+      return evaluateString(value, context).map(v -> (Object) v);
+    }
+    if ("BooleanExpr".equals(simpleName)) {
+      return evaluateBoolean(value, context).map(v -> (Object) v);
+    }
+    if ("VariableRefExpr".equals(simpleName)) {
+      return evaluateVariableRef(value, context);
+    }
+    return Optional.of(value);
+  }
+
+  private static Optional<Object> evaluateVariableRef(Object variableRefNode, CalculationContext context) {
+    Object name = invokeZeroArg(variableRefNode, "name").orElse(null);
+    if (name == null) {
+      return Optional.empty();
+    }
+    return resolveVariableAny(extractVariableName(String.valueOf(name)), context);
+  }
+
+  private static Optional<Object> resolveVariableAny(String variableName, CalculationContext context) {
+    if (variableName == null || variableName.isEmpty()) {
+      return Optional.empty();
+    }
+    Optional<? extends Number> number = context.getNumber(variableName);
+    if (number.isPresent()) {
+      return Optional.of(number.get());
+    }
+    Optional<String> string = context.getString(variableName);
+    if (string.isPresent()) {
+      return Optional.of(string.get());
+    }
+    Optional<Boolean> bool = context.getBoolean(variableName);
+    if (bool.isPresent()) {
+      return Optional.of(bool.get());
+    }
+    Optional<Object> object = context.getObject(variableName, Object.class);
+    if (object.isPresent()) {
+      return object;
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<Object> invokeZeroArg(Object node, String methodName) {
+    try {
+      Method method = node.getClass().getMethod(methodName);
+      return Optional.ofNullable(method.invoke(node));
+    } catch (Throwable ignored) {
+      return Optional.empty();
+    }
+  }
+
+  private static List<Object> reflectiveChildren(Object node) {
+    java.util.ArrayList<Object> children = new java.util.ArrayList<>();
+    Method[] methods = node.getClass().getMethods();
+    for (Method method : methods) {
+      if (method.getParameterCount() != 0) {
+        continue;
+      }
+      String name = method.getName();
+      if ("getClass".equals(name) || "hashCode".equals(name) || "toString".equals(name)) {
+        continue;
+      }
+      try {
+        Object value = method.invoke(node);
+        if (value == null) {
+          continue;
+        }
+        if (value instanceof List<?> list) {
+          children.addAll(list);
+          continue;
+        }
+        children.add(value);
+      } catch (Throwable ignored) {
+      }
+    }
+    return children;
+  }
+
+  private static String extractVariableName(String raw) {
+    if (raw == null) {
+      return null;
+    }
+    String text = raw.strip();
+    if (!text.startsWith("$")) {
+      return text;
+    }
+    int end = 1;
+    while (end < text.length()) {
+      char c = text.charAt(end);
+      if (Character.isLetterOrDigit(c) || c == '_') {
+        end++;
+        continue;
+      }
+      break;
+    }
+    return end > 1 ? text.substring(1, end) : null;
+  }
+
+  private static Optional<Boolean> toBoolean(Object value) {
+    if (value == null) {
+      return Optional.empty();
+    }
+    if (value instanceof Boolean bool) {
+      return Optional.of(bool);
+    }
+    String text = String.valueOf(value).strip().toLowerCase();
+    if ("true".equals(text)) {
+      return Optional.of(true);
+    }
+    if ("false".equals(text)) {
+      return Optional.of(false);
+    }
+    return Optional.empty();
+  }
+}
