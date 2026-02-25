@@ -89,8 +89,8 @@ Result snapshot:
 
 Assoc/precedence repro validation:
 
-- canonical-looking left-assoc rule currently fails with
-  `E-ASSOC-MISSING-CAPTURE`, `E-ASSOC-NO-REPEAT`, `E-MAPPING-MISSING-CAPTURE`
+- group-choice 形式 (`{ ( '+' @op | '-' @op ) Term @right }`) は validator 不一致を再現
+- operator rule reference 形式 (`{ AddOp @op Term @right }`) へ変更すると validate pass
 - dependency note reference:
   - `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md`
 
@@ -138,8 +138,7 @@ Result:
 
 ## 5. Known Gaps after this P4 step
 
-1. Assoc/precedence annotations were not yet hardened in the draft grammar checkpoint.
-2. Full TinyExpression grammar is not yet fully represented in UBNF.
+1. Full TinyExpression grammar is not yet fully represented in UBNF.
 
 ---
 
@@ -147,4 +146,3 @@ Result:
 
 1. Extend lexical-scope conformance tests across string/object method paths as well.
 2. Expand UBNF draft from core subset to full TinyExpression syntax (match/if/setter/method/annotation).
-3. Re-enable associativity/precedence metadata with validator-conformant canonical forms.

@@ -37,17 +37,18 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
   -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-assoc-repro.ubnf --validate-only --report-format json"
 ```
 
-### Current workaround
+### Resolution status
 
-- P4 draft では `@interleave` / `@backref` / `@scopeTree` を優先し、
-  `@leftAssoc` / `@precedence` は一旦外した状態を validator-pass の基準にする。
+- 解消済み（dependency 側拡張なし）。
+- 演算子選択を repeat 内 group choice から rule reference へ変更することで validator-pass となった。
+  - `NumberExpression ::= NumberTerm @left { AddOp @op NumberTerm @right } ;`
+  - `NumberTerm ::= NumberFactor @left { MulOp @op NumberFactor @right } ;`
 
-### Possible extension candidates
+### Decision
 
-1. `unlaxer-dsl` validator 側で canonical left-assoc 判定の許容形を拡張する
-2. capture 抽出ロジックが repeat 内 capture を見落とす条件を調査して修正する
-3. 仕様上の canonical form を TinyExpression 側 grammar に合わせて再定義する
+1. 現時点では `unlaxer-dsl` / `unlaxer-common` の変更は不要。
+2. この問題で dependency repo を編集する必要はない。
 
 ### Required action before editing dependency repos
 
-- `unlaxer-dsl` への修正が必要になった時点で、ユーザー許可を取得してから着手する。
+- 今後別件で `unlaxer-dsl` への修正が必要になった時点で、ユーザー許可を取得してから着手する。

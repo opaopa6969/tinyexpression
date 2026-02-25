@@ -10,12 +10,15 @@ grammar TinyExpressionP4AssocRepro {
   @mapping(BinaryExpr, params=[left, op, right])
   @leftAssoc
   @precedence(level=10)
-  NumberExpression ::= NumberTerm @left { ( '+' @op | '-' @op ) NumberTerm @right } ;
+  NumberExpression ::= NumberTerm @left { AddOp @op NumberTerm @right } ;
 
   @mapping(BinaryExpr, params=[left, op, right])
   @leftAssoc
   @precedence(level=20)
-  NumberTerm ::= NumberFactor @left { ( '*' @op | '/' @op ) NumberFactor @right } ;
+  NumberTerm ::= NumberFactor @left { MulOp @op NumberFactor @right } ;
+
+  AddOp ::= '+' | '-' ;
+  MulOp ::= '*' | '/' ;
 
   NumberFactor ::= NUMBER | '(' NumberExpression ')' ;
 }

@@ -60,6 +60,12 @@ Implemented for P3 (follow-up):
 12. improved scope semantics for method parameter shadowing:
     - `VariableBuilder` now prioritizes method parameter resolution (`VariableTypeResolver.resolveFromMethodParameter`) before context/global lookup,
     - roadmap test now asserts lexical shadowing behavior on number method path.
+13. resolved P4 associativity/precedence validation in UBNF draft without dependency-repo edits:
+    - changed operator pattern to rule-reference form (`AddOp` / `MulOp`),
+    - restored `@leftAssoc` + `@precedence` in draft grammar,
+    - `unlaxer-dsl` validate-only now returns `ok=true` for:
+      - `docs/ubnf/tinyexpression-p4-draft.ubnf`
+      - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf` (success form).
 
 ## Files Changed
 

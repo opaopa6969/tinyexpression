@@ -249,6 +249,11 @@ Completed in this session (P3 follow-up):
 15. added P4 associativity/precedence minimal repro artifact:
    - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`
    - validate-only confirms reproducible failure codes for future dependency-side fix.
+16. resolved P4 associativity/precedence draft validation by grammar rewrite (no dependency repo change):
+   - switched operator segment to rule reference form:
+     - `AddOp @op ...` / `MulOp @op ...`
+   - re-enabled `@leftAssoc` + `@precedence` in `docs/ubnf/tinyexpression-p4-draft.ubnf`
+   - validate-only now passes for both draft and repro-success form.
 
 Verified tests:
 
