@@ -281,6 +281,10 @@ Completed in this session (P3 follow-up):
    - added `ExecutionBackend` (`JAVA_CODE` / `AST_EVALUATOR`),
    - added `CalculatorCreatorRegistry` and switched `FormulaInfoParser` to backend-based creator selection,
    - kept `AST_EVALUATOR` as compatibility fallback path while generated evaluator runtime is being integrated.
+24. started dependency-side codegen hardening for full migration:
+   - implemented executable `MapperGenerator` parse entry + mapping dispatch + assoc extraction in `unlaxer-dsl`,
+   - refreshed mapper snapshot goldens in `unlaxer-dsl`,
+   - added `runtimeMode` (`token`/`ast`) hook to generated DAP adapter and refreshed DAP snapshot golden.
 
 Verified tests:
 

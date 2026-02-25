@@ -93,6 +93,10 @@ Implemented for P3 (follow-up):
     - added `ExecutionBackend` enum (`JAVA_CODE`, `AST_EVALUATOR`),
     - added `CalculatorCreatorRegistry` and switched `FormulaInfoParser` creator selection to backend-based wiring,
     - set `AST_EVALUATOR` as migration fallback path (currently delegates to JavaCode path until generated evaluator runtime is integrated).
+21. implemented dependency-side migration blockers in `unlaxer-dsl`:
+    - `MapperGenerator`: parse entry, rule dispatch, and assoc mapping extraction are now generated as executable code,
+    - updated mapper snapshot goldens,
+    - `DAPGenerator`: added `runtimeMode` launch hook (`token`/`ast`) and mode-aware step collection dispatch (currently `ast` uses token fallback).
 
 ## Files Changed
 
