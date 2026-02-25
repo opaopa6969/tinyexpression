@@ -157,10 +157,14 @@ grammar TinyExpressionP4 {
   @mapping(BooleanExpr, params=[value])
   BooleanExpression ::=
       BooleanMatchExpression @value
+    | ComparisonExpression @value
     | 'true' @value
     | 'false' @value
     | VariableRef @value
     | MethodInvocation @value ;
+
+  ComparisonExpression ::= NumberExpression CompareOp NumberExpression ;
+  CompareOp ::= '==' | '!=' | '<=' | '>=' | '<' | '>' ;
 
   @mapping(ObjectExpr, params=[value])
   ObjectExpression ::=

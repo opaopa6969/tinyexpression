@@ -400,6 +400,10 @@ Completed in this session (P3 follow-up):
 59. added generated-path coverage for numeric control-flow expressions:
    - `GeneratedP4ValueAstEvaluator` now routes number-evaluation misses to embedded expression runtime bridge,
    - `AstEvaluatorGeneratedValuePathTest` now verifies `if(true){1}else{2}` runs on `generated-ast` runtime.
+60. extended P4 draft boolean grammar with comparison expressions:
+   - added `ComparisonExpression ::= NumberExpression CompareOp NumberExpression` and wired it into `BooleanExpression`,
+   - supports `match{1==1->...,default->...}` class formulas on generated parser path,
+   - refreshed parser-ir artifact (`docs/ubnf/tinyexpression-p4-draft.parser-ir.json`) and validated it.
 
 
 
@@ -429,6 +433,8 @@ Verified tests:
 22. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest test`
 23. `./mvnw -q -DskipTests compile`
 24. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
+25. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
+26. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 
 ## Execution Policy
 

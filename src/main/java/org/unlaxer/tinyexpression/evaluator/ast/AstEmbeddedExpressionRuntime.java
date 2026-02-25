@@ -42,7 +42,13 @@ final class AstEmbeddedExpressionRuntime {
         || normalized.startsWith("match{")
         || normalized.startsWith("match {")
         || isMethodInvocationExpression(normalized)
-        || normalized.contains("->");
+        || normalized.contains("->")
+        || normalized.contains("==")
+        || normalized.contains("!=")
+        || normalized.contains("<=")
+        || normalized.contains(">=")
+        || normalized.contains("<")
+        || normalized.contains(">");
   }
 
   private static boolean isMethodInvocationExpression(String text) {

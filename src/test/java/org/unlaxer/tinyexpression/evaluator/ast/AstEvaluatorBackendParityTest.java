@@ -72,11 +72,11 @@ public class AstEvaluatorBackendParityTest {
   public void testValueExpressionsMatchJavaCodeBackendOnComplexNonNumberCases() {
     List<Case> cases = List.of(
         new Case(
-            "match{true->'A',default->'B'}",
+            "match{1==1->'A',default->'B'}",
             new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float),
             null),
         new Case(
-            "match{false->false,default->true}",
+            "match{1==0->false,default->true}",
             new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
             null),
         new Case(
