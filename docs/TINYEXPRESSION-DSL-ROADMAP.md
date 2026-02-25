@@ -349,6 +349,9 @@ Completed in this session (P3 follow-up):
 42. improved mapper selection when root rule is not explicitly mapped:
    - `unlaxer-dsl` generated mapper now picks mapped token candidate by `minimum depth` then `maximum start offset`,
    - avoids accidental capture of declaration-initializer expressions in grammars that contain multiple mapped subexpressions.
+43. added final-gap audit document for end-state tracking:
+   - `docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md`
+   - records done/remaining/priority order toward full DSL replacement + dual runtime parity.
 
 Verified tests:
 
