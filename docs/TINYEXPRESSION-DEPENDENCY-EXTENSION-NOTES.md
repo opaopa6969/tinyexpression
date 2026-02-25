@@ -80,3 +80,25 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 1. generated mapper を受ける AST evaluator 実行器を追加
 2. 既存 Java codegen 実行器との mode 切替を導入
 3. DAP を mode 別に接続する
+
+---
+
+## 2026-02-25: unlaxer-dsl DAP runtimeMode hook
+
+### Context
+
+- Target repo: `unlaxer-dsl`
+- Target file: `src/main/java/org/unlaxer/dsl/codegen/DAPGenerator.java`
+- Goal: DAP で `javacode` / `ast` の両経路接続を可能にする準備。
+
+### Implemented
+
+1. launch 引数 `runtimeMode` を追加（default: `token`）
+2. generated adapter に `isAstRuntimeMode()` 分岐を追加
+3. `collectStepPoints` を mode-dispatch 化
+4. variables へ `runtimeMode` 表示を追加
+
+### Current limitation
+
+- `runtimeMode=ast` は現時点では token stepping fallback。
+- mapper/evaluator runtime が接続された段階で AST ノードステップへ差し替える。

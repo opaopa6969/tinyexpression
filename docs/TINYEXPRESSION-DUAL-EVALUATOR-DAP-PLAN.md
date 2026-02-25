@@ -36,6 +36,16 @@
 1. `mode=javacode`: 既存 JavaCodeCalculator 系のステップ/変数表示
 2. `mode=ast`: generated Evaluator 系の AST ノードステップ/評価値表示
 
+### Current implementation note
+
+`unlaxer-dsl` の `DAPGenerator` には `runtimeMode` launch 引数を追加済み。
+
+1. `runtimeMode=token` (default)
+2. `runtimeMode=ast` / `ast_evaluator`
+
+現時点の `ast` は token stepping fallback 実装で、
+後続で mapper/evaluator runtime 接続時に AST ノードステップへ差し替える。
+
 ## Verification policy
 
 1. 同じ式を 2 経路で実行し、結果一致を検証する
