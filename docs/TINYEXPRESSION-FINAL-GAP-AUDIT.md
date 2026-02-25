@@ -21,16 +21,20 @@ Last updated: 2026-02-25
 6. Object generated-path evaluation now covers variable reference and declaration setter defaulting (`if not exists`) in representative formulas.
 7. `unlaxer-dsl` capture-type inference now degrades heterogeneous captures to `Object`, preventing over-constrained generated AST fields in mixed alternatives.
 8. Generated mapper now supports preferred root selection (`parse(source, preferredAstSimpleName)`), and AST runtime passes preferred node kind by result type.
+9. Generated value runtime now has an embedded-expression bridge for complex text payloads (`match` / `if` / `call`) in `StringExpr` / `BooleanExpr` / `ObjectExpr`:
+   1. expression-like text is evaluated via `JavaCodeCalculatorV3`,
+   2. unresolved expression-like text is rejected (no raw DSL snippet return),
+   3. generated-path tests now cover string `match` and `call + method declaration`.
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
-   1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）
-   2. `IfExpression`, `match` families
-   3. method invocation and declaration semantics in AST runtime
+   1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）は「埋め込みJavaCode bridge」で動作するが、純粋AST walkとしては未完
+   2. `IfExpression`, `match` families の専用ASTノード化と評価器実装は未完
+   3. method invocation/declaration の純粋ASTセマンティクス（bridge非依存）は未完
 2. Declaration semantics in generated AST runtime:
-   1. variable declaration setters/defaulting are basic number/string/boolean/object pathで実装済みだが、複合式（method/match/if）網羅は未完
-   2. dependency on fallback remains for declaration-heavy formulas
+   1. variable declaration setters/defaulting は複合式の一部まで拡張済み（method declaration text injection + embedded eval）
+   2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:
@@ -51,8 +55,7 @@ Last updated: 2026-02-25
 
 ## Recommended Implementation Order
 
-1. Expand generated mapper annotations/rules to include non-numeric expression families.
-2. Implement generated AST evaluator adapters for string/boolean/object and control-flow nodes.
-3. Add declaration/method runtime semantics in AST evaluator path.
-4. Build corpus-based parity runner and promote failing categories incrementally.
-5. Finalize DAP runtime parity checkpoints for evaluator-level behavior.
+1. Expand generated mapper/AST definitions to explicit control-flow/method nodes (reduce textual payload dependence).
+2. Replace embedded-expression bridge paths with pure AST evaluator dispatch for method/match/if.
+3. Build corpus-based parity runner and promote failing categories incrementally.
+4. Finalize DAP runtime parity checkpoints for evaluator-level behavior.

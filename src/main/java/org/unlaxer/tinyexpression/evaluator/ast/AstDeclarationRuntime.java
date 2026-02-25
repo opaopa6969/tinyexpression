@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
@@ -31,9 +32,14 @@ final class AstDeclarationRuntime {
     try {
       Token rootToken = parseAndReduce(source);
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken, specifiedExpressionTypes);
+      String methodDeclarationsSource = tinyExpressionTokens.getMethodTokens().stream()
+          .map(AstDeclarationRuntime::tokenTextCompat)
+          .filter(text -> text != null && !text.isBlank())
+          .collect(Collectors.joining("\n"));
       boolean changed = false;
       for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
-        changed |= applyDeclaration(declarationToken, specifiedExpressionTypes, calculationContext, classLoader);
+        changed |= applyDeclaration(
+            declarationToken, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource);
       }
       return changed;
     } catch (Throwable ignored) {
@@ -42,7 +48,7 @@ final class AstDeclarationRuntime {
   }
 
   private static boolean applyDeclaration(Token declarationToken, SpecifiedExpressionTypes specifiedExpressionTypes,
-      CalculationContext calculationContext, ClassLoader classLoader) {
+      CalculationContext calculationContext, ClassLoader classLoader, String methodDeclarationsSource) {
     Optional<Token> setterToken = declarationToken.getChildAsOptional(TokenPredicators.parserImplements(SetterParser.class));
     if (setterToken.isEmpty()) {
       return false;
@@ -65,7 +71,8 @@ final class AstDeclarationRuntime {
       return false;
     }
     Optional<Object> evaluated = evaluateExpression(
-        expressionSource, variableInfo.expressionType, specifiedExpressionTypes, calculationContext, classLoader);
+        expressionSource, variableInfo.expressionType, specifiedExpressionTypes, calculationContext, classLoader,
+        methodDeclarationsSource);
     if (evaluated.isEmpty()) {
       return false;
     }
@@ -75,7 +82,9 @@ final class AstDeclarationRuntime {
   }
 
   private static Optional<Object> evaluateExpression(String expressionSource, ExpressionType resultType,
-      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader) {
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader,
+      String methodDeclarationsSource) {
+    String embeddedFormulaSource = joinExpressionWithMethods(expressionSource, methodDeclarationsSource);
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
     if (GeneratedAstRuntimeProbe.isAvailable(classLoader)) {
@@ -83,16 +92,29 @@ final class AstDeclarationRuntime {
           expressionSource, classLoader, preferredAstSimpleName(resultType));
       if (mapped.isPresent()) {
         Optional<Object> generatedValue =
-            GeneratedP4ValueAstEvaluator.tryEvaluate(mapped.get(), evalTypes, calculationContext);
+            GeneratedP4ValueAstEvaluator.tryEvaluate(
+                mapped.get(), evalTypes, calculationContext, classLoader, embeddedFormulaSource);
         if (generatedValue.isPresent()) {
           return generatedValue;
         }
       }
     }
     if (resultType.isNumber()) {
-      return AstNumberExpressionEvaluator.tryEvaluate(expressionSource, evalTypes, calculationContext);
+      Optional<Object> number = AstNumberExpressionEvaluator.tryEvaluate(expressionSource, evalTypes, calculationContext);
+      if (number.isPresent()) {
+        return number;
+      }
+      return AstEmbeddedExpressionRuntime.tryEvaluate(
+          expressionSource, resultType, evalTypes, calculationContext, classLoader, embeddedFormulaSource);
     }
-    return parseLiteralOrVariable(expressionSource, resultType, specifiedExpressionTypes, calculationContext);
+    Optional<Object> literalOrVariable = parseLiteralOrVariable(
+        expressionSource, resultType, specifiedExpressionTypes, calculationContext);
+    if (!AstEmbeddedExpressionRuntime.isLikelyExpression(expressionSource)) {
+      return literalOrVariable;
+    }
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        expressionSource, resultType, evalTypes, calculationContext, classLoader, embeddedFormulaSource);
+    return embedded.isPresent() ? embedded : Optional.empty();
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes specifiedExpressionTypes,
@@ -231,6 +253,18 @@ final class AstDeclarationRuntime {
       rootToken = VariableTypeResolver.resolveVariableType(rootToken);
       return OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
     }
+  }
+
+  private static String joinExpressionWithMethods(String expressionSource, String methodDeclarationsSource) {
+    String expression = expressionSource == null ? "" : expressionSource.strip();
+    String methods = methodDeclarationsSource == null ? "" : methodDeclarationsSource.strip();
+    if (methods.isEmpty()) {
+      return expression;
+    }
+    if (expression.isEmpty()) {
+      return methods;
+    }
+    return expression + "\n" + methods;
   }
 
   private static String tokenTextCompat(Token token) {

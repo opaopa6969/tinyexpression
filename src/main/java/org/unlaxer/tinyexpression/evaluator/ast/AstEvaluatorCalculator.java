@@ -201,11 +201,11 @@ public class AstEvaluatorCalculator implements Calculator {
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
-            mapped.get(), specifiedExpressionTypes, calculationContext);
+            mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
         if (generatedAstEvaluated.isEmpty()) {
           AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
           generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
-              mapped.get(), specifiedExpressionTypes, calculationContext);
+              mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
         }
         ExpressionType evaluatedResultType = resultType();
         if (generatedAstEvaluated.isPresent() && evaluatedResultType != null && evaluatedResultType.isNumber()) {

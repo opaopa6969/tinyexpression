@@ -18,6 +18,11 @@ final class GeneratedP4ValueAstEvaluator {
 
   static Optional<Object> tryEvaluate(Object mappedAst, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext) {
+    return tryEvaluate(mappedAst, specifiedExpressionTypes, calculationContext, null, null);
+  }
+
+  static Optional<Object> tryEvaluate(Object mappedAst, SpecifiedExpressionTypes specifiedExpressionTypes,
+      CalculationContext calculationContext, ClassLoader classLoader, String fallbackFormulaSource) {
     if (mappedAst == null) {
       return Optional.empty();
     }
@@ -27,26 +32,31 @@ final class GeneratedP4ValueAstEvaluator {
     }
     if (resultType.isString()) {
       return findFirstNode(mappedAst, "StringExpr")
-          .flatMap(node -> evaluateString(node, calculationContext));
+          .flatMap(node -> evaluateString(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource));
     }
     if (resultType.isBoolean()) {
       return findFirstNode(mappedAst, "BooleanExpr")
-          .flatMap(node -> evaluateBoolean(node, calculationContext));
+          .flatMap(node -> evaluateBoolean(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource));
     }
     if (resultType.isObject()) {
       Optional<Object> objectExpr = findFirstNode(mappedAst, "ObjectExpr")
-          .flatMap(node -> evaluateObject(node, specifiedExpressionTypes, calculationContext));
+          .flatMap(node -> evaluateObject(
+              node, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
       if (objectExpr.isPresent()) {
         return objectExpr;
       }
       Optional<Object> stringExpr = findFirstNode(mappedAst, "StringExpr")
-          .flatMap(node -> evaluateString(node, calculationContext))
+          .flatMap(node -> evaluateString(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(value -> (Object) value);
       if (stringExpr.isPresent()) {
         return stringExpr;
       }
       Optional<Object> booleanExpr = findFirstNode(mappedAst, "BooleanExpr")
-          .flatMap(node -> evaluateBoolean(node, calculationContext))
+          .flatMap(node -> evaluateBoolean(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(value -> (Object) value);
       if (booleanExpr.isPresent()) {
         return booleanExpr;
@@ -93,7 +103,8 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.empty();
   }
 
-  private static Optional<String> evaluateString(Object node, CalculationContext context) {
+  private static Optional<String> evaluateString(Object node, CalculationContext context,
+      SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader, String fallbackFormulaSource) {
     Object value = invokeZeroArg(node, "value").orElse(null);
     if (value == null) {
       return Optional.empty();
@@ -101,17 +112,26 @@ final class GeneratedP4ValueAstEvaluator {
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
       return evaluateVariableRef(value, context).map(String::valueOf);
     }
-    String text = String.valueOf(value);
+    String text = String.valueOf(value).strip();
     if (text.startsWith("$")) {
       Optional<Object> fromContext = resolveVariableAny(extractVariableName(text), context);
       if (fromContext.isPresent()) {
         return Optional.of(String.valueOf(fromContext.get()));
       }
     }
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        text, ExpressionTypes.string, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (embedded.isPresent()) {
+      return Optional.of(String.valueOf(embedded.get()));
+    }
+    if (AstEmbeddedExpressionRuntime.isLikelyExpression(text)) {
+      return Optional.empty();
+    }
     return Optional.of(text);
   }
 
-  private static Optional<Boolean> evaluateBoolean(Object node, CalculationContext context) {
+  private static Optional<Boolean> evaluateBoolean(Object node, CalculationContext context,
+      SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader, String fallbackFormulaSource) {
     Object value = invokeZeroArg(node, "value").orElse(null);
     if (value == null) {
       return Optional.empty();
@@ -123,11 +143,20 @@ final class GeneratedP4ValueAstEvaluator {
     if (text.startsWith("$")) {
       return resolveVariableAny(extractVariableName(text), context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
     }
-    return toBoolean(text);
+    Optional<Boolean> literal = toBoolean(text);
+    if (literal.isPresent()) {
+      return literal;
+    }
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        text, ExpressionTypes._boolean, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (embedded.isPresent()) {
+      return toBoolean(embedded.get());
+    }
+    return Optional.empty();
   }
 
   private static Optional<Object> evaluateObject(Object node, SpecifiedExpressionTypes specifiedExpressionTypes,
-      CalculationContext context) {
+      CalculationContext context, ClassLoader classLoader, String fallbackFormulaSource) {
     Object value = invokeZeroArg(node, "value").orElse(null);
     if (value == null) {
       return Optional.empty();
@@ -137,10 +166,12 @@ final class GeneratedP4ValueAstEvaluator {
       return GeneratedP4NumberAstEvaluator.tryEvaluate(value, specifiedExpressionTypes, context);
     }
     if ("StringExpr".equals(simpleName)) {
-      return evaluateString(value, context).map(v -> (Object) v);
+      return evaluateString(value, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
+          .map(v -> (Object) v);
     }
     if ("BooleanExpr".equals(simpleName)) {
-      return evaluateBoolean(value, context).map(v -> (Object) v);
+      return evaluateBoolean(value, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
+          .map(v -> (Object) v);
     }
     if ("VariableRefExpr".equals(simpleName)) {
       return evaluateVariableRef(value, context);
@@ -150,6 +181,24 @@ final class GeneratedP4ValueAstEvaluator {
       if (binary.isPresent()) {
         return binary;
       }
+    }
+    if (value instanceof String text) {
+      String normalized = text.strip();
+      if (normalized.startsWith("$")) {
+        Optional<Object> variable = resolveVariableAny(extractVariableName(normalized), context);
+        if (variable.isPresent()) {
+          return variable;
+        }
+      }
+      Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+          normalized, ExpressionTypes.object, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      if (embedded.isPresent()) {
+        return embedded;
+      }
+      if (AstEmbeddedExpressionRuntime.isLikelyExpression(normalized)) {
+        return Optional.empty();
+      }
+      return Optional.of(normalized);
     }
     return Optional.of(value);
   }

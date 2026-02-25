@@ -388,6 +388,12 @@ Completed in this session (P3 follow-up):
 55. normalized declaration-side `number` abstract type handling in AST runtime:
    - `AstDeclarationRuntime` now resolves `ExpressionTypes.number` to concrete number type (`specified numberType` or `_float`) for parse/set paths,
    - enables generated-path declaration setter execution for typed number declarations (`as number`).
+56. added embedded-expression bridge for generated value runtime on complex non-numeric formulas:
+   - added `AstEmbeddedExpressionRuntime` to evaluate expression-like payloads (`match`, `if`, `call`) via `JavaCodeCalculatorV3` when generated mapper stores raw textual value,
+   - `GeneratedP4ValueAstEvaluator` now routes `StringExpr` / `BooleanExpr` / `ObjectExpr` textual expressions through the bridge and returns `empty` for unresolved expression-like text instead of returning raw DSL snippets,
+   - `AstDeclarationRuntime` now injects method declarations into declaration-setter embedded evaluation context to support `call ...` setter formulas.
+57. expanded generated-path validation for complex value families:
+   - `AstEvaluatorGeneratedValuePathTest` now covers string `match` evaluation and `call + method declaration` object evaluation on `generated-ast` runtime.
 
 
 
@@ -413,6 +419,9 @@ Verified tests:
 18. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
 19. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
 20. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest#testTypedDeclarationSettersUseGeneratedAstPath test`
+21. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest test`
+22. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest test`
+23. `./mvnw -q -DskipTests compile`
 
 ## Execution Policy
 

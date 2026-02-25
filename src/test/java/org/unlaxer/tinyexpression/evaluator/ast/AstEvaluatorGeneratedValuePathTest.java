@@ -99,6 +99,38 @@ public class AstEvaluatorGeneratedValuePathTest {
         true);
   }
 
+  @Test
+  public void testStringMatchUsesGeneratedAstPath() {
+    String formula = "match{true->'niku',default->'sushi'}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstStringMatchGeneratedPath", types, classLoader);
+
+    Object value = ast.apply(CalculationContext.newConcurrentContext());
+
+    assertEquals("niku", value);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
+  @Test
+  public void testMethodInvocationWithDeclarationUsesGeneratedAstPath() {
+    String formula = "call provide()\nobject provide(){\n'ok'\n}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstMethodInvocationGeneratedPath", types, classLoader);
+
+    Object value = ast.apply(CalculationContext.newConcurrentContext());
+
+    assertEquals("ok", value);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
   private void assertGeneratedDeclarationFormula(String formula, SpecifiedExpressionTypes types, Object expected) {
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
     Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
