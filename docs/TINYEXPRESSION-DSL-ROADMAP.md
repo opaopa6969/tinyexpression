@@ -273,6 +273,10 @@ Completed in this session (P3 follow-up):
    - added roadmap test for method parameter shadowing on string path (`$name`),
    - fixed `StringClauseBuilder` to accept wrapped `NumberExpressionParser` token path and delegate to child expression,
    - verified updated `UbnfExtensionRoadmapTest`.
+22. extended P4 UBNF draft for typed declaration variants:
+   - split `VariableDeclaration` into number/string/boolean/object declaration rules with typed setter rules,
+   - split `MethodDeclaration` into number/string/boolean/object method declaration rules with typed return aliases,
+   - re-validated draft and refreshed parser-ir artifact (`ok` for validate-only and parser-ir validation).
 
 Verified tests:
 
@@ -286,6 +290,9 @@ Verified tests:
 8. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
 9. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --validate-only --report-format json\"`
 10. `./mvnw -q -Dtest=UbnfExtensionRoadmapTest test`
+11. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --validate-only --report-format json\"`
+12. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json\"`
+13. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args=\"--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json\"`
 
 ## Execution Policy
 

@@ -13,16 +13,54 @@ grammar TinyExpressionP4 {
 
   @interleave(profile=javaStyle)
   VariableDeclaration ::=
+      NumberVariableDeclaration
+    | StringVariableDeclaration
+    | BooleanVariableDeclaration
+    | ObjectVariableDeclaration ;
+
+  NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER
-    [ TypeHint ]
-    [ Setter ]
+    [ NumberTypeHint ]
+    [ NumberSetter ]
+    Description
+    ';' ;
+
+  StringVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ StringTypeHint ]
+    [ StringSetter ]
+    Description
+    ';' ;
+
+  BooleanVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ BooleanTypeHint ]
+    [ BooleanSetter ]
+    Description
+    ';' ;
+
+  ObjectVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ ObjectTypeHint ]
+    [ ObjectSetter ]
     Description
     ';' ;
 
   TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
 
-  Setter ::= 'set' [ 'if' 'not' 'exists' ] Expression ;
+  NumberTypeHint ::= [ 'as' ] ( 'number' | 'float' ) ;
+  StringTypeHint ::= [ 'as' ] 'string' ;
+  BooleanTypeHint ::= [ 'as' ] 'boolean' ;
+  ObjectTypeHint ::= [ 'as' ] 'object' ;
+
+  NumberSetter ::= 'set' [ 'if' 'not' 'exists' ] NumberExpression ;
+  StringSetter ::= 'set' [ 'if' 'not' 'exists' ] StringExpression ;
+  BooleanSetter ::= 'set' [ 'if' 'not' 'exists' ] BooleanExpression ;
+  ObjectSetter ::= 'set' [ 'if' 'not' 'exists' ] ObjectExpression ;
 
   Description ::= 'description' '=' STRING ;
 
@@ -32,19 +70,56 @@ grammar TinyExpressionP4 {
 
   @scopeTree(mode=lexical)
   MethodDeclaration ::=
-    ReturnType IDENTIFIER
+      NumberMethodDeclaration
+    | StringMethodDeclaration
+    | BooleanMethodDeclaration
+    | ObjectMethodDeclaration ;
+
+  NumberMethodDeclaration ::=
+    NumberReturnType IDENTIFIER
     '('
       [ MethodParameters ]
     ')'
     '{'
-      Expression
+      NumberExpression
+    '}' ;
+
+  StringMethodDeclaration ::=
+    StringReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      StringExpression
+    '}' ;
+
+  BooleanMethodDeclaration ::=
+    BooleanReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      BooleanExpression
+    '}' ;
+
+  ObjectMethodDeclaration ::=
+    ObjectReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      ObjectExpression
     '}' ;
 
   MethodParameters ::= MethodParameter { ',' MethodParameter } ;
 
   MethodParameter ::= '$' IDENTIFIER [ 'as' ReturnType ] ;
 
-  ReturnType ::= 'number' | 'string' | 'boolean' | 'object' | 'float' ;
+  NumberReturnType ::= 'number' | 'float' ;
+  StringReturnType ::= 'string' ;
+  BooleanReturnType ::= 'boolean' ;
+  ObjectReturnType ::= 'object' ;
+  ReturnType ::= NumberReturnType | StringReturnType | BooleanReturnType | ObjectReturnType ;
 
   @backref(name=methodName)
   MethodInvocation ::= 'call' IDENTIFIER '(' [ Arguments ] ')' ;

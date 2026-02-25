@@ -85,6 +85,10 @@ Implemented for P3 (follow-up):
     - added string lexical shadowing snapshot (`global $name` vs method parameter `$name`),
     - updated `StringClauseBuilder` to handle wrapped `NumberExpressionParser` token path,
     - re-ran `UbnfExtensionRoadmapTest` successfully.
+19. extended P4 UBNF draft with typed declaration variants:
+    - split variable declaration grammar into number/string/boolean/object rules with typed setters,
+    - split method declaration grammar into number/string/boolean/object rules with typed return aliases,
+    - re-validated grammar and parser-ir export/validation successfully.
 
 ## Files Changed
 
@@ -160,7 +164,7 @@ Not executed in this round:
 
 Continue with `P4` in this order:
 
-1. extend UBNF draft for remaining setter/method declaration variants,
+1. continue expanding UBNF draft toward full TinyExpression syntax parity,
 2. keep test policy minimal (`1 fail + 1 success`).
 
 ## Guardrails / Collaboration Rules

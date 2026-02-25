@@ -76,6 +76,9 @@ Draft file:
 Notes:
 
 - Includes `@interleave(profile=javaStyle)`, `@backref(name=methodName)`, `@scopeTree(mode=lexical)`
+- includes typed declaration variants:
+  - `Number/String/Boolean/ObjectVariableDeclaration` + typed setter rules
+  - `Number/String/Boolean/ObjectMethodDeclaration` + typed return aliases
 - Intentionally keeps precedence/assoc minimal for this P4 checkpoint
 
 Validation command and result:
@@ -182,4 +185,4 @@ Result:
 
 ## 6. Next P4 Implementation Steps
 
-1. Expand UBNF draft from core subset to full TinyExpression syntax (setter/method declaration variants).
+1. Expand UBNF draft from typed declaration subset to full TinyExpression syntax parity.
