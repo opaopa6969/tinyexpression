@@ -134,3 +134,19 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 2. `unlaxer-dsl`:
    - parser generator が runtime で解決可能な package import を使うこと
    - mapper generator が `Token` 公開 API のみを使うこと
+
+### Progress update
+
+`unlaxer-dsl` 側で以下の compatibility shim 実装を反映済み:
+
+1. generated `Mapper` / `LSP` / `DAP` の source 初期化を `createRootSourceCompat(...)` に変更
+   - `StringSource.createRootSource(String)` がある環境と、ない環境の両方で reflection fallback する
+2. generated `Mapper` の token text 抽出を `tokenTextCompat(...)` に変更
+   - `getToken()` / `tokenString` / `source.sourceAsString()` を順に fallback
+3. generated `Parsers` の synthetic scope event builder から `org.unlaxer.dsl.ir` 直接参照を除去
+   - 互換 no-op 実装へ置換
+
+残タスク:
+
+1. tinyexpression 側で generated runtime source を compile path に再投入し、通常ビルドで再検証
+2. 問題なければ `pom.xml` の generated source policy を段階的に再有効化

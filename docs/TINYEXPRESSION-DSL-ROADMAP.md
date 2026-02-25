@@ -300,6 +300,10 @@ Completed in this session (P3 follow-up):
    - observed compile break between generated runtime code and current tinyexpression dependency APIs,
    - disabled default `pom.xml` auto-include for generated runtime sources,
    - moved dependency-side follow-up to `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md`.
+29. applied dependency-side generator compatibility shims in `unlaxer-dsl`:
+   - mapper/lsp/dap generated source creation now uses reflection-based `StringSource` compatibility helper,
+   - mapper generated token text extraction now uses compatibility fallback (`getToken` / `tokenString` / `source`),
+   - parser generated synthetic scope-event helpers no longer require direct `org.unlaxer.dsl.ir` dependency.
 
 Verified tests:
 
