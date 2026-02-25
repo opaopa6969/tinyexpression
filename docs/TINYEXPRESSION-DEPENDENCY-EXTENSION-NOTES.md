@@ -52,3 +52,31 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 ### Required action before editing dependency repos
 
 - 今後別件で `unlaxer-dsl` への修正が必要になった時点で、ユーザー許可を取得してから着手する。
+
+---
+
+## 2026-02-25: unlaxer-dsl MapperGenerator implementation start
+
+### Context
+
+- Target repo: `unlaxer-dsl`
+- Target file: `src/main/java/org/unlaxer/dsl/codegen/MapperGenerator.java`
+- Goal: UBNF -> AST の自動マッピングを実運用可能にする第一段階。
+
+### Implemented (in progress)
+
+1. generated `parse(String)` の未実装例外を除去し、実パース導線を生成
+2. mapping rule parser class による dispatch (`mapNode`) を生成
+3. left/right assoc ルールの最小マッピング生成を実装
+4. utility (`findFirstDescendant`, `firstTokenText`) を追加
+
+### Compatibility impact
+
+1. `CodegenSnapshotTest` の mapper golden は更新が必要
+2. TinyExpression 側では dual-path 実行（javacode / ast-evaluator）接続実装がまだ必要
+
+### Follow-up in tinyexpression
+
+1. generated mapper を受ける AST evaluator 実行器を追加
+2. 既存 Java codegen 実行器との mode 切替を導入
+3. DAP を mode 別に接続する
