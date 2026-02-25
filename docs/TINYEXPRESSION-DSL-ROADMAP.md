@@ -394,6 +394,9 @@ Completed in this session (P3 follow-up):
    - `AstDeclarationRuntime` now injects method declarations into declaration-setter embedded evaluation context to support `call ...` setter formulas.
 57. expanded generated-path validation for complex value families:
    - `AstEvaluatorGeneratedValuePathTest` now covers string `match` evaluation and `call + method declaration` object evaluation on `generated-ast` runtime.
+58. expanded backend parity checkpoint beyond numeric-only formulas:
+   - `AstEvaluatorBackendParityTest` now compares `JAVA_CODE` vs `AST_EVALUATOR` on representative non-number cases (`string match`, `boolean match`, `call + method declaration`),
+   - asserts these cases no longer hit `javacode-fallback` runtime.
 
 
 
@@ -422,6 +425,7 @@ Verified tests:
 21. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest test`
 22. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest test`
 23. `./mvnw -q -DskipTests compile`
+24. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
 
 ## Execution Policy
 
