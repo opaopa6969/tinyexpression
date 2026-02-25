@@ -155,10 +155,10 @@ java --enable-preview -cp target/classes \
 3. 使用 generator:
    - runtime: `AST,Parser,Mapper,Evaluator`
    - tooling: `LSP,Launcher,DAP,DAPLauncher`
-4. 現時点では `pom.xml` への自動 source 取り込みは無効化している。
-   - 理由: generated runtime が要求する `unlaxer-common` / `unlaxer-dsl` API と
-     現在の tinyexpression 依存バージョンに差分があるため。
-   - 依存拡張ポイントは `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md` を参照。
+4. `pom.xml` は `build-helper-maven-plugin` で runtime ディレクトリ
+   (`target/generated-sources/tinyexpression-p4/runtime`) を source として自動取り込みする。
+   - `tooling` 生成物（LSP/DAP）は依存差分が大きいため通常 compile には含めない。
+   - 互換性 shim の履歴は `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md` を参照。
 
 ### 3.4 Parser IR を中間契約として使う
 

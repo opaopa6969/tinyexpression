@@ -304,6 +304,9 @@ Completed in this session (P3 follow-up):
    - mapper/lsp/dap generated source creation now uses reflection-based `StringSource` compatibility helper,
    - mapper generated token text extraction now uses compatibility fallback (`getToken` / `tokenString` / `source`),
    - parser generated synthetic scope-event helpers no longer require direct `org.unlaxer.dsl.ir` dependency.
+30. re-enabled runtime generated-source compile integration in tinyexpression:
+   - added `build-helper-maven-plugin` source include for `target/generated-sources/tinyexpression-p4/runtime`,
+   - regenerated P4 artifacts and verified `./mvnw -q -DskipTests compile` succeeds with generated runtime on classpath.
 
 Verified tests:
 

@@ -122,9 +122,9 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 ### Current decision
 
-1. tinyexpression 側は generated runtime source の自動 compile 取り込みを一旦無効化
-2. 生成物は `target/generated-sources/tinyexpression-p4/runtime|tooling` に出力し、検証用 artifact として保持
-3. dependency 拡張（`unlaxer-common` / `unlaxer-dsl`）が必要な項目として継続管理
+1. 生成物は `target/generated-sources/tinyexpression-p4/runtime|tooling` に分離出力
+2. tinyexpression compile には runtime のみを自動取り込み
+3. dependency 拡張（`unlaxer-common` / `unlaxer-dsl`）は継続管理しつつ、互換 shim を順次適用
 
 ### Required extension candidates
 
@@ -146,7 +146,12 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 3. generated `Parsers` の synthetic scope event builder から `org.unlaxer.dsl.ir` 直接参照を除去
    - 互換 no-op 実装へ置換
 
+検証結果:
+
+1. `scripts/generate_tinyexpression_p4_from_ubnf.sh` 実行後に
+   `./mvnw -q -DskipTests compile` で runtime 自動取り込み状態のビルド成功を確認済み
+
 残タスク:
 
-1. tinyexpression 側で generated runtime source を compile path に再投入し、通常ビルドで再検証
-2. 問題なければ `pom.xml` の generated source policy を段階的に再有効化
+1. generated runtime を使った実評価経路（mapper/evaluator）を AST backend 本体へ段階的に接続
+2. DAP runtimeMode の `ast` 分岐で AST ノード単位 stepping へ切替
