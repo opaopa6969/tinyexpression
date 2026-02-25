@@ -319,8 +319,11 @@ Completed in this session (P3 follow-up):
      3) `javacode-fallback`.
 33. improved generated DAP `ast` mode observability:
    - `unlaxer-dsl` `DAPGenerator` now attempts mapper parse in `runtimeMode=ast`,
-   - exposes `astNodeCount` in DAP variables response,
+   - exposes `astNodeCount` and current AST node label (`astCurrentNode`) in DAP variables response,
    - keeps existing token-step behavior as compatibility fallback.
+34. added migration handbook for follow-up implementers:
+   - `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`
+   - covers structure, type/function extension, AST mapping, executable conversion, LSP/DAP linkage.
 
 Verified tests:
 

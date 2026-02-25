@@ -17,6 +17,10 @@
 - `unlaxer-dsl`
 - (`unlaxer-common` は parser combinator 実装の基盤)
 
+補助資料:
+
+- `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`（実装手順を運用目線で要約）
+
 ---
 
 ## 2. TinyExpression 現行アーキテクチャ
