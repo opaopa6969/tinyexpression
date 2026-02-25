@@ -149,8 +149,14 @@ java --enable-preview -cp target/classes \
 次のスクリプトで、P4草案から generated code 一式を再生成できる。
 
 1. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
-2. 出力先: `target/generated-sources/tinyexpression-p4`
-3. 使用 generator: `AST,Parser,Mapper,Evaluator,LSP,Launcher,DAP,DAPLauncher`
+2. 出力先:
+   - runtime: `target/generated-sources/tinyexpression-p4/runtime`
+   - tooling: `target/generated-sources/tinyexpression-p4/tooling`
+3. 使用 generator:
+   - runtime: `AST,Parser,Mapper,Evaluator`
+   - tooling: `LSP,Launcher,DAP,DAPLauncher`
+4. `pom.xml` は `build-helper-maven-plugin` で runtime ディレクトリのみを source として自動取り込みする。
+   (`tooling` 生成物は LSP/DAP 依存を持つため通常 compile には含めない)
 
 ### 3.4 Parser IR を中間契約として使う
 

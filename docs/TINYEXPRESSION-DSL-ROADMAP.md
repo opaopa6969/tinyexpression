@@ -289,6 +289,9 @@ Completed in this session (P3 follow-up):
    - added `AstEvaluatorCalculator` as runtime backend surface for generated AST/evaluator integration,
    - added `GeneratedAstRuntimeProbe` to detect generated parser/mapper runtime availability,
    - switched `CalculatorCreatorRegistry` AST backend from direct JavaCode return to dedicated AST backend class.
+26. separated generated P4 outputs into runtime/tooling tracks to keep default compile stable:
+   - updated `scripts/generate_tinyexpression_p4_from_ubnf.sh` to emit runtime (`AST,Parser,Mapper,Evaluator`) and tooling (`LSP,Launcher,DAP,DAPLauncher`) to separate directories,
+   - updated `pom.xml` to auto-include only `target/generated-sources/tinyexpression-p4/runtime` as compile source.
 
 Verified tests:
 
