@@ -66,6 +66,10 @@ Implemented for P3 (follow-up):
     - `unlaxer-dsl` validate-only now returns `ok=true` for:
       - `docs/ubnf/tinyexpression-p4-draft.ubnf`
       - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf` (success form).
+14. expanded P4 draft grammar with control-flow subset:
+    - added `if(...) { ... } else { ... }` and `match{...}` (number path),
+    - wired these into `NumberFactor`,
+    - re-validated draft with `unlaxer-dsl` (`ok=true`).
 
 ## Files Changed
 

@@ -254,6 +254,10 @@ Completed in this session (P3 follow-up):
      - `AddOp @op ...` / `MulOp @op ...`
    - re-enabled `@leftAssoc` + `@precedence` in `docs/ubnf/tinyexpression-p4-draft.ubnf`
    - validate-only now passes for both draft and repro-success form.
+17. expanded P4 UBNF draft coverage with control-flow subset:
+   - added `IfExpression`, `NumberMatchExpression`, `NumberCase`, `NumberDefaultCase`
+   - integrated into `NumberFactor`
+   - kept validator pass on updated draft (`ok=true`).
 
 Verified tests:
 

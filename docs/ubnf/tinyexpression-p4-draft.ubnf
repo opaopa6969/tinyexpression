@@ -60,13 +60,34 @@ grammar TinyExpressionP4 {
   AddOp ::= '+' | '-' ;
   MulOp ::= '*' | '/' ;
 
-  NumberFactor ::= NUMBER | VariableRef | MethodInvocation | '(' NumberExpression ')' ;
+  NumberFactor ::=
+      NumberMatchExpression
+    | IfExpression
+    | NUMBER
+    | VariableRef
+    | MethodInvocation
+    | '(' NumberExpression ')' ;
 
   StringExpression ::= STRING | VariableRef | MethodInvocation ;
 
   BooleanExpression ::= 'true' | 'false' | VariableRef | MethodInvocation ;
 
   ObjectExpression ::= NumberExpression | StringExpression | BooleanExpression | VariableRef | MethodInvocation ;
+
+  IfExpression ::=
+    'if' '(' BooleanExpression ')'
+    '{' Expression '}'
+    'else'
+    '{' Expression '}' ;
+
+  NumberMatchExpression ::=
+    'match' '{'
+      NumberCase { ',' NumberCase }
+      ',' NumberDefaultCase
+    '}' ;
+
+  NumberCase ::= BooleanExpression '->' NumberExpression ;
+  NumberDefaultCase ::= 'default' '->' NumberExpression ;
 
   VariableRef ::= '$' IDENTIFIER [ TypeHint ] ;
 

@@ -66,6 +66,7 @@ Draft file:
 - `docs/ubnf/tinyexpression-p4-draft.ubnf`
 - assoc/precedence repro file:
   - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`
+  - includes validator-compatible assoc rules and core control-flow subset (`if` / `match` for number flow)
 
 Notes:
 
