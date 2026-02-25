@@ -159,6 +159,9 @@ java --enable-preview -cp target/classes \
    (`target/generated-sources/tinyexpression-p4/runtime`) を source として自動取り込みする。
    - `tooling` 生成物（LSP/DAP）は依存差分が大きいため通常 compile には含めない。
    - 互換性 shim の履歴は `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md` を参照。
+5. `AST_EVALUATOR` backend は AST-first + JavaCode lazy fallback で動作する。
+   - 対応式はまず `AstNumberExpressionEvaluator` で評価し、非対応時のみ JavaCode runtime を遅延初期化する。
+   - `FormulaInfo` 永続化では AST backend の `byteCode` を空配列で扱う（即時コンパイルを強制しない）。
 
 ### 3.4 Parser IR を中間契約として使う
 

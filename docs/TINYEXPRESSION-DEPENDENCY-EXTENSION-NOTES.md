@@ -155,3 +155,4 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 1. generated runtime を使った実評価経路（mapper/evaluator）を AST backend 本体へ段階的に接続
 2. DAP runtimeMode の `ast` 分岐で AST ノード単位 stepping へ切替
+3. AST backend の対応演算子/式カテゴリを number-only から段階拡張

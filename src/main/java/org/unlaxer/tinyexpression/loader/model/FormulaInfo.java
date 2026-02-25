@@ -17,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import org.unlaxer.compiler.InstanceAndByteCode;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
+import org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -152,11 +153,17 @@ public class FormulaInfo{
     calculator = calculatorCreator.create(
         new Source(formulaText , this), className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader);
 
-    this.byteCode = calculator.byteCode();
-
-    javaCodeText  = calculator.javaCode();
-    byteCodeAsHex = HEX.encode(byteCode);
-    hashByByteCode = MD5.toHex(byteCode);
+    if (calculator instanceof AstEvaluatorCalculator) {
+      this.byteCode = new byte[0];
+      this.javaCodeText = "/* AST_EVALUATOR */";
+      this.byteCodeAsHex = "";
+      this.hashByByteCode = MD5.toHex(byteCode);
+    } else {
+      this.byteCode = calculator.byteCode();
+      javaCodeText  = calculator.javaCode();
+      byteCodeAsHex = HEX.encode(byteCode);
+      hashByByteCode = MD5.toHex(byteCode);
+    }
 
     calculator.setFormulaInfo(this);
     state = FormulaInfoState.calculatorConstructed;

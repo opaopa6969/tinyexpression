@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
@@ -16,27 +19,48 @@ import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.FormulaParser;
+import org.unlaxer.util.digest.MD5;
 
 /**
  * AST evaluator backend entry point.
  * <p>
- * Current implementation keeps behavioral compatibility by delegating execution to JavaCode path
- * while reserving this class as the integration point for generated parser/mapper/evaluator runtime.
+ * Runtime policy:
+ * 1) try AST-first execution,
+ * 2) if unsupported, lazily fallback to JavaCode calculator.
  */
 public class AstEvaluatorCalculator implements Calculator {
 
-  private final Calculator delegate;
-  private final boolean generatedAstRuntimeAvailable;
-  private final ClassLoader classLoader;
   private final Source source;
+  private final ClassLoader classLoader;
   private final SpecifiedExpressionTypes specifiedExpressionTypes;
+
+  private final String className;
+  private final String javaCodeFromStore;
+  private final byte[] byteCodeFromStore;
+  private final String byteCodeHashFromStore;
+  private final List<ClassNameAndByteCode> classNameAndByteCodeListFromStore;
+  private final boolean createdFromByteCode;
+
+  private volatile JavaCodeCalculatorV3 delegate;
+  private final Map<String, Object> objectByKey = new LinkedHashMap<>();
+
+  private final List<Calculator> dependsOns = new ArrayList<>();
+  private volatile Optional<Calculator> dependsOnBy = Optional.empty();
+
+  private final boolean generatedAstRuntimeAvailable;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     this.source = source;
-    this.classLoader = classLoader;
+    this.className = className;
     this.specifiedExpressionTypes = specifiedExpressionTypes;
-    this.delegate = new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
+    this.classLoader = classLoader;
+    this.javaCodeFromStore = null;
+    this.byteCodeFromStore = new byte[0];
+    this.byteCodeHashFromStore = MD5.toHex(this.byteCodeFromStore);
+    this.classNameAndByteCodeListFromStore = List.of();
+    this.createdFromByteCode = false;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
   }
 
@@ -44,10 +68,15 @@ public class AstEvaluatorCalculator implements Calculator {
       SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     this.source = source;
-    this.classLoader = classLoader;
+    this.className = className;
     this.specifiedExpressionTypes = specifiedExpressionTypes;
-    this.delegate = new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
-        byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+    this.classLoader = classLoader;
+    this.javaCodeFromStore = javaCode;
+    this.byteCodeFromStore = byteCode == null ? new byte[0] : byteCode;
+    this.byteCodeHashFromStore = byteCodeHash == null ? MD5.toHex(this.byteCodeFromStore) : byteCodeHash;
+    this.classNameAndByteCodeListFromStore = classNameAndByteCodeList == null
+        ? List.of() : List.copyOf(classNameAndByteCodeList);
+    this.createdFromByteCode = true;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
   }
 
@@ -55,133 +84,180 @@ public class AstEvaluatorCalculator implements Calculator {
     return generatedAstRuntimeAvailable;
   }
 
+  private JavaCodeCalculatorV3 ensureDelegate() {
+    JavaCodeCalculatorV3 local = delegate;
+    if (local != null) {
+      return local;
+    }
+    synchronized (this) {
+      local = delegate;
+      if (local != null) {
+        return local;
+      }
+      if (createdFromByteCode) {
+        local = new JavaCodeCalculatorV3(
+            source,
+            javaCodeFromStore == null ? "" : javaCodeFromStore,
+            className,
+            specifiedExpressionTypes,
+            byteCodeFromStore,
+            byteCodeHashFromStore,
+            classNameAndByteCodeListFromStore,
+            classLoader);
+      } else {
+        local = new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
+      }
+      local.dependsOns().addAll(dependsOns);
+      dependsOnBy.ifPresent(local::setDependsOnBy);
+      objectByKey.forEach(local::setObject);
+      delegate = local;
+      return local;
+    }
+  }
+
   @Override
   public InstanceKind instanceKind() {
-    return delegate.instanceKind();
+    return source.formulaInfo().isPresent() ? InstanceKind.fromFormulaInfo : InstanceKind.fromSource;
   }
 
   @Override
   public ExpressionType resultType() {
-    return delegate.resultType();
+    return specifiedExpressionTypes.resultType();
   }
 
   @Override
   public Parser getParser() {
-    return delegate.getParser();
+    return Parser.get(FormulaParser.class);
   }
 
   @Override
   public TokenBaseOperator<CalculationContext> getCalculatorOperator() {
-    return delegate.getCalculatorOperator();
+    return (context, token) -> apply(context);
   }
 
   @Override
   public UnaryOperator<Token> tokenReduer() {
-    return delegate.tokenReduer();
+    return UnaryOperator.identity();
   }
 
   @Override
   public Source source() {
-    return delegate.source();
+    return source;
   }
 
   @Override
   public String returningTypeAsString() {
-    return delegate.returningTypeAsString();
+    return resultType().javaTypeAsString();
   }
 
   @Override
   public String javaCode() {
-    return delegate.javaCode();
+    return javaCodeFromStore == null ? "/* AST_EVALUATOR */" : javaCodeFromStore;
   }
 
   @Override
   public String formula() {
-    return delegate.formula();
+    return source.source();
   }
 
   @Override
   public byte[] byteCode() {
-    return delegate.byteCode();
+    return byteCodeFromStore;
   }
 
   @Override
   public String formulaHash() {
-    return delegate.formulaHash();
+    return MD5.toHex(formula());
   }
 
   @Override
   public String byteCodeHash() {
-    return delegate.byteCodeHash();
+    return byteCodeHashFromStore;
   }
 
   @Override
   public List<Calculator> dependsOns() {
-    return delegate.dependsOns();
+    return dependsOns;
   }
 
   @Override
   public Optional<Calculator> dependsOnBy() {
-    return delegate.dependsOnBy();
+    return dependsOnBy;
   }
 
   @Override
   public void before(CalculationContext calculationContext) {
-    delegate.before(calculationContext);
+    // no-op for AST path; delegate will handle this on fallback if needed
   }
 
   @Override
   public Object apply(CalculationContext calculationContext) {
     Optional<Object> astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
         source.source(), specifiedExpressionTypes, calculationContext);
+
     if (generatedAstRuntimeAvailable) {
-      // Probe generated mapper runtime path; execution still delegates to JavaCode path for compatibility.
-      Optional<Object> ast = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
-      ast.ifPresent(mapped -> setObject("_astEvaluatorMappedAst", mapped));
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
+      mapped.ifPresent(value -> setObject("_astEvaluatorMappedAst", value));
       setObject("_astEvaluatorMapperAvailable", true);
     } else {
       setObject("_astEvaluatorMapperAvailable", false);
     }
+
     if (astEvaluated.isPresent()) {
       setObject("_astEvaluatorRuntime", "token-ast");
       return astEvaluated.get();
     }
+
     setObject("_astEvaluatorRuntime", "javacode-fallback");
-    return delegate.apply(calculationContext);
+    return ensureDelegate().apply(calculationContext);
   }
 
   @Override
   public void after(CalculationContext calculationContext) {
-    delegate.after(calculationContext);
   }
 
   @Override
   public void setObject(String key, Object object) {
-    delegate.setObject(key, object);
+    objectByKey.put(key, object);
+    JavaCodeCalculatorV3 local = delegate;
+    if (local != null) {
+      local.setObject(key, object);
+    }
   }
 
   @Override
   public <X> X getObject(String key, Class<X> objectClass) {
-    return delegate.getObject(key, objectClass);
+    Object local = objectByKey.get(key);
+    if (local != null) {
+      return objectClass.cast(local);
+    }
+    JavaCodeCalculatorV3 delegateLocal = delegate;
+    if (delegateLocal == null) {
+      return null;
+    }
+    return delegateLocal.getObject(key, objectClass);
   }
 
   @Override
   public CreatedFrom createdFrom() {
-    return delegate.createdFrom();
+    return createdFromByteCode ? CreatedFrom.byteCode : CreatedFrom.formula;
   }
 
   @Override
   public void setDependsOnBy(Calculator calculator) {
-    delegate.setDependsOnBy(calculator);
+    dependsOnBy = Optional.ofNullable(calculator);
+    if (delegate != null && calculator != null) {
+      delegate.setDependsOnBy(calculator);
+    }
   }
 
   @Override
   public List<InstanceAndByteCode> instanceAndByteCodeList() {
-    return delegate.instanceAndByteCodeList();
+    return List.of();
   }
 
   @Override
   public CalculateResult calculate(CalculationContext calculateContext, String formula, ExpressionType resultType) {
-    return delegate.calculate(calculateContext, formula, resultType);
+    return ensureDelegate().calculate(calculateContext, formula, resultType);
   }
 }

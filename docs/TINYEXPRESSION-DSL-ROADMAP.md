@@ -307,6 +307,10 @@ Completed in this session (P3 follow-up):
 30. re-enabled runtime generated-source compile integration in tinyexpression:
    - added `build-helper-maven-plugin` source include for `target/generated-sources/tinyexpression-p4/runtime`,
    - regenerated P4 artifacts and verified `./mvnw -q -DskipTests compile` succeeds with generated runtime on classpath.
+31. made AST backend execution path JavaCode-lazy by default:
+   - `AstEvaluatorCalculator` now runs AST-first (`AstNumberExpressionEvaluator`) and only initializes JavaCode runtime on fallback,
+   - backend metadata (`_astEvaluatorRuntime`, mapper probe flags) is tracked without forcing JavaCode delegate instantiation,
+   - `FormulaInfo.updateCalculatorFromFormula` now treats `AST_EVALUATOR` as non-bytecode-first path (`byteCode` empty, marker JavaCode text).
 
 Verified tests:
 
