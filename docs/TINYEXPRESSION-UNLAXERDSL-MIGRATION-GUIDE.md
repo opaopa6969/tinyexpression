@@ -125,6 +125,25 @@ java --enable-preview -cp target/classes \
 - `../unlaxer-dsl/src/main/java/org/unlaxer/dsl/CodegenMain.java`
 - `../unlaxer-dsl/README.md`
 
+### 3.5 P4時点のUBNF反映状況
+
+現時点の草案 `docs/ubnf/tinyexpression-p4-draft.ubnf` には、以下の型別宣言バリアントを反映済み。
+
+1. 変数宣言:
+   - `NumberVariableDeclaration`
+   - `StringVariableDeclaration`
+   - `BooleanVariableDeclaration`
+   - `ObjectVariableDeclaration`
+2. setter:
+   - `NumberSetter` / `StringSetter` / `BooleanSetter` / `ObjectSetter`
+3. メソッド宣言:
+   - `NumberMethodDeclaration`
+   - `StringMethodDeclaration`
+   - `BooleanMethodDeclaration`
+   - `ObjectMethodDeclaration`
+
+この草案は `unlaxer-dsl` で validate-only / parser-ir export / parser-ir validation 済み。
+
 ### 3.4 Parser IR を中間契約として使う
 
 移行時は Parser IR を出力・検証して差分管理すると事故が減る。
@@ -313,6 +332,15 @@ Parser IR を LSP/DAP の共通入力として使うと、
 3. 生成物移行時は `validate-only` + parser-ir export を CI で回す
 4. roadmap 進捗は `docs/TINYEXPRESSION-DSL-ROADMAP.md` と handover に同時反映する
 
+## 11. 依存拡張が必要になったときの扱い
+
+`unlaxer-dsl` / `unlaxer-common` の拡張が必要だと判断した場合は、次を必須ルールとする。
+
+1. 先に tinyexpression 側 docs に拡張要求メモを追加する
+2. 追加先は `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md`
+3. 「現状回避策」「最小再現」「期待する拡張API/仕様」を明記する
+4. 依存リポジトリへ実変更を入れる前にユーザー承認を取る
+
 ---
 
 ## 10. 直近の推奨次アクション
@@ -321,4 +349,3 @@ Parser IR を LSP/DAP の共通入力として使うと、
 2. number grammar だけで `Parser/AST/Mapper/Evaluator` を生成し既存結果と比較
 3. object 系 (`ObjectMethodParser`, `ObjectVariable*`) を grammar 化して差分テストを追加
 4. LSP/DAP は number subset で先に通し、段階的に型ファミリを拡張
-
