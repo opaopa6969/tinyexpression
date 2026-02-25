@@ -30,6 +30,8 @@ public class AstEvaluatorParityCorpusTest {
             context -> context.setObject("payload", "ctx-object")),
         new Case("call provide()\nobject provide(){\n'ok'\n}",
             new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),
+        new Case("call identity('payload')\nobject identity($payload as object){\n$payload\n}",
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),
         new Case("var $name as string set if not exists 'neo' description='name';\n$name",
             new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("var $price as number set if not exists 3 description='price';\n$price+2",

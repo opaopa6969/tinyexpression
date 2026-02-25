@@ -195,15 +195,20 @@ public class AstEvaluatorCalculator implements Calculator {
   public Object apply(CalculationContext calculationContext) {
     Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable) {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-          source.source(), classLoader, preferredAstSimpleName());
-      if (mapped.isPresent()) {
+      boolean declarationsApplied = false;
+      for (String preferredAstSimpleName : preferredAstSimpleNames()) {
+        Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+            source.source(), classLoader, preferredAstSimpleName);
+        if (mapped.isEmpty()) {
+          continue;
+        }
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
-        if (generatedAstEvaluated.isEmpty()) {
+        if (generatedAstEvaluated.isEmpty() && !declarationsApplied) {
           AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+          declarationsApplied = true;
           generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
               mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
         }
@@ -290,24 +295,36 @@ public class AstEvaluatorCalculator implements Calculator {
     return ensureDelegate().calculate(calculateContext, formula, resultType);
   }
 
-  private String preferredAstSimpleName() {
+  private List<String> preferredAstSimpleNames() {
+    List<String> preferred = new ArrayList<>();
+    String formula = source.source() == null ? "" : source.source().strip();
+    boolean methodInvocationHead =
+        formula.startsWith("call")
+            || formula.startsWith("external")
+            || formula.startsWith("internal");
+    if (methodInvocationHead) {
+      preferred.add("MethodInvocationExpr");
+    }
     ExpressionType type = resultType();
     if (type == null) {
-      return null;
+      preferred.add(null);
+      return preferred;
     }
     if (type.isNumber()) {
-      return "BinaryExpr";
+      preferred.add("BinaryExpr");
+    } else if (type.isString()) {
+      preferred.add("StringExpr");
+    } else if (type.isBoolean()) {
+      preferred.add("BooleanExpr");
+    } else if (type.isObject()) {
+      preferred.add("ObjectExpr");
+    } else {
+      preferred.add(null);
     }
-    if (type.isString()) {
-      return "StringExpr";
-    }
-    if (type.isBoolean()) {
-      return "BooleanExpr";
-    }
-    if (type.isObject()) {
-      return "ObjectExpr";
-    }
-    return null;
+    preferred.add("MethodInvocationExpr");
+    preferred.add("VariableRefExpr");
+    preferred.add("BinaryExpr");
+    return preferred.stream().distinct().toList();
   }
 
   private boolean numbersEquivalent(Number left, Number right) {

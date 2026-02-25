@@ -3,8 +3,12 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 import java.math.BigDecimal;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -28,7 +32,15 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.empty();
     }
     ExpressionType resultType = resolveResultType(specifiedExpressionTypes);
+    String rootSimpleName = mappedAst.getClass().getSimpleName();
     if (resultType.isNumber()) {
+      if ("MethodInvocationExpr".equals(rootSimpleName)) {
+        Optional<Object> invocation = evaluateMethodInvocation(mappedAst, resultType,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+        if (invocation.isPresent() && invocation.get() instanceof Number) {
+          return invocation;
+        }
+      }
       Optional<Object> number = GeneratedP4NumberAstEvaluator.tryEvaluate(
           mappedAst, specifiedExpressionTypes, calculationContext);
       if (number.isPresent()) {
@@ -38,16 +50,37 @@ final class GeneratedP4ValueAstEvaluator {
           fallbackFormulaSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, null);
     }
     if (resultType.isString()) {
+      if ("MethodInvocationExpr".equals(rootSimpleName)) {
+        return evaluateMethodInvocation(mappedAst, ExpressionTypes.string,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
+                .map(String::valueOf)
+                .map(v -> (Object) v);
+      }
       return findFirstNode(mappedAst, "StringExpr")
           .flatMap(node -> evaluateString(
-              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource));
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
     }
     if (resultType.isBoolean()) {
+      if ("MethodInvocationExpr".equals(rootSimpleName)) {
+        return evaluateMethodInvocation(mappedAst, ExpressionTypes._boolean,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
+                .flatMap(GeneratedP4ValueAstEvaluator::toBoolean)
+                .map(v -> (Object) v);
+      }
       return findFirstNode(mappedAst, "BooleanExpr")
           .flatMap(node -> evaluateBoolean(
-              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource));
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
     }
     if (resultType.isObject()) {
+      if ("MethodInvocationExpr".equals(rootSimpleName)) {
+        Optional<Object> invocation = evaluateMethodInvocation(mappedAst, ExpressionTypes.object,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+        if (invocation.isPresent()) {
+          return invocation;
+        }
+      }
       Optional<Object> objectExpr = findFirstNode(mappedAst, "ObjectExpr")
           .flatMap(node -> evaluateObject(
               node, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
@@ -325,30 +358,479 @@ final class GeneratedP4ValueAstEvaluator {
     if (name == null) {
       return Optional.empty();
     }
-    MethodSource method = findMethodSource(sourceFormula, String.valueOf(name));
-    if (method == null || !method.parameterSection().isBlank()) {
+    String methodName = String.valueOf(name).strip();
+    if (methodName.isEmpty()) {
+      return Optional.empty();
+    }
+    MethodSource method = findMethodSource(sourceFormula, methodName);
+    if (method == null) {
       return Optional.empty();
     }
     if (method.expression().isBlank()) {
       return Optional.empty();
     }
-    if (method.expression().strip().startsWith("call " + method.name() + "(")) {
+    if (isDirectSelfCall(method.expression(), method.name())) {
       return Optional.empty();
     }
     ClassLoader effectiveClassLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+    List<MethodParameterSpec> parameterSpecs = parseMethodParameterSpecs(method.parameterSection());
+    List<String> argumentExpressions =
+        resolveInvocationArgumentExpressions(methodInvocationNode, sourceFormula, methodName);
+    if (parameterSpecs.size() != argumentExpressions.size()) {
+      return Optional.empty();
+    }
+    Map<String, Object> localBindings =
+        bindMethodArguments(parameterSpecs, argumentExpressions, specifiedExpressionTypes, context,
+            effectiveClassLoader, sourceFormula);
+    if (localBindings == null) {
+      return Optional.empty();
+    }
+    CalculationContext scopedContext =
+        localBindings.isEmpty() ? context : new ScopedCalculationContext(context, localBindings);
     SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
-        expectedType, specifiedExpressionTypes.numberType());
+        expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
     Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
         method.expression(), effectiveClassLoader, preferredAstSimpleName(expectedType));
     if (mapped.isPresent()) {
       Optional<Object> evaluated = tryEvaluate(
-          mapped.get(), evalTypes, context, effectiveClassLoader, sourceFormula);
+          mapped.get(), evalTypes, scopedContext, effectiveClassLoader, sourceFormula);
       if (evaluated.isPresent()) {
         return evaluated;
       }
     }
     return AstEmbeddedExpressionRuntime.tryEvaluate(
-        method.expression(), expectedType, evalTypes, context, effectiveClassLoader, sourceFormula);
+        method.expression(), expectedType, evalTypes, scopedContext, effectiveClassLoader, sourceFormula);
+  }
+
+  private static Map<String, Object> bindMethodArguments(List<MethodParameterSpec> parameterSpecs,
+      List<String> argumentExpressions, SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context,
+      ClassLoader classLoader, String sourceFormula) {
+    if (parameterSpecs.isEmpty()) {
+      return Map.of();
+    }
+    Map<String, Object> bindings = new LinkedHashMap<>();
+    for (int i = 0; i < parameterSpecs.size(); i++) {
+      MethodParameterSpec parameter = parameterSpecs.get(i);
+      Optional<Object> argumentValue = evaluateArgumentExpression(
+          argumentExpressions.get(i), parameter.type(), specifiedExpressionTypes, context, classLoader, sourceFormula);
+      if (argumentValue.isEmpty()) {
+        return null;
+      }
+      bindings.put(parameter.name(), argumentValue.get());
+    }
+    return bindings;
+  }
+
+  private static Optional<Object> evaluateArgumentExpression(String argumentExpression, ExpressionType parameterType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String sourceFormula) {
+    String source = argumentExpression == null ? "" : argumentExpression.strip();
+    if (source.isEmpty()) {
+      return Optional.empty();
+    }
+    if (source.startsWith("$")) {
+      Optional<Object> resolved = resolveVariableAny(extractVariableName(source), context);
+      if (resolved.isPresent()) {
+        return coerceToParameterType(resolved.get(), parameterType, specifiedExpressionTypes.numberType());
+      }
+    }
+    SpecifiedExpressionTypes argumentTypes = new SpecifiedExpressionTypes(
+        parameterType, resolveNumberTypeForEvaluation(parameterType, specifiedExpressionTypes.numberType()));
+    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source, classLoader, preferredAstSimpleName(parameterType));
+    if (mapped.isPresent()) {
+      Optional<Object> evaluated = tryEvaluate(
+          mapped.get(), argumentTypes, context, classLoader, sourceFormula);
+      if (evaluated.isPresent()) {
+        return coerceToParameterType(evaluated.get(), parameterType, specifiedExpressionTypes.numberType());
+      }
+    }
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        source, parameterType, argumentTypes, context, classLoader, sourceFormula);
+    if (embedded.isPresent()) {
+      return coerceToParameterType(embedded.get(), parameterType, specifiedExpressionTypes.numberType());
+    }
+    Optional<Object> literal = parseLiteralArgument(source, parameterType, specifiedExpressionTypes.numberType());
+    if (literal.isPresent()) {
+      return literal;
+    }
+    if (parameterType != null && parameterType.isObject()) {
+      return Optional.of(source);
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<Object> parseLiteralArgument(String source, ExpressionType parameterType,
+      ExpressionType defaultNumberType) {
+    if (source.isEmpty()) {
+      return Optional.empty();
+    }
+    if (source.length() >= 2 && source.charAt(0) == '\'' && source.charAt(source.length() - 1) == '\'') {
+      return Optional.of(source.substring(1, source.length() - 1));
+    }
+    Optional<Boolean> bool = toBoolean(source);
+    if (bool.isPresent()) {
+      return bool.map(v -> (Object) v);
+    }
+    if (isNumericLiteral(source)) {
+      ExpressionType numberType = resolveNumberTypeForEvaluation(parameterType, defaultNumberType);
+      try {
+        return Optional.of(numberType.parseNumber(source));
+      } catch (Throwable ignored) {
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static Optional<Object> coerceToParameterType(Object value, ExpressionType parameterType,
+      ExpressionType defaultNumberType) {
+    if (value == null || parameterType == null) {
+      return Optional.ofNullable(value);
+    }
+    if (parameterType.isObject()) {
+      return Optional.of(value);
+    }
+    if (parameterType.isString()) {
+      return Optional.of(String.valueOf(value));
+    }
+    if (parameterType.isBoolean()) {
+      return toBoolean(value).map(v -> (Object) v);
+    }
+    if (parameterType.isNumber()) {
+      if (value instanceof Number number) {
+        return Optional.of(castNumber(number, resolveNumberTypeForEvaluation(parameterType, defaultNumberType)));
+      }
+      if (value instanceof String text && isNumericLiteral(text.strip())) {
+        try {
+          return Optional.of(resolveNumberTypeForEvaluation(parameterType, defaultNumberType).parseNumber(text.strip()));
+        } catch (Throwable ignored) {
+        }
+      }
+      return Optional.empty();
+    }
+    return Optional.of(value);
+  }
+
+  private static Number castNumber(Number number, ExpressionType targetType) {
+    if (targetType == null) {
+      return number;
+    }
+    if (targetType.isByte()) {
+      return number.byteValue();
+    }
+    if (targetType.isShort()) {
+      return number.shortValue();
+    }
+    if (targetType.isInt()) {
+      return number.intValue();
+    }
+    if (targetType.isLong()) {
+      return number.longValue();
+    }
+    if (targetType.isDouble()) {
+      return number.doubleValue();
+    }
+    if (targetType.isBigInteger()) {
+      return new java.math.BigInteger(String.valueOf(number.longValue()));
+    }
+    if (targetType.isBigDecimal()) {
+      return new java.math.BigDecimal(String.valueOf(number));
+    }
+    return number.floatValue();
+  }
+
+  private static ExpressionType resolveNumberTypeForEvaluation(ExpressionType resultType, ExpressionType numberType) {
+    if (resultType != null && resultType.isNumber() && resultType != ExpressionTypes.number) {
+      return resultType;
+    }
+    if (numberType != null && numberType != ExpressionTypes.number) {
+      return numberType;
+    }
+    return ExpressionTypes._float;
+  }
+
+  private static List<String> resolveInvocationArgumentExpressions(Object methodInvocationNode, String sourceFormula,
+      String methodName) {
+    Optional<String> invocationSnippet = sourceSnippetOfNode(methodInvocationNode, sourceFormula);
+    if (invocationSnippet.isPresent()) {
+      List<String> fromSnippet = parseMethodInvocationArguments(invocationSnippet.get());
+      if (fromSnippet != null) {
+        return fromSnippet;
+      }
+    }
+    return findInvocationArguments(sourceFormula, methodName);
+  }
+
+  private static Optional<String> sourceSnippetOfNode(Object node, String sourceFormula) {
+    if (node == null || sourceFormula == null || sourceFormula.isEmpty()) {
+      return Optional.empty();
+    }
+    try {
+      String mapperClassName = node.getClass().getPackageName() + ".TinyExpressionP4Mapper";
+      Class<?> mapperClass = Class.forName(mapperClassName, false, node.getClass().getClassLoader());
+      Method sourceSpanOf = mapperClass.getMethod("sourceSpanOf", Object.class);
+      Object spanObj = sourceSpanOf.invoke(null, node);
+      if (!(spanObj instanceof Optional<?> spanOptional) || spanOptional.isEmpty()) {
+        return Optional.empty();
+      }
+      Object span = spanOptional.get();
+      if (!(span instanceof int[] positions) || positions.length < 2) {
+        return Optional.empty();
+      }
+      int start = Math.max(0, Math.min(sourceFormula.length(), positions[0]));
+      int end = Math.max(0, Math.min(sourceFormula.length(), positions[1]));
+      if (end <= start) {
+        return Optional.empty();
+      }
+      return Optional.of(sourceFormula.substring(start, end));
+    } catch (Throwable ignored) {
+      return Optional.empty();
+    }
+  }
+
+  private static List<String> parseMethodInvocationArguments(String invocationSource) {
+    if (invocationSource == null) {
+      return null;
+    }
+    int openParen = invocationSource.indexOf('(');
+    if (openParen < 0) {
+      return null;
+    }
+    int closeParen = findMatching(invocationSource, openParen, '(', ')');
+    if (closeParen < 0) {
+      return null;
+    }
+    String arguments = invocationSource.substring(openParen + 1, closeParen).strip();
+    return splitTopLevelCommaSeparated(arguments);
+  }
+
+  private static List<String> findInvocationArguments(String sourceFormula, String methodName) {
+    if (sourceFormula == null || methodName == null || methodName.isBlank()) {
+      return List.of();
+    }
+    String source = sourceFormula;
+    int from = 0;
+    while (from < source.length()) {
+      int callIndex = source.indexOf("call", from);
+      if (callIndex < 0) {
+        return List.of();
+      }
+      if (!matchesWordAt(source, callIndex, "call")) {
+        from = callIndex + 4;
+        continue;
+      }
+      int nameStart = skipJavaDelimiters(source, callIndex + 4);
+      if (!matchesWordAt(source, nameStart, methodName)) {
+        from = callIndex + 4;
+        continue;
+      }
+      int openParen = skipJavaDelimiters(source, nameStart + methodName.length());
+      if (openParen >= source.length() || source.charAt(openParen) != '(') {
+        from = callIndex + 4;
+        continue;
+      }
+      int closeParen = findMatching(source, openParen, '(', ')');
+      if (closeParen < 0) {
+        return List.of();
+      }
+      String arguments = source.substring(openParen + 1, closeParen).strip();
+      return splitTopLevelCommaSeparated(arguments);
+    }
+    return List.of();
+  }
+
+  private static boolean isDirectSelfCall(String expression, String methodName) {
+    if (expression == null || methodName == null || methodName.isBlank()) {
+      return false;
+    }
+    int index = skipJavaDelimiters(expression, 0);
+    if (!matchesWordAt(expression, index, "call")) {
+      return false;
+    }
+    int nameStart = skipJavaDelimiters(expression, index + 4);
+    if (!matchesWordAt(expression, nameStart, methodName)) {
+      return false;
+    }
+    int openParen = skipJavaDelimiters(expression, nameStart + methodName.length());
+    return openParen < expression.length() && expression.charAt(openParen) == '(';
+  }
+
+  private static List<MethodParameterSpec> parseMethodParameterSpecs(String parameterSection) {
+    if (parameterSection == null || parameterSection.isBlank()) {
+      return List.of();
+    }
+    List<String> entries = splitTopLevelCommaSeparated(parameterSection.strip());
+    List<MethodParameterSpec> parameters = new ArrayList<>();
+    for (String entry : entries) {
+      Optional<MethodParameterSpec> parsed = parseMethodParameterSpec(entry);
+      if (parsed.isEmpty()) {
+        return List.of();
+      }
+      parameters.add(parsed.get());
+    }
+    return parameters;
+  }
+
+  private static Optional<MethodParameterSpec> parseMethodParameterSpec(String parameterSpec) {
+    if (parameterSpec == null) {
+      return Optional.empty();
+    }
+    String spec = parameterSpec.strip();
+    if (spec.isEmpty() || spec.charAt(0) != '$') {
+      return Optional.empty();
+    }
+    int end = 1;
+    while (end < spec.length()) {
+      char c = spec.charAt(end);
+      if (Character.isLetterOrDigit(c) || c == '_') {
+        end++;
+        continue;
+      }
+      break;
+    }
+    if (end <= 1) {
+      return Optional.empty();
+    }
+    String name = spec.substring(1, end);
+    ExpressionType type = ExpressionTypes.object;
+    String tail = spec.substring(end).strip();
+    if (!tail.isEmpty()) {
+      String[] tokens = tail.split("\\s+");
+      for (int i = 0; i < tokens.length - 1; i++) {
+        if ("as".equalsIgnoreCase(tokens[i])) {
+          type = parseExpressionType(tokens[i + 1]).orElse(ExpressionTypes.object);
+          break;
+        }
+      }
+    }
+    return Optional.of(new MethodParameterSpec(name, type));
+  }
+
+  private static Optional<ExpressionType> parseExpressionType(String token) {
+    String type = token == null ? "" : token.strip().toLowerCase();
+    return switch (type) {
+      case "number" -> Optional.of(ExpressionTypes.number);
+      case "float" -> Optional.of(ExpressionTypes._float);
+      case "string" -> Optional.of(ExpressionTypes.string);
+      case "boolean" -> Optional.of(ExpressionTypes._boolean);
+      case "object" -> Optional.of(ExpressionTypes.object);
+      default -> Optional.empty();
+    };
+  }
+
+  private static List<String> splitTopLevelCommaSeparated(String source) {
+    String text = source == null ? "" : source.strip();
+    if (text.isEmpty()) {
+      return List.of();
+    }
+    List<String> values = new ArrayList<>();
+    StringBuilder current = new StringBuilder();
+    int parenDepth = 0;
+    int braceDepth = 0;
+    int bracketDepth = 0;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
+    boolean inLineComment = false;
+    boolean inBlockComment = false;
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      char next = i + 1 < text.length() ? text.charAt(i + 1) : '\0';
+      if (inLineComment) {
+        current.append(c);
+        if (c == '\n') {
+          inLineComment = false;
+        }
+        continue;
+      }
+      if (inBlockComment) {
+        current.append(c);
+        if (c == '*' && next == '/') {
+          current.append(next);
+          i++;
+          inBlockComment = false;
+        }
+        continue;
+      }
+      if (inSingleQuote) {
+        current.append(c);
+        if (c == '\'' && (i == 0 || text.charAt(i - 1) != '\\')) {
+          inSingleQuote = false;
+        }
+        continue;
+      }
+      if (inDoubleQuote) {
+        current.append(c);
+        if (c == '"' && (i == 0 || text.charAt(i - 1) != '\\')) {
+          inDoubleQuote = false;
+        }
+        continue;
+      }
+      if (c == '/' && next == '/') {
+        current.append(c).append(next);
+        i++;
+        inLineComment = true;
+        continue;
+      }
+      if (c == '/' && next == '*') {
+        current.append(c).append(next);
+        i++;
+        inBlockComment = true;
+        continue;
+      }
+      if (c == '\'') {
+        inSingleQuote = true;
+        current.append(c);
+        continue;
+      }
+      if (c == '"') {
+        inDoubleQuote = true;
+        current.append(c);
+        continue;
+      }
+      if (c == '(') {
+        parenDepth++;
+        current.append(c);
+        continue;
+      }
+      if (c == ')') {
+        if (parenDepth > 0) {
+          parenDepth--;
+        }
+        current.append(c);
+        continue;
+      }
+      if (c == '{') {
+        braceDepth++;
+        current.append(c);
+        continue;
+      }
+      if (c == '}') {
+        if (braceDepth > 0) {
+          braceDepth--;
+        }
+        current.append(c);
+        continue;
+      }
+      if (c == '[') {
+        bracketDepth++;
+        current.append(c);
+        continue;
+      }
+      if (c == ']') {
+        if (bracketDepth > 0) {
+          bracketDepth--;
+        }
+        current.append(c);
+        continue;
+      }
+      if (c == ',' && parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
+        values.add(current.toString().strip());
+        current.setLength(0);
+        continue;
+      }
+      current.append(c);
+    }
+    values.add(current.toString().strip());
+    return values;
   }
 
   private static MethodSource findMethodSource(String sourceFormula, String methodName) {
@@ -357,32 +839,40 @@ final class GeneratedP4ValueAstEvaluator {
     }
     String source = sourceFormula;
     int length = source.length();
-    String needle = methodName + "(";
     int from = 0;
     while (from < length) {
-      int nameIdx = source.indexOf(needle, from);
+      int nameIdx = source.indexOf(methodName, from);
       if (nameIdx < 0) {
         return null;
+      }
+      if (!matchesWordAt(source, nameIdx, methodName)) {
+        from = nameIdx + methodName.length();
+        continue;
+      }
+      int openParen = skipJavaDelimiters(source, nameIdx + methodName.length());
+      if (openParen >= source.length() || source.charAt(openParen) != '(') {
+        from = nameIdx + methodName.length();
+        continue;
       }
       int typeEnd = nameIdx;
       int typeStart = skipTypeStart(source, typeEnd);
       if (typeStart < 0) {
-        from = nameIdx + needle.length();
+        from = nameIdx + methodName.length();
         continue;
       }
       String typeToken = source.substring(typeStart, typeEnd).strip();
       if (!isMethodReturnType(typeToken)) {
-        from = nameIdx + needle.length();
+        from = nameIdx + methodName.length();
         continue;
       }
-      int paramsStart = nameIdx + methodName.length() + 1;
-      int paramsEnd = findMatching(source, paramsStart - 1, '(', ')');
+      int paramsStart = openParen + 1;
+      int paramsEnd = findMatching(source, openParen, '(', ')');
       if (paramsEnd < 0) {
         return null;
       }
-      int openBrace = skipToChar(source, paramsEnd + 1, '{');
-      if (openBrace < 0) {
-        from = nameIdx + needle.length();
+      int openBrace = skipJavaDelimiters(source, paramsEnd + 1);
+      if (openBrace < 0 || openBrace >= source.length() || source.charAt(openBrace) != '{') {
+        from = nameIdx + methodName.length();
         continue;
       }
       int closeBrace = findMatching(source, openBrace, '{', '}');
@@ -394,6 +884,51 @@ final class GeneratedP4ValueAstEvaluator {
       return new MethodSource(methodName, params, body);
     }
     return null;
+  }
+
+  private static int skipJavaDelimiters(String source, int from) {
+    int i = Math.max(0, from);
+    while (i < source.length()) {
+      char c = source.charAt(i);
+      if (Character.isWhitespace(c)) {
+        i++;
+        continue;
+      }
+      if (c == '/' && i + 1 < source.length()) {
+        char next = source.charAt(i + 1);
+        if (next == '/') {
+          i += 2;
+          while (i < source.length() && source.charAt(i) != '\n') {
+            i++;
+          }
+          continue;
+        }
+        if (next == '*') {
+          i += 2;
+          while (i + 1 < source.length() && !(source.charAt(i) == '*' && source.charAt(i + 1) == '/')) {
+            i++;
+          }
+          i = Math.min(source.length(), i + 2);
+          continue;
+        }
+      }
+      break;
+    }
+    return i;
+  }
+
+  private static boolean matchesWordAt(String source, int index, String word) {
+    if (source == null || word == null || index < 0 || index + word.length() > source.length()) {
+      return false;
+    }
+    if (!source.startsWith(word, index)) {
+      return false;
+    }
+    if (index > 0 && Character.isJavaIdentifierPart(source.charAt(index - 1))) {
+      return false;
+    }
+    int end = index + word.length();
+    return end >= source.length() || !Character.isJavaIdentifierPart(source.charAt(end));
   }
 
   private static int skipTypeStart(String source, int typeEndExclusive) {
@@ -417,25 +952,61 @@ final class GeneratedP4ValueAstEvaluator {
         || "object".equals(t);
   }
 
-  private static int skipToChar(String source, int from, char ch) {
-    for (int i = Math.max(0, from); i < source.length(); i++) {
-      if (source.charAt(i) == ch) {
-        return i;
-      }
-      if (!Character.isWhitespace(source.charAt(i))) {
-        return -1;
-      }
-    }
-    return -1;
-  }
-
   private static int findMatching(String source, int openIndex, char open, char close) {
     if (openIndex < 0 || openIndex >= source.length() || source.charAt(openIndex) != open) {
       return -1;
     }
     int depth = 0;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
+    boolean inLineComment = false;
+    boolean inBlockComment = false;
     for (int i = openIndex; i < source.length(); i++) {
       char c = source.charAt(i);
+      char next = i + 1 < source.length() ? source.charAt(i + 1) : '\0';
+      if (inLineComment) {
+        if (c == '\n') {
+          inLineComment = false;
+        }
+        continue;
+      }
+      if (inBlockComment) {
+        if (c == '*' && next == '/') {
+          i++;
+          inBlockComment = false;
+        }
+        continue;
+      }
+      if (inSingleQuote) {
+        if (c == '\'' && (i == 0 || source.charAt(i - 1) != '\\')) {
+          inSingleQuote = false;
+        }
+        continue;
+      }
+      if (inDoubleQuote) {
+        if (c == '"' && (i == 0 || source.charAt(i - 1) != '\\')) {
+          inDoubleQuote = false;
+        }
+        continue;
+      }
+      if (c == '/' && next == '/') {
+        inLineComment = true;
+        i++;
+        continue;
+      }
+      if (c == '/' && next == '*') {
+        inBlockComment = true;
+        i++;
+        continue;
+      }
+      if (c == '\'') {
+        inSingleQuote = true;
+        continue;
+      }
+      if (c == '"') {
+        inDoubleQuote = true;
+        continue;
+      }
       if (c == open) {
         depth++;
       } else if (c == close) {
@@ -467,7 +1038,158 @@ final class GeneratedP4ValueAstEvaluator {
     return null;
   }
 
+  private static boolean isNumericLiteral(String source) {
+    if (source == null || source.isBlank()) {
+      return false;
+    }
+    int i = 0;
+    String text = source.strip();
+    if (text.charAt(0) == '+' || text.charAt(0) == '-') {
+      i++;
+      if (i >= text.length()) {
+        return false;
+      }
+    }
+    boolean hasDigit = false;
+    boolean hasDot = false;
+    for (; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (Character.isDigit(c)) {
+        hasDigit = true;
+        continue;
+      }
+      if (c == '.' && !hasDot) {
+        hasDot = true;
+        continue;
+      }
+      return false;
+    }
+    return hasDigit;
+  }
+
   private record MethodSource(String name, String parameterSection, String expression) {}
+
+  private record MethodParameterSpec(String name, ExpressionType type) {}
+
+  private static final class ScopedCalculationContext implements CalculationContext {
+
+    private final CalculationContext delegate;
+    private final Map<String, Object> localValues;
+
+    private ScopedCalculationContext(CalculationContext delegate, Map<String, Object> initialValues) {
+      this.delegate = delegate;
+      this.localValues = new HashMap<>(initialValues);
+    }
+
+    @Override
+    public void set(String name, String value) {
+      localValues.put(name, value);
+    }
+
+    @Override
+    public Optional<String> getString(String name) {
+      Object local = localValues.get(name);
+      if (local instanceof String text) {
+        return Optional.of(text);
+      }
+      return delegate.getString(name);
+    }
+
+    @Override
+    public void set(String name, float value) {
+      localValues.put(name, value);
+    }
+
+    @Override
+    public Optional<Float> getValue(String name) {
+      Object local = localValues.get(name);
+      if (local instanceof Number number) {
+        return Optional.of(number.floatValue());
+      }
+      return delegate.getValue(name);
+    }
+
+    @Override
+    public void set(String name, Number value) {
+      localValues.put(name, value);
+    }
+
+    @Override
+    public Optional<? extends Number> getNumber(String name) {
+      Object local = localValues.get(name);
+      if (local instanceof Number number) {
+        return Optional.of(number);
+      }
+      return delegate.getNumber(name);
+    }
+
+    @Override
+    public void set(String name, boolean value) {
+      localValues.put(name, value);
+    }
+
+    @Override
+    public Optional<Boolean> getBoolean(String name) {
+      Object local = localValues.get(name);
+      if (local instanceof Boolean bool) {
+        return Optional.of(bool);
+      }
+      return delegate.getBoolean(name);
+    }
+
+    @Override
+    public <T> Optional<T> getObject(String name, Class<T> clazz) {
+      Object local = localValues.get(name);
+      if (local != null && clazz.isInstance(local)) {
+        return Optional.of(clazz.cast(local));
+      }
+      return delegate.getObject(name, clazz);
+    }
+
+    @Override
+    public void setObject(String name, Object object) {
+      localValues.put(name, object);
+    }
+
+    @Override
+    public boolean isExists(String name) {
+      if (localValues.containsKey(name) && localValues.get(name) != null) {
+        return true;
+      }
+      return delegate.isExists(name);
+    }
+
+    @Override
+    public double radianAngle(double angleValue) {
+      return delegate.radianAngle(angleValue);
+    }
+
+    @Override
+    public float nextRandom() {
+      return delegate.nextRandom();
+    }
+
+    @Override
+    public Angle angle() {
+      return delegate.angle();
+    }
+
+    @Override
+    public int scale() {
+      return delegate.scale();
+    }
+
+    @Override
+    public java.math.RoundingMode roundingMode() {
+      return delegate.roundingMode();
+    }
+
+    @Override
+    public boolean inDayTimeRange(java.time.DayOfWeek fromDayInclusive, float fromDayHourInclusive,
+        java.time.DayOfWeek toDayInclusive, float toDayHourExclusive) {
+      return delegate.inDayTimeRange(fromDayInclusive, fromDayHourInclusive, toDayInclusive, toDayHourExclusive);
+    }
+  }
 
   private static String normalizeComparisonOperator(Object opNode) {
     if (opNode == null) {

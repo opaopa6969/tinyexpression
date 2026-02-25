@@ -132,6 +132,24 @@ public class AstEvaluatorGeneratedValuePathTest {
   }
 
   @Test
+  public void testMethodInvocationWithArgumentsUsesGeneratedAstPath() {
+    String formula = "call identity('local')\nobject identity($payload as object){\n$payload\n}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstMethodInvocationWithArgsGeneratedPath", types, classLoader);
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.setObject("payload", "global");
+    Object value = ast.apply(context);
+
+    assertEquals("local", value);
+    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
+  @Test
   public void testNumberIfExpressionUsesGeneratedAstPath() {
     String formula = "if   (true){1}else{2}";
     SpecifiedExpressionTypes types =
