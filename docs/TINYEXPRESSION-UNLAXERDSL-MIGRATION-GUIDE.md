@@ -336,6 +336,7 @@ AST 化は 2 通りある。
 
 注: `AST_EVALUATOR` はすでに generated-path 実行を優先し、非対応式のみ JavaCode fallback を使う。
 宣言 setter 実行は `AstDeclarationRuntime` で段階導入済み（現在は基本 object path を主対象）。
+さらに mapper root 選択は `parse(source, preferredAstSimpleName)` で結果型に応じた優先指定が可能。
 
 ---
 

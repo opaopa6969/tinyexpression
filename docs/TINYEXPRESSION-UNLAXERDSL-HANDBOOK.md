@@ -83,6 +83,7 @@ TinyExpression では次の3段階で実行:
 7. `AstDeclarationRuntime` で declaration setter の基本実行（object path）を generated-path 前段に導入
 8. `AstEvaluatorGeneratedValuePathTest` で `boolean`/`object`（literal/variable/declaration setter）の generated-path 実行を検証
 9. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
+10. generated mapper は `parse(source, preferredAstSimpleName)` を持ち、result type に応じて root candidate を優先選択できる
 
 要点:
 

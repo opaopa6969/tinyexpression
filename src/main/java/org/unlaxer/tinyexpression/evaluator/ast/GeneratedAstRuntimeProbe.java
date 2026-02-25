@@ -18,11 +18,21 @@ final class GeneratedAstRuntimeProbe {
   }
 
   static Optional<Object> tryMapAst(String source, ClassLoader classLoader) {
+    return tryMapAst(source, classLoader, null);
+  }
+
+  static Optional<Object> tryMapAst(String source, ClassLoader classLoader, String preferredAstSimpleName) {
     try {
       Class<?> mapperClass = Class.forName(
           "org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
-      Method parse = mapperClass.getMethod("parse", String.class);
-      Object ast = parse.invoke(null, source);
+      Object ast;
+      try {
+        Method parsePreferred = mapperClass.getMethod("parse", String.class, String.class);
+        ast = parsePreferred.invoke(null, source, preferredAstSimpleName);
+      } catch (NoSuchMethodException ignored) {
+        Method parse = mapperClass.getMethod("parse", String.class);
+        ast = parse.invoke(null, source);
+      }
       return Optional.ofNullable(ast);
     } catch (Throwable e) {
       return Optional.empty();

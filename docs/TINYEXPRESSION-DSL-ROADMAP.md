@@ -378,6 +378,10 @@ Completed in this session (P3 follow-up):
    - avoids `$` capture loss in variable-reference mapping paths.
 52. expanded generated-path object tests:
    - `AstEvaluatorGeneratedValuePathTest` now covers object variable reference and object declaration setter paths under `generated-ast`.
+53. added preferred-root mapping API for generated mapper and wired AST runtime selection:
+   - `unlaxer-dsl` generated mapper now supports `parse(String, String preferredAstSimpleName)`,
+   - mapped-node selection ranks preferred AST simple name first, then existing depth/offset heuristic,
+   - `AstEvaluatorCalculator` now passes preferred AST node by result type (`BinaryExpr`/`StringExpr`/`BooleanExpr`/`ObjectExpr`).
 
 
 
@@ -400,6 +404,8 @@ Verified tests:
 15. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
 16. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest#testObjectVariableUsesGeneratedAstPath test`
 17. `./mvnw -q -DskipTests compile`
+18. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
+19. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
 
 ## Execution Policy
 

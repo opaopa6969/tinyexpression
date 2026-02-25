@@ -193,7 +193,8 @@ public class AstEvaluatorCalculator implements Calculator {
   @Override
   public Object apply(CalculationContext calculationContext) {
     if (generatedAstRuntimeAvailable) {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source.source(), classLoader);
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+          source.source(), classLoader, preferredAstSimpleName());
       if (mapped.isPresent()) {
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
@@ -273,5 +274,25 @@ public class AstEvaluatorCalculator implements Calculator {
   @Override
   public CalculateResult calculate(CalculationContext calculateContext, String formula, ExpressionType resultType) {
     return ensureDelegate().calculate(calculateContext, formula, resultType);
+  }
+
+  private String preferredAstSimpleName() {
+    ExpressionType type = resultType();
+    if (type == null) {
+      return null;
+    }
+    if (type.isNumber()) {
+      return "BinaryExpr";
+    }
+    if (type.isString()) {
+      return "StringExpr";
+    }
+    if (type.isBoolean()) {
+      return "BooleanExpr";
+    }
+    if (type.isObject()) {
+      return "ObjectExpr";
+    }
+    return null;
   }
 }

@@ -206,6 +206,9 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 3. generated mapper utility に identifier 抽出ヘルパーを追加
    - `identifierLikeText(Token)`
    - `extractIdentifierLike(String)`
+4. generated mapper entry point を拡張
+   - `parse(String, String preferredAstSimpleName)` を追加
+   - preferred AST 名一致ノードを優先して root candidate を選択
 
 ### Compatibility impact
 
