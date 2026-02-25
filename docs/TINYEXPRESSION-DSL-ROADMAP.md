@@ -413,6 +413,10 @@ Completed in this session (P3 follow-up):
 63. fixed dependency-side duplicate-capture indexing for generated non-assoc mappings:
    - `unlaxer-dsl` `MapperGenerator` now emits `findDescendantByIndex(...)` and assigns occurrence index across params in declaration order,
    - resolves mis-mapping when same parser class is captured by multiple params (`left/right` style captures).
+64. added method invocation AST mapping + zero-arg method direct evaluation path:
+   - added `@mapping(MethodInvocationExpr, params=[name])` on `MethodInvocation`,
+   - `GeneratedP4ValueAstEvaluator` now resolves `MethodInvocationExpr` by locating method declaration body from source and evaluating it through generated AST path first (bridge fallback only if needed),
+   - `unlaxer-dsl` mapper generation now binds `IDENTIFIER` capture to `IdentifierParser.class` for accurate method-name extraction.
 
 
 

@@ -119,6 +119,11 @@ final class GeneratedP4ValueAstEvaluator {
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
       return evaluateVariableRef(value, context).map(String::valueOf);
     }
+    if ("MethodInvocationExpr".equals(value.getClass().getSimpleName())) {
+      Optional<Object> invocation = evaluateMethodInvocation(value, ExpressionTypes.string,
+          specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      return invocation.map(String::valueOf);
+    }
     String text = String.valueOf(value).strip();
     if (text.startsWith("$")) {
       Optional<Object> fromContext = resolveVariableAny(extractVariableName(text), context);
@@ -145,6 +150,11 @@ final class GeneratedP4ValueAstEvaluator {
     }
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
       return evaluateVariableRef(value, context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+    }
+    if ("MethodInvocationExpr".equals(value.getClass().getSimpleName())) {
+      return evaluateMethodInvocation(value, ExpressionTypes._boolean,
+          specifiedExpressionTypes, context, classLoader, fallbackFormulaSource)
+              .flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
     }
     if ("ComparisonExpr".equals(value.getClass().getSimpleName())) {
       return evaluateComparison(value, specifiedExpressionTypes, context);
@@ -185,6 +195,10 @@ final class GeneratedP4ValueAstEvaluator {
     }
     if ("VariableRefExpr".equals(simpleName)) {
       return evaluateVariableRef(value, context);
+    }
+    if ("MethodInvocationExpr".equals(simpleName)) {
+      return evaluateMethodInvocation(value, ExpressionTypes.object,
+          specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
     }
     if ("ComparisonExpr".equals(simpleName)) {
       return evaluateComparison(value, specifiedExpressionTypes, context).map(v -> (Object) v);
@@ -303,6 +317,157 @@ final class GeneratedP4ValueAstEvaluator {
       default -> Optional.empty();
     };
   }
+
+  private static Optional<Object> evaluateMethodInvocation(Object methodInvocationNode, ExpressionType expectedType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String sourceFormula) {
+    Object name = invokeZeroArg(methodInvocationNode, "name").orElse(null);
+    if (name == null) {
+      return Optional.empty();
+    }
+    MethodSource method = findMethodSource(sourceFormula, String.valueOf(name));
+    if (method == null || !method.parameterSection().isBlank()) {
+      return Optional.empty();
+    }
+    if (method.expression().isBlank()) {
+      return Optional.empty();
+    }
+    if (method.expression().strip().startsWith("call " + method.name() + "(")) {
+      return Optional.empty();
+    }
+    ClassLoader effectiveClassLoader = classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+    SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
+        expectedType, specifiedExpressionTypes.numberType());
+    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+        method.expression(), effectiveClassLoader, preferredAstSimpleName(expectedType));
+    if (mapped.isPresent()) {
+      Optional<Object> evaluated = tryEvaluate(
+          mapped.get(), evalTypes, context, effectiveClassLoader, sourceFormula);
+      if (evaluated.isPresent()) {
+        return evaluated;
+      }
+    }
+    return AstEmbeddedExpressionRuntime.tryEvaluate(
+        method.expression(), expectedType, evalTypes, context, effectiveClassLoader, sourceFormula);
+  }
+
+  private static MethodSource findMethodSource(String sourceFormula, String methodName) {
+    if (sourceFormula == null || methodName == null || methodName.isBlank()) {
+      return null;
+    }
+    String source = sourceFormula;
+    int length = source.length();
+    String needle = methodName + "(";
+    int from = 0;
+    while (from < length) {
+      int nameIdx = source.indexOf(needle, from);
+      if (nameIdx < 0) {
+        return null;
+      }
+      int typeEnd = nameIdx;
+      int typeStart = skipTypeStart(source, typeEnd);
+      if (typeStart < 0) {
+        from = nameIdx + needle.length();
+        continue;
+      }
+      String typeToken = source.substring(typeStart, typeEnd).strip();
+      if (!isMethodReturnType(typeToken)) {
+        from = nameIdx + needle.length();
+        continue;
+      }
+      int paramsStart = nameIdx + methodName.length() + 1;
+      int paramsEnd = findMatching(source, paramsStart - 1, '(', ')');
+      if (paramsEnd < 0) {
+        return null;
+      }
+      int openBrace = skipToChar(source, paramsEnd + 1, '{');
+      if (openBrace < 0) {
+        from = nameIdx + needle.length();
+        continue;
+      }
+      int closeBrace = findMatching(source, openBrace, '{', '}');
+      if (closeBrace < 0) {
+        return null;
+      }
+      String params = source.substring(paramsStart, paramsEnd).strip();
+      String body = source.substring(openBrace + 1, closeBrace).strip();
+      return new MethodSource(methodName, params, body);
+    }
+    return null;
+  }
+
+  private static int skipTypeStart(String source, int typeEndExclusive) {
+    int i = typeEndExclusive - 1;
+    while (i >= 0 && Character.isWhitespace(source.charAt(i))) {
+      i--;
+    }
+    while (i >= 0 && Character.isJavaIdentifierPart(source.charAt(i))) {
+      i--;
+    }
+    int start = i + 1;
+    return start < typeEndExclusive ? start : -1;
+  }
+
+  private static boolean isMethodReturnType(String token) {
+    String t = token == null ? "" : token.strip();
+    return "number".equals(t)
+        || "float".equals(t)
+        || "string".equals(t)
+        || "boolean".equals(t)
+        || "object".equals(t);
+  }
+
+  private static int skipToChar(String source, int from, char ch) {
+    for (int i = Math.max(0, from); i < source.length(); i++) {
+      if (source.charAt(i) == ch) {
+        return i;
+      }
+      if (!Character.isWhitespace(source.charAt(i))) {
+        return -1;
+      }
+    }
+    return -1;
+  }
+
+  private static int findMatching(String source, int openIndex, char open, char close) {
+    if (openIndex < 0 || openIndex >= source.length() || source.charAt(openIndex) != open) {
+      return -1;
+    }
+    int depth = 0;
+    for (int i = openIndex; i < source.length(); i++) {
+      char c = source.charAt(i);
+      if (c == open) {
+        depth++;
+      } else if (c == close) {
+        depth--;
+        if (depth == 0) {
+          return i;
+        }
+      }
+    }
+    return -1;
+  }
+
+  private static String preferredAstSimpleName(ExpressionType type) {
+    if (type == null) {
+      return null;
+    }
+    if (type.isNumber()) {
+      return "BinaryExpr";
+    }
+    if (type.isString()) {
+      return "StringExpr";
+    }
+    if (type.isBoolean()) {
+      return "BooleanExpr";
+    }
+    if (type.isObject()) {
+      return "ObjectExpr";
+    }
+    return null;
+  }
+
+  private record MethodSource(String name, String parameterSection, String expression) {}
 
   private static String normalizeComparisonOperator(Object opNode) {
     if (opNode == null) {

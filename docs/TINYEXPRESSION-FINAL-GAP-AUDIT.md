@@ -30,13 +30,14 @@ Last updated: 2026-02-25
 12. P4 draft boolean grammar now accepts numeric comparison expressions (`NumberExpression CompareOp NumberExpression`), enabling generated parser path for cases like `match{1==1->...,default->...}`.
 13. Comparison expressions now have explicit AST node mapping (`ComparisonExpr`) and are evaluated directly in generated AST runtime (bridge非依存) for boolean comparison semantics.
 14. Embedded-expression detection now follows java-style delimiter assumptions (`if`/`match` head with variable whitespace/comments), reducing heuristic mismatch vs parser behavior.
+15. `MethodInvocation` now has explicit AST mapping (`MethodInvocationExpr`) and zero-arg method declarations can be resolved/evaluated on generated AST path without mandatory JavaCode fallback.
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
    1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）は「埋め込みJavaCode bridge」で動作するが、純粋AST walkとしては未完
    2. `IfExpression`, `match` families の専用ASTノード化と評価器実装は未完
-   3. method invocation/declaration の純粋ASTセマンティクス（bridge非依存）は未完
+   3. method invocation/declaration は zero-arg sliceのみ direct化済み。引数付き呼び出し/仮引数束縛を含む純粋ASTセマンティクスは未完
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式の一部まで拡張済み（method declaration text injection + embedded eval）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完

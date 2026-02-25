@@ -122,7 +122,8 @@ grammar TinyExpressionP4 {
   ReturnType ::= NumberReturnType | StringReturnType | BooleanReturnType | ObjectReturnType ;
 
   @backref(name=methodName)
-  MethodInvocation ::= 'call' IDENTIFIER '(' [ Arguments ] ')' ;
+  @mapping(MethodInvocationExpr, params=[name])
+  MethodInvocation ::= 'call' IDENTIFIER @name '(' [ Arguments ] ')' ;
 
   Arguments ::= Expression { ',' Expression } ;
 

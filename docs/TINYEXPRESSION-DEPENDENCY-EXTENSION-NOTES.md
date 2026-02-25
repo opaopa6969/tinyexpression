@@ -247,6 +247,8 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 1. generated mapper utility に `findDescendantByIndex(Token, parserClass, index)` を追加。
 2. non-assoc scalar/optional capture で parser class ごとの occurrence index を mapping param順で共有して割り当て。
 3. `findDescendantByIndex(...)` は self token 一致時に `index=0` を self で返す挙動へ拡張。
+4. token declaration が `IdentifierParser` の capture は `IdentifierParser.class` を直接探索するよう修正。
+   - `MethodInvocationExpr.name` など identifier capture が rule root token へ吸い込まれる問題を解消。
 
 ### Effect
 
