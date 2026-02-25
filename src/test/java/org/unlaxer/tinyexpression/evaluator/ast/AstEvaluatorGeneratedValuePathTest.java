@@ -133,7 +133,7 @@ public class AstEvaluatorGeneratedValuePathTest {
 
   @Test
   public void testNumberIfExpressionUsesGeneratedAstPath() {
-    String formula = "if(true){1}else{2}";
+    String formula = "if   (true){1}else{2}";
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

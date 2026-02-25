@@ -223,3 +223,37 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 1. `ObjectExpression` mapping を有効化した generated runtime で `AST_EVALUATOR` object path を再接続
 2. declaration setter 実行と合わせて object variable formula の `generated-ast` 経路を確認
+
+---
+
+## 2026-02-25: duplicate parser-class capture indexing in non-assoc mapping
+
+### Context
+
+- Target repo: `unlaxer-dsl`
+- Target file: `src/main/java/org/unlaxer/dsl/codegen/MapperGenerator.java`
+- Trigger: `ComparisonExpression` に `@mapping(ComparisonExpr, params=[left, op, right])` を追加後、
+  generated mapper が `left/right` の両方に同じ最初の `NumberExpression` を割り当てるケースを確認。
+
+### Observed issue
+
+1. non-assoc mapping で `findFirstDescendant(...)` を param ごとに使うため、
+   同一 parser class capture を複数 param (`left`,`right`) で使うと同じ token が再利用される。
+2. index対応を入れても `findDescendants(...)` が self を含まないため、
+   root parser class と同じ capture で 0番要素が解決できないケースが発生。
+
+### Implemented
+
+1. generated mapper utility に `findDescendantByIndex(Token, parserClass, index)` を追加。
+2. non-assoc scalar/optional capture で parser class ごとの occurrence index を mapping param順で共有して割り当て。
+3. `findDescendantByIndex(...)` は self token 一致時に `index=0` を self で返す挙動へ拡張。
+
+### Effect
+
+1. `left/right` のような同一 parser class 重複captureが正しく別tokenへマップされる。
+2. 既存 single-capture mapping (`StringExpr.value` など) の後方互換性を維持。
+
+### Follow-up in tinyexpression
+
+1. `ComparisonExpr` direct-eval path の回帰確認（`match{1==1->...,default->...}`）。
+2. generated-path runtime testで `javacode-fallback` 退行がないことを継続監視。

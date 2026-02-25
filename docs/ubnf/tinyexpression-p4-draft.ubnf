@@ -163,7 +163,8 @@ grammar TinyExpressionP4 {
     | VariableRef @value
     | MethodInvocation @value ;
 
-  ComparisonExpression ::= NumberExpression CompareOp NumberExpression ;
+  @mapping(ComparisonExpr, params=[left, op, right])
+  ComparisonExpression ::= NumberExpression @left CompareOp @op NumberExpression @right ;
   CompareOp ::= '==' | '!=' | '<=' | '>=' | '<' | '>' ;
 
   @mapping(ObjectExpr, params=[value])

@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
+import java.math.BigDecimal;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;
@@ -130,7 +131,7 @@ final class GeneratedP4ValueAstEvaluator {
     if (embedded.isPresent()) {
       return Optional.of(String.valueOf(embedded.get()));
     }
-    if (AstEmbeddedExpressionRuntime.isLikelyExpression(text)) {
+    if (AstEmbeddedExpressionRuntime.isLikelyStructuredExpression(text)) {
       return Optional.empty();
     }
     return Optional.of(text);
@@ -144,6 +145,9 @@ final class GeneratedP4ValueAstEvaluator {
     }
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
       return evaluateVariableRef(value, context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+    }
+    if ("ComparisonExpr".equals(value.getClass().getSimpleName())) {
+      return evaluateComparison(value, specifiedExpressionTypes, context);
     }
     String text = String.valueOf(value).strip();
     if (text.startsWith("$")) {
@@ -182,6 +186,9 @@ final class GeneratedP4ValueAstEvaluator {
     if ("VariableRefExpr".equals(simpleName)) {
       return evaluateVariableRef(value, context);
     }
+    if ("ComparisonExpr".equals(simpleName)) {
+      return evaluateComparison(value, specifiedExpressionTypes, context).map(v -> (Object) v);
+    }
     if ("BinaryExpr".equals(node.getClass().getSimpleName())) {
       Optional<Object> binary = tryEvaluateBinaryAsObject(node, specifiedExpressionTypes, context);
       if (binary.isPresent()) {
@@ -201,7 +208,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (embedded.isPresent()) {
         return embedded;
       }
-      if (AstEmbeddedExpressionRuntime.isLikelyExpression(normalized)) {
+      if (AstEmbeddedExpressionRuntime.isLikelyStructuredExpression(normalized)) {
         return Optional.empty();
       }
       return Optional.of(normalized);
@@ -261,6 +268,60 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.empty();
     }
     return resolveVariableAny(extractVariableName(String.valueOf(name)), context);
+  }
+
+  private static Optional<Boolean> evaluateComparison(Object comparisonNode,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context) {
+    Object leftNode = invokeZeroArg(comparisonNode, "left").orElse(null);
+    Object rightNode = invokeZeroArg(comparisonNode, "right").orElse(null);
+    Object opNode = invokeZeroArg(comparisonNode, "op").orElse(null);
+    if (leftNode == null || rightNode == null || opNode == null) {
+      return Optional.empty();
+    }
+    Optional<Object> leftValue = GeneratedP4NumberAstEvaluator.tryEvaluate(leftNode, specifiedExpressionTypes, context)
+        .map(v -> (Object) v);
+    Optional<Object> rightValue = GeneratedP4NumberAstEvaluator.tryEvaluate(rightNode, specifiedExpressionTypes, context)
+        .map(v -> (Object) v);
+    if (leftValue.isEmpty() || rightValue.isEmpty()) {
+      return Optional.empty();
+    }
+    if (!(leftValue.get() instanceof Number leftNumber) || !(rightValue.get() instanceof Number rightNumber)) {
+      return Optional.empty();
+    }
+    String op = normalizeComparisonOperator(opNode);
+    if (op == null || op.isEmpty()) {
+      return Optional.empty();
+    }
+    int compare = toBigDecimal(leftNumber).compareTo(toBigDecimal(rightNumber));
+    return switch (op) {
+      case "==" -> Optional.of(compare == 0);
+      case "!=" -> Optional.of(compare != 0);
+      case "<" -> Optional.of(compare < 0);
+      case "<=" -> Optional.of(compare <= 0);
+      case ">" -> Optional.of(compare > 0);
+      case ">=" -> Optional.of(compare >= 0);
+      default -> Optional.empty();
+    };
+  }
+
+  private static String normalizeComparisonOperator(Object opNode) {
+    if (opNode == null) {
+      return null;
+    }
+    if (opNode instanceof List<?> list) {
+      if (list.isEmpty()) {
+        return null;
+      }
+      return String.valueOf(list.get(0)).strip();
+    }
+    return String.valueOf(opNode).strip();
+  }
+
+  private static BigDecimal toBigDecimal(Number value) {
+    if (value instanceof BigDecimal bigDecimal) {
+      return bigDecimal;
+    }
+    return new BigDecimal(String.valueOf(value));
   }
 
   private static Optional<Object> resolveVariableAny(String variableName, CalculationContext context) {

@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 import org.unlaxer.Name;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -11,6 +12,16 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 final class AstEmbeddedExpressionRuntime {
+
+  private static final Pattern IF_HEAD_PATTERN = Pattern.compile(
+      "(?is)^if(?:\\s|/\\*.*?\\*/|//[^\\n]*(?:\\n|$))*\\(");
+  private static final Pattern MATCH_HEAD_PATTERN = Pattern.compile(
+      "(?is)^match(?:\\s|/\\*.*?\\*/|//[^\\n]*(?:\\n|$))*\\{");
+  private static final Pattern METHOD_HEAD_PATTERN = Pattern.compile(
+      "(?is)^(call|external|internal)\\b");
+  private static final Pattern BOOLEAN_COMPARISON_PATTERN = Pattern.compile(
+      "(?s).*(?:\\$[A-Za-z_][A-Za-z0-9_]*|[-+]?\\d+(?:\\.\\d+)?)\\s*(==|!=|<=|>=|<|>)\\s*"
+          + "(?:\\$[A-Za-z_][A-Za-z0-9_]*|[-+]?\\d+(?:\\.\\d+)?).*");
 
   private AstEmbeddedExpressionRuntime() {}
 
@@ -37,23 +48,34 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return normalized.startsWith("if(")
-        || normalized.startsWith("if (")
-        || normalized.startsWith("match{")
-        || normalized.startsWith("match {")
-        || isMethodInvocationExpression(normalized)
+    return isLikelyStructuredExpression(normalized)
+        || isLikelyBooleanComparisonExpression(normalized)
         || normalized.contains("->")
-        || normalized.contains("==")
-        || normalized.contains("!=")
-        || normalized.contains("<=")
-        || normalized.contains(">=")
-        || normalized.contains("<")
-        || normalized.contains(">");
+        ;
+  }
+
+  static boolean isLikelyStructuredExpression(String text) {
+    String normalized = text == null ? "" : text.strip();
+    if (normalized.isEmpty()) {
+      return false;
+    }
+    return IF_HEAD_PATTERN.matcher(normalized).find()
+        || MATCH_HEAD_PATTERN.matcher(normalized).find()
+        || isMethodInvocationExpression(normalized)
+        || normalized.contains("->");
+  }
+
+  static boolean isLikelyBooleanComparisonExpression(String text) {
+    String normalized = text == null ? "" : text.strip();
+    if (normalized.isEmpty()) {
+      return false;
+    }
+    return BOOLEAN_COMPARISON_PATTERN.matcher(normalized).matches();
   }
 
   private static boolean isMethodInvocationExpression(String text) {
     String normalized = text == null ? "" : text.strip();
-    return normalized.startsWith("call ") || normalized.startsWith("external ");
+    return METHOD_HEAD_PATTERN.matcher(normalized).find();
   }
 
   private static Optional<Object> evaluateFormula(String formula, ExpressionType resultType,

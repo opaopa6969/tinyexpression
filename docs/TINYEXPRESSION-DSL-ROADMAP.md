@@ -404,6 +404,15 @@ Completed in this session (P3 follow-up):
    - added `ComparisonExpression ::= NumberExpression CompareOp NumberExpression` and wired it into `BooleanExpression`,
    - supports `match{1==1->...,default->...}` class formulas on generated parser path,
    - refreshed parser-ir artifact (`docs/ubnf/tinyexpression-p4-draft.parser-ir.json`) and validated it.
+61. fixed embedded-expression detector compatibility with parser whitespace semantics:
+   - `AstEmbeddedExpressionRuntime` now treats `if` / `match` heads with java-style delimiters (multi-space/comment tolerant) instead of only `if(` / `if (`,
+   - reduced false positive detection for plain string literals by separating structured-expression and comparison-expression heuristics.
+62. added explicit comparison AST mapping and direct AST evaluation path:
+   - `@mapping(ComparisonExpr, params=[left, op, right])` added to `ComparisonExpression`,
+   - generated runtime now emits `ComparisonExpr` node and `GeneratedP4ValueAstEvaluator` evaluates it directly without bridge fallback.
+63. fixed dependency-side duplicate-capture indexing for generated non-assoc mappings:
+   - `unlaxer-dsl` `MapperGenerator` now emits `findDescendantByIndex(...)` and assigns occurrence index across params in declaration order,
+   - resolves mis-mapping when same parser class is captured by multiple params (`left/right` style captures).
 
 
 
@@ -435,6 +444,7 @@ Verified tests:
 24. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
 25. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 26. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
+27. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorBackendParityTest test`
 
 ## Execution Policy
 
