@@ -96,7 +96,8 @@ TinyExpression では次の3段階で実行:
 1. `DAPGenerator` が `...DebugAdapter` を生成
 2. launch引数 `runtimeMode` (`token` / `ast`) を受ける
 3. `ast` モードでは mapper AST の可視化情報（`astNodeCount`, `astCurrentNode`）を variables に出す
-4. 現時点の step は token 기반 fallback。将来は AST node stepping に置換
+4. `ast` モードでは stackTrace / breakpoint line 判定に mapper の AST node source span を利用
+5. step順序自体は引き続き互換優先（AST node列挙 + token fallback 併用）
 
 ## 8. 依存拡張が必要になった時
 

@@ -336,6 +336,10 @@ Completed in this session (P3 follow-up):
 38. expanded generated AST evaluation entry discovery:
    - `GeneratedP4NumberAstEvaluator` now searches mapped AST graph for binary-expression-like nodes (`left/op/right`) instead of assuming root node shape,
    - enables evaluation from grammar roots that wrap expression nodes.
+39. connected AST-node source spans from generated mapper to generated DAP ast runtime mode:
+   - `unlaxer-dsl` `MapperGenerator` now emits per-node source span registration and `sourceSpanOf(Object)` lookup,
+   - generated DAP `runtimeMode=ast` now computes stack frame location and breakpoint hit lines from AST node spans,
+   - generated DAP variable primary entry now switches to AST node snippet (`type=ASTNode`) in ast mode.
 
 Verified tests:
 
