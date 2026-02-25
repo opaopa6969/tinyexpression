@@ -3,8 +3,11 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.lang.reflect.Method;
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -22,11 +25,72 @@ final class GeneratedP4NumberAstEvaluator {
     }
     try {
       ExpressionType numberType = resolveNumberType(specifiedExpressionTypes);
-      Number value = evalNode(mappedAst, numberType, calculationContext);
+      Object evalTarget = findBinaryExprLikeNode(mappedAst).orElse(mappedAst);
+      Number value = evalNode(evalTarget, numberType, calculationContext);
       return Optional.of(value);
     } catch (Throwable ignored) {
       return Optional.empty();
     }
+  }
+
+  private static Optional<Object> findBinaryExprLikeNode(Object root) {
+    ArrayDeque<Object> queue = new ArrayDeque<>();
+    Set<Object> visited = new HashSet<>();
+    queue.add(root);
+    while (!queue.isEmpty()) {
+      Object current = queue.removeFirst();
+      if (current == null || visited.contains(current)) {
+        continue;
+      }
+      visited.add(current);
+      if (hasBinaryShape(current)) {
+        return Optional.of(current);
+      }
+      for (Object child : reflectiveChildren(current)) {
+        if (child != null) {
+          queue.addLast(child);
+        }
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static boolean hasBinaryShape(Object node) {
+    try {
+      node.getClass().getMethod("left");
+      node.getClass().getMethod("op");
+      node.getClass().getMethod("right");
+      return true;
+    } catch (Throwable ignored) {
+      return false;
+    }
+  }
+
+  private static List<Object> reflectiveChildren(Object node) {
+    java.util.ArrayList<Object> children = new java.util.ArrayList<>();
+    Method[] methods = node.getClass().getMethods();
+    for (Method method : methods) {
+      if (method.getParameterCount() != 0) {
+        continue;
+      }
+      String name = method.getName();
+      if ("getClass".equals(name) || "hashCode".equals(name) || "toString".equals(name)) {
+        continue;
+      }
+      try {
+        Object value = method.invoke(node);
+        if (value == null) {
+          continue;
+        }
+        if (value instanceof List<?> list) {
+          children.addAll(list);
+          continue;
+        }
+        children.add(value);
+      } catch (Throwable ignored) {
+      }
+    }
+    return children;
   }
 
   static int countAstNodes(Object node) {

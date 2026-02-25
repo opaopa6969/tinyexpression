@@ -333,6 +333,9 @@ Completed in this session (P3 follow-up):
 37. raised generated DAP `ast` stepping fidelity:
    - `unlaxer-dsl` generated DAP now uses AST-node count as step limit in `runtimeMode=ast`,
    - stack frame label follows AST node label while preserving token-based source coordinates for compatibility.
+38. expanded generated AST evaluation entry discovery:
+   - `GeneratedP4NumberAstEvaluator` now searches mapped AST graph for binary-expression-like nodes (`left/op/right`) instead of assuming root node shape,
+   - enables evaluation from grammar roots that wrap expression nodes.
 
 Verified tests:
 
