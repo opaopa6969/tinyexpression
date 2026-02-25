@@ -346,6 +346,9 @@ Completed in this session (P3 follow-up):
 41. expanded generated numeric AST evaluator leaf resolution for context variables:
    - `GeneratedP4NumberAstEvaluator` now resolves `$name` leaf literals from `CalculationContext` (`getNumber` / `getValue`) before numeric parse,
    - keeps strict fallback behavior for unresolved/non-numeric leaves.
+42. improved mapper selection when root rule is not explicitly mapped:
+   - `unlaxer-dsl` generated mapper now picks mapped token candidate by `minimum depth` then `maximum start offset`,
+   - avoids accidental capture of declaration-initializer expressions in grammars that contain multiple mapped subexpressions.
 
 Verified tests:
 

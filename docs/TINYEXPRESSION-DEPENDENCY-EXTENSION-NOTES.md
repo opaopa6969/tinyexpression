@@ -158,6 +158,9 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 8. generated `DAP` の `runtimeMode=ast` で source座標を AST span ベースへ改善
    - stackTrace の line/column を AST node span 由来で計算
    - breakpoint line hit 判定も AST step index + span line に同期
+9. generated `Mapper` の root未mapping時ノード選択を改善
+   - 「最初のmappedノード」固定を廃止
+   - `depth asc` + `startOffset desc` ヒューリスティックで主式候補を選択
 
 検証結果:
 
