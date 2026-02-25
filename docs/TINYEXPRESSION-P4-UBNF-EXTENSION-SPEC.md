@@ -167,6 +167,10 @@ Result:
 - object path lexical shadowing is also validated:
   - global `$payload` is ignored when method parameter `$payload` exists,
   - runtime result returns method argument (`"local"`).
+- string path lexical shadowing is validated with runtime builder fix:
+  - added support in `StringClauseBuilder` for wrapped `NumberExpressionParser` token path,
+  - method parameter `$name` now resolves correctly over global `$name`,
+  - runtime result returns method argument (`"local"`).
 
 ---
 
@@ -178,5 +182,4 @@ Result:
 
 ## 6. Next P4 Implementation Steps
 
-1. Extend lexical-scope conformance tests across string method paths as well.
-2. Expand UBNF draft from core subset to full TinyExpression syntax (setter/method declaration variants).
+1. Expand UBNF draft from core subset to full TinyExpression syntax (setter/method declaration variants).

@@ -81,6 +81,10 @@ Implemented for P3 (follow-up):
     - added declared-method backreference success case (`call provide()`),
     - added object lexical shadowing case (method parameter `$payload` shadows global `$payload`),
     - re-ran `UbnfExtensionRoadmapTest` successfully.
+18. completed string lexical shadowing test path and fixed runtime builder gap:
+    - added string lexical shadowing snapshot (`global $name` vs method parameter `$name`),
+    - updated `StringClauseBuilder` to handle wrapped `NumberExpressionParser` token path,
+    - re-ran `UbnfExtensionRoadmapTest` successfully.
 
 ## Files Changed
 
@@ -156,9 +160,8 @@ Not executed in this round:
 
 Continue with `P4` in this order:
 
-1. add string lexical-scope snapshot in `UbnfExtensionRoadmapTest`,
-2. extend UBNF draft for remaining setter/method declaration variants,
-3. keep test policy minimal (`1 fail + 1 success`).
+1. extend UBNF draft for remaining setter/method declaration variants,
+2. keep test policy minimal (`1 fail + 1 success`).
 
 ## Guardrails / Collaboration Rules
 

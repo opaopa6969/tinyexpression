@@ -94,4 +94,23 @@ public class UbnfExtensionRoadmapTest {
     assertEquals("local", result);
   }
 
+  @Test
+  public void testScopeTreeLexicalSemanticsMethodParameterShadowsGlobalStringVariable() {
+    PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
+        Name.of("RoadmapScopeTreeString"),
+        new Source(
+            "var $name as string description='name';\n"
+                + "call identity('local')\n"
+                + "string identity($name as string){\n"
+                + " $name\n"
+                + "}"),
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float),
+        Thread.currentThread().getContextClassLoader());
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.set("name", "global");
+    Object result = calculator.apply(context);
+    assertEquals("local", result);
+  }
+
 }

@@ -269,6 +269,10 @@ Completed in this session (P3 follow-up):
    - added successful backreference case (`call provide()` with declared method),
    - added lexical scope-tree object shadowing case (`global $payload` vs method parameter `$payload`),
    - verified both in `UbnfExtensionRoadmapTest`.
+21. completed string lexical-scope snapshot and runtime builder compatibility fix:
+   - added roadmap test for method parameter shadowing on string path (`$name`),
+   - fixed `StringClauseBuilder` to accept wrapped `NumberExpressionParser` token path and delegate to child expression,
+   - verified updated `UbnfExtensionRoadmapTest`.
 
 Verified tests:
 

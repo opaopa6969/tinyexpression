@@ -21,6 +21,7 @@ import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
 import org.unlaxer.tinyexpression.parser.StringExpressionParser;
@@ -50,6 +51,7 @@ public class StringClauseBuilder {
 
   static {
     registerHandler(StringExpressionParser.class, StringClauseBuilder::buildStringExpression);
+    registerHandler(NumberExpressionParser.class, StringClauseBuilder::buildSingleChild);
     registerHandler(StringTermParser.class, StringClauseBuilder::buildStringTerm);
     registerHandler(StringPlusParser.class, StringClauseBuilder::buildStringPlus);
     registerHandler(SliceParser.class, StringClauseBuilder::buildSlice);
@@ -140,6 +142,10 @@ public class StringClauseBuilder {
       }
       return ExpressionOrLiteral.expressionOf("(" + builder.toString() + ")");
     }
+    return build(token.filteredChildren.get(0), tinyExpressionTokens);
+  }
+
+  private ExpressionOrLiteral buildSingleChild(Token token, TinyExpressionTokens tinyExpressionTokens) {
     return build(token.filteredChildren.get(0), tinyExpressionTokens);
   }
 
