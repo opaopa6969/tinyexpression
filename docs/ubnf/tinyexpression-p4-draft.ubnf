@@ -147,20 +147,28 @@ grammar TinyExpressionP4 {
     | MethodInvocation
     | '(' NumberExpression ')' ;
 
+  @mapping(StringExpr, params=[value])
   StringExpression ::=
-      StringMatchExpression
-    | STRING
-    | VariableRef
-    | MethodInvocation ;
+      StringMatchExpression @value
+    | STRING @value
+    | VariableRef @value
+    | MethodInvocation @value ;
 
+  @mapping(BooleanExpr, params=[value])
   BooleanExpression ::=
-      BooleanMatchExpression
-    | 'true'
-    | 'false'
-    | VariableRef
-    | MethodInvocation ;
+      BooleanMatchExpression @value
+    | 'true' @value
+    | 'false' @value
+    | VariableRef @value
+    | MethodInvocation @value ;
 
-  ObjectExpression ::= NumberExpression | StringExpression | BooleanExpression | VariableRef | MethodInvocation ;
+  @mapping(ObjectExpr, params=[value])
+  ObjectExpression ::=
+      NumberExpression @value
+    | StringExpression @value
+    | BooleanExpression @value
+    | VariableRef @value
+    | MethodInvocation @value ;
 
   IfExpression ::=
     'if' '(' BooleanExpression ')'
@@ -195,7 +203,8 @@ grammar TinyExpressionP4 {
   BooleanCase ::= BooleanExpression '->' BooleanExpression ;
   BooleanDefaultCase ::= 'default' '->' BooleanExpression ;
 
-  VariableRef ::= '$' IDENTIFIER [ TypeHint ] ;
+  @mapping(VariableRefExpr, params=[name])
+  VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
 
   Expression ::=
       NumberExpression

@@ -352,6 +352,9 @@ Completed in this session (P3 follow-up):
 43. added final-gap audit document for end-state tracking:
    - `docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md`
    - records done/remaining/priority order toward full DSL replacement + dual runtime parity.
+44. expanded P4 mapping coverage for non-numeric expression families:
+   - added `@mapping` for `StringExpression`, `BooleanExpression`, `ObjectExpression`, and `VariableRef` in `docs/ubnf/tinyexpression-p4-draft.ubnf`,
+   - regenerated runtime/tooling artifacts now include `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` AST records.
 
 Verified tests:
 
