@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -192,6 +193,7 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public Object apply(CalculationContext calculationContext) {
+    Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable) {
       Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
           source.source(), classLoader, preferredAstSimpleName());
@@ -205,6 +207,17 @@ public class AstEvaluatorCalculator implements Calculator {
           generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
               mapped.get(), specifiedExpressionTypes, calculationContext);
         }
+        ExpressionType evaluatedResultType = resultType();
+        if (generatedAstEvaluated.isPresent() && evaluatedResultType != null && evaluatedResultType.isNumber()) {
+          tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+              source.source(), specifiedExpressionTypes, calculationContext);
+          if (tokenAstEvaluated.isPresent()
+              && generatedAstEvaluated.get() instanceof Number generatedNumber
+              && tokenAstEvaluated.get() instanceof Number tokenNumber
+              && !numbersEquivalent(generatedNumber, tokenNumber)) {
+            generatedAstEvaluated = Optional.empty();
+          }
+        }
         if (generatedAstEvaluated.isPresent()) {
           setObject("_astEvaluatorRuntime", "generated-ast");
           setObject("_astEvaluatorMapperAvailable", true);
@@ -216,8 +229,9 @@ public class AstEvaluatorCalculator implements Calculator {
       setObject("_astEvaluatorMapperAvailable", false);
     }
 
-    Optional<Object> astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
-        source.source(), specifiedExpressionTypes, calculationContext);
+    Optional<Object> astEvaluated = tokenAstEvaluated.isPresent()
+        ? tokenAstEvaluated
+        : AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
     if (astEvaluated.isPresent()) {
       setObject("_astEvaluatorRuntime", "token-ast");
       return astEvaluated.get();
@@ -294,5 +308,21 @@ public class AstEvaluatorCalculator implements Calculator {
       return "ObjectExpr";
     }
     return null;
+  }
+
+  private boolean numbersEquivalent(Number left, Number right) {
+    BigDecimal l = toBigDecimal(left);
+    BigDecimal r = toBigDecimal(right);
+    return l.compareTo(r) == 0;
+  }
+
+  private BigDecimal toBigDecimal(Number value) {
+    if (value == null) {
+      return BigDecimal.ZERO;
+    }
+    if (value instanceof BigDecimal decimal) {
+      return decimal;
+    }
+    return new BigDecimal(value.toString());
   }
 }

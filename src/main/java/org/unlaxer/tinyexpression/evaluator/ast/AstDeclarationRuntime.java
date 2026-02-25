@@ -69,7 +69,8 @@ final class AstDeclarationRuntime {
     if (evaluated.isEmpty()) {
       return false;
     }
-    setVariable(variableInfo.name, variableInfo.expressionType, evaluated.get(), calculationContext);
+    setVariable(variableInfo.name, variableInfo.expressionType, evaluated.get(),
+        specifiedExpressionTypes, calculationContext);
     return true;
   }
 
@@ -78,7 +79,8 @@ final class AstDeclarationRuntime {
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
     if (GeneratedAstRuntimeProbe.isAvailable(classLoader)) {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(expressionSource, classLoader);
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+          expressionSource, classLoader, preferredAstSimpleName(resultType));
       if (mapped.isPresent()) {
         Optional<Object> generatedValue =
             GeneratedP4ValueAstEvaluator.tryEvaluate(mapped.get(), evalTypes, calculationContext);
@@ -90,12 +92,12 @@ final class AstDeclarationRuntime {
     if (resultType.isNumber()) {
       return AstNumberExpressionEvaluator.tryEvaluate(expressionSource, evalTypes, calculationContext);
     }
-    return parseLiteralOrVariable(expressionSource, resultType, calculationContext);
+    return parseLiteralOrVariable(expressionSource, resultType, specifiedExpressionTypes, calculationContext);
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes specifiedExpressionTypes,
       ExpressionType resultType) {
-    if (resultType != null && resultType.isNumber()) {
+    if (resultType != null && resultType.isNumber() && resultType != ExpressionTypes.number) {
       return resultType;
     }
     if (specifiedExpressionTypes.numberType() != null) {
@@ -104,8 +106,27 @@ final class AstDeclarationRuntime {
     return ExpressionTypes._float;
   }
 
+  private static String preferredAstSimpleName(ExpressionType resultType) {
+    if (resultType == null) {
+      return null;
+    }
+    if (resultType.isNumber()) {
+      return "BinaryExpr";
+    }
+    if (resultType.isString()) {
+      return "StringExpr";
+    }
+    if (resultType.isBoolean()) {
+      return "BooleanExpr";
+    }
+    if (resultType.isObject()) {
+      return "ObjectExpr";
+    }
+    return null;
+  }
+
   private static Optional<Object> parseLiteralOrVariable(String expressionSource, ExpressionType resultType,
-      CalculationContext calculationContext) {
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext) {
     String text = expressionSource == null ? "" : expressionSource.strip();
     if (text.isEmpty()) {
       return Optional.empty();
@@ -125,8 +146,9 @@ final class AstDeclarationRuntime {
       }
     }
     if (resultType != null && resultType.isNumber()) {
+      ExpressionType numberType = resolveNumberType(specifiedExpressionTypes, resultType);
       try {
-        return Optional.of(resultType.parseNumber(text));
+        return Optional.of(numberType.parseNumber(text));
       } catch (Throwable ignored) {
       }
     }
@@ -173,9 +195,11 @@ final class AstDeclarationRuntime {
   }
 
   private static void setVariable(String name, ExpressionType resultType, Object value,
+      SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext) {
     if (resultType != null && resultType.isNumber()) {
-      Number number = value instanceof Number n ? n : resultType.parseNumber(String.valueOf(value));
+      ExpressionType numberType = resolveNumberType(specifiedExpressionTypes, resultType);
+      Number number = value instanceof Number n ? n : numberType.parseNumber(String.valueOf(value));
       calculationContext.set(name, number);
       return;
     }

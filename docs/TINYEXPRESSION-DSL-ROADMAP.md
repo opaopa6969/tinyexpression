@@ -382,6 +382,12 @@ Completed in this session (P3 follow-up):
    - `unlaxer-dsl` generated mapper now supports `parse(String, String preferredAstSimpleName)`,
    - mapped-node selection ranks preferred AST simple name first, then existing depth/offset heuristic,
    - `AstEvaluatorCalculator` now passes preferred AST node by result type (`BinaryExpr`/`StringExpr`/`BooleanExpr`/`ObjectExpr`).
+54. fixed generated assoc operator extraction to avoid merged token text (e.g. `+2`) in binary AST:
+   - `unlaxer-dsl` `MapperGenerator` now resolves assoc operator token via op-element parser class before text extraction,
+   - prevents invalid operator payloads and stabilizes generated numeric evaluation.
+55. normalized declaration-side `number` abstract type handling in AST runtime:
+   - `AstDeclarationRuntime` now resolves `ExpressionTypes.number` to concrete number type (`specified numberType` or `_float`) for parse/set paths,
+   - enables generated-path declaration setter execution for typed number declarations (`as number`).
 
 
 
@@ -406,6 +412,7 @@ Verified tests:
 17. `./mvnw -q -DskipTests compile`
 18. `cd /mnt/c/var/unlaxer-temp/unlaxer-dsl && mvn -q -DskipTests compile`
 19. `scripts/generate_tinyexpression_p4_from_ubnf.sh`
+20. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest#testTypedDeclarationSettersUseGeneratedAstPath test`
 
 ## Execution Policy
 

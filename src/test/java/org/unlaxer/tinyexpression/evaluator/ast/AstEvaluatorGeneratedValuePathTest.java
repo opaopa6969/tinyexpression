@@ -82,4 +82,36 @@ public class AstEvaluatorGeneratedValuePathTest {
     assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
     assertEquals("fallback", context.getObject("payload", Object.class).orElse(null));
   }
+
+  @Test
+  public void testTypedDeclarationSettersUseGeneratedAstPath() {
+    assertGeneratedDeclarationFormula(
+        "var $price as number set if not exists 3 description='price';\n$price+2",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        5f);
+    assertGeneratedDeclarationFormula(
+        "var $name as string set if not exists 'neo' description='name';\n$name",
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float),
+        "neo");
+    assertGeneratedDeclarationFormula(
+        "var $enabled as boolean set if not exists true description='enabled';\n$enabled",
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
+        true);
+  }
+
+  private void assertGeneratedDeclarationFormula(String formula, SpecifiedExpressionTypes types, Object expected) {
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstDeclarationGeneratedPath", types, classLoader);
+    CalculationContext context = CalculationContext.newConcurrentContext();
+
+    Object value = ast.apply(context);
+
+    if (expected instanceof Number number) {
+      assertEquals(number.floatValue(), ((Number) value).floatValue(), 0.0001f);
+    } else {
+      assertEquals(expected, value);
+    }
+    assertEquals("formula=" + formula, "generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+  }
 }

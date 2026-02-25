@@ -209,6 +209,9 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 4. generated mapper entry point を拡張
    - `parse(String, String preferredAstSimpleName)` を追加
    - preferred AST 名一致ノードを優先して root candidate を選択
+5. assoc mapping 演算子抽出を repeat-token全体から op要素限定へ修正
+   - `findFirstDescendant(repeatToken, <op parser>)` ベースで operator を抽出
+   - `+2` のような結合トークン混入を防止
 
 ### Compatibility impact
 

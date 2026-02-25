@@ -29,7 +29,7 @@ Last updated: 2026-02-25
    2. `IfExpression`, `match` families
    3. method invocation and declaration semantics in AST runtime
 2. Declaration semantics in generated AST runtime:
-   1. variable declaration setters/defaulting are basic object pathで実装済みだが、number/string/booleanの網羅と複合式評価は未完
+   1. variable declaration setters/defaulting are basic number/string/boolean/object pathで実装済みだが、複合式（method/match/if）網羅は未完
    2. dependency on fallback remains for declaration-heavy formulas
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
