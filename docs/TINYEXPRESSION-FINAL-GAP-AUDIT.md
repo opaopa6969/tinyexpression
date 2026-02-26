@@ -76,7 +76,7 @@ Last updated: 2026-02-26
 1. AST coverage beyond numeric binary core:
    1. `if` / `match` は専用ASTノード + direct eval 対応済み。
    2. `method invocation/declaration` は引数束縛まで direct化済みだが、宣言・複合式全体で bridge/fallback 非依存にするには未完。
-   3. `ObjectExpression` 複合式の一部は still bridge 依存（structured-text AST re-entry + shared head detection + leading-delimiter probe retry で縮小済みだが declaration-heavy / nested complex slices は未完）。
+   3. `ObjectExpression` 複合式の一部は still bridge 依存（structured-text/method body/method argument の multi-root AST retry で縮小済みだが declaration-heavy / nested complex slices は未完）。
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式まで拡張済み（if/match/call を含む preferred-root AST evaluation + method declaration text injection）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完

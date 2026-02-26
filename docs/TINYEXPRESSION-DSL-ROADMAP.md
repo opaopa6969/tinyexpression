@@ -530,6 +530,12 @@ Completed in this session (P3 follow-up):
    - `TinyExpressionDapRuntimeBridge` now publishes `evaluationResultType` and numeric-canonical `evaluationResultNormalized`,
    - generated DAP adapters ingest these via existing runtime-probe variable bridge,
    - improves value-level comparison visibility between `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` runtime modes.
+94. widened generated mapper preferred-root retries in value evaluator:
+   - `GeneratedP4ValueAstEvaluator` now uses multi-candidate preferred roots (head-aware + result-type-aware) instead of single preferred root for
+     1) structured-text AST re-entry,
+     2) method body evaluation,
+     3) method argument expression evaluation,
+   - reduces unnecessary embedded-bridge fallback for object/match/if/method-heavy slices.
 
 
 

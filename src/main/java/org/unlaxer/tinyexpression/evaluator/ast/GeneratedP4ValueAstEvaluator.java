@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
@@ -437,12 +438,18 @@ final class GeneratedP4ValueAstEvaluator {
         classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
         expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
-    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-        text, effectiveClassLoader, preferredAstSimpleName(expectedType));
-    if (mapped.isEmpty()) {
-      return Optional.empty();
+    for (String preferredAstSimpleName : preferredAstSimpleNames(expectedType, text)) {
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+          text, effectiveClassLoader, preferredAstSimpleName);
+      if (mapped.isEmpty()) {
+        continue;
+      }
+      Optional<Object> evaluated = tryEvaluate(mapped.get(), evalTypes, context, effectiveClassLoader, text);
+      if (evaluated.isPresent()) {
+        return evaluated;
+      }
     }
-    return tryEvaluate(mapped.get(), evalTypes, context, effectiveClassLoader, text);
+    return Optional.empty();
   }
 
   private static Optional<Object> tryEvaluateBinaryAsObject(Object mappedAst,
@@ -737,9 +744,12 @@ final class GeneratedP4ValueAstEvaluator {
         localBindings.isEmpty() ? context : new ScopedCalculationContext(context, localBindings);
     SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
         expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
-    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-        method.expression(), effectiveClassLoader, preferredAstSimpleName(expectedType));
-    if (mapped.isPresent()) {
+    for (String preferredAstSimpleName : preferredAstSimpleNames(expectedType, method.expression())) {
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+          method.expression(), effectiveClassLoader, preferredAstSimpleName);
+      if (mapped.isEmpty()) {
+        continue;
+      }
       Optional<Object> evaluated = tryEvaluate(
           mapped.get(), evalTypes, scopedContext, effectiveClassLoader, sourceFormula);
       if (evaluated.isPresent()) {
@@ -784,8 +794,11 @@ final class GeneratedP4ValueAstEvaluator {
     }
     SpecifiedExpressionTypes argumentTypes = new SpecifiedExpressionTypes(
         parameterType, resolveNumberTypeForEvaluation(parameterType, specifiedExpressionTypes.numberType()));
-    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source, classLoader, preferredAstSimpleName(parameterType));
-    if (mapped.isPresent()) {
+    for (String preferredAstSimpleName : preferredAstSimpleNames(parameterType, source)) {
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source, classLoader, preferredAstSimpleName);
+      if (mapped.isEmpty()) {
+        continue;
+      }
       Optional<Object> evaluated = tryEvaluate(
           mapped.get(), argumentTypes, context, classLoader, sourceFormula);
       if (evaluated.isPresent()) {
@@ -1367,23 +1380,55 @@ final class GeneratedP4ValueAstEvaluator {
     return -1;
   }
 
-  private static String preferredAstSimpleName(ExpressionType type) {
+  private static List<String> preferredAstSimpleNames(ExpressionType type, String sourceText) {
+    List<String> preferred = new ArrayList<>();
+    String source = sourceText == null ? "" : sourceText.strip();
+    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(source);
+    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(source);
+    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(source);
+    if (methodInvocationHead) {
+      preferred.add("MethodInvocationExpr");
+    }
+    if (ifHead) {
+      preferred.add("IfExpr");
+    }
     if (type == null) {
-      return null;
+      preferred.add(null);
+      return preferred;
     }
     if (type.isNumber()) {
-      return "BinaryExpr";
+      if (matchHead) {
+        preferred.add("NumberMatchExpr");
+      }
+      preferred.add("BinaryExpr");
+    } else if (type.isString()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+      }
+      preferred.add("StringExpr");
+    } else if (type.isBoolean()) {
+      if (matchHead) {
+        preferred.add("BooleanMatchExpr");
+      }
+      preferred.add("BooleanExpr");
+    } else if (type.isObject()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+        preferred.add("BooleanMatchExpr");
+        preferred.add("NumberMatchExpr");
+      }
+      preferred.add("ObjectExpr");
+      preferred.add("StringExpr");
+      preferred.add("BooleanExpr");
+      preferred.add("BinaryExpr");
+    } else {
+      preferred.add(null);
     }
-    if (type.isString()) {
-      return "StringExpr";
-    }
-    if (type.isBoolean()) {
-      return "BooleanExpr";
-    }
-    if (type.isObject()) {
-      return "ObjectExpr";
-    }
-    return null;
+    preferred.add("MethodInvocationExpr");
+    preferred.add("VariableRefExpr");
+    preferred.add("IfExpr");
+    preferred.add("BinaryExpr");
+    return preferred.stream().distinct().collect(Collectors.toList());
   }
 
   private static boolean isNumericLiteral(String source) {
