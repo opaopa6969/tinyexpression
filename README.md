@@ -1,34 +1,34 @@
 # TinyExpression
 
+日本語 | [English](README.en.md)
+
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression)
 
-TinyExpression is a Java-embedded expression engine (UDF style) for:
+TinyExpression は、アプリケーションに組み込み可能な Java 製の式評価エンジンです。
 
-- runtime formula evaluation
-- multi-formula execution with dependency ordering
-- optional Java code generation and AST-based execution
+- ランタイムでの式評価
+- 複数式の依存関係付き実行
+- JavaCode 生成系と AST 評価系の両対応
 
-Roadmap: `docs/TINYEXPRESSION-DSL-ROADMAP.md`
+ロードマップ: [docs/TINYEXPRESSION-DSL-ROADMAP.md](docs/TINYEXPRESSION-DSL-ROADMAP.md)
 
-## Current Backend Lineup (2026-02-26)
+## 現在の実行バックエンド (2026-02-26)
 
-TinyExpression currently supports four execution backends:
+1. `JAVA_CODE` (現行の JavaCode 実装)
+2. `JAVA_CODE_LEGACY_ASTCREATOR` (リファクタ前比較ベースライン)
+3. `AST_EVALUATOR` (AST 走査実行)
+4. `DSL_JAVA_CODE` (UnlaxerDSL JavaCode シーム)
 
-1. `JAVA_CODE` (current production JavaCode path)
-2. `JAVA_CODE_LEGACY_ASTCREATOR` (pre-refactor baseline)
-3. `AST_EVALUATOR` (AST traversal evaluator)
-4. `DSL_JAVA_CODE` (UnlaxerDSL JavaCode seam)
+詳細契約: [docs/TINYEXPRESSION-BACKEND-CONTRACT.md](docs/TINYEXPRESSION-BACKEND-CONTRACT.md)
 
-Detailed contract: `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`
-
-## Requirements
+## 要件
 
 - Java 21+
 - Maven 3.8+
 
-Note: tests/runtime use reflective access and require add-opens options (already configured in `pom.xml` surefire/argLine context).
+注: テスト/ランタイムで反射アクセスを使うため add-opens が必要です（[`pom.xml`](pom.xml) 側設定済み）。
 
-## Maven Dependency
+## Maven 依存
 
 ```xml
 <dependency>
@@ -38,7 +38,7 @@ Note: tests/runtime use reflective access and require add-opens options (already
 </dependency>
 ```
 
-## Quick Start (Single Formula)
+## クイックスタート (単一式)
 
 ```java
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -70,16 +70,16 @@ public class QuickStart {
 }
 ```
 
-## Multi Formula Execution (`TinyExpressionsExecutor`)
+## 複数式実行 (`TinyExpressionsExecutor`)
 
-Class name is `TinyExpressionsExecutor` (plural).
+クラス名は `TinyExpressionsExecutor` (複数形) です。
 
-`TinyExpressionsExecutor` itself does not choose backend. It executes cached calculators.  
-Backend selection is done while parsing `FormulaInfo` (details in "Backend Configuration").
+`TinyExpressionsExecutor` 自体は backend を選択しません。  
+`FormulaInfo` 解析時に backend が解決された `Calculator` 群を実行します。
 
-### 1. Directory Layout
+### 1. 配置構成
 
-`FileBaseTinyExpressionInstancesCache` expects:
+`FileBaseTinyExpressionInstancesCache` は次の構成を期待します。
 
 ```text
 <root>/
@@ -87,7 +87,7 @@ Backend selection is done while parsing `FormulaInfo` (details in "Backend Confi
   <tenant-id-2>/formulaInfo.txt
 ```
 
-### 2. `formulaInfo.txt` Minimal Example
+### 2. `formulaInfo.txt` の最小例
 
 ```text
 tags:NORMAL
@@ -113,7 +113,7 @@ $baseScore + 10
 ---END_OF_PART---
 ```
 
-### 3. Executor Usage Example
+### 3. 実行例
 
 ```java
 import java.nio.file.Path;
@@ -137,7 +137,7 @@ public class ExecutorExample {
         "siteId",
         info -> info.calculatorName);
 
-    // Global default backend for formulas that do not specify backend/executionBackend.
+    // 式側でbackend指定が無い場合のデフォルト
     fields.setExecutionBackend(ExecutionBackend.JAVA_CODE);
 
     FileBaseTinyExpressionInstancesCache cache = new FileBaseTinyExpressionInstancesCache(
@@ -184,29 +184,22 @@ public class ExecutorExample {
 }
 ```
 
-## `FormulaInfo` Format
+## `FormulaInfo` 記法
 
-Each block is key-value metadata + formula body, delimited by `---END_OF_PART---`.
+各ブロックは `key:value` 形式 + `formula` 本文で構成し、`---END_OF_PART---` で区切ります。
 
-Common keys:
+主要キー:
 
-- `calculatorName`: formula identifier
-- `dependsOn`: comma-separated calculator names
-- `resultType`: return type (`string`, `boolean`, `byte`, `short`, `int`, `long`, `float`, `double`, fully qualified Java type)
-- `numberType`: default number literal type
-- `formula`: TinyExpression body
-- `executionBackend` or `backend`: backend override
-- `tags`, `description`: optional metadata
-- custom keys (example: `var`, `field`, `checkKind`) are preserved in `FormulaInfo.extraValueByKey`
+- `calculatorName`: 式ID
+- `dependsOn`: 依存する式名（カンマ区切り）
+- `resultType`: 戻り値型 (`string`, `boolean`, `byte`, `short`, `int`, `long`, `float`, `double`, FQCN)
+- `numberType`: 数値演算のデフォルト型
+- `formula`: 式本文
+- `executionBackend` または `backend`: backend 上書き
+- `tags`, `description`: 任意メタ情報
+- `var`, `field`, `checkKind`: 実運用でよく使う追加キー（`ResultConsumer` で処理）
 
-Practical semantics used in many production integrations:
-
-- `var`: write result into `CalculationContext` variable (typically handled in custom `ResultConsumer`)
-- `field`: write result into domain object field (also via `ResultConsumer`)
-- `checkKind`: logical output key for score maps / risk maps
-- `calculatorName`: stable ID used by `dependsOn`
-
-Embedded Java class block in `formula` is also supported:
+`formula` 内で Java コードブロックを埋め込むことも可能です。
 
 ~~~text
 formula:
@@ -223,41 +216,40 @@ import sample.v1.CheckDigits#check as checkDigits;
 if(external returning as boolean checkDigits($input)){1}else{0}
 ~~~
 
-## Backend Configuration
+## backend 設定
 
-Backend choice is resolved in this order:
+解決順序:
 
-1. global default: `FormulaInfoAdditionalFields.executionBackend`  
-   (default value is `JAVA_CODE`)
-2. per-formula override by `executionBackend` or `backend` key
-3. mapped to concrete calculator creator by `CalculatorCreatorRegistry.forBackend(...)`
+1. グローバル既定値: `FormulaInfoAdditionalFields.executionBackend`（初期値 `JAVA_CODE`）
+2. 式ごとの上書き: `executionBackend` / `backend`
+3. 実装割り当て: `CalculatorCreatorRegistry.forBackend(...)`
 
-Canonical backend names:
+正式な backend 名:
 
 - `JAVA_CODE`
 - `JAVA_CODE_LEGACY_ASTCREATOR`
 - `AST_EVALUATOR`
 - `DSL_JAVA_CODE`
 
-DAP/runtime aliases (`runtimeMode`) include:
+DAP/runtime alias (`runtimeMode`):
 
 - `token` -> `JAVA_CODE`
-- `legacy-astcreator` or `ootc` -> `JAVA_CODE_LEGACY_ASTCREATOR`
+- `legacy-astcreator` / `ootc` -> `JAVA_CODE_LEGACY_ASTCREATOR`
 - `ast` -> `AST_EVALUATOR`
 - `dsl-javacode` -> `DSL_JAVA_CODE`
 
-Related code:
+関連コード:
 
-- `src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java`
-- `src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java`
-- `src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java`
-- `src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java`
+- [src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java](src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java)
+- [src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java](src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java)
+- [src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java](src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java)
+- [src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java](src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java)
 
-## TinyExpression Language Quick Reference
+## TinyExpression 言語クイックリファレンス
 
-This section is a practical syntax guide (not a complete grammar).
+完全仕様ではなく、実装ベースの実用記法です。
 
-### Values and Variables
+### 値と変数
 
 ```text
 123
@@ -270,7 +262,7 @@ $age
 $name
 ```
 
-### Numeric / Boolean Operators
+### 数値/真偽演算
 
 ```text
 1 + 2 * 3
@@ -284,7 +276,7 @@ true ^ false
 not(false)
 ```
 
-### Conditional and Match
+### 条件分岐
 
 ```text
 if($age >= 20){100}else{0}
@@ -295,7 +287,7 @@ match{
 }
 ```
 
-### String Utilities (examples)
+### 文字列ユーティリティ
 
 ```text
 toUpperCase($name)
@@ -306,7 +298,7 @@ $message.contains('abc')
 $message[0:3]
 ```
 
-### Variable Declaration in Formula
+### 変数宣言
 
 ```text
 variable $sex as string set if not exists 'man' description='sex';
@@ -314,20 +306,20 @@ variable $age as number set 18 description='age';
 variable $isMember as boolean description='member flag';
 ```
 
-### External Java Method Call (in formula)
+### 外部メソッド呼び出し
 
 ```text
 import sample.v1.CheckDigits#check as checkDigits;
 if(external returning as boolean checkDigits($input)){1}else{0}
 ```
 
-At runtime, register the Java object in `CalculationContext`:
+実行時は `CalculationContext` に object を登録します。
 
 ```java
 context.set(new sample.v1.CheckDigits());
 ```
 
-### User-defined Methods (advanced)
+### ユーザー定義メソッド (上級)
 
 ```text
 float main(){
@@ -345,48 +337,34 @@ float feeBySex($sex as string){
 }
 ```
 
-### Comments and Whitespace
+### コメント
 
-- FormulaInfo metadata supports `#` line comments.
-- Formula expressions support whitespace and C-style comments such as `/* ... */`.
+- `FormulaInfo` メタデータ: `#` 行コメント
+- 式本文: 空白と `/* ... */` コメントを許容
 
-## How To Integrate TinyExpression Into Your System
+## ユーザーシステムへの組み込み指針
 
-### Pattern A: Single Formula Embedded in Service
+### パターンA: サービス内で単発評価
 
-Use this when formulas are static or deployed with code.
+固定式やデプロイ同梱式向け。
 
-1. Build `CalculationContext` from request/domain model.
-2. Compile formula with `JavaCodeCalculatorV3` (or your selected backend).
-3. Execute `calculator.apply(context)` and map result.
+1. リクエスト/ドメイン値から `CalculationContext` を作る
+2. `JavaCodeCalculatorV3` などで式をコンパイル
+3. `calculator.apply(context)` の結果を業務モデルへ反映
 
-Good for:
+### パターンB: ルールリポジトリ + `TinyExpressionsExecutor`
 
-- small number of formulas
-- low operational complexity
+テナントごとに式を運用する場合向け。
 
-### Pattern B: Formula Repository + `TinyExpressionsExecutor`
+1. `formulaInfo.txt`（または同等データソース）で式を管理
+2. `TinyExpressionInstancesCache` 実装で tenant 単位にキャッシュ
+3. `TinyExpressionsExecutor` でまとめて実行
+4. `ResultConsumer` で `var` / `field` / `checkKind` を処理
+5. 外部関数用 object は `CalculationContext` に事前登録
 
-Use this when formulas are tenant-specific or updated outside code release.
+### 式名の抽出戦略 (`FormulaInfoAdditionalFields`)
 
-1. Store formulas as `formulaInfo.txt` blocks (or your own source mapped to `FormulaInfo`).
-2. Load/cache by tenant via `TinyExpressionInstancesCache` implementation.
-3. Execute by `TinyExpressionsExecutor` with:
-   - `Comparator<Calculator>` for execution order
-   - `Predicate<Calculator>` for filtering
-   - `ResultConsumer` for output mapping (`var`, `field`, `checkKind` etc.)
-4. Keep domain objects/services in `CalculationContext` for external calls.
-
-Good for:
-
-- multitenancy
-- business-managed rule updates
-- dependency-controlled formula pipelines
-
-### Formula Name Strategy (`FormulaInfoAdditionalFields`)
-
-`FormulaInfo` name resolution is pluggable.  
-This is important when some formulas use `calculatorName`, others use `checkKind`.
+`calculatorName` の有無や運用規約に合わせて名前解決を外出しできます。
 
 ```java
 FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
@@ -397,108 +375,36 @@ FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
     });
 ```
 
-This extracted name is used by cache/executor-level orchestration logic.
+### 結果処理の外出し (`ResultConsumer`)
 
-### Result Handling Strategy (`ResultConsumer`)
+`TinyExpressionsExecutor` は結果処理を `ResultConsumer` に委譲します。
 
-`TinyExpressionsExecutor` intentionally delegates result handling to `ResultConsumer`.
-This design enables:
+- `CalculationContext` への書き戻し
+- ドメインオブジェクトのフィールド更新
+- ログ/メトリクス/通知/キュー/DB 連携
 
-- writing to context variable (`var`)
-- writing to domain object field (`field`)
-- writing to custom sinks (logs, metrics, alerting, Slack, queue, DB)
+### `resultType` と `numberType`
 
-Minimal pattern:
+1. `resultType`: 式の最終戻り値型
+2. `numberType`: 式中の数値リテラル/演算の既定型
 
-```java
-public final class ResultConsumerExample implements ResultConsumer {
-  private final CheckResult checkResult;
+大きな整数演算や型整合が必要なケースでこの2つを分けて使います。
 
-  public ResultConsumerExample(CheckResult checkResult) {
-    this.checkResult = checkResult;
-  }
+## 追加ドキュメント
 
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Number result) {
-    info.getValue("checkKind").ifPresent(name -> checkResult.suspiciousByKind.put(name, result.floatValue()));
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
+- backend contract: [docs/TINYEXPRESSION-BACKEND-CONTRACT.md](docs/TINYEXPRESSION-BACKEND-CONTRACT.md)
+- UnlaxerDSL handbook: [docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md)
+- migration guide: [docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md](docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md)
+- DAP dual-evaluator plan: [docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md](docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md)
+- final gap audit: [docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md](docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md)
 
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, String result) {
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Boolean result) {
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Object result) {
-    info.getValue("var").ifPresent(name -> ctx.setObject(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  private static void setField(Object target, String fieldName, Object value) {
-    try {
-      target.getClass().getDeclaredField(fieldName).set(target, value);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-  }
-}
-```
-
-### Number Type and Return Type
-
-Two common knobs in `FormulaInfo`:
-
-1. `resultType`: final return type of the formula  
-   example: `float`, `double`, `boolean`, `String`
-2. `numberType`: numeric literal/arithmetic default type inside the formula  
-   example: `numberType:long`
-
-This pair is useful when you need:
-
-- large integer behavior in conditions/arithmetic
-- boolean/string return with explicit numeric evaluation type
-
-### Backend Rollout Strategy (Recommended)
-
-1. Keep global default in `FormulaInfoAdditionalFields.setExecutionBackend(...)`.
-2. Roll out per-formula using `backend`/`executionBackend`.
-3. Compare outputs across backends in test/probe before production switch.
-
-### Recommended Production Boundaries
-
-1. Formula authoring/validation boundary:
-   - lint and parser validation before persisting formulas
-2. Runtime boundary:
-   - deterministic context values only
-   - explicit object registration for external functions
-3. Observability boundary:
-   - log calculator name, backend, tenant, result/error
-   - track fallback usage when using AST path
-
-## LSP / DAP / DSL Migration Docs
-
-- backend contract: `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`
-- UnlaxerDSL handbook: `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`
-- migration guide: `docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md`
-- DAP dual-evaluator plan: `docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md`
-- final gap audit: `docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md`
-
-## Development
+## 開発
 
 ```bash
 mvn -q test
 ```
 
-For roadmap context and work history:
+履歴:
 
-- `docs/TINYEXPRESSION-DSL-ROADMAP.md`
-- `docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md`
+- [docs/TINYEXPRESSION-DSL-ROADMAP.md](docs/TINYEXPRESSION-DSL-ROADMAP.md)
+- [docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md](docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md)
