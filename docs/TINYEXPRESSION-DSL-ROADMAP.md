@@ -510,6 +510,10 @@ Completed in this session (P3 follow-up):
 88. reduced extracted Java parity test noise by unsupported-formula prefilter:
    - `DslJavaCodeGenerationExtractedParityTest` now filters ternary (`?:`) formulas before calculator creation,
    - keeps skip-by-exception fallback for other unsupported extractions while reducing expected parse-error log noise.
+89. reduced declaration-shortcut keyword coupling in AST evaluator:
+   - declaration shortcut trigger no longer depends on literal `"var"` string checks,
+   - shortcut pre-check now uses clause separators (`;` / newline) plus existing internal-comment safety guard,
+   - actual declaration presence remains parser-driven via `AstDeclarationRuntime.tryEvaluateMainExpression(...)`.
 
 
 

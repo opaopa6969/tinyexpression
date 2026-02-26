@@ -240,7 +240,7 @@ public class AstEvaluatorCalculator implements Calculator {
       return simpleLiteralOrVariable.get();
     }
 
-    if (looksLikeDeclarationFormula(source.source())) {
+    if (shouldTryDeclarationShortcut(source.source())) {
       Optional<AstDeclarationRuntime.MainExpressionEvaluation> declarationEvaluated =
           AstDeclarationRuntime.tryEvaluateMainExpression(
               source.source(), specifiedExpressionTypes, calculationContext, classLoader);
@@ -386,7 +386,7 @@ public class AstEvaluatorCalculator implements Calculator {
     return false;
   }
 
-  private boolean looksLikeDeclarationFormula(String formula) {
+  private boolean shouldTryDeclarationShortcut(String formula) {
     if (formula == null || formula.isBlank()) {
       return false;
     }
@@ -395,10 +395,7 @@ public class AstEvaluatorCalculator implements Calculator {
     if (trimmedLeading.contains("/*") || trimmedLeading.contains("//")) {
       return false;
     }
-    return trimmedLeading.startsWith("var ")
-        || trimmedLeading.contains("\nvar ")
-        || trimmedLeading.contains(";var ")
-        || trimmedLeading.contains("; var ");
+    return trimmedLeading.contains(";") || trimmedLeading.contains("\n");
   }
 
   private String trimLeadingJavaDelimiters(String source) {
