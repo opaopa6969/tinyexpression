@@ -522,6 +522,10 @@ Completed in this session (P3 follow-up):
    - `AstEvaluatorCalculator` now always attempts `AstDeclarationRuntime.tryEvaluateMainExpression(...)` before `javacode-fallback` (no `var`/separator heuristic gate),
    - internal-comment parity guard is centralized in `AstDeclarationRuntime` (leading comments allowed, internal comment-delimited declaration formulas remain excluded),
    - keeps runtime parity for regression corpus while reducing evaluator-side keyword coupling.
+92. added category-level reporting guard to extracted three-backend parity corpus:
+   - `ThreeExecutionBackendExtractedCorpusParityTest` now aggregates executed and AST-non-fallback cases by formula category (`if`, `math-fn`, `arithmetic`, etc.),
+   - enforces minimum category spread to detect coverage collapse into a single shape family,
+   - keeps existing executed/non-fallback lower bounds.
 
 
 

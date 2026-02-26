@@ -40,8 +40,11 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
     int executed = 0;
     int skipped = 0;
     int astNonFallback = 0;
+    Map<String, Integer> executedByCategory = new LinkedHashMap<>();
+    Map<String, Integer> astNonFallbackByCategory = new LinkedHashMap<>();
     for (int i = 0; i < cases.size(); i++) {
       Case testCase = cases.get(i);
+      String category = categorize(testCase.formula());
       Calculator legacy;
       Calculator ast;
       Calculator dslJava;
@@ -71,7 +74,9 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       assertEquivalent(testCase.formula(), legacyValue, dslJavaValue);
       if (!"javacode-fallback".equals(ast.getObject("_astEvaluatorRuntime", String.class))) {
         astNonFallback++;
+        astNonFallbackByCategory.merge(category, 1, Integer::sum);
       }
+      executedByCategory.merge(category, 1, Integer::sum);
       executed++;
     }
     assertTrue(
@@ -81,6 +86,12 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
         "ast non-fallback cases should be >= " + MIN_AST_NON_FALLBACK_CASES
             + " (astNonFallback=" + astNonFallback + ", executed=" + executed + ")",
         astNonFallback >= MIN_AST_NON_FALLBACK_CASES);
+    assertTrue(
+        "category coverage should include at least 3 categories (executedByCategory=" + executedByCategory + ")",
+        executedByCategory.size() >= 3);
+    assertTrue(
+        "ast non-fallback should include at least 2 categories (astNonFallbackByCategory=" + astNonFallbackByCategory + ")",
+        astNonFallbackByCategory.size() >= 2);
   }
 
   private Calculator createCalculator(ExecutionBackend backend, String formula, int index,
@@ -147,6 +158,36 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       }
     }
     return builder.toString();
+  }
+
+  private String categorize(String formula) {
+    String normalized = formula == null ? "" : formula.strip();
+    if (normalized.startsWith("if(") || normalized.startsWith("if ")) {
+      return "if";
+    }
+    if (normalized.startsWith("match{") || normalized.startsWith("match ")) {
+      return "match";
+    }
+    if (normalized.contains("[") && normalized.contains("]")) {
+      return "slice";
+    }
+    if (normalized.contains("toUpperCase(")
+        || normalized.contains("toLowerCase(")
+        || normalized.contains("trim(")) {
+      return "string-fn";
+    }
+    if (normalized.contains("sin(")
+        || normalized.contains("cos(")
+        || normalized.contains("tan(")) {
+      return "math-fn";
+    }
+    if (normalized.contains("not(")
+        || normalized.contains("|")
+        || normalized.contains("&")
+        || normalized.contains("^")) {
+      return "logical";
+    }
+    return "arithmetic";
   }
 
   private void assertEquivalent(String formula, Object left, Object right) {
