@@ -571,6 +571,10 @@ Completed in this session (P3 follow-up):
 103. separated legacy backend implementation package for readability:
    - moved legacy runtime classes under `org.unlaxer.tinyexpression.evaluator.javacode.legacy`,
    - kept existing current reducer package unchanged to minimize migration risk.
+104. documented 4-backend responsibility contract:
+   - added `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`,
+   - fixed backend role boundaries (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`),
+   - fixed parity and selection rules for formula metadata/runtime aliases.
 
 
 

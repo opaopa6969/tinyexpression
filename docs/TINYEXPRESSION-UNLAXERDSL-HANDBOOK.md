@@ -8,14 +8,22 @@
 
 1. Grammar (`docs/ubnf/*.ubnf`)
 2. Codegen (`unlaxer-dsl` の `AST/Parser/Mapper/Evaluator/LSP/DAP` generator)
-3. Runtime (`tinyexpression` の `AstEvaluatorCalculator` / `JavaCodeCalculatorV3`)
+3. Runtime (`tinyexpression` の
+   `AstEvaluatorCalculator` /
+   `JavaCodeCalculatorV3` /
+   `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator`)
 4. Integration (`FormulaInfoParser` / `CalculatorCreatorRegistry` / backend switch)
 
 実装上の基本方針:
 
-1. `JAVA_CODE` と `AST_EVALUATOR` の dual backend を維持する
+1. backend を4系統で維持する:
+   - `JAVA_CODE`
+   - `JAVA_CODE_LEGACY_ASTCREATOR`
+   - `AST_EVALUATOR`
+   - `DSL_JAVA_CODE`
 2. `AST_EVALUATOR` は `generated-ast -> token-ast -> javacode-fallback` の順で実行
-3. 生成物は `runtime` と `tooling` に分離し、通常 compile には `runtime` のみを入れる
+3. legacy backend は比較・回帰確認用途として扱い、新機能は原則 `JAVA_CODE` / `AST_EVALUATOR` 側へ実装する
+4. 生成物は `runtime` と `tooling` に分離し、通常 compile には `runtime` のみを入れる
 
 ## 2. TinyExpression から UnlaxerDSL へ変換する方法
 
@@ -101,7 +109,7 @@ TinyExpression では次の3段階で実行:
 ### DAP
 
 1. `DAPGenerator` が `...DebugAdapter` を生成
-2. launch引数 `runtimeMode` (`token` / `ast`) を受ける
+2. launch引数 `runtimeMode` (`token` / `legacy-astcreator` / `ast` / `dsl-javacode`) を受ける
 3. `ast` モードでは mapper AST の可視化情報（`astNodeCount`, `astCurrentNode`）を variables に出す
 4. `ast` モードでは stackTrace / breakpoint line 判定に mapper の AST node source span を利用
 5. step順序自体は引き続き互換優先（AST node列挙 + token fallback 併用）

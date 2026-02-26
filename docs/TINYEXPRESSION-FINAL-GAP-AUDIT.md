@@ -5,7 +5,7 @@ Last updated: 2026-02-26
 ## Target
 
 1. TinyExpression parser/AST/runtime/tooling path is fully replaceable by `unlaxer-dsl` generated artifacts.
-2. `JAVA_CODE` and `AST_EVALUATOR` both remain available.
+2. backend families (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) remain selectable.
 3. Final observable behavior is equivalent, and LSP/DAP operate in both runtime modes.
 
 ## Done
@@ -35,11 +35,12 @@ Last updated: 2026-02-26
 17. Generated AST runtime now supports method invocation with arguments:
    1. `MethodInvocationExpr` top-level root evaluation is supported for `number/string/boolean/object` result paths.
    2. invocation argument expressions are resolved and bound to method parameters via scoped `CalculationContext` overlay before evaluating method body.
-18. Execution backend model is now explicitly 3-way:
+18. Execution backend model is now explicitly 4-way:
    1. `JAVA_CODE` (legacy hand-written JavaCode pipeline)
-   2. `AST_EVALUATOR` (generated AST walk + token-ast/java fallback)
-   3. `DSL_JAVA_CODE` (dedicated `DslJavaCodeCalculator` seam; current implementation is bridge-only and delegates to legacy JavaCode runtime while keeping dedicated backend identity markers)
-19. Added 3-way backend parity harness (`ThreeExecutionBackendParityTest`) over a supported mixed corpus, asserting value parity and AST non-fallback guard.
+   2. `JAVA_CODE_LEGACY_ASTCREATOR` (pre-refactor OOTC reconstruction path for comparison/compatibility checks)
+   3. `AST_EVALUATOR` (generated AST walk + token-ast/java fallback)
+   4. `DSL_JAVA_CODE` (dedicated `DslJavaCodeCalculator` seam; current implementation is bridge-only and delegates to legacy JavaCode runtime while keeping dedicated backend identity markers)
+19. Added backend parity harness (`ThreeExecutionBackendParityTest`) over a supported mixed corpus, asserting value parity and AST non-fallback guard.
 20. `if` expression path now has explicit AST mapping and direct evaluator dispatch:
    1. `IfExpr` + `ExpressionExpr` are generated from P4 mapping.
    2. generated runtime evaluates condition and selected branch via AST recursion (bridge-first text evaluation is no longer required for the covered `if` slice).
@@ -48,10 +49,10 @@ Last updated: 2026-02-26
    2. generated runtime executes condition dispatch + selected branch evaluation directly on AST for number/string/boolean paths (and object path where these expressions are selected as root).
 22. Declaration runtime preferred-root policy now includes structured expression heads (`if`/`match`/`call`) so setter expressions can reach generated AST direct paths before bridge fallback.
 23. Formula loader now supports per-formula backend selection (`executionBackend` / `backend`) and validates backend names before calculator construction.
-24. All three backends now publish unified runtime marker metadata (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags), enabling tooling/diagnostics to distinguish bridge vs non-bridge execution.
-25. Three-backend parity corpus coverage has been expanded to broader mixed formulas (method-args and declaration-heavy slices included).
+24. All selectable backends now publish unified runtime marker metadata (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags), enabling tooling/diagnostics to distinguish bridge vs non-bridge execution.
+25. Backend parity corpus coverage has been expanded to broader mixed formulas (method-args and declaration-heavy slices included).
 26. Generated DAP adapter now imports tinyexpression runtime probe variables through an optional reflection bridge (`TinyExpressionDapRuntimeBridge`), exposing selected backend and execution markers in DAP variables for `runtimeMode=token/ast/dsl-javacode`.
-27. Three-backend parity test now uses two-tier verification:
+27. Backend parity test now uses two-tier verification:
    1. supported corpus: `AST_EVALUATOR` non-fallback required.
    2. regression corpus: fallback allowed but value parity with `JAVA_CODE` / `DSL_JAVA_CODE` required across broader legacy-style formulas.
 28. Added extracted legacy-corpus parity check:
@@ -67,7 +68,7 @@ Last updated: 2026-02-26
 35. DAP runtime bridge mode aliases are regression-tested (`dsl-javacode`/`dsl_java_code`/`ast`/`token`) to keep backend selection deterministic for adapter launch configurations.
 36. Declaration-aware shortcut is now wired before `javacode-fallback`: declaration formulas can be evaluated via `AstDeclarationRuntime.tryEvaluateMainExpression(...)` even when generated runtime is unavailable (comment-free scope), reducing bridge fallback for this slice.
 37. DSL JavaCode seam Java-source parity now includes extracted legacy corpus check (`DslJavaCodeGenerationExtractedParityTest`) in addition to curated parity, strengthening “same generated Java program” regression coverage.
-38. Extracted three-backend parity harness now includes an AST non-fallback minimum threshold, so large-corpus checks catch regressions where AST backend silently drifts back to `javacode-fallback`.
+38. Extracted parity harness now includes an AST non-fallback minimum threshold, so large-corpus checks catch regressions where AST backend silently drifts back to `javacode-fallback`.
 39. Declaration shortcut now accepts leading-comment formulas by trimming leading java delimiters before `var` detection, while keeping internal-comment guard to avoid behavior drift.
 40. AST evaluator declaration-shortcut trigger no longer uses literal `"var"` keyword checks; it now relies on separator-based pre-check and parser-driven declaration extraction in `AstDeclarationRuntime`.
 41. Added 4th selectable backend for pre-refactor OOTC runtime:
