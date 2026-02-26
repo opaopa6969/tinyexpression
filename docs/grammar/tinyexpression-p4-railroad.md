@@ -12,82 +12,82 @@ Notes:
 
 ```mermaid
 flowchart LR
-  F[Formula] --> Z1[VariableDeclaration*]
-  Z1 --> Z2[Annotation*]
-  Z2 --> E[Expression]
-  E --> Z3[MethodDeclaration*]
+  F["Formula"] --> Z1["VariableDeclaration zero or more"]
+  Z1 --> Z2["Annotation zero or more"]
+  Z2 --> E["Expression"]
+  E --> Z3["MethodDeclaration zero or more"]
 ```
 
 ## 2. Expression Choice
 
 ```mermaid
 flowchart LR
-  E[Expression] --> N[NumberExpression]
-  E --> S[StringExpression]
-  E --> B[BooleanExpression]
-  E --> O[ObjectExpression]
-  E --> M[MethodInvocation]
-  E --> P[(Expression)]
+  E["Expression"] --> N["NumberExpression"]
+  E --> S["StringExpression"]
+  E --> B["BooleanExpression"]
+  E --> O["ObjectExpression"]
+  E --> M["MethodInvocation"]
+  E --> P["Parenthesized Expression"]
 ```
 
 ## 3. Number Expression (precedence)
 
 ```mermaid
 flowchart LR
-  NE[NumberExpression] --> NT[NumberTerm]
-  NT --> REP1{"{ (+|-) NumberTerm }"}
-  NT --> NF[NumberFactor]
-  NF --> REP2{"{ (*|/) NumberFactor }"}
+  NE["NumberExpression"] --> NT["NumberTerm"]
+  NT --> REP1["Repeat AddOp and NumberTerm"]
+  NT --> NF["NumberFactor"]
+  NF --> REP2["Repeat MulOp and NumberFactor"]
 ```
 
 ## 4. Variable Declaration
 
 ```mermaid
 flowchart LR
-  VD[VariableDeclaration] --> NVD[NumberVariableDeclaration]
-  VD --> SVD[StringVariableDeclaration]
-  VD --> BVD[BooleanVariableDeclaration]
-  VD --> OVD[ObjectVariableDeclaration]
+  VD["VariableDeclaration"] --> NVD["NumberVariableDeclaration"]
+  VD --> SVD["StringVariableDeclaration"]
+  VD --> BVD["BooleanVariableDeclaration"]
+  VD --> OVD["ObjectVariableDeclaration"]
 
-  NVD --> KW[(var|variable)]
-  KW --> DOLLAR[$]
-  DOLLAR --> ID[IDENTIFIER]
-  ID --> TH[[NumberTypeHint?]]
-  TH --> ST[[NumberSetter?]]
-  ST --> DESC[description=STRING]
-  DESC --> SEMI[;]
+  NVD --> KW["Keyword var or variable"]
+  KW --> DOLLAR["Dollar symbol"]
+  DOLLAR --> ID["Identifier"]
+  ID --> TH["Optional NumberTypeHint"]
+  TH --> ST["Optional NumberSetter"]
+  ST --> DESC["Description with String"]
+  DESC --> SEMI["Statement Terminator"]
 ```
 
 ## 5. Method Declaration + Invocation
 
 ```mermaid
 flowchart LR
-  MD[MethodDeclaration] --> NMD[NumberMethodDeclaration]
-  MD --> SMD[StringMethodDeclaration]
-  MD --> BMD[BooleanMethodDeclaration]
-  MD --> OMD[ObjectMethodDeclaration]
+  MD["MethodDeclaration"] --> NMD["NumberMethodDeclaration"]
+  MD --> SMD["StringMethodDeclaration"]
+  MD --> BMD["BooleanMethodDeclaration"]
+  MD --> OMD["ObjectMethodDeclaration"]
 
-  MI[MethodInvocation] --> CALL[call]
-  CALL --> NAME[IDENTIFIER]
-  NAME --> LP[(]
-  LP --> ARGS[[Arguments?]]
-  ARGS --> RP[)]
+  MI["MethodInvocation"] --> CALL["Keyword call"]
+  CALL --> NAME["Identifier"]
+  NAME --> LP["Left Parenthesis"]
+  LP --> ARGS["Optional Arguments"]
+  ARGS --> RP["Right Parenthesis"]
 ```
 
 ## 6. If / Match
 
 ```mermaid
 flowchart LR
-  IF[IfExpression] --> IFKW[if]
-  IFKW --> COND[(BooleanExpression)]
-  COND --> THEN[{ Expression }]
-  THEN --> ELSEKW[else]
-  ELSEKW --> ELSEB[{ Expression }]
+  IF["IfExpression"] --> IFKW["Keyword if"]
+  IFKW --> COND["BooleanExpression"]
+  COND --> THEN["Then Expression Block"]
+  THEN --> ELSEKW["Keyword else"]
+  ELSEKW --> ELSEB["Else Expression Block"]
 
-  NM[NumberMatchExpression] --> MKW[match]
-  MKW --> LCB[\{]
-  LCB --> CASE1[NumberCase]
-  CASE1 --> CASEN[NumberCase*]
-  CASEN --> DEF[default -> NumberCaseValue]
-  DEF --> RCB[\}]
+  NM["NumberMatchExpression"] --> MKW["Keyword match"]
+  MKW --> LCB["Left Brace"]
+  LCB --> CASE1["NumberCase"]
+  CASE1 --> CASEN["More NumberCase"]
+  CASEN --> DEF["Default NumberCaseValue"]
+  DEF --> RCB["Right Brace"]
 ```
