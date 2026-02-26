@@ -308,6 +308,11 @@ final class GeneratedP4ValueAstEvaluator {
         return Optional.of(String.valueOf(fromContext.get()));
       }
     }
+    Optional<Object> remapped = tryEvaluateStructuredTextViaAst(
+        text, ExpressionTypes.string, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (remapped.isPresent()) {
+      return Optional.of(String.valueOf(remapped.get()));
+    }
     Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
         text, ExpressionTypes.string, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
     if (embedded.isPresent()) {
@@ -343,6 +348,11 @@ final class GeneratedP4ValueAstEvaluator {
     Optional<Boolean> literal = toBoolean(text);
     if (literal.isPresent()) {
       return literal;
+    }
+    Optional<Object> remapped = tryEvaluateStructuredTextViaAst(
+        text, ExpressionTypes._boolean, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (remapped.isPresent()) {
+      return toBoolean(remapped.get());
     }
     Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
         text, ExpressionTypes._boolean, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
@@ -394,6 +404,11 @@ final class GeneratedP4ValueAstEvaluator {
           return variable;
         }
       }
+      Optional<Object> remapped = tryEvaluateStructuredTextViaAst(
+          normalized, ExpressionTypes.object, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      if (remapped.isPresent()) {
+        return remapped;
+      }
       Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
           normalized, ExpressionTypes.object, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
       if (embedded.isPresent()) {
@@ -405,6 +420,29 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.of(normalized);
     }
     return Optional.of(value);
+  }
+
+  private static Optional<Object> tryEvaluateStructuredTextViaAst(String sourceText, ExpressionType expectedType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String fallbackFormulaSource) {
+    String text = sourceText == null ? "" : sourceText.strip();
+    if (text.isEmpty() || !AstEmbeddedExpressionRuntime.isLikelyStructuredExpression(text)) {
+      return Optional.empty();
+    }
+    String fallback = fallbackFormulaSource == null ? "" : fallbackFormulaSource.strip();
+    if (!fallback.isEmpty() && fallback.equals(text)) {
+      return Optional.empty();
+    }
+    ClassLoader effectiveClassLoader =
+        classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
+    SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
+        expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
+    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+        text, effectiveClassLoader, preferredAstSimpleName(expectedType));
+    if (mapped.isEmpty()) {
+      return Optional.empty();
+    }
+    return tryEvaluate(mapped.get(), evalTypes, context, effectiveClassLoader, text);
   }
 
   private static Optional<Object> tryEvaluateBinaryAsObject(Object mappedAst,

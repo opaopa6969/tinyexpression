@@ -462,6 +462,10 @@ Completed in this session (P3 follow-up):
    - added `ThreeExecutionBackendExtractedCorpusParityTest`,
    - test extracts literal formulas from `CalculatorImplTest` source, filters context-light cases, and enforces parity against `JAVA_CODE` baseline for `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
    - unsupported extracted formulas are skipped with executed-case lower bound to keep regression signal stable while parser coverage evolves.
+76. reduced bridge dependence in generated value evaluator for structured text payloads:
+   - `GeneratedP4ValueAstEvaluator` now attempts `GeneratedAstRuntimeProbe.tryMapAst(...)` re-entry for expression-like text in `StringExpr` / `BooleanExpr` / `ObjectExpr` before falling back to `AstEmbeddedExpressionRuntime`,
+   - added recursion guard by skipping remap when `sourceText == fallbackFormulaSource` to avoid self-loop remap,
+   - keeps legacy bridge as fallback path for unresolved/non-mappable structured text.
 
 
 
@@ -508,6 +512,7 @@ Verified tests:
 39. `./mvnw -q -Dtest=TinyExpressionDapRuntimeBridgeTest,FormulaInfoExecutionBackendSelectionTest test`
 40. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,TinyExpressionDapRuntimeBridgeTest test`
 41. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
+42. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
 
 ## Execution Policy
 
