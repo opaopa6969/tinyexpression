@@ -391,13 +391,48 @@ public class AstEvaluatorCalculator implements Calculator {
       return false;
     }
     String normalized = formula.strip();
-    if (normalized.contains("/*") || normalized.contains("//")) {
+    String trimmedLeading = trimLeadingJavaDelimiters(normalized);
+    if (trimmedLeading.contains("/*") || trimmedLeading.contains("//")) {
       return false;
     }
-    return normalized.startsWith("var ")
-        || normalized.contains("\nvar ")
-        || normalized.contains(";var ")
-        || normalized.contains("; var ");
+    return trimmedLeading.startsWith("var ")
+        || trimmedLeading.contains("\nvar ")
+        || trimmedLeading.contains(";var ")
+        || trimmedLeading.contains("; var ");
+  }
+
+  private String trimLeadingJavaDelimiters(String source) {
+    if (source == null || source.isEmpty()) {
+      return "";
+    }
+    int i = 0;
+    while (i < source.length()) {
+      char c = source.charAt(i);
+      if (Character.isWhitespace(c)) {
+        i++;
+        continue;
+      }
+      if (c == '/' && i + 1 < source.length()) {
+        char next = source.charAt(i + 1);
+        if (next == '/') {
+          i += 2;
+          while (i < source.length() && source.charAt(i) != '\n') {
+            i++;
+          }
+          continue;
+        }
+        if (next == '*') {
+          int end = source.indexOf("*/", i + 2);
+          if (end < 0) {
+            return "";
+          }
+          i = end + 2;
+          continue;
+        }
+      }
+      break;
+    }
+    return i == 0 ? source : source.substring(i);
   }
 
   private String extractVariableName(String formula) {

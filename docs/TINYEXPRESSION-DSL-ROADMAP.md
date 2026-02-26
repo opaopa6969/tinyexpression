@@ -503,6 +503,10 @@ Completed in this session (P3 follow-up):
 86. strengthened extracted three-backend value parity with AST non-fallback budget:
    - `ThreeExecutionBackendExtractedCorpusParityTest` now tracks `_astEvaluatorRuntime`,
    - keeps executed-case lower bound and adds minimum non-fallback AST case threshold to guard against broad regression into `javacode-fallback`.
+87. widened declaration shortcut eligibility for leading-comment formulas:
+   - declaration formula detection now trims leading java-style delimiters/comments before `var` head check,
+   - still preserves safety guard for internal comments to avoid parity drift,
+   - `AstEvaluatorTokenLiteralFallbackTest` now covers leading-comment declaration formula.
 
 
 

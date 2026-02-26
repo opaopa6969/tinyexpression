@@ -68,6 +68,7 @@ Last updated: 2026-02-26
 36. Declaration-aware shortcut is now wired before `javacode-fallback`: declaration formulas can be evaluated via `AstDeclarationRuntime.tryEvaluateMainExpression(...)` even when generated runtime is unavailable (comment-free scope), reducing bridge fallback for this slice.
 37. DSL JavaCode seam Java-source parity now includes extracted legacy corpus check (`DslJavaCodeGenerationExtractedParityTest`) in addition to curated parity, strengthening “same generated Java program” regression coverage.
 38. Extracted three-backend parity harness now includes an AST non-fallback minimum threshold, so large-corpus checks catch regressions where AST backend silently drifts back to `javacode-fallback`.
+39. Declaration shortcut now accepts leading-comment formulas by trimming leading java delimiters before `var` detection, while keeping internal-comment guard to avoid behavior drift.
 
 ## Remaining Gaps
 
@@ -97,6 +98,9 @@ Last updated: 2026-02-26
 7. Delimiter-chain coupling cleanup (design follow-up):
    1. current probe normalization duplicates java-delimiter handling in evaluator runtime code
    2. introduce shared delimiter-normalization abstraction aligned with `XXXDelimitedChain` parser combinators to avoid drift when delimiter parser behavior changes
+8. Parser-keyword coupling cleanup (design follow-up):
+   1. current declaration head detection still depends on literal `"var "` checks
+   2. replace keyword string checks with parser-driven head detection API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived capability) so alias changes (`variable`/localized keywords) do not require evaluator edits
 
 ## Dependency-Side Needs (Potential Future)
 
