@@ -54,6 +54,10 @@ Last updated: 2026-02-26
 27. Three-backend parity test now uses two-tier verification:
    1. supported corpus: `AST_EVALUATOR` non-fallback required.
    2. regression corpus: fallback allowed but value parity with `JAVA_CODE` / `DSL_JAVA_CODE` required across broader legacy-style formulas.
+28. Added extracted legacy-corpus parity check:
+   1. formulas are auto-extracted from `CalculatorImplTest` literal invocations,
+   2. context-light subset is run across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
+   3. value parity is enforced with executed-case lower bound for stable regression signal.
 
 ## Remaining Gaps
 
@@ -67,8 +71,8 @@ Last updated: 2026-02-26
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:
-   1. representative and medium regression corpora parity are available, but still hand-curated
-   2. systematic large formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) with externalized dataset + reporting is not complete
+   1. representative, medium regression, and extracted legacy-source corpora parity are available
+   2. systematic large formula corpus parity with externalized dataset + category-level reporting (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. backend/runtime marker observability is now exposed in generated DAP variables via runtime probe bridge

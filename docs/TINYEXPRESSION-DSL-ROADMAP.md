@@ -458,6 +458,10 @@ Completed in this session (P3 follow-up):
      - supported corpus (`AST_EVALUATOR` non-fallback required),
      - regression corpus (`AST_EVALUATOR` fallback allowed, value parity required),
    - regression corpus now includes broader legacy-style formulas (`if` boolean operators, string functions/slice, `match`, declaration, method invocation) to increase practical parity coverage while keeping deterministic assertions.
+75. added extracted-corpus three-backend parity from existing legacy test assets:
+   - added `ThreeExecutionBackendExtractedCorpusParityTest`,
+   - test extracts literal formulas from `CalculatorImplTest` source, filters context-light cases, and enforces parity against `JAVA_CODE` baseline for `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
+   - unsupported extracted formulas are skipped with executed-case lower bound to keep regression signal stable while parser coverage evolves.
 
 
 
@@ -503,6 +507,7 @@ Verified tests:
 38. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,FormulaInfoExecutionBackendSelectionTest test`
 39. `./mvnw -q -Dtest=TinyExpressionDapRuntimeBridgeTest,FormulaInfoExecutionBackendSelectionTest test`
 40. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,TinyExpressionDapRuntimeBridgeTest test`
+41. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 
 ## Execution Policy
 
