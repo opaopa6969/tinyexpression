@@ -496,6 +496,10 @@ Completed in this session (P3 follow-up):
    - `AstEvaluatorCalculator` now invokes this path for declaration formulas before `javacode-fallback`,
    - generated-runtime-unavailable regression now includes declaration formula in `AstEvaluatorTokenLiteralFallbackTest`,
    - current guard: comment-containing declaration formulas remain on existing path to avoid legacy parity drift.
+85. added extracted-corpus Java source parity check for DSL JavaCode seam:
+   - added `DslJavaCodeGenerationExtractedParityTest`,
+   - test extracts formulas from `CalculatorImplTest` and compares normalized generated Java source (`JAVA_CODE` vs `DSL_JAVA_CODE`),
+   - unsupported formulas are skipped and minimum executed count is enforced.
 
 
 

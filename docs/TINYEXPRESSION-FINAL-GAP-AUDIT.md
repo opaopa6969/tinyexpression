@@ -66,6 +66,7 @@ Last updated: 2026-02-26
 34. Generated mapper probe now also normalizes comment-delimited `if/*...*/(` head form for retry parse, and supported parity corpus verifies this form on non-fallback AST runtime.
 35. DAP runtime bridge mode aliases are regression-tested (`dsl-javacode`/`dsl_java_code`/`ast`/`token`) to keep backend selection deterministic for adapter launch configurations.
 36. Declaration-aware shortcut is now wired before `javacode-fallback`: declaration formulas can be evaluated via `AstDeclarationRuntime.tryEvaluateMainExpression(...)` even when generated runtime is unavailable (comment-free scope), reducing bridge fallback for this slice.
+37. DSL JavaCode seam Java-source parity now includes extracted legacy corpus check (`DslJavaCodeGenerationExtractedParityTest`) in addition to curated parity, strengthening “same generated Java program” regression coverage.
 
 ## Remaining Gaps
 
