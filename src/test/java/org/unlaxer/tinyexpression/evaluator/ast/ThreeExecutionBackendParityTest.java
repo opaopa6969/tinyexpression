@@ -120,6 +120,7 @@ public class ThreeExecutionBackendParityTest {
   }
 
   private void runParityCases(List<Case> cases, boolean requireAstNonFallback) {
+    int generatedEmbeddedMixed = 0;
     for (int i = 0; i < cases.size(); i++) {
       Case testCase = cases.get(i);
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
@@ -146,8 +147,21 @@ public class ThreeExecutionBackendParityTest {
       if (requireAstNonFallback) {
         assertNotEquals("formula=" + testCase.formula, "javacode-fallback",
             ast.getObject("_astEvaluatorRuntime", String.class));
+        if ("generated-ast".equals(ast.getObject("_astEvaluatorRuntime", String.class))
+            && Boolean.TRUE.equals(ast.getObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", Boolean.class))) {
+          generatedEmbeddedMixed++;
+        }
       }
       assertEquals("dsl-javacode", dslJava.getObject("_tinyExecutionMode", String.class));
+    }
+    if (requireAstNonFallback) {
+      assertNotEquals(
+          "supported corpus should include at least one pure generated-ast case",
+          cases.size(),
+          generatedEmbeddedMixed);
+      org.junit.Assert.assertTrue(
+          "generated+embedded mixed cases should be <= 2 (mixed=" + generatedEmbeddedMixed + ", total=" + cases.size() + ")",
+          generatedEmbeddedMixed <= 2);
     }
   }
 

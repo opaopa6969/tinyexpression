@@ -555,6 +555,10 @@ Completed in this session (P3 follow-up):
    - added `src/test/resources/parity/three-backend-extracted-corpus.escaped.txt` (161 extracted formulas from `CalculatorImplTest`),
    - `ThreeExecutionBackendExtractedCorpusParityTest` now prefers this resource and only falls back to source extraction when resource is absent,
    - reduces hard dependency on test-source parsing for routine parity runs.
+100. added supported-corpus guard for generated+embedded mixed execution:
+   - `ThreeExecutionBackendParityTest` now tracks `_astEvaluatorGeneratedEmbeddedBridgeUsed` on supported corpus,
+   - enforces upper bound on mixed (`generated-ast` + embedded bridge) cases,
+   - keeps `AST_EVALUATOR` non-fallback guarantee while preventing silent regression to bridge-heavy generated path.
 
 
 
