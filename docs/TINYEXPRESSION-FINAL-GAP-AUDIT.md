@@ -59,6 +59,7 @@ Last updated: 2026-02-26
    2. context-light subset is run across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
    3. value parity is enforced with executed-case lower bound for stable regression signal.
 29. Generated value evaluator now performs structured-text AST re-entry before embedded bridge fallback for `StringExpr` / `BooleanExpr` / `ObjectExpr`, reducing bridge-only execution when generated mapper can parse expression-like payload text.
+30. `AstEvaluatorCalculator` now has a token-ast literal/variable fast path for generated-runtime-unavailable cases, so trivial formulas do not require `javacode-fallback` (verified with generated-class-blocking classloader tests).
 
 ## Remaining Gaps
 

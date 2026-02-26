@@ -234,6 +234,12 @@ public class AstEvaluatorCalculator implements Calculator {
       setObject("_astEvaluatorMapperAvailable", false);
     }
 
+    Optional<Object> simpleLiteralOrVariable = tryEvaluateSimpleLiteralOrVariable(calculationContext);
+    if (simpleLiteralOrVariable.isPresent()) {
+      setObject("_astEvaluatorRuntime", "token-ast");
+      return simpleLiteralOrVariable.get();
+    }
+
     Optional<Object> astEvaluated = tokenAstEvaluated.isPresent()
         ? tokenAstEvaluated
         : AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
@@ -244,6 +250,148 @@ public class AstEvaluatorCalculator implements Calculator {
 
     setObject("_astEvaluatorRuntime", "javacode-fallback");
     return ensureDelegate().apply(calculationContext);
+  }
+
+  private Optional<Object> tryEvaluateSimpleLiteralOrVariable(CalculationContext calculationContext) {
+    String formula = source.source() == null ? "" : source.source().strip();
+    if (formula.isEmpty()) {
+      return Optional.empty();
+    }
+    if (formula.startsWith("$")) {
+      return resolveVariable(extractVariableName(formula), calculationContext);
+    }
+    if (containsExpressionSyntax(formula)) {
+      return Optional.empty();
+    }
+    ExpressionType resultType = resultType();
+    if (resultType != null && resultType.isString()) {
+      return parseStringLiteral(formula).map(v -> (Object) v);
+    }
+    if (resultType != null && resultType.isBoolean()) {
+      return parseBooleanLiteral(formula).map(v -> (Object) v);
+    }
+    if (resultType != null && resultType.isNumber()) {
+      return parseNumberLiteral(formula, resultType).map(v -> (Object) v);
+    }
+    if (resultType != null && resultType.isObject()) {
+      Optional<String> string = parseStringLiteral(formula);
+      if (string.isPresent()) {
+        return string.map(v -> (Object) v);
+      }
+      Optional<Boolean> bool = parseBooleanLiteral(formula);
+      if (bool.isPresent()) {
+        return bool.map(v -> (Object) v);
+      }
+      Optional<Number> number = parseNumberLiteral(formula, specifiedExpressionTypes.numberType());
+      if (number.isPresent()) {
+        return number.map(v -> (Object) v);
+      }
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Object> resolveVariable(String variableName, CalculationContext calculationContext) {
+    if (variableName == null || variableName.isBlank()) {
+      return Optional.empty();
+    }
+    ExpressionType resultType = resultType();
+    if (resultType != null && resultType.isNumber()) {
+      return calculationContext.getNumber(variableName).map(v -> (Object) v);
+    }
+    if (resultType != null && resultType.isBoolean()) {
+      return calculationContext.getBoolean(variableName).map(v -> (Object) v);
+    }
+    if (resultType != null && resultType.isString()) {
+      return calculationContext.getString(variableName).map(v -> (Object) v);
+    }
+    Optional<? extends Number> number = calculationContext.getNumber(variableName);
+    if (number.isPresent()) {
+      return number.map(v -> (Object) v);
+    }
+    Optional<String> string = calculationContext.getString(variableName);
+    if (string.isPresent()) {
+      return string.map(v -> (Object) v);
+    }
+    Optional<Boolean> bool = calculationContext.getBoolean(variableName);
+    if (bool.isPresent()) {
+      return bool.map(v -> (Object) v);
+    }
+    return calculationContext.getObject(variableName, Object.class).map(v -> (Object) v);
+  }
+
+  private Optional<String> parseStringLiteral(String formula) {
+    if (formula.length() < 2) {
+      return Optional.empty();
+    }
+    if (formula.charAt(0) == '\'' && formula.charAt(formula.length() - 1) == '\'') {
+      return Optional.of(formula.substring(1, formula.length() - 1));
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Boolean> parseBooleanLiteral(String formula) {
+    if ("true".equalsIgnoreCase(formula)) {
+      return Optional.of(true);
+    }
+    if ("false".equalsIgnoreCase(formula)) {
+      return Optional.of(false);
+    }
+    return Optional.empty();
+  }
+
+  private Optional<Number> parseNumberLiteral(String formula, ExpressionType preferredType) {
+    if (formula.isEmpty()) {
+      return Optional.empty();
+    }
+    ExpressionType numberType = preferredType;
+    if (numberType == null || !numberType.isNumber() || numberType == org.unlaxer.tinyexpression.parser.ExpressionTypes.number) {
+      numberType = specifiedExpressionTypes.numberType();
+    }
+    if (numberType == null || !numberType.isNumber() || numberType == org.unlaxer.tinyexpression.parser.ExpressionTypes.number) {
+      numberType = org.unlaxer.tinyexpression.parser.ExpressionTypes._float;
+    }
+    try {
+      return Optional.of(numberType.parseNumber(formula));
+    } catch (Throwable ignored) {
+      return Optional.empty();
+    }
+  }
+
+  private boolean containsExpressionSyntax(String formula) {
+    for (int i = 0; i < formula.length(); i++) {
+      char c = formula.charAt(i);
+      if (Character.isWhitespace(c)) {
+        continue;
+      }
+      if (Character.isLetterOrDigit(c) || c == '_' || c == '.' || c == '\'' || c == '$') {
+        continue;
+      }
+      if (c == '-' && i + 1 < formula.length() && Character.isDigit(formula.charAt(i + 1))) {
+        continue;
+      }
+      return true;
+    }
+    return false;
+  }
+
+  private String extractVariableName(String formula) {
+    if (formula == null || formula.isEmpty()) {
+      return null;
+    }
+    String text = formula.strip();
+    if (!text.startsWith("$")) {
+      return text;
+    }
+    int end = 1;
+    while (end < text.length()) {
+      char c = text.charAt(end);
+      if (Character.isLetterOrDigit(c) || c == '_') {
+        end++;
+      } else {
+        break;
+      }
+    }
+    return end > 1 ? text.substring(1, end) : null;
   }
 
   @Override

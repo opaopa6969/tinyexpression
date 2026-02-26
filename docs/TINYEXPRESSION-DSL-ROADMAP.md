@@ -466,6 +466,10 @@ Completed in this session (P3 follow-up):
    - `GeneratedP4ValueAstEvaluator` now attempts `GeneratedAstRuntimeProbe.tryMapAst(...)` re-entry for expression-like text in `StringExpr` / `BooleanExpr` / `ObjectExpr` before falling back to `AstEmbeddedExpressionRuntime`,
    - added recursion guard by skipping remap when `sourceText == fallbackFormulaSource` to avoid self-loop remap,
    - keeps legacy bridge as fallback path for unresolved/non-mappable structured text.
+77. added token-ast literal/variable fast path when generated runtime is unavailable:
+   - `AstEvaluatorCalculator` now evaluates simple literal/variable formulas (`'...'`, `true/false`, `$name`, simple numbers) directly before `javacode-fallback`,
+   - this path is enabled when generated mapper runtime is unavailable or mapping fails, reducing unnecessary JavaCode bridge use for trivial formulas,
+   - added `AstEvaluatorTokenLiteralFallbackTest` with a classloader that blocks generated classes to verify `_astEvaluatorRuntime=token-ast`.
 
 
 
@@ -513,6 +517,7 @@ Verified tests:
 40. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,TinyExpressionDapRuntimeBridgeTest test`
 41. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 42. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
+43. `./mvnw -q -Dtest=AstEvaluatorTokenLiteralFallbackTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 
 ## Execution Policy
 
