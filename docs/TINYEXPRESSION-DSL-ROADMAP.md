@@ -482,6 +482,10 @@ Completed in this session (P3 follow-up):
    - `GeneratedAstRuntimeProbe.tryMapAst(...)` now retries parse after trimming leading whitespace/comments when first parse fails,
    - enabled supported parity coverage for leading-comment `if` formulas (non-fallback assertion),
    - internal-comment delimiter forms (`if/*...*/(...)`) remain in regression corpus parity until generated grammar support is extended.
+81. extended probe normalization for comment-delimited `if` heads while preserving legacy parity:
+   - `GeneratedAstRuntimeProbe` now normalizes `if/*...*/(` head delimiters for retry parse,
+   - supported corpus includes `if/*...*/(...)` non-fallback assertion,
+   - `match/*...*/{...}` head normalization is intentionally not forced because it introduced legacy parity drift in regression corpus.
 
 
 

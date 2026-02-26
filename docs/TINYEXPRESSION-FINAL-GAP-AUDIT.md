@@ -63,6 +63,7 @@ Last updated: 2026-02-26
 31. AST preferred-root selection now uses shared structured-head predicates (`if`/`match`/`call` with java-style delimiters/comments) across evaluator and declaration runtime; comment-prefixed control-flow formulas are covered in regression parity corpus.
 32. Added Java source parity test between `JAVA_CODE` and `DSL_JAVA_CODE` backends (`DslJavaCodeGenerationParityTest`) over curated mixed formulas; normalized generated source text is now regression-checked for equivalence.
 33. Generated mapper probe now retries after trimming leading java delimiters/comments, improving AST mapping hit rate for comment-prefixed formulas (supported non-fallback parity now includes leading-comment `if` head case).
+34. Generated mapper probe now also normalizes comment-delimited `if/*...*/(` head form for retry parse, and supported parity corpus verifies this form on non-fallback AST runtime.
 
 ## Remaining Gaps
 
@@ -88,6 +89,9 @@ Last updated: 2026-02-26
    3. current seam equivalence with legacy generated Java source is regression-checked on curated corpus
    4. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
    5. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
+7. Delimiter-chain coupling cleanup (design follow-up):
+   1. current probe normalization duplicates java-delimiter handling in evaluator runtime code
+   2. introduce shared delimiter-normalization abstraction aligned with `XXXDelimitedChain` parser combinators to avoid drift when delimiter parser behavior changes
 
 ## Dependency-Side Needs (Potential Future)
 
