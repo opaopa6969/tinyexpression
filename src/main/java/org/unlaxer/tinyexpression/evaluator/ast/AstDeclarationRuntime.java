@@ -88,42 +88,7 @@ final class AstDeclarationRuntime {
   }
 
   private static boolean hasInternalJavaCommentAfterLeadingDelimiters(String source) {
-    String trimmed = trimLeadingJavaDelimiters(source);
-    return trimmed.contains("/*") || trimmed.contains("//");
-  }
-
-  private static String trimLeadingJavaDelimiters(String source) {
-    if (source == null || source.isEmpty()) {
-      return "";
-    }
-    int i = 0;
-    while (i < source.length()) {
-      char c = source.charAt(i);
-      if (Character.isWhitespace(c)) {
-        i++;
-        continue;
-      }
-      if (c == '/' && i + 1 < source.length()) {
-        char next = source.charAt(i + 1);
-        if (next == '/') {
-          i += 2;
-          while (i < source.length() && source.charAt(i) != '\n') {
-            i++;
-          }
-          continue;
-        }
-        if (next == '*') {
-          int end = source.indexOf("*/", i + 2);
-          if (end < 0) {
-            return "";
-          }
-          i = end + 2;
-          continue;
-        }
-      }
-      break;
-    }
-    return i == 0 ? source : source.substring(i);
+    return JavaStyleSourceProbe.containsCommentAfterLeadingDelimiters(source);
   }
 
   private static boolean applyDeclaration(Token declarationToken, SpecifiedExpressionTypes specifiedExpressionTypes,

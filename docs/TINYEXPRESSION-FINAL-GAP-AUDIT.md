@@ -77,6 +77,10 @@ Last updated: 2026-02-26
       - `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyOperatorOperandTreeCreator`
       - `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator`
    3. parity harness now validates 4-way value equality (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) on supported and extracted corpora.
+42. Java-style delimiter/comment handling in AST runtime helpers is now centralized:
+   1. added `JavaStyleSourceProbe` for shared delimiter skip/trim and structured-head normalization helpers,
+   2. removed duplicated delimiter/comment scanners from `GeneratedAstRuntimeProbe` / `AstDeclarationRuntime` / `GeneratedP4ValueAstEvaluator`,
+   3. `AstEmbeddedExpressionRuntime` structured-head checks now use shared delimiter-aware helper instead of local regex-only head checks.
 
 ## Remaining Gaps
 
@@ -104,8 +108,8 @@ Last updated: 2026-02-26
    4. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
    5. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
 7. Delimiter-chain coupling cleanup (design follow-up):
-   1. current probe normalization duplicates java-delimiter handling in evaluator runtime code
-   2. introduce shared delimiter-normalization abstraction aligned with `XXXDelimitedChain` parser combinators to avoid drift when delimiter parser behavior changes
+   1. shared runtime abstraction is now in place (`JavaStyleSourceProbe`), reducing duplication risk
+   2. remaining work: expose this capability from parser-owned API surface (or shared parser module contract) so evaluator runtime does not own delimiter semantics
 8. Parser-keyword coupling cleanup (design follow-up):
    1. declaration shortcut pre-check has removed direct `"var "` dependency, but full parser-driven head detection API is still not centralized
    2. replace remaining ad-hoc textual pre-checks with shared parser capability API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived) so alias changes (`variable`/localized keywords) do not require evaluator edits

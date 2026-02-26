@@ -575,6 +575,14 @@ Completed in this session (P3 follow-up):
    - added `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`,
    - fixed backend role boundaries (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`),
    - fixed parity and selection rules for formula metadata/runtime aliases.
+105. centralized java-style delimiter/comment probing to reduce evaluator-side drift:
+   - added `JavaStyleSourceProbe` and moved shared delimiter/comment helpers (`skip`, `trim`, head word boundary checks, structured-head normalization) into one place,
+   - replaced duplicated implementations in:
+     - `AstEmbeddedExpressionRuntime`,
+     - `GeneratedAstRuntimeProbe`,
+     - `AstDeclarationRuntime`,
+     - `GeneratedP4ValueAstEvaluator`,
+   - kept parity-safe behavior by limiting structured-head normalization to existing compatibility scope (`if` + method-invocation heads) and avoiding semantic expansion for `match` normalization.
 
 
 
@@ -626,6 +634,8 @@ Verified tests:
 44. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
 45. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,AstEvaluatorTokenLiteralFallbackTest test`
 46. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest,AstEvaluatorTokenLiteralFallbackTest,DslJavaCodeGenerationParityTest test`
+47. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
+48. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest test`
 
 ## Execution Policy
 

@@ -13,12 +13,6 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 final class AstEmbeddedExpressionRuntime {
 
-  private static final Pattern IF_HEAD_PATTERN = Pattern.compile(
-      "(?is)^if(?:\\s|/\\*.*?\\*/|//[^\\n]*(?:\\n|$))*\\(");
-  private static final Pattern MATCH_HEAD_PATTERN = Pattern.compile(
-      "(?is)^match(?:\\s|/\\*.*?\\*/|//[^\\n]*(?:\\n|$))*\\{");
-  private static final Pattern METHOD_HEAD_PATTERN = Pattern.compile(
-      "(?is)^(call|external|internal)\\b");
   private static final Pattern BOOLEAN_COMPARISON_PATTERN = Pattern.compile(
       "(?s).*(?:\\$[A-Za-z_][A-Za-z0-9_]*|[-+]?\\d+(?:\\.\\d+)?)\\s*(==|!=|<=|>=|<|>)\\s*"
           + "(?:\\$[A-Za-z_][A-Za-z0-9_]*|[-+]?\\d+(?:\\.\\d+)?).*");
@@ -70,7 +64,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return IF_HEAD_PATTERN.matcher(normalized).find();
+    return JavaStyleSourceProbe.hasHead(normalized, "if", '(');
   }
 
   static boolean hasMatchHead(String text) {
@@ -78,7 +72,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return MATCH_HEAD_PATTERN.matcher(normalized).find();
+    return JavaStyleSourceProbe.hasHead(normalized, "match", '{');
   }
 
   static boolean hasMethodInvocationHead(String text) {
@@ -99,7 +93,9 @@ final class AstEmbeddedExpressionRuntime {
 
   private static boolean isMethodInvocationExpression(String text) {
     String normalized = text == null ? "" : text.strip();
-    return METHOD_HEAD_PATTERN.matcher(normalized).find();
+    return JavaStyleSourceProbe.hasHead(normalized, "call", null)
+        || JavaStyleSourceProbe.hasHead(normalized, "external", null)
+        || JavaStyleSourceProbe.hasHead(normalized, "internal", null);
   }
 
   private static Optional<Object> evaluateFormula(String formula, ExpressionType resultType,

@@ -999,16 +999,16 @@ final class GeneratedP4ValueAstEvaluator {
       if (callIndex < 0) {
         return List.of();
       }
-      if (!matchesWordAt(source, callIndex, "call")) {
+      if (!JavaStyleSourceProbe.matchesWordAt(source, callIndex, "call")) {
         from = callIndex + 4;
         continue;
       }
-      int nameStart = skipJavaDelimiters(source, callIndex + 4);
-      if (!matchesWordAt(source, nameStart, methodName)) {
+      int nameStart = JavaStyleSourceProbe.skipDelimiters(source, callIndex + 4);
+      if (!JavaStyleSourceProbe.matchesWordAt(source, nameStart, methodName)) {
         from = callIndex + 4;
         continue;
       }
-      int openParen = skipJavaDelimiters(source, nameStart + methodName.length());
+      int openParen = JavaStyleSourceProbe.skipDelimiters(source, nameStart + methodName.length());
       if (openParen >= source.length() || source.charAt(openParen) != '(') {
         from = callIndex + 4;
         continue;
@@ -1027,15 +1027,15 @@ final class GeneratedP4ValueAstEvaluator {
     if (expression == null || methodName == null || methodName.isBlank()) {
       return false;
     }
-    int index = skipJavaDelimiters(expression, 0);
-    if (!matchesWordAt(expression, index, "call")) {
+    int index = JavaStyleSourceProbe.skipDelimiters(expression, 0);
+    if (!JavaStyleSourceProbe.matchesWordAt(expression, index, "call")) {
       return false;
     }
-    int nameStart = skipJavaDelimiters(expression, index + 4);
-    if (!matchesWordAt(expression, nameStart, methodName)) {
+    int nameStart = JavaStyleSourceProbe.skipDelimiters(expression, index + 4);
+    if (!JavaStyleSourceProbe.matchesWordAt(expression, nameStart, methodName)) {
       return false;
     }
-    int openParen = skipJavaDelimiters(expression, nameStart + methodName.length());
+    int openParen = JavaStyleSourceProbe.skipDelimiters(expression, nameStart + methodName.length());
     return openParen < expression.length() && expression.charAt(openParen) == '(';
   }
 
@@ -1230,11 +1230,11 @@ final class GeneratedP4ValueAstEvaluator {
       if (nameIdx < 0) {
         return null;
       }
-      if (!matchesWordAt(source, nameIdx, methodName)) {
+      if (!JavaStyleSourceProbe.matchesWordAt(source, nameIdx, methodName)) {
         from = nameIdx + methodName.length();
         continue;
       }
-      int openParen = skipJavaDelimiters(source, nameIdx + methodName.length());
+      int openParen = JavaStyleSourceProbe.skipDelimiters(source, nameIdx + methodName.length());
       if (openParen >= source.length() || source.charAt(openParen) != '(') {
         from = nameIdx + methodName.length();
         continue;
@@ -1255,7 +1255,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (paramsEnd < 0) {
         return null;
       }
-      int openBrace = skipJavaDelimiters(source, paramsEnd + 1);
+      int openBrace = JavaStyleSourceProbe.skipDelimiters(source, paramsEnd + 1);
       if (openBrace < 0 || openBrace >= source.length() || source.charAt(openBrace) != '{') {
         from = nameIdx + methodName.length();
         continue;
@@ -1269,51 +1269,6 @@ final class GeneratedP4ValueAstEvaluator {
       return new MethodSource(methodName, params, body);
     }
     return null;
-  }
-
-  private static int skipJavaDelimiters(String source, int from) {
-    int i = Math.max(0, from);
-    while (i < source.length()) {
-      char c = source.charAt(i);
-      if (Character.isWhitespace(c)) {
-        i++;
-        continue;
-      }
-      if (c == '/' && i + 1 < source.length()) {
-        char next = source.charAt(i + 1);
-        if (next == '/') {
-          i += 2;
-          while (i < source.length() && source.charAt(i) != '\n') {
-            i++;
-          }
-          continue;
-        }
-        if (next == '*') {
-          i += 2;
-          while (i + 1 < source.length() && !(source.charAt(i) == '*' && source.charAt(i + 1) == '/')) {
-            i++;
-          }
-          i = Math.min(source.length(), i + 2);
-          continue;
-        }
-      }
-      break;
-    }
-    return i;
-  }
-
-  private static boolean matchesWordAt(String source, int index, String word) {
-    if (source == null || word == null || index < 0 || index + word.length() > source.length()) {
-      return false;
-    }
-    if (!source.startsWith(word, index)) {
-      return false;
-    }
-    if (index > 0 && Character.isJavaIdentifierPart(source.charAt(index - 1))) {
-      return false;
-    }
-    int end = index + word.length();
-    return end >= source.length() || !Character.isJavaIdentifierPart(source.charAt(end));
   }
 
   private static int skipTypeStart(String source, int typeEndExclusive) {
