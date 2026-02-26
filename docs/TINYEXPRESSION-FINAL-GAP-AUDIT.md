@@ -89,7 +89,7 @@ Last updated: 2026-02-26
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. backend/runtime marker observability and value probe metadata (`evaluationResultType` / `evaluationResultNormalized`) are exposed in generated DAP variables via runtime probe bridge
-   3. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
+   3. DAP variables now include 3-backend parity probe fields (`parity.*`, `parity.equalAll`), but per-step evaluator-value parity (step-by-step, not whole-formula probe) is not complete
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
    2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata

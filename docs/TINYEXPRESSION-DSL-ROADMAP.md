@@ -543,6 +543,10 @@ Completed in this session (P3 follow-up):
 96. expanded declaration shortcut literal parser for double-quoted strings:
    - `AstDeclarationRuntime.parseLiteralOrVariable(...)` now accepts both `'...'` and `\"...\"`,
    - generated-runtime-unavailable declaration fallback test now covers double-quoted setter value.
+97. added 3-backend parity probe variables to DAP runtime bridge:
+   - `TinyExpressionDapRuntimeBridge` now evaluates formula once per backend (`JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) and exports `parity.*` variables,
+   - includes per-backend value/type/normalized fields plus `parity.equalAll`,
+   - provides value-level runtime parity visibility directly in DAP `variables` response.
 
 
 

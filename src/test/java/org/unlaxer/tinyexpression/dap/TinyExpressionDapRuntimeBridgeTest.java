@@ -30,5 +30,10 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("JAVA_CODE", token.get("_tinyExecutionBackend"));
     assertNotNull(token.get("evaluationResultType"));
     assertNotNull(token.get("evaluationResultNormalized"));
+    assertEquals("true", token.get("parity.allBackendsEvaluated"));
+    assertEquals("true", token.get("parity.equalAll"));
+    assertNotNull(token.get("parity.JAVA_CODE.normalized"));
+    assertNotNull(token.get("parity.AST_EVALUATOR.normalized"));
+    assertNotNull(token.get("parity.DSL_JAVA_CODE.normalized"));
   }
 }

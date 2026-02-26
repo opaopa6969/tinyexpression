@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.dap;
 import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
@@ -64,6 +65,7 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_astEvaluatorMapperAvailable", vars);
       copyMarker(calculator, "_astEvaluatorGeneratedAstNodeCount", vars);
       copyMappedAstType(calculator, vars);
+      collectParityProbe(formulaSource, classLoader, vars);
     } catch (Throwable createError) {
       vars.put("bridgeError", truncate(
           createError.getClass().getSimpleName() + ":" + safeMessage(createError)));
@@ -112,6 +114,50 @@ public final class TinyExpressionDapRuntimeBridge {
       return normalized;
     }
     return normalized.substring(0, VALUE_LIMIT) + "...";
+  }
+
+  private static void collectParityProbe(String formulaSource, ClassLoader classLoader, Map<String, String> vars) {
+    String formula = formulaSource == null ? "" : formulaSource;
+    String legacyNormalized = null;
+    String astNormalized = null;
+    String dslNormalized = null;
+    for (ExecutionBackend backend : new ExecutionBackend[] {
+        ExecutionBackend.JAVA_CODE,
+        ExecutionBackend.AST_EVALUATOR,
+        ExecutionBackend.DSL_JAVA_CODE
+    }) {
+      String prefix = "parity." + backend.name() + ".";
+      try {
+        SpecifiedExpressionTypes types =
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+        Calculator calculator = CalculatorCreatorRegistry.forBackend(backend).create(
+            new Source(formula),
+            "TinyExpressionDapRuntimeBridgeParityProbe",
+            types,
+            classLoader);
+        Object value = calculator.apply(CalculationContext.newConcurrentContext());
+        String normalized = normalizeResult(value);
+        vars.put(prefix + "value", truncate(String.valueOf(value)));
+        vars.put(prefix + "type", truncate(value == null ? "null" : value.getClass().getName()));
+        vars.put(prefix + "normalized", truncate(normalized));
+        if (backend == ExecutionBackend.JAVA_CODE) {
+          legacyNormalized = normalized;
+        } else if (backend == ExecutionBackend.AST_EVALUATOR) {
+          astNormalized = normalized;
+        } else if (backend == ExecutionBackend.DSL_JAVA_CODE) {
+          dslNormalized = normalized;
+        }
+      } catch (Throwable error) {
+        vars.put(prefix + "error", truncate(
+            error.getClass().getSimpleName() + ":" + safeMessage(error)));
+      }
+    }
+    boolean parityComplete = legacyNormalized != null && astNormalized != null && dslNormalized != null;
+    vars.put("parity.allBackendsEvaluated", String.valueOf(parityComplete));
+    if (parityComplete) {
+      vars.put("parity.equalAll", String.valueOf(
+          Objects.equals(legacyNormalized, astNormalized) && Objects.equals(legacyNormalized, dslNormalized)));
+    }
   }
 
   private static String normalizeResult(Object value) {
