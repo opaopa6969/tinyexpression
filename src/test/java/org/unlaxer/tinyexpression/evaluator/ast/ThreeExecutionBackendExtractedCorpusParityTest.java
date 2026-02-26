@@ -49,10 +49,13 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       Case testCase = cases.get(i);
       String category = categorize(testCase.formula());
       Calculator legacy;
+      Calculator legacyAstCreator;
       Calculator ast;
       Calculator dslJava;
       try {
         legacy = createCalculator(ExecutionBackend.JAVA_CODE, testCase.formula(), i, classLoader, types);
+        legacyAstCreator =
+            createCalculator(ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR, testCase.formula(), i, classLoader, types);
         ast = createCalculator(ExecutionBackend.AST_EVALUATOR, testCase.formula(), i, classLoader, types);
         dslJava = createCalculator(ExecutionBackend.DSL_JAVA_CODE, testCase.formula(), i, classLoader, types);
       } catch (RuntimeException ignored) {
@@ -61,18 +64,22 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       }
 
       CalculationContext legacyContext = CalculationContext.newConcurrentContext();
+      CalculationContext legacyAstCreatorContext = CalculationContext.newConcurrentContext();
       CalculationContext astContext = CalculationContext.newConcurrentContext();
       CalculationContext dslJavaContext = CalculationContext.newConcurrentContext();
       seedSharedContext(legacyContext);
+      seedSharedContext(legacyAstCreatorContext);
       seedSharedContext(astContext);
       seedSharedContext(dslJavaContext);
 
       Object legacyValue = legacy.apply(legacyContext);
+      Object legacyAstCreatorValue = legacyAstCreator.apply(legacyAstCreatorContext);
       Object astValue = ast.apply(astContext);
       Object dslJavaValue = dslJava.apply(dslJavaContext);
 
       assertTrue("formula=" + testCase.formula() + " expected JAVA_CODE numeric value",
           legacyValue instanceof Number);
+      assertEquivalent(testCase.formula(), legacyValue, legacyAstCreatorValue);
       assertEquivalent(testCase.formula(), legacyValue, astValue);
       assertEquivalent(testCase.formula(), legacyValue, dslJavaValue);
       if (!"javacode-fallback".equals(ast.getObject("_astEvaluatorRuntime", String.class))) {

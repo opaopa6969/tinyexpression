@@ -120,10 +120,12 @@ public final class TinyExpressionDapRuntimeBridge {
   private static void collectParityProbe(String formulaSource, ClassLoader classLoader, Map<String, String> vars) {
     String formula = formulaSource == null ? "" : formulaSource;
     String legacyNormalized = null;
+    String legacyAstCreatorNormalized = null;
     String astNormalized = null;
     String dslNormalized = null;
     for (ExecutionBackend backend : new ExecutionBackend[] {
         ExecutionBackend.JAVA_CODE,
+        ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR,
         ExecutionBackend.AST_EVALUATOR,
         ExecutionBackend.DSL_JAVA_CODE
     }) {
@@ -143,6 +145,8 @@ public final class TinyExpressionDapRuntimeBridge {
         vars.put(prefix + "normalized", truncate(normalized));
         if (backend == ExecutionBackend.JAVA_CODE) {
           legacyNormalized = normalized;
+        } else if (backend == ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR) {
+          legacyAstCreatorNormalized = normalized;
         } else if (backend == ExecutionBackend.AST_EVALUATOR) {
           astNormalized = normalized;
         } else if (backend == ExecutionBackend.DSL_JAVA_CODE) {
@@ -153,11 +157,16 @@ public final class TinyExpressionDapRuntimeBridge {
             error.getClass().getSimpleName() + ":" + safeMessage(error)));
       }
     }
-    boolean parityComplete = legacyNormalized != null && astNormalized != null && dslNormalized != null;
+    boolean parityComplete = legacyNormalized != null
+        && legacyAstCreatorNormalized != null
+        && astNormalized != null
+        && dslNormalized != null;
     vars.put("parity.allBackendsEvaluated", String.valueOf(parityComplete));
     if (parityComplete) {
       vars.put("parity.equalAll", String.valueOf(
-          Objects.equals(legacyNormalized, astNormalized) && Objects.equals(legacyNormalized, dslNormalized)));
+          Objects.equals(legacyNormalized, legacyAstCreatorNormalized)
+              && Objects.equals(legacyNormalized, astNormalized)
+              && Objects.equals(legacyNormalized, dslNormalized)));
     }
   }
 

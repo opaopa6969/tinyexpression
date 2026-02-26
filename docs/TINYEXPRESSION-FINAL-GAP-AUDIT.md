@@ -70,6 +70,12 @@ Last updated: 2026-02-26
 38. Extracted three-backend parity harness now includes an AST non-fallback minimum threshold, so large-corpus checks catch regressions where AST backend silently drifts back to `javacode-fallback`.
 39. Declaration shortcut now accepts leading-comment formulas by trimming leading java delimiters before `var` detection, while keeping internal-comment guard to avoid behavior drift.
 40. AST evaluator declaration-shortcut trigger no longer uses literal `"var"` keyword checks; it now relies on separator-based pre-check and parser-driven declaration extraction in `AstDeclarationRuntime`.
+41. Added 4th selectable backend for pre-refactor OOTC runtime:
+   1. `ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR` is available from formula metadata/runtime mode alias (`legacy-astcreator`/`ootc`).
+   2. runtime classes are split under:
+      - `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyOperatorOperandTreeCreator`
+      - `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator`
+   3. parity harness now validates 4-way value equality (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) on supported and extracted corpora.
 
 ## Remaining Gaps
 
@@ -89,7 +95,7 @@ Last updated: 2026-02-26
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. backend/runtime marker observability and value probe metadata (`evaluationResultType` / `evaluationResultNormalized`) are exposed in generated DAP variables via runtime probe bridge
-   3. DAP variables now include 3-backend parity probe fields (`parity.*`, `parity.equalAll`), but per-step evaluator-value parity (step-by-step, not whole-formula probe) is not complete
+   3. DAP variables now include 4-backend parity probe fields (`parity.*`, `parity.equalAll`), but per-step evaluator-value parity (step-by-step, not whole-formula probe) is not complete
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
    2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata

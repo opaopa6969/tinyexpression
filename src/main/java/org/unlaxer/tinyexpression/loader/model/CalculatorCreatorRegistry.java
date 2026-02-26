@@ -9,6 +9,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
 public final class CalculatorCreatorRegistry {
@@ -30,6 +31,9 @@ public final class CalculatorCreatorRegistry {
     }
     if (backend == ExecutionBackend.DSL_JAVA_CODE) {
       return dslJavaCodeCreator();
+    }
+    if (backend == ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR) {
+      return legacyAstCreatorJavaCodeCreator();
     }
     return javaCodeCreator();
   }
@@ -99,6 +103,29 @@ public final class CalculatorCreatorRegistry {
             new DslJavaCodeCalculator(source, javaCode, className, specifiedExpressionTypes,
                 byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
             ExecutionBackend.DSL_JAVA_CODE);
+      }
+    };
+  }
+
+  public static CalculatorCreator legacyAstCreatorJavaCodeCreator() {
+    return new CalculatorCreator() {
+
+      @Override
+      public Calculator create(Source source, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        return markExecutionBackend(
+            new LegacyAstCreatorJavaCodeCalculator(source, className, specifiedExpressionTypes, classLoader),
+            ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR);
+      }
+
+      @Override
+      public Calculator create(Source source, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        return markExecutionBackend(
+            new LegacyAstCreatorJavaCodeCalculator(source, javaCode, className, specifiedExpressionTypes,
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
+            ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR);
       }
     };
   }

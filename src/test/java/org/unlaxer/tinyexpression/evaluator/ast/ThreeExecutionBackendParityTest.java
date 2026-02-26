@@ -126,22 +126,28 @@ public class ThreeExecutionBackendParityTest {
       ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
       Calculator legacy = createCalculatorOrThrow(ExecutionBackend.JAVA_CODE, testCase, i, classLoader);
+      Calculator legacyAstCreator = createCalculatorOrThrow(
+          ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR, testCase, i, classLoader);
       Calculator ast = createCalculatorOrThrow(ExecutionBackend.AST_EVALUATOR, testCase, i, classLoader);
       Calculator dslJava = createCalculatorOrThrow(ExecutionBackend.DSL_JAVA_CODE, testCase, i, classLoader);
 
       CalculationContext legacyContext = CalculationContext.newConcurrentContext();
+      CalculationContext legacyAstCreatorContext = CalculationContext.newConcurrentContext();
       CalculationContext astContext = CalculationContext.newConcurrentContext();
       CalculationContext dslJavaContext = CalculationContext.newConcurrentContext();
       if (testCase.preparation != null) {
         testCase.preparation.accept(legacyContext);
+        testCase.preparation.accept(legacyAstCreatorContext);
         testCase.preparation.accept(astContext);
         testCase.preparation.accept(dslJavaContext);
       }
 
       Object legacyValue = legacy.apply(legacyContext);
+      Object legacyAstCreatorValue = legacyAstCreator.apply(legacyAstCreatorContext);
       Object astValue = ast.apply(astContext);
       Object dslJavaValue = dslJava.apply(dslJavaContext);
 
+      assertEquivalent(testCase.formula, legacyValue, legacyAstCreatorValue);
       assertEquivalent(testCase.formula, legacyValue, astValue);
       assertEquivalent(testCase.formula, legacyValue, dslJavaValue);
       if (requireAstNonFallback) {
@@ -153,6 +159,7 @@ public class ThreeExecutionBackendParityTest {
         }
       }
       assertEquals("dsl-javacode", dslJava.getObject("_tinyExecutionMode", String.class));
+      assertEquals("legacy-astcreator", legacyAstCreator.getObject("_tinyExecutionMode", String.class));
     }
     if (requireAstNonFallback) {
       assertNotEquals(

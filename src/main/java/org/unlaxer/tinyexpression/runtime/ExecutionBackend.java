@@ -5,12 +5,14 @@ import java.util.Optional;
 
 public enum ExecutionBackend {
   JAVA_CODE,
+  JAVA_CODE_LEGACY_ASTCREATOR,
   AST_EVALUATOR,
   DSL_JAVA_CODE;
 
   public String runtimeModeMarker() {
     return switch (this) {
       case JAVA_CODE -> "javacode";
+      case JAVA_CODE_LEGACY_ASTCREATOR -> "legacy-astcreator";
       case AST_EVALUATOR -> "ast-evaluator";
       case DSL_JAVA_CODE -> "dsl-javacode";
     };
@@ -19,6 +21,7 @@ public enum ExecutionBackend {
   public String runtimeImplementationMarker() {
     return switch (this) {
       case JAVA_CODE -> "legacy-javacode";
+      case JAVA_CODE_LEGACY_ASTCREATOR -> "legacy-javacode-astcreator";
       case AST_EVALUATOR -> "ast-evaluator";
       case DSL_JAVA_CODE -> "legacy-javacode-bridge";
     };
@@ -35,6 +38,13 @@ public enum ExecutionBackend {
     String normalized = runtimeMode.strip().toLowerCase(Locale.ROOT).replace('_', '-');
     if ("token".equals(normalized) || "javacode".equals(normalized) || "java-code".equals(normalized)) {
       return Optional.of(JAVA_CODE);
+    }
+    if ("legacy-astcreator".equals(normalized)
+        || "legacy-ast-creator".equals(normalized)
+        || "ootc-legacy".equals(normalized)
+        || "astcreator".equals(normalized)
+        || "ootc".equals(normalized)) {
+      return Optional.of(JAVA_CODE_LEGACY_ASTCREATOR);
     }
     if ("ast".equals(normalized) || "ast-evaluator".equals(normalized)) {
       return Optional.of(AST_EVALUATOR);
@@ -63,6 +73,11 @@ public enum ExecutionBackend {
     }
     if ("JAVACODE".equals(compact)) {
       return Optional.of(JAVA_CODE);
+    }
+    if ("JAVACODELEGACYASTCREATOR".equals(compact)
+        || "LEGACYASTCREATOR".equals(compact)
+        || "OOTCLEGACY".equals(compact)) {
+      return Optional.of(JAVA_CODE_LEGACY_ASTCREATOR);
     }
     if ("ASTEVALUATOR".equals(compact)) {
       return Optional.of(AST_EVALUATOR);

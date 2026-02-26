@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoList;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
@@ -66,6 +67,24 @@ public class FormulaInfoExecutionBackendSelectionTest {
         formulaInfo.calculator().getObject("_tinyExecutionBridgeImplementation", Boolean.class));
     assertEquals(Boolean.TRUE,
         formulaInfo.calculator().getObject("_tinyExecutionNonBridgeImplementation", Boolean.class));
+  }
+
+  @Test
+  public void testExecutionBackendMetadataSelectsLegacyAstCreatorJavaCode() {
+    FormulaInfoAdditionalFields additionalFields = additionalFields();
+    String text = formulaInfo(
+        "backend:legacy-astcreator",
+        "legacyAstCreatorFromMetadata");
+    FormulaInfo formulaInfo = parseSingle(text, additionalFields);
+
+    assertEquals(ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR.name(), formulaInfo.executionBackend);
+    assertTrue(formulaInfo.calculator() instanceof LegacyAstCreatorJavaCodeCalculator);
+    assertEquals("JAVA_CODE_LEGACY_ASTCREATOR",
+        formulaInfo.calculator().getObject("_tinyExecutionBackend", String.class));
+    assertEquals("legacy-astcreator",
+        formulaInfo.calculator().getObject("_tinyExecutionMode", String.class));
+    assertEquals("legacy-javacode-astcreator",
+        formulaInfo.calculator().getObject("_tinyExecutionImplementation", String.class));
   }
 
   @Test

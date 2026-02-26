@@ -26,6 +26,10 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertNotNull(ast.get("evaluationResultNormalized"));
     assertNotNull(ast.get("_astEvaluatorGeneratedEmbeddedBridgeUsed"));
 
+    Map<String, String> legacyAstCreator = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "legacy-astcreator");
+    assertEquals("JAVA_CODE_LEGACY_ASTCREATOR", legacyAstCreator.get("selectedExecutionBackend"));
+    assertEquals("JAVA_CODE_LEGACY_ASTCREATOR", legacyAstCreator.get("_tinyExecutionBackend"));
+
     Map<String, String> token = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "token");
     assertEquals("JAVA_CODE", token.get("selectedExecutionBackend"));
     assertEquals("JAVA_CODE", token.get("_tinyExecutionBackend"));
@@ -34,6 +38,7 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("true", token.get("parity.allBackendsEvaluated"));
     assertEquals("true", token.get("parity.equalAll"));
     assertNotNull(token.get("parity.JAVA_CODE.normalized"));
+    assertNotNull(token.get("parity.JAVA_CODE_LEGACY_ASTCREATOR.normalized"));
     assertNotNull(token.get("parity.AST_EVALUATOR.normalized"));
     assertNotNull(token.get("parity.DSL_JAVA_CODE.normalized"));
   }

@@ -529,7 +529,7 @@ Completed in this session (P3 follow-up):
 93. expanded DAP runtime probe value observability:
    - `TinyExpressionDapRuntimeBridge` now publishes `evaluationResultType` and numeric-canonical `evaluationResultNormalized`,
    - generated DAP adapters ingest these via existing runtime-probe variable bridge,
-   - improves value-level comparison visibility between `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` runtime modes.
+   - improves value-level comparison visibility between execution runtime modes.
 94. widened generated mapper preferred-root retries in value evaluator:
    - `GeneratedP4ValueAstEvaluator` now uses multi-candidate preferred roots (head-aware + result-type-aware) instead of single preferred root for
      1) structured-text AST re-entry,
@@ -543,8 +543,8 @@ Completed in this session (P3 follow-up):
 96. expanded declaration shortcut literal parser for double-quoted strings:
    - `AstDeclarationRuntime.parseLiteralOrVariable(...)` now accepts both `'...'` and `\"...\"`,
    - generated-runtime-unavailable declaration fallback test now covers double-quoted setter value.
-97. added 3-backend parity probe variables to DAP runtime bridge:
-   - `TinyExpressionDapRuntimeBridge` now evaluates formula once per backend (`JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) and exports `parity.*` variables,
+97. added backend parity probe variables to DAP runtime bridge:
+   - `TinyExpressionDapRuntimeBridge` now evaluates formula once per backend and exports `parity.*` variables,
    - includes per-backend value/type/normalized fields plus `parity.equalAll`,
    - provides value-level runtime parity visibility directly in DAP `variables` response.
 98. added generated-path embedded-bridge usage marker:
@@ -559,6 +559,18 @@ Completed in this session (P3 follow-up):
    - `ThreeExecutionBackendParityTest` now tracks `_astEvaluatorGeneratedEmbeddedBridgeUsed` on supported corpus,
    - enforces upper bound on mixed (`generated-ast` + embedded bridge) cases,
    - keeps `AST_EVALUATOR` non-fallback guarantee while preventing silent regression to bridge-heavy generated path.
+101. restored pre-refactor OOTC runtime as a selectable 4th backend:
+   - introduced `ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR` and backend aliases (`legacy-astcreator`, `ootc`),
+   - added `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyOperatorOperandTreeCreator` (restored from `bb2b085` with minimal object-parser compatibility patch),
+   - added `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator`,
+   - wired `CalculatorCreatorRegistry` / `FormulaInfoParser` / DAP runtime mode resolution to select this backend.
+102. upgraded parity guard from three to four backends:
+   - `ThreeExecutionBackendParityTest` and `ThreeExecutionBackendExtractedCorpusParityTest` now enforce value parity across
+     `JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
+   - `TinyExpressionDapRuntimeBridge` parity probe now includes the 4th backend and `parity.equalAll` checks all four.
+103. separated legacy backend implementation package for readability:
+   - moved legacy runtime classes under `org.unlaxer.tinyexpression.evaluator.javacode.legacy`,
+   - kept existing current reducer package unchanged to minimize migration risk.
 
 
 
