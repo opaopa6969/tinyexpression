@@ -2,8 +2,10 @@ package org.unlaxer.tinyexpression.loader;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+import org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoList;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
@@ -19,6 +21,7 @@ public class FormulaInfoExecutionBackendSelectionTest {
     FormulaInfo formulaInfo = parseSingle(text, additionalFields);
 
     assertEquals(ExecutionBackend.DSL_JAVA_CODE.name(), formulaInfo.executionBackend);
+    assertTrue(formulaInfo.calculator() instanceof DslJavaCodeCalculator);
     assertEquals("DSL_JAVA_CODE", formulaInfo.calculator().getObject("_tinyExecutionBackend", String.class));
     assertEquals("dsl-javacode", formulaInfo.calculator().getObject("_tinyExecutionMode", String.class));
     assertEquals("legacy-javacode-bridge",

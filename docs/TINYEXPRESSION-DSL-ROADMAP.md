@@ -424,8 +424,9 @@ Completed in this session (P3 follow-up):
    - `GeneratedP4ValueAstEvaluator` now supports top-level `MethodInvocationExpr` roots for all result families (`number/string/boolean/object`),
    - method invocation evaluation now extracts invocation arguments, parses method parameter declarations, binds arguments into a scoped `CalculationContext`, and evaluates method body on generated AST path first.
 67. introduced explicit 3-backend execution model and parity harness:
-   - added `ExecutionBackend.DSL_JAVA_CODE` and registry creator seam (`CalculatorCreatorRegistry.dslJavaCodeCreator()`),
-   - current `DSL_JAVA_CODE` backend runs in bridge mode over existing JavaCode runtime while exposing backend marker (`_tinyExecutionMode=dsl-javacode`),
+   - added `ExecutionBackend.DSL_JAVA_CODE` with a dedicated `DslJavaCodeCalculator` seam (`CalculatorCreatorRegistry.dslJavaCodeCreator()`),
+   - current `DslJavaCodeCalculator` seam is bridge-only: it delegates to legacy `JavaCodeCalculatorV3` while exposing backend markers (`_tinyExecutionMode=dsl-javacode`, `_tinyExecutionImplementation=legacy-javacode-bridge`),
+   - native DSL Java emitter remains an explicit follow-up gap (seam is ready, emitter implementation is pending),
    - added `ThreeExecutionBackendParityTest` to assert value parity across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` on supported mixed formulas.
 68. added explicit `if` AST mapping path with direct branch evaluation:
    - added `@mapping(IfExpr, params=[condition, thenExpr, elseExpr])` on `IfExpression`,

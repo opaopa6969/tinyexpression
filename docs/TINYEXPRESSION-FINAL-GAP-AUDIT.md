@@ -1,6 +1,6 @@
 # TinyExpression Final Gap Audit (DSL Replacement)
 
-Last updated: 2026-02-25
+Last updated: 2026-02-26
 
 ## Target
 
@@ -38,7 +38,7 @@ Last updated: 2026-02-25
 18. Execution backend model is now explicitly 3-way:
    1. `JAVA_CODE` (legacy hand-written JavaCode pipeline)
    2. `AST_EVALUATOR` (generated AST walk + token-ast/java fallback)
-   3. `DSL_JAVA_CODE` (new backend slot; current implementation bridges to existing JavaCode runtime with dedicated backend identity marker)
+   3. `DSL_JAVA_CODE` (dedicated `DslJavaCodeCalculator` seam; current implementation is bridge-only and delegates to legacy JavaCode runtime while keeping dedicated backend identity markers)
 19. Added 3-way backend parity harness (`ThreeExecutionBackendParityTest`) over a supported mixed corpus, asserting value parity and AST non-fallback guard.
 20. `if` expression path now has explicit AST mapping and direct evaluator dispatch:
    1. `IfExpr` + `ExpressionExpr` are generated from P4 mapping.
@@ -68,10 +68,11 @@ Last updated: 2026-02-25
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
-6. Full DSL-native Java code generation backend:
-   1. `DSL_JAVA_CODE` execution backend is present as integration seam
-   2. backend currently reuses legacy JavaCode compiler path (bridge mode), but selection/metadata path is now production-wirable via formula metadata
-   3. dedicated DSL-generated Java emitter + runtime parity at scale are not complete
+6. Full DSL-native Java code generation backend (native-emitter gap):
+   1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
+   2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata
+   3. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
+   4. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
 
 ## Dependency-Side Needs (Potential Future)
 
