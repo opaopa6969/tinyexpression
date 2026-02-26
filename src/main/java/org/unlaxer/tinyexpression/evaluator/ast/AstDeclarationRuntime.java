@@ -29,6 +29,8 @@ final class AstDeclarationRuntime {
 
   private AstDeclarationRuntime() {}
 
+  record MainExpressionEvaluation(Object value, String runtime) {}
+
   static boolean applyDeclarations(String source, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext, ClassLoader classLoader) {
     try {
@@ -46,6 +48,39 @@ final class AstDeclarationRuntime {
       return changed;
     } catch (Throwable ignored) {
       return false;
+    }
+  }
+
+  static Optional<MainExpressionEvaluation> tryEvaluateMainExpression(
+      String source, SpecifiedExpressionTypes specifiedExpressionTypes,
+      CalculationContext calculationContext, ClassLoader classLoader) {
+    try {
+      Token rootToken = parseAndReduce(source);
+      TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken, specifiedExpressionTypes);
+      if (tinyExpressionTokens.getVariableDeclarationTokens().isEmpty()) {
+        return Optional.empty();
+      }
+      String methodDeclarationsSource = tinyExpressionTokens.getMethodTokens().stream()
+          .map(AstDeclarationRuntime::tokenTextCompat)
+          .filter(text -> text != null && !text.isBlank())
+          .collect(Collectors.joining("\n"));
+      for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
+        applyDeclaration(
+            declarationToken, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource);
+      }
+      String expressionSource = tokenTextCompat(tinyExpressionTokens.getExpressionToken());
+      if (expressionSource == null || expressionSource.isBlank()) {
+        return Optional.empty();
+      }
+      ExpressionType resultType = specifiedExpressionTypes.resultType() == null
+          ? ExpressionTypes.object
+          : specifiedExpressionTypes.resultType();
+      return evaluateExpressionWithMode(
+          expressionSource, resultType, specifiedExpressionTypes, calculationContext, classLoader,
+          methodDeclarationsSource)
+          .map(result -> new MainExpressionEvaluation(result.value(), result.runtime()));
+    } catch (Throwable ignored) {
+      return Optional.empty();
     }
   }
 
@@ -86,6 +121,17 @@ final class AstDeclarationRuntime {
   private static Optional<Object> evaluateExpression(String expressionSource, ExpressionType resultType,
       SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader,
       String methodDeclarationsSource) {
+    return evaluateExpressionWithMode(
+        expressionSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource)
+        .map(EvalResult::value);
+  }
+
+  private record EvalResult(Object value, String runtime) {}
+
+  private static Optional<EvalResult> evaluateExpressionWithMode(
+      String expressionSource, ExpressionType resultType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader,
+      String methodDeclarationsSource) {
     String embeddedFormulaSource = joinExpressionWithMethods(expressionSource, methodDeclarationsSource);
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
@@ -98,7 +144,7 @@ final class AstDeclarationRuntime {
               GeneratedP4ValueAstEvaluator.tryEvaluate(
                   mapped.get(), evalTypes, calculationContext, classLoader, embeddedFormulaSource);
           if (generatedValue.isPresent()) {
-            return generatedValue;
+            return generatedValue.map(value -> new EvalResult(value, "generated-ast"));
           }
         }
       }
@@ -106,19 +152,20 @@ final class AstDeclarationRuntime {
     if (resultType.isNumber()) {
       Optional<Object> number = AstNumberExpressionEvaluator.tryEvaluate(expressionSource, evalTypes, calculationContext);
       if (number.isPresent()) {
-        return number;
+        return number.map(value -> new EvalResult(value, "token-ast"));
       }
       return AstEmbeddedExpressionRuntime.tryEvaluate(
-          expressionSource, resultType, evalTypes, calculationContext, classLoader, embeddedFormulaSource);
+          expressionSource, resultType, evalTypes, calculationContext, classLoader, embeddedFormulaSource)
+          .map(value -> new EvalResult(value, "embedded-bridge"));
     }
     Optional<Object> literalOrVariable = parseLiteralOrVariable(
         expressionSource, resultType, specifiedExpressionTypes, calculationContext);
     if (!AstEmbeddedExpressionRuntime.isLikelyExpression(expressionSource)) {
-      return literalOrVariable;
+      return literalOrVariable.map(value -> new EvalResult(value, "token-ast"));
     }
     Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
         expressionSource, resultType, evalTypes, calculationContext, classLoader, embeddedFormulaSource);
-    return embedded.isPresent() ? embedded : Optional.empty();
+    return embedded.map(value -> new EvalResult(value, "embedded-bridge"));
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes specifiedExpressionTypes,

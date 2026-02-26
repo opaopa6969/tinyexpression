@@ -65,6 +65,7 @@ Last updated: 2026-02-26
 33. Generated mapper probe now retries after trimming leading java delimiters/comments, improving AST mapping hit rate for comment-prefixed formulas (supported non-fallback parity now includes leading-comment `if` head case).
 34. Generated mapper probe now also normalizes comment-delimited `if/*...*/(` head form for retry parse, and supported parity corpus verifies this form on non-fallback AST runtime.
 35. DAP runtime bridge mode aliases are regression-tested (`dsl-javacode`/`dsl_java_code`/`ast`/`token`) to keep backend selection deterministic for adapter launch configurations.
+36. Declaration-aware shortcut is now wired before `javacode-fallback`: declaration formulas can be evaluated via `AstDeclarationRuntime.tryEvaluateMainExpression(...)` even when generated runtime is unavailable (comment-free scope), reducing bridge fallback for this slice.
 
 ## Remaining Gaps
 
@@ -75,6 +76,7 @@ Last updated: 2026-02-26
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式まで拡張済み（if/match/call を含む preferred-root AST evaluation + method declaration text injection）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完
+   3. comment-delimited declaration formulas は parity保護のため shortcut 対象外（現状は既存経路維持）
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:

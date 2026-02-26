@@ -24,6 +24,8 @@ public class AstEvaluatorTokenLiteralFallbackTest {
         new Case("'hello'", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
         new Case("\"hello\"", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
         new Case("true", new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), true, null),
+        new Case("var $payload set if not exists 'fallback' description='payload';\n$payload",
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "fallback", null),
         new Case("$payload", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "ctx-object",
             context -> context.setObject("payload", "ctx-object")));
 

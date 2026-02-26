@@ -491,6 +491,11 @@ Completed in this session (P3 follow-up):
    - `AstEvaluatorTokenLiteralFallbackTest` covers `\"hello\"` under generated-runtime-unavailable classloader.
 83. strengthened DAP runtime-bridge mode alias regression coverage:
    - `TinyExpressionDapRuntimeBridgeTest` now asserts backend resolution for `dsl-javacode`, `dsl_java_code`, `ast`, and `token` runtime modes.
+84. added declaration-aware evaluation shortcut before javacode fallback:
+   - `AstDeclarationRuntime` now exposes `tryEvaluateMainExpression(...)` (declaration apply + main expression evaluation with runtime mode),
+   - `AstEvaluatorCalculator` now invokes this path for declaration formulas before `javacode-fallback`,
+   - generated-runtime-unavailable regression now includes declaration formula in `AstEvaluatorTokenLiteralFallbackTest`,
+   - current guard: comment-containing declaration formulas remain on existing path to avoid legacy parity drift.
 
 
 

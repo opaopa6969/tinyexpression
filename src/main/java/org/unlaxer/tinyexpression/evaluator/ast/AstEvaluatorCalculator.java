@@ -240,6 +240,16 @@ public class AstEvaluatorCalculator implements Calculator {
       return simpleLiteralOrVariable.get();
     }
 
+    if (looksLikeDeclarationFormula(source.source())) {
+      Optional<AstDeclarationRuntime.MainExpressionEvaluation> declarationEvaluated =
+          AstDeclarationRuntime.tryEvaluateMainExpression(
+              source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+      if (declarationEvaluated.isPresent()) {
+        setObject("_astEvaluatorRuntime", declarationEvaluated.get().runtime());
+        return declarationEvaluated.get().value();
+      }
+    }
+
     Optional<Object> astEvaluated = tokenAstEvaluated.isPresent()
         ? tokenAstEvaluated
         : AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
@@ -374,6 +384,20 @@ public class AstEvaluatorCalculator implements Calculator {
       return true;
     }
     return false;
+  }
+
+  private boolean looksLikeDeclarationFormula(String formula) {
+    if (formula == null || formula.isBlank()) {
+      return false;
+    }
+    String normalized = formula.strip();
+    if (normalized.contains("/*") || normalized.contains("//")) {
+      return false;
+    }
+    return normalized.startsWith("var ")
+        || normalized.contains("\nvar ")
+        || normalized.contains(";var ")
+        || normalized.contains("; var ");
   }
 
   private String extractVariableName(String formula) {
