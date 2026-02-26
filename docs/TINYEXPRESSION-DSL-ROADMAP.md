@@ -437,6 +437,9 @@ Completed in this session (P3 follow-up):
    - avoided parser-class capture ambiguity in case-value mapping via dedicated `*CaseValue` wrapper rules,
    - `GeneratedP4ValueAstEvaluator` now evaluates match-case conditions and selected values directly on generated AST path for number/string/boolean/object result flows,
    - `AstEvaluatorCalculator` now prefers `*MatchExpr` roots when formula head is `match` and result type matches.
+70. improved declaration-runtime generated AST selection for complex setter expressions:
+   - `AstDeclarationRuntime` now uses preferred-root candidate list (`if`/`match`/`call` aware) instead of single fixed root by result type,
+   - typed declaration setter flow now covers match-based defaults on generated path (e.g. `set if not exists match{...}`).
 
 
 
@@ -478,6 +481,7 @@ Verified tests:
 34. `mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 35. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorParityCorpusTest test`
 36. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
+37. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorBackendParityTest test`
 
 ## Execution Policy
 

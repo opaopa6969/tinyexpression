@@ -1,6 +1,8 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Parsed;
@@ -88,14 +90,16 @@ final class AstDeclarationRuntime {
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
     if (GeneratedAstRuntimeProbe.isAvailable(classLoader)) {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-          expressionSource, classLoader, preferredAstSimpleName(resultType));
-      if (mapped.isPresent()) {
-        Optional<Object> generatedValue =
-            GeneratedP4ValueAstEvaluator.tryEvaluate(
-                mapped.get(), evalTypes, calculationContext, classLoader, embeddedFormulaSource);
-        if (generatedValue.isPresent()) {
-          return generatedValue;
+      for (String preferredAstSimpleName : preferredAstSimpleNames(expressionSource, resultType)) {
+        Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+            expressionSource, classLoader, preferredAstSimpleName);
+        if (mapped.isPresent()) {
+          Optional<Object> generatedValue =
+              GeneratedP4ValueAstEvaluator.tryEvaluate(
+                  mapped.get(), evalTypes, calculationContext, classLoader, embeddedFormulaSource);
+          if (generatedValue.isPresent()) {
+            return generatedValue;
+          }
         }
       }
     }
@@ -128,23 +132,54 @@ final class AstDeclarationRuntime {
     return ExpressionTypes._float;
   }
 
-  private static String preferredAstSimpleName(ExpressionType resultType) {
+  private static List<String> preferredAstSimpleNames(String expressionSource, ExpressionType resultType) {
+    List<String> preferred = new ArrayList<>();
+    String source = expressionSource == null ? "" : expressionSource.strip();
+    boolean methodInvocationHead =
+        source.startsWith("call")
+            || source.startsWith("external")
+            || source.startsWith("internal");
+    boolean ifHead = source.startsWith("if");
+    boolean matchHead = source.startsWith("match");
+    if (methodInvocationHead) {
+      preferred.add("MethodInvocationExpr");
+    }
+    if (ifHead) {
+      preferred.add("IfExpr");
+    }
     if (resultType == null) {
-      return null;
+      preferred.add(null);
+      return preferred;
     }
     if (resultType.isNumber()) {
-      return "BinaryExpr";
+      if (matchHead) {
+        preferred.add("NumberMatchExpr");
+      }
+      preferred.add("BinaryExpr");
+    } else if (resultType.isString()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+      }
+      preferred.add("StringExpr");
+    } else if (resultType.isBoolean()) {
+      if (matchHead) {
+        preferred.add("BooleanMatchExpr");
+      }
+      preferred.add("BooleanExpr");
+    } else if (resultType.isObject()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+        preferred.add("BooleanMatchExpr");
+        preferred.add("NumberMatchExpr");
+      }
+      preferred.add("ObjectExpr");
+    } else {
+      preferred.add(null);
     }
-    if (resultType.isString()) {
-      return "StringExpr";
-    }
-    if (resultType.isBoolean()) {
-      return "BooleanExpr";
-    }
-    if (resultType.isObject()) {
-      return "ObjectExpr";
-    }
-    return null;
+    preferred.add("MethodInvocationExpr");
+    preferred.add("VariableRefExpr");
+    preferred.add("BinaryExpr");
+    return preferred.stream().distinct().toList();
   }
 
   private static Optional<Object> parseLiteralOrVariable(String expressionSource, ExpressionType resultType,

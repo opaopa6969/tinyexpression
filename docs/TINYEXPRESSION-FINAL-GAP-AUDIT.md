@@ -46,6 +46,7 @@ Last updated: 2026-02-25
 21. `match` families now have explicit AST mapping and direct evaluator dispatch:
    1. `NumberMatchExpr` / `StringMatchExpr` / `BooleanMatchExpr` and case/default/value nodes are generated.
    2. generated runtime executes condition dispatch + selected branch evaluation directly on AST for number/string/boolean paths (and object path where these expressions are selected as root).
+22. Declaration runtime preferred-root policy now includes structured expression heads (`if`/`match`/`call`) so setter expressions can reach generated AST direct paths before bridge fallback.
 
 ## Remaining Gaps
 
@@ -54,7 +55,7 @@ Last updated: 2026-02-25
    2. `method invocation/declaration` は引数束縛まで direct化済みだが、宣言・複合式全体で bridge/fallback 非依存にするには未完。
    3. `ObjectExpression` 複合式の一部は still bridge 依存（特に declaration-heavy / nested complex slices）。
 2. Declaration semantics in generated AST runtime:
-   1. variable declaration setters/defaulting は複合式の一部まで拡張済み（method declaration text injection + embedded eval）
+   1. variable declaration setters/defaulting は複合式まで拡張済み（if/match/call を含む preferred-root AST evaluation + method declaration text injection）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized

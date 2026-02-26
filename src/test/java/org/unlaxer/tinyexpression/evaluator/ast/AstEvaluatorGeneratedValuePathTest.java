@@ -90,6 +90,10 @@ public class AstEvaluatorGeneratedValuePathTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
         5f);
     assertGeneratedDeclarationFormula(
+        "var $price as number set if not exists match{1==1->3,default->5} description='price';\n$price+2",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        5f);
+    assertGeneratedDeclarationFormula(
         "var $name as string set if not exists 'neo' description='name';\n$name",
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float),
         "neo");
