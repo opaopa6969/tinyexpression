@@ -1,12 +1,10 @@
-package org.unlaxer.tinyexpression.evaluator.ast;
+package org.unlaxer.tinyexpression.parser;
 
-import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
+public final class TinyExpressionParserCapabilities {
 
-final class JavaStyleSourceProbe {
+  private TinyExpressionParserCapabilities() {}
 
-  private JavaStyleSourceProbe() {}
-
-  static int skipDelimiters(String source, int from) {
+  public static int skipJavaStyleDelimiters(String source, int from) {
     if (source == null || source.isEmpty()) {
       return 0;
     }
@@ -40,11 +38,11 @@ final class JavaStyleSourceProbe {
     return i;
   }
 
-  static String trimLeadingDelimiters(String source) {
+  public static String trimLeadingJavaStyleDelimiters(String source) {
     if (source == null || source.isEmpty()) {
       return "";
     }
-    int index = skipDelimiters(source, 0);
+    int index = skipJavaStyleDelimiters(source, 0);
     if (index <= 0) {
       return source;
     }
@@ -54,17 +52,15 @@ final class JavaStyleSourceProbe {
     return source.substring(index);
   }
 
-  static boolean containsCommentAfterLeadingDelimiters(String source) {
-    String trimmed = trimLeadingDelimiters(source);
+  public static boolean containsCommentAfterLeadingJavaStyleDelimiters(String source) {
+    String trimmed = trimLeadingJavaStyleDelimiters(source);
     if (trimmed.isEmpty()) {
       return false;
     }
-    int block = trimmed.indexOf("/*");
-    int line = trimmed.indexOf("//");
-    return block >= 0 || line >= 0;
+    return trimmed.indexOf("/*") >= 0 || trimmed.indexOf("//") >= 0;
   }
 
-  static boolean startsWithWord(String source, String word) {
+  public static boolean startsWithWord(String source, String word) {
     if (source == null || word == null || word.isEmpty()) {
       return false;
     }
@@ -72,7 +68,7 @@ final class JavaStyleSourceProbe {
     return matchesWordAt(text, 0, word);
   }
 
-  static boolean matchesWordAt(String source, int index, String word) {
+  public static boolean matchesWordAt(String source, int index, String word) {
     if (source == null || word == null || word.isEmpty()) {
       return false;
     }
@@ -89,7 +85,7 @@ final class JavaStyleSourceProbe {
     return end >= source.length() || !Character.isJavaIdentifierPart(source.charAt(end));
   }
 
-  static boolean hasHead(String source, String keyword, Character requiredNext) {
+  public static boolean hasHead(String source, String keyword, Character requiredNext) {
     if (source == null || keyword == null || keyword.isEmpty()) {
       return false;
     }
@@ -100,24 +96,24 @@ final class JavaStyleSourceProbe {
     if (requiredNext == null) {
       return true;
     }
-    int next = skipDelimiters(text, keyword.length());
+    int next = skipJavaStyleDelimiters(text, keyword.length());
     return next < text.length() && text.charAt(next) == requiredNext;
   }
 
-  static String normalizeStructuredHead(String source) {
-    String text = trimLeadingDelimiters(source).stripLeading();
+  public static String normalizeStructuredHead(String source) {
+    String text = trimLeadingJavaStyleDelimiters(source).stripLeading();
     if (text.isEmpty()) {
       return text;
     }
     if (hasHead(text, TinyExpressionKeywords.IF, '(')) {
-      int next = skipDelimiters(text, TinyExpressionKeywords.IF.length());
+      int next = skipJavaStyleDelimiters(text, TinyExpressionKeywords.IF.length());
       return TinyExpressionKeywords.IF + text.substring(next);
     }
     for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
       if (!startsWithWord(text, keyword)) {
         continue;
       }
-      int next = skipDelimiters(text, keyword.length());
+      int next = skipJavaStyleDelimiters(text, keyword.length());
       if (next >= text.length()) {
         return keyword;
       }

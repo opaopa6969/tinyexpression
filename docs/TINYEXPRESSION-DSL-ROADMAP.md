@@ -576,7 +576,7 @@ Completed in this session (P3 follow-up):
    - fixed backend role boundaries (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`),
    - fixed parity and selection rules for formula metadata/runtime aliases.
 105. centralized java-style delimiter/comment probing to reduce evaluator-side drift:
-   - added `JavaStyleSourceProbe` and moved shared delimiter/comment helpers (`skip`, `trim`, head word boundary checks, structured-head normalization) into one place,
+   - added shared java-style probing helpers (`skip`, `trim`, head word boundary checks, structured-head normalization) and removed duplicated scanners,
    - replaced duplicated implementations in:
      - `AstEmbeddedExpressionRuntime`,
      - `GeneratedAstRuntimeProbe`,
@@ -586,7 +586,11 @@ Completed in this session (P3 follow-up):
 106. introduced parser-owned keyword constants and rewired runtime probes to use them:
    - added `TinyExpressionKeywords` (`if` / `match` / `call` / `external` / `internal` / `var` / `variable`),
    - parser definitions now reference shared constants (`IfExpressionParser`, `NumberMatchExpressionParser`, `SideEffectName1/2Parser`, `AbstractVariableDeclarationParser`),
-   - evaluator/probe runtime now references shared constants (`JavaStyleSourceProbe`, `AstEmbeddedExpressionRuntime`, `GeneratedP4ValueAstEvaluator`) to reduce keyword drift when parser aliases evolve.
+   - evaluator/probe runtime now references shared constants (`TinyExpressionParserCapabilities`, `AstEmbeddedExpressionRuntime`, `GeneratedP4ValueAstEvaluator`) to reduce keyword drift when parser aliases evolve.
+107. exposed parser-owned delimiter/head capability API and switched evaluator runtime to it:
+   - added `TinyExpressionParserCapabilities` under parser package,
+   - migrated evaluator/probe delimiter/comment/head checks to parser-owned API (`GeneratedAstRuntimeProbe`, `AstDeclarationRuntime`, `AstEmbeddedExpressionRuntime`, `GeneratedP4ValueAstEvaluator`),
+   - removed evaluator-local delimiter utility so delimiter semantics are now owned by parser package.
 
 
 
@@ -641,6 +645,7 @@ Verified tests:
 47. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 48. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest test`
 49. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
+50. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 
 ## Execution Policy
 

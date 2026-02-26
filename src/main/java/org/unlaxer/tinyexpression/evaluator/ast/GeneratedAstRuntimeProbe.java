@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
+
 final class GeneratedAstRuntimeProbe {
 
   private GeneratedAstRuntimeProbe() {}
@@ -26,14 +28,14 @@ final class GeneratedAstRuntimeProbe {
     if (mapped.isPresent()) {
       return mapped;
     }
-    String normalized = JavaStyleSourceProbe.trimLeadingDelimiters(source);
+    String normalized = TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(source);
     if (!normalized.equals(source)) {
       mapped = tryMapAstOnce(normalized, classLoader, preferredAstSimpleName);
       if (mapped.isPresent()) {
         return mapped;
       }
     }
-    String normalizedHead = JavaStyleSourceProbe.normalizeStructuredHead(normalized);
+    String normalizedHead = TinyExpressionParserCapabilities.normalizeStructuredHead(normalized);
     if (normalizedHead.equals(normalized)) {
       return Optional.empty();
     }

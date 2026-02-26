@@ -22,6 +22,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
 
@@ -88,7 +89,7 @@ final class AstDeclarationRuntime {
   }
 
   private static boolean hasInternalJavaCommentAfterLeadingDelimiters(String source) {
-    return JavaStyleSourceProbe.containsCommentAfterLeadingDelimiters(source);
+    return TinyExpressionParserCapabilities.containsCommentAfterLeadingJavaStyleDelimiters(source);
   }
 
   private static boolean applyDeclaration(Token declarationToken, SpecifiedExpressionTypes specifiedExpressionTypes,

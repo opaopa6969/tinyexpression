@@ -18,6 +18,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class GeneratedP4ValueAstEvaluator {
 
@@ -1001,16 +1002,16 @@ final class GeneratedP4ValueAstEvaluator {
       if (callIndex < 0) {
         return List.of();
       }
-      if (!JavaStyleSourceProbe.matchesWordAt(source, callIndex, callKeyword)) {
+      if (!TinyExpressionParserCapabilities.matchesWordAt(source, callIndex, callKeyword)) {
         from = callIndex + callKeyword.length();
         continue;
       }
-      int nameStart = JavaStyleSourceProbe.skipDelimiters(source, callIndex + callKeyword.length());
-      if (!JavaStyleSourceProbe.matchesWordAt(source, nameStart, methodName)) {
+      int nameStart = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, callIndex + callKeyword.length());
+      if (!TinyExpressionParserCapabilities.matchesWordAt(source, nameStart, methodName)) {
         from = callIndex + callKeyword.length();
         continue;
       }
-      int openParen = JavaStyleSourceProbe.skipDelimiters(source, nameStart + methodName.length());
+      int openParen = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, nameStart + methodName.length());
       if (openParen >= source.length() || source.charAt(openParen) != '(') {
         from = callIndex + callKeyword.length();
         continue;
@@ -1030,15 +1031,15 @@ final class GeneratedP4ValueAstEvaluator {
       return false;
     }
     String callKeyword = TinyExpressionKeywords.CALL;
-    int index = JavaStyleSourceProbe.skipDelimiters(expression, 0);
-    if (!JavaStyleSourceProbe.matchesWordAt(expression, index, callKeyword)) {
+    int index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(expression, 0);
+    if (!TinyExpressionParserCapabilities.matchesWordAt(expression, index, callKeyword)) {
       return false;
     }
-    int nameStart = JavaStyleSourceProbe.skipDelimiters(expression, index + callKeyword.length());
-    if (!JavaStyleSourceProbe.matchesWordAt(expression, nameStart, methodName)) {
+    int nameStart = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(expression, index + callKeyword.length());
+    if (!TinyExpressionParserCapabilities.matchesWordAt(expression, nameStart, methodName)) {
       return false;
     }
-    int openParen = JavaStyleSourceProbe.skipDelimiters(expression, nameStart + methodName.length());
+    int openParen = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(expression, nameStart + methodName.length());
     return openParen < expression.length() && expression.charAt(openParen) == '(';
   }
 
@@ -1233,11 +1234,11 @@ final class GeneratedP4ValueAstEvaluator {
       if (nameIdx < 0) {
         return null;
       }
-      if (!JavaStyleSourceProbe.matchesWordAt(source, nameIdx, methodName)) {
+      if (!TinyExpressionParserCapabilities.matchesWordAt(source, nameIdx, methodName)) {
         from = nameIdx + methodName.length();
         continue;
       }
-      int openParen = JavaStyleSourceProbe.skipDelimiters(source, nameIdx + methodName.length());
+      int openParen = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, nameIdx + methodName.length());
       if (openParen >= source.length() || source.charAt(openParen) != '(') {
         from = nameIdx + methodName.length();
         continue;
@@ -1258,7 +1259,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (paramsEnd < 0) {
         return null;
       }
-      int openBrace = JavaStyleSourceProbe.skipDelimiters(source, paramsEnd + 1);
+      int openBrace = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, paramsEnd + 1);
       if (openBrace < 0 || openBrace >= source.length() || source.charAt(openBrace) != '{') {
         from = nameIdx + methodName.length();
         continue;

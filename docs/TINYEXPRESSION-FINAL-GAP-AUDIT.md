@@ -78,7 +78,7 @@ Last updated: 2026-02-26
       - `org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator`
    3. parity harness now validates 4-way value equality (`JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) on supported and extracted corpora.
 42. Java-style delimiter/comment handling in AST runtime helpers is now centralized:
-   1. added `JavaStyleSourceProbe` for shared delimiter skip/trim and structured-head normalization helpers,
+   1. added parser-owned `TinyExpressionParserCapabilities` for shared delimiter skip/trim and structured-head normalization helpers,
    2. removed duplicated delimiter/comment scanners from `GeneratedAstRuntimeProbe` / `AstDeclarationRuntime` / `GeneratedP4ValueAstEvaluator`,
    3. `AstEmbeddedExpressionRuntime` structured-head checks now use shared delimiter-aware helper instead of local regex-only head checks.
 43. Parser/runtime keyword coupling is reduced through shared keyword constants:
@@ -112,8 +112,8 @@ Last updated: 2026-02-26
    4. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
    5. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
 7. Delimiter-chain coupling cleanup (design follow-up):
-   1. shared runtime abstraction is now in place (`JavaStyleSourceProbe`), reducing duplication risk
-   2. remaining work: expose this capability from parser-owned API surface (or shared parser module contract) so evaluator runtime does not own delimiter semantics
+   1. shared parser-owned capability is now in place (`TinyExpressionParserCapabilities`), reducing duplication risk
+   2. remaining work: align this API explicitly with `XXXDelimitedChain` combinator internals to make delimiter behavior changes verifiably contract-driven
 8. Parser-keyword coupling cleanup (design follow-up):
    1. declaration shortcut pre-check has removed direct `"var "` dependency and keyword constants are shared (`TinyExpressionKeywords`), but full parser-driven head detection API is still not centralized
    2. replace remaining ad-hoc textual pre-checks with shared parser capability API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived) so alias/localization changes do not require evaluator edits

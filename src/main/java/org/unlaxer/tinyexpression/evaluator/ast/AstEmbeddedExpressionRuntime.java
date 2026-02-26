@@ -11,6 +11,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class AstEmbeddedExpressionRuntime {
 
@@ -65,7 +66,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return JavaStyleSourceProbe.hasHead(normalized, TinyExpressionKeywords.IF, '(');
+    return TinyExpressionParserCapabilities.hasHead(normalized, TinyExpressionKeywords.IF, '(');
   }
 
   static boolean hasMatchHead(String text) {
@@ -73,7 +74,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return JavaStyleSourceProbe.hasHead(normalized, TinyExpressionKeywords.MATCH, '{');
+    return TinyExpressionParserCapabilities.hasHead(normalized, TinyExpressionKeywords.MATCH, '{');
   }
 
   static boolean hasMethodInvocationHead(String text) {
@@ -95,7 +96,7 @@ final class AstEmbeddedExpressionRuntime {
   private static boolean isMethodInvocationExpression(String text) {
     String normalized = text == null ? "" : text.strip();
     for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
-      if (JavaStyleSourceProbe.hasHead(normalized, keyword, null)) {
+      if (TinyExpressionParserCapabilities.hasHead(normalized, keyword, null)) {
         return true;
       }
     }
