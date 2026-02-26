@@ -50,6 +50,8 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_tinyExecutionImplementation", vars);
       copyMarker(calculator, "_tinyExecutionBridgeImplementation", vars);
       copyMarker(calculator, "_tinyExecutionNonBridgeImplementation", vars);
+      copyMarker(calculator, "_tinyDslJavaEmitterMode", vars);
+      copyMarker(calculator, "_tinyDslJavaNativeEmitterUsed", vars);
 
       try {
         Object value = calculator.apply(CalculationContext.newConcurrentContext());

@@ -154,6 +154,15 @@ final class DslGeneratedAstJavaEmitter {
       return renderBooleanLiteral(ast);
     }
     if (resultType.isObject()) {
+      if ("BinaryExpr".equals(simpleName)) {
+        return renderNumberExpressionFromBinary(ast, ExpressionTypes._float);
+      }
+      if ("StringExpr".equals(simpleName)) {
+        return renderStringLiteral(ast);
+      }
+      if ("BooleanExpr".equals(simpleName)) {
+        return renderBooleanLiteral(ast);
+      }
       if (!"ObjectExpr".equals(simpleName)) {
         return Optional.empty();
       }

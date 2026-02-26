@@ -89,6 +89,10 @@ Last updated: 2026-02-26
    1. added `DslGeneratedAstJavaEmitter` (generated-AST based java source emitter) for strict literal subset,
    2. `DslJavaCodeCalculator` now selects native emitter first and falls back to legacy bridge when unsupported,
    3. backend implementation marker is dynamic for DSL backend (`dsl-javacode-native` vs `legacy-javacode-bridge`) with `_tinyDslJavaEmitterMode` / `_tinyDslJavaNativeEmitterUsed` observability fields.
+45. DAP runtime bridge now forwards DSL emitter observability markers:
+   1. `_tinyDslJavaEmitterMode`,
+   2. `_tinyDslJavaNativeEmitterUsed`,
+   3. bridge/native distinction is regression-tested in DAP runtime bridge tests.
 
 ## Remaining Gaps
 

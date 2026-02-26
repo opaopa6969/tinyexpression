@@ -600,6 +600,9 @@ Completed in this session (P3 follow-up):
    - added emitter observability markers:
      - `_tinyDslJavaEmitterMode`,
      - `_tinyDslJavaNativeEmitterUsed`.
+109. exposed DSL native-emitter markers in DAP runtime bridge:
+   - `TinyExpressionDapRuntimeBridge` now forwards `_tinyDslJavaEmitterMode` / `_tinyDslJavaNativeEmitterUsed`,
+   - DAP regression now verifies bridge case (`1+1`) and native-literal case (`1`) for `runtimeMode=dsl-javacode`.
 
 
 
@@ -658,6 +661,8 @@ Verified tests:
 51. `./mvnw -q -Dtest=DslGeneratedAstJavaEmitterTest test`
 52. `./mvnw -q -Dtest=FormulaInfoExecutionBackendSelectionTest,DslGeneratedAstJavaEmitterTest test`
 53. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
+54. `./mvnw -q -Dtest=TinyExpressionDapRuntimeBridgeTest,FormulaInfoExecutionBackendSelectionTest,DslGeneratedAstJavaEmitterTest test`
+55. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest,TinyExpressionDapRuntimeBridgeTest test`
 
 ## Execution Policy
 

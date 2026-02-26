@@ -15,6 +15,14 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("true", dslJava.get("bridgeAttached"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("selectedExecutionBackend"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("_tinyExecutionBackend"));
+    assertEquals("legacy-javacode-bridge", dslJava.get("_tinyExecutionImplementation"));
+    assertEquals("legacy-bridge", dslJava.get("_tinyDslJavaEmitterMode"));
+    assertEquals("false", dslJava.get("_tinyDslJavaNativeEmitterUsed"));
+
+    Map<String, String> dslJavaLiteral = TinyExpressionDapRuntimeBridge.debugVariables("1", "dsl-javacode");
+    assertEquals("dsl-javacode-native", dslJavaLiteral.get("_tinyExecutionImplementation"));
+    assertEquals("native-generated-ast", dslJavaLiteral.get("_tinyDslJavaEmitterMode"));
+    assertEquals("true", dslJavaLiteral.get("_tinyDslJavaNativeEmitterUsed"));
 
     Map<String, String> dslJavaAlias = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "dsl_java_code");
     assertEquals("DSL_JAVA_CODE", dslJavaAlias.get("selectedExecutionBackend"));
