@@ -470,6 +470,10 @@ Completed in this session (P3 follow-up):
    - `AstEvaluatorCalculator` now evaluates simple literal/variable formulas (`'...'`, `true/false`, `$name`, simple numbers) directly before `javacode-fallback`,
    - this path is enabled when generated mapper runtime is unavailable or mapping fails, reducing unnecessary JavaCode bridge use for trivial formulas,
    - added `AstEvaluatorTokenLiteralFallbackTest` with a classloader that blocks generated classes to verify `_astEvaluatorRuntime=token-ast`.
+78. unified structured-expression head detection used by AST preferred-root selection:
+   - `AstEmbeddedExpressionRuntime` now exposes shared head predicates (`hasIfHead` / `hasMatchHead` / `hasMethodInvocationHead`),
+   - `AstEvaluatorCalculator` / `AstDeclarationRuntime` preferred-root builders now use these predicates instead of plain `startsWith(...)`,
+   - comment-prefixed control-flow formulas are currently tracked in regression parity corpus (value parity required) until generated parser root handling is fully aligned.
 
 
 
@@ -518,6 +522,7 @@ Verified tests:
 41. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 42. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
 43. `./mvnw -q -Dtest=AstEvaluatorTokenLiteralFallbackTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
+44. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
 
 ## Execution Policy
 

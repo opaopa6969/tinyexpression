@@ -446,12 +446,9 @@ public class AstEvaluatorCalculator implements Calculator {
   private List<String> preferredAstSimpleNames() {
     List<String> preferred = new ArrayList<>();
     String formula = source.source() == null ? "" : source.source().strip();
-    boolean methodInvocationHead =
-        formula.startsWith("call")
-            || formula.startsWith("external")
-            || formula.startsWith("internal");
-    boolean ifHead = formula.startsWith("if");
-    boolean matchHead = formula.startsWith("match");
+    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(formula);
+    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(formula);
+    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(formula);
     if (methodInvocationHead) {
       preferred.add("MethodInvocationExpr");
     }

@@ -135,12 +135,9 @@ final class AstDeclarationRuntime {
   private static List<String> preferredAstSimpleNames(String expressionSource, ExpressionType resultType) {
     List<String> preferred = new ArrayList<>();
     String source = expressionSource == null ? "" : expressionSource.strip();
-    boolean methodInvocationHead =
-        source.startsWith("call")
-            || source.startsWith("external")
-            || source.startsWith("internal");
-    boolean ifHead = source.startsWith("if");
-    boolean matchHead = source.startsWith("match");
+    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(source);
+    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(source);
+    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(source);
     if (methodInvocationHead) {
       preferred.add("MethodInvocationExpr");
     }

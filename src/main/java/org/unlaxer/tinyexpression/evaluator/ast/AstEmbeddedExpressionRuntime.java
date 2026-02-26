@@ -59,10 +59,34 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return IF_HEAD_PATTERN.matcher(normalized).find()
-        || MATCH_HEAD_PATTERN.matcher(normalized).find()
-        || isMethodInvocationExpression(normalized)
+    return hasIfHead(normalized)
+        || hasMatchHead(normalized)
+        || hasMethodInvocationHead(normalized)
         || normalized.contains("->");
+  }
+
+  static boolean hasIfHead(String text) {
+    String normalized = text == null ? "" : text.strip();
+    if (normalized.isEmpty()) {
+      return false;
+    }
+    return IF_HEAD_PATTERN.matcher(normalized).find();
+  }
+
+  static boolean hasMatchHead(String text) {
+    String normalized = text == null ? "" : text.strip();
+    if (normalized.isEmpty()) {
+      return false;
+    }
+    return MATCH_HEAD_PATTERN.matcher(normalized).find();
+  }
+
+  static boolean hasMethodInvocationHead(String text) {
+    String normalized = text == null ? "" : text.strip();
+    if (normalized.isEmpty()) {
+      return false;
+    }
+    return isMethodInvocationExpression(normalized);
   }
 
   static boolean isLikelyBooleanComparisonExpression(String text) {
