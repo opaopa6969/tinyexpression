@@ -64,6 +64,7 @@ Last updated: 2026-02-26
 32. Added Java source parity test between `JAVA_CODE` and `DSL_JAVA_CODE` backends (`DslJavaCodeGenerationParityTest`) over curated mixed formulas; normalized generated source text is now regression-checked for equivalence.
 33. Generated mapper probe now retries after trimming leading java delimiters/comments, improving AST mapping hit rate for comment-prefixed formulas (supported non-fallback parity now includes leading-comment `if` head case).
 34. Generated mapper probe now also normalizes comment-delimited `if/*...*/(` head form for retry parse, and supported parity corpus verifies this form on non-fallback AST runtime.
+35. DAP runtime bridge mode aliases are regression-tested (`dsl-javacode`/`dsl_java_code`/`ast`/`token`) to keep backend selection deterministic for adapter launch configurations.
 
 ## Remaining Gaps
 

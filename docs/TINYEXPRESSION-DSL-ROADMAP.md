@@ -489,6 +489,8 @@ Completed in this session (P3 follow-up):
 82. extended token-ast literal fast path for double-quoted string literals:
    - `AstEvaluatorCalculator.parseStringLiteral(...)` now accepts both `'...'` and `\"...\"`,
    - `AstEvaluatorTokenLiteralFallbackTest` covers `\"hello\"` under generated-runtime-unavailable classloader.
+83. strengthened DAP runtime-bridge mode alias regression coverage:
+   - `TinyExpressionDapRuntimeBridgeTest` now asserts backend resolution for `dsl-javacode`, `dsl_java_code`, `ast`, and `token` runtime modes.
 
 
 
