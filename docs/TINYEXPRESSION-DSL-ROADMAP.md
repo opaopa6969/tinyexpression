@@ -536,6 +536,10 @@ Completed in this session (P3 follow-up):
      2) method body evaluation,
      3) method argument expression evaluation,
    - reduces unnecessary embedded-bridge fallback for object/match/if/method-heavy slices.
+95. started externalized extracted parity dataset support:
+   - `ThreeExecutionBackendExtractedCorpusParityTest` now merges formulas from `src/test/resources/parity/three-backend-parity-corpus.txt`,
+   - keeps extracted `CalculatorImplTest` formulas as base and deduplicates by formula text,
+   - enables curated corpus extension without editing test source.
 
 
 

@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -24,9 +25,10 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
 public class ThreeExecutionBackendExtractedCorpusParityTest {
 
-  private static final int MAX_CASES = 80;
+  private static final int MAX_CASES = 100;
   private static final int MIN_EXECUTED_CASES = 25;
   private static final int MIN_AST_NON_FALLBACK_CASES = 8;
+  private static final String CURATED_CORPUS_RESOURCE = "/parity/three-backend-parity-corpus.txt";
   private static final Pattern CALC_WITH_LITERAL_FORMULA = Pattern.compile(
       "calc\\(context\\s*,\\s*\"((?:\\\\.|[^\"\\\\])*)\"\\s*,\\s*new\\s+BigDecimal\\(\"([^\"]+)\"\\)\\)");
 
@@ -121,6 +123,12 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       }
       uniqueByFormula.putIfAbsent(formula, new Case(formula, expected));
     }
+    for (String curatedFormula : loadCuratedCorpus()) {
+      if (!isEligibleFormula(curatedFormula)) {
+        continue;
+      }
+      uniqueByFormula.putIfAbsent(curatedFormula, new Case(curatedFormula, ""));
+    }
     return uniqueByFormula.values().stream().limit(MAX_CASES).toList();
   }
 
@@ -158,6 +166,20 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       }
     }
     return builder.toString();
+  }
+
+  private List<String> loadCuratedCorpus() throws Exception {
+    try (var stream = ThreeExecutionBackendExtractedCorpusParityTest.class.getResourceAsStream(CURATED_CORPUS_RESOURCE)) {
+      if (stream == null) {
+        return List.of();
+      }
+      String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+      return Stream.of(content.split("\\R"))
+          .map(String::strip)
+          .filter(line -> !line.isEmpty())
+          .filter(line -> !line.startsWith("#"))
+          .toList();
+    }
   }
 
   private String categorize(String formula) {

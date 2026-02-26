@@ -85,7 +85,7 @@ Last updated: 2026-02-26
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:
    1. representative, medium regression, and extracted legacy-source corpora parity are available
-   2. extracted corpus parity now includes category-level coverage/non-fallback counters, but systematic large corpus with externalized dataset is still not complete
+   2. extracted corpus parity now includes category-level coverage/non-fallback counters and supports external curated corpus file merge, but systematic large corpus with fully externalized dataset is still not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. backend/runtime marker observability and value probe metadata (`evaluationResultType` / `evaluationResultNormalized`) are exposed in generated DAP variables via runtime probe bridge
