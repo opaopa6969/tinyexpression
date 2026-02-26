@@ -19,7 +19,7 @@ public class SideEffectName1Parser extends JavaStyleDelimitedLazyChain{
 	public org.unlaxer.parser.Parsers getLazyParsers() {
 	  return
       new Parsers(
-        new Optional(Parser.get(()->new WordParser("call"))),
+        new Optional(Parser.get(()->new WordParser(TinyExpressionKeywords.CALL))),
         Parser.get(()->new WordParser("with")),
         Parser.get(()->new WordParser("side")),
         Parser.get(()->new WordParser("effect"))

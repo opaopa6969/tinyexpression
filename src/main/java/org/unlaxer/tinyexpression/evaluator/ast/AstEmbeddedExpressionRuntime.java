@@ -10,6 +10,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
 
 final class AstEmbeddedExpressionRuntime {
 
@@ -64,7 +65,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return JavaStyleSourceProbe.hasHead(normalized, "if", '(');
+    return JavaStyleSourceProbe.hasHead(normalized, TinyExpressionKeywords.IF, '(');
   }
 
   static boolean hasMatchHead(String text) {
@@ -72,7 +73,7 @@ final class AstEmbeddedExpressionRuntime {
     if (normalized.isEmpty()) {
       return false;
     }
-    return JavaStyleSourceProbe.hasHead(normalized, "match", '{');
+    return JavaStyleSourceProbe.hasHead(normalized, TinyExpressionKeywords.MATCH, '{');
   }
 
   static boolean hasMethodInvocationHead(String text) {
@@ -93,9 +94,12 @@ final class AstEmbeddedExpressionRuntime {
 
   private static boolean isMethodInvocationExpression(String text) {
     String normalized = text == null ? "" : text.strip();
-    return JavaStyleSourceProbe.hasHead(normalized, "call", null)
-        || JavaStyleSourceProbe.hasHead(normalized, "external", null)
-        || JavaStyleSourceProbe.hasHead(normalized, "internal", null);
+    for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
+      if (JavaStyleSourceProbe.hasHead(normalized, keyword, null)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static Optional<Object> evaluateFormula(String formula, ExpressionType resultType,

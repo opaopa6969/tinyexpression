@@ -17,6 +17,7 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
 
 final class GeneratedP4ValueAstEvaluator {
 
@@ -993,24 +994,25 @@ final class GeneratedP4ValueAstEvaluator {
       return List.of();
     }
     String source = sourceFormula;
+    String callKeyword = TinyExpressionKeywords.CALL;
     int from = 0;
     while (from < source.length()) {
-      int callIndex = source.indexOf("call", from);
+      int callIndex = source.indexOf(callKeyword, from);
       if (callIndex < 0) {
         return List.of();
       }
-      if (!JavaStyleSourceProbe.matchesWordAt(source, callIndex, "call")) {
-        from = callIndex + 4;
+      if (!JavaStyleSourceProbe.matchesWordAt(source, callIndex, callKeyword)) {
+        from = callIndex + callKeyword.length();
         continue;
       }
-      int nameStart = JavaStyleSourceProbe.skipDelimiters(source, callIndex + 4);
+      int nameStart = JavaStyleSourceProbe.skipDelimiters(source, callIndex + callKeyword.length());
       if (!JavaStyleSourceProbe.matchesWordAt(source, nameStart, methodName)) {
-        from = callIndex + 4;
+        from = callIndex + callKeyword.length();
         continue;
       }
       int openParen = JavaStyleSourceProbe.skipDelimiters(source, nameStart + methodName.length());
       if (openParen >= source.length() || source.charAt(openParen) != '(') {
-        from = callIndex + 4;
+        from = callIndex + callKeyword.length();
         continue;
       }
       int closeParen = findMatching(source, openParen, '(', ')');
@@ -1027,11 +1029,12 @@ final class GeneratedP4ValueAstEvaluator {
     if (expression == null || methodName == null || methodName.isBlank()) {
       return false;
     }
+    String callKeyword = TinyExpressionKeywords.CALL;
     int index = JavaStyleSourceProbe.skipDelimiters(expression, 0);
-    if (!JavaStyleSourceProbe.matchesWordAt(expression, index, "call")) {
+    if (!JavaStyleSourceProbe.matchesWordAt(expression, index, callKeyword)) {
       return false;
     }
-    int nameStart = JavaStyleSourceProbe.skipDelimiters(expression, index + 4);
+    int nameStart = JavaStyleSourceProbe.skipDelimiters(expression, index + callKeyword.length());
     if (!JavaStyleSourceProbe.matchesWordAt(expression, nameStart, methodName)) {
       return false;
     }

@@ -24,7 +24,7 @@ public class NumberMatchExpressionParser extends JavaStyleDelimitedLazyChain imp
 		private static final long serialVersionUID = -705291952548250790L;
 
 		public MatchFuctionNameParser() {
-			super(true, "match");
+			super(true, TinyExpressionKeywords.MATCH);
 		}
 		
 		@Override

@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
+import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
+
 final class JavaStyleSourceProbe {
 
   private JavaStyleSourceProbe() {}
@@ -107,11 +109,11 @@ final class JavaStyleSourceProbe {
     if (text.isEmpty()) {
       return text;
     }
-    if (hasHead(text, "if", '(')) {
-      int next = skipDelimiters(text, "if".length());
-      return "if" + text.substring(next);
+    if (hasHead(text, TinyExpressionKeywords.IF, '(')) {
+      int next = skipDelimiters(text, TinyExpressionKeywords.IF.length());
+      return TinyExpressionKeywords.IF + text.substring(next);
     }
-    for (String keyword : new String[] {"call", "external", "internal"}) {
+    for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
       if (!startsWithWord(text, keyword)) {
         continue;
       }

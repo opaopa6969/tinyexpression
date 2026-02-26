@@ -583,6 +583,10 @@ Completed in this session (P3 follow-up):
      - `AstDeclarationRuntime`,
      - `GeneratedP4ValueAstEvaluator`,
    - kept parity-safe behavior by limiting structured-head normalization to existing compatibility scope (`if` + method-invocation heads) and avoiding semantic expansion for `match` normalization.
+106. introduced parser-owned keyword constants and rewired runtime probes to use them:
+   - added `TinyExpressionKeywords` (`if` / `match` / `call` / `external` / `internal` / `var` / `variable`),
+   - parser definitions now reference shared constants (`IfExpressionParser`, `NumberMatchExpressionParser`, `SideEffectName1/2Parser`, `AbstractVariableDeclarationParser`),
+   - evaluator/probe runtime now references shared constants (`JavaStyleSourceProbe`, `AstEmbeddedExpressionRuntime`, `GeneratedP4ValueAstEvaluator`) to reduce keyword drift when parser aliases evolve.
 
 
 
@@ -636,6 +640,7 @@ Verified tests:
 46. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest,AstEvaluatorTokenLiteralFallbackTest,DslJavaCodeGenerationParityTest test`
 47. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 48. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest test`
+49. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 
 ## Execution Policy
 

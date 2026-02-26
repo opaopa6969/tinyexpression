@@ -81,6 +81,10 @@ Last updated: 2026-02-26
    1. added `JavaStyleSourceProbe` for shared delimiter skip/trim and structured-head normalization helpers,
    2. removed duplicated delimiter/comment scanners from `GeneratedAstRuntimeProbe` / `AstDeclarationRuntime` / `GeneratedP4ValueAstEvaluator`,
    3. `AstEmbeddedExpressionRuntime` structured-head checks now use shared delimiter-aware helper instead of local regex-only head checks.
+43. Parser/runtime keyword coupling is reduced through shared keyword constants:
+   1. added `TinyExpressionKeywords` as parser-owned keyword set (`if`/`match`/`call`/`external`/`internal`/`var`/`variable`),
+   2. parser and evaluator runtime now consume the same keyword definitions for control-flow/method/declaration heads,
+   3. alias changes now have fewer evaluator touch points (remaining textual checks are limited to comment-presence guard paths).
 
 ## Remaining Gaps
 
@@ -111,8 +115,8 @@ Last updated: 2026-02-26
    1. shared runtime abstraction is now in place (`JavaStyleSourceProbe`), reducing duplication risk
    2. remaining work: expose this capability from parser-owned API surface (or shared parser module contract) so evaluator runtime does not own delimiter semantics
 8. Parser-keyword coupling cleanup (design follow-up):
-   1. declaration shortcut pre-check has removed direct `"var "` dependency, but full parser-driven head detection API is still not centralized
-   2. replace remaining ad-hoc textual pre-checks with shared parser capability API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived) so alias changes (`variable`/localized keywords) do not require evaluator edits
+   1. declaration shortcut pre-check has removed direct `"var "` dependency and keyword constants are shared (`TinyExpressionKeywords`), but full parser-driven head detection API is still not centralized
+   2. replace remaining ad-hoc textual pre-checks with shared parser capability API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived) so alias/localization changes do not require evaluator edits
    3. `AstEvaluatorCalculator.shouldTryDeclarationShortcut(...)` has been removed and declaration-main evaluation is parser-attempt-first, but comment/delimiter exclusion logic is still textual in `AstDeclarationRuntime` / `GeneratedAstRuntimeProbe`
    4. move remaining declaration/head/comment probing behind parser-owned capability methods to prevent future parser-alias drift
 

@@ -32,7 +32,7 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     private static final long serialVersionUID = -6045428101193616423L;
 
     public IfFuctionNameParser() {
-      super(true, "if");
+      super(true, TinyExpressionKeywords.IF);
     }
   
     @Override

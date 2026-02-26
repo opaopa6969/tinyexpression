@@ -11,6 +11,7 @@ import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
 import org.unlaxer.tinyexpression.parser.DescriptionParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
@@ -24,8 +25,8 @@ public abstract class AbstractVariableDeclarationParser extends JavaStyleDelimit
     Parsers parsers = new Parsers();
     parsers.add(
         new Choice(
-            new WordParser("variable"),
-            new WordParser("var")
+            new WordParser(TinyExpressionKeywords.VARIABLE),
+            new WordParser(TinyExpressionKeywords.VAR)
         )
     );
     parsers.add(Parser.get(NakedVariableParser.class));
