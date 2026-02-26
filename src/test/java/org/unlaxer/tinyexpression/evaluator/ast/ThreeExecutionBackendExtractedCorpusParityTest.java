@@ -29,6 +29,7 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
   private static final int MIN_EXECUTED_CASES = 25;
   private static final int MIN_AST_NON_FALLBACK_CASES = 8;
   private static final String CURATED_CORPUS_RESOURCE = "/parity/three-backend-parity-corpus.txt";
+  private static final String EXTRACTED_CORPUS_RESOURCE = "/parity/three-backend-extracted-corpus.escaped.txt";
   private static final Pattern CALC_WITH_LITERAL_FORMULA = Pattern.compile(
       "calc\\(context\\s*,\\s*\"((?:\\\\.|[^\"\\\\])*)\"\\s*,\\s*new\\s+BigDecimal\\(\"([^\"]+)\"\\)\\)");
 
@@ -110,18 +111,29 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
   }
 
   private List<Case> extractedCases() throws Exception {
-    Path calculatorImplTestPath =
-        Path.of("src/test/java/org/unlaxer/tinyexpression/CalculatorImplTest.java");
-    String source = Files.readString(calculatorImplTestPath, StandardCharsets.UTF_8);
-    Matcher matcher = CALC_WITH_LITERAL_FORMULA.matcher(source);
     Map<String, Case> uniqueByFormula = new LinkedHashMap<>();
-    while (matcher.find()) {
-      String formula = unescapeJava(matcher.group(1));
-      String expected = matcher.group(2);
-      if (!isEligibleFormula(formula)) {
-        continue;
+    List<String> resourceExtracted = loadEscapedExtractedCorpus();
+    if (!resourceExtracted.isEmpty()) {
+      for (String escaped : resourceExtracted) {
+        String formula = unescapeJava(escaped);
+        if (!isEligibleFormula(formula)) {
+          continue;
+        }
+        uniqueByFormula.putIfAbsent(formula, new Case(formula, ""));
       }
-      uniqueByFormula.putIfAbsent(formula, new Case(formula, expected));
+    } else {
+      Path calculatorImplTestPath =
+          Path.of("src/test/java/org/unlaxer/tinyexpression/CalculatorImplTest.java");
+      String source = Files.readString(calculatorImplTestPath, StandardCharsets.UTF_8);
+      Matcher matcher = CALC_WITH_LITERAL_FORMULA.matcher(source);
+      while (matcher.find()) {
+        String formula = unescapeJava(matcher.group(1));
+        String expected = matcher.group(2);
+        if (!isEligibleFormula(formula)) {
+          continue;
+        }
+        uniqueByFormula.putIfAbsent(formula, new Case(formula, expected));
+      }
     }
     for (String curatedFormula : loadCuratedCorpus()) {
       if (!isEligibleFormula(curatedFormula)) {
@@ -170,6 +182,20 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
 
   private List<String> loadCuratedCorpus() throws Exception {
     try (var stream = ThreeExecutionBackendExtractedCorpusParityTest.class.getResourceAsStream(CURATED_CORPUS_RESOURCE)) {
+      if (stream == null) {
+        return List.of();
+      }
+      String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+      return Stream.of(content.split("\\R"))
+          .map(String::strip)
+          .filter(line -> !line.isEmpty())
+          .filter(line -> !line.startsWith("#"))
+          .toList();
+    }
+  }
+
+  private List<String> loadEscapedExtractedCorpus() throws Exception {
+    try (var stream = ThreeExecutionBackendExtractedCorpusParityTest.class.getResourceAsStream(EXTRACTED_CORPUS_RESOURCE)) {
       if (stream == null) {
         return List.of();
       }

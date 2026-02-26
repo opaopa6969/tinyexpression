@@ -551,6 +551,10 @@ Completed in this session (P3 follow-up):
    - `GeneratedP4ValueAstEvaluator` now tracks whether evaluation touched `AstEmbeddedExpressionRuntime`,
    - `AstEvaluatorCalculator` publishes `_astEvaluatorGeneratedEmbeddedBridgeUsed`,
    - DAP runtime bridge exposes this marker to distinguish pure generated-ast runs from generated+embedded mixed execution.
+99. externalized extracted corpus source with resource-first loading:
+   - added `src/test/resources/parity/three-backend-extracted-corpus.escaped.txt` (161 extracted formulas from `CalculatorImplTest`),
+   - `ThreeExecutionBackendExtractedCorpusParityTest` now prefers this resource and only falls back to source extraction when resource is absent,
+   - reduces hard dependency on test-source parsing for routine parity runs.
 
 
 
