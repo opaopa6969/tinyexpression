@@ -277,7 +277,9 @@ final class AstDeclarationRuntime {
     if (text.startsWith("$")) {
       return resolveVariable(extractVariableName(text), calculationContext);
     }
-    if (text.length() >= 2 && text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'') {
+    if (text.length() >= 2
+        && ((text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'')
+            || (text.charAt(0) == '"' && text.charAt(text.length() - 1) == '"'))) {
       return Optional.of(text.substring(1, text.length() - 1));
     }
     if (resultType != null && resultType.isBoolean()) {

@@ -540,6 +540,9 @@ Completed in this session (P3 follow-up):
    - `ThreeExecutionBackendExtractedCorpusParityTest` now merges formulas from `src/test/resources/parity/three-backend-parity-corpus.txt`,
    - keeps extracted `CalculatorImplTest` formulas as base and deduplicates by formula text,
    - enables curated corpus extension without editing test source.
+96. expanded declaration shortcut literal parser for double-quoted strings:
+   - `AstDeclarationRuntime.parseLiteralOrVariable(...)` now accepts both `'...'` and `\"...\"`,
+   - generated-runtime-unavailable declaration fallback test now covers double-quoted setter value.
 
 
 
