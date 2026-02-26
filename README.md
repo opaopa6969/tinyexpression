@@ -1,450 +1,504 @@
 # TinyExpression
 
------
-
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression)
 
-Tiny Expression is UDF(user defined function) for your application.
+TinyExpression is a Java-embedded expression engine (UDF style) for:
 
-Roadmap: [`docs/TINYEXPRESSION-DSL-ROADMAP.md`](docs/TINYEXPRESSION-DSL-ROADMAP.md)
+- runtime formula evaluation
+- multi-formula execution with dependency ordering
+- optional Java code generation and AST-based execution
 
-* function compiled to JavaCode.
-* types are number , boolean , String and any javaTypes
-* you can define and call java class
+Roadmap: `docs/TINYEXPRESSION-DSL-ROADMAP.md`
 
+## Current Backend Lineup (2026-02-26)
 
-# usage
+TinyExpression currently supports four execution backends:
 
-## simple
+1. `JAVA_CODE` (current production JavaCode path)
+2. `JAVA_CODE_LEGACY_ASTCREATOR` (pre-refactor baseline)
+3. `AST_EVALUATOR` (AST traversal evaluator)
+4. `DSL_JAVA_CODE` (UnlaxerDSL JavaCode seam)
+
+Detailed contract: `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`
+
+## Requirements
+
+- Java 21+
+- Maven 3.8+
+
+Note: tests/runtime use reflective access and require add-opens options (already configured in `pom.xml` surefire/argLine context).
+
+## Maven Dependency
+
+```xml
+<dependency>
+  <groupId>org.unlaxer</groupId>
+  <artifactId>tinyExpression</artifactId>
+  <version>1.4.10</version>
+</dependency>
+```
+
+## Quick Start (Single Formula)
 
 ```java
-
-package org.unlaxer.tinyexpression;
-
-import static org.junit.Assert.assertEquals;
-
-import org.junit.Test;
-import org.unlaxer.Name;
+import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.PreConstructedCalculator;
+import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
-public class SimpleUDFTest {
-
-  @Test
-  public void testSimple() {
+public class QuickStart {
+  public static void main(String[] args) {
     CalculationContext context = CalculationContext.newConcurrentContext();
     context.set("sex", "male");
 
-    // create UDF
-    String udf = "if($sex=='male'){500}else{1000}";
-
-    // create calculator
+    String formula = "if($sex=='male'){500}else{1000}";
     PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
-        Name.of("Test"), // name for identifier
-        udf, // user define function
-        new SpecifiedExpressionTypes(
-            ExpressionTypes._float, // result type of this udf returning
-            ExpressionTypes._float // default number type. eg. float,double,integer,short...
-        ),
-        Thread.currentThread().getContextClassLoader());// classloader for generated class from udf
-    
-    
-    {
-      // test with male
-      float apply = (float)calculator.apply(context);
-      assertEquals(500.0f, apply , 0.1);
-    }
+        new Source(formula),
+        "QuickStartCalculator",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        Thread.currentThread().getContextClassLoader());
 
-    
-    {
-      // test with female
-      context.set("sex", "female");
-      float apply = (float)calculator.apply(context);
-      assertEquals(1000.0f, apply , 0.1);
-    }
+    float v1 = ((Number) calculator.apply(context)).floatValue();
+    context.set("sex", "female");
+    float v2 = ((Number) calculator.apply(context)).floatValue();
+
+    System.out.println(v1); // 500.0
+    System.out.println(v2); // 1000.0
+  }
+}
+```
+
+## Multi Formula Execution (`TinyExpressionsExecutor`)
+
+Class name is `TinyExpressionsExecutor` (plural).
+
+`TinyExpressionsExecutor` itself does not choose backend. It executes cached calculators.  
+Backend selection is done while parsing `FormulaInfo` (details in "Backend Configuration").
+
+### 1. Directory Layout
+
+`FileBaseTinyExpressionInstancesCache` expects:
+
+```text
+<root>/
+  <tenant-id-1>/formulaInfo.txt
+  <tenant-id-2>/formulaInfo.txt
+```
+
+### 2. `formulaInfo.txt` Minimal Example
+
+```text
+tags:NORMAL
+description:base score
+siteId:69
+calculatorName:baseScore
+var:baseScore
+resultType:float
+formula:
+if($age >= 20){100}else{0}
+---END_OF_PART---
+
+tags:NORMAL
+description:bonus score
+siteId:69
+calculatorName:bonusScore
+dependsOn:baseScore
+var:finalScore
+backend:AST_EVALUATOR
+resultType:float
+formula:
+$baseScore + 10
+---END_OF_PART---
+```
+
+### 3. Executor Usage Example
+
+```java
+import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+
+import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.instances.CalculationResult;
+import org.unlaxer.tinyexpression.instances.FileBaseTinyExpressionInstancesCache;
+import org.unlaxer.tinyexpression.instances.ResultConsumer;
+import org.unlaxer.tinyexpression.instances.TenantID;
+import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor;
+import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
+
+public class ExecutorExample {
+  public static void main(String[] args) {
+    FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
+        "siteId",
+        info -> info.calculatorName);
+
+    // Global default backend for formulas that do not specify backend/executionBackend.
+    fields.setExecutionBackend(ExecutionBackend.JAVA_CODE);
+
+    FileBaseTinyExpressionInstancesCache cache = new FileBaseTinyExpressionInstancesCache(
+        Path.of("src", "main", "resources", "formula-root"),
+        fields);
+
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+    ctx.set("age", 30);
+
+    ResultConsumer resultConsumer = new ResultConsumer() {
+      @Override
+      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Number result) {
+        info.getValue("var").ifPresent(name -> c.set(name, result));
+      }
+
+      @Override
+      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, String result) {
+        info.getValue("var").ifPresent(name -> c.set(name, result));
+      }
+
+      @Override
+      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Boolean result) {
+        info.getValue("var").ifPresent(name -> c.set(name, result));
+      }
+
+      @Override
+      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Object result) {
+        info.getValue("var").ifPresent(name -> c.setObject(name, result));
+      }
+    };
+
+    TinyExpressionsExecutor executor = new TinyExpressionsExecutor();
+    List<CalculationResult> results = executor.execute(
+        TenantID.create(69),
+        ctx,
+        resultConsumer,
+        cache,
+        Comparator.comparingInt(Calculator::dependsOnByNestLevel),
+        calculator -> true,
+        Thread.currentThread().getContextClassLoader());
+
+    System.out.println("executed calculators: " + results.size());
+  }
+}
+```
+
+## `FormulaInfo` Format
+
+Each block is key-value metadata + formula body, delimited by `---END_OF_PART---`.
+
+Common keys:
+
+- `calculatorName`: formula identifier
+- `dependsOn`: comma-separated calculator names
+- `resultType`: return type (`string`, `boolean`, `byte`, `short`, `int`, `long`, `float`, `double`, fully qualified Java type)
+- `numberType`: default number literal type
+- `formula`: TinyExpression body
+- `executionBackend` or `backend`: backend override
+- `tags`, `description`: optional metadata
+- custom keys (example: `var`, `field`, `checkKind`) are preserved in `FormulaInfo.extraValueByKey`
+
+Practical semantics used in many production integrations:
+
+- `var`: write result into `CalculationContext` variable (typically handled in custom `ResultConsumer`)
+- `field`: write result into domain object field (also via `ResultConsumer`)
+- `checkKind`: logical output key for score maps / risk maps
+- `calculatorName`: stable ID used by `dependsOn`
+
+Embedded Java class block in `formula` is also supported:
+
+~~~text
+formula:
+```java:sample.v1.CheckDigits
+package sample.v1;
+import org.unlaxer.tinyexpression.CalculationContext;
+public class CheckDigits{
+  public boolean check(CalculationContext context, String target){
+    return target.matches("\\d+");
+  }
+}
+```
+import sample.v1.CheckDigits#check as checkDigits;
+if(external returning as boolean checkDigits($input)){1}else{0}
+~~~
+
+## Backend Configuration
+
+Backend choice is resolved in this order:
+
+1. global default: `FormulaInfoAdditionalFields.executionBackend`  
+   (default value is `JAVA_CODE`)
+2. per-formula override by `executionBackend` or `backend` key
+3. mapped to concrete calculator creator by `CalculatorCreatorRegistry.forBackend(...)`
+
+Canonical backend names:
+
+- `JAVA_CODE`
+- `JAVA_CODE_LEGACY_ASTCREATOR`
+- `AST_EVALUATOR`
+- `DSL_JAVA_CODE`
+
+DAP/runtime aliases (`runtimeMode`) include:
+
+- `token` -> `JAVA_CODE`
+- `legacy-astcreator` or `ootc` -> `JAVA_CODE_LEGACY_ASTCREATOR`
+- `ast` -> `AST_EVALUATOR`
+- `dsl-javacode` -> `DSL_JAVA_CODE`
+
+Related code:
+
+- `src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java`
+- `src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java`
+- `src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java`
+- `src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java`
+
+## TinyExpression Language Quick Reference
+
+This section is a practical syntax guide (not a complete grammar).
+
+### Values and Variables
+
+```text
+123
+3.14
+'text'
+"text"
+true
+false
+$age
+$name
+```
+
+### Numeric / Boolean Operators
+
+```text
+1 + 2 * 3
+(1 + 2) / 3
+10 >= 3
+10 == 3
+10 != 3
+true | false
+true & false
+true ^ false
+not(false)
+```
+
+### Conditional and Match
+
+```text
+if($age >= 20){100}else{0}
+
+match{
+  $countryCode == 'JP' -> 1,
+  default -> 0
+}
+```
+
+### String Utilities (examples)
+
+```text
+toUpperCase($name)
+toLowerCase($name)
+$message.startsWith('hello')
+$message.endsWith('world')
+$message.contains('abc')
+$message[0:3]
+```
+
+### Variable Declaration in Formula
+
+```text
+variable $sex as string set if not exists 'man' description='sex';
+variable $age as number set 18 description='age';
+variable $isMember as boolean description='member flag';
+```
+
+### External Java Method Call (in formula)
+
+```text
+import sample.v1.CheckDigits#check as checkDigits;
+if(external returning as boolean checkDigits($input)){1}else{0}
+```
+
+At runtime, register the Java object in `CalculationContext`:
+
+```java
+context.set(new sample.v1.CheckDigits());
+```
+
+### User-defined Methods (advanced)
+
+```text
+float main(){
+  match{
+    $age < 18 -> 500,
+    default -> call feeBySex($sex)
   }
 }
 
+float feeBySex($sex as string){
+  match{
+    $sex == 'woman' -> 1000,
+    default -> 1800
+  }
+}
 ```
 
-## TinyExpressionEexcutor
+### Comments and Whitespace
 
-this sample for managed the udf codes with multitenancy.
+- FormulaInfo metadata supports `#` line comments.
+- Formula expressions support whitespace and C-style comments such as `/* ... */`.
 
-```text
- ```java
- ```
-```
+## How To Integrate TinyExpression Into Your System
 
-```text
-tags:NORMAL
-description:JavaCodeBlockで呼び出しをします
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-#
-# calculatorNameが指定できるようになった。この名前はdependsOnで指定できる
-#
-calculatorName:callJavaCodeBlock
+### Pattern A: Single Formula Embedded in Service
 
-#
-# 非標準項目。ResultConsumerでここに指定された名前でCalculationContextの変数に結果を格納する
-#
-var:matchNumber
+Use this when formulas are static or deployed with code.
 
-#
-# ここに他の式名(CalculatorName)を指定する事で指定した式を実行した後にこの式を実行する
-#　複数指定する場合はカンマ区切りで指定する
-# 実際はorder numberで実行順を管理していてdependsOnで指定されたCalculatorのorder numberを
-#　このCalculatorのorder number-1に設定するだけである。このorder numberでsortされて順番に実行される
-#
-dependsOn:
+1. Build `CalculationContext` from request/domain model.
+2. Compile formula with `JavaCodeCalculatorV3` (or your selected backend).
+3. Execute `calculator.apply(context)` and map result.
 
-#
-# 式の戻り値を指定する
-#　string,boolean,byte,short,int,long,float,doubleを指定する
-#
-resultType:float
+Good for:
 
-#
-#　JavaCodeBlockを指定できる。　複数記述可能
-#　java:の後にfull package class nameを指定する。この例ではdefault packageを指定している
-# 同一のクラス名でロジックを変更したい場合classのunloadは出来ないのでpackage名にversionを入れてversion管理をする
-#
-formula:
-` ` `java:CheckDigits
-//package sample.v1;//version1. if logic updates then update package.
-import org.unlaxer.tinyexpression.CalculationContext;
+- small number of formulas
+- low operational complexity
 
-public class CheckDigits{
-	public boolean check(CalculationContext calculationContext,String target){
-		return target.matches("\\d+");
-	}
-}
-```` ``` ````
-import CheckDigits#check as checkDigits;
-var $input as string set if not exists 'not number' description='入力値';
-if(external returning as boolean checkDigits($input)){
-  1
-}else{
-  0
-}
----END_OF_PART---
-tags:NORMAL
-description:JavaCodeBlockで呼び出しをします。packageを使用します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:callJavaCodeBlockWithPackage
-var:matchAlphabet
-dependsOn:
-resultType:float
-formula:
-` ` `java:sample.v1.CheckAlphabets
-package sample.v1;//version1. if logic updates then update package.
-import org.unlaxer.tinyexpression.CalculationContext;
+### Pattern B: Formula Repository + `TinyExpressionsExecutor`
 
-public class CheckAlphabets{
-	public boolean check(CalculationContext calculationContext,String target){
-		return target.matches("[a-zA-Z]+");
-	}
-}
-` ` `
-import sample.v1.CheckAlphabets#check as checkAlphabets;
-var $inputName as string set if not exists '1234' description='入力値';
-if(external returning as boolean checkAlphabets($inputName)){
-  1
-}else{
-  0
-}
----END_OF_PART---
-tags:NORMAL
-description:最終的な点数をcheckKindとして出力します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-# outputToでcheckKindやfieldやvarなどをしてするけどいらないかな？
-calculatorName:setFloatToMintia
-checkKind:Mintia
+Use this when formulas are tenant-specific or updated outside code release.
 
-#
-# ここに他の式名(CalculatorName)を指定する事で指定した式を実行した後にこの式を実行する
-# 実際はorder numberで実行順を管理していてdependsOnで指定されたCalculatorのorder numberを
-#　このCalculatorのorder number-1に設定するだけである。このorder numberでsortされて順番に実行される
-#　複数指定する場合はカンマ区切りで指定する
-#　この場合setSqrt2ToVarを実行してからこの式が実行される
-#
-dependsOn:setSqrt2ToVar
-resultType:float
-formula:
-match{
-    $mintia == 2 -> $sqrt ,
-    default -> 3.141592
-}
----END_OF_PART---
-tags:NORMAL
-description:$sqrtにsqrt(2)を代入します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:setSqrt2ToVar
-var:sqrt
-dependsOn:
-resultType:float
-formula:
-sqrt(2)
----END_OF_PART---
-tags:NORMAL
-description:CheckResultのtheScoreに値をセットします
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:setTheScore
-field:theScore
-dependsOn:
-resultType:float
-formula:
-6969
----END_OF_PART---
-tags:NORMAL
-description:$nameに文字列を代入します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
+1. Store formulas as `formulaInfo.txt` blocks (or your own source mapped to `FormulaInfo`).
+2. Load/cache by tenant via `TinyExpressionInstancesCache` implementation.
+3. Execute by `TinyExpressionsExecutor` with:
+   - `Comparator<Calculator>` for execution order
+   - `Predicate<Calculator>` for filtering
+   - `ResultConsumer` for output mapping (`var`, `field`, `checkKind` etc.)
+4. Keep domain objects/services in `CalculationContext` for external calls.
 
-#
-# 非標準項目。ResultConsumerでここに指定された名前でCheckResultのfieldに結果を格納する
-#
-field:theName
+Good for:
 
-#
-# 非標準項目。ResultConsumerでここに指定された名前でCalculationContextの変数に結果を格納する
-#
-var:name
-dependsOn:
+- multitenancy
+- business-managed rule updates
+- dependency-controlled formula pipelines
 
-#
-# この式ではstringを返す
-#
-resultType:String
-formula:
-"opaopa"
----END_OF_PART---
-tags:NORMAL
-description:longで計算します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:calcLong
-var:ロング計算結果
-dependsOn:
-resultType:Long
-formula:
-423372036854775807+423372036854775807
----END_OF_PART---
-tags:NORMAL
-description:doubleで計算します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:calcDouble
-var:ダブル計算結果
-dependsOn:
-resultType:double
-formula:
-423372036854775807+423372036854775807
----END_OF_PART---
-tags:NORMAL
-description:booleanで計算します
-periodStartInclusive:2018-05-01_00:00:00
-periodEndExclusive:2037-05-01_00:00:00
-siteId:69
-calculatorName:calcBoolean
-var:真偽値計算結果
-dependsOn:
-resultType:boolean
-formula:
-(1==1)&true|('肉'!='魚')
----END_OF_PART---
-var:numberType指定真偽値計算結果
-dependsOn:
-resultType:boolean
+### Formula Name Strategy (`FormulaInfoAdditionalFields`)
 
-#
-# 数値の型を指定できる
-#
-numberType:long
-formula:
-(423372036854775807==423372036854775807)&true|('肉'!='魚')
----END_OF_PART---
-```
-
-
-
-=======
-````text
+`FormulaInfo` name resolution is pluggable.  
+This is important when some formulas use `calculatorName`, others use `checkKind`.
 
 ```java
+FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
+    "siteId",
+    formulaInfo -> {
+      String checkKind = formulaInfo.extraValueByKey.get("checkKind");
+      return formulaInfo.calculatorName != null ? formulaInfo.calculatorName : checkKind;
+    });
 ```
-````
-~~~text
+
+This extracted name is used by cache/executor-level orchestration logic.
+
+### Result Handling Strategy (`ResultConsumer`)
+
+`TinyExpressionsExecutor` intentionally delegates result handling to `ResultConsumer`.
+This design enables:
+
+- writing to context variable (`var`)
+- writing to domain object field (`field`)
+- writing to custom sinks (logs, metrics, alerting, Slack, queue, DB)
+
+Minimal pattern:
+
 ```java
-```
-~~~
+public final class ResultConsumerExample implements ResultConsumer {
+  private final CheckResult checkResult;
 
+  public ResultConsumerExample(CheckResult checkResult) {
+    this.checkResult = checkResult;
+  }
 
+  @Override
+  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Number result) {
+    info.getValue("checkKind").ifPresent(name -> checkResult.suspiciousByKind.put(name, result.floatValue()));
+    info.getValue("var").ifPresent(name -> ctx.set(name, result));
+    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
+  }
 
-```java
-```
+  @Override
+  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, String result) {
+    info.getValue("var").ifPresent(name -> ctx.set(name, result));
+    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
+  }
 
+  @Override
+  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Boolean result) {
+    info.getValue("var").ifPresent(name -> ctx.set(name, result));
+    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
+  }
 
-```java
-```
+  @Override
+  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Object result) {
+    info.getValue("var").ifPresent(name -> ctx.setObject(name, result));
+    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
+  }
 
-
-
-
-
-# samples
-
-```java
-```
-
-
-# BNF
-
-<img src="https://opaopa6969.github.io/TinyExpression144.png"/>
-
-
-```bnf
-TinyExpression = Codes Imports VariableDeclarations Annotations Expressions Methods;
-Codes = { Code };
-Code = CodeStart CharactersWithoutTripleBacktick CodeEnd;
-CodeStart = HeadLine '```' CodeScheme { ':' CodeIdentifier } '\n';
-CodeEnd = HeadLine '```' '\n';
-CodeScheme = Identifier;
-CodeIdentifier = JavaClassName;
-CharactersWithoutTripleBacktick = (? all visible characters excepts '```' ?);
-HeadLine = (? pointer of head line. previous charator is null or one or more line feeds ?);
-Imports = { Import };
-Import = 'import' ( JavaClassMethod | JavaClassName ) 'as' ( Identifier { Identifier } ) ';';
-VariableDeclarations = { VariableDeclaration };
-VariableDeclaration = NumberVariableDeclaration | StringVariableDeclaration | BooleanVariableDeclaration | NakedVariableDeclaration;
-NumberVariableDeclaration = ( 'variable' | 'var' ) NakedVariable ( NumberTypeDeclaration [ NumberSetter ] | NumberSetter ) Description ';';
-NumberTypeDeclaration = [ 'as' ] NumberTypeHint;
-StringVariableDeclaration = ( 'variable' | 'var' ) NakedVariable ( StringTypeDeclaration [ StringSetter ] | StringSetter ) Description ';';
-StringTypeDeclaration = [ 'as' ] StringTypeHint;
-BooleanVariableDeclaration = ( 'variable' | 'var' ) NakedVariable ( BooleanTypeDeclaration [ BooleanSetter ] | BooleanSetter ) Description ';';
-BooleanTypeDeclaration = [ 'as' ] BooleanTypeHint;
-NakedVariableDeclaration = ( 'variable' | 'var' ) NakedVariable Description ';';
-StringSetter = 'set' [ 'if' 'not' 'exist' ] StringExpression;
-BooleanSetter = 'set' [ 'if' 'not' 'exist' ] BooleanExpression;
-NumberSetter = 'set' [ 'if' 'not' 'exist' ] NumberExpression;
-Annotations = { LineAnnotation | Annotation };
-LineAnnotation = '@' ( AlphabetNumericUnderScore { AlphabetNumericUnderScore } ) { (? all visible characters excepts '\n' ?) } '\n';
-Annotation = '@' Identifier AnnotationParameters;
-AnnotationParameters = '(' [ AnnotationParameter { ',' AnnotationParameter } ] ')';
-AnnotationParameter = Identifier '=' ( StringExpression | BooleanExpression | NumberExpression );
-Expressions = [ NumberExpression | StringExpression | BooleanExpression ];
-Methods = { NumberMethod | StringMethod | BooleanMethod };
-NumberExpression = NumberTerm { ( '+' | '-' ) NuberTerm };
-NumberFactor = NumberSideEffectExpression | NumberMethodInvocation | NumberIfExpression | NumberMatchExpression | Number | NumberVariable | NakedVariable | '(' NumberExpression ')' | GetExpressionVariable | Sin | Cos | Tan | SquareRoot | Min | Max | Random | FactorOfString;
-NumberTerm = NumberFactor { ( '*' | '/' ) NumberFactor };
-SideEffectExpressionHeader = [ 'call' ] ( 'with' 'side' 'effect' | 'external' );
-NumberSideEffectExpression = SideEffectExpressionHeader [ [ 'returning' ] NumberTypeHintSuffix ] [ ':' ] ( JavaClassMethod | Identifier ) '(' Arguments ')';
-BooleanSideEffectExpression = SideEffectExpressionHeader ( [ 'returning' ] BooleanTypeHintSuffix ) [ ':' ] ( JavaClassMethod | Identifier ) '(' Arguments ')';
-StringSideEffectExpression = SideEffectExpressionHeader ( [ 'returning' ] StringTypeHintSuffix ) [ ':' ] ( JavaClassMethod | Identifier ) '(' Arguments ')';
-ArgumentChoice = StringExpression | BooleanExpression | NumberExpression;
-Arguments = [ ArgumentChoice { ',' ArgumentChoice } ];
-MethodInvocationHeader = 'call' 'internal' | 'call' | 'internal';
-NumberMethodInvocation = [ MethodInvocationHeader ] Identifier (? match for retuning number method ?) '(' Arguments ')';
-StringMethodInvocation = [ MethodInvocationHeader ] Identifier (? match for retuning string method ?) '(' Arguments ')';
-BooleanMethodInvocation = [ MethodInvocationHeader ] Identifier (? match for retuning boolean method ?) '(' Arguments ')';
-NumberIfExpression = 'if' '(' BooleanExpression ')' '{' NumberExpression '}' 'else' '{' NumberExpression '}';
-StringIfExpression = 'if' '(' BooleanExpression ')' '{' StringExpression '}' 'else' '{' StringExpression '}';
-BooleanIfExpression = 'if' '(' BooleanExpression ')' '{' BooleanExpression '}' 'else' '{' BooleanExpression '}';
-NumberMatchExpression = 'match' '{' NumberCaseExpression NumberDefaultCaseFactor '}';
-NumberCaseFactor = BooleanExpression '->' NumberExpression;
-NumberCaseExpression = { NumberCaseFactor ',' };
-NumberDefaultCaseFactor = 'default' '->' NumberExpression;
-BooleanMatchExpression = 'match' '{' BooleanCaseExpression BooleanDefaultCaseFactor '}';
-BooleanCaseFactor = BooleanExpression '->' BooleanExpression;
-BooleanCaseExpression = { BooleanCaseFactor ',' };
-BooleanDefaultCaseFactor = 'default' '->' BooleanExpression;
-StringMatchExpression = 'match' '{' StringCaseExpression StringDefaultCaseFactor '}';
-StringCaseFactor = BooleanExpression '->' StringExpression;
-StringCaseExpression = { CaseBooleanFactor ',' };
-StringDefaultCaseFactor = 'default' '->' StringExpression;
-IsPresentBoolean = 'isPresent' '(' NakedVariable ')';
-BooleanExpression = BooleanExpression { ( '==' | '!=' | '&' | '�b' | '^' ) BooleanExpression };
-BooleanFactor = BooleanSideEffectExpression | BooleanMethodInvocation | 'true' | 'false' | 'not' '(' BooleanExpression ')' | '(' BooleanExpression ')' | IsPresentBoolean | NumberExpression '==' NumberExpression | NumberExpression '!=' NumberExpression | NumberExpression '>=' NumberExpression | NumberExpression '<=' NumberExpression | NumberExpression '>' NumberExpression | NumberExpression '<' NumberExpression | BooleanVariable | NakedVariable | GetBooleanVariable | BooleanExpressionOfString;
-Number = [ '-' ] ( Digits '.' Digits | Digits '.' | Digits | '.' Digits ) [ Exponent ];
-Exponent = ( 'e' | 'E' ) [ '-' ] ( Digit { Digit } );
-Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
-Digits = Digit { Digit };
-Sin = 'sin' '(' NumberExpression ')';
-Cos = 'cos' '(' NumberExpression ')';
-Tan = 'tan' '(' NumberExpression ')';
-SquareRoot = 'sqrt' '(' Expression ')';
-Min = 'min' '(' NumberExpression ',' NumberExpression ')';
-Max = 'max' '(' NumberExpression ',' NumberExpression ')';
-Random = 'random' '(' ')';
-StringLiteral = '"' { CharactersWithoutDoubleQuote } '"' | ''' { CharactersWithoutSingleQuote } ''';
-StringFactor = StringSideEffectExpression | StringMethodInvocation | StringLiteral | StringVariable | Variable | GetStringVariable '(' StringExpression ')' | 'trim' '(' StringExpression ')' | 'toUpperCase' '(' StringExpression ')' | 'toLowerCase' '(' StringExpression ')';
-StringExpression = StringTerm { '+' StringTerm };
-StringTerm = StringFactor [ Slice ];
-Slice = '[' [ NumberExpression ] ':' [ NumberExpression ] [ ':' NumberExpression ] ']';
-BooleanExpressionOfString = StringExpression '==' StringExpression | StringExpression '!=' StringExpression | StringExpression '.' 'in' '(' StringExpression { ',' StringExpression } ')' | StringExpression '.' 'startsWith' '(' StringExpression ')' | StringExpression '.' 'endsWith' '(' StringExpression ')' | StringExpression '.' 'contains' '(' StringExpression ')';
-FactorOfString = StringLength;
-StringLength = 'len' '(' StringExpression ')';
-StringTypeHint = 'String' | 'string';
-StringTypeHintSuffix = [ 'as' ] StringTypeHint;
-StringTypeHintPrefix = '(' StringTypeHint ')';
-NumberTypeHint = 'Number' | 'number' | 'Float' | 'float';
-NumberTypeHintSuffix = [ 'as' ] NumberTypeHint;
-NumberTypeHintPrefix = '(' NumberTypeHint ')';
-BooleanTypeHint = 'Boolean' | 'boolean';
-BooleanTypeHintSuffix = [ 'as' ] BooleanTypeHint;
-BooleanTypeHintPrefix = '(' BooleanTypeHint ')';
-TypeHintSuffix = StringTypeHintSuffix | NumberTypeHintSuffix | BooleanTypeHintSuffix;
-TypeHintPrefix = StringTypeHintPrefix | NumberTypeHintPrefix | BooleanTypeHintPrefix;
-NakedVariable = '$' Identifier;
-ExclusiveNakedVariable = '$' Identifier (? NO MATCH for TypeHintSuffix ?);
-StringVariable = StringTypeHintPrefix NakedVariable | NakedVariablie StringTypeHintSuffix | (? NakedVariable matched in VariableDeclaration of string ?);
-StringVariableMethodParamer = StringTypeHintPrefix NakedVariable | NakedVariablie StringTypeHintSuffix;
-BooleanVariable = BooleanTypeHintPrefix NakedVariable | NakedVariablie BooleanTypeHintSuffix | (? NakedVariable matched in VariableDeclaration of boolean ?);
-BooleanVariableMethodParameter = BooleanTypeHintPrefix NakedVariable | NakedVariablie BooleanTypeHintSuffix;
-NumberVariable = NumberTypeHintPrefix Variable | Variablie NumberTypeHintSuffix | (? NakedVariable matched in VariableDeclaration of number ?);
-NumberVariableMethodParameter = NumberTypeHintPrefix Variable | Variablie NumberTypeHintSuffix;
-GetExpressionVariable = 'get' [ NumberTypeHint ] '(' NumberVariable ')' [ '.' 'orElse' '(' NumberExpression ')' ];
-GetBooleanVariable = 'get' [ BooleanTypeHint ] '(' BooleanVariable ')' [ '.' 'orElse' '(' BooleanExpression ')' ];
-GetStringVariable = 'get' [ StringTypeHint ] '(' StringVariable ')' [ '.' 'orElse' '(' StringExpression ')' ];
-BlockComment = '/*' { [ LineAnnotation | (? all visible characters excepts '*/' ?) { (? all visible characters excepts '*/' ?) } ] } '*/';
-CPPComment = '//' (? all visible characters excepts '//' ?) '\n';
-AlphabetNumericUnderScoreSpace = (? alphabet and numeric and underscore and space ?);
-AlphabetNumericUnderScore = (? alphabet and numeric and underscore ?);
-AlphabetUnderScore = (? alphabet and and underscore ?);
-CharactersWithoutDoubleQuote = (? all visible characters excepts '"' ?);
-CharactersWithoutSingleQuote = (? all visible characters excepts "'" ?);
-Identifier = AlphabetUnderScore { AlphabetNumericUnderScore };
-Description = 'description' '=' StringLiteral;
-JavaClassMethod = JavaClassAndHash Identifier;
-JavaClassAndHash = JavaClassName '#';
-JavaClassName = Identifier { '.' Identifier };
-NumberMethod = NumberTypeHint Identifier MethodParameters '{' NumberExpression '}';
-StringMethod = StringTypeHint Identifier MethodParameters '{' StringExpression '}';
-BooleanMethod = BooleanTypeHint Identifier MethodParameters '{' BooleanExpression '}';
-MethodParameters = '(' [ MethodParameter { ',' MethodParameter } ] ')';
-MethodParameter = StringVariableMethodParamer | NumberVariableMethodParamer | BooleanVariableMethodParamer;
-AnnotationParameter = StringVariable | BooleanVariable | NumberVariable;
---FormulaTokenizer-- = (? the special tokenizer for fomula separates the token with white space , BlockComennt , CPPComment , Import , VariableDeclaration and Annotation ?);
+  private static void setField(Object target, String fieldName, Object value) {
+    try {
+      target.getClass().getDeclaredField(fieldName).set(target, value);
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}
 ```
 
+### Number Type and Return Type
 
-# Lisence
+Two common knobs in `FormulaInfo`:
 
-This project is licensed under the MIT License, see the LICENSE.txt file for details
+1. `resultType`: final return type of the formula  
+   example: `float`, `double`, `boolean`, `String`
+2. `numberType`: numeric literal/arithmetic default type inside the formula  
+   example: `numberType:long`
 
-icense, see the LICENSE.txt file for details
+This pair is useful when you need:
 
+- large integer behavior in conditions/arithmetic
+- boolean/string return with explicit numeric evaluation type
+
+### Backend Rollout Strategy (Recommended)
+
+1. Keep global default in `FormulaInfoAdditionalFields.setExecutionBackend(...)`.
+2. Roll out per-formula using `backend`/`executionBackend`.
+3. Compare outputs across backends in test/probe before production switch.
+
+### Recommended Production Boundaries
+
+1. Formula authoring/validation boundary:
+   - lint and parser validation before persisting formulas
+2. Runtime boundary:
+   - deterministic context values only
+   - explicit object registration for external functions
+3. Observability boundary:
+   - log calculator name, backend, tenant, result/error
+   - track fallback usage when using AST path
+
+## LSP / DAP / DSL Migration Docs
+
+- backend contract: `docs/TINYEXPRESSION-BACKEND-CONTRACT.md`
+- UnlaxerDSL handbook: `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`
+- migration guide: `docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md`
+- DAP dual-evaluator plan: `docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md`
+- final gap audit: `docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md`
+
+## Development
+
+```bash
+mvn -q test
+```
+
+For roadmap context and work history:
+
+- `docs/TINYEXPRESSION-DSL-ROADMAP.md`
+- `docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md`
