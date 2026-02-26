@@ -514,6 +514,10 @@ Completed in this session (P3 follow-up):
    - declaration shortcut trigger no longer depends on literal `"var"` string checks,
    - shortcut pre-check now uses clause separators (`;` / newline) plus existing internal-comment safety guard,
    - actual declaration presence remains parser-driven via `AstDeclarationRuntime.tryEvaluateMainExpression(...)`.
+90. queued parser-capability refactor for evaluator head detection:
+   - current declaration/embedded-expression pre-checks still include evaluator-side string heuristics,
+   - move these checks behind parser-owned capability APIs so parser keyword aliases (for example `variable` or localized tokens) and delimiter-combinator changes do not require evaluator runtime edits,
+   - target hotspots: `AstEvaluatorCalculator.shouldTryDeclarationShortcut(...)` and `GeneratedAstRuntimeProbe` normalization path.
 
 
 

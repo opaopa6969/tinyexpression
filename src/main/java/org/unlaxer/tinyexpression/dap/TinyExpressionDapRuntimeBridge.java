@@ -41,6 +41,7 @@ public final class TinyExpressionDapRuntimeBridge {
           "TinyExpressionDapRuntimeBridgeProbe",
           types,
           classLoader);
+      vars.put("calculatorClass", truncate(calculator.getClass().getName()));
 
       copyMarker(calculator, "_tinyExecutionBackend", vars);
       copyMarker(calculator, "_tinyExecutionMode", vars);
@@ -59,6 +60,7 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_astEvaluatorRuntime", vars);
       copyMarker(calculator, "_astEvaluatorMapperAvailable", vars);
       copyMarker(calculator, "_astEvaluatorGeneratedAstNodeCount", vars);
+      copyMappedAstType(calculator, vars);
     } catch (Throwable createError) {
       vars.put("bridgeError", truncate(
           createError.getClass().getSimpleName() + ":" + safeMessage(createError)));
@@ -71,6 +73,16 @@ public final class TinyExpressionDapRuntimeBridge {
       Object value = calculator.getObject(key, Object.class);
       if (value != null) {
         target.put(key, truncate(String.valueOf(value)));
+      }
+    } catch (Throwable ignored) {
+    }
+  }
+
+  private static void copyMappedAstType(Calculator calculator, Map<String, String> target) {
+    try {
+      Object mappedAst = calculator.getObject("_astEvaluatorMappedAst", Object.class);
+      if (mappedAst != null) {
+        target.put("mappedAstType", truncate(mappedAst.getClass().getName()));
       }
     } catch (Throwable ignored) {
     }

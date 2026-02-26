@@ -102,6 +102,7 @@ Last updated: 2026-02-26
 8. Parser-keyword coupling cleanup (design follow-up):
    1. declaration shortcut pre-check has removed direct `"var "` dependency, but full parser-driven head detection API is still not centralized
    2. replace remaining ad-hoc textual pre-checks with shared parser capability API (for example `VariableDeclarationParser`/`TinyExpressionParser`-derived) so alias changes (`variable`/localized keywords) do not require evaluator edits
+   3. specifically remove evaluator-side keyword/delimiter string heuristics from `AstEvaluatorCalculator.shouldTryDeclarationShortcut(...)` and move declaration/head probing behind parser-owned capability methods to prevent future parser-alias drift
 
 ## Dependency-Side Needs (Potential Future)
 
