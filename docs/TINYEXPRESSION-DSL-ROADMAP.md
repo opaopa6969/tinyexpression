@@ -453,6 +453,11 @@ Completed in this session (P3 follow-up):
    - added `TinyExpressionDapRuntimeBridge` in tinyexpression (`debugVariables(formula, runtimeMode)`),
    - extended `unlaxer-dsl` `DAPGenerator` so generated debug adapters collect bridge-provided runtime variables reflectively and expose them in DAP `variables`,
    - bridge integration is optional/fallback-safe (adapter keeps working when bridge class is absent).
+74. expanded three-backend parity into two-tier corpus strategy:
+   - `ThreeExecutionBackendParityTest` now separates:
+     - supported corpus (`AST_EVALUATOR` non-fallback required),
+     - regression corpus (`AST_EVALUATOR` fallback allowed, value parity required),
+   - regression corpus now includes broader legacy-style formulas (`if` boolean operators, string functions/slice, `match`, declaration, method invocation) to increase practical parity coverage while keeping deterministic assertions.
 
 
 
@@ -497,6 +502,7 @@ Verified tests:
 37. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorBackendParityTest test`
 38. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,FormulaInfoExecutionBackendSelectionTest test`
 39. `./mvnw -q -Dtest=TinyExpressionDapRuntimeBridgeTest,FormulaInfoExecutionBackendSelectionTest test`
+40. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,TinyExpressionDapRuntimeBridgeTest test`
 
 ## Execution Policy
 

@@ -51,6 +51,9 @@ Last updated: 2026-02-26
 24. All three backends now publish unified runtime marker metadata (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags), enabling tooling/diagnostics to distinguish bridge vs non-bridge execution.
 25. Three-backend parity corpus coverage has been expanded to broader mixed formulas (method-args and declaration-heavy slices included).
 26. Generated DAP adapter now imports tinyexpression runtime probe variables through an optional reflection bridge (`TinyExpressionDapRuntimeBridge`), exposing selected backend and execution markers in DAP variables for `runtimeMode=token/ast/dsl-javacode`.
+27. Three-backend parity test now uses two-tier verification:
+   1. supported corpus: `AST_EVALUATOR` non-fallback required.
+   2. regression corpus: fallback allowed but value parity with `JAVA_CODE` / `DSL_JAVA_CODE` required across broader legacy-style formulas.
 
 ## Remaining Gaps
 
@@ -64,8 +67,8 @@ Last updated: 2026-02-26
 3. Root mapping semantics for mixed grammars:
    1. preferred-root API is available and runtime-connected, but full semantic root policy across declaration/method-heavy formulas is not yet formalized
 4. Full parity harness:
-   1. representative mixed corpus parity is available, but still curated/small
-   2. systematic large formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
+   1. representative and medium regression corpora parity are available, but still hand-curated
+   2. systematic large formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) with externalized dataset + reporting is not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
    2. backend/runtime marker observability is now exposed in generated DAP variables via runtime probe bridge
