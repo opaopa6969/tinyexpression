@@ -77,6 +77,7 @@ public class DslJavaCodeGenerationExtractedParityTest {
       return false;
     }
     return !text.contains("$")
+        && !text.contains("?")
         && !text.contains("call ")
         && !text.contains("external ")
         && !text.contains("internal ")

@@ -507,6 +507,9 @@ Completed in this session (P3 follow-up):
    - declaration formula detection now trims leading java-style delimiters/comments before `var` head check,
    - still preserves safety guard for internal comments to avoid parity drift,
    - `AstEvaluatorTokenLiteralFallbackTest` now covers leading-comment declaration formula.
+88. reduced extracted Java parity test noise by unsupported-formula prefilter:
+   - `DslJavaCodeGenerationExtractedParityTest` now filters ternary (`?:`) formulas before calculator creation,
+   - keeps skip-by-exception fallback for other unsupported extractions while reducing expected parse-error log noise.
 
 
 
