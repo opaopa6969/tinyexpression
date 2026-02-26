@@ -50,6 +50,7 @@ Last updated: 2026-02-26
 23. Formula loader now supports per-formula backend selection (`executionBackend` / `backend`) and validates backend names before calculator construction.
 24. All three backends now publish unified runtime marker metadata (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags), enabling tooling/diagnostics to distinguish bridge vs non-bridge execution.
 25. Three-backend parity corpus coverage has been expanded to broader mixed formulas (method-args and declaration-heavy slices included).
+26. Generated DAP adapter now imports tinyexpression runtime probe variables through an optional reflection bridge (`TinyExpressionDapRuntimeBridge`), exposing selected backend and execution markers in DAP variables for `runtimeMode=token/ast/dsl-javacode`.
 
 ## Remaining Gaps
 
@@ -67,7 +68,8 @@ Last updated: 2026-02-26
    2. systematic large formula corpus parity (`JAVA_CODE` vs `AST_EVALUATOR`) is not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
-   2. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
+   2. backend/runtime marker observability is now exposed in generated DAP variables via runtime probe bridge
+   3. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
    2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata

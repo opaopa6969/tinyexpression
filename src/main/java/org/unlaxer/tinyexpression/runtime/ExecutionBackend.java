@@ -28,6 +28,23 @@ public enum ExecutionBackend {
     return this == DSL_JAVA_CODE;
   }
 
+  public static Optional<ExecutionBackend> fromRuntimeMode(String runtimeMode) {
+    if (runtimeMode == null || runtimeMode.isBlank()) {
+      return Optional.empty();
+    }
+    String normalized = runtimeMode.strip().toLowerCase(Locale.ROOT).replace('_', '-');
+    if ("token".equals(normalized) || "javacode".equals(normalized) || "java-code".equals(normalized)) {
+      return Optional.of(JAVA_CODE);
+    }
+    if ("ast".equals(normalized) || "ast-evaluator".equals(normalized)) {
+      return Optional.of(AST_EVALUATOR);
+    }
+    if ("dsl-javacode".equals(normalized) || "dsl-java-code".equals(normalized)) {
+      return Optional.of(DSL_JAVA_CODE);
+    }
+    return parse(runtimeMode);
+  }
+
   public static Optional<ExecutionBackend> parse(String value) {
     if (value == null) {
       return Optional.empty();

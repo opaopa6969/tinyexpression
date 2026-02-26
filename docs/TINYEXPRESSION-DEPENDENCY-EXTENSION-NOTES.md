@@ -259,3 +259,35 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 
 1. `ComparisonExpr` direct-eval path の回帰確認（`match{1==1->...,default->...}`）。
 2. generated-path runtime testで `javacode-fallback` 退行がないことを継続監視。
+
+---
+
+## 2026-02-26: generated DAP runtime-probe bridge variables
+
+### Context
+
+- Target repo: `unlaxer-dsl`
+- Target file: `src/main/java/org/unlaxer/dsl/codegen/DAPGenerator.java`
+- Goal:
+  - generated DAP adapter 側から tinyexpression runtime の実際の backend 選択結果と実行マーカーを参照可能にする。
+
+### Implemented
+
+1. generated adapter に `runtimeProbeVariables` フィールドを追加。
+2. parse 完了時に `collectRuntimeProbeVariables()` を呼ぶように変更。
+3. generated adapter が reflection で optional bridge を呼び出すように変更。
+   - class: `org.unlaxer.tinyexpression.dap.TinyExpressionDapRuntimeBridge`
+   - method: `debugVariables(String formulaSource, String runtimeMode)`
+4. DAP `variables` 応答へ `runtimeProbeVariables` を展開するように変更。
+5. bridge 不在時・呼び出し失敗時は従来動作を維持（silent fallback）。
+
+### Compatibility impact
+
+1. tinyexpression bridge class がない環境でも generated DAP は動作継続。
+2. bridge class がある環境では backend marker（`_tinyExecution*` など）が DAP variables に露出し、
+   `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` の識別が容易になる。
+
+### Follow-up in tinyexpression
+
+1. `TinyExpressionDapRuntimeBridge` 側で `runtimeMode` -> `ExecutionBackend` 変換を統一して維持する。
+2. DAP stepping 自体の evaluator-level parity（value/step alignment）は別スライスで継続する。

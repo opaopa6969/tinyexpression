@@ -449,6 +449,10 @@ Completed in this session (P3 follow-up):
    - `ExecutionBackend` now provides normalized parser (`dsl-javacode` etc.) and runtime marker metadata,
    - `CalculatorCreatorRegistry` now emits unified runtime markers (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags) for all three backends,
    - added focused loader test `FormulaInfoExecutionBackendSelectionTest`.
+73. connected generated DAP adapter to tinyexpression runtime probe bridge:
+   - added `TinyExpressionDapRuntimeBridge` in tinyexpression (`debugVariables(formula, runtimeMode)`),
+   - extended `unlaxer-dsl` `DAPGenerator` so generated debug adapters collect bridge-provided runtime variables reflectively and expose them in DAP `variables`,
+   - bridge integration is optional/fallback-safe (adapter keeps working when bridge class is absent).
 
 
 
@@ -492,6 +496,7 @@ Verified tests:
 36. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 37. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorBackendParityTest test`
 38. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,FormulaInfoExecutionBackendSelectionTest test`
+39. `./mvnw -q -Dtest=TinyExpressionDapRuntimeBridgeTest,FormulaInfoExecutionBackendSelectionTest test`
 
 ## Execution Policy
 

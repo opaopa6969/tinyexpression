@@ -20,11 +20,13 @@
 2. 同一入力で 3 経路の差分比較ができる
 3. DAP 機能を段階的に強化しやすい
 
-## Current status (2026-02-25)
+## Current status (2026-02-26)
 
 1. UBNF 草案と parser-ir の検証は進行中
 2. `unlaxer-dsl` 側は `MapperGenerator` の実装を開始（parse/dispatch/assoc mapping）
-3. TinyExpression 側は java code generation 経路が主経路のまま
+3. TinyExpression 側は 3 backend (`JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) を formula metadata で選択可能
+4. generated DAP は `runtimeMode=ast` で AST span ベース座標を使用
+5. generated DAP は optional runtime probe bridge 経由で backend marker 変数を表示可能
 
 ## Required implementation slices
 
@@ -47,8 +49,8 @@
 1. `runtimeMode=token` (default)
 2. `runtimeMode=ast` / `ast_evaluator`
 
-現時点の `ast` は token stepping fallback 実装で、
-後続で mapper/evaluator runtime 接続時に AST ノードステップへ差し替える。
+現時点の `ast` は AST node count + AST span 座標ベースで動作する。
+ただし JavaCode runtime との evaluator-value-level ステップ同値性は未完。
 
 また、tinyexpression 側の `AstEvaluatorCalculator` は generated mapper runtime が存在する場合に
 `parse -> mapper.parse()` を probe し、次を context object に記録する。
