@@ -303,6 +303,7 @@ public class AstEvaluatorCalculator implements Calculator {
             || formula.startsWith("external")
             || formula.startsWith("internal");
     boolean ifHead = formula.startsWith("if");
+    boolean matchHead = formula.startsWith("match");
     if (methodInvocationHead) {
       preferred.add("MethodInvocationExpr");
     }
@@ -315,12 +316,26 @@ public class AstEvaluatorCalculator implements Calculator {
       return preferred;
     }
     if (type.isNumber()) {
+      if (matchHead) {
+        preferred.add("NumberMatchExpr");
+      }
       preferred.add("BinaryExpr");
     } else if (type.isString()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+      }
       preferred.add("StringExpr");
     } else if (type.isBoolean()) {
+      if (matchHead) {
+        preferred.add("BooleanMatchExpr");
+      }
       preferred.add("BooleanExpr");
     } else if (type.isObject()) {
+      if (matchHead) {
+        preferred.add("StringMatchExpr");
+        preferred.add("BooleanMatchExpr");
+        preferred.add("NumberMatchExpr");
+      }
       preferred.add("ObjectExpr");
     } else {
       preferred.add(null);

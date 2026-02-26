@@ -183,32 +183,47 @@ grammar TinyExpressionP4 {
     'else'
     '{' Expression @elseExpr '}' ;
 
+  @mapping(NumberMatchExpr, params=[firstCase, moreCases, defaultCase])
   NumberMatchExpression ::=
     'match' '{'
-      NumberCase { ',' NumberCase }
-      ',' NumberDefaultCase
+      NumberCase @firstCase { ',' NumberCase @moreCases }
+      ',' NumberDefaultCase @defaultCase
     '}' ;
 
-  NumberCase ::= BooleanExpression '->' NumberExpression ;
-  NumberDefaultCase ::= 'default' '->' NumberExpression ;
+  @mapping(NumberCaseExpr, params=[condition, value])
+  NumberCase ::= BooleanExpression @condition '->' NumberCaseValue @value ;
+  @mapping(NumberDefaultCaseExpr, params=[value])
+  NumberDefaultCase ::= 'default' '->' NumberCaseValue @value ;
+  @mapping(NumberCaseValueExpr, params=[value])
+  NumberCaseValue ::= NumberExpression @value ;
 
+  @mapping(StringMatchExpr, params=[firstCase, moreCases, defaultCase])
   StringMatchExpression ::=
     'match' '{'
-      StringCase { ',' StringCase }
-      ',' StringDefaultCase
+      StringCase @firstCase { ',' StringCase @moreCases }
+      ',' StringDefaultCase @defaultCase
     '}' ;
 
-  StringCase ::= BooleanExpression '->' StringExpression ;
-  StringDefaultCase ::= 'default' '->' StringExpression ;
+  @mapping(StringCaseExpr, params=[condition, value])
+  StringCase ::= BooleanExpression @condition '->' StringCaseValue @value ;
+  @mapping(StringDefaultCaseExpr, params=[value])
+  StringDefaultCase ::= 'default' '->' StringCaseValue @value ;
+  @mapping(StringCaseValueExpr, params=[value])
+  StringCaseValue ::= StringExpression @value ;
 
+  @mapping(BooleanMatchExpr, params=[firstCase, moreCases, defaultCase])
   BooleanMatchExpression ::=
     'match' '{'
-      BooleanCase { ',' BooleanCase }
-      ',' BooleanDefaultCase
+      BooleanCase @firstCase { ',' BooleanCase @moreCases }
+      ',' BooleanDefaultCase @defaultCase
     '}' ;
 
-  BooleanCase ::= BooleanExpression '->' BooleanExpression ;
-  BooleanDefaultCase ::= 'default' '->' BooleanExpression ;
+  @mapping(BooleanCaseExpr, params=[condition, value])
+  BooleanCase ::= BooleanExpression @condition '->' BooleanCaseValue @value ;
+  @mapping(BooleanDefaultCaseExpr, params=[value])
+  BooleanDefaultCase ::= 'default' '->' BooleanCaseValue @value ;
+  @mapping(BooleanCaseValueExpr, params=[value])
+  BooleanCaseValue ::= BooleanExpression @value ;
 
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;

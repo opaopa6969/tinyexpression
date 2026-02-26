@@ -24,6 +24,7 @@ public class ThreeExecutionBackendParityTest {
     List<Case> cases = List.of(
         new Case("1+(8/4)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if   (true){1}else{2}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("match{1==1->3,default->5}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("match{1==1->'A',default->'B'}", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("call provide()\nobject provide(){\n'ok'\n}",
             new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),

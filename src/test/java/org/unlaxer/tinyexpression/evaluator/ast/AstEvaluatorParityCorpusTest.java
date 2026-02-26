@@ -23,6 +23,7 @@ public class AstEvaluatorParityCorpusTest {
     List<Case> cases = List.of(
         new Case("1+(8/4)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if   (true){1}else{2}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("match{1==1->3,default->5}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("match{1==1->'A',default->'B'}", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("match{1==0->false,default->true}", new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), null),
         new Case("'payload'", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),

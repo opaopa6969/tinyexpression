@@ -48,6 +48,13 @@ final class GeneratedP4ValueAstEvaluator {
           return ifValue;
         }
       }
+      if ("NumberMatchExpr".equals(rootSimpleName)) {
+        Optional<Object> matchValue = evaluateNumberMatchExpression(
+            mappedAst, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+        if (matchValue.isPresent()) {
+          return matchValue;
+        }
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         Optional<Object> invocation = evaluateMethodInvocation(mappedAst, resultType,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
@@ -59,6 +66,12 @@ final class GeneratedP4ValueAstEvaluator {
           node, resultType, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
       if (ifExpression.isPresent() && ifExpression.get() instanceof Number) {
         return ifExpression;
+      }
+      Optional<Object> numberMatch = findFirstNode(mappedAst, "NumberMatchExpr")
+          .flatMap(node -> evaluateNumberMatchExpression(
+              node, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (numberMatch.isPresent()) {
+        return numberMatch;
       }
       Optional<Object> number = GeneratedP4NumberAstEvaluator.tryEvaluate(
           mappedAst, specifiedExpressionTypes, calculationContext);
@@ -75,6 +88,11 @@ final class GeneratedP4ValueAstEvaluator {
                 .map(String::valueOf)
                 .map(v -> (Object) v);
       }
+      if ("StringMatchExpr".equals(rootSimpleName)) {
+        return evaluateStringMatchExpression(
+            mappedAst, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
+                .map(v -> (Object) v);
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         return evaluateMethodInvocation(mappedAst, ExpressionTypes.string,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
@@ -85,6 +103,13 @@ final class GeneratedP4ValueAstEvaluator {
           node, ExpressionTypes.string, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
       if (ifExpression.isPresent()) {
         return ifExpression.map(String::valueOf).map(v -> (Object) v);
+      }
+      Optional<Object> stringMatch = findFirstNode(mappedAst, "StringMatchExpr")
+          .flatMap(node -> evaluateStringMatchExpression(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
+      if (stringMatch.isPresent()) {
+        return stringMatch;
       }
       return findFirstNode(mappedAst, "StringExpr")
           .flatMap(node -> evaluateString(
@@ -98,6 +123,11 @@ final class GeneratedP4ValueAstEvaluator {
                 .flatMap(GeneratedP4ValueAstEvaluator::toBoolean)
                 .map(v -> (Object) v);
       }
+      if ("BooleanMatchExpr".equals(rootSimpleName)) {
+        return evaluateBooleanMatchExpression(
+            mappedAst, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
+                .map(v -> (Object) v);
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         return evaluateMethodInvocation(mappedAst, ExpressionTypes._boolean,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
@@ -108,6 +138,13 @@ final class GeneratedP4ValueAstEvaluator {
           node, ExpressionTypes._boolean, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
       if (ifExpression.isPresent()) {
         return ifExpression.flatMap(GeneratedP4ValueAstEvaluator::toBoolean).map(v -> (Object) v);
+      }
+      Optional<Object> booleanMatch = findFirstNode(mappedAst, "BooleanMatchExpr")
+          .flatMap(node -> evaluateBooleanMatchExpression(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
+      if (booleanMatch.isPresent()) {
+        return booleanMatch;
       }
       return findFirstNode(mappedAst, "BooleanExpr")
           .flatMap(node -> evaluateBoolean(
@@ -123,6 +160,27 @@ final class GeneratedP4ValueAstEvaluator {
           return ifValue;
         }
       }
+      if ("NumberMatchExpr".equals(rootSimpleName)) {
+        Optional<Object> match = evaluateNumberMatchExpression(
+            mappedAst, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+        if (match.isPresent()) {
+          return match;
+        }
+      }
+      if ("StringMatchExpr".equals(rootSimpleName)) {
+        Optional<String> match = evaluateStringMatchExpression(
+            mappedAst, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+        if (match.isPresent()) {
+          return match.map(v -> (Object) v);
+        }
+      }
+      if ("BooleanMatchExpr".equals(rootSimpleName)) {
+        Optional<Boolean> match = evaluateBooleanMatchExpression(
+            mappedAst, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+        if (match.isPresent()) {
+          return match.map(v -> (Object) v);
+        }
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         Optional<Object> invocation = evaluateMethodInvocation(mappedAst, ExpressionTypes.object,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
@@ -134,6 +192,26 @@ final class GeneratedP4ValueAstEvaluator {
           node, ExpressionTypes.object, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
       if (ifExpression.isPresent()) {
         return ifExpression;
+      }
+      Optional<Object> numberMatch = findFirstNode(mappedAst, "NumberMatchExpr")
+          .flatMap(node -> evaluateNumberMatchExpression(
+              node, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (numberMatch.isPresent()) {
+        return numberMatch;
+      }
+      Optional<Object> stringMatch = findFirstNode(mappedAst, "StringMatchExpr")
+          .flatMap(node -> evaluateStringMatchExpression(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
+      if (stringMatch.isPresent()) {
+        return stringMatch;
+      }
+      Optional<Object> booleanMatch = findFirstNode(mappedAst, "BooleanMatchExpr")
+          .flatMap(node -> evaluateBooleanMatchExpression(
+              node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
+          .map(v -> (Object) v);
+      if (booleanMatch.isPresent()) {
+        return booleanMatch;
       }
       Optional<Object> objectExpr = findFirstNode(mappedAst, "ObjectExpr")
           .flatMap(node -> evaluateObject(
@@ -453,6 +531,134 @@ final class GeneratedP4ValueAstEvaluator {
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, specifiedExpressionTypes.numberType());
     return tryEvaluate(node, booleanTypes, context, classLoader, fallbackFormulaSource)
         .flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+  }
+
+  private static Optional<Object> evaluateNumberMatchExpression(Object matchNode,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String fallbackFormulaSource) {
+    Object firstCaseNode = invokeZeroArg(matchNode, "firstCase").orElse(null);
+    Object moreCasesNode = invokeZeroArg(matchNode, "moreCases").orElse(null);
+    Object defaultNode = invokeZeroArg(matchNode, "defaultCase").orElse(null);
+    if (defaultNode == null) {
+      return Optional.empty();
+    }
+    List<Object> cases = mergeCaseNodes(firstCaseNode, moreCasesNode);
+    for (Object caseNode : cases) {
+      if (caseNode == null) {
+        continue;
+      }
+      Object conditionNode = invokeZeroArg(caseNode, "condition").orElse(null);
+      Optional<Boolean> condition = evaluateNodeAsBoolean(
+          conditionNode, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      if (condition.isEmpty() || !condition.get()) {
+        continue;
+      }
+      Object valueNode = unwrapCaseValueNode(invokeZeroArg(caseNode, "value").orElse(null));
+      if (valueNode == null) {
+        return Optional.empty();
+      }
+      return GeneratedP4NumberAstEvaluator.tryEvaluate(valueNode, specifiedExpressionTypes, context).map(v -> (Object) v);
+    }
+    Object defaultValueNode = unwrapCaseValueNode(invokeZeroArg(defaultNode, "value").orElse(null));
+    if (defaultValueNode == null) {
+      return Optional.empty();
+    }
+    return GeneratedP4NumberAstEvaluator.tryEvaluate(defaultValueNode, specifiedExpressionTypes, context).map(v -> (Object) v);
+  }
+
+  private static Optional<String> evaluateStringMatchExpression(Object matchNode, CalculationContext context,
+      SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader, String fallbackFormulaSource) {
+    Object firstCaseNode = invokeZeroArg(matchNode, "firstCase").orElse(null);
+    Object moreCasesNode = invokeZeroArg(matchNode, "moreCases").orElse(null);
+    Object defaultNode = invokeZeroArg(matchNode, "defaultCase").orElse(null);
+    if (defaultNode == null) {
+      return Optional.empty();
+    }
+    List<Object> cases = mergeCaseNodes(firstCaseNode, moreCasesNode);
+    for (Object caseNode : cases) {
+      if (caseNode == null) {
+        continue;
+      }
+      Object conditionNode = invokeZeroArg(caseNode, "condition").orElse(null);
+      Optional<Boolean> condition = evaluateNodeAsBoolean(
+          conditionNode, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      if (condition.isEmpty() || !condition.get()) {
+        continue;
+      }
+      Object valueNode = unwrapCaseValueNode(invokeZeroArg(caseNode, "value").orElse(null));
+      if (valueNode == null) {
+        return Optional.empty();
+      }
+      return evaluateString(valueNode, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+    }
+    Object defaultValueNode = unwrapCaseValueNode(invokeZeroArg(defaultNode, "value").orElse(null));
+    if (defaultValueNode == null) {
+      return Optional.empty();
+    }
+    return evaluateString(defaultValueNode, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+  }
+
+  private static Optional<Boolean> evaluateBooleanMatchExpression(Object matchNode, CalculationContext context,
+      SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader, String fallbackFormulaSource) {
+    Object firstCaseNode = invokeZeroArg(matchNode, "firstCase").orElse(null);
+    Object moreCasesNode = invokeZeroArg(matchNode, "moreCases").orElse(null);
+    Object defaultNode = invokeZeroArg(matchNode, "defaultCase").orElse(null);
+    if (defaultNode == null) {
+      return Optional.empty();
+    }
+    List<Object> cases = mergeCaseNodes(firstCaseNode, moreCasesNode);
+    for (Object caseNode : cases) {
+      if (caseNode == null) {
+        continue;
+      }
+      Object conditionNode = invokeZeroArg(caseNode, "condition").orElse(null);
+      Optional<Boolean> condition = evaluateNodeAsBoolean(
+          conditionNode, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+      if (condition.isEmpty() || !condition.get()) {
+        continue;
+      }
+      Object valueNode = unwrapCaseValueNode(invokeZeroArg(caseNode, "value").orElse(null));
+      if (valueNode == null) {
+        return Optional.empty();
+      }
+      return evaluateBoolean(valueNode, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+    }
+    Object defaultValueNode = unwrapCaseValueNode(invokeZeroArg(defaultNode, "value").orElse(null));
+    if (defaultValueNode == null) {
+      return Optional.empty();
+    }
+    return evaluateBoolean(defaultValueNode, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+  }
+
+  private static List<Object> mergeCaseNodes(Object firstCaseNode, Object moreCasesNode) {
+    List<Object> merged = new ArrayList<>();
+    if (firstCaseNode != null) {
+      merged.add(firstCaseNode);
+    }
+    if (moreCasesNode instanceof List<?> moreCases) {
+      for (Object moreCase : moreCases) {
+        if (moreCase != null) {
+          merged.add(moreCase);
+        }
+      }
+    }
+    return merged;
+  }
+
+  private static Object unwrapCaseValueNode(Object node) {
+    Object current = node;
+    while (current != null) {
+      String simpleName = current.getClass().getSimpleName();
+      if (!"ExpressionExpr".equals(simpleName) && !simpleName.endsWith("CaseValueExpr")) {
+        break;
+      }
+      Object value = invokeZeroArg(current, "value").orElse(null);
+      if (value == null || value == current) {
+        return null;
+      }
+      current = value;
+    }
+    return current;
   }
 
   private static Optional<Object> evaluateMethodInvocation(Object methodInvocationNode, ExpressionType expectedType,

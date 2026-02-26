@@ -43,13 +43,16 @@ Last updated: 2026-02-25
 20. `if` expression path now has explicit AST mapping and direct evaluator dispatch:
    1. `IfExpr` + `ExpressionExpr` are generated from P4 mapping.
    2. generated runtime evaluates condition and selected branch via AST recursion (bridge-first text evaluation is no longer required for the covered `if` slice).
+21. `match` families now have explicit AST mapping and direct evaluator dispatch:
+   1. `NumberMatchExpr` / `StringMatchExpr` / `BooleanMatchExpr` and case/default/value nodes are generated.
+   2. generated runtime executes condition dispatch + selected branch evaluation directly on AST for number/string/boolean paths (and object path where these expressions are selected as root).
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
-   1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）は「埋め込みJavaCode bridge」で動作するが、純粋AST walkとしては未完
-   2. `match` families の専用ASTノード化と評価器実装は未完（`if` は専用ASTノード + direct eval 対応済み）
-   3. method invocation/declaration は zero-arg sliceのみ direct化済み。引数付き呼び出し/仮引数束縛を含む純粋ASTセマンティクスは未完
+   1. `if` / `match` は専用ASTノード + direct eval 対応済み。
+   2. `method invocation/declaration` は引数束縛まで direct化済みだが、宣言・複合式全体で bridge/fallback 非依存にするには未完。
+   3. `ObjectExpression` 複合式の一部は still bridge 依存（特に declaration-heavy / nested complex slices）。
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式の一部まで拡張済み（method declaration text injection + embedded eval）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完

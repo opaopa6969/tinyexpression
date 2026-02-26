@@ -431,6 +431,12 @@ Completed in this session (P3 follow-up):
    - added `@mapping(IfExpr, params=[condition, thenExpr, elseExpr])` on `IfExpression`,
    - added `@mapping(ExpressionExpr, params=[value])` on `Expression` so `if` branches are carried as AST nodes instead of plain text tokens,
    - `GeneratedP4ValueAstEvaluator` now evaluates `IfExpr` directly (condition AST eval + selected branch recursive AST eval) and `AstEvaluatorCalculator` prefers `IfExpr` root when formula head is `if`.
+69. added explicit `match` AST mapping path with direct case-dispatch evaluation:
+   - added typed AST mappings for `Number/String/Boolean` match families:
+     - `*MatchExpr`, `*CaseExpr`, `*DefaultCaseExpr`, `*CaseValueExpr`,
+   - avoided parser-class capture ambiguity in case-value mapping via dedicated `*CaseValue` wrapper rules,
+   - `GeneratedP4ValueAstEvaluator` now evaluates match-case conditions and selected values directly on generated AST path for number/string/boolean/object result flows,
+   - `AstEvaluatorCalculator` now prefers `*MatchExpr` roots when formula head is `match` and result type matches.
 
 
 
@@ -470,6 +476,8 @@ Verified tests:
 32. `./mvnw -q -Dtest=AstEvaluatorParityCorpusTest test`
 33. `mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 34. `mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
+35. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorParityCorpusTest test`
+36. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 
 ## Execution Policy
 
