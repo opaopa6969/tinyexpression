@@ -59,7 +59,7 @@ Last updated: 2026-02-26
    2. context-light subset is run across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`,
    3. value parity is enforced with executed-case lower bound for stable regression signal.
 29. Generated value evaluator now performs structured-text AST re-entry before embedded bridge fallback for `StringExpr` / `BooleanExpr` / `ObjectExpr`, reducing bridge-only execution when generated mapper can parse expression-like payload text.
-30. `AstEvaluatorCalculator` now has a token-ast literal/variable fast path for generated-runtime-unavailable cases, so trivial formulas do not require `javacode-fallback` (verified with generated-class-blocking classloader tests).
+30. `AstEvaluatorCalculator` now has a token-ast literal/variable fast path for generated-runtime-unavailable cases (single/double-quoted strings, booleans, variables, simple numbers), so trivial formulas do not require `javacode-fallback` (verified with generated-class-blocking classloader tests).
 31. AST preferred-root selection now uses shared structured-head predicates (`if`/`match`/`call` with java-style delimiters/comments) across evaluator and declaration runtime; comment-prefixed control-flow formulas are covered in regression parity corpus.
 32. Added Java source parity test between `JAVA_CODE` and `DSL_JAVA_CODE` backends (`DslJavaCodeGenerationParityTest`) over curated mixed formulas; normalized generated source text is now regression-checked for equivalence.
 33. Generated mapper probe now retries after trimming leading java delimiters/comments, improving AST mapping hit rate for comment-prefixed formulas (supported non-fallback parity now includes leading-comment `if` head case).

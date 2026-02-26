@@ -22,6 +22,7 @@ public class AstEvaluatorTokenLiteralFallbackTest {
         Thread.currentThread().getContextClassLoader());
     List<Case> cases = List.of(
         new Case("'hello'", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
+        new Case("\"hello\"", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
         new Case("true", new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), true, null),
         new Case("$payload", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "ctx-object",
             context -> context.setObject("payload", "ctx-object")));
@@ -35,9 +36,11 @@ public class AstEvaluatorTokenLiteralFallbackTest {
         testCase.preparation.accept(context);
       }
       Object value = calculator.apply(context);
-      assertEquals(testCase.expected, value);
-      assertEquals("token-ast", calculator.getObject("_astEvaluatorRuntime", String.class));
-      assertEquals(false, calculator.getObject("_astEvaluatorMapperAvailable", Boolean.class));
+      assertEquals("formula=" + testCase.formula, testCase.expected, value);
+      assertEquals("formula=" + testCase.formula,
+          "token-ast", calculator.getObject("_astEvaluatorRuntime", String.class));
+      assertEquals("formula=" + testCase.formula,
+          false, calculator.getObject("_astEvaluatorMapperAvailable", Boolean.class));
     }
   }
 

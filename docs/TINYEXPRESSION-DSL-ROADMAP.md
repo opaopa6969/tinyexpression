@@ -486,6 +486,9 @@ Completed in this session (P3 follow-up):
    - `GeneratedAstRuntimeProbe` now normalizes `if/*...*/(` head delimiters for retry parse,
    - supported corpus includes `if/*...*/(...)` non-fallback assertion,
    - `match/*...*/{...}` head normalization is intentionally not forced because it introduced legacy parity drift in regression corpus.
+82. extended token-ast literal fast path for double-quoted string literals:
+   - `AstEvaluatorCalculator.parseStringLiteral(...)` now accepts both `'...'` and `\"...\"`,
+   - `AstEvaluatorTokenLiteralFallbackTest` covers `\"hello\"` under generated-runtime-unavailable classloader.
 
 
 

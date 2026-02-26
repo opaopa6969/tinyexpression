@@ -323,7 +323,9 @@ public class AstEvaluatorCalculator implements Calculator {
     if (formula.length() < 2) {
       return Optional.empty();
     }
-    if (formula.charAt(0) == '\'' && formula.charAt(formula.length() - 1) == '\'') {
+    char start = formula.charAt(0);
+    char end = formula.charAt(formula.length() - 1);
+    if ((start == '\'' && end == '\'') || (start == '"' && end == '"')) {
       return Optional.of(formula.substring(1, formula.length() - 1));
     }
     return Optional.empty();
@@ -363,7 +365,7 @@ public class AstEvaluatorCalculator implements Calculator {
       if (Character.isWhitespace(c)) {
         continue;
       }
-      if (Character.isLetterOrDigit(c) || c == '_' || c == '.' || c == '\'' || c == '$') {
+      if (Character.isLetterOrDigit(c) || c == '_' || c == '.' || c == '\'' || c == '"' || c == '$') {
         continue;
       }
       if (c == '-' && i + 1 < formula.length() && Character.isDigit(formula.charAt(i + 1))) {
