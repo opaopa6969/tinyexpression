@@ -53,9 +53,9 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 public class QuickStart {
   public static void main(String[] args) {
     CalculationContext context = CalculationContext.newConcurrentContext();
-    context.set("sex", "male");
+    context.set("gender", "male");
 
-    String formula = "if($sex=='male'){500}else{1000}";
+    String formula = "if($gender=='male'){500}else{1000}";
     PreConstructedCalculator calculator = new JavaCodeCalculatorV3(
         new Source(formula),
         "QuickStartCalculator",
@@ -63,7 +63,7 @@ public class QuickStart {
         Thread.currentThread().getContextClassLoader());
 
     float v1 = ((Number) calculator.apply(context)).floatValue();
-    context.set("sex", "female");
+    context.set("gender", "female");
     float v2 = ((Number) calculator.apply(context)).floatValue();
 
     System.out.println(v1); // 500.0
@@ -311,7 +311,7 @@ $message[0:3]
 ### Variable Declaration in Formula
 
 ```text
-variable $sex as string set if not exists 'man' description='sex';
+variable $gender as string set if not exists 'male' description='gender';
 variable $age as number set 18 description='age';
 variable $isMember as boolean description='member flag';
 ```
@@ -335,13 +335,13 @@ context.set(new sample.v1.CheckDigits());
 float main(){
   match{
     $age < 18 -> 500,
-    default -> call feeBySex($sex)
+    default -> call feeByGender($gender)
   }
 }
 
-float feeBySex($sex as string){
+float feeByGender($gender as string){
   match{
-    $sex == 'woman' -> 1000,
+    $gender == 'female' -> 1000,
     default -> 1800
   }
 }
