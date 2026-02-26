@@ -26,6 +26,7 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
 
   private static final int MAX_CASES = 80;
   private static final int MIN_EXECUTED_CASES = 25;
+  private static final int MIN_AST_NON_FALLBACK_CASES = 8;
   private static final Pattern CALC_WITH_LITERAL_FORMULA = Pattern.compile(
       "calc\\(context\\s*,\\s*\"((?:\\\\.|[^\"\\\\])*)\"\\s*,\\s*new\\s+BigDecimal\\(\"([^\"]+)\"\\)\\)");
 
@@ -38,6 +39,7 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
     SpecifiedExpressionTypes types = new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     int executed = 0;
     int skipped = 0;
+    int astNonFallback = 0;
     for (int i = 0; i < cases.size(); i++) {
       Case testCase = cases.get(i);
       Calculator legacy;
@@ -67,11 +69,18 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
           legacyValue instanceof Number);
       assertEquivalent(testCase.formula(), legacyValue, astValue);
       assertEquivalent(testCase.formula(), legacyValue, dslJavaValue);
+      if (!"javacode-fallback".equals(ast.getObject("_astEvaluatorRuntime", String.class))) {
+        astNonFallback++;
+      }
       executed++;
     }
     assertTrue(
         "executed parity cases should be >= " + MIN_EXECUTED_CASES + " (executed=" + executed + ", skipped=" + skipped + ")",
         executed >= MIN_EXECUTED_CASES);
+    assertTrue(
+        "ast non-fallback cases should be >= " + MIN_AST_NON_FALLBACK_CASES
+            + " (astNonFallback=" + astNonFallback + ", executed=" + executed + ")",
+        astNonFallback >= MIN_AST_NON_FALLBACK_CASES);
   }
 
   private Calculator createCalculator(ExecutionBackend backend, String formula, int index,

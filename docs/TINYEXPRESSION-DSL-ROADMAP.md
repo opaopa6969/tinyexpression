@@ -500,6 +500,9 @@ Completed in this session (P3 follow-up):
    - added `DslJavaCodeGenerationExtractedParityTest`,
    - test extracts formulas from `CalculatorImplTest` and compares normalized generated Java source (`JAVA_CODE` vs `DSL_JAVA_CODE`),
    - unsupported formulas are skipped and minimum executed count is enforced.
+86. strengthened extracted three-backend value parity with AST non-fallback budget:
+   - `ThreeExecutionBackendExtractedCorpusParityTest` now tracks `_astEvaluatorRuntime`,
+   - keeps executed-case lower bound and adds minimum non-fallback AST case threshold to guard against broad regression into `javacode-fallback`.
 
 
 
