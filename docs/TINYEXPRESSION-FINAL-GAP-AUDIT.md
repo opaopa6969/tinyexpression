@@ -62,13 +62,14 @@ Last updated: 2026-02-26
 30. `AstEvaluatorCalculator` now has a token-ast literal/variable fast path for generated-runtime-unavailable cases, so trivial formulas do not require `javacode-fallback` (verified with generated-class-blocking classloader tests).
 31. AST preferred-root selection now uses shared structured-head predicates (`if`/`match`/`call` with java-style delimiters/comments) across evaluator and declaration runtime; comment-prefixed control-flow formulas are covered in regression parity corpus.
 32. Added Java source parity test between `JAVA_CODE` and `DSL_JAVA_CODE` backends (`DslJavaCodeGenerationParityTest`) over curated mixed formulas; normalized generated source text is now regression-checked for equivalence.
+33. Generated mapper probe now retries after trimming leading java delimiters/comments, improving AST mapping hit rate for comment-prefixed formulas (supported non-fallback parity now includes leading-comment `if` head case).
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
    1. `if` / `match` は専用ASTノード + direct eval 対応済み。
    2. `method invocation/declaration` は引数束縛まで direct化済みだが、宣言・複合式全体で bridge/fallback 非依存にするには未完。
-   3. `ObjectExpression` 複合式の一部は still bridge 依存（structured-text AST re-entry + shared head detection で縮小済みだが declaration-heavy / nested complex slices は未完）。
+   3. `ObjectExpression` 複合式の一部は still bridge 依存（structured-text AST re-entry + shared head detection + leading-delimiter probe retry で縮小済みだが declaration-heavy / nested complex slices は未完）。
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式まで拡張済み（if/match/call を含む preferred-root AST evaluation + method declaration text injection）
    2. declaration-heavy formulas の pure generated-ast-only 実行（bridge/fallback不要化）は未完

@@ -478,6 +478,10 @@ Completed in this session (P3 follow-up):
    - added `DslJavaCodeGenerationParityTest`,
    - compares normalized generated Java source from `JAVA_CODE` and `DSL_JAVA_CODE` across curated mixed formulas,
    - confirms current DSL JavaCode seam produces equivalent Java program text (class-name normalization applied).
+80. improved generated mapper probe resilience for leading java delimiters:
+   - `GeneratedAstRuntimeProbe.tryMapAst(...)` now retries parse after trimming leading whitespace/comments when first parse fails,
+   - enabled supported parity coverage for leading-comment `if` formulas (non-fallback assertion),
+   - internal-comment delimiter forms (`if/*...*/(...)`) remain in regression corpus parity until generated grammar support is extended.
 
 
 
@@ -528,6 +532,7 @@ Verified tests:
 43. `./mvnw -q -Dtest=AstEvaluatorTokenLiteralFallbackTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 44. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
 45. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,AstEvaluatorTokenLiteralFallbackTest test`
+46. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest,AstEvaluatorTokenLiteralFallbackTest,DslJavaCodeGenerationParityTest test`
 
 ## Execution Policy
 

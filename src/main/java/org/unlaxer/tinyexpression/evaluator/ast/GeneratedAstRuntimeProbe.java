@@ -22,6 +22,18 @@ final class GeneratedAstRuntimeProbe {
   }
 
   static Optional<Object> tryMapAst(String source, ClassLoader classLoader, String preferredAstSimpleName) {
+    Optional<Object> mapped = tryMapAstOnce(source, classLoader, preferredAstSimpleName);
+    if (mapped.isPresent()) {
+      return mapped;
+    }
+    String normalized = trimLeadingJavaDelimiters(source);
+    if (normalized.equals(source)) {
+      return Optional.empty();
+    }
+    return tryMapAstOnce(normalized, classLoader, preferredAstSimpleName);
+  }
+
+  private static Optional<Object> tryMapAstOnce(String source, ClassLoader classLoader, String preferredAstSimpleName) {
     try {
       Class<?> mapperClass = Class.forName(
           "org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
@@ -37,5 +49,39 @@ final class GeneratedAstRuntimeProbe {
     } catch (Throwable e) {
       return Optional.empty();
     }
+  }
+
+  private static String trimLeadingJavaDelimiters(String source) {
+    if (source == null || source.isEmpty()) {
+      return "";
+    }
+    int i = 0;
+    while (i < source.length()) {
+      char c = source.charAt(i);
+      if (Character.isWhitespace(c)) {
+        i++;
+        continue;
+      }
+      if (c == '/' && i + 1 < source.length()) {
+        char next = source.charAt(i + 1);
+        if (next == '/') {
+          i += 2;
+          while (i < source.length() && source.charAt(i) != '\n') {
+            i++;
+          }
+          continue;
+        }
+        if (next == '*') {
+          int end = source.indexOf("*/", i + 2);
+          if (end < 0) {
+            return "";
+          }
+          i = end + 2;
+          continue;
+        }
+      }
+      break;
+    }
+    return i == 0 ? source : source.substring(i);
   }
 }
