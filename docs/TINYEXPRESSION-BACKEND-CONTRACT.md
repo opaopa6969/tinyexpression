@@ -24,8 +24,8 @@ Last updated: 2026-02-26
 
 4. `DSL_JAVA_CODE`
    - class family: `org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator`
-   - role: DSL JavaCode seam (currently legacy bridge)
-   - change policy: migration target for future native DSL Java emitter
+   - role: DSL JavaCode seam (hybrid: partial native emitter + legacy bridge fallback)
+   - change policy: migration target for expanding native DSL Java emitter coverage
 
 ## 2. Selection Contract
 
@@ -52,7 +52,22 @@ Last updated: 2026-02-26
 3. DAP probe:
    - `parity.*` variables and `parity.equalAll` must reflect all four backends
 
-## 4. Change Guidelines
+## 4. Runtime Marker Contract
+
+1. shared:
+   - `_tinyExecutionBackend`
+   - `_tinyExecutionMode`
+   - `_tinyExecutionImplementation`
+   - `_tinyExecutionBridgeImplementation`
+   - `_tinyExecutionNonBridgeImplementation`
+2. DSL backend additional markers:
+   - `_tinyDslJavaEmitterMode`
+   - `_tinyDslJavaNativeEmitterUsed`
+3. current DSL implementation values:
+   - native-slice hit: `_tinyExecutionImplementation=dsl-javacode-native`
+   - fallback: `_tinyExecutionImplementation=legacy-javacode-bridge`
+
+## 5. Change Guidelines
 
 1. when extending syntax/runtime:
    - first update `JAVA_CODE` and `AST_EVALUATOR`

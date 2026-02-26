@@ -34,6 +34,34 @@ public class FormulaInfoExecutionBackendSelectionTest {
   }
 
   @Test
+  public void testExecutionBackendMetadataSelectsDslJavaCodeNativeEmitterForLiteral() {
+    FormulaInfoAdditionalFields additionalFields = additionalFields();
+    StringBuilder builder = new StringBuilder();
+    builder
+        .append("backend:dsl-javacode").append('\n')
+        .append("calculatorName:dslLiteralNative").append('\n')
+        .append("resultType:float").append('\n')
+        .append("formula:").append('\n')
+        .append("1").append('\n')
+        .append("---END_OF_PART---").append('\n');
+
+    FormulaInfo formulaInfo = parseSingle(builder.toString(), additionalFields);
+
+    assertEquals(ExecutionBackend.DSL_JAVA_CODE.name(), formulaInfo.executionBackend);
+    assertTrue(formulaInfo.calculator() instanceof DslJavaCodeCalculator);
+    assertEquals("dsl-javacode-native",
+        formulaInfo.calculator().getObject("_tinyExecutionImplementation", String.class));
+    assertEquals(Boolean.FALSE,
+        formulaInfo.calculator().getObject("_tinyExecutionBridgeImplementation", Boolean.class));
+    assertEquals(Boolean.TRUE,
+        formulaInfo.calculator().getObject("_tinyExecutionNonBridgeImplementation", Boolean.class));
+    assertEquals("native-generated-ast",
+        formulaInfo.calculator().getObject("_tinyDslJavaEmitterMode", String.class));
+    assertEquals(Boolean.TRUE,
+        formulaInfo.calculator().getObject("_tinyDslJavaNativeEmitterUsed", Boolean.class));
+  }
+
+  @Test
   public void testExecutionBackendFallsBackToConfiguredDefaultWhenMetadataMissing() {
     FormulaInfoAdditionalFields additionalFields = additionalFields()
         .setExecutionBackend(ExecutionBackend.AST_EVALUATOR);

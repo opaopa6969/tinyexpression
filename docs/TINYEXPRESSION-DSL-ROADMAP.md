@@ -591,6 +591,15 @@ Completed in this session (P3 follow-up):
    - added `TinyExpressionParserCapabilities` under parser package,
    - migrated evaluator/probe delimiter/comment/head checks to parser-owned API (`GeneratedAstRuntimeProbe`, `AstDeclarationRuntime`, `AstEmbeddedExpressionRuntime`, `GeneratedP4ValueAstEvaluator`),
    - removed evaluator-local delimiter utility so delimiter semantics are now owned by parser package.
+108. introduced first DSL-native Java emitter slice for `DSL_JAVA_CODE` backend:
+   - added `DslGeneratedAstJavaEmitter` (generated-AST based java-source emitter) with strict literal subset support (`number` / `string` / `boolean` / `object-literal`),
+   - `DslJavaCodeCalculator#createJavaClass(...)` now runs `generated-ast -> java source` first and falls back to legacy `GeneralJavaClassCreator` path when unsupported,
+   - backend markers are now dynamic for DSL backend:
+     - native path: `_tinyExecutionImplementation=dsl-javacode-native`, `_tinyExecutionBridgeImplementation=false`,
+     - fallback path: existing `legacy-javacode-bridge`,
+   - added emitter observability markers:
+     - `_tinyDslJavaEmitterMode`,
+     - `_tinyDslJavaNativeEmitterUsed`.
 
 
 
@@ -646,6 +655,9 @@ Verified tests:
 48. `./mvnw -q -Dtest=ThreeExecutionBackendExtractedCorpusParityTest test`
 49. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 50. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
+51. `./mvnw -q -Dtest=DslGeneratedAstJavaEmitterTest test`
+52. `./mvnw -q -Dtest=FormulaInfoExecutionBackendSelectionTest,DslGeneratedAstJavaEmitterTest test`
+53. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 
 ## Execution Policy
 

@@ -17,11 +17,21 @@ public final class CalculatorCreatorRegistry {
   private CalculatorCreatorRegistry() {}
 
   private static Calculator markExecutionBackend(Calculator calculator, ExecutionBackend backend) {
+    String implementation = backend.runtimeImplementationMarker();
+    boolean bridgeImplementation = backend.bridgeImplementation();
+    if (backend == ExecutionBackend.DSL_JAVA_CODE && calculator instanceof DslJavaCodeCalculator dslJavaCodeCalculator) {
+      if (dslJavaCodeCalculator.nativeEmitterUsed()) {
+        implementation = "dsl-javacode-native";
+        bridgeImplementation = false;
+      }
+      calculator.setObject("_tinyDslJavaEmitterMode", dslJavaCodeCalculator.dslEmitterMode());
+      calculator.setObject("_tinyDslJavaNativeEmitterUsed", dslJavaCodeCalculator.nativeEmitterUsed());
+    }
     calculator.setObject("_tinyExecutionBackend", backend.name());
     calculator.setObject("_tinyExecutionMode", backend.runtimeModeMarker());
-    calculator.setObject("_tinyExecutionImplementation", backend.runtimeImplementationMarker());
-    calculator.setObject("_tinyExecutionBridgeImplementation", backend.bridgeImplementation());
-    calculator.setObject("_tinyExecutionNonBridgeImplementation", !backend.bridgeImplementation());
+    calculator.setObject("_tinyExecutionImplementation", implementation);
+    calculator.setObject("_tinyExecutionBridgeImplementation", bridgeImplementation);
+    calculator.setObject("_tinyExecutionNonBridgeImplementation", !bridgeImplementation);
     return calculator;
   }
 

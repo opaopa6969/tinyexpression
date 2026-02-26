@@ -85,6 +85,10 @@ Last updated: 2026-02-26
    1. added `TinyExpressionKeywords` as parser-owned keyword set (`if`/`match`/`call`/`external`/`internal`/`var`/`variable`),
    2. parser and evaluator runtime now consume the same keyword definitions for control-flow/method/declaration heads,
    3. alias changes now have fewer evaluator touch points (remaining textual checks are limited to comment-presence guard paths).
+44. `DSL_JAVA_CODE` now has partial native-emitter execution path:
+   1. added `DslGeneratedAstJavaEmitter` (generated-AST based java source emitter) for strict literal subset,
+   2. `DslJavaCodeCalculator` now selects native emitter first and falls back to legacy bridge when unsupported,
+   3. backend implementation marker is dynamic for DSL backend (`dsl-javacode-native` vs `legacy-javacode-bridge`) with `_tinyDslJavaEmitterMode` / `_tinyDslJavaNativeEmitterUsed` observability fields.
 
 ## Remaining Gaps
 
@@ -107,10 +111,10 @@ Last updated: 2026-02-26
    3. DAP variables now include 4-backend parity probe fields (`parity.*`, `parity.equalAll`), but per-step evaluator-value parity (step-by-step, not whole-formula probe) is not complete
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
-   2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata
-   3. current seam equivalence with legacy generated Java source is regression-checked on curated corpus
-   4. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
-   5. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
+   2. seam now supports a partial native-emitter slice (generated AST -> Java source) for strict literal formulas; unsupported formulas still use legacy bridge path
+   3. current seam equivalence with legacy generated Java source remains regression-checked on curated corpus (non-literal/mixed formulas currently bridge path)
+   4. dedicated DSL-native Java emitter for complex formulas (`if`/`match`/`declaration`/`method`) is not complete yet
+   5. large-corpus parity/performance sign-off for expanded native emitter path is still pending
 7. Delimiter-chain coupling cleanup (design follow-up):
    1. shared parser-owned capability is now in place (`TinyExpressionParserCapabilities`), reducing duplication risk
    2. remaining work: align this API explicitly with `XXXDelimitedChain` combinator internals to make delimiter behavior changes verifiably contract-driven
