@@ -1,0 +1,146 @@
+# TinyExpression P4 Draft Grammar (BNF/EBNF reconstructed)
+
+Source of truth:
+- ../ubnf/tinyexpression-p4-draft.ubnf
+
+Notes:
+- This is a reconstructed BNF/EBNF view for readability.
+- [] means optional, {} means repetition (0..n).
+- Token terminals are defined by parser bindings in UBNF (NUMBER, IDENTIFIER, STRING).
+
+<Formula> ::= { <VariableDeclaration> } { <Annotation> } <Expression> { <MethodDeclaration> } ;
+
+<VariableDeclaration> ::= <NumberVariableDeclaration>
+                        | <StringVariableDeclaration>
+                        | <BooleanVariableDeclaration>
+                        | <ObjectVariableDeclaration> ;
+
+<NumberVariableDeclaration> ::= ( 'var' | 'variable' ) '$' IDENTIFIER
+                                [ <NumberTypeHint> ] [ <NumberSetter> ] <Description> ';' ;
+
+<StringVariableDeclaration> ::= ( 'var' | 'variable' ) '$' IDENTIFIER
+                                [ <StringTypeHint> ] [ <StringSetter> ] <Description> ';' ;
+
+<BooleanVariableDeclaration> ::= ( 'var' | 'variable' ) '$' IDENTIFIER
+                                 [ <BooleanTypeHint> ] [ <BooleanSetter> ] <Description> ';' ;
+
+<ObjectVariableDeclaration> ::= ( 'var' | 'variable' ) '$' IDENTIFIER
+                                [ <ObjectTypeHint> ] [ <ObjectSetter> ] <Description> ';' ;
+
+<TypeHint> ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
+
+<NumberTypeHint>  ::= [ 'as' ] ( 'number' | 'float' ) ;
+<StringTypeHint>  ::= [ 'as' ] 'string' ;
+<BooleanTypeHint> ::= [ 'as' ] 'boolean' ;
+<ObjectTypeHint>  ::= [ 'as' ] 'object' ;
+
+<NumberSetter>  ::= 'set' [ 'if' 'not' 'exists' ] <NumberExpression> ;
+<StringSetter>  ::= 'set' [ 'if' 'not' 'exists' ] <StringExpression> ;
+<BooleanSetter> ::= 'set' [ 'if' 'not' 'exists' ] <BooleanExpression> ;
+<ObjectSetter>  ::= 'set' [ 'if' 'not' 'exists' ] <ObjectExpression> ;
+
+<Description> ::= 'description' '=' STRING ;
+
+<Annotation> ::= '@' IDENTIFIER '(' [ <AnnotationParameters> ] ')' ;
+<AnnotationParameters> ::= <AnnotationParameter> { ',' <AnnotationParameter> } ;
+<AnnotationParameter> ::= IDENTIFIER '=' <Expression> ;
+
+<MethodDeclaration> ::= <NumberMethodDeclaration>
+                      | <StringMethodDeclaration>
+                      | <BooleanMethodDeclaration>
+                      | <ObjectMethodDeclaration> ;
+
+<NumberMethodDeclaration> ::= <NumberReturnType> IDENTIFIER '(' [ <MethodParameters> ] ')'
+                              '{' <NumberExpression> '}' ;
+
+<StringMethodDeclaration> ::= <StringReturnType> IDENTIFIER '(' [ <MethodParameters> ] ')'
+                              '{' <StringExpression> '}' ;
+
+<BooleanMethodDeclaration> ::= <BooleanReturnType> IDENTIFIER '(' [ <MethodParameters> ] ')'
+                               '{' <BooleanExpression> '}' ;
+
+<ObjectMethodDeclaration> ::= <ObjectReturnType> IDENTIFIER '(' [ <MethodParameters> ] ')'
+                              '{' <ObjectExpression> '}' ;
+
+<MethodParameters> ::= <MethodParameter> { ',' <MethodParameter> } ;
+<MethodParameter> ::= '$' IDENTIFIER [ 'as' <ReturnType> ] ;
+
+<NumberReturnType>  ::= 'number' | 'float' ;
+<StringReturnType>  ::= 'string' ;
+<BooleanReturnType> ::= 'boolean' ;
+<ObjectReturnType>  ::= 'object' ;
+<ReturnType> ::= <NumberReturnType> | <StringReturnType> | <BooleanReturnType> | <ObjectReturnType> ;
+
+<MethodInvocation> ::= 'call' IDENTIFIER '(' [ <Arguments> ] ')' ;
+<Arguments> ::= <Expression> { ',' <Expression> } ;
+
+<NumberExpression> ::= <NumberTerm> { <AddOp> <NumberTerm> } ;
+<NumberTerm> ::= <NumberFactor> { <MulOp> <NumberFactor> } ;
+<AddOp> ::= '+' | '-' ;
+<MulOp> ::= '*' | '/' ;
+
+<NumberFactor> ::= <NumberMatchExpression>
+                 | <IfExpression>
+                 | NUMBER
+                 | <VariableRef>
+                 | <MethodInvocation>
+                 | '(' <NumberExpression> ')' ;
+
+<StringExpression> ::= <StringMatchExpression>
+                     | STRING
+                     | <VariableRef>
+                     | <MethodInvocation> ;
+
+<BooleanExpression> ::= <BooleanMatchExpression>
+                      | <ComparisonExpression>
+                      | 'true'
+                      | 'false'
+                      | <VariableRef>
+                      | <MethodInvocation> ;
+
+<ComparisonExpression> ::= <NumberExpression> <CompareOp> <NumberExpression> ;
+<CompareOp> ::= '==' | '!=' | '<=' | '>=' | '<' | '>' ;
+
+<ObjectExpression> ::= <NumberExpression>
+                     | <StringExpression>
+                     | <BooleanExpression>
+                     | <VariableRef>
+                     | <MethodInvocation> ;
+
+<IfExpression> ::= 'if' '(' <BooleanExpression> ')'
+                   '{' <Expression> '}'
+                   'else'
+                   '{' <Expression> '}' ;
+
+<NumberMatchExpression> ::= 'match' '{'
+                              <NumberCase> { ',' <NumberCase> }
+                              ',' <NumberDefaultCase>
+                            '}' ;
+<NumberCase> ::= <BooleanExpression> '->' <NumberCaseValue> ;
+<NumberDefaultCase> ::= 'default' '->' <NumberCaseValue> ;
+<NumberCaseValue> ::= <NumberExpression> ;
+
+<StringMatchExpression> ::= 'match' '{'
+                              <StringCase> { ',' <StringCase> }
+                              ',' <StringDefaultCase>
+                            '}' ;
+<StringCase> ::= <BooleanExpression> '->' <StringCaseValue> ;
+<StringDefaultCase> ::= 'default' '->' <StringCaseValue> ;
+<StringCaseValue> ::= <StringExpression> ;
+
+<BooleanMatchExpression> ::= 'match' '{'
+                               <BooleanCase> { ',' <BooleanCase> }
+                               ',' <BooleanDefaultCase>
+                             '}' ;
+<BooleanCase> ::= <BooleanExpression> '->' <BooleanCaseValue> ;
+<BooleanDefaultCase> ::= 'default' '->' <BooleanCaseValue> ;
+<BooleanCaseValue> ::= <BooleanExpression> ;
+
+<VariableRef> ::= '$' IDENTIFIER [ <TypeHint> ] ;
+
+<Expression> ::= <NumberExpression>
+               | <StringExpression>
+               | <BooleanExpression>
+               | <ObjectExpression>
+               | <MethodInvocation>
+               | '(' <Expression> ')' ;

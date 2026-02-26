@@ -488,6 +488,10 @@ This pair is useful when you need:
 
 ## LSP / DAP / DSL Migration Docs
 
+- grammar UBNF (source of truth): [docs/ubnf/tinyexpression-p4-draft.ubnf](docs/ubnf/tinyexpression-p4-draft.ubnf)
+- grammar parser-ir: [docs/ubnf/tinyexpression-p4-draft.parser-ir.json](docs/ubnf/tinyexpression-p4-draft.parser-ir.json)
+- grammar BNF (reconstructed): [docs/grammar/tinyexpression-p4-draft.bnf](docs/grammar/tinyexpression-p4-draft.bnf)
+- railroad diagrams (Mermaid): [docs/grammar/tinyexpression-p4-railroad.md](docs/grammar/tinyexpression-p4-railroad.md)
 - backend contract: [docs/TINYEXPRESSION-BACKEND-CONTRACT.md](docs/TINYEXPRESSION-BACKEND-CONTRACT.md)
 - UnlaxerDSL handbook: [docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md)
 - migration guide: [docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md](docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md)
