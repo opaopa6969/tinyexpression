@@ -1,7 +1,59 @@
 package org.unlaxer.tinyexpression.runtime;
 
+import java.util.Locale;
+import java.util.Optional;
+
 public enum ExecutionBackend {
   JAVA_CODE,
   AST_EVALUATOR,
-  DSL_JAVA_CODE
+  DSL_JAVA_CODE;
+
+  public String runtimeModeMarker() {
+    return switch (this) {
+      case JAVA_CODE -> "javacode";
+      case AST_EVALUATOR -> "ast-evaluator";
+      case DSL_JAVA_CODE -> "dsl-javacode";
+    };
+  }
+
+  public String runtimeImplementationMarker() {
+    return switch (this) {
+      case JAVA_CODE -> "legacy-javacode";
+      case AST_EVALUATOR -> "ast-evaluator";
+      case DSL_JAVA_CODE -> "legacy-javacode-bridge";
+    };
+  }
+
+  public boolean bridgeImplementation() {
+    return this == DSL_JAVA_CODE;
+  }
+
+  public static Optional<ExecutionBackend> parse(String value) {
+    if (value == null) {
+      return Optional.empty();
+    }
+    String normalized = value.trim();
+    if (normalized.isEmpty()) {
+      return Optional.empty();
+    }
+    normalized = normalized
+        .replace('-', '_')
+        .replace(' ', '_')
+        .toUpperCase(Locale.ROOT);
+    String compact = normalized.replace("_", "");
+    if ("DSLJAVACODE".equals(compact)) {
+      return Optional.of(DSL_JAVA_CODE);
+    }
+    if ("JAVACODE".equals(compact)) {
+      return Optional.of(JAVA_CODE);
+    }
+    if ("ASTEVALUATOR".equals(compact)) {
+      return Optional.of(AST_EVALUATOR);
+    }
+    try {
+      return Optional.of(ExecutionBackend.valueOf(normalized));
+    } catch (IllegalArgumentException e) {
+      return Optional.empty();
+    }
+  }
 }

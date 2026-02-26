@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreator;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.digest.HEX;
@@ -55,11 +56,13 @@ public class FormulaInfoParser extends LazyOneOrMore{
   @TokenExtractor
   public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed ,
       FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
+    List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
+    ExecutionBackend selectedBackend = resolveExecutionBackend(elements, formulaInfoAdditionalFields);
     CalculatorCreator calculatorCreator =
-        CalculatorCreatorRegistry.forBackend(formulaInfoAdditionalFields.executionBackend());
+        CalculatorCreatorRegistry.forBackend(selectedBackend);
 
     FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields , calculatorCreator);
-    List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
+    formulaInfo.executionBackend = selectedBackend.name();
 
     AtomicBoolean hasByteCode = new AtomicBoolean(false);
     for (Token token : elements) {
@@ -81,6 +84,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "dependsOn", (value)->formulaInfo.dependsOn = value);
         match |= set(keyValue, "resultType", (value)->formulaInfo.resultType = new ResultType(value));
         match |= set(keyValue, "numberType", (value)->formulaInfo.numberType = new ResultType(value));
+        match |= setExecutionBackend(keyValue, formulaInfo);
 //        match |= set(keyValue, "outputTo", (value)->formulaInfo.outputTo = value);
 
         if(formulaInfoAdditionalFields.multiTenancyAttributeName().isPresent()) {
@@ -140,6 +144,40 @@ public class FormulaInfoParser extends LazyOneOrMore{
       formulaInfo.updateCalculatorWithByteCode(classLoader);
     }
     return formulaInfo;
+  }
+
+  static ExecutionBackend resolveExecutionBackend(List<Token> elements,
+      FormulaInfoAdditionalFields formulaInfoAdditionalFields) {
+    ExecutionBackend resolved = formulaInfoAdditionalFields.executionBackend();
+    for (Token token : elements) {
+      Parser parser = token.parser;
+      if (!(parser instanceof FormulaInfoElementParser)) {
+        continue;
+      }
+      TypedToken<FormulaInfoElementParser> typed = token.typed(FormulaInfoElementParser.class);
+      FormulaInfoElementParser formulaInfoElementParser = typed.getParser();
+      KeyValue keyValue = formulaInfoElementParser.extract(typed);
+      if(false == isExecutionBackendKey(keyValue.getKey())) {
+        continue;
+      }
+      resolved = ExecutionBackend.parse(keyValue.getValue()).orElseThrow(
+          () -> new IllegalArgumentException("unknown executionBackend: " + keyValue.getValue()));
+    }
+    return resolved;
+  }
+
+  static boolean setExecutionBackend(KeyValue keyValue, FormulaInfo formulaInfo) {
+    if(false == isExecutionBackendKey(keyValue.getKey())) {
+      return false;
+    }
+    ExecutionBackend executionBackend = ExecutionBackend.parse(keyValue.getValue()).orElseThrow(
+        () -> new IllegalArgumentException("unknown executionBackend: " + keyValue.getValue()));
+    formulaInfo.executionBackend = executionBackend.name();
+    return true;
+  }
+
+  static boolean isExecutionBackendKey(String key) {
+    return "executionBackend".equalsIgnoreCase(key) || "backend".equalsIgnoreCase(key);
   }
 
   static boolean set(KeyValue keyValue , String targetKey , Consumer<String> valueConsumer) {

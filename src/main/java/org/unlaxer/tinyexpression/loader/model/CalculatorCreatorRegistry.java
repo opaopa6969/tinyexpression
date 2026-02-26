@@ -14,6 +14,15 @@ public final class CalculatorCreatorRegistry {
 
   private CalculatorCreatorRegistry() {}
 
+  private static Calculator markExecutionBackend(Calculator calculator, ExecutionBackend backend) {
+    calculator.setObject("_tinyExecutionBackend", backend.name());
+    calculator.setObject("_tinyExecutionMode", backend.runtimeModeMarker());
+    calculator.setObject("_tinyExecutionImplementation", backend.runtimeImplementationMarker());
+    calculator.setObject("_tinyExecutionBridgeImplementation", backend.bridgeImplementation());
+    calculator.setObject("_tinyExecutionNonBridgeImplementation", !backend.bridgeImplementation());
+    return calculator;
+  }
+
   public static CalculatorCreator forBackend(ExecutionBackend backend) {
     if (backend == ExecutionBackend.AST_EVALUATOR) {
       return astEvaluatorCreator();
@@ -30,15 +39,19 @@ public final class CalculatorCreatorRegistry {
       @Override
       public Calculator create(Source source, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
+        return markExecutionBackend(
+            new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader),
+            ExecutionBackend.JAVA_CODE);
       }
 
       @Override
       public Calculator create(Source source, String javaCode, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
           List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
-        return new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
-            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+        return markExecutionBackend(
+            new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
+            ExecutionBackend.JAVA_CODE);
       }
     };
   }
@@ -49,15 +62,19 @@ public final class CalculatorCreatorRegistry {
       @Override
       public Calculator create(Source source, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        return new AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader);
+        return markExecutionBackend(
+            new AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader),
+            ExecutionBackend.AST_EVALUATOR);
       }
 
       @Override
       public Calculator create(Source source, String javaCode, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
           List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
-        return new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
-            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+        return markExecutionBackend(
+            new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
+            ExecutionBackend.AST_EVALUATOR);
       }
     };
   }
@@ -68,21 +85,19 @@ public final class CalculatorCreatorRegistry {
       @Override
       public Calculator create(Source source, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-        JavaCodeCalculatorV3 calculator =
-            new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader);
-        calculator.setObject("_tinyExecutionMode", "dsl-javacode");
-        return calculator;
+        return markExecutionBackend(
+            new JavaCodeCalculatorV3(source, className, specifiedExpressionTypes, classLoader),
+            ExecutionBackend.DSL_JAVA_CODE);
       }
 
       @Override
       public Calculator create(Source source, String javaCode, String className,
           SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
           List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
-        JavaCodeCalculatorV3 calculator =
+        return markExecutionBackend(
             new JavaCodeCalculatorV3(source, javaCode, className, specifiedExpressionTypes,
-                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
-        calculator.setObject("_tinyExecutionMode", "dsl-javacode");
-        return calculator;
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
+            ExecutionBackend.DSL_JAVA_CODE);
       }
     };
   }

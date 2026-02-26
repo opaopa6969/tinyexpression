@@ -47,6 +47,9 @@ Last updated: 2026-02-25
    1. `NumberMatchExpr` / `StringMatchExpr` / `BooleanMatchExpr` and case/default/value nodes are generated.
    2. generated runtime executes condition dispatch + selected branch evaluation directly on AST for number/string/boolean paths (and object path where these expressions are selected as root).
 22. Declaration runtime preferred-root policy now includes structured expression heads (`if`/`match`/`call`) so setter expressions can reach generated AST direct paths before bridge fallback.
+23. Formula loader now supports per-formula backend selection (`executionBackend` / `backend`) and validates backend names before calculator construction.
+24. All three backends now publish unified runtime marker metadata (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags), enabling tooling/diagnostics to distinguish bridge vs non-bridge execution.
+25. Three-backend parity corpus coverage has been expanded to broader mixed formulas (method-args and declaration-heavy slices included).
 
 ## Remaining Gaps
 
@@ -67,7 +70,7 @@ Last updated: 2026-02-25
    2. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
 6. Full DSL-native Java code generation backend:
    1. `DSL_JAVA_CODE` execution backend is present as integration seam
-   2. backend currently reuses legacy JavaCode compiler path (bridge mode)
+   2. backend currently reuses legacy JavaCode compiler path (bridge mode), but selection/metadata path is now production-wirable via formula metadata
    3. dedicated DSL-generated Java emitter + runtime parity at scale are not complete
 
 ## Dependency-Side Needs (Potential Future)

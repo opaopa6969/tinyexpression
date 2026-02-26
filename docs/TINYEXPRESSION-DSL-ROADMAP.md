@@ -440,6 +440,14 @@ Completed in this session (P3 follow-up):
 70. improved declaration-runtime generated AST selection for complex setter expressions:
    - `AstDeclarationRuntime` now uses preferred-root candidate list (`if`/`match`/`call` aware) instead of single fixed root by result type,
    - typed declaration setter flow now covers match-based defaults on generated path (e.g. `set if not exists match{...}`).
+71. expanded three-backend parity corpus to a broader mixed slice:
+   - `ThreeExecutionBackendParityTest` now covers numeric arithmetic/control-flow/match, string/boolean match, object literals/variables, method argument calls, and declaration-heavy formulas,
+   - parity assertion remains `JAVA_CODE` baseline vs `AST_EVALUATOR` and `DSL_JAVA_CODE`.
+72. implemented formula-level backend selection wiring + backend diagnostics markers:
+   - `FormulaInfoParser` now resolves execution backend from metadata keys (`executionBackend` / `backend`) with strict validation and fallback to configured default backend,
+   - `ExecutionBackend` now provides normalized parser (`dsl-javacode` etc.) and runtime marker metadata,
+   - `CalculatorCreatorRegistry` now emits unified runtime markers (`_tinyExecutionBackend`, `_tinyExecutionMode`, `_tinyExecutionImplementation`, bridge flags) for all three backends,
+   - added focused loader test `FormulaInfoExecutionBackendSelectionTest`.
 
 
 
@@ -482,6 +490,7 @@ Verified tests:
 35. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorParityCorpusTest test`
 36. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest test`
 37. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorBackendParityTest test`
+38. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,FormulaInfoExecutionBackendSelectionTest test`
 
 ## Execution Policy
 
