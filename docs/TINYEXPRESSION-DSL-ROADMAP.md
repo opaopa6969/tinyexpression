@@ -603,6 +603,13 @@ Completed in this session (P3 follow-up):
 109. exposed DSL native-emitter markers in DAP runtime bridge:
    - `TinyExpressionDapRuntimeBridge` now forwards `_tinyDslJavaEmitterMode` / `_tinyDslJavaNativeEmitterUsed`,
    - DAP regression now verifies bridge case (`1+1`) and native-literal case (`1`) for `runtimeMode=dsl-javacode`.
+110. registered postponed design tasks in dedicated backlog document:
+   - added `docs/TINYEXPRESSION-DESIGN-BACKLOG.md`,
+   - captured parser delimiter coupling / keyword coupling / evaluator type safety / error-message envelope items for next design phase.
+111. added VS Code plugin operation notes and extension policy:
+   - added `docs/TINYEXPRESSION-VSCODE-PLUGIN-NOTES.md`,
+   - recorded canonical extension recommendation (`.texpr`) with compatibility extensions,
+   - documented three-variant packaging pattern (`token` / `ast` / `dsl-javacode`) for DAP/runtime split distribution.
 
 
 
