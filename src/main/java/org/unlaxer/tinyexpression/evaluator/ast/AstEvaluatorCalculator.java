@@ -240,14 +240,12 @@ public class AstEvaluatorCalculator implements Calculator {
       return simpleLiteralOrVariable.get();
     }
 
-    if (shouldTryDeclarationShortcut(source.source())) {
-      Optional<AstDeclarationRuntime.MainExpressionEvaluation> declarationEvaluated =
-          AstDeclarationRuntime.tryEvaluateMainExpression(
-              source.source(), specifiedExpressionTypes, calculationContext, classLoader);
-      if (declarationEvaluated.isPresent()) {
-        setObject("_astEvaluatorRuntime", declarationEvaluated.get().runtime());
-        return declarationEvaluated.get().value();
-      }
+    Optional<AstDeclarationRuntime.MainExpressionEvaluation> declarationEvaluated =
+        AstDeclarationRuntime.tryEvaluateMainExpression(
+            source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+    if (declarationEvaluated.isPresent()) {
+      setObject("_astEvaluatorRuntime", declarationEvaluated.get().runtime());
+      return declarationEvaluated.get().value();
     }
 
     Optional<Object> astEvaluated = tokenAstEvaluated.isPresent()
@@ -384,52 +382,6 @@ public class AstEvaluatorCalculator implements Calculator {
       return true;
     }
     return false;
-  }
-
-  private boolean shouldTryDeclarationShortcut(String formula) {
-    if (formula == null || formula.isBlank()) {
-      return false;
-    }
-    String normalized = formula.strip();
-    String trimmedLeading = trimLeadingJavaDelimiters(normalized);
-    if (trimmedLeading.contains("/*") || trimmedLeading.contains("//")) {
-      return false;
-    }
-    return trimmedLeading.contains(";") || trimmedLeading.contains("\n");
-  }
-
-  private String trimLeadingJavaDelimiters(String source) {
-    if (source == null || source.isEmpty()) {
-      return "";
-    }
-    int i = 0;
-    while (i < source.length()) {
-      char c = source.charAt(i);
-      if (Character.isWhitespace(c)) {
-        i++;
-        continue;
-      }
-      if (c == '/' && i + 1 < source.length()) {
-        char next = source.charAt(i + 1);
-        if (next == '/') {
-          i += 2;
-          while (i < source.length() && source.charAt(i) != '\n') {
-            i++;
-          }
-          continue;
-        }
-        if (next == '*') {
-          int end = source.indexOf("*/", i + 2);
-          if (end < 0) {
-            return "";
-          }
-          i = end + 2;
-          continue;
-        }
-      }
-      break;
-    }
-    return i == 0 ? source : source.substring(i);
   }
 
   private String extractVariableName(String formula) {

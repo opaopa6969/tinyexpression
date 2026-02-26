@@ -518,6 +518,10 @@ Completed in this session (P3 follow-up):
    - current declaration/embedded-expression pre-checks still include evaluator-side string heuristics,
    - move these checks behind parser-owned capability APIs so parser keyword aliases (for example `variable` or localized tokens) and delimiter-combinator changes do not require evaluator runtime edits,
    - target hotspots: `AstEvaluatorCalculator.shouldTryDeclarationShortcut(...)` and `GeneratedAstRuntimeProbe` normalization path.
+91. switched declaration shortcut entry from heuristic gating to parser-attempt-first:
+   - `AstEvaluatorCalculator` now always attempts `AstDeclarationRuntime.tryEvaluateMainExpression(...)` before `javacode-fallback` (no `var`/separator heuristic gate),
+   - internal-comment parity guard is centralized in `AstDeclarationRuntime` (leading comments allowed, internal comment-delimited declaration formulas remain excluded),
+   - keeps runtime parity for regression corpus while reducing evaluator-side keyword coupling.
 
 
 
