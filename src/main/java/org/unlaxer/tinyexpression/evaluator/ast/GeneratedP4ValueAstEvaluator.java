@@ -20,7 +20,20 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 final class GeneratedP4ValueAstEvaluator {
 
+  private static final ThreadLocal<Boolean> EMBEDDED_BRIDGE_USED =
+      ThreadLocal.withInitial(() -> false);
+
   private GeneratedP4ValueAstEvaluator() {}
+
+  static void resetEmbeddedBridgeUsageFlag() {
+    EMBEDDED_BRIDGE_USED.set(false);
+  }
+
+  static boolean consumeEmbeddedBridgeUsageFlag() {
+    boolean used = EMBEDDED_BRIDGE_USED.get();
+    EMBEDDED_BRIDGE_USED.set(false);
+    return used;
+  }
 
   static Optional<Object> tryEvaluate(Object mappedAst, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext) {
@@ -79,7 +92,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (number.isPresent()) {
         return number;
       }
-      return AstEmbeddedExpressionRuntime.tryEvaluate(
+      return evaluateEmbedded(
           fallbackFormulaSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, null);
     }
     if (resultType.isString()) {
@@ -314,7 +327,7 @@ final class GeneratedP4ValueAstEvaluator {
     if (remapped.isPresent()) {
       return Optional.of(String.valueOf(remapped.get()));
     }
-    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+    Optional<Object> embedded = evaluateEmbedded(
         text, ExpressionTypes.string, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
     if (embedded.isPresent()) {
       return Optional.of(String.valueOf(embedded.get()));
@@ -355,7 +368,7 @@ final class GeneratedP4ValueAstEvaluator {
     if (remapped.isPresent()) {
       return toBoolean(remapped.get());
     }
-    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+    Optional<Object> embedded = evaluateEmbedded(
         text, ExpressionTypes._boolean, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
     if (embedded.isPresent()) {
       return toBoolean(embedded.get());
@@ -410,7 +423,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (remapped.isPresent()) {
         return remapped;
       }
-      Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+      Optional<Object> embedded = evaluateEmbedded(
           normalized, ExpressionTypes.object, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
       if (embedded.isPresent()) {
         return embedded;
@@ -538,6 +551,17 @@ final class GeneratedP4ValueAstEvaluator {
       case ">=" -> Optional.of(compare >= 0);
       default -> Optional.empty();
     };
+  }
+
+  private static Optional<Object> evaluateEmbedded(String expressionSource, ExpressionType resultType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String fallbackFormulaSource) {
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        expressionSource, resultType, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (embedded.isPresent()) {
+      EMBEDDED_BRIDGE_USED.set(true);
+    }
+    return embedded;
   }
 
   private static Optional<Object> evaluateIfExpression(Object ifNode, ExpressionType expectedType,
@@ -756,7 +780,7 @@ final class GeneratedP4ValueAstEvaluator {
         return evaluated;
       }
     }
-    return AstEmbeddedExpressionRuntime.tryEvaluate(
+    return evaluateEmbedded(
         method.expression(), expectedType, evalTypes, scopedContext, effectiveClassLoader, sourceFormula);
   }
 
@@ -805,7 +829,7 @@ final class GeneratedP4ValueAstEvaluator {
         return coerceToParameterType(evaluated.get(), parameterType, specifiedExpressionTypes.numberType());
       }
     }
-    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+    Optional<Object> embedded = evaluateEmbedded(
         source, parameterType, argumentTypes, context, classLoader, sourceFormula);
     if (embedded.isPresent()) {
       return coerceToParameterType(embedded.get(), parameterType, specifiedExpressionTypes.numberType());

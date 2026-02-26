@@ -194,6 +194,7 @@ public class AstEvaluatorCalculator implements Calculator {
   @Override
   public Object apply(CalculationContext calculationContext) {
     Optional<Object> tokenAstEvaluated = Optional.empty();
+    setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
     if (generatedAstRuntimeAvailable) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
@@ -204,14 +205,17 @@ public class AstEvaluatorCalculator implements Calculator {
         }
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
+        GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
         if (generatedAstEvaluated.isEmpty() && !declarationsApplied) {
           AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
           declarationsApplied = true;
+          GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
           generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
               mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
         }
+        boolean generatedEmbeddedBridgeUsed = GeneratedP4ValueAstEvaluator.consumeEmbeddedBridgeUsageFlag();
         ExpressionType evaluatedResultType = resultType();
         if (generatedAstEvaluated.isPresent() && evaluatedResultType != null && evaluatedResultType.isNumber()) {
           tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
@@ -226,6 +230,7 @@ public class AstEvaluatorCalculator implements Calculator {
         if (generatedAstEvaluated.isPresent()) {
           setObject("_astEvaluatorRuntime", "generated-ast");
           setObject("_astEvaluatorMapperAvailable", true);
+          setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", generatedEmbeddedBridgeUsed);
           return generatedAstEvaluated.get();
         }
       }

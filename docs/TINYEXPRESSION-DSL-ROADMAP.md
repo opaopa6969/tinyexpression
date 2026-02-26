@@ -547,6 +547,10 @@ Completed in this session (P3 follow-up):
    - `TinyExpressionDapRuntimeBridge` now evaluates formula once per backend (`JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`) and exports `parity.*` variables,
    - includes per-backend value/type/normalized fields plus `parity.equalAll`,
    - provides value-level runtime parity visibility directly in DAP `variables` response.
+98. added generated-path embedded-bridge usage marker:
+   - `GeneratedP4ValueAstEvaluator` now tracks whether evaluation touched `AstEmbeddedExpressionRuntime`,
+   - `AstEvaluatorCalculator` publishes `_astEvaluatorGeneratedEmbeddedBridgeUsed`,
+   - DAP runtime bridge exposes this marker to distinguish pure generated-ast runs from generated+embedded mixed execution.
 
 
 

@@ -24,6 +24,7 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("AST_EVALUATOR", ast.get("_tinyExecutionBackend"));
     assertNotNull(ast.get("evaluationResultType"));
     assertNotNull(ast.get("evaluationResultNormalized"));
+    assertNotNull(ast.get("_astEvaluatorGeneratedEmbeddedBridgeUsed"));
 
     Map<String, String> token = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "token");
     assertEquals("JAVA_CODE", token.get("selectedExecutionBackend"));

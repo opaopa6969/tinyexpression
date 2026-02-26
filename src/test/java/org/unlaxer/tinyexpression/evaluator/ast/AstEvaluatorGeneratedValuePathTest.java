@@ -27,6 +27,7 @@ public class AstEvaluatorGeneratedValuePathTest {
 
     assertEquals(true, value);
     assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertEquals(false, ast.getObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", Boolean.class));
   }
 
   @Test
