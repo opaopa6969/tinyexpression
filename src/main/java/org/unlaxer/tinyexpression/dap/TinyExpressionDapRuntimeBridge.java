@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.dap;
 
+import java.math.BigDecimal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -52,6 +53,8 @@ public final class TinyExpressionDapRuntimeBridge {
       try {
         Object value = calculator.apply(CalculationContext.newConcurrentContext());
         vars.put("evaluationResult", truncate(String.valueOf(value)));
+        vars.put("evaluationResultType", truncate(value == null ? "null" : value.getClass().getName()));
+        vars.put("evaluationResultNormalized", truncate(normalizeResult(value)));
       } catch (Throwable applyError) {
         vars.put("evaluationError",
             truncate(applyError.getClass().getSimpleName() + ":" + safeMessage(applyError)));
@@ -109,5 +112,19 @@ public final class TinyExpressionDapRuntimeBridge {
       return normalized;
     }
     return normalized.substring(0, VALUE_LIMIT) + "...";
+  }
+
+  private static String normalizeResult(Object value) {
+    if (value == null) {
+      return "null";
+    }
+    if (value instanceof Number number) {
+      try {
+        return new BigDecimal(String.valueOf(number)).stripTrailingZeros().toPlainString();
+      } catch (Throwable ignored) {
+        return String.valueOf(value);
+      }
+    }
+    return String.valueOf(value);
   }
 }

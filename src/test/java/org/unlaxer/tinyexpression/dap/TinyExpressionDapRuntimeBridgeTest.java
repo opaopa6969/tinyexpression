@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.dap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.Map;
 
@@ -21,9 +22,13 @@ public class TinyExpressionDapRuntimeBridgeTest {
     Map<String, String> ast = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "ast");
     assertEquals("AST_EVALUATOR", ast.get("selectedExecutionBackend"));
     assertEquals("AST_EVALUATOR", ast.get("_tinyExecutionBackend"));
+    assertNotNull(ast.get("evaluationResultType"));
+    assertNotNull(ast.get("evaluationResultNormalized"));
 
     Map<String, String> token = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "token");
     assertEquals("JAVA_CODE", token.get("selectedExecutionBackend"));
     assertEquals("JAVA_CODE", token.get("_tinyExecutionBackend"));
+    assertNotNull(token.get("evaluationResultType"));
+    assertNotNull(token.get("evaluationResultNormalized"));
   }
 }

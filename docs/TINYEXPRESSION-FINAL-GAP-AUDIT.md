@@ -88,7 +88,7 @@ Last updated: 2026-02-26
    2. extracted corpus parity now includes category-level coverage/non-fallback counters, but systematic large corpus with externalized dataset is still not complete
 5. DAP dual-runtime execution integration:
    1. `runtimeMode` AST stepping/coordinates are implemented
-   2. backend/runtime marker observability is now exposed in generated DAP variables via runtime probe bridge
+   2. backend/runtime marker observability and value probe metadata (`evaluationResultType` / `evaluationResultNormalized`) are exposed in generated DAP variables via runtime probe bridge
    3. evaluator-value-level stepping parity between JavaCode/AST runtime is not complete
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam

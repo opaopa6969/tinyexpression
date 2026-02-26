@@ -526,6 +526,10 @@ Completed in this session (P3 follow-up):
    - `ThreeExecutionBackendExtractedCorpusParityTest` now aggregates executed and AST-non-fallback cases by formula category (`if`, `math-fn`, `arithmetic`, etc.),
    - enforces minimum category spread to detect coverage collapse into a single shape family,
    - keeps existing executed/non-fallback lower bounds.
+93. expanded DAP runtime probe value observability:
+   - `TinyExpressionDapRuntimeBridge` now publishes `evaluationResultType` and numeric-canonical `evaluationResultNormalized`,
+   - generated DAP adapters ingest these via existing runtime-probe variable bridge,
+   - improves value-level comparison visibility between `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` runtime modes.
 
 
 
