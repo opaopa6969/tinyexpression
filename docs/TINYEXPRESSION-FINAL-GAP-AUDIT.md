@@ -61,6 +61,7 @@ Last updated: 2026-02-26
 29. Generated value evaluator now performs structured-text AST re-entry before embedded bridge fallback for `StringExpr` / `BooleanExpr` / `ObjectExpr`, reducing bridge-only execution when generated mapper can parse expression-like payload text.
 30. `AstEvaluatorCalculator` now has a token-ast literal/variable fast path for generated-runtime-unavailable cases, so trivial formulas do not require `javacode-fallback` (verified with generated-class-blocking classloader tests).
 31. AST preferred-root selection now uses shared structured-head predicates (`if`/`match`/`call` with java-style delimiters/comments) across evaluator and declaration runtime; comment-prefixed control-flow formulas are covered in regression parity corpus.
+32. Added Java source parity test between `JAVA_CODE` and `DSL_JAVA_CODE` backends (`DslJavaCodeGenerationParityTest`) over curated mixed formulas; normalized generated source text is now regression-checked for equivalence.
 
 ## Remaining Gaps
 
@@ -83,8 +84,9 @@ Last updated: 2026-02-26
 6. Full DSL-native Java code generation backend (native-emitter gap):
    1. `DSL_JAVA_CODE` execution backend is present with a dedicated `DslJavaCodeCalculator` seam
    2. seam currently reuses legacy JavaCode compiler/runtime path (`JavaCodeCalculatorV3`) in bridge mode; backend selection and metadata are already production-wirable via formula metadata
-   3. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
-   4. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
+   3. current seam equivalence with legacy generated Java source is regression-checked on curated corpus
+   4. dedicated DSL-native Java emitter (generated AST -> Java source/compiler path without legacy bridge) is not implemented yet
+   5. large-corpus parity/performance sign-off for the native emitter path is therefore still pending
 
 ## Dependency-Side Needs (Potential Future)
 

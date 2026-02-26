@@ -474,6 +474,10 @@ Completed in this session (P3 follow-up):
    - `AstEmbeddedExpressionRuntime` now exposes shared head predicates (`hasIfHead` / `hasMatchHead` / `hasMethodInvocationHead`),
    - `AstEvaluatorCalculator` / `AstDeclarationRuntime` preferred-root builders now use these predicates instead of plain `startsWith(...)`,
    - comment-prefixed control-flow formulas are currently tracked in regression parity corpus (value parity required) until generated parser root handling is fully aligned.
+79. added Java source parity checkpoint between legacy and DSL JavaCode backends:
+   - added `DslJavaCodeGenerationParityTest`,
+   - compares normalized generated Java source from `JAVA_CODE` and `DSL_JAVA_CODE` across curated mixed formulas,
+   - confirms current DSL JavaCode seam produces equivalent Java program text (class-name normalization applied).
 
 
 
@@ -523,6 +527,7 @@ Verified tests:
 42. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
 43. `./mvnw -q -Dtest=AstEvaluatorTokenLiteralFallbackTest,ThreeExecutionBackendParityTest,ThreeExecutionBackendExtractedCorpusParityTest test`
 44. `./mvnw -q -Dtest=ThreeExecutionBackendParityTest,AstEvaluatorGeneratedValuePathTest test`
+45. `./mvnw -q -Dtest=DslJavaCodeGenerationParityTest,ThreeExecutionBackendParityTest,AstEvaluatorTokenLiteralFallbackTest test`
 
 ## Execution Policy
 
