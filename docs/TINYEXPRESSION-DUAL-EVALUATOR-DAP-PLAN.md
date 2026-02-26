@@ -2,20 +2,22 @@
 
 ## Goal
 
-最終目標は次の 2 経路を同時に維持すること。
+最終目標は次の 3 経路を同時に維持すること。
 
 1. 既存: TinyExpression の Java code generation 実行経路
 2. 新規: UnlaxerDSL で生成した AST を走査する Evaluator 実行経路
+3. 新規: UnlaxerDSL 側の Java code generation 実行経路（現状は bridge 実装）
 
-さらに DAP は次の 2 経路で接続できるようにする。
+さらに DAP は既存 TinyExpression を温存したまま次の実行経路に attach できるようにする。
 
 1. Java code generation 経路の DAP
 2. AST Evaluator 経路の DAP
+3. DSL JavaCode 経路の DAP（bridge -> native へ段階移行）
 
 ## Why dual-path
 
 1. 既存本番互換を維持しながら段階移行できる
-2. 同一入力で 2 経路の差分比較ができる
+2. 同一入力で 3 経路の差分比較ができる
 3. DAP 機能を段階的に強化しやすい
 
 ## Current status (2026-02-25)
@@ -30,11 +32,13 @@
 2. AST Evaluator 実行クラスを tinyexpression 側へ接続
 3. Java code generation 実行器と AST Evaluator 実行器を同一 API で選択可能化
 4. DAP launcher を runtime mode 引数で分岐可能にする
+5. `ExecutionBackend` を 3 経路（`JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE`）で運用する
 
 ## DAP dual connection model
 
 1. `mode=javacode`: 既存 JavaCodeCalculator 系のステップ/変数表示
 2. `mode=ast`: generated Evaluator 系の AST ノードステップ/評価値表示
+3. `mode=dsl-javacode`: DSL JavaCode backend のステップ/変数表示（初期は legacy bridge）
 
 ### Current implementation note
 
@@ -54,9 +58,9 @@
 
 ## Verification policy
 
-1. 同じ式を 2 経路で実行し、結果一致を検証する
+1. 同じ式を 3 経路で実行し、結果一致を検証する
 2. 生成 Java ソース差分はスナップショット化して比較する
-3. DAP は stopOnEntry / next / continue / variables / stackTrace を両経路で確認する
+3. DAP は stopOnEntry / next / continue / variables / stackTrace を各経路で確認する
 
 ## Dependency-note rule
 

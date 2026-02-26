@@ -33,13 +33,32 @@ final class GeneratedP4ValueAstEvaluator {
     }
     ExpressionType resultType = resolveResultType(specifiedExpressionTypes);
     String rootSimpleName = mappedAst.getClass().getSimpleName();
+    if ("ExpressionExpr".equals(rootSimpleName)) {
+      Object unwrapped = unwrapExpressionNode(mappedAst);
+      if (unwrapped == null || unwrapped == mappedAst) {
+        return Optional.empty();
+      }
+      return tryEvaluate(unwrapped, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+    }
     if (resultType.isNumber()) {
+      if ("IfExpr".equals(rootSimpleName)) {
+        Optional<Object> ifValue = evaluateIfExpression(
+            mappedAst, resultType, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
+        if (ifValue.isPresent() && ifValue.get() instanceof Number) {
+          return ifValue;
+        }
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         Optional<Object> invocation = evaluateMethodInvocation(mappedAst, resultType,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
         if (invocation.isPresent() && invocation.get() instanceof Number) {
           return invocation;
         }
+      }
+      Optional<Object> ifExpression = findFirstNode(mappedAst, "IfExpr").flatMap(node -> evaluateIfExpression(
+          node, resultType, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (ifExpression.isPresent() && ifExpression.get() instanceof Number) {
+        return ifExpression;
       }
       Optional<Object> number = GeneratedP4NumberAstEvaluator.tryEvaluate(
           mappedAst, specifiedExpressionTypes, calculationContext);
@@ -50,11 +69,22 @@ final class GeneratedP4ValueAstEvaluator {
           fallbackFormulaSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, null);
     }
     if (resultType.isString()) {
+      if ("IfExpr".equals(rootSimpleName)) {
+        return evaluateIfExpression(mappedAst, ExpressionTypes.string,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
+                .map(String::valueOf)
+                .map(v -> (Object) v);
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         return evaluateMethodInvocation(mappedAst, ExpressionTypes.string,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
                 .map(String::valueOf)
                 .map(v -> (Object) v);
+      }
+      Optional<Object> ifExpression = findFirstNode(mappedAst, "IfExpr").flatMap(node -> evaluateIfExpression(
+          node, ExpressionTypes.string, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (ifExpression.isPresent()) {
+        return ifExpression.map(String::valueOf).map(v -> (Object) v);
       }
       return findFirstNode(mappedAst, "StringExpr")
           .flatMap(node -> evaluateString(
@@ -62,11 +92,22 @@ final class GeneratedP4ValueAstEvaluator {
           .map(v -> (Object) v);
     }
     if (resultType.isBoolean()) {
+      if ("IfExpr".equals(rootSimpleName)) {
+        return evaluateIfExpression(mappedAst, ExpressionTypes._boolean,
+            specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
+                .flatMap(GeneratedP4ValueAstEvaluator::toBoolean)
+                .map(v -> (Object) v);
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         return evaluateMethodInvocation(mappedAst, ExpressionTypes._boolean,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource)
                 .flatMap(GeneratedP4ValueAstEvaluator::toBoolean)
                 .map(v -> (Object) v);
+      }
+      Optional<Object> ifExpression = findFirstNode(mappedAst, "IfExpr").flatMap(node -> evaluateIfExpression(
+          node, ExpressionTypes._boolean, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (ifExpression.isPresent()) {
+        return ifExpression.flatMap(GeneratedP4ValueAstEvaluator::toBoolean).map(v -> (Object) v);
       }
       return findFirstNode(mappedAst, "BooleanExpr")
           .flatMap(node -> evaluateBoolean(
@@ -74,12 +115,25 @@ final class GeneratedP4ValueAstEvaluator {
           .map(v -> (Object) v);
     }
     if (resultType.isObject()) {
+      if ("IfExpr".equals(rootSimpleName)) {
+        Optional<Object> ifValue = evaluateIfExpression(
+            mappedAst, ExpressionTypes.object, specifiedExpressionTypes, calculationContext, classLoader,
+            fallbackFormulaSource);
+        if (ifValue.isPresent()) {
+          return ifValue;
+        }
+      }
       if ("MethodInvocationExpr".equals(rootSimpleName)) {
         Optional<Object> invocation = evaluateMethodInvocation(mappedAst, ExpressionTypes.object,
             specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
         if (invocation.isPresent()) {
           return invocation;
         }
+      }
+      Optional<Object> ifExpression = findFirstNode(mappedAst, "IfExpr").flatMap(node -> evaluateIfExpression(
+          node, ExpressionTypes.object, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource));
+      if (ifExpression.isPresent()) {
+        return ifExpression;
       }
       Optional<Object> objectExpr = findFirstNode(mappedAst, "ObjectExpr")
           .flatMap(node -> evaluateObject(
@@ -109,6 +163,18 @@ final class GeneratedP4ValueAstEvaluator {
       return tryEvaluateBinaryAsObject(mappedAst, specifiedExpressionTypes, calculationContext);
     }
     return Optional.empty();
+  }
+
+  private static Object unwrapExpressionNode(Object node) {
+    Object current = node;
+    while (current != null && "ExpressionExpr".equals(current.getClass().getSimpleName())) {
+      Object value = invokeZeroArg(current, "value").orElse(null);
+      if (value == null || value == current) {
+        return null;
+      }
+      current = value;
+    }
+    return current;
   }
 
   private static ExpressionType resolveResultType(SpecifiedExpressionTypes specifiedExpressionTypes) {
@@ -349,6 +415,44 @@ final class GeneratedP4ValueAstEvaluator {
       case ">=" -> Optional.of(compare >= 0);
       default -> Optional.empty();
     };
+  }
+
+  private static Optional<Object> evaluateIfExpression(Object ifNode, ExpressionType expectedType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String fallbackFormulaSource) {
+    Object conditionNode = invokeZeroArg(ifNode, "condition").orElse(null);
+    Object thenNode = invokeZeroArg(ifNode, "thenExpr").orElse(null);
+    Object elseNode = invokeZeroArg(ifNode, "elseExpr").orElse(null);
+    if (conditionNode == null || thenNode == null || elseNode == null) {
+      return Optional.empty();
+    }
+    Optional<Boolean> condition = evaluateNodeAsBoolean(
+        conditionNode, specifiedExpressionTypes, context, classLoader, fallbackFormulaSource);
+    if (condition.isEmpty()) {
+      return Optional.empty();
+    }
+    Object selected = condition.get() ? thenNode : elseNode;
+    Object branchNode = unwrapExpressionNode(selected);
+    if (branchNode == null) {
+      return Optional.empty();
+    }
+    SpecifiedExpressionTypes branchTypes = new SpecifiedExpressionTypes(
+        expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
+    return tryEvaluate(branchNode, branchTypes, context, classLoader, fallbackFormulaSource);
+  }
+
+  private static Optional<Boolean> evaluateNodeAsBoolean(Object node, SpecifiedExpressionTypes specifiedExpressionTypes,
+      CalculationContext context, ClassLoader classLoader, String fallbackFormulaSource) {
+    if (node == null) {
+      return Optional.empty();
+    }
+    if ("BooleanExpr".equals(node.getClass().getSimpleName())) {
+      return evaluateBoolean(node, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
+    }
+    SpecifiedExpressionTypes booleanTypes =
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, specifiedExpressionTypes.numberType());
+    return tryEvaluate(node, booleanTypes, context, classLoader, fallbackFormulaSource)
+        .flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
   }
 
   private static Optional<Object> evaluateMethodInvocation(Object methodInvocationNode, ExpressionType expectedType,

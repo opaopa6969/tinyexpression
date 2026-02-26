@@ -302,8 +302,12 @@ public class AstEvaluatorCalculator implements Calculator {
         formula.startsWith("call")
             || formula.startsWith("external")
             || formula.startsWith("internal");
+    boolean ifHead = formula.startsWith("if");
     if (methodInvocationHead) {
       preferred.add("MethodInvocationExpr");
+    }
+    if (ifHead) {
+      preferred.add("IfExpr");
     }
     ExpressionType type = resultType();
     if (type == null) {

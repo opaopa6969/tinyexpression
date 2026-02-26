@@ -176,11 +176,12 @@ grammar TinyExpressionP4 {
     | VariableRef @value
     | MethodInvocation @value ;
 
+  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
   IfExpression ::=
-    'if' '(' BooleanExpression ')'
-    '{' Expression '}'
+    'if' '(' BooleanExpression @condition ')'
+    '{' Expression @thenExpr '}'
     'else'
-    '{' Expression '}' ;
+    '{' Expression @elseExpr '}' ;
 
   NumberMatchExpression ::=
     'match' '{'
@@ -212,11 +213,12 @@ grammar TinyExpressionP4 {
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
 
+  @mapping(ExpressionExpr, params=[value])
   Expression ::=
-      NumberExpression
-    | StringExpression
-    | BooleanExpression
-    | ObjectExpression
-    | MethodInvocation
-    | '(' Expression ')' ;
+      NumberExpression @value
+    | StringExpression @value
+    | BooleanExpression @value
+    | ObjectExpression @value
+    | MethodInvocation @value
+    | '(' Expression @value ')' ;
 }

@@ -40,12 +40,15 @@ Last updated: 2026-02-25
    2. `AST_EVALUATOR` (generated AST walk + token-ast/java fallback)
    3. `DSL_JAVA_CODE` (new backend slot; current implementation bridges to existing JavaCode runtime with dedicated backend identity marker)
 19. Added 3-way backend parity harness (`ThreeExecutionBackendParityTest`) over a supported mixed corpus, asserting value parity and AST non-fallback guard.
+20. `if` expression path now has explicit AST mapping and direct evaluator dispatch:
+   1. `IfExpr` + `ExpressionExpr` are generated from P4 mapping.
+   2. generated runtime evaluates condition and selected branch via AST recursion (bridge-first text evaluation is no longer required for the covered `if` slice).
 
 ## Remaining Gaps
 
 1. AST coverage beyond numeric binary core:
    1. `StringExpression`, `BooleanExpression`, `ObjectExpression` の複合式（method/match/if）は「埋め込みJavaCode bridge」で動作するが、純粋AST walkとしては未完
-   2. `IfExpression`, `match` families の専用ASTノード化と評価器実装は未完
+   2. `match` families の専用ASTノード化と評価器実装は未完（`if` は専用ASTノード + direct eval 対応済み）
    3. method invocation/declaration は zero-arg sliceのみ direct化済み。引数付き呼び出し/仮引数束縛を含む純粋ASTセマンティクスは未完
 2. Declaration semantics in generated AST runtime:
    1. variable declaration setters/defaulting は複合式の一部まで拡張済み（method declaration text injection + embedded eval）

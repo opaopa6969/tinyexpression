@@ -427,6 +427,10 @@ Completed in this session (P3 follow-up):
    - added `ExecutionBackend.DSL_JAVA_CODE` and registry creator seam (`CalculatorCreatorRegistry.dslJavaCodeCreator()`),
    - current `DSL_JAVA_CODE` backend runs in bridge mode over existing JavaCode runtime while exposing backend marker (`_tinyExecutionMode=dsl-javacode`),
    - added `ThreeExecutionBackendParityTest` to assert value parity across `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` on supported mixed formulas.
+68. added explicit `if` AST mapping path with direct branch evaluation:
+   - added `@mapping(IfExpr, params=[condition, thenExpr, elseExpr])` on `IfExpression`,
+   - added `@mapping(ExpressionExpr, params=[value])` on `Expression` so `if` branches are carried as AST nodes instead of plain text tokens,
+   - `GeneratedP4ValueAstEvaluator` now evaluates `IfExpr` directly (condition AST eval + selected branch recursive AST eval) and `AstEvaluatorCalculator` prefers `IfExpr` root when formula head is `if`.
 
 
 
@@ -463,6 +467,9 @@ Verified tests:
 29. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,AstEvaluatorParityCorpusTest test`
 30. `./mvnw -q -Dtest=AstEvaluatorBackendParityTest test`
 31. `./mvnw -q -Dtest=AstEvaluatorGeneratedValuePathTest,ThreeExecutionBackendParityTest test`
+32. `./mvnw -q -Dtest=AstEvaluatorParityCorpusTest test`
+33. `mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--grammar /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.ubnf --export-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
+34. `mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain -Dexec.args="--validate-parser-ir /mnt/c/var/unlaxer-temp/tinyexpression/docs/ubnf/tinyexpression-p4-draft.parser-ir.json --report-format json"`
 
 ## Execution Policy
 
