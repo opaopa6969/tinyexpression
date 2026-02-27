@@ -226,6 +226,7 @@ Progress snapshot (2026-02-27):
   - `TE019` get/orElse syntax invalid.
 - TE021/TE023 false-positive reduction:
   - unknown-method scan now ignores string/comment regions,
+  - unknown-method scan now skips dot-qualified chained calls (example: `get(...).orElse(...)`),
   - operator/notation (`TE023`) scan now ignores string/comment regions for `&&`, `||`, and `$method(...)` probes.
 - LSP now sets `Diagnostic.code = TE###` and emits catalog-style user message for mapped parse failures.
 - quick fix implemented for parser-safe bracket/semicolon cases:

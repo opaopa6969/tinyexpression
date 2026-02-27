@@ -49,7 +49,7 @@ class TinyExpressionVariableCatalogTest {
                 TinyExpressionVariableCatalog.loadFromPathList(catalog.toString(), "test");
 
         CalculatorAstAnalyzer analyzer = new CalculatorAstAnalyzer(rules);
-        String content = "$kind + $kind_login + $ag + '$kind' // $kind\n";
+        String content = "$kind + $kind_login + $ag + get($age).orElse(1) + '$kind' // $kind\n";
         CalculatorLanguageServer.ParseResult parseResult = new CalculatorLanguageServer.ParseResult(
                 true,
                 content.length(),
@@ -60,7 +60,9 @@ class TinyExpressionVariableCatalogTest {
         List<CalculatorAstAnalyzer.AstError> errors = analyzer.analyze(content, parseResult).errors();
         long te024Count = errors.stream().filter(error -> error.message().startsWith("[TE024]")).count();
         long te022Count = errors.stream().filter(error -> error.message().startsWith("[TE022]")).count();
+        long te021Count = errors.stream().filter(error -> error.message().startsWith("[TE021]")).count();
         assertEquals(1, te024Count);
         assertEquals(1, te022Count);
+        assertEquals(0, te021Count);
     }
 }

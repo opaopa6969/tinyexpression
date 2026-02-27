@@ -110,6 +110,9 @@ public final class CalculatorAstAnalyzer {
             if (allowedMethods.contains(methodName) || RESERVED_HEADS.contains(methodName)) {
                 continue;
             }
+            if (hasDotQualifier(content, start)) {
+                continue;
+            }
             if (isInvocationDeclarationContext(content, start)) {
                 continue;
             }
@@ -411,6 +414,11 @@ public final class CalculatorAstAnalyzer {
     private boolean hasDollarPrefix(String content, int invocationStart) {
         int previous = skipWhitespaceBackward(content, invocationStart - 1);
         return previous >= 0 && content.charAt(previous) == '$';
+    }
+
+    private boolean hasDotQualifier(String content, int invocationStart) {
+        int previous = skipWhitespaceBackward(content, invocationStart - 1);
+        return previous >= 0 && content.charAt(previous) == '.';
     }
 
     private int skipWhitespaceBackward(String content, int index) {
