@@ -814,6 +814,13 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (byExpected.isPresent()) {
                 return byExpected.get();
             }
+            Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(content);
+            if (missingSemicolonByLine.isPresent()
+                    && isLikelyStatementStartAfterOffset(content, missingSemicolonByLine.get())) {
+                return new ParseFailureDescription(
+                        missingSemicolonByLine.get(),
+                        "missing ';' after var declaration");
+            }
             int stackDepth = failureMaxReachedStackDepth(failureDiagnostics);
             String stackHint = stackDepth <= 0 ? "" : " near parser stack depth=" + stackDepth;
             return new ParseFailureDescription(start, "parse failed" + stackHint);
