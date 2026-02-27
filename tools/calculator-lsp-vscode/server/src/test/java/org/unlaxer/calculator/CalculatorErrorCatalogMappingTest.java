@@ -54,6 +54,24 @@ class CalculatorErrorCatalogMappingTest {
                 }\r
                 """;
         assertEquals("TE013", resolveCatalogCode(missingCommaBetweenCases));
+        String missingIfBlockOpen = """
+                if(external returning as boolean checkDigits($input))
+                  1
+                }else{
+                  match{
+                    true -> 1,
+                    default -> 0
+                  }
+                }
+                """;
+        assertEquals("TE010", resolveCatalogCode(missingIfBlockOpen));
+        String missingArrowRhs = """
+                match{
+                  true -> ,
+                  default -> 0
+                }
+                """;
+        assertEquals("TE013", resolveCatalogCode(missingArrowRhs));
     }
 
     @Test

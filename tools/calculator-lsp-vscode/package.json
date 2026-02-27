@@ -14,7 +14,7 @@
   "name": "tinyexpression-lsp",
   "displayName": "TinyExpression DSL (LSP)",
   "description": "VS Code extension for TinyExpression DSL (LSP4J). Includes TE catalog diagnostics (TE022/TE024) via external catalog settings.",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "publisher": "opaopa6969",
   "files": [
     "README.md",

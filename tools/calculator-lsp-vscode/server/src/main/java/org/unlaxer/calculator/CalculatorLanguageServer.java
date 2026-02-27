@@ -786,6 +786,16 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (operatorNotationIssue.isPresent()) {
             return operatorNotationIssue.get();
         }
+        Optional<ParseFailureDescription> globalMissingIfElseBlockOpenFallback =
+                describeMissingIfElseBlockOpeningCurlyBrace(content);
+        if (globalMissingIfElseBlockOpenFallback.isPresent()) {
+            return globalMissingIfElseBlockOpenFallback.get();
+        }
+        Optional<ParseFailureDescription> globalMissingArrowRhsFallback =
+                describeMissingExpressionAfterArrowAnywhere(content);
+        if (globalMissingArrowRhsFallback.isPresent()) {
+            return globalMissingArrowRhsFallback.get();
+        }
         Optional<ParseFailureDescription> globalMissingBlockOpen =
                 describeMissingBlockOpeningCurlyBrace(content, content.length(), List.of("'{'"));
         if (globalMissingBlockOpen.isPresent()) {
@@ -845,6 +855,16 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return new ParseFailureDescription(
                     missingCommaBetweenCases.get(),
                     "missing ',' between match cases");
+        }
+        Optional<ParseFailureDescription> globalMissingIfElseBlockOpen =
+                describeMissingIfElseBlockOpeningCurlyBrace(content);
+        if (globalMissingIfElseBlockOpen.isPresent()) {
+            return globalMissingIfElseBlockOpen.get();
+        }
+        Optional<ParseFailureDescription> globalMissingArrowRhs =
+                describeMissingExpressionAfterArrowAnywhere(content);
+        if (globalMissingArrowRhs.isPresent()) {
+            return globalMissingArrowRhs.get();
         }
         return detectMissingCommaBeforeDefaultOffset(content)
                 .map(offset -> new ParseFailureDescription(
@@ -1686,6 +1706,69 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             position = content.length();
         }
         return Optional.of(new ParseFailureDescription(position, "expected '}'"));
+    }
+
+    private Optional<ParseFailureDescription> describeMissingIfElseBlockOpeningCurlyBrace(String content) {
+        int searchFrom = 0;
+        while (searchFrom < content.length()) {
+            int ifIndex = content.indexOf("if", searchFrom);
+            if (ifIndex < 0) {
+                break;
+            }
+            searchFrom = ifIndex + 2;
+            if (isIdentifierPart(content, ifIndex - 1) || isIdentifierPart(content, ifIndex + 2)) {
+                continue;
+            }
+            int open = skipWhitespace(content, ifIndex + 2);
+            if (open >= content.length() || content.charAt(open) != '(') {
+                continue;
+            }
+            int close = findMatchingCloseParenthesis(content, open);
+            if (close < 0) {
+                continue;
+            }
+            int blockStart = skipWhitespace(content, close + 1);
+            if (blockStart < content.length() && content.charAt(blockStart) != '{') {
+                return Optional.of(new ParseFailureDescription(blockStart, "expected '{'"));
+            }
+        }
+
+        searchFrom = 0;
+        while (searchFrom < content.length()) {
+            int elseIndex = content.indexOf("else", searchFrom);
+            if (elseIndex < 0) {
+                break;
+            }
+            searchFrom = elseIndex + 4;
+            if (isIdentifierPart(content, elseIndex - 1) || isIdentifierPart(content, elseIndex + 4)) {
+                continue;
+            }
+            int blockStart = skipWhitespace(content, elseIndex + 4);
+            if (blockStart < content.length() && content.charAt(blockStart) != '{') {
+                return Optional.of(new ParseFailureDescription(blockStart, "expected '{'"));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeMissingExpressionAfterArrowAnywhere(String content) {
+        int searchFrom = 0;
+        while (searchFrom < content.length()) {
+            int arrow = content.indexOf("->", searchFrom);
+            if (arrow < 0) {
+                return Optional.empty();
+            }
+            int rhsStart = skipWhitespace(content, arrow + 2);
+            if (rhsStart >= content.length()) {
+                return Optional.of(new ParseFailureDescription(rhsStart, "expected expression after '->'"));
+            }
+            char marker = content.charAt(rhsStart);
+            if (marker == ',' || marker == '}') {
+                return Optional.of(new ParseFailureDescription(rhsStart, "expected expression after '->'"));
+            }
+            searchFrom = arrow + 2;
+        }
+        return Optional.empty();
     }
 
     private int countUnclosedCurlyBraces(String content) {
