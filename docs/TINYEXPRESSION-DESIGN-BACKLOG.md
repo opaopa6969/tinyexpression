@@ -97,9 +97,9 @@ Validation snapshot (2026-02-26):
 - migration task needs an adapter/refactor phase before parity verification can continue.
 
 Validation snapshot (2026-02-27, plugin runtime):
-- `tinyexpression-lsp` server dependency aligned to `tinyExpression 1.4.10` + `unlaxer-common 2.4.0`.
-- resolved runtime ABI crash: `NoSuchMethodError: org.unlaxer.TypedToken.flatten()Ljava/util/List;`.
-- user sample formula (`import` + `var` + `if` + `match`) now parses fully in shaded server jar probe.
+- `tinyexpression-lsp` server dependency is currently pinned to `tinyExpression 1.4.10` + `unlaxer-common 1.2.7` for runtime ABI compatibility.
+- mismatch (`tinyExpression 1.4.10` + `unlaxer-common 2.4.0`) reproduces parser runtime linkage failure: `NoSuchMethodError: org.unlaxer.TypedToken.flatten()Ljava/util/List;`.
+- follow-up remains: move to newer `tinyExpression` line that is ABI-compatible with `unlaxer-common 2.4.x`, then re-enable latest-common target.
 
 ## 7. VS Code Native DAP Integration
 
