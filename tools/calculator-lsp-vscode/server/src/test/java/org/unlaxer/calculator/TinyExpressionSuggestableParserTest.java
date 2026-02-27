@@ -20,8 +20,8 @@ class TinyExpressionSuggestableParserTest {
                 .findFirst()
                 .orElseThrow();
 
-        assertEquals("var \\$${1:name} as ${2:string} set if not exists ${3:'value'} description='${4:}';",
+        assertEquals("var \\$name as string set if not exists 'value' description='';",
                 varSuggestion.insertText());
-        assertTrue(varSuggestion.insertText().contains("description='${4:}'"));
+        assertTrue(varSuggestion.insertText().contains("description=''"));
     }
 }

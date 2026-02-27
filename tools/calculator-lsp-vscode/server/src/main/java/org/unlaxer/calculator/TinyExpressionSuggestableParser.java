@@ -15,7 +15,7 @@ public final class TinyExpressionSuggestableParser implements SuggestableParser 
     private static final List<Suggestion> SUGGESTIONS = List.of(
             keywordSnippet("if", "if expression", "if($1){$2}else{$3}"),
             keywordSnippet("match", "match expression", "match{$1 -> $2, default -> $3}"),
-            keywordSnippet("var", "variable declaration", "var \\$${1:name} as ${2:string} set if not exists ${3:'value'} description='${4:}';"),
+            keywordSnippet("var", "variable declaration", "var \\$name as string set if not exists 'value' description='';"),
             keywordSnippet("external", "external function call", "external returning as ${1:boolean} ${2:func}($3)"),
             keywordSnippet("import", "import external function", "import ${1:Class}#${2:method} as ${3:alias};"),
             keywordSnippet("default", "default case", "default -> $1"),
