@@ -57,16 +57,7 @@ export async function activate(
     clientOptions
   );
 
-  client.start().then(() => {
-    outputChannel?.appendLine("[TinyExpression P4 LSP] Server started successfully.");
-  }).catch((err: unknown) => {
-    outputChannel?.appendLine(`[TinyExpression P4 LSP] Failed to start server: ${String(err)}`);
-    void vscode.window.showErrorMessage(
-      `TinyExpression P4 LSP: Failed to start Java server. Check Output > TinyExpression P4 LSP for details. (${String(err)})`
-    );
-  });
-
-  // ── showServerOutput command ──
+  // ── showServerOutput command — registered early so it works even if server fails to start ──
   context.subscriptions.push(
     vscode.commands.registerCommand(
       "tinyExpressionP4Lsp.showServerOutput",
@@ -75,6 +66,15 @@ export async function activate(
       }
     )
   );
+
+  client.start().then(() => {
+    outputChannel?.appendLine("[TinyExpression P4 LSP] Server started successfully.");
+  }).catch((err: unknown) => {
+    outputChannel?.appendLine(`[TinyExpression P4 LSP] Failed to start server: ${String(err)}`);
+    void vscode.window.showErrorMessage(
+      `TinyExpression P4 LSP: Failed to start Java server. Check Output > TinyExpression P4 LSP for details. (${String(err)})`
+    );
+  });
 
   context.subscriptions.push({
     dispose: () => {

@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
@@ -105,7 +105,9 @@
         "runtime": "node",
         "configurationAttributes": {
           "launch": {
-            "required": ["formulaSource"],
+            "required": [
+              "formulaSource"
+            ],
             "properties": {
               "formulaSource": {
                 "type": "string",
@@ -113,7 +115,10 @@
               },
               "runtimeMode": {
                 "type": "string",
-                "enum": ["p4-ast", "p4-dsl-javacode"],
+                "enum": [
+                  "p4-ast",
+                  "p4-dsl-javacode"
+                ],
                 "default": "p4-ast",
                 "description": "P4 execution backend."
               }
@@ -147,27 +152,37 @@
         },
         "tinyExpressionP4Lsp.server.jvmArgs": {
           "type": "array",
-          "items": { "type": "string" },
+          "items": {
+            "type": "string"
+          },
           "default": [],
           "description": "Extra JVM arguments (e.g. -Xmx512m)."
         },
         "tinyExpressionP4Lsp.runtimeMode": {
           "type": "string",
-          "enum": ["p4-ast", "p4-dsl-javacode"],
+          "enum": [
+            "p4-ast",
+            "p4-dsl-javacode"
+          ],
           "default": "p4-ast",
           "description": "P4 execution backend for formula evaluation and DAP debug."
         },
         "tinyExpressionP4Lsp.fileExtensions": {
           "type": "array",
-          "items": { "type": "string" },
-          "default": [".tinyexp"],
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".tinyexp"
+          ],
           "description": "File extensions to watch for the TinyExpression P4 language (must match contributes.languages.extensions)."
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm run bundle",
+    "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --platform=node --format=cjs --sourcemap",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "npx --yes @vscode/vsce package --no-dependencies"
@@ -176,9 +191,10 @@
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
-    "@types/vscode": "^1.85.0",
     "@types/node": "^20.11.30",
-    "typescript": "^5.4.5",
-    "@vscode/vsce": "^2.26.0"
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^2.26.0",
+    "esbuild": "^0.27.3",
+    "typescript": "^5.4.5"
   }
 }
