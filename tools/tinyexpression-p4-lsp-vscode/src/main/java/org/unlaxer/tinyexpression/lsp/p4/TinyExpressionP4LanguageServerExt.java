@@ -161,32 +161,118 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   // =========================================================================
-  // parseDocument — enrich with AST mapping and typed diagnostics
+  // File format: FormulaInfo multi-section document
+  //   tags:NORMAL
+  //   description:...
+  //   formula:          ← delimiter; formula content follows
+  //   $x + $y
+  //   ---END_OF_PART---
+  // =========================================================================
+
+  private static final String FORMULA_LINE_MARKER = "formula:";
+  private static final String PART_END_MARKER     = "---END_OF_PART---";
+
+  /**
+   * Extracts the first formula section from a FormulaInfo-style document.
+   * Returns null if no {@code formula:} marker is found (plain .tinyexp).
+   *
+   * @return FormulaSection with the formula text and the line-number offset
+   *         within the original document where the formula content starts.
+   */
+  static FormulaSection extractFormulaSection(String fullContent) {
+    String[] lines = fullContent.split("\n", -1);
+    for (int i = 0; i < lines.length; i++) {
+      // Strip \r so Windows (\r\n) and Unix (\n) line endings both work
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (FORMULA_LINE_MARKER.equals(stripped)) {
+        int formulaLineOffset = i + 1; // first line of formula content
+        StringBuilder sb = new StringBuilder();
+        for (int j = formulaLineOffset; j < lines.length; j++) {
+          String fline = lines[j].replace("\r", "");
+          if (PART_END_MARKER.equals(fline.stripTrailing())) break;
+          sb.append(lines[j].replace("\r", "")); // keep original spacing
+          sb.append('\n');
+        }
+        return new FormulaSection(sb.toString(), formulaLineOffset);
+      }
+    }
+    return null; // no formula: marker — plain expression file
+  }
+
+  record FormulaSection(String content, int lineOffset) {}
+
+  // =========================================================================
+  // parseDocument — extract formula section, then enrich diagnostics
   // =========================================================================
 
   @Override
   public ParseResult parseDocument(String uri, String content) {
-    // Let the parent parse, store in its own map, and publish basic diagnostics.
+    FormulaSection fs = extractFormulaSection(content);
+
+    if (fs != null) {
+      // FormulaInfo file: parse only the formula section content.
+      return parseWithFormulaSection(uri, content, fs);
+    }
+
+    // Plain expression file: delegate to parent, then enrich.
     ParseResult result = super.parseDocument(uri, content);
 
-    // Attempt typed AST mapping (succeeds only on full parse).
     TinyExpressionP4AST ast = null;
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
-      try {
-        ast = TinyExpressionP4Mapper.parse(content);
-      } catch (Exception ignored) {}
+      try { ast = TinyExpressionP4Mapper.parse(content); } catch (Exception ignored) {}
     }
 
-    // Build typed failure diagnostics.
     ParseFailureDiagnostics failures = buildFailureDiagnostics(result, content);
+    extDocuments.put(uri, new ExtDocumentState(content, result, ast, failures, 0));
 
-    extDocuments.put(uri, new ExtDocumentState(content, result, ast, failures));
-
-    // Re-publish enriched diagnostics (overwrites the basic ones from super).
     if (extClient != null) {
-      publishEnrichedDiagnostics(uri, content, failures);
+      publishEnrichedDiagnostics(uri, content, failures, 0);
+    }
+    return result;
+  }
+
+  private ParseResult parseWithFormulaSection(String uri, String fullContent, FormulaSection fs) {
+    String formulaContent = fs.content();
+    int lineOffset = fs.lineOffset();
+
+    // Parse only the formula portion.
+    StringSource source = createRootSource(formulaContent);
+    ParseResult result;
+    if (source == null) {
+      result = new ParseResult(false, 0, formulaContent.length());
+    } else {
+      Parser rootParser = TinyExpressionP4Parsers.getRootParser();
+      ParseContext ctx = new ParseContext(source);
+      Parsed parsed;
+      try {
+        parsed = rootParser.parse(ctx);
+      } finally {
+        ctx.close();
+      }
+      int consumed = 0;
+      if (parsed.isSucceeded() && parsed.getConsumed() != null) {
+        String s = parsed.getConsumed().source.sourceAsString();
+        if (s != null) consumed = s.length();
+      }
+      result = new ParseResult(parsed.isSucceeded(), consumed, formulaContent.length());
     }
 
+    // Suppress parent's whole-file diagnostics by pre-publishing empty list.
+    if (extClient != null) {
+      extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
+    }
+
+    TinyExpressionP4AST ast = null;
+    if (result.succeeded() && result.consumedLength() == result.totalLength()) {
+      try { ast = TinyExpressionP4Mapper.parse(formulaContent); } catch (Exception ignored) {}
+    }
+
+    ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent);
+    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, lineOffset));
+
+    if (extClient != null) {
+      publishEnrichedDiagnostics(uri, formulaContent, failures, lineOffset);
+    }
     return result;
   }
 
@@ -229,7 +315,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   private void publishEnrichedDiagnostics(String uri, String content,
-      ParseFailureDiagnostics failures) {
+      ParseFailureDiagnostics failures, int lineOffset) {
     List<Diagnostic> diagnostics = new ArrayList<>();
     if (failures.hasFailure()) {
       int offset = failures.failureOffset();
@@ -237,10 +323,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           .substring(offset, Math.min(offset + 20, content.length()))
           .strip();
 
+      Position rawStart = offsetToPosition(content, offset);
+      Position rawEnd   = offsetToPosition(content, content.length());
+      // Shift positions by lineOffset so they point into the original document.
+      Position start = new Position(rawStart.getLine() + lineOffset, rawStart.getCharacter());
+      Position end   = new Position(rawEnd.getLine()   + lineOffset, rawEnd.getCharacter());
+
       Diagnostic d = new Diagnostic();
-      d.setRange(new Range(
-          offsetToPosition(content, offset),
-          offsetToPosition(content, content.length())));
+      d.setRange(new Range(start, end));
       d.setSeverity(DiagnosticSeverity.Error);
       d.setSource("tinyexpression-p4");
       d.setCode(Either.forLeft("TE001"));
@@ -264,7 +354,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   // Semantic token computation — type-safe token-tree walk
   // =========================================================================
 
-  List<Integer> computeSemanticTokens(String content) {
+  List<Integer> computeSemanticTokens(String content, int lineOffset) {
     StringSource source = createRootSource(content);
     if (source == null) return Collections.emptyList();
 
@@ -283,6 +373,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     leaves.sort(Comparator.comparingInt(t -> t.source.offsetFromRoot().value()));
 
     List<Integer> data = new ArrayList<>();
+    // prevLine/prevChar are in full-document coordinates (lineOffset applied)
     int prevLine = 0, prevChar = 0;
 
     for (Token leaf : leaves) {
@@ -294,7 +385,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       int offset = leaf.source.offsetFromRoot().value();
       int[] lc = offsetToLineChar(content, offset);
-      int line = lc[0], col = lc[1];
+      int line = lc[0] + lineOffset; // shift into full-document coordinates
+      int col  = lc[1];
       int length = text.length();
 
       int deltaLine = line - prevLine;
@@ -397,7 +489,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       String content,
       ParseResult parseResult,
       TinyExpressionP4AST ast,
-      ParseFailureDiagnostics failures) {}
+      ParseFailureDiagnostics failures,
+      int lineOffset) {}
 
   /**
    * Extended TextDocumentService that replaces the generated no-op implementations
@@ -636,7 +729,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (state == null) {
         return CompletableFuture.completedFuture(new SemanticTokens(Collections.emptyList()));
       }
-      List<Integer> data = server.computeSemanticTokens(state.content());
+      List<Integer> data = server.computeSemanticTokens(state.content(), state.lineOffset());
       return CompletableFuture.completedFuture(new SemanticTokens(data));
     }
   }
