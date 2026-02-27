@@ -259,6 +259,13 @@ Progress snapshot (2026-02-27):
 - quick fix integration expanded:
   - `TE021`: rename unknown method to suggested candidate (`候補: ...`) as replacement edit.
   - `TE023`: operator/notation quick fixes for `&& -> &`, `|| -> |`, `$method(...)` -> `method(...)` (remove leading `$`), and missing RHS after `&`/`|` (insert `true`).
+  - `TE003`: convert string double quotes to single quotes.
+  - `TE007`: close missing quote in `description='...'`.
+  - `TE008`: normalize full-width punctuation to half-width symbols.
+  - `TE016`: add missing `as alias` in `import ... as ...;`.
+  - `TE017`: add missing `$` in variable declaration head.
+  - `TE018`: reorder misplaced type hint from `as type $name` to `$name as type`.
+  - `TE019`: repair `get(...).orElse(...)` shape (missing `.orElse`, missing `orElse(...)`, or missing `)` in `orElse`).
 - unresolved:
   - full-precision semantic validation still has gaps (advanced `TE011` boolean-shape validation / advanced `TE015` signature validation / advanced `TE021`/`TE022`/`TE023` context validation beyond lightweight heuristics).
   - `TE001` / `TE012`: **N/A (not supported by design)**.
