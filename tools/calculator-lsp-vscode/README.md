@@ -53,6 +53,19 @@ bash scripts/package-vsix.sh --out-dir ./dist
 bash scripts/package-vsix.sh --matrix-three
 ```
 
+## Catalog setup in VS Code (TE022/TE024)
+1. Open VS Code Settings.
+2. Search `TinyExpression LSP: Catalog Path`.
+3. Set one or more catalog files:
+   - `${workspaceFolder}/catalog/nimt.tecatalog`
+   - `${workspaceFolder}/catalog/fa.tecatalog`
+   - Multiple files can be joined with `,`.
+4. Reopen `.tinyexp` files (or run `Developer: Reload Window`).
+
+See details:
+- [docs/PLUGIN-USAGE.md](docs/PLUGIN-USAGE.md)
+- [docs/CATALOG-PROVIDER-EXTENSION.md](docs/CATALOG-PROVIDER-EXTENSION.md)
+
 ## Configuration
 - `tinyExpressionLsp.server.javaPath`: path to java executable (default: `java`)
 - `tinyExpressionLsp.server.jarPath`: optional path to an external server jar. If empty, uses the bundled jar in this extension.
