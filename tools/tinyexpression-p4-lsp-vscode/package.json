@@ -1,19 +1,59 @@
 {
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opaopa6969/tinyexpression.git"
+  },
+  "homepage": "https://unlaxer.org",
+  "bugs": {
+    "url": "https://github.com/opaopa6969/tinyexpression/issues"
+  },
+  "author": {
+    "name": "unlaxer.org",
+    "url": "https://unlaxer.org"
+  },
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
-  "description": "Type-safe LSP/DAP for TinyExpression (P4, UBNF-generated)",
+  "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
   "version": "0.1.0",
-  "publisher": "unlaxer",
-  "engines": { "vscode": "^1.75.0" },
-  "categories": ["Programming Languages", "Debuggers"],
-  "activationEvents": ["onLanguage:tinyexpressionP4"],
-  "main": "./out/extension",
+  "publisher": "opaopa6969",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Debuggers"
+  ],
+  "activationEvents": [
+    "onLanguage:tinyexpressionP4",
+    "onCommand:tinyExpressionP4Lsp.showServerOutput"
+  ],
+  "main": "./out/extension.js",
   "contributes": {
+    "commands": [
+      {
+        "command": "tinyExpressionP4Lsp.showServerOutput",
+        "title": "TinyExpression P4 LSP: Show Server Output",
+        "category": "TinyExpression P4"
+      }
+    ],
     "languages": [
       {
         "id": "tinyexpressionP4",
-        "aliases": ["TinyExpression P4", "tinyexpressionp4"],
-        "extensions": [".tinyexp"],
+        "aliases": [
+          "TinyExpression P4",
+          "tinyexpressionp4"
+        ],
+        "extensions": [
+          ".tinyexp"
+        ],
+        "filenames": [
+          "default",
+          "emergency"
+        ],
+        "filenamePatterns": [
+          "*.default",
+          "*.emergency"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -24,11 +64,44 @@
         "path": "./syntaxes/tinyexpression.tmLanguage.json"
       }
     ],
+    "semanticTokenScopes": [
+      {
+        "language": "tinyexpressionP4",
+        "scopes": {
+          "keyword": [
+            "keyword.control.tinyexpression"
+          ],
+          "variable": [
+            "variable.other.readwrite.tinyexpression",
+            "variable.other.tinyexpression"
+          ],
+          "function": [
+            "entity.name.function.tinyexpression",
+            "support.function.builtin.tinyexpression"
+          ],
+          "number": [
+            "constant.numeric.tinyexpression"
+          ],
+          "string": [
+            "string.quoted.single.tinyexpression",
+            "string.quoted.double.tinyexpression"
+          ],
+          "operator": [
+            "keyword.operator.tinyexpression",
+            "punctuation.separator.tinyexpression"
+          ],
+          "comment": [
+            "comment.line.double-slash.tinyexpression",
+            "comment.block.tinyexpression"
+          ]
+        }
+      }
+    ],
     "debuggers": [
       {
         "type": "tinyexpressionP4",
         "label": "TinyExpression P4 Debug",
-        "program": "./out/extension",
+        "program": "./out/extension.js",
         "runtime": "node",
         "configurationAttributes": {
           "launch": {
@@ -70,19 +143,25 @@
         "tinyExpressionP4Lsp.server.jarPath": {
           "type": "string",
           "default": "",
-          "description": "Path to tinyexpression-p4-lsp-server.jar (leave empty to use bundled)."
+          "description": "Path to tinyexpression-p4-lsp-server.jar (leave empty to use bundled jar)."
         },
         "tinyExpressionP4Lsp.server.jvmArgs": {
           "type": "array",
           "items": { "type": "string" },
           "default": [],
-          "description": "Extra JVM arguments."
+          "description": "Extra JVM arguments (e.g. -Xmx512m)."
         },
         "tinyExpressionP4Lsp.runtimeMode": {
           "type": "string",
           "enum": ["p4-ast", "p4-dsl-javacode"],
           "default": "p4-ast",
-          "description": "P4 execution backend for formula evaluation."
+          "description": "P4 execution backend for formula evaluation and DAP debug."
+        },
+        "tinyExpressionP4Lsp.fileExtensions": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [".tinyexp"],
+          "description": "File extensions to watch for the TinyExpression P4 language (must match contributes.languages.extensions)."
         }
       }
     }
@@ -90,15 +169,16 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "package": "npx --yes @vscode/vsce package --no-dependencies"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
-    "@types/vscode": "^1.75.0",
-    "@types/node": "^18.0.0",
-    "typescript": "^5.0.0",
-    "@vscode/vsce": "^2.22.0"
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.11.30",
+    "typescript": "^5.4.5",
+    "@vscode/vsce": "^2.26.0"
   }
 }
