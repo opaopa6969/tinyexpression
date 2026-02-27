@@ -2623,6 +2623,8 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 Diagnostic diagnostic) {
             int initialSize = actions.size();
             createMissingIfBlockBraceFix(actions, uri, content, diagnostic);
+            createMissingElseBlockBraceFix(actions, uri, content, diagnostic);
+            createMissingCloseBraceBeforeElseFix(actions, uri, content, diagnostic);
             Optional<Integer> missingRhs = findArrowWithMissingRhs(content);
             if (missingRhs.isPresent()) {
                 int insertAt = missingRhs.get();
@@ -2690,6 +2692,62 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     new Range(server.offsetToPosition(content, close + 1), server.offsetToPosition(content, close + 1)),
                     "{");
             addQuickFix(actions, uri, diagnostic, edit, "if ブロック開始 '{' を追加");
+        }
+
+        private void createMissingElseBlockBraceFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            int searchFrom = 0;
+            while (searchFrom < content.length()) {
+                int elseIndex = content.indexOf("else", searchFrom);
+                if (elseIndex < 0) {
+                    return;
+                }
+                searchFrom = elseIndex + 4;
+                if (server.isIdentifierPart(content, elseIndex - 1)
+                        || server.isIdentifierPart(content, elseIndex + 4)) {
+                    continue;
+                }
+                int blockStart = skipWhitespaceForward(content, elseIndex + 4);
+                if (blockStart < content.length() && content.charAt(blockStart) == '{') {
+                    continue;
+                }
+                TextEdit edit = new TextEdit(
+                        new Range(server.offsetToPosition(content, elseIndex + 4), server.offsetToPosition(content, elseIndex + 4)),
+                        "{");
+                addQuickFix(actions, uri, diagnostic, edit, "else ブロック開始 '{' を追加");
+                return;
+            }
+        }
+
+        private void createMissingCloseBraceBeforeElseFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            int searchFrom = 0;
+            while (searchFrom < content.length()) {
+                int elseIndex = content.indexOf("else", searchFrom);
+                if (elseIndex < 0) {
+                    return;
+                }
+                searchFrom = elseIndex + 4;
+                if (server.isIdentifierPart(content, elseIndex - 1)
+                        || server.isIdentifierPart(content, elseIndex + 4)) {
+                    continue;
+                }
+                int prev = server.skipWhitespaceBackward(content, elseIndex - 1);
+                if (prev >= 0 && content.charAt(prev) == '}') {
+                    continue;
+                }
+                TextEdit edit = new TextEdit(
+                        new Range(server.offsetToPosition(content, elseIndex), server.offsetToPosition(content, elseIndex)),
+                        "}");
+                addQuickFix(actions, uri, diagnostic, edit, "else の前に閉じ波括弧 '}' を追加");
+                return;
+            }
         }
 
         private Optional<Integer> findArrowWithMissingRhs(String content) {

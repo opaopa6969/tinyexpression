@@ -171,6 +171,30 @@ class CalculatorErrorCatalogMappingTest {
         assertFalse(actions.isEmpty(), "TE013 should provide at least one quick fix");
     }
 
+    @Test
+    void providesQuickFixForMissingCloseBraceBeforeElse() throws Exception {
+        CalculatorLanguageServer server = new CalculatorLanguageServer();
+        String uri = "file:///te009-else-closebrace.tinyexp";
+        String expression = """
+                if(true){
+                  1
+                else{
+                  0
+                }
+                """;
+        server.parseDocument(uri, expression);
+
+        Diagnostic diagnostic = new Diagnostic();
+        diagnostic.setCode(Either.forLeft("TE009"));
+        diagnostic.setRange(new Range(new Position(2, 0), new Position(5, 0)));
+        diagnostic.setMessage("[TE009] ここに不要なトークンがあります。 修正: 余分な語句を削除");
+
+        CodeActionContext context = new CodeActionContext(List.of(diagnostic));
+        CodeActionParams params = new CodeActionParams(new TextDocumentIdentifier(uri), diagnostic.getRange(), context);
+        List<?> actions = server.getTextDocumentService().codeAction(params).get();
+        assertFalse(actions.isEmpty(), "missing '}' before else should provide quick fix");
+    }
+
     private String resolveCatalogCode(String content) throws Exception {
         CalculatorLanguageServer server = new CalculatorLanguageServer();
         CalculatorLanguageServer.ParseResult result = server.parseExpression(content);
