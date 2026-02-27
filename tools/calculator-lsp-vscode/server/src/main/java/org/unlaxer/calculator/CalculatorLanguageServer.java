@@ -2256,11 +2256,14 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             for (Diagnostic diagnostic : params.getContext().getDiagnostics()) {
                 String code = diagnosticCode(diagnostic);
                 if (code == null) {
-                    continue;
+                    code = inferCatalogCodeFromMessage(diagnostic.getMessage());
+                    if (code == null) {
+                        continue;
+                    }
                 }
                 switch (code) {
                     case "TE004":
-                        createInsertFix(actions, uri, state.content, diagnostic, ")", "閉じ括弧 ')' を追加");
+                        createTe004ClosingParenthesisFix(actions, uri, state.content, diagnostic);
                         break;
                     case "TE005":
                         createInsertFix(actions, uri, state.content, diagnostic, "}", "閉じ波括弧 '}' を追加");
@@ -2301,6 +2304,12 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE008":
                         createTe008NormalizePunctuationFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE013":
+                        createTe013MatchFix(actions, uri, state.content, diagnostic);
+                        break;
+                    case "TE009":
+                        createTe009HeuristicFix(actions, uri, state.content, diagnostic);
+                        break;
                     default:
                         break;
                 }
@@ -2340,6 +2349,38 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             actions.add(Either.forRight(codeAction));
         }
 
+        private void createTe004ClosingParenthesisFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset >= content.length()) {
+                return;
+            }
+            int openParen = content.indexOf('(', startOffset);
+            if (openParen < 0) {
+                createInsertFix(actions, uri, content, diagnostic, ")", "閉じ括弧 ')' を追加");
+                return;
+            }
+            int closeParen = server.findMatchingCloseParenthesis(content, openParen);
+            if (closeParen >= 0) {
+                createInsertFix(actions, uri, content, diagnostic, ")", "閉じ括弧 ')' を追加");
+                return;
+            }
+            int lineEnd = content.indexOf('\n', openParen);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, lineEnd), server.offsetToPosition(content, lineEnd)),
+                    ")");
+            addQuickFix(actions, uri, diagnostic, edit, "閉じ括弧 ')' を追加");
+        }
+
         private void createTe006SemicolonFix(
                 List<Either<Command, CodeAction>> actions,
                 String uri,
@@ -2370,6 +2411,114 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     new Range(server.offsetToPosition(content, insertAt), server.offsetToPosition(content, insertAt)),
                     ";");
             addQuickFix(actions, uri, diagnostic, edit, "セミコロン ';' を追加");
+        }
+
+        private void createTe013MatchFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            String message = diagnostic.getMessage() == null ? "" : diagnostic.getMessage();
+            Position start = diagnostic.getRange().getStart();
+            int offset = positionToOffset(content, start);
+            if (offset < 0 || offset > content.length()) {
+                return;
+            }
+            if (message.contains("区切りに ',' が必要") || message.contains("missing ','")) {
+                TextEdit edit = new TextEdit(new Range(start, start), ",");
+                addQuickFix(actions, uri, diagnostic, edit, "match case の区切り ',' を追加");
+                return;
+            }
+            Optional<Integer> missingRhs = findArrowWithMissingRhs(content);
+            if (missingRhs.isPresent()) {
+                int insertAt = missingRhs.get();
+                TextEdit edit = new TextEdit(
+                        new Range(server.offsetToPosition(content, insertAt), server.offsetToPosition(content, insertAt)),
+                        " 0");
+                addQuickFix(actions, uri, diagnostic, edit, "-> の右辺式を補完");
+            }
+        }
+
+        private void createTe009HeuristicFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            createMissingIfBlockBraceFix(actions, uri, content, diagnostic);
+            Optional<Integer> missingRhs = findArrowWithMissingRhs(content);
+            if (missingRhs.isPresent()) {
+                int insertAt = missingRhs.get();
+                TextEdit edit = new TextEdit(
+                        new Range(server.offsetToPosition(content, insertAt), server.offsetToPosition(content, insertAt)),
+                        " 0");
+                addQuickFix(actions, uri, diagnostic, edit, "-> の右辺式を補完");
+            }
+            Optional<Integer> missingComma = server.detectMissingCommaBetweenMatchCasesOffset(content, content.length());
+            if (missingComma.isPresent()) {
+                Position insertPos = server.offsetToPosition(content, missingComma.get());
+                TextEdit edit = new TextEdit(new Range(insertPos, insertPos), ",");
+                addQuickFix(actions, uri, diagnostic, edit, "match case の区切り ',' を追加");
+            }
+        }
+
+        private void createMissingIfBlockBraceFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            int ifIndex = content.lastIndexOf("if(");
+            if (ifIndex < 0) {
+                ifIndex = content.lastIndexOf("if (");
+            }
+            if (ifIndex < 0) {
+                return;
+            }
+            int open = content.indexOf('(', ifIndex);
+            if (open < 0) {
+                return;
+            }
+            int close = server.findMatchingCloseParenthesis(content, open);
+            if (close < 0) {
+                return;
+            }
+            int next = skipWhitespaceForward(content, close + 1);
+            if (next < content.length() && content.charAt(next) == '{') {
+                return;
+            }
+            if (next < content.length() && content.charAt(next) == ')') {
+                TextEdit edit = new TextEdit(
+                        new Range(server.offsetToPosition(content, next), server.offsetToPosition(content, next + 1)),
+                        "{");
+                addQuickFix(actions, uri, diagnostic, edit, "if ブロック開始 '{' に修正");
+                return;
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, close + 1), server.offsetToPosition(content, close + 1)),
+                    "{");
+            addQuickFix(actions, uri, diagnostic, edit, "if ブロック開始 '{' を追加");
+        }
+
+        private Optional<Integer> findArrowWithMissingRhs(String content) {
+            int search = 0;
+            while (search < content.length()) {
+                int arrow = content.indexOf("->", search);
+                if (arrow < 0) {
+                    return Optional.empty();
+                }
+                int rhs = skipWhitespaceForward(content, arrow + 2);
+                if (rhs >= content.length()) {
+                    return Optional.of(arrow + 2);
+                }
+                char c = content.charAt(rhs);
+                if (c == ',' || c == '}' || c == ')' || c == ';') {
+                    return Optional.of(arrow + 2);
+                }
+                search = arrow + 2;
+            }
+            return Optional.empty();
         }
 
         private void createUnknownMethodRenameFix(
@@ -2877,6 +3026,20 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 return code.getLeft();
             }
             return String.valueOf(code.getRight());
+        }
+
+        private String inferCatalogCodeFromMessage(String message) {
+            if (message == null || message.isBlank()) {
+                return null;
+            }
+            if (message.contains("開き括弧が閉じられていません")
+                    || message.contains("丸カッコが閉じられていません")) {
+                return "TE004";
+            }
+            if (message.contains("波カッコが閉じられていません")) {
+                return "TE005";
+            }
+            return null;
         }
 
         /**
