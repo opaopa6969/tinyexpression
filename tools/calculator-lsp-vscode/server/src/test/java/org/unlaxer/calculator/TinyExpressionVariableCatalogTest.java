@@ -64,5 +64,8 @@ class TinyExpressionVariableCatalogTest {
         assertEquals(1, te024Count);
         assertEquals(1, te022Count);
         assertEquals(0, te021Count);
+        assertTrue(errors.stream()
+                .filter(error -> error.message().startsWith("[TE022]"))
+                .anyMatch(error -> error.message().contains("候補: $age")));
     }
 }

@@ -2,6 +2,7 @@ package org.unlaxer.calculator;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
@@ -306,13 +307,43 @@ public final class CalculatorAstAnalyzer {
     }
 
     private String closestVariableName(String unknownVariable, Set<String> declaredVariables) {
-        Set<String> candidates = new HashSet<>();
-        candidates.addAll(variableCatalogRules.exactNames());
-        candidates.addAll(declaredVariables);
-        for (String prefix : variableCatalogRules.partialPrefixes()) {
-            candidates.add(prefix + "_<suffix>");
+        List<VariableSuggestionCandidate> candidates = new ArrayList<>();
+        for (String declared : declaredVariables) {
+            candidates.add(new VariableSuggestionCandidate(declared, 0));
         }
-        return closestCandidate(unknownVariable, candidates);
+        for (String exact : variableCatalogRules.exactNames()) {
+            candidates.add(new VariableSuggestionCandidate(exact, 1));
+        }
+        for (String prefix : variableCatalogRules.partialPrefixes()) {
+            candidates.add(new VariableSuggestionCandidate(prefix + "_<suffix>", 2));
+        }
+        if (unknownVariable == null || unknownVariable.isBlank() || candidates.isEmpty()) {
+            return null;
+        }
+        String unknownLower = unknownVariable.toLowerCase();
+        List<ScoredVariableCandidate> scored = new ArrayList<>();
+        for (VariableSuggestionCandidate candidate : candidates) {
+            if (candidate.name() == null || candidate.name().isBlank()) {
+                continue;
+            }
+            int distance = variableDistance(unknownLower, candidate.name().toLowerCase());
+            int score = distance * 10 + candidate.priority();
+            scored.add(new ScoredVariableCandidate(candidate.name(), candidate.priority(), distance, score));
+        }
+        if (scored.isEmpty()) {
+            return null;
+        }
+        scored.sort(Comparator
+                .comparingInt(ScoredVariableCandidate::score)
+                .thenComparingInt(ScoredVariableCandidate::distance)
+                .thenComparingInt(ScoredVariableCandidate::priority)
+                .thenComparingInt(candidate -> candidate.name().length()));
+        ScoredVariableCandidate best = scored.get(0);
+        int threshold = Math.max(2, unknownVariable.length() / 2 + 1);
+        if (best.distance() > threshold) {
+            return null;
+        }
+        return best.name();
     }
 
     private String closestCandidate(String unknown, Set<String> candidates) {
@@ -345,6 +376,20 @@ public final class CalculatorAstAnalyzer {
         return best;
     }
 
+    private int variableDistance(String unknownLower, String candidateLower) {
+        if (candidateLower.endsWith("_<suffix>")) {
+            String prefix = candidateLower.substring(0, candidateLower.length() - "_<suffix>".length());
+            if (unknownLower.equals(prefix)) {
+                return 0;
+            }
+            if (unknownLower.startsWith(prefix + "_")) {
+                return 1;
+            }
+            return levenshtein(unknownLower, prefix) + 1;
+        }
+        return levenshtein(unknownLower, candidateLower);
+    }
+
     private int levenshtein(String left, String right) {
         int[] previous = new int[right.length() + 1];
         int[] current = new int[right.length() + 1];
@@ -369,6 +414,8 @@ public final class CalculatorAstAnalyzer {
     }
 
     private record VariableReference(String name, int startOffset, int endOffset) {}
+    private record VariableSuggestionCandidate(String name, int priority) {}
+    private record ScoredVariableCandidate(String name, int priority, int distance, int score) {}
 
     private Set<String> extractImportAliases(String content, boolean[] ignoredMask) {
         Set<String> aliases = new HashSet<>();

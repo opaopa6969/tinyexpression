@@ -228,6 +228,9 @@ Progress snapshot (2026-02-27):
   - unknown-method scan now ignores string/comment regions,
   - unknown-method scan now skips dot-qualified chained calls (example: `get(...).orElse(...)`),
   - operator/notation (`TE023`) scan now ignores string/comment regions for `&&`, `||`, and `$method(...)` probes.
+- TE022 suggestion quality update:
+  - candidate ranking now prefers local declared variables over global catalog names,
+  - partial-key suggestions consider prefix-aware distance (`prefix_<suffix>`).
 - LSP now sets `Diagnostic.code = TE###` and emits catalog-style user message for mapped parse failures.
 - quick fix implemented for parser-safe bracket/semicolon cases:
   - `TE004` => insert `)`
