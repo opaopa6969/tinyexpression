@@ -21,6 +21,14 @@ class CalculatorErrorCatalogMappingTest {
         assertEquals("TE011", resolveCatalogCode(expression));
         String missingSemicolon = "var $input as string set if not exists 'n'\nif(true){1}else{0}";
         assertEquals("TE006", resolveCatalogCode(missingSemicolon));
+        assertEquals("TE002", resolveCatalogCode("abc"));
+        assertEquals("TE003", resolveCatalogCode("\"abc"));
+        assertEquals("TE007", resolveCatalogCode("var $x as string set if not exists 'a' description='x"));
+        assertEquals("TE008", resolveCatalogCode("var $x as string set if not exists 'a'；"));
+        assertEquals("TE016", resolveCatalogCode("import CheckDigits#check;"));
+        assertEquals("TE017", resolveCatalogCode("var name as string;"));
+        assertEquals("TE018", resolveCatalogCode("as string $name"));
+        assertEquals("TE019", resolveCatalogCode("get($x).orElse"));
     }
 
     private String resolveCatalogCode(String content) throws Exception {

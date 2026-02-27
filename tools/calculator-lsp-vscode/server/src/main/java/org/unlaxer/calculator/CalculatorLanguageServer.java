@@ -68,6 +68,16 @@ import org.unlaxer.tinyexpression.parser.FormulaParser;
 public class CalculatorLanguageServer implements LanguageServer, LanguageClientAware {
 
     private static final Pattern CATALOG_CODE_PATTERN = Pattern.compile("^\\[(TE\\d{3})\\]\\s*");
+    private static final Pattern BARE_IDENTIFIER_PATTERN =
+            Pattern.compile("^[\\p{L}_][\\p{L}\\p{N}_]*$");
+    private static final Pattern VALID_IMPORT_PATTERN =
+            Pattern.compile("^import\\s+.+\\bas\\s+[A-Za-z_][A-Za-z0-9_]*\\s*;\\s*$");
+    private static final Pattern VALID_VAR_HEAD_PATTERN =
+            Pattern.compile("^(?:var|variable)\\s+\\$[\\p{L}_][\\p{L}\\p{N}_]*\\b.*$");
+    private static final Pattern VALID_DESCRIPTION_PATTERN =
+            Pattern.compile("\\bdescription\\s*=\\s*'[^']*'");
+    private static final Pattern MISPLACED_TYPE_HINT_PATTERN =
+            Pattern.compile("\\bas\\s+(?:Number|number|Float|float|String|string|Boolean|boolean|Object|object)\\s+\\$");
     private LanguageClient client;
     private final Map<String, DocumentState> documents = new HashMap<>();
     private final SuggestableParser suggestableParser = new TinyExpressionSuggestableParser();
@@ -321,6 +331,30 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (message == null || message.isBlank()) {
             return TE020_OTHER_SYNTAX;
         }
+        if (message.startsWith("bare identifier expression")) {
+            return TE002_BARE_IDENTIFIER_EXPRESSION;
+        }
+        if (message.startsWith("string literal quote invalid")) {
+            return TE003_STRING_QUOTE_INVALID;
+        }
+        if (message.startsWith("description syntax invalid")) {
+            return TE007_DESCRIPTION_SYNTAX_INVALID;
+        }
+        if (message.startsWith("invalid non-ascii punctuation character")) {
+            return TE008_INVALID_CHARACTER;
+        }
+        if (message.startsWith("import declaration invalid")) {
+            return TE016_IMPORT_DECLARATION_INVALID;
+        }
+        if (message.startsWith("variable declaration invalid")) {
+            return TE017_VARIABLE_DECLARATION_INVALID;
+        }
+        if (message.startsWith("type hint position invalid")) {
+            return TE018_TYPE_HINT_POSITION_INVALID;
+        }
+        if (message.startsWith("get/orElse syntax invalid")) {
+            return TE019_GET_ORELSE_INVALID;
+        }
         if (message.startsWith("if condition")) {
             return TE011_IF_CONDITION_INVALID;
         }
@@ -416,6 +450,22 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     "エラー行の直前トークンと括弧を確認");
     private static final ErrorCatalogEntry TE022_UNDEFINED_VARIABLE_REFERENCE =
             new ErrorCatalogEntry("TE022", "利用可能な変数名ではありません。", "候補変数名へ修正");
+    private static final ErrorCatalogEntry TE002_BARE_IDENTIFIER_EXPRESSION =
+            new ErrorCatalogEntry("TE002", "識別子を式として解釈できません。", "変数は '$name'、文字列は 'text' を使用");
+    private static final ErrorCatalogEntry TE003_STRING_QUOTE_INVALID =
+            new ErrorCatalogEntry("TE003", "文字列リテラルのクォートが不正です。", "'text' 形式に修正");
+    private static final ErrorCatalogEntry TE007_DESCRIPTION_SYNTAX_INVALID =
+            new ErrorCatalogEntry("TE007", "description の書式が不正です。", "description='...' 形式に修正");
+    private static final ErrorCatalogEntry TE008_INVALID_CHARACTER =
+            new ErrorCatalogEntry("TE008", "不正な文字が含まれています。", "全角記号を半角記号へ修正");
+    private static final ErrorCatalogEntry TE016_IMPORT_DECLARATION_INVALID =
+            new ErrorCatalogEntry("TE016", "import 宣言の形式が不正です。", "import ... as ...; を確認");
+    private static final ErrorCatalogEntry TE017_VARIABLE_DECLARATION_INVALID =
+            new ErrorCatalogEntry("TE017", "variable 宣言の形式が不正です。", "var $name ... ; を確認");
+    private static final ErrorCatalogEntry TE018_TYPE_HINT_POSITION_INVALID =
+            new ErrorCatalogEntry("TE018", "型ヒントの位置が不正です。", "as number/string/boolean の位置を修正");
+    private static final ErrorCatalogEntry TE019_GET_ORELSE_INVALID =
+            new ErrorCatalogEntry("TE019", "get(...).orElse(...) 構文が不正です。", "get(...).orElse(...) 形式を確認");
 
     
     private String createParseFailureHint(ParseResult result, String primaryMessage) {
@@ -708,6 +758,11 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             String content,
             int defaultOffset,
             Object failureDiagnostics) {
+        Optional<ParseFailureDescription> catalogSyntaxIssue =
+                describeCatalogSpecificSyntaxIssues(content, defaultOffset);
+        if (catalogSyntaxIssue.isPresent()) {
+            return catalogSyntaxIssue.get();
+        }
         Optional<ParseFailureDescription> ifConditionIssue =
                 describeIfConditionIssue(content, defaultOffset);
         if (ifConditionIssue.isPresent()) {
@@ -784,6 +839,11 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int startOffset,
             List<Object> expectedHintCandidates,
             List<String> expectedHints) {
+        Optional<ParseFailureDescription> catalogSyntaxIssue =
+                describeCatalogSpecificSyntaxIssues(content, startOffset);
+        if (catalogSyntaxIssue.isPresent()) {
+            return catalogSyntaxIssue;
+        }
         List<String> mergedHints = new ArrayList<>();
         if (expectedHintCandidates != null) {
             mergedHints.addAll(expectedHintCandidates.stream()
@@ -892,6 +952,173 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return Optional.of(new ParseFailureDescription(
                     startOffset,
                     "expected " + tokenHints.get(0)));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeCatalogSpecificSyntaxIssues(
+            String content,
+            int startOffset) {
+        Optional<ParseFailureDescription> invalidCharacter = describeInvalidCharacterIssue(content);
+        if (invalidCharacter.isPresent()) {
+            return invalidCharacter;
+        }
+        Optional<ParseFailureDescription> stringQuote = describeStringQuoteIssue(content);
+        if (stringQuote.isPresent()) {
+            return stringQuote;
+        }
+        Optional<ParseFailureDescription> description = describeDescriptionSyntaxIssue(content);
+        if (description.isPresent()) {
+            return description;
+        }
+        Optional<ParseFailureDescription> importIssue = describeImportDeclarationIssue(content);
+        if (importIssue.isPresent()) {
+            return importIssue;
+        }
+        Optional<ParseFailureDescription> variableIssue = describeVariableDeclarationIssue(content);
+        if (variableIssue.isPresent()) {
+            return variableIssue;
+        }
+        Optional<ParseFailureDescription> typeHintIssue = describeTypeHintPositionIssue(content);
+        if (typeHintIssue.isPresent()) {
+            return typeHintIssue;
+        }
+        Optional<ParseFailureDescription> getOrElseIssue = describeGetOrElseSyntaxIssue(content);
+        if (getOrElseIssue.isPresent()) {
+            return getOrElseIssue;
+        }
+        return describeBareIdentifierIssue(content, startOffset);
+    }
+
+    private Optional<ParseFailureDescription> describeBareIdentifierIssue(String content, int startOffset) {
+        String trimmed = content.strip();
+        if (trimmed.isEmpty()) {
+            return Optional.empty();
+        }
+        if (BARE_IDENTIFIER_PATTERN.matcher(trimmed).matches() == false) {
+            return Optional.empty();
+        }
+        String lower = trimmed.toLowerCase();
+        if (lower.equals("if") || lower.equals("match") || lower.equals("default")
+                || lower.equals("var") || lower.equals("variable")
+                || lower.equals("import") || lower.equals("external")
+                || lower.equals("internal") || lower.equals("call")
+                || lower.equals("true") || lower.equals("false")) {
+            return Optional.empty();
+        }
+        int position = content.indexOf(trimmed);
+        if (position < 0) {
+            position = Math.max(0, Math.min(content.length(), startOffset));
+        }
+        return Optional.of(new ParseFailureDescription(position, "bare identifier expression"));
+    }
+
+    private Optional<ParseFailureDescription> describeStringQuoteIssue(String content) {
+        int index = content.indexOf('"');
+        if (index < 0) {
+            return Optional.empty();
+        }
+        return Optional.of(new ParseFailureDescription(index, "string literal quote invalid"));
+    }
+
+    private Optional<ParseFailureDescription> describeInvalidCharacterIssue(String content) {
+        String invalids = "；（），｛｝：＄”’　";
+        for (int i = 0; i < content.length(); i++) {
+            if (invalids.indexOf(content.charAt(i)) >= 0) {
+                return Optional.of(new ParseFailureDescription(i, "invalid non-ascii punctuation character"));
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeImportDeclarationIssue(String content) {
+        int offset = 0;
+        while (offset <= content.length()) {
+            int lineEnd = content.indexOf('\n', offset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(offset, lineEnd);
+            String trimmed = line.stripLeading();
+            if (trimmed.startsWith("import ") && VALID_IMPORT_PATTERN.matcher(trimmed).matches() == false) {
+                return Optional.of(new ParseFailureDescription(offset + line.indexOf(trimmed), "import declaration invalid"));
+            }
+            if (lineEnd >= content.length()) {
+                break;
+            }
+            offset = lineEnd + 1;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeVariableDeclarationIssue(String content) {
+        int offset = 0;
+        while (offset <= content.length()) {
+            int lineEnd = content.indexOf('\n', offset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(offset, lineEnd);
+            String trimmed = line.stripLeading();
+            if ((trimmed.startsWith("var ") || trimmed.startsWith("variable "))
+                    && VALID_VAR_HEAD_PATTERN.matcher(trimmed).matches() == false) {
+                return Optional.of(new ParseFailureDescription(offset + line.indexOf(trimmed), "variable declaration invalid"));
+            }
+            if (lineEnd >= content.length()) {
+                break;
+            }
+            offset = lineEnd + 1;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeDescriptionSyntaxIssue(String content) {
+        int offset = 0;
+        while (offset <= content.length()) {
+            int lineEnd = content.indexOf('\n', offset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(offset, lineEnd);
+            String trimmed = line.stripLeading();
+            if ((trimmed.startsWith("var ") || trimmed.startsWith("variable "))
+                    && trimmed.contains("description")
+                    && VALID_DESCRIPTION_PATTERN.matcher(trimmed).find() == false) {
+                return Optional.of(new ParseFailureDescription(offset + line.indexOf(trimmed), "description syntax invalid"));
+            }
+            if (lineEnd >= content.length()) {
+                break;
+            }
+            offset = lineEnd + 1;
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeTypeHintPositionIssue(String content) {
+        Matcher matcher = MISPLACED_TYPE_HINT_PATTERN.matcher(content);
+        if (matcher.find()) {
+            return Optional.of(new ParseFailureDescription(matcher.start(), "type hint position invalid"));
+        }
+        return Optional.empty();
+    }
+
+    private Optional<ParseFailureDescription> describeGetOrElseSyntaxIssue(String content) {
+        if (content.contains("get(") == false || content.contains("orElse") == false) {
+            return Optional.empty();
+        }
+        int getHead = content.indexOf("get(");
+        int getOpen = content.indexOf('(', getHead);
+        if (getOpen < 0) {
+            return Optional.of(new ParseFailureDescription(getHead, "get/orElse syntax invalid"));
+        }
+        int getClose = findMatchingCloseParenthesis(content, getOpen);
+        int orElseIndex = content.indexOf(".orElse(", getHead);
+        if (orElseIndex < 0 || getClose < 0 || orElseIndex <= getClose) {
+            return Optional.of(new ParseFailureDescription(getHead, "get/orElse syntax invalid"));
+        }
+        int orElseOpen = content.indexOf('(', orElseIndex);
+        if (orElseOpen < 0 || findMatchingCloseParenthesis(content, orElseOpen) < 0) {
+            return Optional.of(new ParseFailureDescription(orElseIndex, "get/orElse syntax invalid"));
         }
         return Optional.empty();
     }

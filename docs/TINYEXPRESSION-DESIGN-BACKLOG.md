@@ -215,6 +215,15 @@ Progress snapshot (2026-02-27):
 - backlog item created and parser-feasible subset implementation started in `CalculatorLanguageServer`.
 - parser-phase mapping implemented (initial):
   - `TE004` `TE005` `TE006` `TE009` `TE010` `TE013` `TE014` `TE020` `TE022` (tentative for undeclared/untyped variable message).
+- parser-phase catalog mapping extended:
+  - `TE002` bare identifier,
+  - `TE003` string quote invalid,
+  - `TE007` description syntax invalid,
+  - `TE008` invalid full-width punctuation,
+  - `TE016` import declaration invalid,
+  - `TE017` variable declaration invalid,
+  - `TE018` type hint position invalid,
+  - `TE019` get/orElse syntax invalid.
 - LSP now sets `Diagnostic.code = TE###` and emits catalog-style user message for mapped parse failures.
 - quick fix implemented for parser-safe bracket/semicolon cases:
   - `TE004` => insert `)`
@@ -244,7 +253,7 @@ Progress snapshot (2026-02-27):
   - `TE021`: rename unknown method to suggested candidate (`候補: ...`) as replacement edit.
   - `TE023`: operator/notation quick fixes for `&& -> &`, `|| -> |`, and `$method(...)` -> `method(...)` (remove leading `$`).
 - unresolved:
-  - semantic-only/full-precision codes still require analyzer integration (`TE024`, and advanced `TE011` boolean-shape validation / advanced `TE015` signature validation / advanced `TE021`/`TE023` context validation beyond lightweight heuristics).
+  - full-precision semantic validation still has gaps (advanced `TE011` boolean-shape validation / advanced `TE015` signature validation / advanced `TE021`/`TE022`/`TE023` context validation beyond lightweight heuristics).
   - `TE001` / `TE012`: **N/A (not supported by design)**.
 
 ## 14. TE024 Catalog Externalization and Generalization
