@@ -249,7 +249,7 @@ Progress snapshot (2026-02-27):
 
 ## 14. TE024 Catalog Externalization and Generalization
 
-Status: planned
+Status: in progress
 
 Decision (2026-02-27):
 - do not embed partialKey catalog data in VSIX.
