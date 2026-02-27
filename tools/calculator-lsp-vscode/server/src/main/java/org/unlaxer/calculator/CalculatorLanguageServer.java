@@ -2161,6 +2161,12 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE024":
                         createTe024PartialKeySuffixFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE003":
+                        createTe003StringQuoteFix(actions, uri, state.content, diagnostic);
+                        break;
+                    case "TE017":
+                        createTe017VariableDeclarationFix(actions, uri, state.content, diagnostic);
+                        break;
                     default:
                         break;
                 }
@@ -2396,6 +2402,77 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             }
             TextEdit edit = new TextEdit(new Range(start, end), suggestion);
             addQuickFix(actions, uri, diagnostic, edit, "変数名を '" + suggestion + "' に修正");
+        }
+
+        private void createTe003StringQuoteFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset >= content.length()) {
+                return;
+            }
+            int firstQuote = content.indexOf('"', startOffset);
+            if (firstQuote < 0) {
+                return;
+            }
+            int secondQuote = content.indexOf('"', firstQuote + 1);
+            List<TextEdit> edits = new ArrayList<>();
+            edits.add(new TextEdit(
+                    new Range(server.offsetToPosition(content, firstQuote), server.offsetToPosition(content, firstQuote + 1)),
+                    "'"));
+            if (secondQuote > firstQuote) {
+                edits.add(new TextEdit(
+                        new Range(server.offsetToPosition(content, secondQuote), server.offsetToPosition(content, secondQuote + 1)),
+                        "'"));
+            }
+            Map<String, List<TextEdit>> changes = new HashMap<>();
+            changes.put(uri, edits);
+            WorkspaceEdit workspaceEdit = new WorkspaceEdit();
+            workspaceEdit.setChanges(changes);
+
+            CodeAction codeAction = new CodeAction("文字列クォートを '...' に修正");
+            codeAction.setKind(CodeActionKind.QuickFix);
+            codeAction.setDiagnostics(List.of(diagnostic));
+            codeAction.setEdit(workspaceEdit);
+            actions.add(Either.forRight(codeAction));
+        }
+
+        private void createTe017VariableDeclarationFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset > content.length()) {
+                return;
+            }
+            int lineStart = content.lastIndexOf('\n', Math.max(0, startOffset - 1));
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            int lineEnd = content.indexOf('\n', startOffset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(lineStart, lineEnd);
+            Matcher matcher = Pattern.compile("^(\\s*(?:var|variable)\\s+)([\\p{L}_][\\p{L}\\p{N}_]*)").matcher(line);
+            if (matcher.find() == false) {
+                return;
+            }
+            int variableStart = lineStart + matcher.start(2);
+            if (variableStart < content.length() && content.charAt(variableStart) == '$') {
+                return;
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, variableStart), server.offsetToPosition(content, variableStart)),
+                    "$");
+            addQuickFix(actions, uri, diagnostic, edit, "変数名に '$' を追加");
         }
 
         private String diagnosticCode(Diagnostic diagnostic) {
