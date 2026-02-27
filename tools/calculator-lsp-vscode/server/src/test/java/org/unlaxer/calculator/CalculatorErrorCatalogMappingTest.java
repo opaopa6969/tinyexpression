@@ -5,7 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.TextDocumentIdentifier;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
 
 class CalculatorErrorCatalogMappingTest {
@@ -89,6 +97,33 @@ class CalculatorErrorCatalogMappingTest {
                 """;
         CalculatorLanguageServer.ParseResult result = server.parseExpression(expression);
         assertTrue(result.succeeded, "if/match expression should parse successfully");
+    }
+
+    @Test
+    void providesQuickFixForTe010MissingBlockOpen() throws Exception {
+        CalculatorLanguageServer server = new CalculatorLanguageServer();
+        String uri = "file:///te010-sample.tinyexp";
+        String expression = """
+                if(external returning as boolean checkDigits($input))
+                  1
+                }else{
+                  match{
+                    true -> 1,
+                    default -> 0
+                  }
+                }
+                """;
+        server.parseDocument(uri, expression);
+
+        Diagnostic diagnostic = new Diagnostic();
+        diagnostic.setCode(Either.forLeft("TE010"));
+        diagnostic.setRange(new Range(new Position(1, 0), new Position(7, 0)));
+        diagnostic.setMessage("[TE010] 構文の並びが想定と一致しません。 修正: 直前の式と区切り記号を確認");
+
+        CodeActionContext context = new CodeActionContext(List.of(diagnostic));
+        CodeActionParams params = new CodeActionParams(new TextDocumentIdentifier(uri), diagnostic.getRange(), context);
+        List<?> actions = server.getTextDocumentService().codeAction(params).get();
+        assertFalse(actions.isEmpty(), "TE010 should provide at least one quick fix");
     }
 
     private String resolveCatalogCode(String content) throws Exception {
