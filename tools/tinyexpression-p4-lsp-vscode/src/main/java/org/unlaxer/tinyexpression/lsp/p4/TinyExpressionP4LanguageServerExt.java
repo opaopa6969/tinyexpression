@@ -12,6 +12,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemKind;
 import org.eclipse.lsp4j.CompletionList;
@@ -36,7 +41,11 @@ import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.eclipse.lsp4j.SemanticTokensWithRegistrationOptions;
 import org.eclipse.lsp4j.ServerCapabilities;
+import org.eclipse.lsp4j.TextDocumentEdit;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.TextDocumentService;
@@ -145,6 +154,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     stOpts.setFull(true);
     stOpts.setLegend(new SemanticTokensLegend(SEMANTIC_TOKEN_TYPES, List.of()));
     cap.setSemanticTokensProvider(stOpts);
+
+    cap.setCodeActionProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -488,6 +499,132 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       content.setKind("markdown");
       content.setValue(markdownText);
       return CompletableFuture.completedFuture(new Hover(content));
+    }
+
+    // ── code actions (quick fixes) ──
+
+    @Override
+    public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(
+        CodeActionParams params) {
+
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      List<Either<Command, CodeAction>> actions = new ArrayList<>();
+
+      if (state == null) {
+        return CompletableFuture.completedFuture(actions);
+      }
+
+      CodeActionContext ctx = params.getContext();
+      List<Diagnostic> diagnostics = ctx.getDiagnostics();
+      if (diagnostics == null || diagnostics.isEmpty()) {
+        return CompletableFuture.completedFuture(actions);
+      }
+
+      for (Diagnostic diag : diagnostics) {
+        String code = diag.getCode() instanceof Either<?,?> e
+            ? (e.isLeft() ? String.valueOf(e.getLeft()) : String.valueOf(e.getRight()))
+            : "";
+
+        if ("TE001".equals(code)) {
+          // TE001: parse error — suggest rewriting with P4 syntax
+          actions.addAll(buildTE001QuickFixes(uri, state.content(), diag));
+        }
+      }
+
+      return CompletableFuture.completedFuture(actions);
+    }
+
+    private List<Either<Command, CodeAction>> buildTE001QuickFixes(
+        String uri, String content, Diagnostic diag) {
+
+      List<Either<Command, CodeAction>> result = new ArrayList<>();
+      int offset = positionToOffset(content, diag.getRange().getStart());
+      String remaining = content.substring(offset).stripLeading();
+
+      // Quick fix: "if ... else ..." → "if (...) { ... } else { ... }"
+      if (remaining.startsWith("if ")) {
+        CodeAction ca = new CodeAction("Rewrite 'if' to P4 syntax: if (cond) { then } else { else }");
+        ca.setKind(CodeActionKind.QuickFix);
+        ca.setDiagnostics(List.of(diag));
+
+        // Build a template replacement for the whole line
+        Range lineRange = wholeLinesRange(content, diag.getRange());
+        String oldLine = content.substring(
+            positionToOffset(content, lineRange.getStart()),
+            positionToOffset(content, lineRange.getEnd()));
+        String newLine = convertIfToP4Syntax(oldLine);
+        if (newLine != null) {
+          ca.setEdit(buildEdit(uri, lineRange, newLine));
+          result.add(Either.forRight(ca));
+        }
+      }
+
+      // Quick fix: "funcName(...)" without 'call' → "call funcName(...)"
+      java.util.regex.Matcher m = java.util.regex.Pattern
+          .compile("^([a-zA-Z_][a-zA-Z0-9_]*)\\s*\\(")
+          .matcher(remaining);
+      if (m.find()) {
+        String funcName = m.group(1);
+        if (!KEYWORD_SET.contains(funcName)) {
+          CodeAction ca = new CodeAction("Add 'call' keyword: call " + funcName + "(...)");
+          ca.setKind(CodeActionKind.QuickFix);
+          ca.setDiagnostics(List.of(diag));
+          Position insertPos = diag.getRange().getStart();
+          ca.setEdit(buildEdit(uri, new Range(insertPos, insertPos), "call "));
+          result.add(Either.forRight(ca));
+        }
+      }
+
+      // Generic: show P4 syntax reference as hint via a no-op command
+      CodeAction hint = new CodeAction(
+          "P4 syntax: use 'call func()', 'if(cond){then}else{else}', 'match{cond->val,...,default->val}'");
+      hint.setKind(CodeActionKind.Empty);
+      hint.setDiagnostics(List.of(diag));
+      result.add(Either.forRight(hint));
+
+      return result;
+    }
+
+    private static int positionToOffset(String content, Position pos) {
+      int line = 0, offset = 0;
+      while (offset < content.length() && line < pos.getLine()) {
+        if (content.charAt(offset++) == '\n') line++;
+      }
+      return Math.min(offset + pos.getCharacter(), content.length());
+    }
+
+    private static Range wholeLinesRange(String content, Range diag) {
+      Position start = new Position(diag.getStart().getLine(), 0);
+      int endLine = diag.getEnd().getLine();
+      int endOffset = positionToOffset(content, new Position(endLine, 0));
+      // extend to end of the last line
+      while (endOffset < content.length() && content.charAt(endOffset) != '\n') endOffset++;
+      if (endOffset < content.length()) endOffset++; // include newline
+      int[] lc = offsetToLineChar(content, endOffset);
+      return new Range(start, new Position(lc[0], lc[1]));
+    }
+
+    /** Simple heuristic: "if a else b" → "if (a) { b_then } else { b_else }". */
+    private static String convertIfToP4Syntax(String line) {
+      // match "if <cond> else <value>" (basic single-line pattern)
+      java.util.regex.Matcher m = java.util.regex.Pattern
+          .compile("(?i)^(\\s*)if\\s+(.+?)\\s+else\\s+(.+?)\\s*$")
+          .matcher(line);
+      if (!m.matches()) return null;
+      String indent = m.group(1);
+      String cond   = m.group(2).trim();
+      String els    = m.group(3).trim();
+      return indent + "if (" + cond + ") { /* then */ } else { " + els + " }";
+    }
+
+    private static WorkspaceEdit buildEdit(String uri, Range range, String newText) {
+      TextEdit edit = new TextEdit(range, newText);
+      VersionedTextDocumentIdentifier docId = new VersionedTextDocumentIdentifier(uri, null);
+      TextDocumentEdit docEdit = new TextDocumentEdit(docId, List.of(edit));
+      WorkspaceEdit we = new WorkspaceEdit();
+      we.setDocumentChanges(List.of(Either.forLeft(docEdit)));
+      return we;
     }
 
     // ── semantic tokens ──

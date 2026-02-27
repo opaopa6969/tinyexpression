@@ -7,6 +7,7 @@ import {
 } from "vscode-languageclient/node";
 
 let client: LanguageClient | undefined;
+let outputChannel: vscode.OutputChannel | undefined;
 
 function getBundledJarPath(context: vscode.ExtensionContext): string {
   return context.asAbsolutePath(
@@ -28,9 +29,16 @@ export async function activate(
       ? configuredJar
       : getBundledJarPath(context);
 
+  outputChannel = vscode.window.createOutputChannel("TinyExpression P4 LSP");
+
+  // Log startup info so users can diagnose server startup issues
+  outputChannel.appendLine("[TinyExpression P4 LSP] Starting server...");
+  outputChannel.appendLine(`  java: ${javaPath}`);
+  outputChannel.appendLine(`  jar:  ${jarPath}`);
+  outputChannel.appendLine(`  args: --enable-preview -jar ${jarPath}`);
+
   // ── LSP server ──
   // Launched as a fat jar via -jar; main class is TinyExpressionP4LspLauncherExt
-  // which creates TinyExpressionP4LanguageServerExt (type-safe, token-tree based).
   const serverOptions: ServerOptions = {
     command: javaPath,
     args: [...jvmArgs, "--enable-preview", "-jar", jarPath],
@@ -39,7 +47,7 @@ export async function activate(
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: "file", language: "tinyexpressionP4" }],
-    outputChannel: vscode.window.createOutputChannel("TinyExpression P4 LSP")
+    outputChannel
   };
 
   client = new LanguageClient(
@@ -49,7 +57,24 @@ export async function activate(
     clientOptions
   );
 
-  client.start();
+  client.start().then(() => {
+    outputChannel?.appendLine("[TinyExpression P4 LSP] Server started successfully.");
+  }).catch((err: unknown) => {
+    outputChannel?.appendLine(`[TinyExpression P4 LSP] Failed to start server: ${String(err)}`);
+    void vscode.window.showErrorMessage(
+      `TinyExpression P4 LSP: Failed to start Java server. Check Output > TinyExpression P4 LSP for details. (${String(err)})`
+    );
+  });
+
+  // ── showServerOutput command ──
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tinyExpressionP4Lsp.showServerOutput",
+      () => {
+        outputChannel?.show(true);
+      }
+    )
+  );
 
   context.subscriptions.push({
     dispose: () => {
