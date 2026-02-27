@@ -2164,6 +2164,12 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE003":
                         createTe003StringQuoteFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE007":
+                        createTe007DescriptionQuoteFix(actions, uri, state.content, diagnostic);
+                        break;
+                    case "TE016":
+                        createTe016ImportDeclarationFix(actions, uri, state.content, diagnostic);
+                        break;
                     case "TE017":
                         createTe017VariableDeclarationFix(actions, uri, state.content, diagnostic);
                         break;
@@ -2440,6 +2446,105 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             codeAction.setDiagnostics(List.of(diagnostic));
             codeAction.setEdit(workspaceEdit);
             actions.add(Either.forRight(codeAction));
+        }
+
+        private void createTe007DescriptionQuoteFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset > content.length()) {
+                return;
+            }
+            int lineStart = content.lastIndexOf('\n', Math.max(0, startOffset - 1));
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            int lineEnd = content.indexOf('\n', startOffset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(lineStart, lineEnd);
+            Matcher matcher = Pattern.compile("\\bdescription\\s*=\\s*'[^']*$").matcher(line);
+            if (matcher.find() == false) {
+                return;
+            }
+            int insertOffset = lineEnd;
+            int semicolonAtEnd = line.lastIndexOf(';');
+            if (semicolonAtEnd >= 0 && line.substring(semicolonAtEnd).trim().equals(";")) {
+                insertOffset = lineStart + semicolonAtEnd;
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, insertOffset), server.offsetToPosition(content, insertOffset)),
+                    "'");
+            addQuickFix(actions, uri, diagnostic, edit, "description のクォートを閉じる");
+        }
+
+        private void createTe016ImportDeclarationFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset > content.length()) {
+                return;
+            }
+            int lineStart = content.lastIndexOf('\n', Math.max(0, startOffset - 1));
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            int lineEnd = content.indexOf('\n', startOffset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(lineStart, lineEnd);
+            Matcher matcher = Pattern.compile("^(\\s*)import\\s+([^;]+?)\\s*;?\\s*$").matcher(line);
+            if (matcher.find() == false) {
+                return;
+            }
+            String indent = matcher.group(1) == null ? "" : matcher.group(1);
+            String importBody = matcher.group(2) == null ? "" : matcher.group(2).trim();
+            if (importBody.isBlank() || importBody.contains(" as ")) {
+                return;
+            }
+            String alias = deriveImportAlias(importBody);
+            String replacement = indent + "import " + importBody + " as " + alias + ";";
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, lineStart), server.offsetToPosition(content, lineEnd)),
+                    replacement);
+            addQuickFix(actions, uri, diagnostic, edit, "import に alias を追加");
+        }
+
+        private String deriveImportAlias(String importBody) {
+            if (importBody == null || importBody.isBlank()) {
+                return "alias";
+            }
+            String candidate = importBody;
+            int hash = candidate.lastIndexOf('#');
+            if (hash >= 0 && hash + 1 < candidate.length()) {
+                candidate = candidate.substring(hash + 1).trim();
+            } else {
+                int dot = candidate.lastIndexOf('.');
+                if (dot >= 0 && dot + 1 < candidate.length()) {
+                    candidate = candidate.substring(dot + 1).trim();
+                }
+            }
+            candidate = candidate.replaceAll("[^A-Za-z0-9_]", "");
+            if (candidate.isBlank()) {
+                return "alias";
+            }
+            if (Character.isJavaIdentifierStart(candidate.charAt(0)) == false) {
+                candidate = "_" + candidate;
+            }
+            StringBuilder normalized = new StringBuilder();
+            for (int i = 0; i < candidate.length(); i++) {
+                char c = candidate.charAt(i);
+                normalized.append(Character.isJavaIdentifierPart(c) ? c : '_');
+            }
+            return normalized.isEmpty() ? "alias" : normalized.toString();
         }
 
         private void createTe017VariableDeclarationFix(
