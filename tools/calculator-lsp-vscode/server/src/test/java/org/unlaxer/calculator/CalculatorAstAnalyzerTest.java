@@ -182,13 +182,13 @@ public class CalculatorAstAnalyzerTest {
     }
 
     private Token createNumberToken(String value) {
-        StringSource source = StringSource.createRootSource(value);
+        StringSource source = new StringSource(value);
         Parser parser = new CalculatorParsers.NumberParser();
-        return new Token(TokenKind.consumed, source, parser);
+        return new Token(TokenKind.consumed, source.peek(0, value.length()), parser);
     }
 
     private Token createOperatorToken(Parser parser, Token... children) {
-        return new Token(TokenKind.consumed, new org.unlaxer.TokenList(children), parser);
+        return new Token(TokenKind.consumed, java.util.List.of(children), parser, 0);
     }
 
     private static final class UnknownOperatorParser extends MappedSingleCharacterParser {

@@ -376,6 +376,9 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (message.startsWith("missing ',' before default case")) {
             return TE014_DEFAULT_CASE_INVALID;
         }
+        if (message.startsWith("missing ',' between match cases")) {
+            return TE013_MATCH_SYNTAX_INVALID;
+        }
         if (message.startsWith("expected expression after '->'")
                 || message.startsWith("unexpected trailing ',' before '}'")) {
             return TE013_MATCH_SYNTAX_INVALID;
@@ -832,6 +835,12 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     missingSemicolonByLine.get(),
                     "missing ';' after var declaration");
         }
+        Optional<Integer> missingCommaBetweenCases = detectMissingCommaBetweenMatchCasesOffset(content, content.length());
+        if (missingCommaBetweenCases.isPresent()) {
+            return new ParseFailureDescription(
+                    missingCommaBetweenCases.get(),
+                    "missing ',' between match cases");
+        }
         return detectMissingCommaBeforeDefaultOffset(content)
                 .map(offset -> new ParseFailureDescription(
                         offset,
@@ -903,6 +912,13 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 describeTrailingCommaBeforeMatchCloseBrace(content, startOffset);
         if (trailingCommaBeforeMatchCloseBraceHint.isPresent()) {
             return trailingCommaBeforeMatchCloseBraceHint;
+        }
+        Optional<Integer> missingCommaBetweenCasesOffset =
+                detectMissingCommaBetweenMatchCasesOffset(content, startOffset);
+        if (missingCommaBetweenCasesOffset.isPresent()) {
+            return Optional.of(new ParseFailureDescription(
+                    missingCommaBetweenCasesOffset.get(),
+                    "missing ',' between match cases"));
         }
         Optional<ParseFailureDescription> missingBraceBeforeElseHint =
                 describeMissingClosingCurlyBraceBeforeElse(content, startOffset);
@@ -1045,7 +1061,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (lineEnd < 0) {
                 lineEnd = content.length();
             }
-            String line = content.substring(offset, lineEnd);
+            String line = normalizeLineForRegex(content.substring(offset, lineEnd));
             String trimmed = line.stripLeading();
             if (trimmed.startsWith("import ") && VALID_IMPORT_PATTERN.matcher(trimmed).matches() == false) {
                 return Optional.of(new ParseFailureDescription(offset + line.indexOf(trimmed), "import declaration invalid"));
@@ -1065,7 +1081,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (lineEnd < 0) {
                 lineEnd = content.length();
             }
-            String line = content.substring(offset, lineEnd);
+            String line = normalizeLineForRegex(content.substring(offset, lineEnd));
             String trimmed = line.stripLeading();
             if ((trimmed.startsWith("var ") || trimmed.startsWith("variable "))
                     && VALID_VAR_HEAD_PATTERN.matcher(trimmed).matches() == false) {
@@ -1086,7 +1102,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (lineEnd < 0) {
                 lineEnd = content.length();
             }
-            String line = content.substring(offset, lineEnd);
+            String line = normalizeLineForRegex(content.substring(offset, lineEnd));
             String trimmed = line.stripLeading();
             if ((trimmed.startsWith("var ") || trimmed.startsWith("variable "))
                     && trimmed.contains("description")
@@ -1908,10 +1924,84 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         return Optional.empty();
     }
 
+    private Optional<Integer> detectMissingCommaBetweenMatchCasesOffset(String content, int startOffset) {
+        int matchIndex = findLastKeywordBefore(content, "match", startOffset);
+        if (matchIndex < 0) {
+            return Optional.empty();
+        }
+        int matchOpen = skipWhitespace(content, matchIndex + "match".length());
+        if (matchOpen >= content.length() || content.charAt(matchOpen) != '{') {
+            return Optional.empty();
+        }
+        int matchClose = findMatchingCloseCurlyBrace(content, matchOpen);
+        if (matchClose < 0) {
+            return Optional.empty();
+        }
+        int cursor = matchOpen + 1;
+        while (cursor < matchClose) {
+            int lineStart = cursor;
+            if (lineStart > matchOpen + 1) {
+                char prev = content.charAt(lineStart - 1);
+                if (prev != '\n' && prev != '\r') {
+                    cursor++;
+                    continue;
+                }
+            }
+            int head = skipWhitespace(content, lineStart);
+            if (head >= matchClose) {
+                break;
+            }
+            int lineEnd = content.indexOf('\n', head);
+            if (lineEnd < 0 || lineEnd > matchClose) {
+                lineEnd = matchClose;
+            }
+            if (isSimpleMatchCaseHead(content, head, lineEnd)) {
+                int previousNonWhitespace = skipWhitespaceBackward(content, head - 1);
+                if (previousNonWhitespace >= 0) {
+                    char separator = content.charAt(previousNonWhitespace);
+                    if (separator != ',' && separator != '{') {
+                        if (startsWithKeywordAt(content, head, "default")) {
+                            return Optional.empty();
+                        }
+                        return Optional.of(head);
+                    }
+                }
+            }
+            if (lineEnd >= matchClose) {
+                break;
+            }
+            cursor = lineEnd + 1;
+        }
+        return Optional.empty();
+    }
+
+    private boolean isSimpleMatchCaseHead(String content, int head, int lineEndExclusive) {
+        if (head < 0 || head >= lineEndExclusive) {
+            return false;
+        }
+        int arrow = content.indexOf("->", head);
+        if (arrow < 0 || arrow >= lineEndExclusive) {
+            return false;
+        }
+        if (content.charAt(head) == '$') {
+            return true;
+        }
+        return startsWithKeywordAt(content, head, "true")
+                || startsWithKeywordAt(content, head, "false")
+                || startsWithKeywordAt(content, head, "default");
+    }
+
     private boolean startsWithArrow(String content, int index) {
         return index + 1 < content.length()
                 && content.charAt(index) == '-'
                 && content.charAt(index + 1) == '>';
+    }
+
+    private String normalizeLineForRegex(String line) {
+        if (line != null && line.endsWith("\r")) {
+            return line.substring(0, line.length() - 1);
+        }
+        return line;
     }
 
     private int skipWhitespace(String content, int index) {
@@ -2171,7 +2261,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                         createInsertFix(actions, uri, state.content, diagnostic, "}", "閉じ波括弧 '}' を追加");
                         break;
                     case "TE006":
-                        createInsertFix(actions, uri, state.content, diagnostic, ";", "セミコロン ';' を追加");
+                        createTe006SemicolonFix(actions, uri, state.content, diagnostic);
                         break;
                     case "TE021":
                         createUnknownMethodRenameFix(actions, uri, state.content, diagnostic);
@@ -2243,6 +2333,38 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             codeAction.setDiagnostics(List.of(diagnostic));
             codeAction.setEdit(workspaceEdit);
             actions.add(Either.forRight(codeAction));
+        }
+
+        private void createTe006SemicolonFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            int offset = server.detectMissingSemicolonAfterVarDeclarationByLine(content)
+                    .orElseGet(() -> {
+                        if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                            return -1;
+                        }
+                        return positionToOffset(content, diagnostic.getRange().getStart());
+                    });
+            if (offset < 0 || offset > content.length()) {
+                return;
+            }
+            int insertAt = offset;
+            if (insertAt > 0 && insertAt <= content.length()) {
+                int prev = insertAt - 1;
+                while (prev >= 0 && (content.charAt(prev) == '\r' || content.charAt(prev) == '\n')) {
+                    insertAt = prev;
+                    prev--;
+                }
+            }
+            if (insertAt > 0 && content.charAt(insertAt - 1) == ';') {
+                return;
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, insertAt), server.offsetToPosition(content, insertAt)),
+                    ";");
+            addQuickFix(actions, uri, diagnostic, edit, "セミコロン ';' を追加");
         }
 
         private void createUnknownMethodRenameFix(

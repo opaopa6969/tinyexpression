@@ -38,6 +38,22 @@ class CalculatorErrorCatalogMappingTest {
                 }
                 """;
         assertEquals("TE014", resolveCatalogCode(varSetIfNotExistsPlusMatchMissingComma));
+        String missingCommaBetweenCases = """
+                import CheckDigits#check as checkDigits;\r
+                var $input as string set if not exists 'not number' description='入力値';\r
+                var $didCheck as boolean set if not exists true description='aaa';\r
+                var $name as string set if not exists 'value' description='';\r
+                \r
+                if(external returning as boolean checkDigits($input)){\r
+                  1\r
+                }else{\r
+                  match{\r
+                  $name=='肉太郎' -> 1\r
+                  $didCheck -> 2,\r
+                  default -> 0 }\r
+                }\r
+                """;
+        assertEquals("TE013", resolveCatalogCode(missingCommaBetweenCases));
     }
 
     @Test
