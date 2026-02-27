@@ -38,6 +38,7 @@ import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.InitializeResult;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.Range;
@@ -116,12 +117,22 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private final SuggestableParser suggestableParser = new TinyExpressionSuggestableParser();
     private final CalculatorTextDocumentService textDocumentService;
     private CalculatorAstAnalyzer astAnalyzer;
+    private TinyExpressionVariableCatalog.Rules variableCatalogRules;
 
     public CalculatorLanguageServer() {
-        this(new CalculatorAstAnalyzer());
+        this(TinyExpressionVariableCatalog.loadFromRuntimeConfiguration());
+    }
+
+    CalculatorLanguageServer(TinyExpressionVariableCatalog.Rules variableCatalogRules) {
+        this.variableCatalogRules = variableCatalogRules == null
+                ? TinyExpressionVariableCatalog.Rules.empty()
+                : variableCatalogRules;
+        this.astAnalyzer = new CalculatorAstAnalyzer(this.variableCatalogRules);
+        this.textDocumentService = new CalculatorTextDocumentService(this);
     }
 
     CalculatorLanguageServer(CalculatorAstAnalyzer astAnalyzer) {
+        this.variableCatalogRules = TinyExpressionVariableCatalog.Rules.empty();
         this.astAnalyzer = astAnalyzer == null ? new CalculatorAstAnalyzer() : astAnalyzer;
         this.textDocumentService = new CalculatorTextDocumentService(this);
     }
@@ -175,6 +186,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (rules.isEmpty()) {
             return;
         }
+        this.variableCatalogRules = rules;
         this.astAnalyzer = new CalculatorAstAnalyzer(rules);
         System.err.println("[tinyExpressionLsp] catalog loaded from initializationOptions: " + rules.source());
     }
@@ -224,14 +236,15 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         return documents;
     }
 
+    private static final String FORMULA_LINE_MARKER = "formula:";
+    private static final String PART_END_MARKER = "---END_OF_PART---";
+
     /**
      * Parse document and update state.
      */
     public ParseResult parseDocument(String uri, String content) {
-        ParseResult parseResult = parseExpression(content);
-
-        CalculatorAstAnalyzer.AnalysisResult analysis = astAnalyzer.analyze(content, parseResult);
-        DocumentState state = new DocumentState(uri, content, parseResult, analysis);
+        List<FormulaSectionState> sections = buildFormulaSectionStates(content);
+        DocumentState state = new DocumentState(uri, content, sections);
         documents.put(uri, state);
 
         // Publish diagnostics
@@ -239,7 +252,70 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             publishDiagnostics(state);
         }
 
-        return parseResult;
+        return state.parseResult;
+    }
+
+    private List<FormulaSectionState> buildFormulaSectionStates(String content) {
+        List<FormulaSectionRange> ranges = extractFormulaSectionRanges(content);
+        if (ranges.isEmpty()) {
+            ParseResult parseResult = parseExpression(content);
+            CalculatorAstAnalyzer.AnalysisResult analysis = astAnalyzer.analyze(content, parseResult);
+            return List.of(new FormulaSectionState(0, content.length(), content, parseResult, analysis, false));
+        }
+        List<FormulaSectionState> sections = new ArrayList<>();
+        for (FormulaSectionRange range : ranges) {
+            int start = Math.max(0, Math.min(content.length(), range.startOffset()));
+            int end = Math.max(start, Math.min(content.length(), range.endOffset()));
+            String formulaContent = content.substring(start, end);
+            ParseResult parseResult = parseExpression(formulaContent);
+            CalculatorAstAnalyzer.AnalysisResult analysis = astAnalyzer.analyze(formulaContent, parseResult);
+            sections.add(new FormulaSectionState(start, end, formulaContent, parseResult, analysis, true));
+        }
+        return sections;
+    }
+
+    private List<FormulaSectionRange> extractFormulaSectionRanges(String content) {
+        List<FormulaSectionRange> ranges = new ArrayList<>();
+        int cursor = 0;
+        while (cursor <= content.length()) {
+            int lineStart = cursor;
+            int lineEnd = content.indexOf('\n', cursor);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(lineStart, lineEnd);
+            if (FORMULA_LINE_MARKER.equals(line.strip())) {
+                int formulaStart = lineEnd < content.length() ? lineEnd + 1 : lineEnd;
+                int scan = formulaStart;
+                int formulaEnd = content.length();
+                while (scan <= content.length()) {
+                    int sectionLineStart = scan;
+                    int sectionLineEnd = content.indexOf('\n', scan);
+                    if (sectionLineEnd < 0) {
+                        sectionLineEnd = content.length();
+                    }
+                    String sectionLine = content.substring(sectionLineStart, sectionLineEnd);
+                    if (sectionLine.stripLeading().startsWith(PART_END_MARKER)) {
+                        formulaEnd = sectionLineStart;
+                        scan = sectionLineEnd < content.length() ? sectionLineEnd + 1 : sectionLineEnd;
+                        break;
+                    }
+                    if (sectionLineEnd >= content.length()) {
+                        scan = content.length();
+                        break;
+                    }
+                    scan = sectionLineEnd + 1;
+                }
+                ranges.add(new FormulaSectionRange(formulaStart, formulaEnd));
+                cursor = scan;
+                continue;
+            }
+            if (lineEnd >= content.length()) {
+                break;
+            }
+            cursor = lineEnd + 1;
+        }
+        return ranges;
     }
 
     ParseResult parseExpression(String content) {
@@ -279,68 +355,92 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
      */
     private void publishDiagnostics(DocumentState state) {
         List<Diagnostic> diagnostics = new ArrayList<>();
-
-        List<CalculatorAstAnalyzer.AstError> astErrors = state.analysis.errors();
-        for (CalculatorAstAnalyzer.AstError astError : astErrors) {
-            Diagnostic diagnostic = new Diagnostic();
-            diagnostic.setRange(astError.range());
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            extractCatalogCode(astError.message()).ifPresent(code -> diagnostic.setCode(Either.forLeft(code)));
-            diagnostic.setMessage(astError.message());
-            diagnostic.setSource("tinyexpression");
-            diagnostics.add(diagnostic);
-        }
-
-        ParseResult result = state.parseResult;
-        String content = state.content;
         String uri = state.uri;
 
-        if (result.consumedLength < result.totalLength) {
-            // Part of the input is invalid
-            int errorStart = result.consumedLength;
-            int errorEnd = result.totalLength;
+        for (FormulaSectionState section : state.sections) {
+            List<CalculatorAstAnalyzer.AstError> astErrors = section.analysis().errors();
+            for (CalculatorAstAnalyzer.AstError astError : astErrors) {
+                Diagnostic diagnostic = new Diagnostic();
+                diagnostic.setRange(mapLocalRangeToDocumentRange(state.content, section, astError.range()));
+                diagnostic.setSeverity(DiagnosticSeverity.Error);
+                extractCatalogCode(astError.message()).ifPresent(code -> diagnostic.setCode(Either.forLeft(code)));
+                diagnostic.setMessage(astError.message());
+                diagnostic.setSource("tinyexpression");
+                diagnostics.add(diagnostic);
+            }
 
-            ParseFailureDescription failure =
-                    describeParseFailure(content, errorStart, result.failureDiagnostics);
-            errorStart = failure.startOffset();
+            ParseResult result = section.parseResult();
+            String sectionContent = section.content();
+            if (result.consumedLength < result.totalLength) {
+                int errorStart = result.consumedLength;
+                int errorEnd = result.totalLength;
 
-            Position startPos = offsetToPosition(content, errorStart);
-            Position endPos = offsetToPosition(content, errorEnd);
+                ParseFailureDescription failure =
+                        describeParseFailure(sectionContent, errorStart, result.failureDiagnostics);
+                errorStart = failure.startOffset();
 
-            Diagnostic diagnostic = new Diagnostic();
-            diagnostic.setRange(new Range(startPos, endPos));
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            applyErrorCatalog(
-                    diagnostic,
-                    content,
-                    failure,
-                    "Invalid expression: "
-                            + failure.message()
-                            + createParseFailureHint(result, failure.message()));
-            diagnostic.setSource("tinyexpression");
-            diagnostics.add(diagnostic);
-        } else if (false == result.succeeded && result.totalLength > 0) {
-            // Entire input is invalid
-            ParseFailureDescription failure = describeParseFailure(content, 0, result.failureDiagnostics);
-            int start = Math.max(0, Math.min(content.length(), failure.startOffset()));
-            Diagnostic diagnostic = new Diagnostic();
-            diagnostic.setRange(new Range(
-                offsetToPosition(content, start),
-                offsetToPosition(content, content.length())
-            ));
-            diagnostic.setSeverity(DiagnosticSeverity.Error);
-            applyErrorCatalog(
-                    diagnostic,
-                    content,
-                    failure,
-                    "Invalid expression: "
-                            + failure.message()
-                            + createParseFailureHint(result, failure.message()));
-            diagnostic.setSource("tinyexpression");
-            diagnostics.add(diagnostic);
+                Diagnostic diagnostic = new Diagnostic();
+                diagnostic.setRange(mapLocalOffsetsToDocumentRange(
+                        state.content,
+                        section,
+                        errorStart,
+                        errorEnd));
+                diagnostic.setSeverity(DiagnosticSeverity.Error);
+                applyErrorCatalog(
+                        diagnostic,
+                        sectionContent,
+                        failure,
+                        "Invalid expression: "
+                                + failure.message()
+                                + createParseFailureHint(result, failure.message()));
+                diagnostic.setSource("tinyexpression");
+                diagnostics.add(diagnostic);
+            } else if (false == result.succeeded && result.totalLength > 0) {
+                ParseFailureDescription failure = describeParseFailure(sectionContent, 0, result.failureDiagnostics);
+                int start = Math.max(0, Math.min(sectionContent.length(), failure.startOffset()));
+                Diagnostic diagnostic = new Diagnostic();
+                diagnostic.setRange(mapLocalOffsetsToDocumentRange(
+                        state.content,
+                        section,
+                        start,
+                        sectionContent.length()));
+                diagnostic.setSeverity(DiagnosticSeverity.Error);
+                applyErrorCatalog(
+                        diagnostic,
+                        sectionContent,
+                        failure,
+                        "Invalid expression: "
+                                + failure.message()
+                                + createParseFailureHint(result, failure.message()));
+                diagnostic.setSource("tinyexpression");
+                diagnostics.add(diagnostic);
+            }
         }
 
         client.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
+    }
+
+    private Range mapLocalRangeToDocumentRange(
+            String documentContent,
+            FormulaSectionState section,
+            Range localRange) {
+        int localStart = positionToOffsetInContent(section.content(), localRange.getStart());
+        int localEnd = positionToOffsetInContent(section.content(), localRange.getEnd());
+        return mapLocalOffsetsToDocumentRange(documentContent, section, localStart, localEnd);
+    }
+
+    private Range mapLocalOffsetsToDocumentRange(
+            String documentContent,
+            FormulaSectionState section,
+            int localStartOffset,
+            int localEndOffset) {
+        int boundedLocalStart = Math.max(0, Math.min(section.content().length(), localStartOffset));
+        int boundedLocalEnd = Math.max(boundedLocalStart, Math.min(section.content().length(), localEndOffset));
+        int documentStart = section.startOffset() + boundedLocalStart;
+        int documentEnd = section.startOffset() + boundedLocalEnd;
+        return new Range(
+                offsetToPosition(documentContent, documentStart),
+                offsetToPosition(documentContent, documentEnd));
     }
 
     private void applyErrorCatalog(
@@ -2238,6 +2338,28 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         return new Position(line, column);
     }
 
+    private int positionToOffsetInContent(String content, Position position) {
+        if (position == null) {
+            return 0;
+        }
+        int offset = 0;
+        int line = 0;
+        int column = 0;
+        while (offset < content.length()) {
+            if (line == position.getLine() && column == position.getCharacter()) {
+                return offset;
+            }
+            if (content.charAt(offset) == '\n') {
+                line++;
+                column = 0;
+            } else {
+                column++;
+            }
+            offset++;
+        }
+        return offset;
+    }
+
     /**
      * Document state holder.
      */
@@ -2246,15 +2368,42 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         public final String content;
         public final ParseResult parseResult;
         public final CalculatorAstAnalyzer.AnalysisResult analysis;
+        public final List<FormulaSectionState> sections;
 
-        public DocumentState(String uri, String content, ParseResult parseResult,
-                CalculatorAstAnalyzer.AnalysisResult analysis) {
+        public DocumentState(String uri, String content, List<FormulaSectionState> sections) {
             this.uri = uri;
             this.content = content;
-            this.parseResult = parseResult;
-            this.analysis = analysis;
+            List<FormulaSectionState> normalized = sections == null ? List.of() : List.copyOf(sections);
+            if (normalized.isEmpty()) {
+                this.sections = List.of();
+                this.parseResult = new ParseResult(true, 0, 0, Parsed.FAILED, null);
+                this.analysis = new CalculatorAstAnalyzer.AnalysisResult(List.of(), null, null);
+            } else {
+                this.sections = normalized;
+                this.parseResult = normalized.get(0).parseResult();
+                this.analysis = normalized.get(0).analysis();
+            }
+        }
+
+        public FormulaSectionState sectionAtOffset(int offset) {
+            for (FormulaSectionState section : sections) {
+                if (offset >= section.startOffset() && offset <= section.endOffset()) {
+                    return section;
+                }
+            }
+            return null;
         }
     }
+
+    public static record FormulaSectionState(
+            int startOffset,
+            int endOffset,
+            String content,
+            ParseResult parseResult,
+            CalculatorAstAnalyzer.AnalysisResult analysis,
+            boolean extractedFromFormulaInfo) {}
+
+    private static record FormulaSectionRange(int startOffset, int endOffset) {}
 
     /**
      * Parse result holder.
@@ -2329,16 +2478,25 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 return CompletableFuture.completedFuture(null);
             }
 
+            int documentOffset = positionToOffset(state.content, position);
+            FormulaSectionState section = state.sectionAtOffset(documentOffset);
+            if (section == null && state.sections.isEmpty() == false) {
+                section = state.sections.get(0);
+            }
+            if (section == null) {
+                return CompletableFuture.completedFuture(null);
+            }
             String hoverText = null;
-            for (CalculatorAstAnalyzer.AstError error : state.analysis.errors()) {
-                if (isPositionInRange(position, error.range())) {
+            for (CalculatorAstAnalyzer.AstError error : section.analysis().errors()) {
+                Range mappedRange = server.mapLocalRangeToDocumentRange(state.content, section, error.range());
+                if (isPositionInRange(position, mappedRange)) {
                     hoverText = error.message();
                     break;
                 }
             }
 
-            if (hoverText == null && state.analysis.hasValue()) {
-                hoverText = "= " + state.analysis.value();
+            if (hoverText == null && section.analysis().hasValue()) {
+                hoverText = "= " + section.analysis().value();
             }
 
             if (hoverText == null) {
@@ -2393,9 +2551,42 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (state == null) {
                 return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
             }
-
-            List<CompletionItem> items = getCompletionItems(state.content, position);
+            int documentOffset = positionToOffset(state.content, position);
+            FormulaSectionState section = state.sectionAtOffset(documentOffset);
+            List<CompletionItem> items;
+            if (section != null) {
+                int localOffset = Math.max(0, Math.min(section.content().length(), documentOffset - section.startOffset()));
+                Position localPosition = server.offsetToPosition(section.content(), localOffset);
+                items = getCompletionItems(section.content(), localPosition);
+                remapCompletionTextEditsToDocument(state, section, items);
+            } else {
+                items = getCompletionItems(state.content, position);
+            }
             return CompletableFuture.completedFuture(Either.forLeft(items));
+        }
+
+        private void remapCompletionTextEditsToDocument(
+                DocumentState state,
+                FormulaSectionState section,
+                List<CompletionItem> items) {
+            if (items == null || items.isEmpty()) {
+                return;
+            }
+            for (CompletionItem item : items) {
+                Either<TextEdit, org.eclipse.lsp4j.InsertReplaceEdit> textEditEither = item.getTextEdit();
+                if (textEditEither == null || textEditEither.isLeft() == false) {
+                    continue;
+                }
+                TextEdit localEdit = textEditEither.getLeft();
+                if (localEdit == null || localEdit.getRange() == null) {
+                    continue;
+                }
+                Range mappedRange = server.mapLocalRangeToDocumentRange(
+                        state.content,
+                        section,
+                        localEdit.getRange());
+                item.setTextEdit(Either.forLeft(new TextEdit(mappedRange, localEdit.getNewText())));
+            }
         }
 
         @Override
@@ -3305,6 +3496,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
          */
         private List<CompletionItem> getCompletionItems(String content, Position position) {
             List<CompletionItem> items = new ArrayList<>();
+            Set<String> existingLabels = new HashSet<>();
 
             for (SuggestableParser.Suggestion suggestion : server.suggestableParser.suggest(content, position)) {
                 CompletionItem item = new CompletionItem(suggestion.label());
@@ -3313,7 +3505,11 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 item.setInsertText(suggestion.insertText());
                 item.setInsertTextFormat(suggestion.insertTextFormat());
                 items.add(item);
+                existingLabels.add(suggestion.label());
             }
+
+            int cursorOffset = positionToOffset(content, position);
+            addCatalogVariableCompletions(content, cursorOffset, items, existingLabels);
 
             if (items.isEmpty()) {
                 items.addAll(getParseFailureHintCompletions(content, position));
@@ -3321,6 +3517,130 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
 
             return items;
         }
+
+        private void addCatalogVariableCompletions(
+                String content,
+                int cursorOffset,
+                List<CompletionItem> items,
+                Set<String> existingLabels) {
+            TinyExpressionVariableCatalog.Rules rules = server.variableCatalogRules;
+            if (rules == null || rules.isEmpty()) {
+                return;
+            }
+            VariablePrefix variablePrefix = currentVariablePrefix(content, cursorOffset);
+            if (variablePrefix == null || variablePrefix.token().isBlank()) {
+                return;
+            }
+            String needle = variablePrefix.token().length() <= 1
+                    ? ""
+                    : variablePrefix.token().substring(1).toLowerCase();
+            Range replaceRange = new Range(
+                    server.offsetToPosition(content, variablePrefix.startOffset()),
+                    server.offsetToPosition(content, cursorOffset));
+
+            List<String> exactNames = new ArrayList<>(rules.exactNames());
+            exactNames.sort(String::compareToIgnoreCase);
+            for (String exactName : exactNames) {
+                if (needle.isBlank() == false && exactName.toLowerCase().startsWith(needle) == false) {
+                    continue;
+                }
+                String label = "$" + exactName;
+                if (existingLabels.add(label) == false) {
+                    continue;
+                }
+                CompletionItem item = new CompletionItem(label);
+                item.setKind(CompletionItemKind.Variable);
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, label)));
+                TinyExpressionVariableCatalog.CatalogEntryInfo info = rules.exactEntry(exactName);
+                item.setDetail(buildCatalogDetail(info, false));
+                item.setDocumentation(buildCatalogDocumentation(info));
+                item.setSortText("050_exact_" + exactName.toLowerCase());
+                items.add(item);
+            }
+
+            List<String> partialPrefixes = new ArrayList<>(rules.partialPrefixes());
+            partialPrefixes.sort(String::compareToIgnoreCase);
+            for (String prefix : partialPrefixes) {
+                if (needle.isBlank() == false && prefix.toLowerCase().startsWith(needle) == false) {
+                    continue;
+                }
+                String label = "$" + prefix + "_<suffix>";
+                if (existingLabels.add(label) == false) {
+                    continue;
+                }
+                CompletionItem item = new CompletionItem(label);
+                item.setKind(CompletionItemKind.Variable);
+                item.setTextEdit(Either.forLeft(new TextEdit(replaceRange, "$" + prefix + "_${1:suffix}")));
+                item.setInsertTextFormat(InsertTextFormat.Snippet);
+                TinyExpressionVariableCatalog.CatalogEntryInfo info = rules.partialEntry(prefix);
+                item.setDetail(buildCatalogDetail(info, true));
+                item.setDocumentation(buildCatalogDocumentation(info));
+                item.setSortText("060_partial_" + prefix.toLowerCase());
+                items.add(item);
+            }
+        }
+
+        private String buildCatalogDetail(
+                TinyExpressionVariableCatalog.CatalogEntryInfo info,
+                boolean partialWithSuffix) {
+            String kind = partialWithSuffix ? "catalog partial" : "catalog exact";
+            if (info == null) {
+                return kind;
+            }
+            StringBuilder detail = new StringBuilder(kind);
+            if (info.hasContext()) {
+                detail.append(" [").append(info.context()).append("]");
+            }
+            if (info.hasDescription()) {
+                detail.append(" hint: ").append(info.description());
+            }
+            return detail.toString();
+        }
+
+        private String buildCatalogDocumentation(TinyExpressionVariableCatalog.CatalogEntryInfo info) {
+            if (info == null) {
+                return null;
+            }
+            List<String> lines = new ArrayList<>();
+            if (info.hasContext()) {
+                lines.add("context: " + info.context());
+            }
+            if (info.hasDescription()) {
+                lines.add(info.description());
+            }
+            if (info.sourcePath().isBlank() == false) {
+                lines.add("source: " + info.sourcePath());
+            }
+            if (lines.isEmpty()) {
+                return null;
+            }
+            return String.join("\n", lines);
+        }
+
+        private VariablePrefix currentVariablePrefix(String content, int cursorOffset) {
+            if (cursorOffset < 0 || cursorOffset > content.length()) {
+                return null;
+            }
+            int start = cursorOffset;
+            while (start > 0) {
+                char previous = content.charAt(start - 1);
+                if (Character.isLetterOrDigit(previous) || previous == '_' || previous == '$') {
+                    start--;
+                    continue;
+                }
+                break;
+            }
+            if (start >= cursorOffset) {
+                return null;
+            }
+            String token = content.substring(start, cursorOffset);
+            if (token.startsWith("$")) {
+                return new VariablePrefix(token, start);
+            }
+            return null;
+        }
+
+        private record VariablePrefix(String token, int startOffset) {}
 
         private List<CompletionItem> getParseFailureHintCompletions(String content, Position position) {
             ParseResult parseResult = server.parseExpression(content);

@@ -74,24 +74,35 @@ See details:
 - `tinyExpressionLsp.catalog.path`: external variable catalog path(s) for TE024 partialKey checks (comma-separated). The extension forwards this as `-Dtinyexpression.catalog.path=...` to the server.
   - supports `${workspaceFolder}` and `~` expansion on the client side.
   - when configured, analyzer also enables catalog-backed TE022 undefined-variable diagnostics/suggestions.
+  - `$` completion also uses this catalog and shows context/description in completion detail.
+- `tinyExpressionLsp.catalog.useBundledDefault`: when `true` (default), use bundled `catalog/default.tecatalog` if `catalog.path` is empty.
+  - Current default behavior prefers bundled `config/*.txt` catalogs:
+    - `config/nimt-allowed-variables-cfvar.txt`: NIM CF variable catalog
+    - `config/nimt-allowed-variables-checkkind.txt`: NIM checkKind-derived variable catalog
+    - `config/fa-allowed-variables-cf-variable.txt`: FA CF variable catalog
+    - `config/fa-allowed-variables-checkkind.txt`: FA checkKind-derived variable catalog
+  - If those files are unavailable, it falls back to `catalog/default.tecatalog`.
 - `tinyExpressionLsp.catalog.providerClass`: optional runtime provider class (`org.unlaxer.calculator.RuntimeCatalogProvider`).
 - `tinyExpressionLsp.fileExtensions`: file extensions watched by the extension (default: `.tinyexp`)
 
 ### TE024 catalog format (external file)
 Supported formats:
 - legacy format (existing teammate format): `name|type|api|description` with partial key as `prefix_*`
+  - `prefix_*` means wildcard suffix: `$prefix_<anything>` is valid, `$prefix` alone triggers TE024.
 - canonical format (v1):
   - marker line: `tinyexpression-catalog-v1` (optional but recommended)
-  - `exact|name`
-  - `prefixWithSuffix|prefix|_|1`
+  - `exact|name|description(optional)|context(optional)`
+  - `prefixWithSuffix|prefix|_|1|description(optional)|context(optional)`
 
 Example:
 ```text
 # tinyexpression canonical catalog
 tinyexpression-catalog-v1
-exact|age
-prefixWithSuffix|kind|_|1
+exact|age|age in years|nimt
+prefixWithSuffix|kind|_|1|partial key|fa
 ```
+
+If context column is omitted, context is inferred from catalog file name tokens (`nimt` / `fa` etc).
 
 Convert legacy to canonical:
 ```bash
@@ -124,6 +135,7 @@ Built-in sample provider:
 
 ## File extension policy
 - recommended canonical extension: `.tinyexp`
+- extensionless filenames `default` / `emergency` are also auto-detected as TinyExpression
 
 ## Notes for WSL / Windows
 - If you develop in WSL but run VS Code on Windows, prefer launching the server jar with a Windows-side Java, or set `tinyExpressionLsp.server.jarPath` to a jar reachable from Windows.

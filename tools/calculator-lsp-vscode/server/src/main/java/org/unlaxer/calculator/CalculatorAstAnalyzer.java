@@ -184,10 +184,10 @@ public final class CalculatorAstAnalyzer {
             if (reportedOffsets.add(reference.startOffset()) == false) {
                 continue;
             }
-            String suggestion = closestVariableName(variableName, declaredVariables);
+            VariableSuggestion suggestion = closestVariableName(variableName, declaredVariables);
             String fix = suggestion == null
                     ? "候補変数名へ修正"
-                    : "候補: $" + suggestion;
+                    : "候補: $" + suggestion.name() + formatVariableSuggestionHint(suggestion);
             errors.add(new AstError(
                     toRange(content, reference.startOffset(), reference.endOffset()),
                     "[TE022] 利用可能な変数名ではありません: $" + variableName
@@ -306,16 +306,39 @@ public final class CalculatorAstAnalyzer {
         return closestCandidate(unknownMethod, allowedMethods);
     }
 
-    private String closestVariableName(String unknownVariable, Set<String> declaredVariables) {
+    private String formatVariableSuggestionHint(VariableSuggestion suggestion) {
+        if (suggestion == null) {
+            return "";
+        }
+        List<String> hints = new ArrayList<>();
+        if (suggestion.description() != null && suggestion.description().isBlank() == false) {
+            hints.add(suggestion.description());
+        }
+        if (suggestion.context() != null && suggestion.context().isBlank() == false) {
+            hints.add("context=" + suggestion.context());
+        }
+        if (hints.isEmpty()) {
+            return "";
+        }
+        return " ヒント: " + String.join(" / ", hints);
+    }
+
+    private VariableSuggestion closestVariableName(String unknownVariable, Set<String> declaredVariables) {
         List<VariableSuggestionCandidate> candidates = new ArrayList<>();
         for (String declared : declaredVariables) {
-            candidates.add(new VariableSuggestionCandidate(declared, 0));
+            candidates.add(new VariableSuggestionCandidate(declared, 0, "", ""));
         }
         for (String exact : variableCatalogRules.exactNames()) {
-            candidates.add(new VariableSuggestionCandidate(exact, 1));
+            TinyExpressionVariableCatalog.CatalogEntryInfo info = variableCatalogRules.exactEntry(exact);
+            String description = info == null ? "" : info.description();
+            String context = info == null ? "" : info.context();
+            candidates.add(new VariableSuggestionCandidate(exact, 1, description, context));
         }
         for (String prefix : variableCatalogRules.partialPrefixes()) {
-            candidates.add(new VariableSuggestionCandidate(prefix + "_<suffix>", 2));
+            TinyExpressionVariableCatalog.CatalogEntryInfo info = variableCatalogRules.partialEntry(prefix);
+            String description = info == null ? "" : info.description();
+            String context = info == null ? "" : info.context();
+            candidates.add(new VariableSuggestionCandidate(prefix + "_<suffix>", 2, description, context));
         }
         if (unknownVariable == null || unknownVariable.isBlank() || candidates.isEmpty()) {
             return null;
@@ -328,7 +351,13 @@ public final class CalculatorAstAnalyzer {
             }
             int distance = variableDistance(unknownLower, candidate.name().toLowerCase());
             int score = distance * 10 + candidate.priority();
-            scored.add(new ScoredVariableCandidate(candidate.name(), candidate.priority(), distance, score));
+            scored.add(new ScoredVariableCandidate(
+                    candidate.name(),
+                    candidate.priority(),
+                    candidate.description(),
+                    candidate.context(),
+                    distance,
+                    score));
         }
         if (scored.isEmpty()) {
             return null;
@@ -343,7 +372,7 @@ public final class CalculatorAstAnalyzer {
         if (best.distance() > threshold) {
             return null;
         }
-        return best.name();
+        return new VariableSuggestion(best.name(), best.description(), best.context());
     }
 
     private String closestCandidate(String unknown, Set<String> candidates) {
@@ -414,8 +443,15 @@ public final class CalculatorAstAnalyzer {
     }
 
     private record VariableReference(String name, int startOffset, int endOffset) {}
-    private record VariableSuggestionCandidate(String name, int priority) {}
-    private record ScoredVariableCandidate(String name, int priority, int distance, int score) {}
+    private record VariableSuggestion(String name, String description, String context) {}
+    private record VariableSuggestionCandidate(String name, int priority, String description, String context) {}
+    private record ScoredVariableCandidate(
+            String name,
+            int priority,
+            String description,
+            String context,
+            int distance,
+            int score) {}
 
     private Set<String> extractImportAliases(String content, boolean[] ignoredMask) {
         Set<String> aliases = new HashSet<>();

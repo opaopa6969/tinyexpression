@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.unlaxer.Source;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
@@ -188,8 +189,8 @@ public class StringClauseBuilder {
 
   private ExpressionOrLiteral buildStringLiteral(Token token, TinyExpressionTokens tinyExpressionTokens) {
     Token literalChoiceToken = ChoiceInterface.choiced(token);
-    String contents = stringByToken.get(literalChoiceToken);
-    return ExpressionOrLiteral.literalOf(contents == null ? "" : contents);
+    Source contents = stringByToken.get(literalChoiceToken);
+    return ExpressionOrLiteral.literalOf(contents == null ? "" : contents.sourceAsString());
   }
 
   private ExpressionOrLiteral buildStringVariable(Token token, TinyExpressionTokens tinyExpressionTokens) {
@@ -302,5 +303,5 @@ public class StringClauseBuilder {
     return ExpressionOrLiteral.expressionOf(builder.getBuilder(Kind.Calculation).toString()).setReturning(builder);
   }
 
-	static FactoryBoundCache<Token, String> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
+	static FactoryBoundCache<Token, Source> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
 }

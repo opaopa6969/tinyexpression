@@ -19,13 +19,15 @@ class TinyExpressionVariableCatalogTest {
                 "# variable|type|api|description",
                 "kind_*|string|catalog|partial key",
                 "$direct_*|string|catalog|partial key",
-                "plainName|string|catalog|exact"));
+                "plainName|string|catalog|exact",
+                "checkKindLike|All|チェック種別の説明",
+                "typeOnly|string"));
         Path canonicalCatalog = Files.createTempFile("tinyexpression-canonical-catalog", ".tecatalog");
         Files.writeString(canonicalCatalog, String.join("\n",
                 "# canonical",
                 "tinyexpression-catalog-v1",
-                "exact|score",
-                "prefixWithSuffix|segment|_|1"));
+                "exact|score|score description|nimt",
+                "prefixWithSuffix|segment|_|1|segment description|fa"));
 
         TinyExpressionVariableCatalog.Rules rules =
                 TinyExpressionVariableCatalog.loadFromPathList(
@@ -37,6 +39,19 @@ class TinyExpressionVariableCatalogTest {
         assertTrue(rules.partialPrefixes().contains("segment"));
         assertTrue(rules.exactNames().contains("plainName"));
         assertTrue(rules.exactNames().contains("score"));
+        assertTrue(rules.exactNames().contains("checkKindLike"));
+        assertTrue(rules.exactNames().contains("typeOnly"));
+        assertEquals("score description", rules.exactEntry("score").description());
+        assertEquals("NIM", rules.exactEntry("score").context());
+        assertEquals("FA", rules.partialEntry("segment").context());
+        assertEquals("チェック種別の説明", rules.exactEntry("checkKindLike").description());
+        assertEquals("type=string", rules.exactEntry("typeOnly").description());
+
+        Path nimtCatalog = Files.createTempFile("nimt-allowed-variables-", ".txt");
+        Files.writeString(nimtCatalog, "fromNimt|string");
+        TinyExpressionVariableCatalog.Rules nimtRules =
+                TinyExpressionVariableCatalog.loadFromPathList(nimtCatalog.toString(), "test");
+        assertEquals("NIM", nimtRules.exactEntry("fromNimt").context());
     }
 
     @Test

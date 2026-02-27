@@ -1,7 +1,9 @@
 package org.unlaxer.calculator;
 
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -47,9 +49,19 @@ public final class SampleInMemoryRuntimeCatalogProvider implements RuntimeCatalo
         if (exactNames.isEmpty() && partialPrefixes.isEmpty()) {
             return TinyExpressionVariableCatalog.Rules.empty();
         }
+        Map<String, TinyExpressionVariableCatalog.CatalogEntryInfo> exactEntries = new LinkedHashMap<>();
+        for (String exactName : exactNames) {
+            exactEntries.put(exactName, new TinyExpressionVariableCatalog.CatalogEntryInfo("sample", "", "sample-in-memory"));
+        }
+        Map<String, TinyExpressionVariableCatalog.CatalogEntryInfo> partialEntries = new LinkedHashMap<>();
+        for (String partialPrefix : partialPrefixes) {
+            partialEntries.put(partialPrefix, new TinyExpressionVariableCatalog.CatalogEntryInfo("sample", "", "sample-in-memory"));
+        }
         return new TinyExpressionVariableCatalog.Rules(
                 Set.copyOf(exactNames),
                 Set.copyOf(partialPrefixes),
+                Map.copyOf(exactEntries),
+                Map.copyOf(partialEntries),
                 "sample-in-memory");
     }
 
@@ -73,9 +85,19 @@ public final class SampleInMemoryRuntimeCatalogProvider implements RuntimeCatalo
         if (exactNames.isEmpty() && partialPrefixes.isEmpty()) {
             return TinyExpressionVariableCatalog.Rules.empty();
         }
+        Map<String, TinyExpressionVariableCatalog.CatalogEntryInfo> exactEntries = new LinkedHashMap<>();
+        Map<String, TinyExpressionVariableCatalog.CatalogEntryInfo> partialEntries = new LinkedHashMap<>();
+        for (String exactName : exactNames) {
+            exactEntries.put(exactName, new TinyExpressionVariableCatalog.CatalogEntryInfo("fallback", "", "sample-fallback-paths"));
+        }
+        for (String partialPrefix : partialPrefixes) {
+            partialEntries.put(partialPrefix, new TinyExpressionVariableCatalog.CatalogEntryInfo("fallback", "", "sample-fallback-paths"));
+        }
         return new TinyExpressionVariableCatalog.Rules(
                 Set.copyOf(exactNames),
                 Set.copyOf(partialPrefixes),
+                Map.copyOf(exactEntries),
+                Map.copyOf(partialEntries),
                 "sample-fallback-paths");
     }
 

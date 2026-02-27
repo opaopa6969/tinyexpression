@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.Optional;
 
 import org.unlaxer.EnclosureDirection;
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Range;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
@@ -223,9 +224,9 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 			return Optional.empty();
 		}
 		int position = getPosition();
-		Optional<Token> selected = 
-				TokenEnclosureUtil.getEnclosureWithToken(rootToken.get(),
-						enclosureDirection, position, getSelection(), enclosureMatchers);
+			Optional<Token> selected = 
+					TokenEnclosureUtil.getEnclosureWithToken(rootToken.get(),
+							enclosureDirection, new CodePointIndex(position), getSelection(), enclosureMatchers);
 		
 		if(selected.isPresent()){
 			EditHistory clone = getCurrent().clone(EditAction.of(ActionType.of(enclosureDirection)));

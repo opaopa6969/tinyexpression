@@ -172,6 +172,35 @@ class CalculatorErrorCatalogMappingTest {
     }
 
     @Test
+    void parsesFormulaSectionsInsideFormulaInfoLikeFile() {
+        CalculatorLanguageServer server = new CalculatorLanguageServer();
+        String uri = "file:///default";
+        String content = """
+                tags:NORMAL
+                description:test
+                formula:
+                if(true){
+                  1
+                }else{
+                  0
+                }
+                ---END_OF_PART---
+                tags:NORMAL
+                formula:
+                match{
+                  true -> 1,
+                  default -> 0
+                }
+                ---END_OF_PART---
+                """;
+        server.parseDocument(uri, content);
+        CalculatorLanguageServer.DocumentState state = server.getDocuments().get(uri);
+        assertTrue(state.sections.size() >= 2);
+        assertTrue(state.sections.get(0).parseResult().succeeded);
+        assertTrue(state.sections.get(1).parseResult().succeeded);
+    }
+
+    @Test
     void providesQuickFixForMissingCloseBraceBeforeElse() throws Exception {
         CalculatorLanguageServer server = new CalculatorLanguageServer();
         String uri = "file:///te009-else-closebrace.tinyexp";

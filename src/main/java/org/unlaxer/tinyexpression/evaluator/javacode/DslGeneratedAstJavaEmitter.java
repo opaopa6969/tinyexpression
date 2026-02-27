@@ -24,7 +24,7 @@ final class DslGeneratedAstJavaEmitter {
       return Optional.empty();
     }
     String formula = source.source() == null ? "" : source.source().strip();
-    if (formula.isEmpty() || !isLiteralEligible(formula, resultType)) {
+    if (formula.isEmpty() || !isNativeEligible(formula, resultType)) {
       return Optional.empty();
     }
 
@@ -39,7 +39,7 @@ final class DslGeneratedAstJavaEmitter {
     return Optional.of(new EmittedJava(buildJavaClass(className, resultType, expression.get()), "native-generated-ast"));
   }
 
-  private static boolean isLiteralEligible(String formula, ExpressionType resultType) {
+  private static boolean isNativeEligible(String formula, ExpressionType resultType) {
     if (formula == null) {
       return false;
     }
@@ -54,7 +54,7 @@ final class DslGeneratedAstJavaEmitter {
       return false;
     }
     if (resultType.isNumber()) {
-      return isNumberLiteral(text);
+      return isNumberLiteral(text) || isNumericExpressionCandidate(text);
     }
     if (resultType.isString()) {
       return isStringLiteral(text);
@@ -63,9 +63,19 @@ final class DslGeneratedAstJavaEmitter {
       return isBooleanLiteral(text);
     }
     if (resultType.isObject()) {
-      return isNumberLiteral(text) || isStringLiteral(text) || isBooleanLiteral(text);
+      return isNumberLiteral(text)
+          || isNumericExpressionCandidate(text)
+          || isStringLiteral(text)
+          || isBooleanLiteral(text);
     }
     return false;
+  }
+
+  private static boolean isNumericExpressionCandidate(String text) {
+    if (text == null || text.isBlank()) {
+      return false;
+    }
+    return text.matches("[0-9+\\-*/().\\s]+");
   }
 
   private static boolean isNumberLiteral(String text) {

@@ -5,8 +5,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public final class TinyExpressionVariableCatalog {
@@ -70,6 +72,8 @@ public final class TinyExpressionVariableCatalog {
         }
         Set<String> exactNames = new LinkedHashSet<>();
         Set<String> partialPrefixes = new LinkedHashSet<>();
+        Map<String, CatalogEntryInfo> exactEntries = new LinkedHashMap<>();
+        Map<String, CatalogEntryInfo> partialEntries = new LinkedHashMap<>();
         List<String> loadedSources = new ArrayList<>();
         for (String segment : rawPathList.split(",")) {
             String trimmed = segment.trim();
@@ -86,12 +90,19 @@ public final class TinyExpressionVariableCatalog {
             }
             exactNames.addAll(loaded.exactNames());
             partialPrefixes.addAll(loaded.partialPrefixes());
+            loaded.exactEntries().forEach(exactEntries::putIfAbsent);
+            loaded.partialEntries().forEach(partialEntries::putIfAbsent);
             loadedSources.add(path.toAbsolutePath().toString());
         }
         if (loadedSources.isEmpty()) {
             return Rules.empty();
         }
-        return new Rules(Set.copyOf(exactNames), Set.copyOf(partialPrefixes), sourceLabel + ":" + String.join(",", loadedSources));
+        return new Rules(
+                Set.copyOf(exactNames),
+                Set.copyOf(partialPrefixes),
+                Map.copyOf(exactEntries),
+                Map.copyOf(partialEntries),
+                sourceLabel + ":" + String.join(",", loadedSources));
     }
 
     public static CatalogProvider defaultProvider() {
@@ -108,6 +119,13 @@ public final class TinyExpressionVariableCatalog {
             return trimmed.substring(1);
         }
         return trimmed;
+    }
+
+    private static String normalizeField(String raw) {
+        if (raw == null) {
+            return "";
+        }
+        return raw.trim();
     }
 
     private static String firstNonBlank(String... candidates) {
@@ -127,6 +145,107 @@ public final class TinyExpressionVariableCatalog {
             return;
         }
         target.add(part.trim());
+    }
+
+    private static CatalogEntryInfo buildEntryInfo(Path path, String rawDescription, String rawContext) {
+        String description = normalizeField(rawDescription);
+        String context = normalizeContextLabel(normalizeField(rawContext));
+        if (context.isEmpty()) {
+            context = inferContextFromPath(path);
+        }
+        String sourcePath = path == null ? "" : path.toAbsolutePath().toString();
+        return new CatalogEntryInfo(context, description, sourcePath);
+    }
+
+    private static String deriveLegacyDescription(String[] parts) {
+        if (parts == null || parts.length == 0) {
+            return "";
+        }
+        if (parts.length >= 4) {
+            return normalizeField(parts[3]);
+        }
+        if (parts.length == 3) {
+            return normalizeField(parts[2]);
+        }
+        if (parts.length == 2) {
+            String second = normalizeField(parts[1]);
+            if (second.equalsIgnoreCase("string")
+                    || second.equalsIgnoreCase("boolean")
+                    || second.equalsIgnoreCase("number")
+                    || second.equalsIgnoreCase("float")
+                    || second.equalsIgnoreCase("double")
+                    || second.equalsIgnoreCase("long")
+                    || second.equalsIgnoreCase("int")
+                    || second.equalsIgnoreCase("short")
+                    || second.equalsIgnoreCase("byte")
+                    || second.equalsIgnoreCase("object")) {
+                return "type=" + second;
+            }
+            return second;
+        }
+        return "";
+    }
+
+    private static String deriveLegacyContext(String[] parts) {
+        if (parts == null) {
+            return "";
+        }
+        if (parts.length >= 5) {
+            return normalizeField(parts[4]);
+        }
+        return "";
+    }
+
+    private static String normalizeContextLabel(String rawContext) {
+        if (rawContext == null || rawContext.isBlank()) {
+            return "";
+        }
+        String lowered = rawContext.trim().toLowerCase();
+        if (lowered.startsWith("nim")) {
+            return "NIM";
+        }
+        if (lowered.equals("fa") || lowered.startsWith("fa_") || lowered.startsWith("fa-")) {
+            return "FA";
+        }
+        return rawContext.trim();
+    }
+
+    private static String inferContextFromPath(Path path) {
+        if (path == null) {
+            return "";
+        }
+        String fileName = path.getFileName() == null ? "" : path.getFileName().toString().toLowerCase();
+        String context = inferContextFromNameToken(fileName);
+        if (context.isEmpty() == false) {
+            return context;
+        }
+        Path parent = path.getParent();
+        if (parent != null && parent.getFileName() != null) {
+            context = inferContextFromNameToken(parent.getFileName().toString().toLowerCase());
+            if (context.isEmpty() == false) {
+                return context;
+            }
+        }
+        return "";
+    }
+
+    private static String inferContextFromNameToken(String rawName) {
+        if (rawName == null || rawName.isBlank()) {
+            return "";
+        }
+        String[] tokens = rawName.split("[^a-z0-9]+");
+        for (String token : tokens) {
+            if (token.isBlank()) {
+                continue;
+            }
+            if (token.startsWith("nim")) {
+                return "NIM";
+            }
+            if (token.startsWith("fa")) {
+                return "FA";
+            }
+        }
+        return "";
     }
 
     private static RuntimeCatalogProvider tryCreateRuntimeProvider() {
@@ -158,7 +277,9 @@ public final class TinyExpressionVariableCatalog {
 
     interface CatalogAdapter {
         boolean supports(Path path, List<String> lines);
+
         Rules parse(Path path, List<String> lines);
+
         default int priority() {
             return 100;
         }
@@ -228,23 +349,36 @@ public final class TinyExpressionVariableCatalog {
         public Rules parse(Path path, List<String> lines) {
             Set<String> exactNames = new LinkedHashSet<>();
             Set<String> partialPrefixes = new LinkedHashSet<>();
+            Map<String, CatalogEntryInfo> exactEntries = new LinkedHashMap<>();
+            Map<String, CatalogEntryInfo> partialEntries = new LinkedHashMap<>();
             for (String rawLine : lines) {
                 String line = rawLine == null ? "" : rawLine.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                String[] parts = line.split("\\|", 2);
+                String[] parts = line.split("\\|", -1);
                 String variableName = normalizeVariableName(parts[0]);
                 if (variableName.isEmpty()) {
                     continue;
                 }
+                String description = deriveLegacyDescription(parts);
+                String context = deriveLegacyContext(parts);
+                CatalogEntryInfo info = buildEntryInfo(path, description, context);
                 if (variableName.endsWith("_*") && variableName.length() > 2) {
-                    partialPrefixes.add(variableName.substring(0, variableName.length() - 2));
+                    String prefix = variableName.substring(0, variableName.length() - 2);
+                    partialPrefixes.add(prefix);
+                    partialEntries.putIfAbsent(prefix, info);
                     continue;
                 }
                 exactNames.add(variableName);
+                exactEntries.putIfAbsent(variableName, info);
             }
-            return new Rules(Set.copyOf(exactNames), Set.copyOf(partialPrefixes), "legacy:" + path.toAbsolutePath());
+            return new Rules(
+                    Set.copyOf(exactNames),
+                    Set.copyOf(partialPrefixes),
+                    Map.copyOf(exactEntries),
+                    Map.copyOf(partialEntries),
+                    "legacy:" + path.toAbsolutePath());
         }
 
         @Override
@@ -283,12 +417,14 @@ public final class TinyExpressionVariableCatalog {
         public Rules parse(Path path, List<String> lines) {
             Set<String> exactNames = new LinkedHashSet<>();
             Set<String> partialPrefixes = new LinkedHashSet<>();
+            Map<String, CatalogEntryInfo> exactEntries = new LinkedHashMap<>();
+            Map<String, CatalogEntryInfo> partialEntries = new LinkedHashMap<>();
             for (String rawLine : lines) {
                 String line = rawLine == null ? "" : rawLine.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                String[] parts = line.split("\\|");
+                String[] parts = line.split("\\|", -1);
                 String kind = parts[0].trim();
                 if (CANONICAL_FORMAT_MARKER.equalsIgnoreCase(kind)) {
                     continue;
@@ -302,6 +438,11 @@ public final class TinyExpressionVariableCatalog {
                         continue;
                     }
                     exactNames.add(name);
+                    CatalogEntryInfo info = buildEntryInfo(
+                            path,
+                            parts.length >= 3 ? parts[2] : "",
+                            parts.length >= 4 ? parts[3] : "");
+                    exactEntries.putIfAbsent(name, info);
                     continue;
                 }
                 if ("prefixWithSuffix".equalsIgnoreCase(kind)
@@ -319,9 +460,19 @@ public final class TinyExpressionVariableCatalog {
                         continue;
                     }
                     partialPrefixes.add(prefix);
+                    CatalogEntryInfo info = buildEntryInfo(
+                            path,
+                            parts.length >= 5 ? parts[4] : "",
+                            parts.length >= 6 ? parts[5] : "");
+                    partialEntries.putIfAbsent(prefix, info);
                 }
             }
-            return new Rules(Set.copyOf(exactNames), Set.copyOf(partialPrefixes), "canonical:" + path.toAbsolutePath());
+            return new Rules(
+                    Set.copyOf(exactNames),
+                    Set.copyOf(partialPrefixes),
+                    Map.copyOf(exactEntries),
+                    Map.copyOf(partialEntries),
+                    "canonical:" + path.toAbsolutePath());
         }
 
         @Override
@@ -330,9 +481,53 @@ public final class TinyExpressionVariableCatalog {
         }
     }
 
-    public static record Rules(Set<String> exactNames, Set<String> partialPrefixes, String source) {
+    public static record CatalogEntryInfo(String context, String description, String sourcePath) {
+        public CatalogEntryInfo {
+            context = context == null ? "" : context;
+            description = description == null ? "" : description;
+            sourcePath = sourcePath == null ? "" : sourcePath;
+        }
+
+        public boolean hasDescription() {
+            return description.isBlank() == false;
+        }
+
+        public boolean hasContext() {
+            return context.isBlank() == false;
+        }
+    }
+
+    public static record Rules(
+            Set<String> exactNames,
+            Set<String> partialPrefixes,
+            Map<String, CatalogEntryInfo> exactEntries,
+            Map<String, CatalogEntryInfo> partialEntries,
+            String source) {
+
+        public Rules {
+            exactNames = exactNames == null ? Set.of() : Set.copyOf(exactNames);
+            partialPrefixes = partialPrefixes == null ? Set.of() : Set.copyOf(partialPrefixes);
+            exactEntries = exactEntries == null ? Map.of() : Map.copyOf(exactEntries);
+            partialEntries = partialEntries == null ? Map.of() : Map.copyOf(partialEntries);
+            source = source == null ? "none" : source;
+        }
+
         public static Rules empty() {
-            return new Rules(Set.of(), Set.of(), "none");
+            return new Rules(Set.of(), Set.of(), Map.of(), Map.of(), "none");
+        }
+
+        public CatalogEntryInfo exactEntry(String variableName) {
+            if (variableName == null) {
+                return null;
+            }
+            return exactEntries.get(variableName);
+        }
+
+        public CatalogEntryInfo partialEntry(String prefix) {
+            if (prefix == null) {
+                return null;
+            }
+            return partialEntries.get(prefix);
         }
 
         public boolean isMissingPartialSuffix(String variableName) {

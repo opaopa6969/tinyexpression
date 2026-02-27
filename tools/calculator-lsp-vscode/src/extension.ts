@@ -12,6 +12,20 @@ function getBundledJarPath(context: vscode.ExtensionContext): string {
   return context.asAbsolutePath(path.join("server-dist", "tinyexpression-lsp-server.jar"));
 }
 
+function getBundledCatalogPath(context: vscode.ExtensionContext): string {
+  return context.asAbsolutePath(path.join("catalog", "default.tecatalog"));
+}
+
+function getBundledConfigCatalogPaths(context: vscode.ExtensionContext): string[] {
+  const candidates = [
+    context.asAbsolutePath(path.join("config", "nimt-allowed-variables-cfvar.txt")),
+    context.asAbsolutePath(path.join("config", "nimt-allowed-variables-checkkind.txt")),
+    context.asAbsolutePath(path.join("config", "fa-allowed-variables-cf-variable.txt")),
+    context.asAbsolutePath(path.join("config", "fa-allowed-variables-checkkind.txt"))
+  ];
+  return candidates.filter((candidate) => fs.existsSync(candidate));
+}
+
 function parseJavaMajor(versionOutput: string): number | undefined {
   const quoted = versionOutput.match(/version\s+"([^"]+)"/i);
   const raw = quoted?.[1];
@@ -103,8 +117,21 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   const configuredJarPath: string = config.get<string>("server.jarPath", "");
   const jvmArgs: string[] = config.get<string[]>("server.jvmArgs", []) ?? [];
   const runtimeMode: string = config.get<string>("runtimeMode", "token");
+  const useBundledCatalog: boolean = config.get<boolean>("catalog.useBundledDefault", true);
   const configuredCatalogPath: string = (config.get<string>("catalog.path", "") ?? "").trim();
-  const catalogPath: string = resolveCatalogPath(configuredCatalogPath);
+  const resolvedConfiguredCatalogPath: string = resolveCatalogPath(configuredCatalogPath);
+  const bundledCatalogPath = getBundledCatalogPath(context);
+  const bundledConfigCatalogPaths = getBundledConfigCatalogPaths(context);
+  const bundledFallbackCatalogPaths = fs.existsSync(bundledCatalogPath) ? [bundledCatalogPath] : [];
+  const bundledCatalogCandidates = bundledConfigCatalogPaths.length > 0
+    ? bundledConfigCatalogPaths
+    : bundledFallbackCatalogPaths;
+  const useBundledCatalogPath = useBundledCatalog
+    && resolvedConfiguredCatalogPath.length === 0
+    && bundledCatalogCandidates.length > 0;
+  const catalogPath: string = useBundledCatalogPath
+    ? bundledCatalogCandidates.join(",")
+    : resolvedConfiguredCatalogPath;
   const catalogProviderClass: string = (config.get<string>("catalog.providerClass", "") ?? "").trim();
 
   const jarPath: string = configuredJarPath.trim().length > 0
@@ -125,6 +152,10 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
   outputChannel.appendLine(`[tinyExpressionLsp] javaPath=${javaPath}`);
   outputChannel.appendLine(`[tinyExpressionLsp] jarPath=${jarPath}`);
   outputChannel.appendLine(`[tinyExpressionLsp] catalogPath=${catalogPath.length > 0 ? catalogPath : "(default/empty)"}`);
+  outputChannel.appendLine(`[tinyExpressionLsp] usingBundledCatalog=${String(useBundledCatalogPath)}`);
+  if (useBundledCatalogPath) {
+    outputChannel.appendLine(`[tinyExpressionLsp] bundledCatalogSources=${bundledCatalogCandidates.join(",")}`);
+  }
   outputChannel.appendLine(`[tinyExpressionLsp] catalogProviderClass=${catalogProviderClass.length > 0 ? catalogProviderClass : "(default/empty)"}`);
   outputChannel.appendLine(`[tinyExpressionLsp] javaVersionProbe=${javaProbe.detail}`);
   if (javaProbe.ok === false) {

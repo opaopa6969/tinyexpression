@@ -20,6 +20,7 @@ npm run package:vsix
 ## 3. Recommended file extension
 
 1. Canonical: `.tinyexp`
+2. Also supported: extensionless `default`, `emergency`, and `*.default` / `*.emergency`
 
 Why `.tinyexp`:
 - short and explicit for TinyExpression
@@ -33,6 +34,7 @@ Why `.tinyexp`:
   "tinyExpressionLsp.server.jarPath": "",
   "tinyExpressionLsp.server.jvmArgs": ["-Xmx512m"],
   "tinyExpressionLsp.catalog.path": "C:/catalogs/nimt-allowed-variables-cfvar.txt,C:/catalogs/nimt-allowed-variables-checkkind.txt",
+  "tinyExpressionLsp.catalog.useBundledDefault": true,
   "tinyExpressionLsp.catalog.providerClass": "",
   "tinyExpressionLsp.runtimeMode": "token",
   "tinyExpressionLsp.fileExtensions": [".tinyexp"]
@@ -44,7 +46,14 @@ Notes:
 - Use an absolute `server.jarPath` when you manage server versions externally.
 - Java 21+ is required for the bundled server.
 - `catalog.path` is optional and enables TE024 partialKey diagnostics from external catalogs.
+- `catalog.path` is also used for `$` completion entries (detail includes context + description).
 - `catalog.path` supports `${workspaceFolder}` and `~` expansion.
+- if `catalog.path` is empty and `catalog.useBundledDefault=true`, bundled catalogs are used in this order:
+  - `config/nimt-allowed-variables-cfvar.txt`
+  - `config/nimt-allowed-variables-checkkind.txt`
+  - `config/fa-allowed-variables-cf-variable.txt`
+  - `config/fa-allowed-variables-checkkind.txt`
+- if above files are unavailable, fallback is `catalog/default.tecatalog`.
 
 ### 4.2 Catalog format for TE024
 
@@ -55,12 +64,22 @@ Supported:
 kind_*|string|catalog|partial key
 age|number|catalog|exact
 ```
+`foo_*` means wildcard suffix: `$foo_<anything>` is allowed, while `$foo` alone is treated as TE024.
 2. Canonical format (`.tecatalog` recommended):
 ```text
 tinyexpression-catalog-v1
-exact|age
-prefixWithSuffix|kind|_|1
+exact|age|age in years|nimt
+prefixWithSuffix|kind|_|1|partial key variable|fa
 ```
+
+`$` completion detail shows context + description. If context column is omitted, file name tokens (e.g. `nimt`, `fa`) are used as context inference.
+
+### 4.3 Bundled config files
+
+- `nimt-allowed-variables-cfvar.txt`: NIM product CF variable allow-list (`variable|type|api|description`).
+- `nimt-allowed-variables-checkkind.txt`: NIM checkKind-derived variable candidates (`variable|api|description`).
+- `fa-allowed-variables-cf-variable.txt`: FA product CF variable allow-list (`variable|type`).
+- `fa-allowed-variables-checkkind.txt`: FA checkKind-derived variable candidates (`variable|description`).
 
 Convert legacy to canonical:
 ```bash

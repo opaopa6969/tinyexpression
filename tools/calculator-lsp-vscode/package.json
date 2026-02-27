@@ -13,8 +13,8 @@
   },
   "name": "tinyexpression-lsp",
   "displayName": "TinyExpression DSL (LSP)",
-  "description": "VS Code extension for TinyExpression DSL (LSP4J). Includes TE catalog diagnostics (TE022/TE024) via external catalog settings.",
-  "version": "0.2.24",
+  "description": "VS Code extension for TinyExpression DSL (LSP4J). Includes TE catalog diagnostics/completion (TE022/TE024) with context labels.",
+  "version": "0.2.31",
   "publisher": "opaopa6969",
   "files": [
     "README.md",
@@ -24,6 +24,8 @@
     "out/**",
     "extension/**",
     "server-dist/**",
+    "config/**",
+    "catalog/**",
     "docs/**",
     "scripts/**",
     "src/**",
@@ -57,6 +59,14 @@
         ],
         "extensions": [
           ".tinyexp"
+        ],
+        "filenames": [
+          "default",
+          "emergency"
+        ],
+        "filenamePatterns": [
+          "*.default",
+          "*.emergency"
         ],
         "configuration": "./language-configuration.json"
       }
@@ -136,8 +146,14 @@
         "tinyExpressionLsp.catalog.path": {
           "type": "string",
           "default": "",
-          "description": "External TinyExpression variable catalog path(s) used for TE024/TE022 diagnostics. Comma-separated file paths are supported.",
-          "markdownDescription": "External TinyExpression variable catalog path(s) used for TE024/TE022 diagnostics. Supports comma-separated paths, `${workspaceFolder}`, and `~`.\n\nExample: `${workspaceFolder}/catalog/nimt.tecatalog,${workspaceFolder}/catalog/fa.tecatalog`"
+          "description": "External TinyExpression variable catalog path(s) used for TE024/TE022 diagnostics and $ completion. Comma-separated file paths are supported.",
+          "markdownDescription": "External TinyExpression variable catalog path(s) used for TE024/TE022 diagnostics and `$` completion (with context labels).\n\nSupports comma-separated paths, `${workspaceFolder}`, and `~`.\n\nIf empty and `tinyExpressionLsp.catalog.useBundledDefault=true`, the bundled `catalog/default.tecatalog` is used.\n\nExample: `${workspaceFolder}/catalog/nimt.tecatalog,${workspaceFolder}/catalog/fa.tecatalog`"
+        },
+        "tinyExpressionLsp.catalog.useBundledDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use bundled config/*.txt (or catalog/default.tecatalog fallback) when catalog.path is empty.",
+          "markdownDescription": "If `true`, the extension uses bundled `config/*.txt` catalogs when `tinyExpressionLsp.catalog.path` is empty. If those files are unavailable, it falls back to `catalog/default.tecatalog`."
         },
         "tinyExpressionLsp.catalog.providerClass": {
           "type": "string",
