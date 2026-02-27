@@ -2387,6 +2387,9 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE008":
                         createTe008NormalizePunctuationFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE010":
+                        createTe010StructuralFix(actions, uri, state.content, diagnostic);
+                        break;
                     case "TE013":
                         createTe013MatchFix(actions, uri, state.content, diagnostic);
                         break;
@@ -2545,6 +2548,15 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 TextEdit edit = new TextEdit(new Range(insertPos, insertPos), ",");
                 addQuickFix(actions, uri, diagnostic, edit, "match case の区切り ',' を追加");
             }
+        }
+
+        private void createTe010StructuralFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            createTe009HeuristicFix(actions, uri, content, diagnostic);
+            createInsertFix(actions, uri, content, diagnostic, "{", "ブロック開始 '{' を追加");
         }
 
         private void createMissingIfBlockBraceFix(
