@@ -150,6 +150,7 @@ npm run compile
 Detailed usage and integration guide:
 - [docs/PLUGIN-USAGE.md](docs/PLUGIN-USAGE.md)
 - [docs/CATALOG-PROVIDER-EXTENSION.md](docs/CATALOG-PROVIDER-EXTENSION.md)
+- [docs/DIAGNOSTIC-QUICKFIX-SPEC-ja.md](docs/DIAGNOSTIC-QUICKFIX-SPEC-ja.md)
 
 ## Adding a new function (one place)
 Functions are defined in their own parsers in `server/src/main/java/.../CalculatorParsers.java`:
