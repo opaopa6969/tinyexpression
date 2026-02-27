@@ -417,6 +417,11 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private String formatCatalogMessage(ErrorCatalogEntry catalog, String detail) {
         String base = "[" + catalog.code() + "] " + catalog.message()
                 + " 修正: " + catalog.fix();
+        if ("TE013".equals(catalog.code())
+                && detail != null
+                && detail.startsWith("missing ','")) {
+            return base + " (detail: match case の区切りに ',' が必要です)";
+        }
         if ("TE020".equals(catalog.code())) {
             return base + " (detail: " + detail + ")";
         }
