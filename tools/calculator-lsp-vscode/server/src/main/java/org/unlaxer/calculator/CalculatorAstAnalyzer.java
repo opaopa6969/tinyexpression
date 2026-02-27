@@ -29,6 +29,10 @@ public final class CalculatorAstAnalyzer {
             Pattern.compile("([A-Za-z_][A-Za-z0-9_]*)\\s*\\(");
     private static final Pattern VARIABLE_REFERENCE_PATTERN =
             Pattern.compile("\\$([\\p{L}_][\\p{L}\\p{N}_]*)");
+    private static final Pattern VARIABLE_DECLARATION_PATTERN =
+            Pattern.compile("\\b(?:var|variable)\\s+\\$([\\p{L}_][\\p{L}\\p{N}_]*)");
+    private static final Pattern TYPED_VARIABLE_PATTERN =
+            Pattern.compile("\\$([\\p{L}_][\\p{L}\\p{N}_]*)\\s+as\\b");
     private static final Set<String> PARSER_DEFINED_METHODS =
             TinyExpressionParserMethodCatalog.methodNames();
     private static final Set<String> RESERVED_HEADS = Set.of(
@@ -52,7 +56,10 @@ public final class CalculatorAstAnalyzer {
         List<AstError> errors = new ArrayList<>();
         errors.addAll(findParenthesisErrors(content));
         errors.addAll(findUnknownMethodErrors(content));
-        errors.addAll(findPartialKeyVariableErrors(content));
+        boolean[] ignoredMask = buildIgnoredMask(content);
+        List<VariableReference> variableReferences = collectVariableReferences(content, ignoredMask);
+        errors.addAll(findPartialKeyVariableErrors(content, variableReferences));
+        errors.addAll(findUndefinedVariableErrors(content, ignoredMask, variableReferences));
         return new AnalysisResult(errors, null, null);
     }
 
@@ -120,20 +127,17 @@ public final class CalculatorAstAnalyzer {
         return errors;
     }
 
-    private List<AstError> findPartialKeyVariableErrors(String content) {
+    private List<AstError> findPartialKeyVariableErrors(
+            String content,
+            List<VariableReference> variableReferences) {
         if (variableCatalogRules.partialPrefixes().isEmpty()) {
             return List.of();
         }
         List<AstError> errors = new ArrayList<>();
-        boolean[] ignoredMask = buildIgnoredMask(content);
         Set<Integer> reportedOffsets = new HashSet<>();
-        Matcher matcher = VARIABLE_REFERENCE_PATTERN.matcher(content);
-        while (matcher.find()) {
-            int start = matcher.start();
-            if (start < ignoredMask.length && ignoredMask[start]) {
-                continue;
-            }
-            String variableName = matcher.group(1);
+        for (VariableReference reference : variableReferences) {
+            int start = reference.startOffset();
+            String variableName = reference.name();
             if (variableCatalogRules.isMissingPartialSuffix(variableName) == false) {
                 continue;
             }
@@ -142,11 +146,88 @@ public final class CalculatorAstAnalyzer {
             }
             String suggestion = "$" + variableName + "_<suffix>";
             errors.add(new AstError(
-                    toRange(content, start, matcher.end()),
+                    toRange(content, start, reference.endOffset()),
                     "[TE024] partialKey 変数の形式が不正です: $" + variableName
                             + " 修正: " + suggestion + " 形式に修正"));
         }
         return errors;
+    }
+
+    private List<AstError> findUndefinedVariableErrors(
+            String content,
+            boolean[] ignoredMask,
+            List<VariableReference> variableReferences) {
+        if (variableCatalogRules.isEmpty()) {
+            return List.of();
+        }
+        Set<String> declaredVariables = extractDeclaredVariables(content, ignoredMask);
+        List<AstError> errors = new ArrayList<>();
+        Set<Integer> reportedOffsets = new HashSet<>();
+        for (VariableReference reference : variableReferences) {
+            String variableName = reference.name();
+            if (variableCatalogRules.isMissingPartialSuffix(variableName)) {
+                continue;
+            }
+            if (declaredVariables.contains(variableName)) {
+                continue;
+            }
+            if (variableCatalogRules.isAllowed(variableName)) {
+                continue;
+            }
+            if (reportedOffsets.add(reference.startOffset()) == false) {
+                continue;
+            }
+            String suggestion = closestVariableName(variableName, declaredVariables);
+            String fix = suggestion == null
+                    ? "候補変数名へ修正"
+                    : "候補: $" + suggestion;
+            errors.add(new AstError(
+                    toRange(content, reference.startOffset(), reference.endOffset()),
+                    "[TE022] 利用可能な変数名ではありません: $" + variableName
+                            + " 修正: " + fix));
+        }
+        return errors;
+    }
+
+    private Set<String> extractDeclaredVariables(String content, boolean[] ignoredMask) {
+        Set<String> declared = new HashSet<>();
+        Matcher declarationMatcher = VARIABLE_DECLARATION_PATTERN.matcher(content);
+        while (declarationMatcher.find()) {
+            int start = declarationMatcher.start(1) - 1;
+            if (isIgnoredOffset(ignoredMask, start)) {
+                continue;
+            }
+            declared.add(declarationMatcher.group(1));
+        }
+        Matcher typedMatcher = TYPED_VARIABLE_PATTERN.matcher(content);
+        while (typedMatcher.find()) {
+            int start = typedMatcher.start(1) - 1;
+            if (isIgnoredOffset(ignoredMask, start)) {
+                continue;
+            }
+            declared.add(typedMatcher.group(1));
+        }
+        return declared;
+    }
+
+    private List<VariableReference> collectVariableReferences(String content, boolean[] ignoredMask) {
+        List<VariableReference> references = new ArrayList<>();
+        Matcher matcher = VARIABLE_REFERENCE_PATTERN.matcher(content);
+        while (matcher.find()) {
+            int start = matcher.start();
+            if (isIgnoredOffset(ignoredMask, start)) {
+                continue;
+            }
+            references.add(new VariableReference(matcher.group(1), start, matcher.end()));
+        }
+        return references;
+    }
+
+    private boolean isIgnoredOffset(boolean[] ignoredMask, int offset) {
+        if (offset < 0 || offset >= ignoredMask.length) {
+            return false;
+        }
+        return ignoredMask[offset];
     }
 
     private boolean[] buildIgnoredMask(String content) {
@@ -215,13 +296,27 @@ public final class CalculatorAstAnalyzer {
     }
 
     private String closestMethodName(String unknownMethod, Set<String> allowedMethods) {
-        if (unknownMethod == null || unknownMethod.isBlank() || allowedMethods == null || allowedMethods.isEmpty()) {
+        return closestCandidate(unknownMethod, allowedMethods);
+    }
+
+    private String closestVariableName(String unknownVariable, Set<String> declaredVariables) {
+        Set<String> candidates = new HashSet<>();
+        candidates.addAll(variableCatalogRules.exactNames());
+        candidates.addAll(declaredVariables);
+        for (String prefix : variableCatalogRules.partialPrefixes()) {
+            candidates.add(prefix + "_<suffix>");
+        }
+        return closestCandidate(unknownVariable, candidates);
+    }
+
+    private String closestCandidate(String unknown, Set<String> candidates) {
+        if (unknown == null || unknown.isBlank() || candidates == null || candidates.isEmpty()) {
             return null;
         }
-        String unknownLower = unknownMethod.toLowerCase();
+        String unknownLower = unknown.toLowerCase();
         String best = null;
         int bestDistance = Integer.MAX_VALUE;
-        for (String candidate : allowedMethods) {
+        for (String candidate : candidates) {
             if (candidate == null || candidate.isBlank()) {
                 continue;
             }
@@ -237,7 +332,7 @@ public final class CalculatorAstAnalyzer {
         if (best == null) {
             return null;
         }
-        int threshold = Math.max(2, unknownMethod.length() / 2);
+        int threshold = Math.max(2, unknown.length() / 2);
         if (bestDistance > threshold) {
             return null;
         }
@@ -266,6 +361,8 @@ public final class CalculatorAstAnalyzer {
         }
         return previous[right.length()];
     }
+
+    private record VariableReference(String name, int startOffset, int endOffset) {}
 
     private Set<String> extractImportAliases(String content) {
         Set<String> aliases = new HashSet<>();

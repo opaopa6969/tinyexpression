@@ -60,6 +60,7 @@ bash scripts/package-vsix.sh --matrix-three
 - `tinyExpressionLsp.runtimeMode`: runtime mode hint (`token` / `ast` / `dsl-javacode`)
 - `tinyExpressionLsp.catalog.path`: external variable catalog path(s) for TE024 partialKey checks (comma-separated). The extension forwards this as `-Dtinyexpression.catalog.path=...` to the server.
   - supports `${workspaceFolder}` and `~` expansion on the client side.
+  - when configured, analyzer also enables catalog-backed TE022 undefined-variable diagnostics/suggestions.
 - `tinyExpressionLsp.catalog.providerClass`: optional runtime provider class (`org.unlaxer.calculator.RuntimeCatalogProvider`).
 - `tinyExpressionLsp.fileExtensions`: file extensions watched by the extension (default: `.tinyexp`)
 

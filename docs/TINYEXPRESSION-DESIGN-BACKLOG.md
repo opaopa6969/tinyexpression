@@ -298,6 +298,9 @@ Progress snapshot (2026-02-27):
 - kept legacy catalog compatibility (`name|type|api|description`, `prefix_*` partial key).
 - TE024 analyzer now consumes loaded catalog rules and emits `[TE024]` diagnostics for `$prefix` usage.
 - added TE024 quick fix in LSP: append `_<suffix>` for partialKey variable references.
+- added catalog-backed semantic TE022 in analyzer:
+  - when external catalog is loaded, undefined variable references emit `[TE022] ...` with closest candidate hint,
+  - LSP quick fix now supports TE022 variable rename (`候補: $...`).
 - added converter script:
   - `tools/calculator-lsp-vscode/scripts/convert-legacy-catalog-to-canonical.sh`,
   - `npm run catalog:convert -- <legacy-files...>`.

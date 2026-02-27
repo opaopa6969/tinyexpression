@@ -335,8 +335,23 @@ public final class TinyExpressionVariableCatalog {
             return new Rules(Set.of(), Set.of(), "none");
         }
 
-        boolean isMissingPartialSuffix(String variableName) {
+        public boolean isMissingPartialSuffix(String variableName) {
             return partialPrefixes.contains(variableName);
+        }
+
+        public boolean isAllowed(String variableName) {
+            if (variableName == null || variableName.isBlank()) {
+                return false;
+            }
+            if (exactNames.contains(variableName)) {
+                return true;
+            }
+            for (String prefix : partialPrefixes) {
+                if (variableName.startsWith(prefix + "_")) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public boolean isEmpty() {

@@ -1763,6 +1763,9 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE021":
                         createUnknownMethodRenameFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE022":
+                        createTe022VariableRenameFix(actions, uri, state.content, diagnostic);
+                        break;
                     case "TE023":
                         createTe023NotationFix(actions, uri, state.content, diagnostic);
                         break;
@@ -1898,6 +1901,14 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return matcher.group(1);
         }
 
+        private String extractVariableSuggestionFromDiagnostic(String message) {
+            Matcher matcher = Pattern.compile("候補:\\s*(\\$[\\p{L}_][\\p{L}\\p{N}_]*(?:_<suffix>)?)").matcher(message);
+            if (matcher.find() == false) {
+                return null;
+            }
+            return matcher.group(1);
+        }
+
         private void addQuickFix(
                 List<Either<Command, CodeAction>> actions,
                 String uri,
@@ -1951,6 +1962,35 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             codeAction.setDiagnostics(List.of(diagnostic));
             codeAction.setEdit(workspaceEdit);
             actions.add(Either.forRight(codeAction));
+        }
+
+        private void createTe022VariableRenameFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getMessage() == null || diagnostic.getRange() == null) {
+                return;
+            }
+            String suggestion = extractVariableSuggestionFromDiagnostic(diagnostic.getMessage());
+            if (suggestion == null || suggestion.isBlank()) {
+                return;
+            }
+            Position start = diagnostic.getRange().getStart();
+            Position end = diagnostic.getRange().getEnd();
+            if (start == null || end == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, start);
+            int endOffset = positionToOffset(content, end);
+            if (startOffset < 0 || endOffset < startOffset || endOffset > content.length()) {
+                return;
+            }
+            if (content.substring(startOffset, endOffset).equals(suggestion)) {
+                return;
+            }
+            TextEdit edit = new TextEdit(new Range(start, end), suggestion);
+            addQuickFix(actions, uri, diagnostic, edit, "変数名を '" + suggestion + "' に修正");
         }
 
         private String diagnosticCode(Diagnostic diagnostic) {

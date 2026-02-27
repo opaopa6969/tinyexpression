@@ -42,12 +42,14 @@ class TinyExpressionVariableCatalogTest {
     @Test
     void analyzerEmitsTe024OnlyForMissingSuffixOutsideQuotesAndComments() throws Exception {
         Path catalog = Files.createTempFile("tinyexpression-catalog", ".txt");
-        Files.writeString(catalog, "kind_*|string|catalog|partial key\n");
+        Files.writeString(catalog, String.join("\n",
+                "kind_*|string|catalog|partial key",
+                "age|number|catalog|exact"));
         TinyExpressionVariableCatalog.Rules rules =
                 TinyExpressionVariableCatalog.loadFromPathList(catalog.toString(), "test");
 
         CalculatorAstAnalyzer analyzer = new CalculatorAstAnalyzer(rules);
-        String content = "$kind + $kind_login + '$kind' // $kind\n";
+        String content = "$kind + $kind_login + $ag + '$kind' // $kind\n";
         CalculatorLanguageServer.ParseResult parseResult = new CalculatorLanguageServer.ParseResult(
                 true,
                 content.length(),
@@ -57,6 +59,8 @@ class TinyExpressionVariableCatalogTest {
 
         List<CalculatorAstAnalyzer.AstError> errors = analyzer.analyze(content, parseResult).errors();
         long te024Count = errors.stream().filter(error -> error.message().startsWith("[TE024]")).count();
+        long te022Count = errors.stream().filter(error -> error.message().startsWith("[TE022]")).count();
         assertEquals(1, te024Count);
+        assertEquals(1, te022Count);
     }
 }
