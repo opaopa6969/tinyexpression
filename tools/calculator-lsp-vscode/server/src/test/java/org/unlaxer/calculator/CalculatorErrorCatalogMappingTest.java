@@ -2,6 +2,7 @@ package org.unlaxer.calculator;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.lang.reflect.Method;
 
@@ -29,6 +30,31 @@ class CalculatorErrorCatalogMappingTest {
         assertEquals("TE017", resolveCatalogCode("var name as string;"));
         assertEquals("TE018", resolveCatalogCode("as string $name"));
         assertEquals("TE019", resolveCatalogCode("get($x).orElse"));
+        String varSetIfNotExistsPlusMatchMissingComma = """
+                var $input as string set if not exists 'not number' description='入力値';
+                match{
+                  true -> 1
+                  default -> 0
+                }
+                """;
+        assertEquals("TE014", resolveCatalogCode(varSetIfNotExistsPlusMatchMissingComma));
+    }
+
+    @Test
+    void parsesIfElseMatchWithStringEquality() {
+        CalculatorLanguageServer server = new CalculatorLanguageServer();
+        String expression = """
+                if(true){
+                  1
+                }else{
+                  match{
+                  $name=='肉太郎' -> 1,
+                  $didCheck -> 2,
+                  default -> 0 }
+                }
+                """;
+        CalculatorLanguageServer.ParseResult result = server.parseExpression(expression);
+        assertTrue(result.succeeded, "if/match expression should parse successfully");
     }
 
     private String resolveCatalogCode(String content) throws Exception {

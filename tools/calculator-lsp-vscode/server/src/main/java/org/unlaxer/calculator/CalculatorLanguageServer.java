@@ -407,7 +407,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (matchIndex < 0) {
             return false;
         }
-        int ifIndex = findLastKeywordBefore(content, "if", startOffset);
+        int ifIndex = findLastIfExpressionKeywordBefore(content, startOffset);
         return matchIndex > ifIndex;
     }
 
@@ -1133,7 +1133,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private Optional<ParseFailureDescription> describeIfConditionIssue(
             String content,
             int startOffset) {
-        int ifIndex = findLastKeywordBefore(content, "if", startOffset);
+        int ifIndex = findLastIfExpressionKeywordBefore(content, startOffset);
         if (ifIndex < 0) {
             return Optional.empty();
         }
@@ -1531,7 +1531,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private Optional<ParseFailureDescription> describeMissingIfConditionClosingParenthesis(
             String content,
             int startOffset) {
-        int ifIndex = findLastKeywordBefore(content, "if", startOffset);
+        int ifIndex = findLastIfExpressionKeywordBefore(content, startOffset);
         if (ifIndex < 0) {
             return Optional.empty();
         }
@@ -1691,6 +1691,23 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int end = found + keyword.length();
             if (isIdentifierPart(content, found - 1) == false
                     && isIdentifierPart(content, end) == false) {
+                return found;
+            }
+            searchFrom = found - 1;
+        }
+        return -1;
+    }
+
+    private int findLastIfExpressionKeywordBefore(String content, int endOffsetExclusive) {
+        int bound = Math.max(0, Math.min(content.length(), endOffsetExclusive));
+        int searchFrom = bound;
+        while (searchFrom >= 0) {
+            int found = findLastKeywordBefore(content, "if", searchFrom);
+            if (found < 0) {
+                return -1;
+            }
+            int cursor = skipWhitespace(content, found + 2);
+            if (cursor < content.length() && content.charAt(cursor) == '(') {
                 return found;
             }
             searchFrom = found - 1;

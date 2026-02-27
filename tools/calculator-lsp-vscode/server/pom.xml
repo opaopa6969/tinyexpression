@@ -12,7 +12,7 @@
     <maven.compiler.release>21</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <lsp4j.version>0.23.1</lsp4j.version>
-    <unlaxer.version>2.4.0</unlaxer.version>
+    <unlaxer.version>1.2.7</unlaxer.version>
     <tinyexpression.version>1.4.10</tinyexpression.version>
     <junit.jupiter.version>5.10.2</junit.jupiter.version>
   </properties>
