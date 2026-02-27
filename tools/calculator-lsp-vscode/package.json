@@ -14,7 +14,7 @@
   "name": "tinyexpression-lsp",
   "displayName": "TinyExpression DSL (LSP)",
   "description": "VS Code extension for TinyExpression DSL (LSP4J). Includes TE catalog diagnostics (TE022/TE024) via external catalog settings.",
-  "version": "0.2.20",
+  "version": "0.2.21",
   "publisher": "opaopa6969",
   "files": [
     "README.md",
@@ -66,6 +66,40 @@
         "language": "tinyexpression",
         "scopeName": "source.tinyexpression",
         "path": "./syntaxes/calculator.tmLanguage.json"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "tinyexpression",
+        "scopes": {
+          "keyword": [
+            "keyword.control.tinyexpression"
+          ],
+          "variable": [
+            "variable.other.readwrite.tinyexpression",
+            "variable.other.tinyexpression"
+          ],
+          "function": [
+            "entity.name.function.tinyexpression",
+            "support.function.builtin.tinyexpression"
+          ],
+          "number": [
+            "constant.numeric.tinyexpression"
+          ],
+          "string": [
+            "string.quoted.single.tinyexpression",
+            "string.quoted.double.tinyexpression"
+          ],
+          "operator": [
+            "keyword.operator.tinyexpression",
+            "punctuation.separator.tinyexpression",
+            "punctuation.bracket.tinyexpression"
+          ],
+          "comment": [
+            "comment.line.double-slash.tinyexpression",
+            "comment.block.tinyexpression"
+          ]
+        }
       }
     ],
     "configuration": {

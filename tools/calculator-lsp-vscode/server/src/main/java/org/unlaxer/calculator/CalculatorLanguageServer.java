@@ -2,11 +2,15 @@ package org.unlaxer.calculator;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.concurrent.CompletableFuture;
@@ -78,6 +82,35 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             Pattern.compile("\\bdescription\\s*=\\s*'[^']*'");
     private static final Pattern MISPLACED_TYPE_HINT_PATTERN =
             Pattern.compile("\\bas\\s+(?:Number|number|Float|float|String|string|Boolean|boolean|Object|object)\\s+\\$");
+    private static final Pattern SEMANTIC_BLOCK_COMMENT_PATTERN =
+            Pattern.compile("/\\*[\\s\\S]*?\\*/");
+    private static final Pattern SEMANTIC_LINE_COMMENT_PATTERN =
+            Pattern.compile("//.*");
+    private static final Pattern SEMANTIC_STRING_PATTERN =
+            Pattern.compile("'(?:\\\\.|[^'\\\\])*'|\"(?:\\\\.|[^\"\\\\])*\"");
+    private static final Pattern SEMANTIC_NUMBER_PATTERN =
+            Pattern.compile("\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b");
+    private static final Pattern SEMANTIC_VARIABLE_PATTERN =
+            Pattern.compile("\\$[\\p{L}_][\\p{L}\\p{N}_]*");
+    private static final Pattern SEMANTIC_KEYWORD_PATTERN =
+            Pattern.compile("\\b(?:if|else|match|default|var|variable|as|set|not|exists|description|import|external|returning|internal|call|true|false)\\b");
+    private static final Pattern SEMANTIC_FUNCTION_PATTERN =
+            Pattern.compile("\\b[\\p{L}_][\\p{L}\\p{N}_]*\\s*(?=\\()");
+    private static final Pattern SEMANTIC_IDENTIFIER_PATTERN =
+            Pattern.compile("\\b[\\p{L}_][\\p{L}\\p{N}_]*\\b");
+    private static final Pattern SEMANTIC_OPERATOR_PATTERN =
+            Pattern.compile("->|==|!=|<=|>=|&&|\\|\\||[+\\-*/%<>&|!=?:;,{}()\\[\\]]");
+    private static final int SEMANTIC_TYPE_KEYWORD = 0;
+    private static final int SEMANTIC_TYPE_VARIABLE = 1;
+    private static final int SEMANTIC_TYPE_FUNCTION = 2;
+    private static final int SEMANTIC_TYPE_NUMBER = 3;
+    private static final int SEMANTIC_TYPE_STRING = 4;
+    private static final int SEMANTIC_TYPE_OPERATOR = 5;
+    private static final int SEMANTIC_TYPE_COMMENT = 6;
+    private static final Set<String> SEMANTIC_KEYWORDS = new HashSet<>(List.of(
+            "if", "else", "match", "default", "var", "variable", "as", "set",
+            "not", "exists", "description", "import", "external", "returning",
+            "internal", "call", "true", "false"));
     private LanguageClient client;
     private final Map<String, DocumentState> documents = new HashMap<>();
     private final SuggestableParser suggestableParser = new TinyExpressionSuggestableParser();
@@ -112,7 +145,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             new SemanticTokensWithRegistrationOptions();
         semanticTokensOptions.setFull(true);
         semanticTokensOptions.setLegend(new SemanticTokensLegend(
-            List.of("valid", "invalid", "function", "number", "operator"),
+            List.of("keyword", "variable", "function", "number", "string", "operator", "comment"),
             List.of()
         ));
         capabilities.setSemanticTokensProvider(semanticTokensOptions);
@@ -3264,7 +3297,6 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         /**
          * Build semantic tokens data.
          * Format: [deltaLine, deltaStart, length, tokenType, tokenModifiers]
-         * tokenType: 0=valid, 1=invalid
          */
         private List<Integer> buildSemanticTokens(String content, ParseResult result) {
             List<Integer> data = new ArrayList<>();
@@ -3272,31 +3304,107 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (content.isEmpty()) {
                 return data;
             }
-
-            int validEnd = result.consumedLength;
-
-            // Valid portion (green)
-            if (validEnd > 0) {
-                // deltaLine=0, deltaStart=0, length=validEnd, tokenType=0 (valid), modifiers=0
-                data.add(0);
-                data.add(0);
-                data.add(validEnd);
-                data.add(0); // valid
-                data.add(0);
+            List<SemanticLexToken> tokens = collectSemanticLexTokens(content);
+            if (tokens.isEmpty()) {
+                return data;
             }
 
-            // Invalid portion (red)
-            if (validEnd < content.length()) {
-                int invalidLength = content.length() - validEnd;
-                // deltaLine=0, deltaStart=validEnd (relative to previous), length, tokenType=1 (invalid)
+            tokens.sort(Comparator.comparingInt(token -> token.startOffset));
+            int previousLine = 0;
+            int previousCharacter = 0;
+            for (SemanticLexToken token : tokens) {
+                if (token.length <= 0) {
+                    continue;
+                }
+                Position position = server.offsetToPosition(content, token.startOffset);
+                int deltaLine = position.getLine() - previousLine;
+                int deltaStart = deltaLine == 0
+                        ? position.getCharacter() - previousCharacter
+                        : position.getCharacter();
+                data.add(deltaLine);
+                data.add(deltaStart);
+                data.add(token.length);
+                data.add(token.typeIndex);
                 data.add(0);
-                data.add(validEnd);
-                data.add(invalidLength);
-                data.add(1); // invalid
-                data.add(0);
+                previousLine = position.getLine();
+                previousCharacter = position.getCharacter();
             }
 
             return data;
+        }
+
+        private List<SemanticLexToken> collectSemanticLexTokens(String content) {
+            List<SemanticLexToken> tokens = new ArrayList<>();
+            boolean[] occupied = new boolean[content.length()];
+
+            addSemanticMatches(content, SEMANTIC_BLOCK_COMMENT_PATTERN, SEMANTIC_TYPE_COMMENT, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_LINE_COMMENT_PATTERN, SEMANTIC_TYPE_COMMENT, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_STRING_PATTERN, SEMANTIC_TYPE_STRING, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_KEYWORD_PATTERN, SEMANTIC_TYPE_KEYWORD, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_VARIABLE_PATTERN, SEMANTIC_TYPE_VARIABLE, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_NUMBER_PATTERN, SEMANTIC_TYPE_NUMBER, occupied, tokens, text -> true);
+            addSemanticMatches(content, SEMANTIC_FUNCTION_PATTERN, SEMANTIC_TYPE_FUNCTION, occupied, tokens,
+                    text -> {
+                        String normalized = text.strip();
+                        return SEMANTIC_KEYWORDS.contains(normalized) == false;
+                    });
+            addSemanticMatches(content, SEMANTIC_IDENTIFIER_PATTERN, SEMANTIC_TYPE_VARIABLE, occupied, tokens,
+                    text -> SEMANTIC_KEYWORDS.contains(text.strip()) == false);
+            addSemanticMatches(content, SEMANTIC_OPERATOR_PATTERN, SEMANTIC_TYPE_OPERATOR, occupied, tokens, text -> true);
+            return tokens;
+        }
+
+        private void addSemanticMatches(
+                String content,
+                Pattern pattern,
+                int typeIndex,
+                boolean[] occupied,
+                List<SemanticLexToken> tokens,
+                Predicate<String> filter) {
+            Matcher matcher = pattern.matcher(content);
+            while (matcher.find()) {
+                int start = matcher.start();
+                int end = matcher.end();
+                if (start < 0 || end <= start) {
+                    continue;
+                }
+                if (isOccupied(occupied, start, end)) {
+                    continue;
+                }
+                String lexeme = content.substring(start, end);
+                if (filter.test(lexeme) == false) {
+                    continue;
+                }
+                markOccupied(occupied, start, end);
+                tokens.add(new SemanticLexToken(start, end - start, typeIndex));
+            }
+        }
+
+        private boolean isOccupied(boolean[] occupied, int start, int endExclusive) {
+            for (int i = Math.max(0, start); i < Math.min(occupied.length, endExclusive); i++) {
+                if (occupied[i]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private void markOccupied(boolean[] occupied, int start, int endExclusive) {
+            for (int i = Math.max(0, start); i < Math.min(occupied.length, endExclusive); i++) {
+                occupied[i] = true;
+            }
+        }
+
+        private static final class SemanticLexToken {
+            final int startOffset;
+            final int length;
+            final int typeIndex;
+
+            SemanticLexToken(int startOffset, int length, int typeIndex) {
+                this.startOffset = startOffset;
+                this.length = length;
+                this.typeIndex = typeIndex;
+            }
         }
     }
 
