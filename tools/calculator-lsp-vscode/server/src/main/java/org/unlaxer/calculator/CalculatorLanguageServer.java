@@ -2173,6 +2173,15 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     case "TE017":
                         createTe017VariableDeclarationFix(actions, uri, state.content, diagnostic);
                         break;
+                    case "TE018":
+                        createTe018TypeHintPositionFix(actions, uri, state.content, diagnostic);
+                        break;
+                    case "TE019":
+                        createTe019GetOrElseFix(actions, uri, state.content, diagnostic);
+                        break;
+                    case "TE008":
+                        createTe008NormalizePunctuationFix(actions, uri, state.content, diagnostic);
+                        break;
                     default:
                         break;
                 }
@@ -2545,6 +2554,134 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 normalized.append(Character.isJavaIdentifierPart(c) ? c : '_');
             }
             return normalized.isEmpty() ? "alias" : normalized.toString();
+        }
+
+        private void createTe018TypeHintPositionFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset > content.length()) {
+                return;
+            }
+            int lineStart = content.lastIndexOf('\n', Math.max(0, startOffset - 1));
+            lineStart = lineStart < 0 ? 0 : lineStart + 1;
+            int lineEnd = content.indexOf('\n', startOffset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(lineStart, lineEnd);
+            Matcher matcher = Pattern.compile(
+                    "\\bas\\s+(Number|number|Float|float|String|string|Boolean|boolean|Object|object)\\s+(\\$[\\p{L}_][\\p{L}\\p{N}_]*)")
+                    .matcher(line);
+            if (matcher.find() == false) {
+                return;
+            }
+            String type = matcher.group(1);
+            String variable = matcher.group(2);
+            String replacement = variable + " as " + type;
+            int start = lineStart + matcher.start();
+            int end = lineStart + matcher.end();
+            TextEdit edit = new TextEdit(
+                    new Range(server.offsetToPosition(content, start), server.offsetToPosition(content, end)),
+                    replacement);
+            addQuickFix(actions, uri, diagnostic, edit, "型ヒント位置を '$name as type' に修正");
+        }
+
+        private void createTe019GetOrElseFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+                return;
+            }
+            int startOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            if (startOffset < 0 || startOffset > content.length()) {
+                return;
+            }
+            int searchStart = Math.max(0, startOffset - 128);
+            int searchEnd = Math.min(content.length(), startOffset + 256);
+            String window = content.substring(searchStart, searchEnd);
+
+            int relOrElse = window.indexOf(".orElse");
+            if (relOrElse >= 0) {
+                int orElseOffset = searchStart + relOrElse;
+                int afterOrElse = orElseOffset + ".orElse".length();
+                int next = skipWhitespaceForward(content, afterOrElse);
+                if (next >= content.length() || content.charAt(next) != '(') {
+                    TextEdit edit = new TextEdit(
+                            new Range(server.offsetToPosition(content, afterOrElse), server.offsetToPosition(content, afterOrElse)),
+                            "(0)");
+                    addQuickFix(actions, uri, diagnostic, edit, "orElse の引数を補完");
+                    return;
+                }
+                int close = server.findMatchingCloseParenthesis(content, next);
+                if (close < 0) {
+                    int lineEnd = content.indexOf('\n', next);
+                    if (lineEnd < 0) {
+                        lineEnd = content.length();
+                    }
+                    int insertOffset = lineEnd;
+                    int semicolon = content.indexOf(';', next);
+                    if (semicolon >= 0 && semicolon < lineEnd) {
+                        insertOffset = semicolon;
+                    }
+                    TextEdit edit = new TextEdit(
+                            new Range(server.offsetToPosition(content, insertOffset), server.offsetToPosition(content, insertOffset)),
+                            ")");
+                    addQuickFix(actions, uri, diagnostic, edit, "orElse の閉じ括弧 ')' を追加");
+                    return;
+                }
+            }
+
+            int getHead = content.lastIndexOf("get(", startOffset);
+            if (getHead < 0 && window.contains("get(")) {
+                getHead = searchStart + window.indexOf("get(");
+            }
+            if (getHead >= 0) {
+                int getOpen = content.indexOf('(', getHead);
+                int getClose = getOpen < 0 ? -1 : server.findMatchingCloseParenthesis(content, getOpen);
+                if (getClose >= 0) {
+                    int afterGet = skipWhitespaceForward(content, getClose + 1);
+                    if (afterGet >= content.length() || content.startsWith(".orElse", afterGet) == false) {
+                        TextEdit edit = new TextEdit(
+                                new Range(server.offsetToPosition(content, getClose + 1), server.offsetToPosition(content, getClose + 1)),
+                                ".orElse(0)");
+                        addQuickFix(actions, uri, diagnostic, edit, "get(...) に orElse(...) を追加");
+                    }
+                }
+            }
+        }
+
+        private void createTe008NormalizePunctuationFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                String content,
+                Diagnostic diagnostic) {
+            String normalized = content
+                    .replace('；', ';')
+                    .replace('（', '(')
+                    .replace('）', ')')
+                    .replace('，', ',')
+                    .replace('｛', '{')
+                    .replace('｝', '}')
+                    .replace('：', ':')
+                    .replace('＄', '$')
+                    .replace('”', '\'')
+                    .replace('’', '\'')
+                    .replace('　', ' ');
+            if (normalized.equals(content)) {
+                return;
+            }
+            TextEdit edit = new TextEdit(
+                    new Range(new Position(0, 0), server.offsetToPosition(content, content.length())),
+                    normalized);
+            addQuickFix(actions, uri, diagnostic, edit, "全角記号を半角へ正規化");
         }
 
         private void createTe017VariableDeclarationFix(
