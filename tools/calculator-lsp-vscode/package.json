@@ -1,0 +1,147 @@
+{
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/opaopa6969/tinyexpression.git"
+  },
+  "homepage": "https://unlaxer.org",
+  "bugs": {
+    "url": "https://github.com/opaopa6969/tinyexpression/issues"
+  },
+  "author": {
+    "name": "unlaxer.org",
+    "url": "https://unlaxer.org"
+  },
+  "name": "tinyexpression-lsp",
+  "displayName": "TinyExpression DSL (LSP)",
+  "description": "VS Code extension for TinyExpression DSL backed by a Java LSP server (LSP4J).",
+  "version": "0.2.11",
+  "publisher": "opaopa6969",
+  "files": [
+    "README.md",
+    "package.json",
+    "language-configuration.json",
+    "syntaxes/**",
+    "out/**",
+    "extension/**",
+    "server-dist/**",
+    "docs/**",
+    "scripts/**",
+    "src/**",
+    "tsconfig.json"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:tinyexpression",
+    "onCommand:tinyExpressionLsp.showServerOutput"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "tinyExpressionLsp.showServerOutput",
+        "title": "TinyExpression LSP: Show Server Output",
+        "category": "TinyExpression"
+      }
+    ],
+    "languages": [
+      {
+        "id": "tinyexpression",
+        "aliases": [
+          "TinyExpression",
+          "tinyexpression"
+        ],
+        "extensions": [
+          ".tinyexp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tinyexpression",
+        "scopeName": "source.tinyexpression",
+        "path": "./syntaxes/calculator.tmLanguage.json"
+      }
+    ],
+    "configuration": {
+      "title": "TinyExpression LSP",
+      "properties": {
+        "tinyExpressionLsp.server.javaPath": {
+          "type": "string",
+          "default": "java",
+          "description": "Java executable to launch the language server (e.g. java, /path/to/java)."
+        },
+        "tinyExpressionLsp.server.jarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the TinyExpression LSP server jar. If empty, the bundled jar in this extension will be used."
+        },
+        "tinyExpressionLsp.server.jvmArgs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Extra JVM arguments (e.g. -Xmx512m)."
+        },
+        "tinyExpressionLsp.runtimeMode": {
+          "type": "string",
+          "enum": [
+            "token",
+            "ast",
+            "dsl-javacode"
+          ],
+          "default": "token",
+          "description": "Execution/DAP runtime mode hint passed to the server/adapter."
+        },
+        "tinyExpressionLsp.catalog.path": {
+          "type": "string",
+          "default": "",
+          "description": "External TinyExpression variable catalog path(s) for TE024 checks. Comma-separated file paths are supported."
+        },
+        "tinyExpressionLsp.catalog.providerClass": {
+          "type": "string",
+          "default": "",
+          "description": "Optional runtime catalog provider class name (implements org.unlaxer.calculator.RuntimeCatalogProvider)."
+        },
+        "tinyExpressionLsp.fileExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            ".tinyexp"
+          ],
+          "description": "File extensions to watch for the TinyExpression language (must match contributes.languages.extensions). Recommended: .tinyexp."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint .",
+    "test": "node ./out/test/runTest.js",
+    "build:server": "cd server && mvn -q -Dmaven.test.skip=true package && node ../tools/copyServerJar.js",
+    "package": "npx --yes @vscode/vsce package --no-dependencies",
+    "package:vsix": "bash ./scripts/package-vsix.sh",
+    "catalog:convert": "bash ./scripts/convert-legacy-catalog-to-canonical.sh"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "@types/vscode": "^1.85.0",
+    "@vscode/test-electron": "^2.3.9",
+    "eslint": "^8.57.0",
+    "typescript": "^5.4.5",
+    "@vscode/vsce": "^2.26.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}
