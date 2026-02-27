@@ -14,7 +14,7 @@
   "name": "tinyexpression-lsp",
   "displayName": "TinyExpression DSL (LSP)",
   "description": "VS Code extension for TinyExpression DSL backed by a Java LSP server (LSP4J).",
-  "version": "0.2.11",
+  "version": "0.2.12",
   "publisher": "opaopa6969",
   "files": [
     "README.md",
