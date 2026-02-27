@@ -147,6 +147,30 @@ class CalculatorErrorCatalogMappingTest {
         assertFalse(actions.isEmpty(), "TE010 should provide at least one quick fix");
     }
 
+    @Test
+    void providesQuickFixForTe013MissingComma() throws Exception {
+        CalculatorLanguageServer server = new CalculatorLanguageServer();
+        String uri = "file:///te013-sample.tinyexp";
+        String expression = """
+                match{
+                  $name=='肉太郎' -> 1
+                  $didCheck -> 2,
+                  default -> 0
+                }
+                """;
+        server.parseDocument(uri, expression);
+
+        Diagnostic diagnostic = new Diagnostic();
+        diagnostic.setCode(Either.forLeft("TE013"));
+        diagnostic.setRange(new Range(new Position(2, 2), new Position(5, 0)));
+        diagnostic.setMessage("[TE013] match 構文が不正です。 修正: match { cond -> expr, default -> expr } を確認");
+
+        CodeActionContext context = new CodeActionContext(List.of(diagnostic));
+        CodeActionParams params = new CodeActionParams(new TextDocumentIdentifier(uri), diagnostic.getRange(), context);
+        List<?> actions = server.getTextDocumentService().codeAction(params).get();
+        assertFalse(actions.isEmpty(), "TE013 should provide at least one quick fix");
+    }
+
     private String resolveCatalogCode(String content) throws Exception {
         CalculatorLanguageServer server = new CalculatorLanguageServer();
         CalculatorLanguageServer.ParseResult result = server.parseExpression(content);
