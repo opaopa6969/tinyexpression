@@ -301,6 +301,9 @@ Progress snapshot (2026-02-27):
 - added catalog-backed semantic TE022 in analyzer:
   - when external catalog is loaded, undefined variable references emit `[TE022] ...` with closest candidate hint,
   - LSP quick fix now supports TE022 variable rename (`候補: $...`).
+- reduced diagnostic noise for structural mismatch fallback:
+  - TE010 messages no longer append parser detail tail by default,
+  - missing-semicolon (`TE006`) detection for `var` declarations now includes a line-based fallback path when parse start offset rewinds to the file head.
 - added converter script:
   - `tools/calculator-lsp-vscode/scripts/convert-legacy-catalog-to-canonical.sh`,
   - `npm run catalog:convert -- <legacy-files...>`.

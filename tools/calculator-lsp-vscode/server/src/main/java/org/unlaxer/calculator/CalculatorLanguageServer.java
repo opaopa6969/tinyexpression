@@ -380,7 +380,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private String formatCatalogMessage(ErrorCatalogEntry catalog, String detail) {
         String base = "[" + catalog.code() + "] " + catalog.message()
                 + " 修正: " + catalog.fix();
-        if ("TE010".equals(catalog.code()) || "TE020".equals(catalog.code())) {
+        if ("TE020".equals(catalog.code())) {
             return base + " (detail: " + detail + ")";
         }
         return base;
@@ -737,6 +737,13 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int stackDepth = failureMaxReachedStackDepth(failureDiagnostics);
             String stackHint = stackDepth <= 0 ? "" : " near parser stack depth=" + stackDepth;
             return new ParseFailureDescription(start, "parse failed" + stackHint);
+        }
+        Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(content);
+        if (missingSemicolonByLine.isPresent()
+                && isLikelyStatementStartAfterOffset(content, missingSemicolonByLine.get())) {
+            return new ParseFailureDescription(
+                    missingSemicolonByLine.get(),
+                    "missing ';' after var declaration");
         }
         return detectMissingCommaBeforeDefaultOffset(content)
                 .map(offset -> new ParseFailureDescription(
@@ -1099,37 +1106,89 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int startOffset,
             List<String> mergedHints) {
         boolean expectsSemicolon = mergedHints.stream().anyMatch(h -> tokenEquals(h, ";"));
-        if (expectsSemicolon == false) {
-            return Optional.empty();
-        }
         boolean hasVarDeclarationSignals = mergedHints.stream()
                 .anyMatch(h -> tokenEquals(h, "var")
                         || tokenEquals(h, "variable")
                         || tokenEquals(h, "description")
                         || tokenEquals(h, "$"));
-        if (hasVarDeclarationSignals == false) {
-            return Optional.empty();
+
+        if (expectsSemicolon && hasVarDeclarationSignals) {
+            int probe = Math.max(0, Math.min(content.length(), startOffset));
+            int statementEnd = skipWhitespaceBackward(content, probe - 1);
+            if (statementEnd >= 0) {
+                int statementStart = findStatementStart(content, statementEnd);
+                if (statementStart < content.length()) {
+                    String statement = content.substring(statementStart, statementEnd + 1).stripLeading();
+                    if ((statement.startsWith("var ") || statement.startsWith("variable "))
+                            && statement.indexOf(';') < 0) {
+                        return Optional.of(new ParseFailureDescription(
+                                Math.min(content.length(), statementEnd + 1),
+                                "missing ';' after var declaration"));
+                    }
+                }
+            }
         }
 
-        int probe = Math.max(0, Math.min(content.length(), startOffset));
-        int statementEnd = skipWhitespaceBackward(content, probe - 1);
-        if (statementEnd < 0) {
-            return Optional.empty();
+        Optional<Integer> lineBasedOffset = detectMissingSemicolonAfterVarDeclarationByLine(content);
+        if (lineBasedOffset.isPresent()) {
+            boolean shouldUseLineFallback = expectsSemicolon
+                    || hasVarDeclarationSignals
+                    || isLikelyStatementStartAfterOffset(content, lineBasedOffset.get());
+            if (shouldUseLineFallback == false) {
+                return Optional.empty();
+            }
+            return Optional.of(new ParseFailureDescription(
+                    lineBasedOffset.get(),
+                    "missing ';' after var declaration"));
         }
-        int statementStart = findStatementStart(content, statementEnd);
-        if (statementStart >= content.length()) {
-            return Optional.empty();
+        return Optional.empty();
+    }
+
+    private Optional<Integer> detectMissingSemicolonAfterVarDeclarationByLine(String content) {
+        int offset = 0;
+        while (offset <= content.length()) {
+            int lineEnd = content.indexOf('\n', offset);
+            if (lineEnd < 0) {
+                lineEnd = content.length();
+            }
+            String line = content.substring(offset, lineEnd);
+            String trimmed = line.stripLeading();
+            if ((trimmed.startsWith("var ") || trimmed.startsWith("variable "))
+                    && trimmed.contains(";") == false) {
+                int commentIndex = trimmed.indexOf("//");
+                String commentStripped = commentIndex >= 0
+                        ? trimmed.substring(0, commentIndex)
+                        : trimmed;
+                if (commentStripped.contains(";") == false) {
+                    return Optional.of(Math.min(content.length(), lineEnd));
+                }
+            }
+            if (lineEnd >= content.length()) {
+                break;
+            }
+            offset = lineEnd + 1;
         }
-        String statement = content.substring(statementStart, statementEnd + 1).stripLeading();
-        if (statement.startsWith("var ") == false && statement.startsWith("variable ") == false) {
-            return Optional.empty();
+        return Optional.empty();
+    }
+
+    private boolean isLikelyStatementStartAfterOffset(String content, int offset) {
+        int cursor = skipWhitespace(content, Math.max(0, offset));
+        if (cursor >= content.length()) {
+            return false;
         }
-        if (statement.indexOf(';') >= 0) {
-            return Optional.empty();
+        if (content.charAt(cursor) == '}') {
+            return true;
         }
-        return Optional.of(new ParseFailureDescription(
-                Math.min(content.length(), statementEnd + 1),
-                "missing ';' after var declaration"));
+        String[] starts = new String[] {
+                "if", "match", "var", "variable", "import", "external", "internal", "call", "default"
+        };
+        for (String start : starts) {
+            if (content.regionMatches(cursor, start, 0, start.length())
+                    && isIdentifierPart(content, cursor + start.length()) == false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Optional<ParseFailureDescription> describeMissingIfConditionClosingParenthesis(

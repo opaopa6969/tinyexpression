@@ -16,9 +16,11 @@ class CalculatorErrorCatalogMappingTest {
     }
 
     @Test
-    void mapsIfEmptyConditionToTe011() throws Exception {
+    void mapsIfEmptyConditionToTe011AndVarMissingSemicolonToTe006() throws Exception {
         String expression = "if(){1}else{0}";
         assertEquals("TE011", resolveCatalogCode(expression));
+        String missingSemicolon = "var $input as string set if not exists 'n'\nif(true){1}else{0}";
+        assertEquals("TE006", resolveCatalogCode(missingSemicolon));
     }
 
     private String resolveCatalogCode(String content) throws Exception {
