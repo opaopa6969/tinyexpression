@@ -258,7 +258,7 @@ Progress snapshot (2026-02-27):
   - emits `[TE021] ...` diagnostics with closest-candidate hint (`候補: ...`) and propagates `Diagnostic.code` via catalog-prefix extraction.
 - quick fix integration expanded:
   - `TE021`: rename unknown method to suggested candidate (`候補: ...`) as replacement edit.
-  - `TE023`: operator/notation quick fixes for `&& -> &`, `|| -> |`, and `$method(...)` -> `method(...)` (remove leading `$`).
+  - `TE023`: operator/notation quick fixes for `&& -> &`, `|| -> |`, `$method(...)` -> `method(...)` (remove leading `$`), and missing RHS after `&`/`|` (insert `true`).
 - unresolved:
   - full-precision semantic validation still has gaps (advanced `TE011` boolean-shape validation / advanced `TE015` signature validation / advanced `TE021`/`TE022`/`TE023` context validation beyond lightweight heuristics).
   - `TE001` / `TE012`: **N/A (not supported by design)**.

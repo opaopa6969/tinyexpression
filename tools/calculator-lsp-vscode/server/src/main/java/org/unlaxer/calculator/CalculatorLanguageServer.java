@@ -2271,6 +2271,22 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                         addQuickFix(actions, uri, diagnostic, edit, "$ を除去してメソッド呼び出しに修正");
                     }
                 }
+                return;
+            }
+
+            char current = content.charAt(offset);
+            if (current == '&' || current == '|') {
+                int rhs = skipWhitespaceForward(content, offset + 1);
+                boolean missingRhs = rhs >= content.length();
+                if (missingRhs == false) {
+                    char rhsChar = content.charAt(rhs);
+                    missingRhs = rhsChar == ')' || rhsChar == '}' || rhsChar == ';' || rhsChar == ',';
+                }
+                if (missingRhs) {
+                    Position insertAt = server.offsetToPosition(content, offset + 1);
+                    TextEdit edit = new TextEdit(new Range(insertAt, insertAt), " true");
+                    addQuickFix(actions, uri, diagnostic, edit, "演算子の右辺に true を補完");
+                }
             }
         }
 
