@@ -80,6 +80,27 @@ class CalculatorErrorCatalogMappingTest {
                 }
                 """;
         assertEquals("TE013", resolveCatalogCode(missingArrowRhs));
+        String withJavaFenceAndMissingBlockOpen = """
+                ```java:CheckDigits
+                import org.unlaxer.tinyexpression.CalculationContext;
+                public class CheckDigits{
+                  public boolean check(CalculationContext c,String target){
+                    return target.matches("\\\\d+");
+                  }
+                }
+                ```
+                import CheckDigits#check as checkDigits;
+                var $input as string set if not exists 'not number' description='入力値';
+                if(external returning as boolean checkDigits($input))
+                  1
+                }else{
+                  match{
+                    true -> 1,
+                    default -> 0
+                  }
+                }
+                """;
+        assertEquals("TE010", resolveCatalogCode(withJavaFenceAndMissingBlockOpen));
     }
 
     @Test

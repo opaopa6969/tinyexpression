@@ -809,75 +809,76 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             String content,
             int defaultOffset,
             Object failureDiagnostics) {
+        String heuristicContent = maskFencedCodeBlocks(content);
         Optional<ParseFailureDescription> catalogSyntaxIssue =
-                describeCatalogSpecificSyntaxIssues(content, defaultOffset);
+                describeCatalogSpecificSyntaxIssues(heuristicContent, defaultOffset);
         if (catalogSyntaxIssue.isPresent()) {
             return catalogSyntaxIssue.get();
         }
         Optional<ParseFailureDescription> ifConditionIssue =
-                describeIfConditionIssue(content, defaultOffset);
+                describeIfConditionIssue(heuristicContent, defaultOffset);
         if (ifConditionIssue.isPresent()) {
             return ifConditionIssue.get();
         }
         Optional<ParseFailureDescription> minMaxArityIssue =
-                describeMinMaxArityIssue(content, defaultOffset, List.of());
+                describeMinMaxArityIssue(heuristicContent, defaultOffset, List.of());
         if (minMaxArityIssue.isPresent()) {
             return minMaxArityIssue.get();
         }
         Optional<ParseFailureDescription> operatorNotationIssue =
-                describeOperatorNotationIssue(content, defaultOffset);
+                describeOperatorNotationIssue(heuristicContent, defaultOffset);
         if (operatorNotationIssue.isPresent()) {
             return operatorNotationIssue.get();
         }
         Optional<ParseFailureDescription> globalMissingIfElseBlockOpenFallback =
-                describeMissingIfElseBlockOpeningCurlyBrace(content);
+                describeMissingIfElseBlockOpeningCurlyBrace(heuristicContent);
         if (globalMissingIfElseBlockOpenFallback.isPresent()) {
             return globalMissingIfElseBlockOpenFallback.get();
         }
         Optional<ParseFailureDescription> globalMissingArrowRhsFallback =
-                describeMissingExpressionAfterArrowAnywhere(content);
+                describeMissingExpressionAfterArrowAnywhere(heuristicContent);
         if (globalMissingArrowRhsFallback.isPresent()) {
             return globalMissingArrowRhsFallback.get();
         }
         Optional<ParseFailureDescription> globalMissingBlockOpen =
-                describeMissingBlockOpeningCurlyBrace(content, content.length(), List.of("'{'"));
+                describeMissingBlockOpeningCurlyBrace(heuristicContent, heuristicContent.length(), List.of("'{'"));
         if (globalMissingBlockOpen.isPresent()) {
             return globalMissingBlockOpen.get();
         }
         Optional<ParseFailureDescription> globalMissingMatchOpen =
-                describeMissingMatchOpeningCurlyBrace(content, content.length());
+                describeMissingMatchOpeningCurlyBrace(heuristicContent, heuristicContent.length());
         if (globalMissingMatchOpen.isPresent()) {
             return globalMissingMatchOpen.get();
         }
         Optional<ParseFailureDescription> globalMissingMatchClose =
-                describeMissingMatchClosingCurlyBrace(content, content.length());
+                describeMissingMatchClosingCurlyBrace(heuristicContent, heuristicContent.length());
         if (globalMissingMatchClose.isPresent()) {
             return globalMissingMatchClose.get();
         }
         Optional<ParseFailureDescription> globalMissingBraceBeforeElse =
-                describeMissingClosingCurlyBraceBeforeElse(content, content.length());
+                describeMissingClosingCurlyBraceBeforeElse(heuristicContent, heuristicContent.length());
         if (globalMissingBraceBeforeElse.isPresent()) {
             return globalMissingBraceBeforeElse.get();
         }
         Optional<ParseFailureDescription> globalMissingCloseBrace =
-                describeMissingGeneralClosingCurlyBrace(content, content.length());
+                describeMissingGeneralClosingCurlyBrace(heuristicContent, heuristicContent.length());
         if (globalMissingCloseBrace.isPresent()) {
             return globalMissingCloseBrace.get();
         }
         if (failureHasFailureCandidate(failureDiagnostics)) {
-            int start = Math.max(0, Math.min(content.length(), failureFarthestOffset(failureDiagnostics)));
+            int start = Math.max(0, Math.min(heuristicContent.length(), failureFarthestOffset(failureDiagnostics)));
             Optional<ParseFailureDescription> byExpected =
                     describeFromExpectedHints(
-                            content,
+                            heuristicContent,
                             start,
                             failureExpectedHintCandidates(failureDiagnostics),
                             failureExpectedParsers(failureDiagnostics));
             if (byExpected.isPresent()) {
                 return byExpected.get();
             }
-            Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(content);
+            Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(heuristicContent);
             if (missingSemicolonByLine.isPresent()
-                    && isLikelyStatementStartAfterOffset(content, missingSemicolonByLine.get())) {
+                    && isLikelyStatementStartAfterOffset(heuristicContent, missingSemicolonByLine.get())) {
                 return new ParseFailureDescription(
                         missingSemicolonByLine.get(),
                         "missing ';' after var declaration");
@@ -886,30 +887,31 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             String stackHint = stackDepth <= 0 ? "" : " near parser stack depth=" + stackDepth;
             return new ParseFailureDescription(start, "parse failed" + stackHint);
         }
-        Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(content);
+        Optional<Integer> missingSemicolonByLine = detectMissingSemicolonAfterVarDeclarationByLine(heuristicContent);
         if (missingSemicolonByLine.isPresent()
-                && isLikelyStatementStartAfterOffset(content, missingSemicolonByLine.get())) {
+                && isLikelyStatementStartAfterOffset(heuristicContent, missingSemicolonByLine.get())) {
             return new ParseFailureDescription(
                     missingSemicolonByLine.get(),
                     "missing ';' after var declaration");
         }
-        Optional<Integer> missingCommaBetweenCases = detectMissingCommaBetweenMatchCasesOffset(content, content.length());
+        Optional<Integer> missingCommaBetweenCases =
+                detectMissingCommaBetweenMatchCasesOffset(heuristicContent, heuristicContent.length());
         if (missingCommaBetweenCases.isPresent()) {
             return new ParseFailureDescription(
                     missingCommaBetweenCases.get(),
                     "missing ',' between match cases");
         }
         Optional<ParseFailureDescription> globalMissingIfElseBlockOpen =
-                describeMissingIfElseBlockOpeningCurlyBrace(content);
+                describeMissingIfElseBlockOpeningCurlyBrace(heuristicContent);
         if (globalMissingIfElseBlockOpen.isPresent()) {
             return globalMissingIfElseBlockOpen.get();
         }
         Optional<ParseFailureDescription> globalMissingArrowRhs =
-                describeMissingExpressionAfterArrowAnywhere(content);
+                describeMissingExpressionAfterArrowAnywhere(heuristicContent);
         if (globalMissingArrowRhs.isPresent()) {
             return globalMissingArrowRhs.get();
         }
-        return detectMissingCommaBeforeDefaultOffset(content)
+        return detectMissingCommaBeforeDefaultOffset(heuristicContent)
                 .map(offset -> new ParseFailureDescription(
                         offset,
                         "missing ',' before default case in match expression"))
@@ -923,8 +925,9 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int startOffset,
             List<Object> expectedHintCandidates,
             List<String> expectedHints) {
+        String heuristicContent = maskFencedCodeBlocks(content);
         Optional<ParseFailureDescription> catalogSyntaxIssue =
-                describeCatalogSpecificSyntaxIssues(content, startOffset);
+                describeCatalogSpecificSyntaxIssues(heuristicContent, startOffset);
         if (catalogSyntaxIssue.isPresent()) {
             return catalogSyntaxIssue;
         }
@@ -943,17 +946,17 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return Optional.empty();
         }
         Optional<ParseFailureDescription> ifConditionIssueHint =
-                describeIfConditionIssue(content, startOffset);
+                describeIfConditionIssue(heuristicContent, startOffset);
         if (ifConditionIssueHint.isPresent()) {
             return ifConditionIssueHint;
         }
         Optional<ParseFailureDescription> minMaxArityIssueHint =
-                describeMinMaxArityIssue(content, startOffset, mergedHints);
+                describeMinMaxArityIssue(heuristicContent, startOffset, mergedHints);
         if (minMaxArityIssueHint.isPresent()) {
             return minMaxArityIssueHint;
         }
         Optional<ParseFailureDescription> operatorNotationIssueHint =
-                describeOperatorNotationIssue(content, startOffset);
+                describeOperatorNotationIssue(heuristicContent, startOffset);
         if (operatorNotationIssueHint.isPresent()) {
             return operatorNotationIssueHint;
         }
@@ -962,43 +965,43 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 .anyMatch(h -> tokenEquals(h, "default")
                         || (h != null && h.endsWith("DefaultCaseFactorParser")));
         Optional<ParseFailureDescription> missingMatchOpenBraceHint =
-                describeMissingMatchOpeningCurlyBrace(content, startOffset);
+                describeMissingMatchOpeningCurlyBrace(heuristicContent, startOffset);
         if (missingMatchOpenBraceHint.isPresent()) {
             return missingMatchOpenBraceHint;
         }
         Optional<ParseFailureDescription> missingMatchCloseBraceHint =
-                describeMissingMatchClosingCurlyBrace(content, startOffset);
+                describeMissingMatchClosingCurlyBrace(heuristicContent, startOffset);
         if (missingMatchCloseBraceHint.isPresent()) {
             return missingMatchCloseBraceHint;
         }
         Optional<ParseFailureDescription> missingExpressionAfterArrowHint =
-                describeMissingExpressionAfterArrowInMatch(content, startOffset);
+                describeMissingExpressionAfterArrowInMatch(heuristicContent, startOffset);
         if (missingExpressionAfterArrowHint.isPresent()) {
             return missingExpressionAfterArrowHint;
         }
         Optional<ParseFailureDescription> trailingCommaBeforeMatchCloseBraceHint =
-                describeTrailingCommaBeforeMatchCloseBrace(content, startOffset);
+                describeTrailingCommaBeforeMatchCloseBrace(heuristicContent, startOffset);
         if (trailingCommaBeforeMatchCloseBraceHint.isPresent()) {
             return trailingCommaBeforeMatchCloseBraceHint;
         }
         Optional<Integer> missingCommaBetweenCasesOffset =
-                detectMissingCommaBetweenMatchCasesOffset(content, startOffset);
+                detectMissingCommaBetweenMatchCasesOffset(heuristicContent, startOffset);
         if (missingCommaBetweenCasesOffset.isPresent()) {
             return Optional.of(new ParseFailureDescription(
                     missingCommaBetweenCasesOffset.get(),
                     "missing ',' between match cases"));
         }
         Optional<ParseFailureDescription> missingBraceBeforeElseHint =
-                describeMissingClosingCurlyBraceBeforeElse(content, startOffset);
+                describeMissingClosingCurlyBraceBeforeElse(heuristicContent, startOffset);
         if (missingBraceBeforeElseHint.isPresent()) {
             return missingBraceBeforeElseHint;
         }
         Optional<ParseFailureDescription> missingGeneralCloseBraceHint =
-                describeMissingGeneralClosingCurlyBrace(content, startOffset);
+                describeMissingGeneralClosingCurlyBrace(heuristicContent, startOffset);
         if (missingGeneralCloseBraceHint.isPresent()) {
             return missingGeneralCloseBraceHint;
         }
-        Optional<Integer> missingCommaBeforeDefaultOffset = detectMissingCommaBeforeDefaultOffset(content);
+        Optional<Integer> missingCommaBeforeDefaultOffset = detectMissingCommaBeforeDefaultOffset(heuristicContent);
         if (expectsComma && expectsDefaultCase && missingCommaBeforeDefaultOffset.isPresent()) {
             return Optional.of(new ParseFailureDescription(
                     startOffset,
@@ -1008,17 +1011,17 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return Optional.of(new ParseFailureDescription(startOffset, "missing ','"));
         }
         Optional<ParseFailureDescription> variableHint =
-                describeUndeclaredVariableHint(content, startOffset, mergedHints);
+                describeUndeclaredVariableHint(heuristicContent, startOffset, mergedHints);
         if (variableHint.isPresent()) {
             return variableHint;
         }
         Optional<ParseFailureDescription> missingSemicolonHint =
-                describeMissingSemicolonAfterVarDeclaration(content, startOffset, mergedHints);
+                describeMissingSemicolonAfterVarDeclaration(heuristicContent, startOffset, mergedHints);
         if (missingSemicolonHint.isPresent()) {
             return missingSemicolonHint;
         }
         Optional<ParseFailureDescription> missingBlockBraceHint =
-                describeMissingBlockOpeningCurlyBrace(content, startOffset, mergedHints);
+                describeMissingBlockOpeningCurlyBrace(heuristicContent, startOffset, mergedHints);
         if (missingBlockBraceHint.isPresent()) {
             return missingBlockBraceHint;
         }
@@ -1079,6 +1082,30 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return getOrElseIssue;
         }
         return describeBareIdentifierIssue(content, startOffset);
+    }
+
+    private String maskFencedCodeBlocks(String content) {
+        if (content == null || content.isEmpty() || content.indexOf("```") < 0) {
+            return content;
+        }
+        char[] chars = content.toCharArray();
+        boolean inFence = false;
+        int i = 0;
+        while (i < chars.length) {
+            if (i + 2 < chars.length && chars[i] == '`' && chars[i + 1] == '`' && chars[i + 2] == '`') {
+                chars[i] = ' ';
+                chars[i + 1] = ' ';
+                chars[i + 2] = ' ';
+                inFence = !inFence;
+                i += 3;
+                continue;
+            }
+            if (inFence && chars[i] != '\n' && chars[i] != '\r') {
+                chars[i] = ' ';
+            }
+            i++;
+        }
+        return new String(chars);
     }
 
     private Optional<ParseFailureDescription> describeBareIdentifierIssue(String content, int startOffset) {
