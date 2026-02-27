@@ -49,18 +49,18 @@ public class StringContentsTest extends ParserTestBase{
 		try(ParseContext parseContext = create(d(source)).get()){
 			Parsed parsed = parser.parse(parseContext);
 			Token rootToken = parsed.getRootToken();
-			String contents = QuotedParser.contents(rootToken);
-			assertEquals(source, contents);
+			Object contents = QuotedParser.contents(rootToken);
+			assertEquals(source, contents == null ? null : contents.toString());
 		}
 	}
-	
+
 	static void assertSContents(String source , Parser parser) {
-		
+
 		try(ParseContext parseContext = create(s(source)).get()){
 			Parsed parsed = parser.parse(parseContext);
 			Token rootToken = parsed.getRootToken();
-			String contents = QuotedParser.contents(rootToken);
-			assertEquals(source, contents);
+			Object contents = QuotedParser.contents(rootToken);
+			assertEquals(source, contents == null ? null : contents.toString());
 		}
 	}
 }

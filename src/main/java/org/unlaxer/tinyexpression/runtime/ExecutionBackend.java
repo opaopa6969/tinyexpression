@@ -7,7 +7,9 @@ public enum ExecutionBackend {
   JAVA_CODE,
   JAVA_CODE_LEGACY_ASTCREATOR,
   AST_EVALUATOR,
-  DSL_JAVA_CODE;
+  DSL_JAVA_CODE,
+  P4_AST_EVALUATOR,
+  P4_DSL_JAVA_CODE;
 
   public String runtimeModeMarker() {
     return switch (this) {
@@ -15,6 +17,8 @@ public enum ExecutionBackend {
       case JAVA_CODE_LEGACY_ASTCREATOR -> "legacy-astcreator";
       case AST_EVALUATOR -> "ast-evaluator";
       case DSL_JAVA_CODE -> "dsl-javacode";
+      case P4_AST_EVALUATOR -> "p4-ast";
+      case P4_DSL_JAVA_CODE -> "p4-dsl-javacode";
     };
   }
 
@@ -24,11 +28,13 @@ public enum ExecutionBackend {
       case JAVA_CODE_LEGACY_ASTCREATOR -> "legacy-javacode-astcreator";
       case AST_EVALUATOR -> "ast-evaluator";
       case DSL_JAVA_CODE -> "legacy-javacode-bridge";
+      case P4_AST_EVALUATOR -> "p4-ast-evaluator";
+      case P4_DSL_JAVA_CODE -> "p4-dsl-javacode";
     };
   }
 
   public boolean bridgeImplementation() {
-    return this == DSL_JAVA_CODE;
+    return this == DSL_JAVA_CODE || this == P4_DSL_JAVA_CODE;
   }
 
   public static Optional<ExecutionBackend> fromRuntimeMode(String runtimeMode) {
@@ -51,6 +57,12 @@ public enum ExecutionBackend {
     }
     if ("dsl-javacode".equals(normalized) || "dsl-java-code".equals(normalized)) {
       return Optional.of(DSL_JAVA_CODE);
+    }
+    if ("p4-ast".equals(normalized) || "p4-ast-evaluator".equals(normalized)) {
+      return Optional.of(P4_AST_EVALUATOR);
+    }
+    if ("p4-dsl-javacode".equals(normalized) || "p4-dsl-java-code".equals(normalized)) {
+      return Optional.of(P4_DSL_JAVA_CODE);
     }
     return parse(runtimeMode);
   }
@@ -81,6 +93,12 @@ public enum ExecutionBackend {
     }
     if ("ASTEVALUATOR".equals(compact)) {
       return Optional.of(AST_EVALUATOR);
+    }
+    if ("P4ASTEVALUATOR".equals(compact)) {
+      return Optional.of(P4_AST_EVALUATOR);
+    }
+    if ("P4DSLJAVACODE".equals(compact)) {
+      return Optional.of(P4_DSL_JAVA_CODE);
     }
     try {
       return Optional.of(ExecutionBackend.valueOf(normalized));

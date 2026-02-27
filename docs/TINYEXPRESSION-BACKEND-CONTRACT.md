@@ -27,6 +27,16 @@ Last updated: 2026-02-26
    - role: DSL JavaCode seam (hybrid: partial native emitter + legacy bridge fallback)
    - change policy: migration target for expanding native DSL Java emitter coverage
 
+5. `P4_AST_EVALUATOR`
+   - class family: `org.unlaxer.tinyexpression.evaluator.p4.P4AstEvaluatorCalculator`
+   - role: UBNF-generated type-safe parser (P4 grammar) + AST_EVALUATOR execution chain
+   - change policy: expand P4 grammar coverage; use as reference for type-safe LSP/DAP
+
+6. `P4_DSL_JAVA_CODE`
+   - class family: `org.unlaxer.tinyexpression.evaluator.p4.P4DslJavaCodeCalculator`
+   - role: UBNF-generated type-safe parser (P4 grammar) + DSL_JAVA_CODE execution chain
+   - change policy: expand P4 grammar coverage; bridge to fully generated DSL evaluator
+
 ## 2. Selection Contract
 
 1. formula metadata:
@@ -36,7 +46,10 @@ Last updated: 2026-02-26
    - `legacy-astcreator` / `ootc` -> `JAVA_CODE_LEGACY_ASTCREATOR`
    - `ast` -> `AST_EVALUATOR`
    - `dsl-javacode` -> `DSL_JAVA_CODE`
-3. wiring:
+3. runtime aliases:
+   - `p4-ast` / `p4-ast-evaluator` -> `P4_AST_EVALUATOR`
+   - `p4-dsl-javacode` / `p4-dsl-java-code` -> `P4_DSL_JAVA_CODE`
+4. wiring:
    - `org.unlaxer.tinyexpression.runtime.ExecutionBackend`
    - `org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry`
    - `org.unlaxer.tinyexpression.loader.FormulaInfoParser`
@@ -44,13 +57,16 @@ Last updated: 2026-02-26
 ## 3. Parity Contract
 
 1. supported corpus:
-   - all four backends must return equivalent values
+   - all six backends must return equivalent values
    - `AST_EVALUATOR` must avoid `javacode-fallback`
+   - `P4_AST_EVALUATOR` and `P4_DSL_JAVA_CODE` must return equivalent values to the existing four
+   - Known exception: formulas using syntax not yet covered by the P4 grammar will use fallback paths
 2. extracted corpus:
    - all four backends must return equivalent values
    - executed/non-fallback thresholds must pass
 3. DAP probe:
-   - `parity.*` variables and `parity.equalAll` must reflect all four backends
+   - `parity.*` variables and `parity.equalAll` must reflect all six backends
+   - parity probe includes all six backends: parity.P4_AST_EVALUATOR.* and parity.P4_DSL_JAVA_CODE.* added
 
 ## 4. Runtime Marker Contract
 

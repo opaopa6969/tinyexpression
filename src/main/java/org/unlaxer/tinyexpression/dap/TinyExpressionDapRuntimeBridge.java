@@ -68,6 +68,8 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_astEvaluatorGeneratedAstNodeCount", vars);
       copyMarker(calculator, "_astEvaluatorGeneratedEmbeddedBridgeUsed", vars);
       copyMappedAstType(calculator, vars);
+      copyMarker(calculator, "_tinyP4ParserUsed", vars);
+      copyMarker(calculator, "_tinyP4AstNodeType", vars);
       collectParityProbe(formulaSource, classLoader, vars);
     } catch (Throwable createError) {
       vars.put("bridgeError", truncate(
@@ -125,11 +127,15 @@ public final class TinyExpressionDapRuntimeBridge {
     String legacyAstCreatorNormalized = null;
     String astNormalized = null;
     String dslNormalized = null;
+    String p4AstNormalized = null;
+    String p4DslNormalized = null;
     for (ExecutionBackend backend : new ExecutionBackend[] {
         ExecutionBackend.JAVA_CODE,
         ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR,
         ExecutionBackend.AST_EVALUATOR,
-        ExecutionBackend.DSL_JAVA_CODE
+        ExecutionBackend.DSL_JAVA_CODE,
+        ExecutionBackend.P4_AST_EVALUATOR,
+        ExecutionBackend.P4_DSL_JAVA_CODE
     }) {
       String prefix = "parity." + backend.name() + ".";
       try {
@@ -153,6 +159,10 @@ public final class TinyExpressionDapRuntimeBridge {
           astNormalized = normalized;
         } else if (backend == ExecutionBackend.DSL_JAVA_CODE) {
           dslNormalized = normalized;
+        } else if (backend == ExecutionBackend.P4_AST_EVALUATOR) {
+          p4AstNormalized = normalized;
+        } else if (backend == ExecutionBackend.P4_DSL_JAVA_CODE) {
+          p4DslNormalized = normalized;
         }
       } catch (Throwable error) {
         vars.put(prefix + "error", truncate(
@@ -164,11 +174,21 @@ public final class TinyExpressionDapRuntimeBridge {
         && astNormalized != null
         && dslNormalized != null;
     vars.put("parity.allBackendsEvaluated", String.valueOf(parityComplete));
+    vars.put("parity.p4BackendsEvaluated", String.valueOf(
+        p4AstNormalized != null && p4DslNormalized != null));
     if (parityComplete) {
       vars.put("parity.equalAll", String.valueOf(
           Objects.equals(legacyNormalized, legacyAstCreatorNormalized)
               && Objects.equals(legacyNormalized, astNormalized)
               && Objects.equals(legacyNormalized, dslNormalized)));
+    }
+    if (parityComplete && p4AstNormalized != null && p4DslNormalized != null) {
+      vars.put("parity.equalAllWithP4", String.valueOf(
+          Objects.equals(legacyNormalized, legacyAstCreatorNormalized)
+              && Objects.equals(legacyNormalized, astNormalized)
+              && Objects.equals(legacyNormalized, dslNormalized)
+              && Objects.equals(legacyNormalized, p4AstNormalized)
+              && Objects.equals(legacyNormalized, p4DslNormalized)));
     }
   }
 

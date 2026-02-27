@@ -9,7 +9,6 @@ public class CommaParser extends SingleCharacterParser {
     return target == ',';
   }
 
-  @Override
   public Optional<String> expectedDisplayText() {
     return Optional.of("','");
   }

@@ -1,0 +1,104 @@
+{
+  "name": "tinyexpression-p4-lsp",
+  "displayName": "TinyExpression P4 LSP/DAP",
+  "description": "Type-safe LSP/DAP for TinyExpression (P4, UBNF-generated)",
+  "version": "0.1.0",
+  "publisher": "unlaxer",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Programming Languages", "Debuggers"],
+  "activationEvents": ["onLanguage:tinyexpressionP4"],
+  "main": "./out/extension",
+  "contributes": {
+    "languages": [
+      {
+        "id": "tinyexpressionP4",
+        "aliases": ["TinyExpression P4", "tinyexpressionp4"],
+        "extensions": [".tinyexp"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "tinyexpressionP4",
+        "scopeName": "source.tinyexpression",
+        "path": "./syntaxes/tinyexpression.tmLanguage.json"
+      }
+    ],
+    "debuggers": [
+      {
+        "type": "tinyexpressionP4",
+        "label": "TinyExpression P4 Debug",
+        "program": "./out/extension",
+        "runtime": "node",
+        "configurationAttributes": {
+          "launch": {
+            "required": ["formulaSource"],
+            "properties": {
+              "formulaSource": {
+                "type": "string",
+                "description": "The TinyExpression formula source to debug."
+              },
+              "runtimeMode": {
+                "type": "string",
+                "enum": ["p4-ast", "p4-dsl-javacode"],
+                "default": "p4-ast",
+                "description": "P4 execution backend."
+              }
+            }
+          }
+        },
+        "initialConfigurations": [
+          {
+            "type": "tinyexpressionP4",
+            "request": "launch",
+            "name": "Debug TinyExpression P4",
+            "formulaSource": "${file}",
+            "runtimeMode": "p4-ast"
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "TinyExpression P4 LSP",
+      "properties": {
+        "tinyExpressionP4Lsp.server.javaPath": {
+          "type": "string",
+          "default": "java",
+          "description": "Path to Java executable (Java 21+ required)."
+        },
+        "tinyExpressionP4Lsp.server.jarPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to tinyexpression-p4-lsp-server.jar (leave empty to use bundled)."
+        },
+        "tinyExpressionP4Lsp.server.jvmArgs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "description": "Extra JVM arguments."
+        },
+        "tinyExpressionP4Lsp.runtimeMode": {
+          "type": "string",
+          "enum": ["p4-ast", "p4-dsl-javacode"],
+          "default": "p4-ast",
+          "description": "P4 execution backend for formula evaluation."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^5.0.0",
+    "@vscode/vsce": "^2.22.0"
+  }
+}

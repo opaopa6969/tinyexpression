@@ -1,0 +1,11 @@
+.vscode/**
+.vscode-test/**
+src/**
+grammar/**
+!grammar/tinyexpression-p4.ubnf
+node_modules/**
+!node_modules/vscode-languageclient/**
+target/**
+*.vsix
+pom.xml
+tsconfig.json

@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import java.util.Optional;
 
 import org.junit.Test;
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.EnclosureDirection;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
@@ -60,7 +61,7 @@ public abstract class TokenTest {
 	*/
 
 		String formula = "(1+1)/3+sin(30)";
-		int position = formula.indexOf("1");
+		CodePointIndex position = new CodePointIndex(formula.indexOf("1"));
 		
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		
@@ -122,7 +123,7 @@ public abstract class TokenTest {
 	@Test
 	public void testEnclosureSelectWithInvalid() {
 		String formula = "(1+1)/3ax+sign(30)";
-		int position = formula.indexOf("a");
+		CodePointIndex position = new CodePointIndex(formula.indexOf("a"));
 		
 		ParsersSpecifier enclosurematchers = CalculatorEditableLineModel.enclosureMatchers;
 		

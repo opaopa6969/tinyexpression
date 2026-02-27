@@ -10,6 +10,8 @@ import org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.evaluator.javacode.legacy.LegacyAstCreatorJavaCodeCalculator;
+import org.unlaxer.tinyexpression.evaluator.p4.P4AstEvaluatorCalculator;
+import org.unlaxer.tinyexpression.evaluator.p4.P4DslJavaCodeCalculator;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
 public final class CalculatorCreatorRegistry {
@@ -44,6 +46,12 @@ public final class CalculatorCreatorRegistry {
     }
     if (backend == ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR) {
       return legacyAstCreatorJavaCodeCreator();
+    }
+    if (backend == ExecutionBackend.P4_AST_EVALUATOR) {
+      return p4AstEvaluatorCreator();
+    }
+    if (backend == ExecutionBackend.P4_DSL_JAVA_CODE) {
+      return p4DslJavaCodeCreator();
     }
     return javaCodeCreator();
   }
@@ -113,6 +121,56 @@ public final class CalculatorCreatorRegistry {
             new DslJavaCodeCalculator(source, javaCode, className, specifiedExpressionTypes,
                 byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
             ExecutionBackend.DSL_JAVA_CODE);
+      }
+    };
+  }
+
+  public static CalculatorCreator p4AstEvaluatorCreator() {
+    return new CalculatorCreator() {
+
+      @Override
+      public Calculator create(Source source, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        return markExecutionBackend(
+            new P4AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader),
+            ExecutionBackend.P4_AST_EVALUATOR);
+      }
+
+      @Override
+      public Calculator create(Source source, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        return markExecutionBackend(
+            new P4AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
+                byteCode, byteCodeHash, classNameAndByteCodeList, classLoader),
+            ExecutionBackend.P4_AST_EVALUATOR);
+      }
+    };
+  }
+
+  public static CalculatorCreator p4DslJavaCodeCreator() {
+    return new CalculatorCreator() {
+
+      @Override
+      public Calculator create(Source source, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+        Calculator calc = new P4DslJavaCodeCalculator(source, className, specifiedExpressionTypes, classLoader);
+        markExecutionBackend(calc, ExecutionBackend.P4_DSL_JAVA_CODE);
+        if (calc instanceof P4DslJavaCodeCalculator p4 && p4.nativeEmitterUsed()) {
+          calc.setObject("_tinyExecutionImplementation", "p4-dsl-javacode-native");
+          calc.setObject("_tinyExecutionBridgeImplementation", false);
+        }
+        return calc;
+      }
+
+      @Override
+      public Calculator create(Source source, String javaCode, String className,
+          SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+          List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+        Calculator calc = new P4DslJavaCodeCalculator(source, javaCode, className, specifiedExpressionTypes,
+            byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+        markExecutionBackend(calc, ExecutionBackend.P4_DSL_JAVA_CODE);
+        return calc;
       }
     };
   }
