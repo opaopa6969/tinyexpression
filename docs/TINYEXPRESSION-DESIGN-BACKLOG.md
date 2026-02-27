@@ -303,7 +303,8 @@ Progress snapshot (2026-02-27):
   - LSP quick fix now supports TE022 variable rename (`候補: $...`).
 - reduced diagnostic noise for structural mismatch fallback:
   - TE010 messages no longer append parser detail tail by default,
-  - missing-semicolon (`TE006`) detection for `var` declarations now includes a line-based fallback path when parse start offset rewinds to the file head.
+  - missing-semicolon (`TE006`) detection for `var` declarations now includes a line-based fallback path when parse start offset rewinds to the file head,
+  - global structural fallback now checks missing block/match braces (`expected '{'` / `expected '}'`) before generic `unexpected characters`.
 - added converter script:
   - `tools/calculator-lsp-vscode/scripts/convert-legacy-catalog-to-canonical.sh`,
   - `npm run catalog:convert -- <legacy-files...>`.

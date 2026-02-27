@@ -723,6 +723,31 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         if (operatorNotationIssue.isPresent()) {
             return operatorNotationIssue.get();
         }
+        Optional<ParseFailureDescription> globalMissingBlockOpen =
+                describeMissingBlockOpeningCurlyBrace(content, content.length(), List.of("'{'"));
+        if (globalMissingBlockOpen.isPresent()) {
+            return globalMissingBlockOpen.get();
+        }
+        Optional<ParseFailureDescription> globalMissingMatchOpen =
+                describeMissingMatchOpeningCurlyBrace(content, content.length());
+        if (globalMissingMatchOpen.isPresent()) {
+            return globalMissingMatchOpen.get();
+        }
+        Optional<ParseFailureDescription> globalMissingMatchClose =
+                describeMissingMatchClosingCurlyBrace(content, content.length());
+        if (globalMissingMatchClose.isPresent()) {
+            return globalMissingMatchClose.get();
+        }
+        Optional<ParseFailureDescription> globalMissingBraceBeforeElse =
+                describeMissingClosingCurlyBraceBeforeElse(content, content.length());
+        if (globalMissingBraceBeforeElse.isPresent()) {
+            return globalMissingBraceBeforeElse.get();
+        }
+        Optional<ParseFailureDescription> globalMissingCloseBrace =
+                describeMissingGeneralClosingCurlyBrace(content, content.length());
+        if (globalMissingCloseBrace.isPresent()) {
+            return globalMissingCloseBrace.get();
+        }
         if (failureHasFailureCandidate(failureDiagnostics)) {
             int start = Math.max(0, Math.min(content.length(), failureFarthestOffset(failureDiagnostics)));
             Optional<ParseFailureDescription> byExpected =
