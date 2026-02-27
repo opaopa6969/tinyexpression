@@ -224,6 +224,9 @@ Progress snapshot (2026-02-27):
   - `TE017` variable declaration invalid,
   - `TE018` type hint position invalid,
   - `TE019` get/orElse syntax invalid.
+- TE021/TE023 false-positive reduction:
+  - unknown-method scan now ignores string/comment regions,
+  - operator/notation (`TE023`) scan now ignores string/comment regions for `&&`, `||`, and `$method(...)` probes.
 - LSP now sets `Diagnostic.code = TE###` and emits catalog-style user message for mapped parse failures.
 - quick fix implemented for parser-safe bracket/semicolon cases:
   - `TE004` => insert `)`

@@ -55,8 +55,8 @@ public final class CalculatorAstAnalyzer {
     public AnalysisResult analyze(String content, CalculatorLanguageServer.ParseResult parseResult) {
         List<AstError> errors = new ArrayList<>();
         errors.addAll(findParenthesisErrors(content));
-        errors.addAll(findUnknownMethodErrors(content));
         boolean[] ignoredMask = buildIgnoredMask(content);
+        errors.addAll(findUnknownMethodErrors(content, ignoredMask));
         List<VariableReference> variableReferences = collectVariableReferences(content, ignoredMask);
         errors.addAll(findPartialKeyVariableErrors(content, variableReferences));
         errors.addAll(findUndefinedVariableErrors(content, ignoredMask, variableReferences));
@@ -90,10 +90,10 @@ public final class CalculatorAstAnalyzer {
         return errors;
     }
 
-    private List<AstError> findUnknownMethodErrors(String content) {
+    private List<AstError> findUnknownMethodErrors(String content, boolean[] ignoredMask) {
         Set<String> allowedMethods = new HashSet<>(PARSER_DEFINED_METHODS);
-        allowedMethods.addAll(extractImportAliases(content));
-        allowedMethods.addAll(extractDeclaredMethods(content));
+        allowedMethods.addAll(extractImportAliases(content, ignoredMask));
+        allowedMethods.addAll(extractDeclaredMethods(content, ignoredMask));
 
         List<AstError> errors = new ArrayList<>();
         Set<Integer> reportedOffsets = new HashSet<>();
@@ -101,6 +101,9 @@ public final class CalculatorAstAnalyzer {
         while (matcher.find()) {
             String methodName = matcher.group(1);
             int start = matcher.start(1);
+            if (isIgnoredOffset(ignoredMask, start)) {
+                continue;
+            }
             if (reportedOffsets.contains(start)) {
                 continue;
             }
@@ -364,19 +367,25 @@ public final class CalculatorAstAnalyzer {
 
     private record VariableReference(String name, int startOffset, int endOffset) {}
 
-    private Set<String> extractImportAliases(String content) {
+    private Set<String> extractImportAliases(String content, boolean[] ignoredMask) {
         Set<String> aliases = new HashSet<>();
         Matcher matcher = IMPORT_ALIAS_PATTERN.matcher(content);
         while (matcher.find()) {
+            if (isIgnoredOffset(ignoredMask, matcher.start(1))) {
+                continue;
+            }
             aliases.add(matcher.group(1));
         }
         return aliases;
     }
 
-    private Set<String> extractDeclaredMethods(String content) {
+    private Set<String> extractDeclaredMethods(String content, boolean[] ignoredMask) {
         Set<String> methods = new HashSet<>();
         Matcher matcher = METHOD_DECLARATION_PATTERN.matcher(content);
         while (matcher.find()) {
+            if (isIgnoredOffset(ignoredMask, matcher.start(1))) {
+                continue;
+            }
             methods.add(matcher.group(1));
         }
         return methods;

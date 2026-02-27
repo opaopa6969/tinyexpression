@@ -1247,24 +1247,31 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
     private Optional<ParseFailureDescription> describeOperatorNotationIssue(
             String content,
             int startOffset) {
+        boolean[] ignoredMask = buildIgnoredTextMask(content);
         int offset = Math.max(0, Math.min(content.length(), startOffset));
         int windowStart = Math.max(0, offset - 96);
         int windowEnd = Math.min(content.length(), offset + 96);
-        String window = content.substring(windowStart, windowEnd);
-
-        int andAnd = window.indexOf("&&");
-        if (andAnd >= 0) {
-            return Optional.of(new ParseFailureDescription(
-                    windowStart + andAnd,
-                    "operator or notation invalid: use '&' instead of '&&'"));
-        }
-        int orOr = window.indexOf("||");
-        if (orOr >= 0) {
-            return Optional.of(new ParseFailureDescription(
-                    windowStart + orOr,
-                    "operator or notation invalid: use '|' instead of '||'"));
+        for (int i = windowStart; i + 1 < windowEnd; i++) {
+            if (isIgnoredTextOffset(ignoredMask, i)) {
+                continue;
+            }
+            char current = content.charAt(i);
+            char next = content.charAt(i + 1);
+            if (current == '&' && next == '&') {
+                return Optional.of(new ParseFailureDescription(
+                        i,
+                        "operator or notation invalid: use '&' instead of '&&'"));
+            }
+            if (current == '|' && next == '|') {
+                return Optional.of(new ParseFailureDescription(
+                        i,
+                        "operator or notation invalid: use '|' instead of '||'"));
+            }
         }
         for (int i = windowStart; i < windowEnd; i++) {
+            if (isIgnoredTextOffset(ignoredMask, i)) {
+                continue;
+            }
             char current = content.charAt(i);
             if (current != '&' && current != '|') {
                 continue;
@@ -1285,7 +1292,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                         "operator or notation invalid: missing rhs after boolean operator"));
             }
         }
-        Optional<Integer> dollarMethod = findDollarPrefixedInvocation(content, windowStart, windowEnd);
+        Optional<Integer> dollarMethod = findDollarPrefixedInvocation(content, windowStart, windowEnd, ignoredMask);
         if (dollarMethod.isPresent()) {
             return Optional.of(new ParseFailureDescription(
                     dollarMethod.get(),
@@ -1294,8 +1301,15 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         return Optional.empty();
     }
 
-    private Optional<Integer> findDollarPrefixedInvocation(String content, int windowStart, int windowEnd) {
+    private Optional<Integer> findDollarPrefixedInvocation(
+            String content,
+            int windowStart,
+            int windowEnd,
+            boolean[] ignoredMask) {
         for (int i = windowStart; i < windowEnd; i++) {
+            if (isIgnoredTextOffset(ignoredMask, i)) {
+                continue;
+            }
             if (content.charAt(i) != '$') {
                 continue;
             }
@@ -1318,6 +1332,70 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             }
         }
         return Optional.empty();
+    }
+
+    private boolean[] buildIgnoredTextMask(String content) {
+        boolean[] ignoredMask = new boolean[content.length()];
+        boolean inSingleQuote = false;
+        boolean inLineComment = false;
+        boolean inBlockComment = false;
+        for (int i = 0; i < content.length(); i++) {
+            char current = content.charAt(i);
+            if (inLineComment) {
+                ignoredMask[i] = true;
+                if (current == '\n') {
+                    inLineComment = false;
+                }
+                continue;
+            }
+            if (inBlockComment) {
+                ignoredMask[i] = true;
+                if (current == '*' && i + 1 < content.length() && content.charAt(i + 1) == '/') {
+                    ignoredMask[i + 1] = true;
+                    i++;
+                    inBlockComment = false;
+                }
+                continue;
+            }
+            if (inSingleQuote) {
+                ignoredMask[i] = true;
+                if (current == '\\' && i + 1 < content.length()) {
+                    ignoredMask[i + 1] = true;
+                    i++;
+                    continue;
+                }
+                if (current == '\'') {
+                    inSingleQuote = false;
+                }
+                continue;
+            }
+            if (current == '/' && i + 1 < content.length()) {
+                char next = content.charAt(i + 1);
+                if (next == '/') {
+                    ignoredMask[i] = true;
+                    ignoredMask[i + 1] = true;
+                    i++;
+                    inLineComment = true;
+                    continue;
+                }
+                if (next == '*') {
+                    ignoredMask[i] = true;
+                    ignoredMask[i + 1] = true;
+                    i++;
+                    inBlockComment = true;
+                    continue;
+                }
+            }
+            if (current == '\'') {
+                ignoredMask[i] = true;
+                inSingleQuote = true;
+            }
+        }
+        return ignoredMask;
+    }
+
+    private boolean isIgnoredTextOffset(boolean[] ignoredMask, int offset) {
+        return offset >= 0 && offset < ignoredMask.length && ignoredMask[offset];
     }
 
     private Optional<ParseFailureDescription> describeUndeclaredVariableHint(
