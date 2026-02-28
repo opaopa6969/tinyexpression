@@ -1,5 +1,8 @@
 package org.unlaxer.tinyexpression.lsp.p4;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Strategy for extracting the parseable TinyExpression formula from a document
  * that may contain non-formula content (metadata headers, Markdown fences, etc.).
@@ -95,17 +98,95 @@ public interface DocumentFilter {
   }
 
   /**
+   * Legacy TinyExpression format filter.
+   *
+   * <p>Handles pre-P4 documents that embed constructs not present in the P4
+   * grammar.  The filter rewrites the document in-place (preserving line and
+   * character positions) so the P4 parser sees valid input:
+   *
+   * <ul>
+   *   <li><b>Fenced code blocks</b> — any block whose opening line begins with
+   *       {@code ```} (followed by at least one more character, e.g.
+   *       {@code ```java:Foo}) is replaced line-by-line with spaces until the
+   *       closing {@code ```} line.  Line count is preserved.</li>
+   *   <li><b>Import declarations</b> — lines of the form
+   *       {@code import ...<semicolon>} are replaced with spaces of the same
+   *       length.</li>
+   *   <li><b>External-invocation prefixes</b> — the phrase
+   *       {@code external returning as <type>} (where type is {@code boolean},
+   *       {@code number}, {@code float}, {@code string}, or {@code object})
+   *       is rewritten to {@code call} followed by padding spaces so that the
+   *       total length is unchanged, keeping character positions accurate for
+   *       diagnostics and semantic-token highlighting.</li>
+   * </ul>
+   *
+   * <p>The result is returned as {@link FormulaSection}{@code (maskedContent, 0)}
+   * — line offset 0 because line positions inside the masked content correspond
+   * 1:1 to positions in the original document.
+   */
+  static DocumentFilter legacy() {
+    Pattern extPattern = Pattern.compile(
+        "external\\s+returning\\s+as\\s+(?:boolean|number|float|string|object)\\s*");
+    return fullContent -> {
+      String[] lines = fullContent.split("\n", -1);
+      StringBuilder sb = new StringBuilder();
+      boolean inFenced = false;
+
+      for (int i = 0; i < lines.length; i++) {
+        String line    = lines[i];
+        String stripped = line.replace("\r", "").stripTrailing();
+
+        String out;
+        if (!inFenced && stripped.length() > 3 && stripped.startsWith("```")) {
+          // Opening fence: ```java:Foo or ```python etc.
+          out = " ".repeat(stripped.length());
+          inFenced = true;
+        } else if (inFenced) {
+          if (stripped.equals("```")) {
+            // Closing fence
+            out = "   "; // same length as "```"
+            inFenced = false;
+          } else {
+            // Inside fenced block — blank out
+            out = " ".repeat(stripped.length());
+          }
+        } else if (stripped.startsWith("import ") && stripped.endsWith(";")) {
+          // Import declaration — blank out
+          out = " ".repeat(stripped.length());
+        } else {
+          // Regular line — rewrite any "external returning as TYPE " prefix
+          out = rewriteExternalInvocation(line, extPattern);
+        }
+
+        sb.append(out);
+        if (i < lines.length - 1) sb.append('\n');
+      }
+      return new FormulaSection(sb.toString(), 0);
+    };
+  }
+
+  /** Replaces {@code external returning as <type>} with {@code call} + padding spaces. */
+  private static String rewriteExternalInvocation(String line, Pattern pattern) {
+    Matcher m = pattern.matcher(line);
+    if (!m.find()) return line;
+    int matchLen = m.end() - m.start();
+    // "call " is 5 chars; pad with spaces so total replacement length == matchLen
+    String replacement = "call " + " ".repeat(Math.max(0, matchLen - 5));
+    return line.substring(0, m.start()) + replacement + line.substring(m.end());
+  }
+
+  /**
    * Auto-detect filter (default).
    *
-   * <p>Tries {@link #formulaInfo()} first.  If no {@code formula:} marker is
-   * found (returns {@code null}), the whole document is parsed unchanged.
-   * This covers both FormulaInfo-style files and plain expression files with
-   * a single filter.
+   * <p>Tries {@link #formulaInfo()} first (for files with a {@code formula:}
+   * marker).  If no marker is found, applies {@link #legacy()} masking which
+   * handles fenced code blocks, import declarations, and
+   * {@code external returning as} invocations.
+   * This single filter covers FormulaInfo-style files, legacy pre-P4 files,
+   * and plain P4 expression files.
    */
   static DocumentFilter autoDetect() {
-    // formulaInfo() already returns null when no 'formula:' marker exists,
-    // so it acts as autoDetect automatically.
-    return formulaInfo();
+    return firstMatch(formulaInfo(), legacy());
   }
 
   /**
