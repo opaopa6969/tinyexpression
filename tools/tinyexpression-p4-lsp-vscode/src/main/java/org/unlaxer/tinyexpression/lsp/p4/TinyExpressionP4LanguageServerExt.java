@@ -123,8 +123,35 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   // ── State ──
 
+  private final DocumentFilter documentFilter;
   private LanguageClient extClient;
   private final Map<String, ExtDocumentState> extDocuments = new HashMap<>();
+
+  // =========================================================================
+  // Constructors
+  // =========================================================================
+
+  /** Uses {@link DocumentFilter#autoDetect()} — handles both FormulaInfo and plain files. */
+  public TinyExpressionP4LanguageServerExt() {
+    this(DocumentFilter.autoDetect());
+  }
+
+  /**
+   * Injects a custom {@link DocumentFilter}.
+   *
+   * <pre>{@code
+   * // Markdown with fenced blocks:
+   * new TinyExpressionP4LanguageServerExt(DocumentFilter.fenced("```tinyexp", "```"))
+   *
+   * // Multiple formats:
+   * new TinyExpressionP4LanguageServerExt(
+   *     DocumentFilter.firstMatch(DocumentFilter.formulaInfo(),
+   *                               DocumentFilter.fenced("```tinyexp", "```")))
+   * }</pre>
+   */
+  public TinyExpressionP4LanguageServerExt(DocumentFilter documentFilter) {
+    this.documentFilter = documentFilter;
+  }
 
   // =========================================================================
   // LanguageClientAware
@@ -199,15 +226,13 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return null; // no formula: marker — plain expression file
   }
 
-  record FormulaSection(String content, int lineOffset) {}
-
   // =========================================================================
-  // parseDocument — extract formula section, then enrich diagnostics
+  // parseDocument — extract formula section via DocumentFilter, then enrich
   // =========================================================================
 
   @Override
   public ParseResult parseDocument(String uri, String content) {
-    FormulaSection fs = extractFormulaSection(content);
+    FormulaSection fs = documentFilter.extract(content);
 
     if (fs != null) {
       // FormulaInfo file: parse only the formula section content.

@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
