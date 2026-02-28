@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.lsp.p4;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Strategy for extracting the parseable TinyExpression formula from a document
@@ -100,62 +98,47 @@ public interface DocumentFilter {
   /**
    * Legacy TinyExpression format filter.
    *
-   * <p>Handles pre-P4 documents that embed constructs not present in the P4
-   * grammar.  The filter rewrites the document in-place (preserving line and
-   * character positions) so the P4 parser sees valid input:
+   * <p>Handles documents that embed fenced code blocks (e.g.
+   * {@code ```java:ClassName ... ```}) containing non-TinyExpression content
+   * such as Java class definitions.  The fenced blocks are replaced line-by-line
+   * with spaces so they are invisible to the P4 parser, while line positions
+   * are preserved so diagnostic ranges remain accurate.
    *
-   * <ul>
-   *   <li><b>Fenced code blocks</b> — any block whose opening line begins with
-   *       {@code ```} (followed by at least one more character, e.g.
-   *       {@code ```java:Foo}) is replaced line-by-line with spaces until the
-   *       closing {@code ```} line.  Line count is preserved.</li>
-   *   <li><b>Import declarations</b> — lines of the form
-   *       {@code import ...<semicolon>} are replaced with spaces of the same
-   *       length.</li>
-   *   <li><b>External-invocation prefixes</b> — the phrase
-   *       {@code external returning as <type>} (where type is {@code boolean},
-   *       {@code number}, {@code float}, {@code string}, or {@code object})
-   *       is rewritten to {@code call} followed by padding spaces so that the
-   *       total length is unchanged, keeping character positions accurate for
-   *       diagnostics and semantic-token highlighting.</li>
-   * </ul>
+   * <p>{@code import} declarations and {@code external returning as} invocations
+   * are <em>not</em> masked — they are now part of the P4 grammar and are
+   * validated directly.
    *
    * <p>The result is returned as {@link FormulaSection}{@code (maskedContent, 0)}
    * — line offset 0 because line positions inside the masked content correspond
    * 1:1 to positions in the original document.
    */
   static DocumentFilter legacy() {
-    Pattern extPattern = Pattern.compile(
-        "external\\s+returning\\s+as\\s+(?:boolean|number|float|string|object)\\s*");
     return fullContent -> {
       String[] lines = fullContent.split("\n", -1);
       StringBuilder sb = new StringBuilder();
       boolean inFenced = false;
 
       for (int i = 0; i < lines.length; i++) {
-        String line    = lines[i];
+        String line     = lines[i];
         String stripped = line.replace("\r", "").stripTrailing();
 
         String out;
         if (!inFenced && stripped.length() > 3 && stripped.startsWith("```")) {
-          // Opening fence: ```java:Foo or ```python etc.
+          // Opening fence line: ```java:Foo, ```python, etc.
           out = " ".repeat(stripped.length());
           inFenced = true;
         } else if (inFenced) {
           if (stripped.equals("```")) {
-            // Closing fence
+            // Closing fence line
             out = "   "; // same length as "```"
             inFenced = false;
           } else {
-            // Inside fenced block — blank out
+            // Content inside fenced block — blank out (cannot be validated as P4)
             out = " ".repeat(stripped.length());
           }
-        } else if (stripped.startsWith("import ") && stripped.endsWith(";")) {
-          // Import declaration — blank out
-          out = " ".repeat(stripped.length());
         } else {
-          // Regular line — rewrite any "external returning as TYPE " prefix
-          out = rewriteExternalInvocation(line, extPattern);
+          // Regular line — pass through unchanged; P4 grammar handles it
+          out = line;
         }
 
         sb.append(out);
@@ -163,16 +146,6 @@ public interface DocumentFilter {
       }
       return new FormulaSection(sb.toString(), 0);
     };
-  }
-
-  /** Replaces {@code external returning as <type>} with {@code call} + padding spaces. */
-  private static String rewriteExternalInvocation(String line, Pattern pattern) {
-    Matcher m = pattern.matcher(line);
-    if (!m.find()) return line;
-    int matchLen = m.end() - m.start();
-    // "call " is 5 chars; pad with spaces so total replacement length == matchLen
-    String replacement = "call " + " ".repeat(Math.max(0, matchLen - 5));
-    return line.substring(0, m.start()) + replacement + line.substring(m.end());
   }
 
   /**

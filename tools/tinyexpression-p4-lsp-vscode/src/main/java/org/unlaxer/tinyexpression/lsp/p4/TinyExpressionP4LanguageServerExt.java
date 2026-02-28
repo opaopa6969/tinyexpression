@@ -99,6 +99,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "var", "variable", "as",
       "number", "string", "boolean", "object", "float",
       "set", "not", "exists", "description", "call",
+      "import", "external", "returning",
       "true", "false");
 
   // ── Operator set ──
@@ -115,6 +116,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "var", "variable", "as",
       "number", "string", "boolean", "object", "float",
       "set", "not", "exists", "call",
+      "import", "external", "returning",
       "true", "false");
 
   /** Pattern for extracting $variable references from document text. */

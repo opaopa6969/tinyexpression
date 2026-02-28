@@ -9,7 +9,19 @@ grammar TinyExpressionP4 {
   token STRING     = SingleQuotedParser
 
   @root
-  Formula ::= { VariableDeclaration } { Annotation } Expression { MethodDeclaration } ;
+  Formula ::= { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } ;
+
+  // ── Import declaration ─────────────────────────────────────────────────────
+  // Syntax: import fully.qualified.ClassName#methodName as alias;
+  // Example: import sample.v1.CheckAlphabets#check as checkAlphabets;
+
+  @interleave(profile=javaStyle)
+  @mapping(ImportDeclarationExpr, params=[method, alias])
+  ImportDeclaration ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
+
+  ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
+
+  // ── Variable declarations ──────────────────────────────────────────────────
 
   @interleave(profile=javaStyle)
   VariableDeclaration ::=
@@ -121,11 +133,35 @@ grammar TinyExpressionP4 {
   ObjectReturnType ::= 'object' ;
   ReturnType ::= NumberReturnType | StringReturnType | BooleanReturnType | ObjectReturnType ;
 
+  // ── External invocations ───────────────────────────────────────────────────
+  // Syntax: external returning as <type> methodName(args)
+  // Example: external returning as boolean checkAlphabets($inputName)
+
+  @mapping(ExternalBooleanInvocationExpr, params=[name])
+  ExternalBooleanInvocation ::=
+    'external' 'returning' 'as' BooleanReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalNumberInvocationExpr, params=[name])
+  ExternalNumberInvocation ::=
+    'external' 'returning' 'as' NumberReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalStringInvocationExpr, params=[name])
+  ExternalStringInvocation ::=
+    'external' 'returning' 'as' StringReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalObjectInvocationExpr, params=[name])
+  ExternalObjectInvocation ::=
+    'external' 'returning' 'as' ObjectReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  // ── Built-in method invocation (call keyword) ─────────────────────────────
+
   @backref(name=methodName)
   @mapping(MethodInvocationExpr, params=[name])
   MethodInvocation ::= 'call' IDENTIFIER @name '(' [ Arguments ] ')' ;
 
   Arguments ::= Expression { ',' Expression } ;
+
+  // ── Numeric expressions ────────────────────────────────────────────────────
 
   @mapping(BinaryExpr, params=[left, op, right])
   @leftAssoc
@@ -143,22 +179,29 @@ grammar TinyExpressionP4 {
   NumberFactor ::=
       NumberMatchExpression
     | IfExpression
+    | ExternalNumberInvocation
     | NUMBER
     | VariableRef
     | MethodInvocation
     | '(' NumberExpression ')' ;
 
+  // ── String expressions ─────────────────────────────────────────────────────
+
   @mapping(StringExpr, params=[value])
   StringExpression ::=
       StringMatchExpression @value
+    | ExternalStringInvocation @value
     | STRING @value
     | VariableRef @value
     | MethodInvocation @value ;
+
+  // ── Boolean expressions ────────────────────────────────────────────────────
 
   @mapping(BooleanExpr, params=[value])
   BooleanExpression ::=
       BooleanMatchExpression @value
     | ComparisonExpression @value
+    | ExternalBooleanInvocation @value
     | 'true' @value
     | 'false' @value
     | VariableRef @value
@@ -168,13 +211,18 @@ grammar TinyExpressionP4 {
   ComparisonExpression ::= NumberExpression @left CompareOp @op NumberExpression @right ;
   CompareOp ::= '==' | '!=' | '<=' | '>=' | '<' | '>' ;
 
+  // ── Object expressions ─────────────────────────────────────────────────────
+
   @mapping(ObjectExpr, params=[value])
   ObjectExpression ::=
       NumberExpression @value
     | StringExpression @value
     | BooleanExpression @value
+    | ExternalObjectInvocation @value
     | VariableRef @value
     | MethodInvocation @value ;
+
+  // ── Control flow ───────────────────────────────────────────────────────────
 
   @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
   IfExpression ::=
@@ -182,6 +230,8 @@ grammar TinyExpressionP4 {
     '{' Expression @thenExpr '}'
     'else'
     '{' Expression @elseExpr '}' ;
+
+  // ── Match expressions ──────────────────────────────────────────────────────
 
   @mapping(NumberMatchExpr, params=[firstCase, moreCases, defaultCase])
   NumberMatchExpression ::=
@@ -225,8 +275,12 @@ grammar TinyExpressionP4 {
   @mapping(BooleanCaseValueExpr, params=[value])
   BooleanCaseValue ::= BooleanExpression @value ;
 
+  // ── Variable references ────────────────────────────────────────────────────
+
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
+
+  // ── Top-level expression ───────────────────────────────────────────────────
 
   @mapping(ExpressionExpr, params=[value])
   Expression ::=
