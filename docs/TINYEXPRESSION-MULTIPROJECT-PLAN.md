@@ -1,7 +1,7 @@
-# TinyExpression Multi-Project Migration Plan
+# TinyExpression Multi-Project Migration Plan (Detailed)
 
 ## 1. Background and Objective
-TinyExpression has grown into a large project with **6 distinct execution backends**. To improve maintainability, facilitate Maven Central publishing, and clarify the internal dependency graph, we propose migrating from a monolithic JAR to a multi-module Maven project.
+TinyExpression has grown into a sophisticated engine with **6 distinct execution backends**. The current monolithic structure creates high cognitive load and circular dependency risks. This plan outlines a 3-layer architecture to decouple core definitions from specific evaluation strategies.
 
 ### The 6 Execution Backends to be Preserved:
 1.  `JAVA_CODE` (Baseline JavaCode V3)
@@ -13,77 +13,95 @@ TinyExpression has grown into a large project with **6 distinct execution backen
 
 ---
 
-## 2. Proposed Module Structure
+## 2. The 3-Layer Architecture Strategy
 
-| Module Name | Responsibilities | Target Backends |
-| :--- | :--- | :--- |
-| **`tinyexpression-parent`** | Parent POM, version management, common build plugins. | - |
-| **`tinyexpression-runtime`** | Core interfaces (`Calculator`, `Source`), `ExecutionBackend` enum, `FormulaInfo`, common utilities, and registry. | All |
-| **`tinyexpression-evaluator-ast`** | Logic for direct AST evaluation and token-to-AST transformation. | `AST_EVALUATOR` |
-| **`tinyexpression-evaluator-javacode`** | Implementation of JavaCode V3 and legacy OOTC (V2). | `JAVA_CODE`, `JAVA_CODE_LEGACY_ASTCREATOR` |
-| **`tinyexpression-evaluator-dsl`** | DSL-based Java emitter (Native + Bridge). | `DSL_JAVA_CODE` |
-| **`tinyexpression-p4`** | UBNF-generated parser, type-safe AST models, and bridges to AST/DSL evaluators. | `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` |
-| **`tinyexpression-tooling`** | LSP (Language Server), DAP (Debug Adapter), and CLI launchers. | - |
+To reduce cognitive load, modules are categorized into three layers based on their stability and responsibility.
+
+### Layer 1: Core API & Metadata (`tinyexpression-api`)
+- **Responsibility**: Pure definitions, interfaces, and metadata.
+- **Key Symbols**: `Calculator`, `ExecutionBackend`, `FormulaInfo`, `Source`.
+- **Constraint**: Must NOT depend on any implementation module.
+
+### Layer 2: Evaluator Implementation (`tinyexpression-evaluators-*`)
+- **Group A: `tinyexpression-evaluators-basic`**: Standard evaluators (JavaCode V3, Legacy, and direct AST).
+- **Group B: `tinyexpression-evaluator-dsl`**: The high-performance hybrid Java emitter.
+- **Strategy**: These modules implement the `Calculator` interface and register themselves via SPI.
+
+### Layer 3: P4 & Tooling (`tinyexpression-p4`, `tinyexpression-tooling`)
+- **P4 Engine**: Contains UBNF-generated code and bridges them to Layer 2 evaluators.
+- **Tooling**: LSP, DAP, and CLI. These are "consumers" of the entire stack.
 
 ---
 
-## 3. Dependency Graph (Concept)
+## 3. Decoupling Strategy: SPI (Service Provider Interface)
+
+To avoid circular dependencies (e.g., Registry knowing implementations, and implementations using the Registry), we will adopt Java's `ServiceLoader`.
+
+- **Registry**: `CalculatorCreatorRegistry` in `tinyexpression-api` will use `ServiceLoader` to find available `CalculatorCreator` implementations at runtime.
+- **Providers**: Each evaluator module will provide a `META-INF/services/org.unlaxer.tinyexpression.runtime.CalculatorCreator` file.
+- **Benefit**: New backends can be added by simply adding a JAR to the classpath, without modifying the core registry.
+
+---
+
+## 4. Proposed Module List
+
+| Module Name | Layer | Target Backends |
+| :--- | :--- | :--- |
+| `tinyexpression-api` | Layer 1 | Core Interfaces, Enum, Registry (SPI-based) |
+| `tinyexpression-evaluators-basic` | Layer 2 | `JAVA_CODE`, `JAVA_CODE_LEGACY_ASTCREATOR`, `AST_EVALUATOR` |
+| `tinyexpression-evaluator-dsl` | Layer 2 | `DSL_JAVA_CODE` |
+| `tinyexpression-p4` | Layer 3 | `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` |
+| `tinyexpression-tooling` | Layer 3 | LSP, DAP, CLI |
+| `tinyexpression-test-suite` | - | Cross-module Parity/Integration Tests |
+
+---
+
+## 5. Dependency Graph
 
 ```mermaid
 graph TD
-    runtime[tinyexpression-runtime]
-    ast[tinyexpression-evaluator-ast]
-    javacode[tinyexpression-evaluator-javacode]
+    api[tinyexpression-api]
+    basic[tinyexpression-evaluators-basic]
     dsl[tinyexpression-evaluator-dsl]
     p4[tinyexpression-p4]
     tooling[tinyexpression-tooling]
+    test[tinyexpression-test-suite]
 
-    ast --> runtime
-    javacode --> runtime
-    dsl --> runtime
-    dsl -.->|optional/bridge| javacode
+    basic --> api
+    dsl --> api
     
-    p4 --> runtime
-    p4 --> ast
-    p4 --> dsl
+    p4 --> api
+    p4 --> basic
+    p4 -.->|optional| dsl
     
     tooling --> p4
-    tooling --> runtime
+    tooling --> api
+    
+    test --> basic
+    test --> dsl
+    test --> p4
 ```
 
 ---
 
-## 4. Key Concerns and Risks
+## 6. Technical Challenges & Solutions
 
-### A. Build Cycle and `unlaxer-dsl` Dependency
--   **Current State**: `tinyexpression` generates P4 code by calling `unlaxer-dsl` (physically located in a sibling directory) via shell scripts.
--   **Risk**: If `tinyexpression-p4` is a module, how should it handle code generation?
--   **Option 1**: Keep using the script, but ensure `unlaxer-dsl` is built first.
--   **Option 2**: Make `unlaxer-dsl` a Maven plugin or a build-time dependency to automate generation during the `generate-sources` phase.
+### A. Code Generation Lifecycle
+- **Challenge**: `tinyexpression-p4` depends on code generated by `unlaxer-dsl`.
+- **Solution**: Incorporate `unlaxer-dsl` as a build-time library. Use `maven-exec-plugin` within `tinyexpression-p4`'s `generate-sources` phase to automate UBNF-to-Java conversion.
 
-### B. Parity Testing (Cross-Backend Validation)
--   **Current State**: `ThreeExecutionBackendParityTest` compares outputs across backends within the same JAR.
--   **Concern**: How to perform this test across modules?
--   **Solution**: Create a `tinyexpression-test-suite` module that depends on all evaluator modules to run integration/parity tests.
+### B. Cross-Backend Parity
+- **Challenge**: Maintaining the `ThreeExecutionBackendParityTest` across modules.
+- **Solution**: The `tinyexpression-test-suite` module will act as a "Full Stack" validator, ensuring all 6 backends produce identical results for the same formulas.
 
-### C. Resource and UBNF Placement
--   **Concern**: Where should the source of truth for the UBNF grammar (`tinyexpression-p4-draft.ubnf`) reside?
--   **Proposal**: `tinyexpression-p4/src/main/resources/grammar/`.
+### C. Java 21 Preview Features
+- **Solution**: Centralize `<compilerArgs><arg>--enable-preview</arg></compilerArgs>` in the Parent POM to ensure consistency across all modules.
 
 ---
 
-## 5. Questions for the Architect
-
-1.  **Granularity**: Should `evaluator-ast`, `evaluator-javacode`, and `evaluator-dsl` be separate modules, or is a single `tinyexpression-evaluators` module containing all three preferred?
-2.  **Versioning**: Should all modules share the same version (e.g., `1.5.0`), or should they evolve independently? (Recommended: Shared version for initial release).
-3.  **LSP/DAP Scope**: Should the VSCode extension (`tools/`) also be part of this multi-module structure, or remain a separate project that consumes the generated JARs?
-4.  **Java 21 Preview**: Some modules use `--enable-preview`. This configuration must be carefully inherited from the Parent POM.
-
----
-
-## 6. Next Steps
-1.  Finalize the module list and dependency graph.
-2.  Create the `tinyexpression-parent` POM.
-3.  Phase 1: Extract `tinyexpression-runtime` and `tinyexpression-evaluator-ast`.
-4.  Phase 2: Extract `tinyexpression-evaluator-javacode` and `dsl`.
-5.  Phase 3: Reorganize `tinyexpression-p4` and its generator integration.
+## 7. Next Steps
+1.  **Refactor `ExecutionBackend`**: Add SPI support to the enum/registry in the current codebase as a preparation.
+2.  **Create Parent POM**: Define common versions and plugins.
+3.  **Extract `tinyexpression-api`**: Move core interfaces and basic models.
+4.  **Isolate Evaluators**: Move implementation logic into their respective modules.
+5.  **Integrate P4 Generation**: Automate the UBNF build within the new Maven structure.
