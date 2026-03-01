@@ -13,7 +13,28 @@ TinyExpression has grown into a sophisticated engine with **6 distinct execution
 
 ---
 
-## 2. The 3-Layer Architecture Strategy
+## 2. Evolution History: The Journey with Agents
+
+The existence of 6 backends is not merely a technical choice, but a living record of the project's evolution through collaboration between human architects and AI agents.
+
+### Phase 1: Manual Roots & Performance
+- **Origin**: Initially implemented with handwritten AST traversal using `unlaxer-common`.
+- **Shift**: To improve performance, the system moved to a Java code generation approach. The original handwritten traversal was eventually removed to reduce maintenance costs.
+
+### Phase 2: Grammar Explosion & Agent A
+- **Growth**: As the grammar expanded, the ParseTree-to-AST logic became too complex to maintain manually.
+- **Intervention**: **Agent A** was tasked with refactoring the ParseTree-to-AST conversion (Implementation 2).
+- **DSL Era**: `unlaxer-dsl` was created to support generators including LSP/DAP. **Agent A** implemented Implementation 3 (AST Traversal) and Implementation 4 (Java Generation).
+- **Lessons Learned**: While functional, Agent A's implementation relied on regex for LSP/DAP features rather than the formal parser definitions, leading to high maintenance debt.
+
+### Phase 3: Type Safety & Agent B
+- **Infrastructure**: To support more precise code generation, the human architect added `ParseFailureDiagnostics` and other type-safety aids.
+- **Refinement**: **Agent B** utilized these new capabilities to implement Implementation 5 (Type-safe AST Traversal) and Implementation 6 (Type-safe Java Generation), which now form the "P4" backend series.
+- **Current State**: The 6 backends are maintained to ensure parity and verify the correctness of each evolutionary step.
+
+---
+
+## 3. The 3-Layer Architecture Strategy
 
 To reduce cognitive load, modules are categorized into three layers based on their stability and responsibility.
 
@@ -33,7 +54,7 @@ To reduce cognitive load, modules are categorized into three layers based on the
 
 ---
 
-## 3. Decoupling Strategy: SPI (Service Provider Interface)
+## 4. Decoupling Strategy: SPI (Service Provider Interface)
 
 To avoid circular dependencies (e.g., Registry knowing implementations, and implementations using the Registry), we will adopt Java's `ServiceLoader`.
 
@@ -43,7 +64,7 @@ To avoid circular dependencies (e.g., Registry knowing implementations, and impl
 
 ---
 
-## 4. Proposed Module List
+## 5. Proposed Module List
 
 | Module Name | Layer | Target Backends |
 | :--- | :--- | :--- |
@@ -53,34 +74,6 @@ To avoid circular dependencies (e.g., Registry knowing implementations, and impl
 | `tinyexpression-p4` | Layer 3 | `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` |
 | `tinyexpression-tooling` | Layer 3 | LSP, DAP, CLI |
 | `tinyexpression-test-suite` | - | Cross-module Parity/Integration Tests |
-
----
-
-## 5. Dependency Graph
-
-```mermaid
-graph TD
-    api[tinyexpression-api]
-    basic[tinyexpression-evaluators-basic]
-    dsl[tinyexpression-evaluator-dsl]
-    p4[tinyexpression-p4]
-    tooling[tinyexpression-tooling]
-    test[tinyexpression-test-suite]
-
-    basic --> api
-    dsl --> api
-    
-    p4 --> api
-    p4 --> basic
-    p4 -.->|optional| dsl
-    
-    tooling --> p4
-    tooling --> api
-    
-    test --> basic
-    test --> dsl
-    test --> p4
-```
 
 ---
 
