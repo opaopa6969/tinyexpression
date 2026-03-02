@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="750" height="90">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ContainsMethod</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#StringExpression" target="_top">
+<rect x="50" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="132" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</a>
+<line x1="214" y1="57" x2="230" y2="57" class="rail"/>
+<polygon points="219,54 225,57 219,60" class="arrow"/>
+<rect x="230" y="44" width="119" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="289" y="62" text-anchor="middle" class="terminal-text">'.contains'</text>
+<line x1="349" y1="57" x2="365" y2="57" class="rail"/>
+<polygon points="354,54 360,57 354,60" class="arrow"/>
+<rect x="365" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="388" y="62" text-anchor="middle" class="terminal-text">'('</text>
+<line x1="412" y1="57" x2="428" y2="57" class="rail"/>
+<polygon points="417,54 423,57 417,60" class="arrow"/>
+<a xlink:href="#CommaSeparatedStrings" target="_top">
+<rect x="428" y="44" width="209" height="26" class="nonterminal-box"/>
+<text x="532" y="62" text-anchor="middle" class="nonterminal-text">CommaSeparatedStrings</text>
+</a>
+<line x1="637" y1="57" x2="653" y2="57" class="rail"/>
+<polygon points="642,54 648,57 642,60" class="arrow"/>
+<rect x="653" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="676" y="62" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="700" y1="57" x2="714" y2="57" class="rail"/>
+<circle cx="722" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="722" cy="57" r="5" class="end-circle-inner"/>
+</svg>

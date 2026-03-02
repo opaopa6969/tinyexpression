@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="646" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringSetter</text>
+<circle cx="26" cy="79" r="6" class="start-circle"/>
+<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
+<rect x="50" y="66" width="65" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="82" y="84" text-anchor="middle" class="terminal-text">'set'</text>
+<line x1="115" y1="79" x2="131" y2="79" class="rail"/>
+<polygon points="120,76 126,79 120,82" class="arrow"/>
+<rect x="151" y="66" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="179" y="84" text-anchor="middle" class="terminal-text">'if'</text>
+<line x1="207" y1="79" x2="223" y2="79" class="rail"/>
+<polygon points="212,76 218,79 212,82" class="arrow"/>
+<rect x="223" y="66" width="65" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="255" y="84" text-anchor="middle" class="terminal-text">'not'</text>
+<line x1="288" y1="79" x2="304" y2="79" class="rail"/>
+<polygon points="293,76 299,79 293,82" class="arrow"/>
+<rect x="304" y="66" width="92" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="350" y="84" text-anchor="middle" class="terminal-text">'exists'</text>
+<line x1="131" y1="79" x2="151" y2="79" class="rail"/>
+<line x1="396" y1="79" x2="416" y2="79" class="rail"/>
+<path d="M 131,79 Q 141,79 141,69" class="rail"/>
+<line x1="141" y1="69" x2="141" y2="64" class="rail"/>
+<path d="M 141,64 Q 141,54 151,54" class="rail"/>
+<line x1="151" y1="54" x2="396" y2="54" class="rail"/>
+<path d="M 396,54 Q 406,54 406,64" class="rail"/>
+<line x1="406" y1="64" x2="406" y2="69" class="rail"/>
+<path d="M 406,69 Q 406,79 416,79" class="rail"/>
+<line x1="416" y1="79" x2="432" y2="79" class="rail"/>
+<polygon points="421,76 427,79 421,82" class="arrow"/>
+<a xlink:href="#StringExpression" target="_top">
+<rect x="432" y="66" width="164" height="26" class="nonterminal-box"/>
+<text x="514" y="84" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</a>
+<line x1="596" y1="79" x2="610" y2="79" class="rail"/>
+<circle cx="618" cy="79" r="8" class="end-circle-outer"/>
+<circle cx="618" cy="79" r="5" class="end-circle-inner"/>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="542" height="128">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SideEffectHeader</text>
+<circle cx="26" cy="79" r="6" class="start-circle"/>
+<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
+<rect x="70" y="66" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="107" y="84" text-anchor="middle" class="terminal-text">'call'</text>
+<line x1="50" y1="79" x2="70" y2="79" class="rail"/>
+<line x1="144" y1="79" x2="164" y2="79" class="rail"/>
+<path d="M 50,79 Q 60,79 60,69" class="rail"/>
+<line x1="60" y1="69" x2="60" y2="64" class="rail"/>
+<path d="M 60,64 Q 60,54 70,54" class="rail"/>
+<line x1="70" y1="54" x2="144" y2="54" class="rail"/>
+<path d="M 144,54 Q 154,54 154,64" class="rail"/>
+<line x1="154" y1="64" x2="154" y2="69" class="rail"/>
+<path d="M 154,69 Q 154,79 164,79" class="rail"/>
+<line x1="164" y1="79" x2="180" y2="79" class="rail"/>
+<polygon points="169,76 175,79 169,82" class="arrow"/>
+<rect x="200" y="66" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="237" y="84" text-anchor="middle" class="terminal-text">'with'</text>
+<line x1="274" y1="79" x2="290" y2="79" class="rail"/>
+<polygon points="279,76 285,79 279,82" class="arrow"/>
+<rect x="290" y="66" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="327" y="84" text-anchor="middle" class="terminal-text">'side'</text>
+<line x1="364" y1="79" x2="380" y2="79" class="rail"/>
+<polygon points="369,76 375,79 369,82" class="arrow"/>
+<rect x="380" y="66" width="92" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="426" y="84" text-anchor="middle" class="terminal-text">'effect'</text>
+<line x1="180" y1="79" x2="200" y2="79" class="rail"/>
+<line x1="472" y1="79" x2="492" y2="79" class="rail"/>
+<rect x="281" y="104" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="336" y="122" text-anchor="middle" class="terminal-text">'external'</text>
+<line x1="200" y1="117" x2="281" y2="117" class="rail"/>
+<line x1="391" y1="117" x2="472" y2="117" class="rail"/>
+<path d="M 180,79 Q 190,79 190,89" class="rail"/>
+<line x1="190" y1="89" x2="190" y2="107" class="rail"/>
+<path d="M 190,107 Q 190,117 200,117" class="rail"/>
+<path d="M 472,117 Q 482,117 482,107" class="rail"/>
+<line x1="482" y1="107" x2="482" y2="89" class="rail"/>
+<path d="M 482,89 Q 482,79 492,79" class="rail"/>
+<line x1="492" y1="79" x2="506" y2="79" class="rail"/>
+<circle cx="514" cy="79" r="8" class="end-circle-outer"/>
+<circle cx="514" cy="79" r="5" class="end-circle-inner"/>
+</svg>

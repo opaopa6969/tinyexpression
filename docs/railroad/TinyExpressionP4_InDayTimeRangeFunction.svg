@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1173" height="90">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">InDayTimeRangeFunction</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<rect x="50" y="44" width="164" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="132" y="62" text-anchor="middle" class="terminal-text">'inDayTimeRange'</text>
+<line x1="214" y1="57" x2="230" y2="57" class="rail"/>
+<polygon points="219,54 225,57 219,60" class="arrow"/>
+<rect x="230" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="253" y="62" text-anchor="middle" class="terminal-text">'('</text>
+<line x1="277" y1="57" x2="293" y2="57" class="rail"/>
+<polygon points="282,54 288,57 282,60" class="arrow"/>
+<a xlink:href="#DayOfWeek" target="_top">
+<rect x="293" y="44" width="101" height="26" class="nonterminal-box"/>
+<text x="343" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
+</a>
+<line x1="394" y1="57" x2="410" y2="57" class="rail"/>
+<polygon points="399,54 405,57 399,60" class="arrow"/>
+<rect x="410" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="433" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="457" y1="57" x2="473" y2="57" class="rail"/>
+<polygon points="462,54 468,57 462,60" class="arrow"/>
+<a xlink:href="#NumberExpression" target="_top">
+<rect x="473" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="555" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</a>
+<line x1="637" y1="57" x2="653" y2="57" class="rail"/>
+<polygon points="642,54 648,57 642,60" class="arrow"/>
+<rect x="653" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="676" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="700" y1="57" x2="716" y2="57" class="rail"/>
+<polygon points="705,54 711,57 705,60" class="arrow"/>
+<a xlink:href="#DayOfWeek" target="_top">
+<rect x="716" y="44" width="101" height="26" class="nonterminal-box"/>
+<text x="766" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
+</a>
+<line x1="817" y1="57" x2="833" y2="57" class="rail"/>
+<polygon points="822,54 828,57 822,60" class="arrow"/>
+<rect x="833" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="856" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="880" y1="57" x2="896" y2="57" class="rail"/>
+<polygon points="885,54 891,57 885,60" class="arrow"/>
+<a xlink:href="#NumberExpression" target="_top">
+<rect x="896" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="978" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</a>
+<line x1="1060" y1="57" x2="1076" y2="57" class="rail"/>
+<polygon points="1065,54 1071,57 1065,60" class="arrow"/>
+<rect x="1076" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="1099" y="62" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="1123" y1="57" x2="1137" y2="57" class="rail"/>
+<circle cx="1145" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="1145" cy="57" r="5" class="end-circle-inner"/>
+</svg>

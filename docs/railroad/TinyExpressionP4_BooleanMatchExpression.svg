@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="943" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanMatchExpression</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<rect x="50" y="44" width="83" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="91" y="62" text-anchor="middle" class="terminal-text">'match'</text>
+<line x1="133" y1="57" x2="149" y2="57" class="rail"/>
+<polygon points="138,54 144,57 138,60" class="arrow"/>
+<rect x="149" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="172" y="62" text-anchor="middle" class="terminal-text">'{'</text>
+<line x1="196" y1="57" x2="212" y2="57" class="rail"/>
+<polygon points="201,54 207,57 201,60" class="arrow"/>
+<a xlink:href="#BooleanCase" target="_top">
+<rect x="212" y="44" width="119" height="26" class="nonterminal-box"/>
+<text x="271" y="62" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
+</a>
+<line x1="331" y1="57" x2="347" y2="57" class="rail"/>
+<polygon points="336,54 342,57 336,60" class="arrow"/>
+<rect x="367" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="390" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="414" y1="57" x2="430" y2="57" class="rail"/>
+<polygon points="419,54 425,57 419,60" class="arrow"/>
+<a xlink:href="#BooleanCase" target="_top">
+<rect x="430" y="44" width="119" height="26" class="nonterminal-box"/>
+<text x="489" y="62" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
+</a>
+<line x1="347" y1="57" x2="367" y2="57" class="rail"/>
+<line x1="549" y1="57" x2="569" y2="57" class="rail"/>
+<path d="M 357,57 Q 347,57 347,67" class="rail"/>
+<line x1="347" y1="67" x2="347" y2="72" class="rail"/>
+<path d="M 347,72 Q 347,82 357,82" class="rail"/>
+<line x1="357" y1="82" x2="559" y2="82" class="rail"/>
+<polygon points="461,79 455,82 461,85" class="arrow"/>
+<path d="M 559,82 Q 569,82 569,72" class="rail"/>
+<line x1="569" y1="72" x2="569" y2="67" class="rail"/>
+<path d="M 569,67 Q 569,57 559,57" class="rail"/>
+<line x1="569" y1="57" x2="585" y2="57" class="rail"/>
+<polygon points="574,54 580,57 574,60" class="arrow"/>
+<rect x="585" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="608" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="632" y1="57" x2="648" y2="57" class="rail"/>
+<polygon points="637,54 643,57 637,60" class="arrow"/>
+<a xlink:href="#BooleanDefaultCase" target="_top">
+<rect x="648" y="44" width="182" height="26" class="nonterminal-box"/>
+<text x="739" y="62" text-anchor="middle" class="nonterminal-text">BooleanDefaultCase</text>
+</a>
+<line x1="830" y1="57" x2="846" y2="57" class="rail"/>
+<polygon points="835,54 841,57 835,60" class="arrow"/>
+<rect x="846" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="869" y="62" text-anchor="middle" class="terminal-text">'}'</text>
+<line x1="893" y1="57" x2="907" y2="57" class="rail"/>
+<circle cx="915" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="915" cy="57" r="5" class="end-circle-inner"/>
+</svg>

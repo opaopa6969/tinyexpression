@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1015" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalBooleanInvocation</text>
+<circle cx="26" cy="79" r="6" class="start-circle"/>
+<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
+<rect x="50" y="66" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="105" y="84" text-anchor="middle" class="terminal-text">'external'</text>
+<line x1="160" y1="79" x2="176" y2="79" class="rail"/>
+<polygon points="165,76 171,79 165,82" class="arrow"/>
+<rect x="176" y="66" width="119" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="235" y="84" text-anchor="middle" class="terminal-text">'returning'</text>
+<line x1="295" y1="79" x2="311" y2="79" class="rail"/>
+<polygon points="300,76 306,79 300,82" class="arrow"/>
+<rect x="311" y="66" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="339" y="84" text-anchor="middle" class="terminal-text">'as'</text>
+<line x1="367" y1="79" x2="383" y2="79" class="rail"/>
+<polygon points="372,76 378,79 372,82" class="arrow"/>
+<a xlink:href="#BooleanReturnType" target="_top">
+<rect x="383" y="66" width="173" height="26" class="nonterminal-box"/>
+<text x="469" y="84" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
+</a>
+<line x1="556" y1="79" x2="572" y2="79" class="rail"/>
+<polygon points="561,76 567,79 561,82" class="arrow"/>
+<a xlink:href="#IDENTIFIER" target="_top">
+<rect x="572" y="66" width="110" height="26" class="nonterminal-box"/>
+<text x="627" y="84" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</a>
+<line x1="682" y1="79" x2="698" y2="79" class="rail"/>
+<polygon points="687,76 693,79 687,82" class="arrow"/>
+<rect x="698" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="721" y="84" text-anchor="middle" class="terminal-text">'('</text>
+<line x1="745" y1="79" x2="761" y2="79" class="rail"/>
+<polygon points="750,76 756,79 750,82" class="arrow"/>
+<a xlink:href="#Arguments" target="_top">
+<rect x="781" y="66" width="101" height="26" class="nonterminal-box"/>
+<text x="831" y="84" text-anchor="middle" class="nonterminal-text">Arguments</text>
+</a>
+<line x1="761" y1="79" x2="781" y2="79" class="rail"/>
+<line x1="882" y1="79" x2="902" y2="79" class="rail"/>
+<path d="M 761,79 Q 771,79 771,69" class="rail"/>
+<line x1="771" y1="69" x2="771" y2="64" class="rail"/>
+<path d="M 771,64 Q 771,54 781,54" class="rail"/>
+<line x1="781" y1="54" x2="882" y2="54" class="rail"/>
+<path d="M 882,54 Q 892,54 892,64" class="rail"/>
+<line x1="892" y1="64" x2="892" y2="69" class="rail"/>
+<path d="M 892,69 Q 892,79 902,79" class="rail"/>
+<line x1="902" y1="79" x2="918" y2="79" class="rail"/>
+<polygon points="907,76 913,79 907,82" class="arrow"/>
+<rect x="918" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="941" y="84" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="965" y1="79" x2="979" y2="79" class="rail"/>
+<circle cx="987" cy="79" r="8" class="end-circle-outer"/>
+<circle cx="987" cy="79" r="5" class="end-circle-inner"/>
+</svg>

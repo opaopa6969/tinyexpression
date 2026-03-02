@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1060" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanMethodDeclaration</text>
+<circle cx="26" cy="79" r="6" class="start-circle"/>
+<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
+<a xlink:href="#BooleanReturnType" target="_top">
+<rect x="50" y="66" width="173" height="26" class="nonterminal-box"/>
+<text x="136" y="84" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
+</a>
+<line x1="223" y1="79" x2="239" y2="79" class="rail"/>
+<polygon points="228,76 234,79 228,82" class="arrow"/>
+<a xlink:href="#IDENTIFIER" target="_top">
+<rect x="239" y="66" width="110" height="26" class="nonterminal-box"/>
+<text x="294" y="84" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</a>
+<line x1="349" y1="79" x2="365" y2="79" class="rail"/>
+<polygon points="354,76 360,79 354,82" class="arrow"/>
+<rect x="365" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="388" y="84" text-anchor="middle" class="terminal-text">'('</text>
+<line x1="412" y1="79" x2="428" y2="79" class="rail"/>
+<polygon points="417,76 423,79 417,82" class="arrow"/>
+<a xlink:href="#MethodParameters" target="_top">
+<rect x="448" y="66" width="164" height="26" class="nonterminal-box"/>
+<text x="530" y="84" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
+</a>
+<line x1="428" y1="79" x2="448" y2="79" class="rail"/>
+<line x1="612" y1="79" x2="632" y2="79" class="rail"/>
+<path d="M 428,79 Q 438,79 438,69" class="rail"/>
+<line x1="438" y1="69" x2="438" y2="64" class="rail"/>
+<path d="M 438,64 Q 438,54 448,54" class="rail"/>
+<line x1="448" y1="54" x2="612" y2="54" class="rail"/>
+<path d="M 612,54 Q 622,54 622,64" class="rail"/>
+<line x1="622" y1="64" x2="622" y2="69" class="rail"/>
+<path d="M 622,69 Q 622,79 632,79" class="rail"/>
+<line x1="632" y1="79" x2="648" y2="79" class="rail"/>
+<polygon points="637,76 643,79 637,82" class="arrow"/>
+<rect x="648" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="671" y="84" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="695" y1="79" x2="711" y2="79" class="rail"/>
+<polygon points="700,76 706,79 700,82" class="arrow"/>
+<rect x="711" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="734" y="84" text-anchor="middle" class="terminal-text">'{'</text>
+<line x1="758" y1="79" x2="774" y2="79" class="rail"/>
+<polygon points="763,76 769,79 763,82" class="arrow"/>
+<a xlink:href="#BooleanExpression" target="_top">
+<rect x="774" y="66" width="173" height="26" class="nonterminal-box"/>
+<text x="860" y="84" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
+</a>
+<line x1="947" y1="79" x2="963" y2="79" class="rail"/>
+<polygon points="952,76 958,79 952,82" class="arrow"/>
+<rect x="963" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="986" y="84" text-anchor="middle" class="terminal-text">'}'</text>
+<line x1="1010" y1="79" x2="1024" y2="79" class="rail"/>
+<circle cx="1032" cy="79" r="8" class="end-circle-outer"/>
+<circle cx="1032" cy="79" r="5" class="end-circle-inner"/>
+</svg>

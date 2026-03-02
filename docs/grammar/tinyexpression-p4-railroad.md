@@ -1,12 +1,16 @@
-# TinyExpression P4 Railroad (Mermaid)
+# TinyExpression P4 Grammar — Railroad Diagrams
 
-Source of truth:
-- [UBNF draft](../ubnf/tinyexpression-p4-draft.ubnf)
-- [BNF view](tinyexpression-p4-draft.bnf)
+**Complete, auto-generated railroad diagrams** for all grammar rules.
 
-Notes:
-- This file provides railroad-like diagrams in Mermaid for key rules.
-- For complete rule details, use the BNF/UBNF files above.
+## 📖 Documentation
+
+- **[Complete Railroad Diagrams](../railroad/README.md)** — All 106 grammar rules with SVG railroad diagrams (GitHub-compatible)
+- [UBNF Grammar](../ubnf/tinyexpression-p4-complete.ubnf) — Complete grammar definition
+- [BNF Reference](tinyexpression-p4-draft.bnf) — EBNF-style reference
+
+## Quick Navigation
+
+The diagrams below are simplified Mermaid flowcharts showing key rule relationships. For complete rule definitions and exact syntax, refer to the **[Complete Railroad Diagrams](../railroad/README.md)**.
 
 ## 1. Formula
 
