@@ -5,6 +5,7 @@ import java.util.Deque;
 import java.util.Optional;
 
 import org.unlaxer.EnclosureDirection;
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.Range;
 import org.unlaxer.Token;
 import org.unlaxer.TokenEnclosureUtil;
@@ -13,9 +14,9 @@ import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberFactorParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 import org.unlaxer.util.StringUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{
@@ -223,9 +224,9 @@ public class CalculatorEditableLineModel implements EditableLineModel{
 			return Optional.empty();
 		}
 		int position = getPosition();
-		Optional<Token> selected = 
-				TokenEnclosureUtil.getEnclosureWithToken(rootToken.get(),
-						enclosureDirection, position, getSelection(), enclosureMatchers);
+			Optional<Token> selected = 
+					TokenEnclosureUtil.getEnclosureWithToken(rootToken.get(),
+							enclosureDirection, new CodePointIndex(position), getSelection(), enclosureMatchers);
 		
 		if(selected.isPresent()){
 			EditHistory clone = getCurrent().clone(EditAction.of(ActionType.of(enclosureDirection)));

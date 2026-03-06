@@ -1,6 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
-
-import org.unlaxer.tinyexpression.parser.AbstractStringExpressionParser;
+package org.unlaxer.tinyexpression.parser;
 
 public class StringExpressionParser extends AbstractStringExpressionParser{
 

@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Iterator;
 import java.util.List;

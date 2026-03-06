@@ -6,9 +6,9 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 
 
 

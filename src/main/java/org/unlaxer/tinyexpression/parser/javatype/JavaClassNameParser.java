@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.javatype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;

@@ -1,11 +1,8 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.BinaryOperatorParser;
-import org.unlaxer.tinyexpression.parser.LessParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class NumberLessExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser , BooleanExpression{

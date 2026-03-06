@@ -5,16 +5,12 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
-import org.unlaxer.tinyexpression.parser.stringtype.StringPlusParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringTermParser;
 
-public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedLazyChain implements
-  StringExpression , VariableTypeSelectable , LeftAndOperatorPlusRights{
+public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedLazyChain implements StringExpression , VariableTypeSelectable{
 
 	private static final long serialVersionUID = 3057326703009847594L;
-
-
+	
+	
 	public AbstractStringExpressionParser() {
 		super();
 	}
@@ -22,7 +18,7 @@ public abstract class AbstractStringExpressionParser extends JavaStyleDelimitedL
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
     return
-        withNakedVariable ?
+        withNakedVariable ? 
         // StringExpression:=StringTerm('+'StringTerm)*;
           new Parsers(
             Parser.get(StringTermParser.class),

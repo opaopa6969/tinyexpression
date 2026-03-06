@@ -9,14 +9,14 @@ import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.parser.posix.SemiColonParser;
-import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
-import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
+import org.unlaxer.tinyexpression.parser.JavaClassMethodParser;
+import org.unlaxer.tinyexpression.parser.JavaClassNameParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;
 
 public class ImportParser extends JavaStyleDelimitedLazyChain{
-
-  public final static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
+  
+  static Tag javaClassMethodOrClassNameTag = Tag.of("javaClassMethodOrClassName");
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
@@ -31,10 +31,10 @@ public class ImportParser extends JavaStyleDelimitedLazyChain{
         Parser.get(SemiColonParser.class)
     );
   }
-
+  
   @TokenExtractor
   public static Token extractImport(Token thisParserParsed){
-
+    
     //choiceを選択するにはこの方法が良いがTiming.UseOperatorOperandTreeの時に面倒
 //    Token choice = thisParserParsed.getChild(
 //        TokenPredicators.hasTag(choiceTag),
@@ -44,10 +44,10 @@ public class ImportParser extends JavaStyleDelimitedLazyChain{
     Token javaClassMethodOrClassName = thisParserParsed.getChild(
         TokenPredicators.hasTag(javaClassMethodOrClassNameTag));
     Token identifier = thisParserParsed.getChildWithParser(IdentifierParser.class);
-
+    
     return thisParserParsed.newCreatesOf(javaClassMethodOrClassName,identifier);
   }
-
+  
   @TokenExtractor(timings = Timing.UseOperatorOperandTree)
   public static Token extractJavaClassMethodOrClassName(Token thisParserParsed){
     return thisParserParsed.getChildFromAstNodes(0);

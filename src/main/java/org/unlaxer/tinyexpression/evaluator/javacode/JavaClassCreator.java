@@ -10,13 +10,13 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.BooleanVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.NumberVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.StringVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableMethodParameterParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableMethodParameterParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringVariableMethodParameterParser;
 
 public interface JavaClassCreator{
   default String createJavaClass(String className, 
@@ -24,7 +24,7 @@ public interface JavaClassCreator{
     
     TypedToken<ExpressionInterface> expressionToken = tinyExpressionToken.expressionToken;
     ExpressionInterface parser = expressionToken.getParser();
-    String returningType = parser.expressionType(expressionToken).javaType().getSimpleName();
+    String returningType = parser.expressionType().javaType().getSimpleName();
     
     SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
 
@@ -103,7 +103,7 @@ public interface JavaClassCreator{
       
       Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
       ExpressionInterface expressionParser = expression.getParser(ExpressionInterface.class);
-      ExpressionType expressionType = expressionParser.expressionType(expression);
+      ExpressionType expressionType = expressionParser.expressionType();
       
       builder
         .n()

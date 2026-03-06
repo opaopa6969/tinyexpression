@@ -1,10 +1,8 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TypeHint;
 
 public class StringTypeHintParser extends LazyChoice implements TypeHint{
 
@@ -24,6 +22,6 @@ public class StringTypeHintParser extends LazyChoice implements TypeHint{
 
   @Override
   public ExpressionTypes type() {
-    return ExpressionTypes._string;
+    return ExpressionTypes.string;
   }
 }

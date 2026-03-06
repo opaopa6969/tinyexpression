@@ -6,7 +6,6 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class InTimeRangeParser extends JavaStyleDelimitedLazyChain {

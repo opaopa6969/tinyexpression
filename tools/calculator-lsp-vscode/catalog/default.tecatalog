@@ -1,0 +1,12 @@
+# Bundled TinyExpression catalog (default)
+# format:
+#   exact|name|description|context(optional)
+#   prefixWithSuffix|prefix|_|1|description|context(optional)
+tinyexpression-catalog-v1
+
+exact|input|default input value|COMMON
+exact|inputName|default name input|COMMON
+exact|didCheck|flag set by external checks|COMMON
+
+prefixWithSuffix|nim|_|1|NIM context variable (nim_<suffix>)|NIM
+prefixWithSuffix|fa|_|1|FA context variable (fa_<suffix>)|FA

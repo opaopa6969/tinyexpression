@@ -6,8 +6,6 @@ import org.unlaxer.parser.combinator.Chain;
 import org.unlaxer.parser.combinator.ZeroOrOne;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
 
 public class SliceParser extends JavaStyleDelimitedLazyChain implements StringExpression{
 	

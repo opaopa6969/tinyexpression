@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
@@ -6,9 +6,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.ExpressionTags;
-import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.TokenExtractor.Timing;

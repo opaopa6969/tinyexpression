@@ -98,4 +98,42 @@ public class MethodsParserTest extends ParserTestBase{
     System.out.println(string);
   }
 
+  @Test
+  public void testObjectMethod() {
+
+    setLevel(OutputLevel.mostDetail);
+
+    var parser = new MethodsParser();
+
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+    simpleBuilder
+      .line("object provide(){")
+      .line(" 'ok'")
+      .line("}");
+
+    String formula = simpleBuilder.toString();
+    TestResult testAllMatch = testAllMatch(parser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+
+  @Test
+  public void testObjectMethodWithObjectParameter() {
+    setLevel(OutputLevel.mostDetail);
+    var parser = new MethodsParser();
+
+    SimpleBuilder simpleBuilder = new SimpleBuilder();
+    simpleBuilder
+      .line("object identity($payload as object){")
+      .line(" $payload")
+      .line("}");
+
+    String formula = simpleBuilder.toString();
+    TestResult testAllMatch = testAllMatch(parser, formula);
+    Token rootToken = testAllMatch.parsed.getRootToken();
+    String string = TokenPrinter.get(rootToken);
+    System.out.println(string);
+  }
+
 }

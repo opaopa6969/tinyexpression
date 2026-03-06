@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="570" height="90">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringComparisonExpression</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#StringExpression" target="_top">
+<rect x="50" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="132" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</a>
+<line x1="214" y1="57" x2="230" y2="57" class="rail"/>
+<polygon points="219,54 225,57 219,60" class="arrow"/>
+<a xlink:href="#EqualityOp" target="_top">
+<rect x="230" y="44" width="110" height="26" class="nonterminal-box"/>
+<text x="285" y="62" text-anchor="middle" class="nonterminal-text">EqualityOp</text>
+</a>
+<line x1="340" y1="57" x2="356" y2="57" class="rail"/>
+<polygon points="345,54 351,57 345,60" class="arrow"/>
+<a xlink:href="#StringExpression" target="_top">
+<rect x="356" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="438" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</a>
+<line x1="520" y1="57" x2="534" y2="57" class="rail"/>
+<circle cx="542" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="542" cy="57" r="5" class="end-circle-inner"/>
+</svg>

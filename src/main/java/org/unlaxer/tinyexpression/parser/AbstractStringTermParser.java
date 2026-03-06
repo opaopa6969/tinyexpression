@@ -4,8 +4,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
-import org.unlaxer.tinyexpression.parser.stringtype.StringFactorParser;
 
 public abstract class AbstractStringTermParser extends JavaStyleDelimitedLazyChain implements StringExpression , VariableTypeSelectable{
 

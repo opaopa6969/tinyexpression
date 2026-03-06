@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="304" height="242">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringPredicateMethod</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#IndexOfMethod" target="_top">
+<rect x="83" y="44" width="137" height="26" class="nonterminal-box"/>
+<text x="151" y="62" text-anchor="middle" class="nonterminal-text">IndexOfMethod</text>
+</a>
+<line x1="70" y1="57" x2="83" y2="57" class="rail"/>
+<line x1="220" y1="57" x2="234" y2="57" class="rail"/>
+<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
+<line x1="234" y1="57" x2="254" y2="57" class="rail"/>
+<a xlink:href="#StartsWithMethod" target="_top">
+<rect x="70" y="82" width="164" height="26" class="nonterminal-box"/>
+<text x="152" y="100" text-anchor="middle" class="nonterminal-text">StartsWithMethod</text>
+</a>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
+<path d="M 60,85 Q 60,95 70,95" class="rail"/>
+<path d="M 234,95 Q 244,95 244,85" class="rail"/>
+<line x1="244" y1="85" x2="244" y2="67" class="rail"/>
+<path d="M 244,67 Q 244,57 254,57" class="rail"/>
+<a xlink:href="#EndsWithMethod" target="_top">
+<rect x="79" y="120" width="146" height="26" class="nonterminal-box"/>
+<text x="152" y="138" text-anchor="middle" class="nonterminal-text">EndsWithMethod</text>
+</a>
+<line x1="70" y1="133" x2="79" y2="133" class="rail"/>
+<line x1="225" y1="133" x2="234" y2="133" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
+<path d="M 60,123 Q 60,133 70,133" class="rail"/>
+<path d="M 234,133 Q 244,133 244,123" class="rail"/>
+<line x1="244" y1="123" x2="244" y2="67" class="rail"/>
+<path d="M 244,67 Q 244,57 254,57" class="rail"/>
+<a xlink:href="#ContainsMethod" target="_top">
+<rect x="79" y="158" width="146" height="26" class="nonterminal-box"/>
+<text x="152" y="176" text-anchor="middle" class="nonterminal-text">ContainsMethod</text>
+</a>
+<line x1="70" y1="171" x2="79" y2="171" class="rail"/>
+<line x1="225" y1="171" x2="234" y2="171" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="161" class="rail"/>
+<path d="M 60,161 Q 60,171 70,171" class="rail"/>
+<path d="M 234,171 Q 244,171 244,161" class="rail"/>
+<line x1="244" y1="161" x2="244" y2="67" class="rail"/>
+<path d="M 244,67 Q 244,57 254,57" class="rail"/>
+<a xlink:href="#InMethod" target="_top">
+<rect x="106" y="196" width="92" height="26" class="nonterminal-box"/>
+<text x="152" y="214" text-anchor="middle" class="nonterminal-text">InMethod</text>
+</a>
+<line x1="70" y1="209" x2="106" y2="209" class="rail"/>
+<line x1="198" y1="209" x2="234" y2="209" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="199" class="rail"/>
+<path d="M 60,199 Q 60,209 70,209" class="rail"/>
+<path d="M 234,209 Q 244,209 244,199" class="rail"/>
+<line x1="244" y1="199" x2="244" y2="67" class="rail"/>
+<path d="M 244,67 Q 244,57 254,57" class="rail"/>
+<line x1="254" y1="57" x2="268" y2="57" class="rail"/>
+<circle cx="276" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="276" cy="57" r="5" class="end-circle-inner"/>
+</svg>

@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.parser;
 
-import java.util.stream.Stream;
-
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
@@ -24,39 +22,21 @@ public class MethodParametersParser extends JavaStyleDelimitedLazyChain{
         Parser.get(RightParenthesisParser.class)
     );
   }
-
-//  @TokenExtractor
-//  public java.util.Optional<TypedToken<TypedVariableParser>>
-//    extractTypedVariableParser(TypedToken<MethodParametersParser> thisParserParsed , String parameterName){
-//
-//    return thisParserParsed.flatten().stream()
-//      .filter(TokenPredicators.parserImplements(TypedVariableParser.class))
-//      .map(token->token.typed(TypedVariableParser.class))
-//      .filter(typeToken->{
-//        TypedVariableParser parser = typeToken.getParser();
-//        String variableName = parser.getVariableName(typeToken);
-//        return variableName.equals(parameterName);
-//      })
-//      .map(typedToken->
-//        typedToken.newWithReplace(typedToken.getParser().getRootVariableParer()).typed(TypedVariableParser.class))
-//      .findFirst();
-//  }
-
+  
   @TokenExtractor
-  public java.util.Optional<ExpressionType>
+  public java.util.Optional<TypedToken<TypedVariableParser>> 
     extractTypedVariableParser(TypedToken<MethodParametersParser> thisParserParsed , String parameterName){
 
-    Stream<TypedToken<TypedVariableParser>> filter = thisParserParsed.flatten().stream()
+    return thisParserParsed.flatten().stream()
       .filter(TokenPredicators.parserImplements(TypedVariableParser.class))
       .map(token->token.typed(TypedVariableParser.class))
       .filter(typeToken->{
         TypedVariableParser parser = typeToken.getParser();
         String variableName = parser.getVariableName(typeToken);
         return variableName.equals(parameterName);
-      });
-//      .map(typedToken->
-//        typedToken.newWithReplace(typedToken.getParser().getRootVariableParer()).typed(TypedVariableParser.class))
-//      .findFirst();
+      })
+      .map(typedToken->
+        typedToken.newWithReplace(typedToken.getParser().getRootVariableParer()).typed(TypedVariableParser.class))
+      .findFirst();
   }
-
 }

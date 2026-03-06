@@ -1,13 +1,10 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
 @SuppressWarnings("serial")

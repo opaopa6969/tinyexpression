@@ -1,14 +1,12 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.tinyexpression.parser.ReturningNumberParser;
-import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 
 public class NumberSideEffectExpressionParser extends SideEffectExpressionParser implements NumberExpression{
 
   @Override
-  public Parser typedReturningParser() {
+  Parser typedReturningParser() {
     return new Optional(ReturningNumberParser.class);
   }
 }

@@ -1,9 +1,8 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.tinyexpression.parser.AsParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class BooleanTypeHintSuffixParser extends JavaStyleDelimitedLazyChain {

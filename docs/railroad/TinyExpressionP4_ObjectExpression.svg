@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="376" height="280">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectExpression</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#NumberExpression" target="_top">
+<rect x="106" y="44" width="164" height="26" class="nonterminal-box"/>
+<text x="188" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</a>
+<line x1="70" y1="57" x2="106" y2="57" class="rail"/>
+<line x1="270" y1="57" x2="306" y2="57" class="rail"/>
+<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
+<line x1="306" y1="57" x2="326" y2="57" class="rail"/>
+<a xlink:href="#StringExpression" target="_top">
+<rect x="106" y="82" width="164" height="26" class="nonterminal-box"/>
+<text x="188" y="100" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</a>
+<line x1="70" y1="95" x2="106" y2="95" class="rail"/>
+<line x1="270" y1="95" x2="306" y2="95" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
+<path d="M 60,85 Q 60,95 70,95" class="rail"/>
+<path d="M 306,95 Q 316,95 316,85" class="rail"/>
+<line x1="316" y1="85" x2="316" y2="67" class="rail"/>
+<path d="M 316,67 Q 316,57 326,57" class="rail"/>
+<a xlink:href="#BooleanExpression" target="_top">
+<rect x="101" y="120" width="173" height="26" class="nonterminal-box"/>
+<text x="187" y="138" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
+</a>
+<line x1="70" y1="133" x2="101" y2="133" class="rail"/>
+<line x1="274" y1="133" x2="306" y2="133" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
+<path d="M 60,123 Q 60,133 70,133" class="rail"/>
+<path d="M 306,133 Q 316,133 316,123" class="rail"/>
+<line x1="316" y1="123" x2="316" y2="67" class="rail"/>
+<path d="M 316,67 Q 316,57 326,57" class="rail"/>
+<a xlink:href="#ExternalObjectInvocation" target="_top">
+<rect x="70" y="158" width="236" height="26" class="nonterminal-box"/>
+<text x="188" y="176" text-anchor="middle" class="nonterminal-text">ExternalObjectInvocation</text>
+</a>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="161" class="rail"/>
+<path d="M 60,161 Q 60,171 70,171" class="rail"/>
+<path d="M 306,171 Q 316,171 316,161" class="rail"/>
+<line x1="316" y1="161" x2="316" y2="67" class="rail"/>
+<path d="M 316,67 Q 316,57 326,57" class="rail"/>
+<a xlink:href="#VariableRef" target="_top">
+<rect x="128" y="196" width="119" height="26" class="nonterminal-box"/>
+<text x="187" y="214" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</a>
+<line x1="70" y1="209" x2="128" y2="209" class="rail"/>
+<line x1="247" y1="209" x2="306" y2="209" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="199" class="rail"/>
+<path d="M 60,199 Q 60,209 70,209" class="rail"/>
+<path d="M 306,209 Q 316,209 316,199" class="rail"/>
+<line x1="316" y1="199" x2="316" y2="67" class="rail"/>
+<path d="M 316,67 Q 316,57 326,57" class="rail"/>
+<a xlink:href="#MethodInvocation" target="_top">
+<rect x="106" y="234" width="164" height="26" class="nonterminal-box"/>
+<text x="188" y="252" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+</a>
+<line x1="70" y1="247" x2="106" y2="247" class="rail"/>
+<line x1="270" y1="247" x2="306" y2="247" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="237" class="rail"/>
+<path d="M 60,237 Q 60,247 70,247" class="rail"/>
+<path d="M 306,247 Q 316,247 316,237" class="rail"/>
+<line x1="316" y1="237" x2="316" y2="67" class="rail"/>
+<path d="M 316,67 Q 316,57 326,57" class="rail"/>
+<line x1="326" y1="57" x2="340" y2="57" class="rail"/>
+<circle cx="348" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="348" cy="57" r="5" class="end-circle-inner"/>
+</svg>

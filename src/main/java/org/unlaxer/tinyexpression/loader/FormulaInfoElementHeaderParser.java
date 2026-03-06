@@ -8,7 +8,7 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.elementary.StartOfLineParser;
 import org.unlaxer.parser.posix.ColonParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoParser.Kind;
-import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
+import org.unlaxer.tinyexpression.parser.JavaClassNameParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class FormulaInfoElementHeaderParser extends LazyChain{

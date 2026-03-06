@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.WordParser;

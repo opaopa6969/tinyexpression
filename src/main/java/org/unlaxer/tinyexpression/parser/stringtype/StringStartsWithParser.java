@@ -1,9 +1,7 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.StartsWithMethodParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class StringStartsWithParser extends JavaStyleDelimitedLazyChain 

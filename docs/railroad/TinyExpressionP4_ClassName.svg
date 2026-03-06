@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="439" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ClassName</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#IDENTIFIER" target="_top">
+<rect x="50" y="44" width="110" height="26" class="nonterminal-box"/>
+<text x="105" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</a>
+<line x1="160" y1="57" x2="176" y2="57" class="rail"/>
+<polygon points="165,54 171,57 165,60" class="arrow"/>
+<rect x="196" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="219" y="62" text-anchor="middle" class="terminal-text">'.'</text>
+<line x1="243" y1="57" x2="259" y2="57" class="rail"/>
+<polygon points="248,54 254,57 248,60" class="arrow"/>
+<a xlink:href="#IDENTIFIER" target="_top">
+<rect x="259" y="44" width="110" height="26" class="nonterminal-box"/>
+<text x="314" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</a>
+<line x1="176" y1="57" x2="196" y2="57" class="rail"/>
+<line x1="369" y1="57" x2="389" y2="57" class="rail"/>
+<path d="M 186,57 Q 176,57 176,67" class="rail"/>
+<line x1="176" y1="67" x2="176" y2="72" class="rail"/>
+<path d="M 176,72 Q 176,82 186,82" class="rail"/>
+<line x1="186" y1="82" x2="379" y2="82" class="rail"/>
+<polygon points="285,79 279,82 285,85" class="arrow"/>
+<path d="M 379,82 Q 389,82 389,72" class="rail"/>
+<line x1="389" y1="72" x2="389" y2="67" class="rail"/>
+<path d="M 389,67 Q 389,57 379,57" class="rail"/>
+<line x1="389" y1="57" x2="403" y2="57" class="rail"/>
+<circle cx="411" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="411" cy="57" r="5" class="end-circle-inner"/>
+</svg>

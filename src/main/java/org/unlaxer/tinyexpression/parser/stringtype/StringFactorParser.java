@@ -1,12 +1,7 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Set;
 
-import org.unlaxer.tinyexpression.parser.AbstractStringFactorParser;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TypedParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
 import org.unlaxer.util.Singletons;
 
 public class StringFactorParser extends AbstractStringFactorParser implements TypedParser{
@@ -23,7 +18,7 @@ public class StringFactorParser extends AbstractStringFactorParser implements Ty
 
   @Override
   public ExpressionTypes type() {
-    return ExpressionTypes._string;
+    return ExpressionTypes.string;
   }
 
   @Override

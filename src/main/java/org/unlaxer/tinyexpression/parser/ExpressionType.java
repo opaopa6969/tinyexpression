@@ -8,7 +8,7 @@ import org.unlaxer.Tag;
 
 public interface ExpressionType{
   public Tag asTag();
-  public String name();
+  
   public boolean isBoolean();
   public boolean isShort();
   public boolean isByte();
@@ -19,37 +19,37 @@ public interface ExpressionType{
   public boolean isBigInteger();
   public boolean isBigDecimal();
   public boolean isNumber();
-
+  
   public default String javaLiteralSuffix() {
   	return "";
   };
-
+  
   public boolean isBigNumber();
   public default boolean isNotBigNumber() {
     return false == isBigNumber();
   }
-
+  
   public boolean isPrimitiveNumber();
   public boolean isVoid();
   public boolean isObject();
   public boolean isString();
   public boolean isTimestamp();
-  public boolean isExternalJavaType();
-  public boolean isUndefined();
-
+  
   public Class<?> javaType();
   public default String javaTypeAsString() {
     return javaType().getTypeName();
   }
-
-  public Optional<String> lowerCaseTypeName();
-
 //    public static Optional<ExpressionType> of(Class<?> clazz);
-
+    
   public Optional<Class<?>> javaTypePrimitive();
-
+  
   public static record PrePost(String pre,String post) {};
 
+  private IllegalArgumentException unsupportedNumberOperation(String operation) {
+    return new IllegalArgumentException(
+        "ExpressionType " + this + " does not support operation: " + operation);
+  }
+  
   public default PrePost wrapNumber() {
     if(isInt()) {
       return new PrePost("((int)" ,")");
@@ -75,11 +75,11 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return new PrePost("BigDecimal.valueOf(" ,")");
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("wrapNumber");
   }
-
+  
   public default String zeroNumber() {
-
+    
     if(isInt() || isShort() || isByte()) {
       return "0";
     }
@@ -98,11 +98,11 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return "new BigDecimal(\"0\")";
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("zeroNumber");
   }
-
+  
   public default Number parseNumber(String numberToken) {
-
+    
     if(isInt()) {
       return Integer.parseInt(numberToken);
     }
@@ -127,40 +127,12 @@ public interface ExpressionType{
     if(isBigDecimal()) {
       return new BigDecimal(numberToken);
     }
-    throw new IllegalArgumentException();
+    throw unsupportedNumberOperation("parseNumber");
   }
-
+  
   public default String numberWithSuffix(String numberToken) {
-
+    
     return String.valueOf(parseNumber(numberToken))+javaLiteralSuffix();
   }
-
-  public default String valueMethod() {
-    if(isInt()) {
-      return "intValue()";
-    }
-    if(isShort()) {
-      return "shortValue()";
-    }
-    if(isByte()) {
-      return "byteValue()";
-    }
-    if(isFloat()) {
-      return "floatValue()";
-    }
-    if(isLong()) {
-      return "longValue()";
-    }
-    if(isDouble()) {
-      return "douleValue()";
-    }
-    if(isBigInteger()) {
-      return "";
-    }
-    if(isBigDecimal()) {
-      return "";
-    }
-    throw new IllegalArgumentException();
-  }
-
+  
 }

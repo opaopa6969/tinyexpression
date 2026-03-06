@@ -1,7 +1,5 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
-import org.unlaxer.tinyexpression.parser.TypeHint;
-import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 
 public class BooleanTypeHintPrefixParser extends JavaStyleParenthesesParser implements TypeHintVariableParser {

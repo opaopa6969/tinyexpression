@@ -3,8 +3,6 @@ package org.unlaxer.tinyexpression.parser;
 import org.junit.Test;
 import org.unlaxer.ParserTestBase;
 import org.unlaxer.listener.OutputLevel;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringSuffixedVariableParser;
 
 public class StringSuffixedVariableParserTest extends ParserTestBase{
 

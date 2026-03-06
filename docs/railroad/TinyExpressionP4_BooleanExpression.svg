@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="619" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanExpression</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#BooleanAndExpression" target="_top">
+<rect x="50" y="44" width="200" height="26" class="nonterminal-box"/>
+<text x="150" y="62" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
+</a>
+<line x1="250" y1="57" x2="266" y2="57" class="rail"/>
+<polygon points="255,54 261,57 255,60" class="arrow"/>
+<rect x="286" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="309" y="62" text-anchor="middle" class="terminal-text">'|'</text>
+<line x1="333" y1="57" x2="349" y2="57" class="rail"/>
+<polygon points="338,54 344,57 338,60" class="arrow"/>
+<a xlink:href="#BooleanAndExpression" target="_top">
+<rect x="349" y="44" width="200" height="26" class="nonterminal-box"/>
+<text x="449" y="62" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
+</a>
+<line x1="266" y1="57" x2="286" y2="57" class="rail"/>
+<line x1="549" y1="57" x2="569" y2="57" class="rail"/>
+<path d="M 276,57 Q 266,57 266,67" class="rail"/>
+<line x1="266" y1="67" x2="266" y2="72" class="rail"/>
+<path d="M 266,72 Q 266,82 276,82" class="rail"/>
+<line x1="276" y1="82" x2="559" y2="82" class="rail"/>
+<polygon points="420,79 414,82 420,85" class="arrow"/>
+<path d="M 559,82 Q 569,82 569,72" class="rail"/>
+<line x1="569" y1="72" x2="569" y2="67" class="rail"/>
+<path d="M 569,67 Q 569,57 559,57" class="rail"/>
+<line x1="569" y1="57" x2="583" y2="57" class="rail"/>
+<circle cx="591" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="591" cy="57" r="5" class="end-circle-inner"/>
+</svg>

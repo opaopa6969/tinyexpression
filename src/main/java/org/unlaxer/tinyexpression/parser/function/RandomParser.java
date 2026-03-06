@@ -6,7 +6,7 @@ import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.NoneChildCollectingParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 
 public class RandomParser extends NoneChildCollectingParser implements NumberExpression{
 

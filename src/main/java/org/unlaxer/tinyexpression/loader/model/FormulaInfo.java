@@ -17,12 +17,14 @@ import org.jetbrains.annotations.Nullable;
 import org.unlaxer.compiler.InstanceAndByteCode;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
+import org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 import org.unlaxer.util.EpochPeriodForNavigable;
 import org.unlaxer.util.MultiDateParser;
 import org.unlaxer.util.digest.HEX;
@@ -88,6 +90,7 @@ public class FormulaInfo{
 
   @Nullable
   @FormulaInfoField public String calculatorName;
+  @FormulaInfoField public String executionBackend = ExecutionBackend.JAVA_CODE.name();
 
 //  @FormulaInfoField public String formulaName;
 
@@ -152,11 +155,17 @@ public class FormulaInfo{
     calculator = calculatorCreator.create(
         new Source(formulaText , this), className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader);
 
-    this.byteCode = calculator.byteCode();
-
-    javaCodeText  = calculator.javaCode();
-    byteCodeAsHex = HEX.encode(byteCode);
-    hashByByteCode = MD5.toHex(byteCode);
+    if (calculator instanceof AstEvaluatorCalculator) {
+      this.byteCode = new byte[0];
+      this.javaCodeText = "/* AST_EVALUATOR */";
+      this.byteCodeAsHex = "";
+      this.hashByByteCode = MD5.toHex(byteCode);
+    } else {
+      this.byteCode = calculator.byteCode();
+      javaCodeText  = calculator.javaCode();
+      byteCodeAsHex = HEX.encode(byteCode);
+      hashByByteCode = MD5.toHex(byteCode);
+    }
 
     calculator.setFormulaInfo(this);
     state = FormulaInfoState.calculatorConstructed;
@@ -291,6 +300,13 @@ public class FormulaInfo{
         .append("calculatorName")
         .append(":")
         .line(calculatorName);
+    }
+
+    if(executionBackend != null) {
+      builder
+        .append("executionBackend")
+        .append(":")
+        .line(executionBackend);
     }
 
 //    builder

@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 public class StringStartsWithMethodParser extends StringExpressionMethodParser{
 

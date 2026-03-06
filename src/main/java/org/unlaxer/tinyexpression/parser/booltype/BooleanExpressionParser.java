@@ -1,6 +1,4 @@
-package org.unlaxer.tinyexpression.parser.booltype;
-
-import org.unlaxer.tinyexpression.parser.AbstractBooleanExpressionParser;
+package org.unlaxer.tinyexpression.parser;
 
 public class BooleanExpressionParser extends AbstractBooleanExpressionParser{
 

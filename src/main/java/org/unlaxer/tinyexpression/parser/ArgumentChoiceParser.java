@@ -3,10 +3,6 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.StrictTypedNumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
 
 public class ArgumentChoiceParser extends LazyChoice{
 
@@ -22,5 +18,5 @@ public class ArgumentChoiceParser extends LazyChoice{
         Parser.get(StringExpressionParser.class)
     );
   }
-
+  
 }

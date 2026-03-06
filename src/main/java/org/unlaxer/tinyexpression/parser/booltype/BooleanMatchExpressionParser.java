@@ -1,14 +1,11 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.ExpressionTags;
-import org.unlaxer.tinyexpression.parser.LeftCurlyBraceParser;
-import org.unlaxer.tinyexpression.parser.RightCurlyBraceParser;
+import org.unlaxer.tinyexpression.parser.NumberMatchExpressionParser.MatchFuctionNameParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberMatchExpressionParser.MatchFuctionNameParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class BooleanMatchExpressionParser extends JavaStyleDelimitedLazyChain implements BooleanExpression{

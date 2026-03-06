@@ -13,14 +13,8 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
-import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
@@ -69,7 +63,7 @@ public class ArgumentsParser extends JavaStyleDelimitedLazyChain {
 		            Token token = matchedVariableDeclaration.get();
 		            
 		            VariableDeclaration parser = token.getParser(VariableDeclaration.class);
-		            type = parser.type(token.typed(VariableDeclaration.class));
+		            type = parser.type();
 		          }
 		          if(type.isEmpty()) {
 		            

@@ -3,9 +3,9 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import java.util.Optional;
 
 import org.unlaxer.Tag;
-import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ObjectSetterParser;
 
 @SuppressWarnings("serial")
 public class NakedVariableDeclarationParser extends AbstractVariableDeclarationParser {
@@ -22,12 +22,16 @@ public class NakedVariableDeclarationParser extends AbstractVariableDeclarationP
 
   @Override
   public Optional<Parser> setter() {
-    return Optional.empty();
+    return Optional.of(
+        new org.unlaxer.parser.combinator.Optional(
+            ObjectSetterParser.class
+        )
+    );
   }
 
   @Override
-  public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
-    return Optional.empty();
+  public Optional<ExpressionType> type() {
+    return Optional.of(org.unlaxer.tinyexpression.parser.ExpressionTypes.object);
   }
   
 }

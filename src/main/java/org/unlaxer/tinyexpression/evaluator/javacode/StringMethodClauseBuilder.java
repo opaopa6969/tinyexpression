@@ -5,9 +5,9 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
-import org.unlaxer.tinyexpression.parser.stringtype.StringContainsParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringEndsWithParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringStartsWithParser;
+import org.unlaxer.tinyexpression.parser.StringContainsParser;
+import org.unlaxer.tinyexpression.parser.StringEndsWithParser;
+import org.unlaxer.tinyexpression.parser.StringStartsWithParser;
 
 public class StringMethodClauseBuilder implements TokenCodeBuilder {
 
@@ -37,7 +37,8 @@ public class StringMethodClauseBuilder implements TokenCodeBuilder {
 		}else if(parser instanceof StringContainsParser) {
 			builder.append(".contains(");
 		}else {
-			throw new IllegalArgumentException();
+			throw new IllegalArgumentException(
+			    "Unsupported string method clause parser: " + parser.getClass().getName());
 		}
 		builder
 			.append(right.toString())

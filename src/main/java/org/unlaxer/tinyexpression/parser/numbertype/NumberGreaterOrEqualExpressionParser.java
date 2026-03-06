@@ -1,11 +1,8 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.BinaryOperatorParser;
-import org.unlaxer.tinyexpression.parser.GreaterOrEqualParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 

@@ -6,12 +6,9 @@ import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements
-  BooleanExpression , VariableTypeSelectable,LeftAndOperatorPlusRights{
+public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimitedLazyChain implements BooleanExpression , VariableTypeSelectable{
 
 	private static final long serialVersionUID = 1362501275934237988L;
 
@@ -23,10 +20,10 @@ public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimited
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers(boolean withNakedVariable) {
-
-    Class<? extends Parser> booleanExpressionParserClazz =
+    
+    Class<? extends Parser> booleanExpressionParserClazz = 
         withNakedVariable ? BooleanFactorParser.class : StrictTypedBooleanFactorParser.class;
-
+    
     // <BooleanExpression> ::= <BooleanExpression>[('=='|'!='|'&'|'|'|'^')<BooleanExpression>]*
     return
       new Parsers(
@@ -45,5 +42,5 @@ public abstract class AbstractBooleanExpressionParser extends JavaStyleDelimited
           )
         );
   }
-
+  
 }

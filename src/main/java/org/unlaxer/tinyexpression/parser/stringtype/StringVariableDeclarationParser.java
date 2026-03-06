@@ -1,14 +1,12 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser.javalang;
 
 import java.util.Optional;
 
 import org.unlaxer.Tag;
-import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.javalang.AbstractVariableDeclarationParser;
-import org.unlaxer.tinyexpression.parser.javalang.VariableDeclaration;
+import org.unlaxer.tinyexpression.parser.StringSetterParser;
 
 @SuppressWarnings("serial")
 public class StringVariableDeclarationParser extends AbstractVariableDeclarationParser {
@@ -34,8 +32,8 @@ public class StringVariableDeclarationParser extends AbstractVariableDeclaration
   }
 
   @Override
-  public Optional<ExpressionType> type(TypedToken<? extends VariableDeclaration> thisParserParsed) {
-    return Optional.of(ExpressionTypes._string);
+  public Optional<ExpressionType> type() {
+    return Optional.of(ExpressionTypes.string);
   }
 
 }

@@ -1,0 +1,24 @@
+grammar TinyExpressionP4AssocRepro {
+  @package: org.unlaxer.tinyexpression.generated.p4
+  @whitespace: javaStyle
+
+  token NUMBER = NumberParser
+
+  @root
+  Expression ::= NumberExpression ;
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=10)
+  NumberExpression ::= NumberTerm @left { AddOp @op NumberTerm @right } ;
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=20)
+  NumberTerm ::= NumberFactor @left { MulOp @op NumberFactor @right } ;
+
+  AddOp ::= '+' | '-' ;
+  MulOp ::= '*' | '/' ;
+
+  NumberFactor ::= NUMBER | '(' NumberExpression ')' ;
+}

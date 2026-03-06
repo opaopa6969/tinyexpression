@@ -1,7 +1,6 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 
 public class NumberIfExpressionParser extends IfExpressionParser implements NumberExpression{
 

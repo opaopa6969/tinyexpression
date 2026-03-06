@@ -1,0 +1,327 @@
+grammar TinyExpressionP4 {
+
+  @package: org.unlaxer.tinyexpression.generated.p4
+  @whitespace: javaStyle
+  @comment: { line: '//' }
+
+  token NUMBER     = NumberParser
+  token IDENTIFIER = IdentifierParser
+  token STRING     = SingleQuotedParser
+  token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
+  token CODE_BODY  = org.unlaxer.tinyexpression.parser.javalang.CodeBodyUntilTripleBackticksParser
+  token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
+  token EOF        = EndOfSourceParser
+
+  @root
+  Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
+
+  // ── Fenced Java code block ─────────────────────────────────────────────────
+  // Syntax: ```scheme:JavaClassName\n...\n```
+  // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
+
+  @mapping(CodeBlockExpr)
+  CodeBlock ::= CodeStart CodeBody CodeEnd ;
+  CodeStart ::= CODE_START ;
+  CodeBody ::= CODE_BODY ;
+  CodeEnd ::= CODE_END ;
+
+  // ── Import declaration ─────────────────────────────────────────────────────
+  // Syntax: import fully.qualified.ClassName#methodName as alias;
+  //         import fully.qualified.ClassName as alias;
+  // Example: import sample.v1.CheckAlphabets#check as checkAlphabets;
+
+  @interleave(profile=javaStyle)
+  ImportDeclaration ::=
+      ImportDeclarationWithMethod
+    | ImportDeclarationBare ;
+
+  @mapping(ImportDeclarationExpr, params=[method, alias])
+  ImportDeclarationWithMethod ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
+
+  @mapping(ImportDeclarationBareExpr, params=[alias])
+  ImportDeclarationBare ::= 'import' ClassName 'as' IDENTIFIER @alias ';' ;
+
+  ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
+
+  // ── Variable declarations ──────────────────────────────────────────────────
+
+  @interleave(profile=javaStyle)
+  VariableDeclaration ::=
+      NumberVariableDeclaration
+    | StringVariableDeclaration
+    | BooleanVariableDeclaration
+    | ObjectVariableDeclaration ;
+
+  NumberVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ NumberTypeHint ]
+    [ NumberSetter ]
+    Description
+    ';' ;
+
+  StringVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ StringTypeHint ]
+    [ StringSetter ]
+    Description
+    ';' ;
+
+  BooleanVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ BooleanTypeHint ]
+    [ BooleanSetter ]
+    Description
+    ';' ;
+
+  ObjectVariableDeclaration ::=
+    ( 'var' | 'variable' )
+    '$' IDENTIFIER
+    [ ObjectTypeHint ]
+    [ ObjectSetter ]
+    Description
+    ';' ;
+
+  TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
+
+  NumberTypeHint ::= [ 'as' ] ( 'number' | 'float' ) ;
+  StringTypeHint ::= [ 'as' ] 'string' ;
+  BooleanTypeHint ::= [ 'as' ] 'boolean' ;
+  ObjectTypeHint ::= [ 'as' ] 'object' ;
+
+  NumberSetter ::= 'set' [ 'if' 'not' 'exists' ] NumberExpression ;
+  StringSetter ::= 'set' [ 'if' 'not' 'exists' ] StringExpression ;
+  BooleanSetter ::= 'set' [ 'if' 'not' 'exists' ] BooleanExpression ;
+  ObjectSetter ::= 'set' [ 'if' 'not' 'exists' ] ObjectExpression ;
+
+  Description ::= 'description' '=' STRING ;
+
+  Annotation ::= '@' IDENTIFIER '(' [ AnnotationParameters ] ')' ;
+  AnnotationParameters ::= AnnotationParameter { ',' AnnotationParameter } ;
+  AnnotationParameter ::= IDENTIFIER '=' Expression ;
+
+  @scopeTree(mode=lexical)
+  MethodDeclaration ::=
+      NumberMethodDeclaration
+    | StringMethodDeclaration
+    | BooleanMethodDeclaration
+    | ObjectMethodDeclaration ;
+
+  NumberMethodDeclaration ::=
+    NumberReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      NumberExpression
+    '}' ;
+
+  StringMethodDeclaration ::=
+    StringReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      StringExpression
+    '}' ;
+
+  BooleanMethodDeclaration ::=
+    BooleanReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      BooleanExpression
+    '}' ;
+
+  ObjectMethodDeclaration ::=
+    ObjectReturnType IDENTIFIER
+    '('
+      [ MethodParameters ]
+    ')'
+    '{'
+      ObjectExpression
+    '}' ;
+
+  MethodParameters ::= MethodParameter { ',' MethodParameter } ;
+
+  MethodParameter ::= '$' IDENTIFIER [ 'as' ReturnType ] ;
+
+  NumberReturnType ::= 'number' | 'float' ;
+  StringReturnType ::= 'string' ;
+  BooleanReturnType ::= 'boolean' ;
+  ObjectReturnType ::= 'object' ;
+  ReturnType ::= NumberReturnType | StringReturnType | BooleanReturnType | ObjectReturnType ;
+
+  // ── External invocations ───────────────────────────────────────────────────
+  // Syntax: external returning as <type> methodName(args)
+  // Example: external returning as boolean checkAlphabets($inputName)
+
+  @mapping(ExternalBooleanInvocationExpr, params=[name])
+  ExternalBooleanInvocation ::=
+    'external' 'returning' 'as' BooleanReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalNumberInvocationExpr, params=[name])
+  ExternalNumberInvocation ::=
+    'external' 'returning' 'as' NumberReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalStringInvocationExpr, params=[name])
+  ExternalStringInvocation ::=
+    'external' 'returning' 'as' StringReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  @mapping(ExternalObjectInvocationExpr, params=[name])
+  ExternalObjectInvocation ::=
+    'external' 'returning' 'as' ObjectReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  // ── Built-in method invocation (call / call internal / internal) ──────────
+
+  // Matches: "call internal", "call", or "internal" (actual MethodInvocationHeaderParser)
+  MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
+
+  @backref(name=methodName)
+  @mapping(MethodInvocationExpr, params=[name])
+  MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+  Arguments ::= Expression { ',' Expression } ;
+
+  // ── Numeric expressions ────────────────────────────────────────────────────
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=10)
+  NumberExpression ::= NumberTerm @left { AddOp @op NumberTerm @right } ;
+
+  @mapping(BinaryExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=20)
+  NumberTerm ::= NumberFactor @left { MulOp @op NumberFactor @right } ;
+
+  AddOp ::= '+' | '-' ;
+  MulOp ::= '*' | '/' ;
+
+  NumberFactor ::=
+      NumberMatchExpression
+    | IfExpression
+    | ExternalNumberInvocation
+    | NUMBER
+    | VariableRef
+    | MethodInvocation
+    | '(' NumberExpression ')' ;
+
+  // ── String expressions ─────────────────────────────────────────────────────
+
+  @mapping(StringExpr, params=[value])
+  StringExpression ::=
+      StringMatchExpression @value
+    | ExternalStringInvocation @value
+    | STRING @value
+    | VariableRef @value
+    | MethodInvocation @value ;
+
+  // ── Boolean expressions ────────────────────────────────────────────────────
+
+  @mapping(BooleanExpr, params=[value])
+  BooleanExpression ::=
+      BooleanMatchExpression @value
+    | ExternalBooleanInvocation @value
+    | StringComparisonExpression @value
+    | ComparisonExpression @value
+    | 'true' @value
+    | 'false' @value
+    | VariableRef @value
+    | MethodInvocation @value ;
+
+  // String equality: $var == 'text', 'a' != 'b', etc.
+  // Must appear before number ComparisonExpression (actual BooleanExpressionOfStringParser ordering)
+  @mapping(StringComparisonExpr, params=[left, op, right])
+  StringComparisonExpression ::= StringExpression @left EqualityOp @op StringExpression @right ;
+  EqualityOp ::= '==' | '!=' ;
+
+  @mapping(ComparisonExpr, params=[left, op, right])
+  ComparisonExpression ::= NumberExpression @left CompareOp @op NumberExpression @right ;
+  CompareOp ::= '==' | '!=' | '<=' | '>=' | '<' | '>' ;
+
+  // ── Object expressions ─────────────────────────────────────────────────────
+
+  @mapping(ObjectExpr, params=[value])
+  ObjectExpression ::=
+      NumberExpression @value
+    | StringExpression @value
+    | BooleanExpression @value
+    | ExternalObjectInvocation @value
+    | VariableRef @value
+    | MethodInvocation @value ;
+
+  // ── Control flow ───────────────────────────────────────────────────────────
+
+  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
+  IfExpression ::=
+    'if' '(' BooleanExpression @condition ')'
+    '{' Expression @thenExpr '}'
+    'else'
+    '{' Expression @elseExpr '}' ;
+
+  // ── Match expressions ──────────────────────────────────────────────────────
+
+  @mapping(NumberMatchExpr, params=[firstCase, moreCases, defaultCase])
+  NumberMatchExpression ::=
+    'match' '{'
+      NumberCase @firstCase { ',' NumberCase @moreCases }
+      ',' NumberDefaultCase @defaultCase
+    '}' ;
+
+  @mapping(NumberCaseExpr, params=[condition, value])
+  NumberCase ::= BooleanExpression @condition '->' NumberCaseValue @value ;
+  @mapping(NumberDefaultCaseExpr, params=[value])
+  NumberDefaultCase ::= 'default' '->' NumberCaseValue @value ;
+  @mapping(NumberCaseValueExpr, params=[value])
+  NumberCaseValue ::= NumberExpression @value ;
+
+  @mapping(StringMatchExpr, params=[firstCase, moreCases, defaultCase])
+  StringMatchExpression ::=
+    'match' '{'
+      StringCase @firstCase { ',' StringCase @moreCases }
+      ',' StringDefaultCase @defaultCase
+    '}' ;
+
+  @mapping(StringCaseExpr, params=[condition, value])
+  StringCase ::= BooleanExpression @condition '->' StringCaseValue @value ;
+  @mapping(StringDefaultCaseExpr, params=[value])
+  StringDefaultCase ::= 'default' '->' StringCaseValue @value ;
+  @mapping(StringCaseValueExpr, params=[value])
+  StringCaseValue ::= StringExpression @value ;
+
+  @mapping(BooleanMatchExpr, params=[firstCase, moreCases, defaultCase])
+  BooleanMatchExpression ::=
+    'match' '{'
+      BooleanCase @firstCase { ',' BooleanCase @moreCases }
+      ',' BooleanDefaultCase @defaultCase
+    '}' ;
+
+  @mapping(BooleanCaseExpr, params=[condition, value])
+  BooleanCase ::= BooleanExpression @condition '->' BooleanCaseValue @value ;
+  @mapping(BooleanDefaultCaseExpr, params=[value])
+  BooleanDefaultCase ::= 'default' '->' BooleanCaseValue @value ;
+  @mapping(BooleanCaseValueExpr, params=[value])
+  BooleanCaseValue ::= BooleanExpression @value ;
+
+  // ── Variable references ────────────────────────────────────────────────────
+
+  @mapping(VariableRefExpr, params=[name])
+  VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
+
+  // ── Top-level expression ───────────────────────────────────────────────────
+
+  // BooleanExpression first: comparison/string-eq patterns are more specific than NumberExpression
+  // (actual ExpressionsParser ordering; prevents VariableRef in NumberExpression from eating "$x == y")
+  @mapping(ExpressionExpr, params=[value])
+  Expression ::=
+      BooleanExpression @value
+    | NumberExpression @value
+    | StringExpression @value
+    | ObjectExpression @value
+    | MethodInvocation @value
+    | '(' Expression @value ')' ;
+}

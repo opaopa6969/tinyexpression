@@ -1,13 +1,10 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TypedVariableParser;
 
 @SuppressWarnings("serial")
 public class StringVariableMethodParameterParser extends LazyChoice implements TypedVariableParser , StringExpression{
@@ -27,6 +24,6 @@ public class StringVariableMethodParameterParser extends LazyChoice implements T
   
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionTypes._string);
+    return Optional.of(ExpressionTypes.string);
   }
 }

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="313" height="166">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringMethodCall</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#ToUpperCaseMethod" target="_top">
+<rect x="70" y="44" width="173" height="26" class="nonterminal-box"/>
+<text x="156" y="62" text-anchor="middle" class="nonterminal-text">ToUpperCaseMethod</text>
+</a>
+<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
+<line x1="243" y1="57" x2="263" y2="57" class="rail"/>
+<a xlink:href="#ToLowerCaseMethod" target="_top">
+<rect x="70" y="82" width="173" height="26" class="nonterminal-box"/>
+<text x="156" y="100" text-anchor="middle" class="nonterminal-text">ToLowerCaseMethod</text>
+</a>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
+<path d="M 60,85 Q 60,95 70,95" class="rail"/>
+<path d="M 243,95 Q 253,95 253,85" class="rail"/>
+<line x1="253" y1="85" x2="253" y2="67" class="rail"/>
+<path d="M 253,67 Q 253,57 263,57" class="rail"/>
+<a xlink:href="#TrimMethod" target="_top">
+<rect x="101" y="120" width="110" height="26" class="nonterminal-box"/>
+<text x="156" y="138" text-anchor="middle" class="nonterminal-text">TrimMethod</text>
+</a>
+<line x1="70" y1="133" x2="101" y2="133" class="rail"/>
+<line x1="211" y1="133" x2="243" y2="133" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
+<path d="M 60,123 Q 60,133 70,133" class="rail"/>
+<path d="M 243,133 Q 253,133 253,123" class="rail"/>
+<line x1="253" y1="123" x2="253" y2="67" class="rail"/>
+<path d="M 253,67 Q 253,57 263,57" class="rail"/>
+<line x1="263" y1="57" x2="277" y2="57" class="rail"/>
+<circle cx="285" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="285" cy="57" r="5" class="end-circle-inner"/>
+</svg>

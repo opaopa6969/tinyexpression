@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="570" height="90">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ImportDeclarationBare</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<rect x="50" y="44" width="92" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="96" y="62" text-anchor="middle" class="terminal-text">'import'</text>
+<line x1="142" y1="57" x2="158" y2="57" class="rail"/>
+<polygon points="147,54 153,57 147,60" class="arrow"/>
+<a xlink:href="#ClassName" target="_top">
+<rect x="158" y="44" width="101" height="26" class="nonterminal-box"/>
+<text x="208" y="62" text-anchor="middle" class="nonterminal-text">ClassName</text>
+</a>
+<line x1="259" y1="57" x2="275" y2="57" class="rail"/>
+<polygon points="264,54 270,57 264,60" class="arrow"/>
+<rect x="275" y="44" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="303" y="62" text-anchor="middle" class="terminal-text">'as'</text>
+<line x1="331" y1="57" x2="347" y2="57" class="rail"/>
+<polygon points="336,54 342,57 336,60" class="arrow"/>
+<a xlink:href="#IDENTIFIER" target="_top">
+<rect x="347" y="44" width="110" height="26" class="nonterminal-box"/>
+<text x="402" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</a>
+<line x1="457" y1="57" x2="473" y2="57" class="rail"/>
+<polygon points="462,54 468,57 462,60" class="arrow"/>
+<rect x="473" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="496" y="62" text-anchor="middle" class="terminal-text">';'</text>
+<line x1="520" y1="57" x2="534" y2="57" class="rail"/>
+<circle cx="542" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="542" cy="57" r="5" class="end-circle-inner"/>
+</svg>

@@ -30,7 +30,10 @@ public class VariableDeclarationsParser extends LazyZeroOrMore{
   public static List<Token> extractVariables(Token thisParserParsed){
     
     if(false == thisParserParsed.parser instanceof VariableDeclarationsParser) {
-      throw new IllegalArgumentException();
+      throw new IllegalArgumentException(
+          "Expected VariableDeclarationsParser token but got: "
+              + thisParserParsed.parser.getClass().getName()
+              + " (tokenPath=" + thisParserParsed.getPath() + ")");
     }
     
     boolean isOperatorOperandTree  = thisParserParsed.getChildren(TokenPredicators.parserImplements(VariableDeclaration.class))

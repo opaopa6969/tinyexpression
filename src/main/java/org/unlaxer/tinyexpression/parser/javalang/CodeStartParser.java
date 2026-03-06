@@ -11,7 +11,7 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.elementary.EndOfLineParser;
 import org.unlaxer.parser.elementary.StartOfLineParser;
 import org.unlaxer.parser.elementary.WordParser;
-import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
+import org.unlaxer.tinyexpression.parser.JavaClassNameParser;
 
 public class CodeStartParser extends LazyChain{
 

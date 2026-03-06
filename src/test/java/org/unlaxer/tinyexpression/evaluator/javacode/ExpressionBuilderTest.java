@@ -20,13 +20,13 @@ public class ExpressionBuilderTest {
     Parsed parsed= tinyExpressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとOperatorOperandTreeCreatorがうまく動かない
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);
-    SpecifiedExpressionTypes specifiedExpressionTypes =
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float, ExpressionTypes._float);
+    SpecifiedExpressionTypes specifiedExpressionTypes = 
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken , specifiedExpressionTypes);
     {
       SimpleJavaCodeBuilder simpleJavaCodeBuilder = new SimpleJavaCodeBuilder();
       System.out.println(TokenPrinter.get(rootToken));
-      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder,
+      NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, 
           tinyExpressionTokens.expressionToken , tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();
       System.out.println(build);
@@ -41,7 +41,7 @@ public class ExpressionBuilderTest {
       System.out.println(TokenPrinter.get(rootToken));
 
       tinyExpressionTokens = new TinyExpressionTokens(rootToken, specifiedExpressionTypes);
-
+      
       NumberExpressionBuilder.SINGLETON.build(simpleJavaCodeBuilder, tinyExpressionTokens.expressionToken ,
           tinyExpressionTokens);
       String build = simpleJavaCodeBuilder.build();

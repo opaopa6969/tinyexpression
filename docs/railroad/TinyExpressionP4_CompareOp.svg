@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="196" height="280">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CompareOp</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<rect x="70" y="44" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="98" y="62" text-anchor="middle" class="terminal-text">'=='</text>
+<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
+<line x1="126" y1="57" x2="146" y2="57" class="rail"/>
+<rect x="70" y="82" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="98" y="100" text-anchor="middle" class="terminal-text">'!='</text>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
+<path d="M 60,85 Q 60,95 70,95" class="rail"/>
+<path d="M 126,95 Q 136,95 136,85" class="rail"/>
+<line x1="136" y1="85" x2="136" y2="67" class="rail"/>
+<path d="M 136,67 Q 136,57 146,57" class="rail"/>
+<rect x="70" y="120" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="98" y="138" text-anchor="middle" class="terminal-text">'&lt;='</text>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
+<path d="M 60,123 Q 60,133 70,133" class="rail"/>
+<path d="M 126,133 Q 136,133 136,123" class="rail"/>
+<line x1="136" y1="123" x2="136" y2="67" class="rail"/>
+<path d="M 136,67 Q 136,57 146,57" class="rail"/>
+<rect x="70" y="158" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="98" y="176" text-anchor="middle" class="terminal-text">'&gt;='</text>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="161" class="rail"/>
+<path d="M 60,161 Q 60,171 70,171" class="rail"/>
+<path d="M 126,171 Q 136,171 136,161" class="rail"/>
+<line x1="136" y1="161" x2="136" y2="67" class="rail"/>
+<path d="M 136,67 Q 136,57 146,57" class="rail"/>
+<rect x="74" y="196" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="214" text-anchor="middle" class="terminal-text">'&lt;'</text>
+<line x1="70" y1="209" x2="74" y2="209" class="rail"/>
+<line x1="121" y1="209" x2="126" y2="209" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="199" class="rail"/>
+<path d="M 60,199 Q 60,209 70,209" class="rail"/>
+<path d="M 126,209 Q 136,209 136,199" class="rail"/>
+<line x1="136" y1="199" x2="136" y2="67" class="rail"/>
+<path d="M 136,67 Q 136,57 146,57" class="rail"/>
+<rect x="74" y="234" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="252" text-anchor="middle" class="terminal-text">'&gt;'</text>
+<line x1="70" y1="247" x2="74" y2="247" class="rail"/>
+<line x1="121" y1="247" x2="126" y2="247" class="rail"/>
+<path d="M 50,57 Q 60,57 60,67" class="rail"/>
+<line x1="60" y1="67" x2="60" y2="237" class="rail"/>
+<path d="M 60,237 Q 60,247 70,247" class="rail"/>
+<path d="M 126,247 Q 136,247 136,237" class="rail"/>
+<line x1="136" y1="237" x2="136" y2="67" class="rail"/>
+<path d="M 136,67 Q 136,57 146,57" class="rail"/>
+<line x1="146" y1="57" x2="160" y2="57" class="rail"/>
+<circle cx="168" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="168" cy="57" r="5" class="end-circle-inner"/>
+</svg>

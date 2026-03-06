@@ -1,10 +1,8 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.IfExpressionParser;
-import org.unlaxer.tinyexpression.parser.StrictTypedBooleanExpressionParser;
 
-public class BooleanIfExpressionParser extends IfExpressionParser implements BooleanExpression{// NumberExpression{
+public class BooleanIfExpressionParser extends IfExpressionParser implements NumberExpression{
 
   @Override
   public Class<? extends Parser> strictTypedReturning() {
@@ -15,5 +13,4 @@ public class BooleanIfExpressionParser extends IfExpressionParser implements Boo
   public Class<? extends Parser> nonStrictTypedReturning() {
     return BooleanExpressionParser.class;
   }
-
 }

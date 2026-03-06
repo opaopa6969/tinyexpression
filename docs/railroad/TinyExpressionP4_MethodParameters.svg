@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="529" height="112">
+<style>
+  svg { background: white; font-family: sans-serif; }
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { fill: #333; }
+  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
+  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
+  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
+  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
+  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
+  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: #333; stroke: none; }
+  .end-circle-inner { fill: white; stroke: none; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodParameters</text>
+<circle cx="26" cy="57" r="6" class="start-circle"/>
+<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
+<a xlink:href="#MethodParameter" target="_top">
+<rect x="50" y="44" width="155" height="26" class="nonterminal-box"/>
+<text x="127" y="62" text-anchor="middle" class="nonterminal-text">MethodParameter</text>
+</a>
+<line x1="205" y1="57" x2="221" y2="57" class="rail"/>
+<polygon points="210,54 216,57 210,60" class="arrow"/>
+<rect x="241" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
+<text x="264" y="62" text-anchor="middle" class="terminal-text">','</text>
+<line x1="288" y1="57" x2="304" y2="57" class="rail"/>
+<polygon points="293,54 299,57 293,60" class="arrow"/>
+<a xlink:href="#MethodParameter" target="_top">
+<rect x="304" y="44" width="155" height="26" class="nonterminal-box"/>
+<text x="381" y="62" text-anchor="middle" class="nonterminal-text">MethodParameter</text>
+</a>
+<line x1="221" y1="57" x2="241" y2="57" class="rail"/>
+<line x1="459" y1="57" x2="479" y2="57" class="rail"/>
+<path d="M 231,57 Q 221,57 221,67" class="rail"/>
+<line x1="221" y1="67" x2="221" y2="72" class="rail"/>
+<path d="M 221,72 Q 221,82 231,82" class="rail"/>
+<line x1="231" y1="82" x2="469" y2="82" class="rail"/>
+<polygon points="353,79 347,82 353,85" class="arrow"/>
+<path d="M 469,82 Q 479,82 479,72" class="rail"/>
+<line x1="479" y1="72" x2="479" y2="67" class="rail"/>
+<path d="M 479,67 Q 479,57 469,57" class="rail"/>
+<line x1="479" y1="57" x2="493" y2="57" class="rail"/>
+<circle cx="501" cy="57" r="8" class="end-circle-outer"/>
+<circle cx="501" cy="57" r="5" class="end-circle-inner"/>
+</svg>

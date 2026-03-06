@@ -6,10 +6,9 @@ import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleNamedParenthesesParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 
@@ -61,11 +60,5 @@ public class CosParser extends JavaStyleNamedParenthesesParser implements Number
   @Override
   public Parser innerParser() {
     return Parser.get(NumberExpressionParser.class);
-  }
-
-  @Override
-  public ExpressionType expressionType(Token thisParserParsed) {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'expressionType'");
   }
 }

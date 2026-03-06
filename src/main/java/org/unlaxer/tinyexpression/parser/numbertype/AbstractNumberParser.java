@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Name;
 import org.unlaxer.parser.Parser;
@@ -13,27 +13,31 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.ExponentParser;
 import org.unlaxer.parser.elementary.SignParser;
 import org.unlaxer.parser.posix.DigitParser;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstField;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstFieldSource;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstNode;
+import org.unlaxer.tinyexpression.ast.annotation.TinyAstNodeKind;
 
-public abstract class AbstractNumberParser extends LazyChain implements StaticParser , NumberExpression{
-
+@TinyAstNode(kind = TinyAstNodeKind.NUMBER_LITERAL)
+@TinyAstField(name = "literal", source = TinyAstFieldSource.TOKEN_TEXT)
+public class NumberParser extends LazyChain implements StaticParser , NumberExpression{
+	
 	private static final long serialVersionUID = -7768486767795358533L;
-
+	
 	static final Parser digitParser = new DigitParser();
 	static final Parser signParser = new SignParser();
 	static final Parser pointParser = new PointParser();
 	static final OneOrMore digitsParser = new OneOrMore(Name.of("any-digit"),digitParser);
-
-	public AbstractNumberParser() {
+	
+	public NumberParser() {
 		super();
 	}
 
 	@Override
 	public org.unlaxer.parser.Parsers getLazyParsers() {
-		Parsers parsers = new Parsers();
-
-		// + or -
-		parsers.add(new Optional(Name.of("optional-signParser"),signParser));
-		parsers.add(
+		return new Parsers(				
+				// + or -
+				new Optional(Name.of("optional-signParser"),signParser),
 				new Choice(
 					// 12.3
 					new Chain(Name.of("digits-point-degits"),
@@ -55,19 +59,10 @@ public abstract class AbstractNumberParser extends LazyChain implements StaticPa
 						pointParser,
 						digitsParser
 					)
-				)
+				),
+				// e-3
+				new Optional(ExponentParser.class)
 		);
-
-		// e-3
-		parsers.add(
-		    new Optional(ExponentParser.class)
-		);
-
-		typeSuffix().ifPresent(parsers::add);
-		return parsers;
 	}
-
-  abstract java.util.Optional<Parser> typeSuffix();
-  abstract java.util.Optional<Parser> typePrefix();
 
 }

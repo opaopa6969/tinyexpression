@@ -3,9 +3,6 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanTypeHintPrefixParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberTypeHintPrefixParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringTypeHintPrefixParser;
 
 public class TypeHintPrefixParser extends LazyChoice {
 
@@ -18,6 +15,7 @@ public class TypeHintPrefixParser extends LazyChoice {
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {
     return  new Parsers(
+        Parser.get(ObjectTypeHintPrefixParser.class),//
         Parser.get(StringTypeHintPrefixParser.class),//
         Parser.get(NumberTypeHintPrefixParser.class),//
         Parser.get(BooleanTypeHintPrefixParser.class)//

@@ -1,4 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;

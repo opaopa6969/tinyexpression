@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.unlaxer.Token;
@@ -10,13 +11,18 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.BooleanVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
+import org.unlaxer.tinyexpression.parser.NumberVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.ObjectSetterParser;
+import org.unlaxer.tinyexpression.parser.ObjectVariableMethodParameterParser;
+import org.unlaxer.tinyexpression.parser.StringVariableMethodParameterParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableMethodParameterParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableMethodParameterParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringVariableMethodParameterParser;
 
 public interface GeneralJavaClassCreator{
   
@@ -67,7 +73,7 @@ public interface GeneralJavaClassCreator{
       .line(") ")
       .n();
     
-    if(resultType.isNotBigNumber() && resultType.isNumber()) {
+    if(resultType.isNumber()) {
       
       NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
@@ -79,7 +85,30 @@ public interface GeneralJavaClassCreator{
       
       BooleanExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
 
-    } 
+    } else if (resultType.isObject()) {
+      ExpressionType expressionType = parser.expressionType();
+      Token normalizedNumberExpression = NumberExpressionBuilder.SINGLETON.unwrapNumberExpressionToken(expressionToken);
+      if (normalizedNumberExpression.parser instanceof NakedVariableParser) {
+        TypedToken<VariableParser> typedVariable = normalizedNumberExpression.typed(VariableParser.class);
+        String variableName = typedVariable.getParser().getVariableName(typedVariable);
+        ExpressionType resolvedType = VariableTypeResolver
+            .resolveFromVariableParserToken(normalizedNumberExpression, tinyExpressionToken)
+            .orElse(ExpressionTypes.object);
+        if (resolvedType.isObject()) {
+          appendObjectVariableAccess(builder, tinyExpressionToken, variableName);
+        } else {
+          NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
+        }
+      } else if (expressionType.isNumber()) {
+        NumberExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
+      } else if (expressionType.isBoolean()) {
+        BooleanExpressionBuilder.SINGLETON.build(builder, expressionToken, tinyExpressionToken);
+      } else {
+        ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expressionToken, tinyExpressionToken);
+        build.populateTo(builder, Kind.Function);
+        builder.append(build.toString());
+      }
+    }
 
     builder
       .setKind(Kind.Calculation)
@@ -100,6 +129,80 @@ public interface GeneralJavaClassCreator{
 //    System.out.println(code);
     return code;
   }
+
+  default void appendObjectVariableAccess(SimpleJavaCodeBuilder builder, TinyExpressionTokens tinyExpressionToken,
+      String variableName) {
+    Optional<Token> declaration = tinyExpressionToken.matchedVariableDeclaration(variableName);
+    if (declaration.isPresent()) {
+      Optional<Token> setter = declaration.get().getChildWithParserAsOptional(ObjectSetterParser.class);
+      if (setter.isPresent()) {
+        Token setterToken = setter.get();
+        Token expression = setterToken.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
+        String expressionCode = objectExpressionCode(expression, tinyExpressionToken);
+        Optional<Token> ifNotExists = setterToken.getChildWithParserAsOptional(IfNotExistsParser.class);
+        if (ifNotExists.isPresent()) {
+          builder.append("calculateContext.getObject(")
+              .w(variableName)
+              .append(",java.lang.Object.class).orElse(")
+              .append(expressionCode)
+              .append(")");
+        } else {
+          builder.append("calculateContext.setAndGetObject(")
+              .w(variableName)
+              .append(",")
+              .append(expressionCode)
+              .append(",java.lang.Object.class)");
+        }
+        return;
+      }
+    }
+    builder.append("calculateContext.getObject(")
+        .w(variableName)
+        .append(",java.lang.Object.class).orElse(null)");
+  }
+
+  default String objectExpressionCode(Token expression, TinyExpressionTokens tinyExpressionToken) {
+    return objectExpressionCode(expression, tinyExpressionToken, List.of());
+  }
+
+  default String objectExpressionCode(Token expression, TinyExpressionTokens tinyExpressionToken,
+      List<String> localParameterNames) {
+    if (expression.getParser() instanceof VariableParser) {
+      TypedToken<VariableParser> typedVariable = expression.typed(VariableParser.class);
+      String variableName = typedVariable.getParser().getVariableName(typedVariable);
+      if (localParameterNames.contains(variableName)) {
+        return variableName;
+      }
+      ExpressionType resolvedType = VariableTypeResolver
+          .resolveFromVariableParserToken(expression, tinyExpressionToken)
+          .orElse(ExpressionTypes.object);
+      if (resolvedType.isObject()) {
+        SimpleJavaCodeBuilder builder = new SimpleJavaCodeBuilder();
+        appendObjectVariableAccess(builder, tinyExpressionToken, variableName);
+        return builder.getBuilder(Kind.Main).toString();
+      }
+    }
+
+    ExpressionType expressionType = expression.getParser(ExpressionInterface.class).expressionType();
+    if (expressionType.isObject() && !expression.filteredChildren.isEmpty()) {
+      Token nestedExpression = expression.filteredChildren.get(0);
+      if (nestedExpression.getParser() instanceof ExpressionInterface) {
+        return objectExpressionCode(nestedExpression, tinyExpressionToken, localParameterNames);
+      }
+    }
+    SimpleJavaCodeBuilder expressionBuilder = new SimpleJavaCodeBuilder();
+    if (expressionType.isNumber()) {
+      NumberExpressionBuilder.SINGLETON.build(expressionBuilder, expression, tinyExpressionToken);
+      return expressionBuilder.getBuilder(Kind.Main).toString();
+    }
+    if (expressionType.isBoolean()) {
+      BooleanExpressionBuilder.SINGLETON.build(expressionBuilder, expression, tinyExpressionToken);
+      return expressionBuilder.getBuilder(Kind.Main).toString();
+    }
+    ExpressionOrLiteral built = StringClauseBuilder.SINGLETON.build(expression, tinyExpressionToken);
+    built.populateTo(expressionBuilder, Kind.Function);
+    return built.toString();
+  }
   
   default void createMethods(SimpleJavaCodeBuilder builder , TinyExpressionTokens tinyExpressionTokens , 
       String calculationContextName , ExpressionType resultType) {
@@ -117,12 +220,19 @@ public interface GeneralJavaClassCreator{
           .filter(TokenPredicators.parsers(
               StringVariableMethodParameterParser.class,
               NumberVariableMethodParameterParser.class,
-              BooleanVariableMethodParameterParser.class))
+              BooleanVariableMethodParameterParser.class,
+              ObjectVariableMethodParameterParser.class))
+          .collect(Collectors.toList());
+      List<String> parameterNames = parameters.stream()
+          .map(parameter -> {
+            TypedToken<VariableParser> typed = parameter.typed(VariableParser.class);
+            return typed.getParser().getVariableName(typed);
+          })
           .collect(Collectors.toList());
       
       Token expression = token.getChild(TokenPredicators.parserImplements(ExpressionInterface.class));
       ExpressionInterface expressionParser = expression.getParser(ExpressionInterface.class);
-      ExpressionType expressionType = expressionParser.expressionType(expression);
+      ExpressionType expressionType = expressionParser.expressionType();
       
       builder
         .n()
@@ -150,6 +260,8 @@ public interface GeneralJavaClassCreator{
         NumberExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
       }else if(expressionType.isBoolean()) {
         BooleanExpressionBuilder.SINGLETON.build(builder, expression , tinyExpressionTokens);
+      } else if (expressionType.isObject()) {
+        builder.append(objectExpressionCode(expression, tinyExpressionTokens, parameterNames));
       }else {
         ExpressionOrLiteral build = StringClauseBuilder.SINGLETON.build(expression , 
             tinyExpressionTokens);

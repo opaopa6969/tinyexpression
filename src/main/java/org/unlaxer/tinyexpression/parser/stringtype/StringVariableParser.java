@@ -1,15 +1,10 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Optional;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.RootVariableParser;
-import org.unlaxer.tinyexpression.parser.TypeHintVariableParser;
-import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.util.cache.SupplierBoundCache;
 
 public class StringVariableParser extends LazyChoice implements RootVariableParser , StringExpression{
@@ -33,7 +28,7 @@ public class StringVariableParser extends LazyChoice implements RootVariablePars
  
   @Override
   public Optional<ExpressionType> typeAsOptional() {
-    return Optional.of(ExpressionTypes._string);
+    return Optional.of(ExpressionTypes.string);
   }
     
   public static StringVariableParser get() {

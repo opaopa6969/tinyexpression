@@ -1,8 +1,4 @@
-package org.unlaxer.tinyexpression.parser.stringtype;
-
-import org.unlaxer.tinyexpression.parser.AbstractMethodParser;
-import org.unlaxer.tinyexpression.parser.ExpressionInterface;
-import org.unlaxer.tinyexpression.parser.TypeHint;
+package org.unlaxer.tinyexpression.parser;
 
 public class StringMethodParser extends AbstractMethodParser{
 

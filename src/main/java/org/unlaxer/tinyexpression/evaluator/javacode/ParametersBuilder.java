@@ -6,11 +6,11 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
+import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
+import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser.MethodAndParameters;
-import org.unlaxer.tinyexpression.parser.booltype.BooleanExpression;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpression;
-import org.unlaxer.tinyexpression.parser.stringtype.StringExpression;
+import org.unlaxer.tinyexpression.parser.StringExpression;
 
 public class ParametersBuilder  {
 
@@ -40,7 +40,10 @@ public class ParametersBuilder  {
         build.populateTo(builder, Kind.Function);
         builder.append(build.toString());
 			}else {
-				throw new IllegalArgumentException();
+				throw new IllegalArgumentException(
+				    "Unsupported side-effect parameter parser: "
+				        + parser.getClass().getName()
+				        + " (tokenPath=" + token.getPath() + ")");
 			}
 			if(iterator.hasNext()) {
 				builder.append(" , ");

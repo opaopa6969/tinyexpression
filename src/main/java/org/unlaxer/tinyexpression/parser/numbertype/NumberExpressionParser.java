@@ -1,10 +1,8 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.TokenKind;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class NumberExpressionParser extends AbstractNumberExpressionParser{
 
@@ -22,10 +20,5 @@ public class NumberExpressionParser extends AbstractNumberExpressionParser{
   public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
     return super.parse(parseContext, tokenKind, invertMatch);
   }
-
-  @Override
-  public ExpressionType expressionType() {
-    return ExpressionTypes.number;
-  }
-
+ 
 }

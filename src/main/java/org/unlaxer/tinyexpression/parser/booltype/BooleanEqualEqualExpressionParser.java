@@ -1,9 +1,7 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
-import org.unlaxer.tinyexpression.parser.BinaryOperatorParser;
-import org.unlaxer.tinyexpression.parser.EqualEqualParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
 public class BooleanEqualEqualExpressionParser extends JavaStyleDelimitedLazyChain implements BinaryOperatorParser{

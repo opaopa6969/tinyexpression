@@ -1,8 +1,4 @@
-package org.unlaxer.tinyexpression.parser.numbertype;
-
-import org.unlaxer.tinyexpression.parser.AbstractMethodParser;
-import org.unlaxer.tinyexpression.parser.ExpressionInterface;
-import org.unlaxer.tinyexpression.parser.TypeHint;
+package org.unlaxer.tinyexpression.parser;
 
 public class NumberMethodParser extends AbstractMethodParser{
 

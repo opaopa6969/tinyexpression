@@ -1,12 +1,7 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import java.util.Set;
 
-import org.unlaxer.tinyexpression.parser.AbstractBooleanFactorParser;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TypedParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringFactorParser;
 import org.unlaxer.util.Singletons;
 
 public class BooleanFactorParser extends AbstractBooleanFactorParser implements TypedParser{

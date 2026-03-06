@@ -1,14 +1,8 @@
-package org.unlaxer.tinyexpression.parser.booltype;
+package org.unlaxer.tinyexpression.parser;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.stringtype.StringContainsParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringEndsWithParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringInParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringNotEqualsExpressionParser;
-import org.unlaxer.tinyexpression.parser.stringtype.StringStartsWithParser;
 
 public class BooleanExpressionOfStringParser extends LazyChoice implements BooleanExpression{
 	

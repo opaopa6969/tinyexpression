@@ -18,4 +18,5 @@ public class AnnotationFirstParameterParser extends LazyZeroOrMore{
   public Optional<Parser> getLazyTerminatorParser() {
     return Optional.empty();
   }
+  
 }

@@ -23,9 +23,9 @@ import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
 
 import net.arnx.jsonic.JSON;
 
@@ -1483,9 +1483,7 @@ if ($endpoint == 'withdrawal'
   }
 
   public static void main(String[] args) {
-    double a = 0.005e10d;
-    Long b = 1010L;
-    byte c=0x1c;
+
 	  System.out.println("0f == 0f:" + (0f == 0f));
 
 	  V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA calculator = new V2Test_CalculatorClass6378146570728423373_B580574A033946B953357CF8A718BBEA();
@@ -1561,6 +1559,7 @@ if ($endpoint == 'withdrawal'
       ;
 
     System.out.println(simpleBuilder.toString());
+
   }
 
   @Test

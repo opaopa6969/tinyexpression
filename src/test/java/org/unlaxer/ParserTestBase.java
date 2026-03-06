@@ -98,9 +98,10 @@ public class ParserTestBase {
 			(parseContext , parsed)->{
 
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				org.unlaxer.Source _tokenSource = parseContext.getCurrent().source();
+				Optional<String> lastToken = _tokenSource == null ? Optional.empty() : Optional.of(_tokenSource.toString());
 				resultTokenString.set(lastToken);
-				
+
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
 				
 				testResult.add(
@@ -255,9 +256,10 @@ public class ParserTestBase {
 		return test(parser, sourceString, createMeta,
 			(parseContext , parsed)->{
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				org.unlaxer.Source _tokenSource2 = parseContext.getCurrent().source();
+				Optional<String> lastToken = _tokenSource2 == null ? Optional.empty() : Optional.of(_tokenSource2.toString());
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
-				
+
 				testResult.add(
 						checkAssertEquals(false, parsed.isSucceeded() , doAssert)
 				);
@@ -278,7 +280,8 @@ public class ParserTestBase {
 		return test(parser, sourceString, createMeta, 
 			(parseContext , parsed)->{
 				resultParsed.set(parsed);
-				Optional<String> lastToken = parseContext.getCurrent().getTokenString();
+				org.unlaxer.Source _tokenSource3 = parseContext.getCurrent().source();
+				Optional<String> lastToken = _tokenSource3 == null ? Optional.empty() : Optional.of(_tokenSource3.toString());
 				TestResult testResult = new TestResult(parsed, parseContext, lastToken);
 				testResult.add(
 						checkAssertEquals(true, parsed.isSucceeded()  ,doAssert)

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "TinyExpression",
+  "scopeName": "source.tinyexpression",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#booleans"
+    },
+    {
+      "include": "#variables"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#functions"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#identifiers"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.tinyexpression",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.tinyexpression",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.single.tinyexpression",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.tinyexpression",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.double.tinyexpression",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.tinyexpression",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.tinyexpression",
+          "match": "\\b\\d+(?:\\.\\d+)?(?:[eE][+-]?\\d+)?\\b"
+        }
+      ]
+    },
+    "booleans": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.tinyexpression",
+          "match": "\\b(?:true|false)\\b"
+        }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.tinyexpression",
+          "match": "\\$[\\p{L}_][\\p{L}\\p{N}_]*"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.tinyexpression",
+          "match": "\\b(?:if|else|match|default|var|variable|import|external|internal|call|returning|set|not|exists|description|as)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.tinyexpression",
+          "match": "\\b(?:Number|number|Float|float|String|string|Boolean|boolean|Object|object|byte|short|int|long|double)\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.tinyexpression",
+          "match": "\\b(?:sqrt|min|max|log|sin|cos|tan|get|orElse)\\b(?=\\s*\\()"
+        },
+        {
+          "name": "entity.name.function.tinyexpression",
+          "match": "\\b[\\p{L}_][\\p{L}\\p{N}_]*\\b(?=\\s*\\()"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.tinyexpression",
+          "match": "->|==|!=|<=|>=|&&|\\|\\||[+\\-*/%<>&|!=?:]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.tinyexpression",
+          "match": "[,;]"
+        },
+        {
+          "name": "punctuation.bracket.tinyexpression",
+          "match": "[(){}\\[\\]]"
+        }
+      ]
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.tinyexpression",
+          "match": "\\b[\\p{L}_][\\p{L}\\p{N}_]*\\b"
+        }
+      ]
+    }
+  }
+}
