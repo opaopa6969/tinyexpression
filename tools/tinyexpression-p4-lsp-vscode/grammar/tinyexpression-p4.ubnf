@@ -8,7 +8,7 @@ grammar TinyExpressionP4 {
   token IDENTIFIER = IdentifierParser
   token STRING     = SingleQuotedParser
   token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
-  token CODE_BODY  = org.unlaxer.tinyexpression.parser.javalang.CodeBodyUntilTripleBackticksParser
+  token CODE_BODY  = UNTIL('```')
   token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
   token EOF        = EndOfSourceParser
 

@@ -6,7 +6,7 @@
 
     <groupId>org.unlaxer</groupId>
     <artifactId>tinyexpression-p4-lsp-vscode</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
     <packaging>jar</packaging>
     <description>TinyExpression P4 LSP/DAP — UBNF生成による型安全LSP/DAPサーバー</description>
 
@@ -23,7 +23,7 @@
         <dependency>
             <groupId>org.unlaxer</groupId>
             <artifactId>unlaxer-dsl</artifactId>
-            <version>0.1.0</version>
+            <version>0.2.0</version>
         </dependency>
         <dependency>
             <groupId>org.unlaxer</groupId>

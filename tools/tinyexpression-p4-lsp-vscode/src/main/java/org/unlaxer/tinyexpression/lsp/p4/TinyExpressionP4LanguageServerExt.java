@@ -507,6 +507,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     if (parser instanceof SpaceParser) return -1;
     if (parser instanceof NumberParser) return TOKEN_TYPE_NUMBER;
     if (parser instanceof SingleQuotedParser) return TOKEN_TYPE_STRING;
+    if (parser instanceof org.unlaxer.parser.elementary.WildCardStringTerninatorParser) return TOKEN_TYPE_STRING;
 
     // Text-based classification
     if (KEYWORD_SET.contains(stripped)) return TOKEN_TYPE_KEYWORD;
