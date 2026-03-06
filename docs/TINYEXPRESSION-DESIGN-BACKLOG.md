@@ -231,6 +231,21 @@ Progress snapshot (2026-02-27):
 - TE022 suggestion quality update:
   - candidate ranking now prefers local declared variables over global catalog names,
   - partial-key suggestions consider prefix-aware distance (`prefix_<suffix>`).
+  - when document includes context hints (e.g., `tags:FA`, `nimt`), TE022 suggestion ranking now prefers catalog entries with matching context label.
+  - explicit context keys (`tags/context/product/...`) are prioritized over free-text tokens when deriving TE022 context bias.
+  - explicit context hints now accept quoted values as well (`context=\"FA\"`, `tags='NIM'`).
+  - explicit context key parsing also accepts single-quoted JSON-like form (`'context': 'FA'`).
+  - explicit context hints now also support list-style values (`tags=core,FA,ops`) and extract context tokens from the value segment.
+  - explicit context key parsing now accepts JSON-like quoted keys as well (`\"context\": \"FA\"`).
+  - when multiple explicit hints exist, TE022 context bias uses the first explicit hint in document order.
+  - when a single explicit value includes multiple recognized tokens (`tags=core,NIM,FA`), TE022 uses the first recognized token.
+  - if the first explicit hint has no recognized token (`tags=core,ops`), TE022 evaluates subsequent explicit hints before falling back to free text.
+  - JSON-like explicit context hints inside comments are ignored and do not affect TE022 ranking.
+  - variable-like tokens in explicit context values (`context=$fa`) are ignored as context hints.
+  - comment fragments inside explicit values (`tags=core /* FA */`, `tags=NIM // FA`) are stripped before context-token extraction.
+  - inline comment tail tokens on explicit context lines (e.g., `tags:NIM // FA`) are ignored as context hints.
+  - context hint extraction now ignores string/comment regions to avoid accidental bias from non-code text.
+  - TE022 suggestion hint text now uses a fixed order: `context=...` first, then description.
 - LSP now sets `Diagnostic.code = TE###` and emits catalog-style user message for mapped parse failures.
 - quick fix implemented for parser-safe bracket/semicolon cases:
   - `TE004` => insert `)`
@@ -245,11 +260,39 @@ Progress snapshot (2026-02-27):
 - parser-phase `TE015` mapping is now added for `min/max` arity issues:
   - detects empty argument segment and non-2-argument forms around nearest `min(...)`/`max(...)`,
   - implementation point: `CalculatorLanguageServer.describeMinMaxArityIssue(...)` + catalog mapping in `resolveErrorCatalogEntry(...)`.
+- analyzer-phase advanced semantic checks are extended:
+  - `TE011`: catches clearly non-boolean `if(...)` conditions (`if(1)`, string/object literal direct conditions),
+  - `TE015`: validates `min/max` top-level argument count on parse-success path (non-2-arg and empty-segment forms).
 - parser-phase `TE023` mapping is now added for operator/notation mistakes:
   - detects `&&` / `||` misuse (TinyExpression expects single-char `&` / `|`),
   - detects missing RHS after boolean operator (`&)` / `|}` etc.),
   - detects `$method(...)` notation misuse and suggests removing `$`.
   - implementation point: `CalculatorLanguageServer.describeOperatorNotationIssue(...)` + catalog mapping in `resolveErrorCatalogEntry(...)`.
+- added TE023 regression tests in LSP server suite:
+  - `CalculatorErrorCatalogMappingTest` now verifies TE023 mapping for `&&`, missing RHS after `|`, and `$method(...)`,
+  - quick-fix availability for TE023 `&&` diagnostics is covered,
+  - false-positive guard cases for comments/strings containing `&&` or `$method(...)` are covered (should remain `TE005` in missing-brace scenarios).
+- tuned TE023 classifier priority using parse-hint context:
+  - missing-RHS (`&`/`|`) branch now prefers parse expected-hint context and falls back only when parse offset is known to be unreliable,
+  - `&&`/`||` and `$method(...)` checks remain unconditional syntax diagnostics.
+- improved TE023 quick-fix targeting for broad diagnostics:
+  - code-action resolver now scans the diagnostic neighborhood and selects the nearest TE023 issue (`&&`/`||`, `$method(...)`, missing RHS),
+  - this keeps quick fixes available even when `Diagnostic.range` starts before the actual operator token.
+- expanded TE023 code-action output for mixed notation errors:
+  - when multiple TE023 issues coexist in the same diagnostic range, LSP now returns multiple quick-fix actions (up to 3 nearest issues),
+  - regression test covers mixed `$method(...)` + `&&` input and expects multi-action output.
+- set TE023 quick-fix ordering policy:
+  - quick fixes are sorted by edit destructiveness (symbol normalization `&&/||` first, `$method(...)` cleanup next, missing-RHS completion last),
+  - regression test asserts the first suggested action for mixed input is `&& を & に修正`.
+- deduplicated TE023 quick-fix kinds in mixed diagnostics:
+  - code-action resolver now keeps at most one action per TE023 issue kind to avoid repeated identical fixes (`&&` duplicates, etc.),
+  - regression test asserts quick-fix titles are unique for mixed `$method(...)` + repeated `&&` input.
+- classified TE023 code-action kinds for UI readability:
+  - rewrite-type fixes (`&&/||` normalization, `$method(...)` cleanup) are emitted as `quickfix.rewrite`,
+  - completion-type fixes (missing RHS -> ` true`) are emitted as `quickfix.insert` and regression-tested.
+- advertised TE023 quick-fix sub-kinds in server capabilities:
+  - `initialize` response now returns `CodeActionOptions.codeActionKinds = [quickfix, quickfix.rewrite, quickfix.insert]`,
+  - capability regression test ensures VS Code can consume the structured kinds reliably.
 - lightweight semantic `TE021` mapping is now added in LSP analyzer phase:
   - scans invocation heads and reports unknown method calls not found in:
     - parser-definition-derived method catalog (`TinyExpressionParserMethodCatalog`),
@@ -257,8 +300,10 @@ Progress snapshot (2026-02-27):
     - declared method names in current document.
   - emits `[TE021] ...` diagnostics with closest-candidate hint (`候補: ...`) and propagates `Diagnostic.code` via catalog-prefix extraction.
 - quick fix integration expanded:
-  - `TE021`: rename unknown method to suggested candidate (`候補: ...`) as replacement edit.
+  - `TE021`: rename unknown method to suggested candidate (`候補: ...`) as replacement edit (`quickfix.rewrite`).
+  - `TE022`: rename unknown variable to suggested candidate (`候補: $...`) as replacement edit (`quickfix.rewrite`).
   - `TE023`: operator/notation quick fixes for `&& -> &`, `|| -> |`, `$method(...)` -> `method(...)` (remove leading `$`), and missing RHS after `&`/`|` (insert `true`).
+  - `TE024`: partialKey suffix quick fix (`$prefix` -> `$prefix_<suffix>`) is classified as `quickfix.insert`.
   - `TE003`: convert string double quotes to single quotes.
   - `TE007`: close missing quote in `description='...'`.
   - `TE008`: normalize full-width punctuation to half-width symbols.
@@ -267,7 +312,7 @@ Progress snapshot (2026-02-27):
   - `TE018`: reorder misplaced type hint from `as type $name` to `$name as type`.
   - `TE019`: repair `get(...).orElse(...)` shape (missing `.orElse`, missing `orElse(...)`, or missing `)` in `orElse`).
 - unresolved:
-  - full-precision semantic validation still has gaps (advanced `TE011` boolean-shape validation / advanced `TE015` signature validation / advanced `TE021`/`TE022`/`TE023` context validation beyond lightweight heuristics).
+  - full-precision semantic validation still has gaps (`TE011`/`TE015` now have first-stage advanced checks, but deep type-aware validation and broader `TE021`/`TE022`/`TE023` context validation remain).
   - `TE001` / `TE012`: **N/A (not supported by design)**.
 
 ## 14. TE024 Catalog Externalization and Generalization
@@ -324,6 +369,9 @@ Progress snapshot (2026-02-27):
 - added catalog-backed semantic TE022 in analyzer:
   - when external catalog is loaded, undefined variable references emit `[TE022] ...` with closest candidate hint,
   - LSP quick fix now supports TE022 variable rename (`候補: $...`).
+- added analyzer regression coverage for TE021 unknown methods:
+  - configuration-free analyzer run now produces `[TE021]` diagnostics with candidate hints (e.g., `cosh` → `cos`),
+  - `TinyExpressionVariableCatalogTest` guards TE021/TE022 counts so future heuristic tweaks are covered.
 - reduced diagnostic noise for structural mismatch fallback:
   - TE010 messages no longer append parser detail tail by default,
   - missing-semicolon (`TE006`) detection for `var` declarations now includes a line-based fallback path when parse start offset rewinds to the file head,
@@ -333,3 +381,24 @@ Progress snapshot (2026-02-27):
   - `npm run catalog:convert -- <legacy-files...>`.
 - VSCode client now resolves catalog path tokens before launch:
   - `${workspaceFolder}` and `~` expansion in `tinyExpressionLsp.catalog.path`.
+
+## 15. TinyExpression P4 UBNF Completion (CodeBlock / Full Consume)
+
+Status: planned (queued)
+
+Context:
+- `tinyexpression-p4.ubnf` で parse は進むが、debug trace ではサンプル式が全文消費に到達しないケースがある（`if(external ...)` 付近で rollback）。
+- `CodeBlock` は現在 `token CODE_BLOCK = org.unlaxer.tinyexpression.parser.javalang.CodeParser` 依存で、UBNF側の終端保証（全文消費）と責務境界が曖昧。
+- debugger 側の trace test で `expectedAllConsumed=true` を入れたため、未完成箇所が継続的に可視化される状態。
+
+Target:
+1. `Formula` の終端契約を明示する（`Expression` 必須化 + EOF 明示を含む最終仕様決定）。
+2. `CodeBlock` を可能な範囲で UBNF へ寄せる:
+   - `CodeStart` / `CodeBody` / `CodeEnd` の文法責務分離、
+   - ただし本文の「終端まで読み飛ばし」は必要なら専用 parser 併用。
+3. parser trace と debugger cargo movement の整合テストを追加し、同一入力で一致を検証する。
+4. `tinyExpression-p4.ubnf` 更新に合わせて spec / docs / sample grammar を同期更新する。
+
+Validation:
+1. `unlaxer-debugger` の `DebugSessionTraceTest` で `tinyexpression-p4-user-sample` が全文消費で green。
+2. `tinyexpression` 側 parser/evaluator/LSP の既存回帰が壊れない。

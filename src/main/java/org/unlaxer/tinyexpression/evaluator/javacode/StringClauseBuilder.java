@@ -183,14 +183,16 @@ public class StringClauseBuilder {
 
     return specifier.map(slicerSpecifier ->
         ExpressionOrLiteral.expressionOf(
-            "new org.unlaxer.util.Slicer(" + inner + ").pythonian(\"" + slicerSpecifier + "\").get()"))
+            "new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(String.valueOf(" + inner
+                + "))).pythonian(\"" + slicerSpecifier + "\").get()"))
         .orElse(inner);
   }
 
   private ExpressionOrLiteral buildStringLiteral(Token token, TinyExpressionTokens tinyExpressionTokens) {
     Token literalChoiceToken = ChoiceInterface.choiced(token);
     Source contents = stringByToken.get(literalChoiceToken);
-    return ExpressionOrLiteral.literalOf(contents == null ? "" : contents.sourceAsString());
+    String raw = contents == null ? "" : contents.sourceAsString();
+    return ExpressionOrLiteral.literalOf(normalizeLiteralContents(raw));
   }
 
   private ExpressionOrLiteral buildStringVariable(Token token, TinyExpressionTokens tinyExpressionTokens) {
@@ -304,4 +306,26 @@ public class StringClauseBuilder {
   }
 
 	static FactoryBoundCache<Token, Source> stringByToken = new FactoryBoundCache<>(QuotedParser::contents);
+
+  private static String normalizeLiteralContents(String raw) {
+    if (raw == null || raw.isEmpty()) {
+      return "";
+    }
+    if (raw.length() >= 2) {
+      char start = raw.charAt(0);
+      char end = raw.charAt(raw.length() - 1);
+      if ((start == '\'' && end == '\'') || (start == '"' && end == '"')) {
+        return raw.substring(1, raw.length() - 1);
+      }
+    }
+    char start = raw.charAt(0);
+    if (start == '\'' || start == '"') {
+      return raw.substring(1);
+    }
+    char end = raw.charAt(raw.length() - 1);
+    if (end == '\'' || end == '"') {
+      return raw.substring(0, raw.length() - 1);
+    }
+    return raw;
+  }
 }

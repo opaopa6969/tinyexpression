@@ -7,17 +7,39 @@ grammar TinyExpressionP4 {
   token NUMBER     = NumberParser
   token IDENTIFIER = IdentifierParser
   token STRING     = SingleQuotedParser
+  token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
+  token CODE_BODY  = org.unlaxer.tinyexpression.parser.javalang.CodeBodyUntilTripleBackticksParser
+  token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
+  token EOF        = EndOfSourceParser
 
   @root
-  Formula ::= { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } ;
+  Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
+
+  // ── Fenced Java code block ─────────────────────────────────────────────────
+  // Syntax: ```scheme:JavaClassName\n...\n```
+  // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
+
+  @mapping(CodeBlockExpr)
+  CodeBlock ::= CodeStart CodeBody CodeEnd ;
+  CodeStart ::= CODE_START ;
+  CodeBody ::= CODE_BODY ;
+  CodeEnd ::= CODE_END ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName#methodName as alias;
+  //         import fully.qualified.ClassName as alias;
   // Example: import sample.v1.CheckAlphabets#check as checkAlphabets;
 
   @interleave(profile=javaStyle)
+  ImportDeclaration ::=
+      ImportDeclarationWithMethod
+    | ImportDeclarationBare ;
+
   @mapping(ImportDeclarationExpr, params=[method, alias])
-  ImportDeclaration ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
+  ImportDeclarationWithMethod ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
+
+  @mapping(ImportDeclarationBareExpr, params=[alias])
+  ImportDeclarationBare ::= 'import' ClassName 'as' IDENTIFIER @alias ';' ;
 
   ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
 
@@ -153,11 +175,14 @@ grammar TinyExpressionP4 {
   ExternalObjectInvocation ::=
     'external' 'returning' 'as' ObjectReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
 
-  // ── Built-in method invocation (call keyword) ─────────────────────────────
+  // ── Built-in method invocation (call / call internal / internal) ──────────
+
+  // Matches: "call internal", "call", or "internal" (actual MethodInvocationHeaderParser)
+  MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
 
   @backref(name=methodName)
   @mapping(MethodInvocationExpr, params=[name])
-  MethodInvocation ::= 'call' IDENTIFIER @name '(' [ Arguments ] ')' ;
+  MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
 
   Arguments ::= Expression { ',' Expression } ;
 
@@ -200,12 +225,19 @@ grammar TinyExpressionP4 {
   @mapping(BooleanExpr, params=[value])
   BooleanExpression ::=
       BooleanMatchExpression @value
-    | ComparisonExpression @value
     | ExternalBooleanInvocation @value
+    | StringComparisonExpression @value
+    | ComparisonExpression @value
     | 'true' @value
     | 'false' @value
     | VariableRef @value
     | MethodInvocation @value ;
+
+  // String equality: $var == 'text', 'a' != 'b', etc.
+  // Must appear before number ComparisonExpression (actual BooleanExpressionOfStringParser ordering)
+  @mapping(StringComparisonExpr, params=[left, op, right])
+  StringComparisonExpression ::= StringExpression @left EqualityOp @op StringExpression @right ;
+  EqualityOp ::= '==' | '!=' ;
 
   @mapping(ComparisonExpr, params=[left, op, right])
   ComparisonExpression ::= NumberExpression @left CompareOp @op NumberExpression @right ;
@@ -282,11 +314,13 @@ grammar TinyExpressionP4 {
 
   // ── Top-level expression ───────────────────────────────────────────────────
 
+  // BooleanExpression first: comparison/string-eq patterns are more specific than NumberExpression
+  // (actual ExpressionsParser ordering; prevents VariableRef in NumberExpression from eating "$x == y")
   @mapping(ExpressionExpr, params=[value])
   Expression ::=
-      NumberExpression @value
+      BooleanExpression @value
+    | NumberExpression @value
     | StringExpression @value
-    | BooleanExpression @value
     | ObjectExpression @value
     | MethodInvocation @value
     | '(' Expression @value ')' ;

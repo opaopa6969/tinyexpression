@@ -86,6 +86,31 @@ Convert legacy to canonical:
 npm run catalog:convert -- /path/legacy-variables.txt > /path/catalog.tecatalog
 ```
 
+### 4.4 TE022 suggestion context hints
+
+When TE022 (`利用可能な変数名ではありません`) suggests candidate variables, the server applies a context bias if it detects context hints in the document.
+
+Supported explicit forms (preferred over free-text tokens):
+- `tags: FA`
+- `context = "NIM"`
+- `tenant='NIM'`
+- `"context": "FA"` (JSON-like)
+- `'context': 'FA'` (JSON-like single-quote style)
+- `tags = core,FA,ops` (list-style value)
+
+Behavior notes:
+- If multiple explicit hints exist, the first one in document order is used.
+- If one explicit value includes multiple recognized tokens (for example `tags=core,NIM,FA`), the first recognized token is used.
+- If the first explicit hint has no recognized token, the next explicit hint is evaluated.
+- Explicit hints that appear only in commented lines are skipped; later explicit hints can still be used.
+- If an explicit value contains no recognized token, context bias falls back to free-text hints.
+- If explicit hints exist only in comments, they are ignored and context bias falls back to free-text hints.
+- Tokens inside inline/block comment fragments within explicit values are ignored (`// ...`, `/* ... */`).
+- Unterminated block-comment tails in explicit values are also ignored from `/*` onward.
+- String/comment regions are ignored for context extraction.
+- Variable-like tokens (for example `context=$fa`) are not treated as context hints.
+- Inline comment tails (for example `tags:NIM // FA`) do not change context bias.
+
 Optional (advanced): custom runtime provider class
 - JVM property: `-Dtinyexpression.catalog.provider.class=your.package.YourRuntimeCatalogProvider`
 - env var: `TINYEXPRESSION_CATALOG_PROVIDER_CLASS=your.package.YourRuntimeCatalogProvider`
@@ -151,3 +176,16 @@ bash scripts/package-vsix.sh --matrix-three
 3. `*-dsl-javacode.vsix`
 
 and settings presets under `build/runtime-mode-presets/`.
+
+## 7. TE021-TE024 Quick Fix visibility
+
+- TE021/TE022 (rename fixes) are emitted as `quickfix.rewrite`:
+  - TE021: unknown method -> candidate method name
+  - TE022: unknown variable -> candidate variable name
+
+- TE023 (`演算子/記法が不正です`) provides categorized quick fixes:
+  - `quickfix.rewrite`: `&&` -> `&`, `||` -> `|`, `$method(...)` -> `method(...)`
+  - `quickfix.insert`: missing RHS after `&` / `|` -> insert ` true`
+- TE024 (`partialKey` suffix不足) quick fix is also `quickfix.insert`:
+  - `$kind` -> `$kind_<suffix>`
+- The server advertises `quickfix`, `quickfix.rewrite`, and `quickfix.insert` in `initialize` capabilities, so VS Code can group and filter these actions consistently.

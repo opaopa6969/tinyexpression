@@ -98,54 +98,16 @@ public interface DocumentFilter {
   /**
    * Legacy TinyExpression format filter.
    *
-   * <p>Handles documents that embed fenced code blocks (e.g.
-   * {@code ```java:ClassName ... ```}) containing non-TinyExpression content
-   * such as Java class definitions.  The fenced blocks are replaced line-by-line
-   * with spaces so they are invisible to the P4 parser, while line positions
-   * are preserved so diagnostic ranges remain accurate.
+   * <p>Passes the full document through unchanged.  Fenced code blocks
+   * ({@code ```java:ClassName ... ```}), {@code import} declarations, and
+   * {@code external returning as} invocations are all part of the P4 grammar
+   * and are validated directly by the parser.
    *
-   * <p>{@code import} declarations and {@code external returning as} invocations
-   * are <em>not</em> masked — they are now part of the P4 grammar and are
-   * validated directly.
-   *
-   * <p>The result is returned as {@link FormulaSection}{@code (maskedContent, 0)}
-   * — line offset 0 because line positions inside the masked content correspond
-   * 1:1 to positions in the original document.
+   * <p>Returns {@code null} so the server uses the full document with line
+   * offset 0 (equivalent to {@link #passThrough()}).
    */
   static DocumentFilter legacy() {
-    return fullContent -> {
-      String[] lines = fullContent.split("\n", -1);
-      StringBuilder sb = new StringBuilder();
-      boolean inFenced = false;
-
-      for (int i = 0; i < lines.length; i++) {
-        String line     = lines[i];
-        String stripped = line.replace("\r", "").stripTrailing();
-
-        String out;
-        if (!inFenced && stripped.length() > 3 && stripped.startsWith("```")) {
-          // Opening fence line: ```java:Foo, ```python, etc.
-          out = " ".repeat(stripped.length());
-          inFenced = true;
-        } else if (inFenced) {
-          if (stripped.equals("```")) {
-            // Closing fence line
-            out = "   "; // same length as "```"
-            inFenced = false;
-          } else {
-            // Content inside fenced block — blank out (cannot be validated as P4)
-            out = " ".repeat(stripped.length());
-          }
-        } else {
-          // Regular line — pass through unchanged; P4 grammar handles it
-          out = line;
-        }
-
-        sb.append(out);
-        if (i < lines.length - 1) sb.append('\n');
-      }
-      return new FormulaSection(sb.toString(), 0);
-    };
+    return _content -> null;
   }
 
   /**

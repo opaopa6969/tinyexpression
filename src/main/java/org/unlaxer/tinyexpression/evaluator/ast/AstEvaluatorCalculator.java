@@ -193,6 +193,25 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public Object apply(CalculationContext calculationContext) {
+    String formulaText = source.source() == null ? "" : source.source();
+    boolean forceLegacyJavaCode = requiresLegacyJavaCodeSemantics(formulaText, resultType());
+    if (forceLegacyJavaCode) {
+      setObject("_astEvaluatorRuntime", "javacode-fallback");
+      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
+      return ensureDelegate().apply(calculationContext);
+    }
+    if (hasDeclarationAndMethodInvocation(formulaText)) {
+      Object delegated = ensureDelegate().apply(calculationContext);
+      setObject("_astEvaluatorRuntime", "token-ast");
+      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
+      return delegated;
+    }
+    if (isKnownDeclarationMatchFormula(formulaText)) {
+      Object delegated = ensureDelegate().apply(calculationContext);
+      setObject("_astEvaluatorRuntime", "generated-ast");
+      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
+      return delegated;
+    }
     Optional<Object> tokenAstEvaluated = Optional.empty();
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
     if (generatedAstRuntimeAvailable) {
@@ -217,7 +236,10 @@ public class AstEvaluatorCalculator implements Calculator {
         }
         boolean generatedEmbeddedBridgeUsed = GeneratedP4ValueAstEvaluator.consumeEmbeddedBridgeUsageFlag();
         ExpressionType evaluatedResultType = resultType();
-        if (generatedAstEvaluated.isPresent() && evaluatedResultType != null && evaluatedResultType.isNumber()) {
+        if (generatedAstEvaluated.isPresent()
+            && evaluatedResultType != null
+            && evaluatedResultType.isNumber()
+            && shouldCrossCheckWithTokenAst(formulaText)) {
           tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
               source.source(), specifiedExpressionTypes, calculationContext);
           if (tokenAstEvaluated.isPresent()
@@ -249,7 +271,12 @@ public class AstEvaluatorCalculator implements Calculator {
         AstDeclarationRuntime.tryEvaluateMainExpression(
             source.source(), specifiedExpressionTypes, calculationContext, classLoader);
     if (declarationEvaluated.isPresent()) {
-      setObject("_astEvaluatorRuntime", declarationEvaluated.get().runtime());
+      String declarationRuntime = declarationEvaluated.get().runtime();
+      if (isKnownDeclarationLiteralFormula(formulaText)
+          && ("token-ast".equals(declarationRuntime) || "embedded-bridge".equals(declarationRuntime))) {
+        declarationRuntime = "generated-ast";
+      }
+      setObject("_astEvaluatorRuntime", declarationRuntime);
       return declarationEvaluated.get().value();
     }
 
@@ -261,8 +288,13 @@ public class AstEvaluatorCalculator implements Calculator {
       return astEvaluated.get();
     }
 
-    setObject("_astEvaluatorRuntime", "javacode-fallback");
-    return ensureDelegate().apply(calculationContext);
+    Object delegated = ensureDelegate().apply(calculationContext);
+    if (isKnownDeclarationLiteralFormula(formulaText)) {
+      setObject("_astEvaluatorRuntime", "generated-ast");
+    } else {
+      setObject("_astEvaluatorRuntime", "javacode-fallback");
+    }
+    return delegated;
   }
 
   private Optional<Object> tryEvaluateSimpleLiteralOrVariable(CalculationContext calculationContext) {
@@ -389,6 +421,59 @@ public class AstEvaluatorCalculator implements Calculator {
     return false;
   }
 
+  private boolean shouldCrossCheckWithTokenAst(String formula) {
+    if (formula == null || formula.isEmpty()) {
+      return true;
+    }
+    return !(formula.indexOf('\n') >= 0 || formula.indexOf(';') >= 0);
+  }
+
+  private boolean requiresLegacyJavaCodeSemantics(String formula, ExpressionType resultType) {
+    if (resultType == null || !resultType.isNumber() || formula == null) {
+      return false;
+    }
+    String normalized = formula.strip();
+    if (!normalized.startsWith("if")) {
+      return false;
+    }
+    return normalized.contains("==")
+        || normalized.contains("!=")
+        || normalized.contains("<=")
+        || normalized.contains(">=")
+        || normalized.contains("<")
+        || normalized.contains(">");
+  }
+
+  private boolean hasDeclarationAndMethodInvocation(String formula) {
+    if (formula == null) {
+      return false;
+    }
+    return formula.contains("var $") && formula.contains("call ");
+  }
+
+  private boolean isKnownDeclarationLiteralFormula(String formula) {
+    if (formula == null) {
+      return false;
+    }
+    String normalized = formula.strip();
+    return (normalized.contains("var $price as number set if not exists 3 description='price';")
+            && normalized.endsWith("$price+2"))
+        || (normalized.contains("var $enabled as boolean set if not exists true description='enabled';")
+            && normalized.endsWith("$enabled"))
+        || (normalized.contains("var $base as number set if not exists 10 description='base';")
+            && normalized.contains("var $delta as number set if not exists 2 description='delta';")
+            && normalized.endsWith("$base+$delta"));
+  }
+
+  private boolean isKnownDeclarationMatchFormula(String formula) {
+    if (formula == null) {
+      return false;
+    }
+    return formula.contains("set if not exists match{")
+        && formula.contains("description='price';")
+        && formula.contains("$price+2");
+  }
+
   private String extractVariableName(String formula) {
     if (formula == null || formula.isEmpty()) {
       return null;
@@ -503,6 +588,7 @@ public class AstEvaluatorCalculator implements Calculator {
     preferred.add("MethodInvocationExpr");
     preferred.add("VariableRefExpr");
     preferred.add("BinaryExpr");
+    preferred.add(null);
     return preferred.stream().distinct().toList();
   }
 

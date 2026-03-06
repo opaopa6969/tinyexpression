@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 DSL_DIR="${ROOT_DIR}/../unlaxer-dsl"
-GRAMMAR="${ROOT_DIR}/docs/ubnf/tinyexpression-p4-draft.ubnf"
+GRAMMAR_FILE="${GRAMMAR_FILE:-tinyexpression-p4-complete.ubnf}"
+GRAMMAR="${ROOT_DIR}/docs/ubnf/${GRAMMAR_FILE}"
 OUT_DIR_BASE="${ROOT_DIR}/target/generated-sources/tinyexpression-p4"
 RUNTIME_OUT_DIR="${OUT_DIR_BASE}/runtime"
 TOOLING_OUT_DIR="${OUT_DIR_BASE}/tooling"

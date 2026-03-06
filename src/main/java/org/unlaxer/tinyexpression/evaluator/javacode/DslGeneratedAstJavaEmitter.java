@@ -75,7 +75,9 @@ final class DslGeneratedAstJavaEmitter {
     if (text == null || text.isBlank()) {
       return false;
     }
-    return text.matches("[0-9+\\-*/().\\s]+");
+    // Parenthesized arithmetic still has known precedence gaps in native emission;
+    // route those formulas to the legacy bridge for parity.
+    return text.matches("[0-9+\\-*/.\\s]+");
   }
 
   private static boolean isNumberLiteral(String text) {

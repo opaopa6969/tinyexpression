@@ -40,6 +40,8 @@
 		<maven.compiler.source>21</maven.compiler.source>
 		<maven.compiler.target>21</maven.compiler.target>
 		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
+		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
+		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 	</properties>
 
 	<dependencies>
@@ -53,6 +55,11 @@
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-common</artifactId>
 			<version>2.5.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.unlaxer</groupId>
+			<artifactId>unlaxer-dsl</artifactId>
+			<version>0.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>
@@ -92,6 +99,33 @@
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<version>3.3.0</version>
+				<executions>
+					<execution>
+						<id>generate-tinyexpression-p4-runtime</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>org.unlaxer.dsl.CodegenMain</mainClass>
+							<arguments>
+								<argument>--grammar</argument>
+								<argument>${tinyexpression.p4.grammar}</argument>
+								<argument>--output</argument>
+								<argument>${tinyexpression.p4.generated.runtime}</argument>
+								<argument>--generators</argument>
+								<argument>Parser,AST,Mapper,Evaluator</argument>
+							</arguments>
+							<includeProjectDependencies>true</includeProjectDependencies>
+							<includePluginDependencies>false</includePluginDependencies>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>build-helper-maven-plugin</artifactId>
 				<version>3.5.0</version>
 				<executions>
@@ -103,7 +137,7 @@
 						</goals>
 						<configuration>
 							<sources>
-								<source>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</source>
+								<source>${tinyexpression.p4.generated.runtime}</source>
 							</sources>
 						</configuration>
 					</execution>

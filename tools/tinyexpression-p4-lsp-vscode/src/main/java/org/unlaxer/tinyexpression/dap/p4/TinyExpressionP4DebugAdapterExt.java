@@ -127,6 +127,10 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
         b.right().stream().limit(1)
             .forEach(r -> collectAstTypeNames(r, path, depth + 1, maxDepth));
       }
+      case TinyExpressionP4AST.StringComparisonExpr sc2 -> {
+        collectAstTypeNames(sc2.left(), path, depth + 1, maxDepth);
+        collectAstTypeNames(sc2.right(), path, depth + 1, maxDepth);
+      }
       case TinyExpressionP4AST.ComparisonExpr c -> {
         collectAstTypeNames(c.left(), path, depth + 1, maxDepth);
         collectAstTypeNames(c.right(), path, depth + 1, maxDepth);
@@ -171,7 +175,9 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.StringExpr se -> {}
       case TinyExpressionP4AST.BooleanExpr be -> {}
       case TinyExpressionP4AST.ObjectExpr oe -> {}
+      case TinyExpressionP4AST.CodeBlockExpr cb -> {}
       case TinyExpressionP4AST.ImportDeclarationExpr id -> {}
+      case TinyExpressionP4AST.ImportDeclarationBareExpr ib -> {}
       case TinyExpressionP4AST.ExternalBooleanInvocationExpr eb -> {}
       case TinyExpressionP4AST.ExternalNumberInvocationExpr en -> {}
       case TinyExpressionP4AST.ExternalStringInvocationExpr es -> {}

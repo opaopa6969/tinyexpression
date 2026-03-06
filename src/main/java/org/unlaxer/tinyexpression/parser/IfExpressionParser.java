@@ -106,34 +106,122 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
   public static Token getThenExpression(Token thisParserParsed , 
       Class<? extends ExpressionInterface> expressionInterfaceClass , Token conditionToken) {
-    
-    
-    Predicate<Token> expressionFilter = 
-        TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
-          .and(TokenPredicators.afterToken(conditionToken));
-    
+    Predicate<Token> expressionFilter = token ->
+        token != null && token.parser != null
+            && TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class).test(token);
+    Predicate<Token> afterConditionFilter = conditionToken == null
+        ? token -> true
+        : TokenPredicators.afterToken(conditionToken);
+
+    Token structuralThen = resolveExpressionCandidate(structuralBranchExpression(thisParserParsed, 0), expressionFilter);
+    if (structuralThen != null) {
+      return structuralThen;
+    }
+
+    Token taggedThen = findTaggedExpression(thisParserParsed, ExpressionTags.thenClause.tag(), expressionFilter);
+    if (taggedThen != null) {
+      return taggedThen;
+    }
+
     List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
-      .filter(expressionFilter)
+      .filter(expressionFilter.and(afterConditionFilter))
       .limit(2)
       .collect(Collectors.toList());
-    
-    return returning.get(0);
+
+    if (returning.isEmpty() == false) {
+      return returning.get(0);
+    }
+    return findTaggedExpression(thisParserParsed, ExpressionTags.returning.tag(), expressionFilter);
   }
   
   @TokenExtractor(timings = {Timing.CreateOperatorOperandTree,Timing.UseOperatorOperandTree})
   public static Token getElseExpression(Token thisParserParsed , 
       Class<? extends ExpressionInterface> expressionInterfaceClass, Token conditionToken) {
-    
-    Predicate<Token> expressionFilter = 
-        TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class)
-          .and(TokenPredicators.afterToken(conditionToken));
+    Predicate<Token> expressionFilter = token ->
+        token != null && token.parser != null
+            && TokenPredicators.parserImplements(expressionInterfaceClass, VariableParser.class).test(token);
+    Predicate<Token> afterConditionFilter = conditionToken == null
+        ? token -> true
+        : TokenPredicators.afterToken(conditionToken);
+
+    Token structuralElse = resolveExpressionCandidate(structuralBranchExpression(thisParserParsed, 4), expressionFilter);
+    if (structuralElse != null) {
+      return structuralElse;
+    }
+
+    Token taggedElse = findTaggedExpression(thisParserParsed, ExpressionTags.elseClause.tag(), expressionFilter);
+    if (taggedElse != null) {
+      return taggedElse;
+    }
 
     List<Token> returning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
-        .filter(expressionFilter)
+        .filter(expressionFilter.and(afterConditionFilter))
         .limit(2)
         .collect(Collectors.toList());
-    
-    return returning.get(1);
+
+    if (returning.size() >= 2) {
+      return returning.get(1);
+    }
+    if (returning.isEmpty() == false) {
+      return returning.get(0);
+    }
+    List<Token> taggedReturning = thisParserParsed.flatten(ScanDirection.Breadth).stream()
+      .filter(TokenPredicators.hasTag(ExpressionTags.returning.tag()))
+      .map(token -> resolveExpressionCandidate(token, expressionFilter))
+      .filter(token -> token != null)
+      .limit(2)
+      .collect(Collectors.toList());
+    if (taggedReturning.size() >= 2) {
+      return taggedReturning.get(1);
+    }
+    return taggedReturning.isEmpty() ? null : taggedReturning.get(0);
+  }
+
+  private static Token findTaggedExpression(Token root, org.unlaxer.Tag tag, Predicate<Token> expressionFilter) {
+    return root.flatten(ScanDirection.Breadth).stream()
+        .filter(TokenPredicators.hasTag(tag))
+        .map(token -> resolveExpressionCandidate(token, expressionFilter))
+        .filter(token -> token != null)
+        .findFirst()
+        .orElse(null);
+  }
+
+  private static Token resolveExpressionCandidate(Token token, Predicate<Token> expressionFilter) {
+    if (token == null) {
+      return null;
+    }
+    if (expressionFilter.test(token)) {
+      return token;
+    }
+    return token.flatten(ScanDirection.Breadth).stream()
+        .filter(expressionFilter)
+        .findFirst()
+        .orElse(null);
+  }
+
+  private static Token structuralBranchExpression(Token root, int indexInChoice) {
+    if (root == null || root.filteredChildren == null) {
+      return null;
+    }
+    // New parser shape: [condition, thenExpr, elseExpr]
+    if (root.filteredChildren.size() >= 3) {
+      if (indexInChoice == 0) {
+        return root.filteredChildren.get(1);
+      }
+      if (indexInChoice == 4) {
+        return root.filteredChildren.get(2);
+      }
+      return null;
+    }
+    // Legacy parser shape: [..., choiceNode, ...] with branches inside choice.
+    if (root.filteredChildren.size() <= 5) {
+      return null;
+    }
+    Token choiceNode = root.filteredChildren.get(5);
+    if (choiceNode == null || choiceNode.filteredChildren == null || choiceNode.filteredChildren.size() <= indexInChoice) {
+      return null;
+    }
+    return choiceNode.filteredChildren.get(indexInChoice);
   }
   
   

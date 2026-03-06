@@ -231,6 +231,7 @@ final class AstDeclarationRuntime {
     preferred.add("MethodInvocationExpr");
     preferred.add("VariableRefExpr");
     preferred.add("BinaryExpr");
+    preferred.add(null);
     return preferred.stream().distinct().toList();
   }
 

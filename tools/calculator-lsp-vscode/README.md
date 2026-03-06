@@ -75,6 +75,7 @@ See details:
   - supports `${workspaceFolder}` and `~` expansion on the client side.
   - when configured, analyzer also enables catalog-backed TE022 undefined-variable diagnostics/suggestions.
   - `$` completion also uses this catalog and shows context/description in completion detail.
+  - TE022 suggestion ranking also uses document context hints (`tags/context/...`) when available.
 - `tinyExpressionLsp.catalog.useBundledDefault`: when `true` (default), use bundled `catalog/default.tecatalog` if `catalog.path` is empty.
   - Current default behavior prefers bundled `config/*.txt` catalogs:
     - `config/nimt-allowed-variables-cfvar.txt`: NIM CF variable catalog
@@ -187,3 +188,18 @@ Register the parser class in `getFunctionParserClasses()`. That drives:
 
 ## Diagnostics: show expected tokens
 When parsing fails, the server publishes diagnostics. If unlaxer provides “expected tokens” metadata, the server adds it to the diagnostic message (best-effort extraction).
+
+### TE021-TE024 Quick Fix kinds
+- TE021/TE022 rename fixes use `quickfix.rewrite`:
+  - unknown method -> candidate method name
+  - unknown variable -> candidate variable name
+- TE023 (`演算子/記法が不正です`) returns subtype-aware quick fixes.
+- Rewrite fixes use `quickfix.rewrite`:
+  - `&&` -> `&`
+  - `||` -> `|`
+  - `$method(...)` -> `method(...)`
+- Missing RHS completion uses `quickfix.insert`:
+  - `a &` / `a |` -> append ` true` on the right-hand side.
+- TE024 (`partialKey` suffix不足) uses `quickfix.insert`:
+  - `$kind` -> `$kind_<suffix>`
+- Server capability advertises `quickfix`, `quickfix.rewrite`, and `quickfix.insert` from `initialize`.

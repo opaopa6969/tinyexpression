@@ -165,6 +165,9 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
   }
 
   Token unwrapNumberExpressionToken(Token token) {
+    if (token == null) {
+      throw new IllegalArgumentException("Number expression token is null");
+    }
     Parser parser = token.parser;
 
     if (parser instanceof NumberExpressionParser) {
@@ -337,6 +340,16 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     Token booleanExpression = IfExpressionParser.getBooleanExpression(token);
     Token factor1 = IfExpressionParser.getThenExpression(token, NumberExpression.class, booleanExpression);
     Token factor2 = IfExpressionParser.getElseExpression(token, NumberExpression.class, booleanExpression);
+    if (factor1 == null) {
+      factor1 = extractChoiceBranchToken(token, 0);
+    }
+    if (factor2 == null) {
+      factor2 = extractChoiceBranchToken(token, 4);
+    }
+    if (factor1 == null || factor2 == null) {
+      throw new IllegalArgumentException(
+          "if-expression branch token missing then/else");
+    }
 
     builder.append("(");
     BooleanExpressionBuilder.SINGLETON.build(builder, booleanExpression, tinyExpressionTokens);
@@ -346,6 +359,29 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     build(builder, factor2, tinyExpressionTokens);
     builder.decTab();
     builder.append(")");
+  }
+
+  private Token extractChoiceBranchToken(Token ifToken, int branchIndex) {
+    if (ifToken == null || ifToken.filteredChildren == null) {
+      return null;
+    }
+    if (ifToken.filteredChildren.size() >= 3) {
+      if (branchIndex == 0) {
+        return ifToken.filteredChildren.get(1);
+      }
+      if (branchIndex == 4) {
+        return ifToken.filteredChildren.get(2);
+      }
+      return null;
+    }
+    if (ifToken.filteredChildren.size() <= 5) {
+      return null;
+    }
+    Token choiceNode = ifToken.filteredChildren.get(5);
+    if (choiceNode == null || choiceNode.filteredChildren == null || choiceNode.filteredChildren.size() <= branchIndex) {
+      return null;
+    }
+    return choiceNode.filteredChildren.get(branchIndex);
   }
 
   private void buildNumberMatch(SimpleJavaCodeBuilder builder, Token token,

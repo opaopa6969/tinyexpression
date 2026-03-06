@@ -24,6 +24,7 @@ import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensOptions;
 import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
@@ -168,7 +169,13 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
         CodeLensOptions codeLensOptions = new CodeLensOptions();
         codeLensOptions.setResolveProvider(false);
         capabilities.setCodeLensProvider(codeLensOptions);
-        capabilities.setCodeActionProvider(true);
+        CodeActionOptions codeActionOptions = new CodeActionOptions();
+        codeActionOptions.setResolveProvider(false);
+        codeActionOptions.setCodeActionKinds(List.of(
+                CodeActionKind.QuickFix,
+                CodeActionKind.QuickFix + ".rewrite",
+                CodeActionKind.QuickFix + ".insert"));
+        capabilities.setCodeActionProvider(Either.forRight(codeActionOptions));
 
         return CompletableFuture.completedFuture(new InitializeResult(capabilities));
     }
@@ -926,7 +933,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return minMaxArityIssue.get();
         }
         Optional<ParseFailureDescription> operatorNotationIssue =
-                describeOperatorNotationIssue(heuristicContent, defaultOffset);
+                describeOperatorNotationIssue(heuristicContent, defaultOffset, List.of());
         if (operatorNotationIssue.isPresent()) {
             return operatorNotationIssue.get();
         }
@@ -1056,7 +1063,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             return minMaxArityIssueHint;
         }
         Optional<ParseFailureDescription> operatorNotationIssueHint =
-                describeOperatorNotationIssue(heuristicContent, startOffset);
+                describeOperatorNotationIssue(heuristicContent, startOffset, mergedHints);
         if (operatorNotationIssueHint.isPresent()) {
             return operatorNotationIssueHint;
         }
@@ -1346,6 +1353,9 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             int startOffset) {
         int ifIndex = findLastIfExpressionKeywordBefore(content, startOffset);
         if (ifIndex < 0) {
+            ifIndex = skipSetIfNotExistsContexts(content, startOffset);
+        }
+        if (ifIndex < 0) {
             return Optional.empty();
         }
         int cursor = skipWhitespace(content, ifIndex + 2);
@@ -1464,9 +1474,12 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
 
     private Optional<ParseFailureDescription> describeOperatorNotationIssue(
             String content,
-            int startOffset) {
+            int startOffset,
+            List<String> mergedHints) {
         boolean[] ignoredMask = buildIgnoredTextMask(content);
+        boolean checkMissingRhs = shouldCheckMissingBooleanRhs(mergedHints);
         int offset = Math.max(0, Math.min(content.length(), startOffset));
+        boolean parseOffsetUnreliable = offset <= 1;
         int windowStart = Math.max(0, offset - 96);
         int windowEnd = Math.min(content.length(), offset + 96);
         for (int i = windowStart; i + 1 < windowEnd; i++) {
@@ -1497,6 +1510,11 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             if (i + 1 < content.length() && content.charAt(i + 1) == current) {
                 continue;
             }
+            if (checkMissingRhs == false
+                    && parseOffsetUnreliable == false
+                    && Math.abs(i - offset) > 8) {
+                continue;
+            }
             int rhs = skipWhitespace(content, i + 1);
             if (rhs >= content.length()) {
                 return Optional.of(new ParseFailureDescription(
@@ -1517,6 +1535,38 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     "operator or notation invalid: remove '$' before method call"));
         }
         return Optional.empty();
+    }
+
+    private boolean shouldCheckMissingBooleanRhs(List<String> mergedHints) {
+        if (mergedHints == null || mergedHints.isEmpty()) {
+            return false;
+        }
+        for (String hint : mergedHints) {
+            if (hint == null || hint.isBlank()) {
+                continue;
+            }
+            if (tokenEquals(hint, "$")
+                    || tokenEquals(hint, "(")
+                    || tokenEquals(hint, "if")
+                    || tokenEquals(hint, "match")
+                    || tokenEquals(hint, "get")
+                    || tokenEquals(hint, "call")
+                    || tokenEquals(hint, "external")
+                    || tokenEquals(hint, "internal")
+                    || tokenEquals(hint, "true")
+                    || tokenEquals(hint, "false")) {
+                return true;
+            }
+            String normalized = hint.strip();
+            if (normalized.endsWith("ExpressionParser")
+                    || normalized.endsWith("TermParser")
+                    || normalized.endsWith("FactorParser")
+                    || normalized.endsWith("VariableRefParser")
+                    || normalized.endsWith("VariableReferenceParser")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Optional<Integer> findDollarPrefixedInvocation(
@@ -1987,6 +2037,42 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             searchFrom = found - 1;
         }
         return -1;
+    }
+
+    private int skipSetIfNotExistsContexts(String content, int endOffsetExclusive) {
+        int bound = Math.max(0, Math.min(content.length(), endOffsetExclusive));
+        int candidate = findLastKeywordBefore(content, "if", bound);
+        while (candidate >= 0 && isSetIfNotExistsContext(content, candidate)) {
+            candidate = findLastKeywordBefore(content, "if", candidate - 1);
+        }
+        return candidate;
+    }
+
+    private boolean isSetIfNotExistsContext(String content, int ifIndex) {
+        if (ifIndex < 0 || ifIndex + 2 > content.length()) {
+            return false;
+        }
+        int afterIf = skipWhitespace(content, ifIndex + 2);
+        if (afterIf >= content.length() || content.startsWith("not", afterIf) == false) {
+            return false;
+        }
+        int afterNot = skipWhitespace(content, afterIf + 3);
+        if (afterNot >= content.length() || content.startsWith("exists", afterNot) == false) {
+            return false;
+        }
+        int beforeIf = skipWhitespaceBackward(content, ifIndex - 1);
+        if (beforeIf < 0) {
+            return false;
+        }
+        int start = beforeIf;
+        while (start >= 0 && isIdentifierPart(content, start)) {
+            start--;
+        }
+        start++;
+        if (start > beforeIf) {
+            return false;
+        }
+        return content.regionMatches(start, "set", 0, 3);
     }
 
     private boolean startsWithKeywordAt(String content, int start, String keyword) {
@@ -2987,7 +3073,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 return;
             }
             TextEdit edit = new TextEdit(new Range(start, end), suggestion);
-            addQuickFix(actions, uri, diagnostic, edit, "メソッド名を '" + suggestion + "' に修正");
+            addQuickFix(actions, uri, diagnostic, edit, "メソッド名を '" + suggestion + "' に修正", "rewrite");
         }
 
         private void createTe023NotationFix(
@@ -2995,27 +3081,129 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 String uri,
                 String content,
                 Diagnostic diagnostic) {
-            if (diagnostic.getRange() == null || diagnostic.getRange().getStart() == null) {
+            if (diagnostic.getRange() == null
+                    || diagnostic.getRange().getStart() == null
+                    || diagnostic.getRange().getEnd() == null) {
                 return;
             }
-            Position start = diagnostic.getRange().getStart();
-            int offset = positionToOffset(content, start);
-            if (offset < 0 || offset >= content.length()) {
+            int diagnosticStartOffset = positionToOffset(content, diagnostic.getRange().getStart());
+            int diagnosticEndOffset = positionToOffset(content, diagnostic.getRange().getEnd());
+            if (diagnosticStartOffset < 0 || diagnosticStartOffset >= content.length()) {
                 return;
+            }
+            if (diagnosticEndOffset < diagnosticStartOffset) {
+                diagnosticEndOffset = diagnosticStartOffset;
+            }
+            List<Te023Issue> issues = findNearestTe023Issues(content, diagnosticStartOffset, diagnosticEndOffset);
+            if (issues.isEmpty()) {
+                return;
+            }
+            for (Te023Issue issue : issues) {
+                int offset = issue.offset();
+                Position start = server.offsetToPosition(content, offset);
+                if (issue.kind() == Te023IssueKind.DOUBLE_AND) {
+                    TextEdit edit = new TextEdit(
+                            new Range(start, server.offsetToPosition(content, offset + 2)),
+                            "&");
+                    addQuickFix(actions, uri, diagnostic, edit, "&& を & に修正", "rewrite");
+                    continue;
+                }
+                if (issue.kind() == Te023IssueKind.DOUBLE_OR) {
+                    TextEdit edit = new TextEdit(
+                            new Range(start, server.offsetToPosition(content, offset + 2)),
+                            "|");
+                    addQuickFix(actions, uri, diagnostic, edit, "|| を | に修正", "rewrite");
+                    continue;
+                }
+                if (issue.kind() == Te023IssueKind.DOLLAR_METHOD) {
+                    int methodStart = skipWhitespaceForward(content, offset + 1);
+                    if (methodStart < content.length() && Character.isJavaIdentifierStart(content.charAt(methodStart))) {
+                        int methodEnd = methodStart + 1;
+                        while (methodEnd < content.length() && Character.isJavaIdentifierPart(content.charAt(methodEnd))) {
+                            methodEnd++;
+                        }
+                        int next = skipWhitespaceForward(content, methodEnd);
+                        if (next < content.length() && content.charAt(next) == '(') {
+                            TextEdit edit = new TextEdit(
+                                    new Range(start, server.offsetToPosition(content, offset + 1)),
+                                    "");
+                            addQuickFix(actions, uri, diagnostic, edit, "$ を除去してメソッド呼び出しに修正", "rewrite");
+                        }
+                    }
+                    continue;
+                }
+
+                char current = content.charAt(offset);
+                if (issue.kind() == Te023IssueKind.MISSING_BOOLEAN_RHS
+                        && (current == '&' || current == '|')) {
+                    int rhs = skipWhitespaceForward(content, offset + 1);
+                    boolean missingRhs = rhs >= content.length();
+                    if (missingRhs == false) {
+                        char rhsChar = content.charAt(rhs);
+                        missingRhs = rhsChar == ')' || rhsChar == '}' || rhsChar == ';' || rhsChar == ',';
+                    }
+                    if (missingRhs) {
+                        Position insertAt = server.offsetToPosition(content, offset + 1);
+                        TextEdit edit = new TextEdit(new Range(insertAt, insertAt), " true");
+                        addQuickFix(actions, uri, diagnostic, edit, "演算子の右辺に true を補完", "insert");
+                    }
+                }
+            }
+        }
+
+        private List<Te023Issue> findNearestTe023Issues(
+                String content,
+                int diagnosticStartOffset,
+                int diagnosticEndOffset) {
+            if (content.isEmpty()) {
+                return List.of();
+            }
+            boolean[] ignoredMask = server.buildIgnoredTextMask(content);
+            int searchStart = Math.max(0, diagnosticStartOffset - 64);
+            int searchEnd = Math.min(content.length(), Math.max(diagnosticEndOffset + 64, diagnosticStartOffset + 1));
+            List<ScoredTe023Issue> scored = new ArrayList<>();
+            for (int i = searchStart; i < searchEnd; i++) {
+                if (server.isIgnoredTextOffset(ignoredMask, i)) {
+                    continue;
+                }
+                Te023IssueKind kind = detectTe023IssueKindAt(content, i);
+                if (kind == null) {
+                    continue;
+                }
+                int score = te023IssueScore(i, kind, diagnosticStartOffset, diagnosticEndOffset);
+                scored.add(new ScoredTe023Issue(new Te023Issue(kind, i), score));
+            }
+            if (scored.isEmpty()) {
+                return List.of();
+            }
+            scored.sort(Comparator
+                    .comparingInt(ScoredTe023Issue::score)
+                    .thenComparingInt(entry -> entry.issue().offset()));
+            List<Te023Issue> selected = new ArrayList<>();
+            Set<String> seenKind = new HashSet<>();
+            for (ScoredTe023Issue entry : scored) {
+                Te023Issue issue = entry.issue();
+                String kind = issue.kind().name();
+                if (seenKind.add(kind) == false) {
+                    continue;
+                }
+                selected.add(issue);
+                if (selected.size() >= 3) {
+                    break;
+                }
+            }
+            return selected;
+        }
+
+        private Te023IssueKind detectTe023IssueKindAt(String content, int offset) {
+            if (offset < 0 || offset >= content.length()) {
+                return null;
             }
             if (offset + 1 < content.length() && content.startsWith("&&", offset)) {
-                TextEdit edit = new TextEdit(
-                        new Range(start, server.offsetToPosition(content, offset + 2)),
-                        "&");
-                addQuickFix(actions, uri, diagnostic, edit, "&& を & に修正");
-                return;
+                return Te023IssueKind.DOUBLE_AND;
             }
             if (offset + 1 < content.length() && content.startsWith("||", offset)) {
-                TextEdit edit = new TextEdit(
-                        new Range(start, server.offsetToPosition(content, offset + 2)),
-                        "|");
-                addQuickFix(actions, uri, diagnostic, edit, "|| を | に修正");
-                return;
+                return Te023IssueKind.DOUBLE_OR;
             }
             if (content.charAt(offset) == '$') {
                 int methodStart = skipWhitespaceForward(content, offset + 1);
@@ -3026,30 +3214,62 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                     }
                     int next = skipWhitespaceForward(content, methodEnd);
                     if (next < content.length() && content.charAt(next) == '(') {
-                        TextEdit edit = new TextEdit(
-                                new Range(start, server.offsetToPosition(content, offset + 1)),
-                                "");
-                        addQuickFix(actions, uri, diagnostic, edit, "$ を除去してメソッド呼び出しに修正");
+                        return Te023IssueKind.DOLLAR_METHOD;
                     }
                 }
-                return;
             }
-
             char current = content.charAt(offset);
             if (current == '&' || current == '|') {
-                int rhs = skipWhitespaceForward(content, offset + 1);
-                boolean missingRhs = rhs >= content.length();
-                if (missingRhs == false) {
-                    char rhsChar = content.charAt(rhs);
-                    missingRhs = rhsChar == ')' || rhsChar == '}' || rhsChar == ';' || rhsChar == ',';
+                if (offset + 1 < content.length() && content.charAt(offset + 1) == current) {
+                    return null;
                 }
-                if (missingRhs) {
-                    Position insertAt = server.offsetToPosition(content, offset + 1);
-                    TextEdit edit = new TextEdit(new Range(insertAt, insertAt), " true");
-                    addQuickFix(actions, uri, diagnostic, edit, "演算子の右辺に true を補完");
+                int rhs = skipWhitespaceForward(content, offset + 1);
+                if (rhs >= content.length()) {
+                    return Te023IssueKind.MISSING_BOOLEAN_RHS;
+                }
+                char rhsChar = content.charAt(rhs);
+                if (rhsChar == ')' || rhsChar == '}' || rhsChar == ';' || rhsChar == ',') {
+                    return Te023IssueKind.MISSING_BOOLEAN_RHS;
                 }
             }
+            return null;
         }
+
+        private int te023IssueScore(
+                int issueOffset,
+                Te023IssueKind kind,
+                int diagnosticStartOffset,
+                int diagnosticEndOffset) {
+            int distance;
+            if (issueOffset < diagnosticStartOffset) {
+                distance = diagnosticStartOffset - issueOffset;
+            } else if (issueOffset > diagnosticEndOffset) {
+                distance = issueOffset - diagnosticEndOffset;
+            } else {
+                distance = 0;
+            }
+            int priority = te023FixPriority(kind);
+            return distance * 10 + priority;
+        }
+
+        private int te023FixPriority(Te023IssueKind kind) {
+            return switch (kind) {
+                // Smallest textual edits first.
+                case DOUBLE_AND, DOUBLE_OR -> 0;
+                case DOLLAR_METHOD -> 1;
+                case MISSING_BOOLEAN_RHS -> 2;
+            };
+        }
+
+        private enum Te023IssueKind {
+            DOUBLE_AND,
+            DOUBLE_OR,
+            DOLLAR_METHOD,
+            MISSING_BOOLEAN_RHS
+        }
+
+        private record Te023Issue(Te023IssueKind kind, int offset) {}
+        private record ScoredTe023Issue(Te023Issue issue, int score) {}
 
         private int skipWhitespaceForward(String content, int offset) {
             int i = Math.max(0, offset);
@@ -3081,13 +3301,27 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 Diagnostic diagnostic,
                 TextEdit edit,
                 String title) {
+            addQuickFix(actions, uri, diagnostic, edit, title, null);
+        }
+
+        private void addQuickFix(
+                List<Either<Command, CodeAction>> actions,
+                String uri,
+                Diagnostic diagnostic,
+                TextEdit edit,
+                String title,
+                String quickFixSubtype) {
             Map<String, List<TextEdit>> changes = new HashMap<>();
             changes.put(uri, List.of(edit));
             WorkspaceEdit workspaceEdit = new WorkspaceEdit();
             workspaceEdit.setChanges(changes);
 
             CodeAction codeAction = new CodeAction(title);
-            codeAction.setKind(CodeActionKind.QuickFix);
+            if (quickFixSubtype == null || quickFixSubtype.isBlank()) {
+                codeAction.setKind(CodeActionKind.QuickFix);
+            } else {
+                codeAction.setKind(CodeActionKind.QuickFix + "." + quickFixSubtype);
+            }
             codeAction.setDiagnostics(List.of(diagnostic));
             codeAction.setEdit(workspaceEdit);
             actions.add(Either.forRight(codeAction));
@@ -3118,16 +3352,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
             TextEdit edit = new TextEdit(
                     new Range(diagnostic.getRange().getStart(), diagnostic.getRange().getEnd()),
                     token + "_<suffix>");
-            Map<String, List<TextEdit>> changes = new HashMap<>();
-            changes.put(uri, List.of(edit));
-            WorkspaceEdit workspaceEdit = new WorkspaceEdit();
-            workspaceEdit.setChanges(changes);
-
-            CodeAction codeAction = new CodeAction("partialKey 変数に suffix を追加");
-            codeAction.setKind(CodeActionKind.QuickFix);
-            codeAction.setDiagnostics(List.of(diagnostic));
-            codeAction.setEdit(workspaceEdit);
-            actions.add(Either.forRight(codeAction));
+            addQuickFix(actions, uri, diagnostic, edit, "partialKey 変数に suffix を追加", "insert");
         }
 
         private void createTe022VariableRenameFix(
@@ -3156,7 +3381,7 @@ public class CalculatorLanguageServer implements LanguageServer, LanguageClientA
                 return;
             }
             TextEdit edit = new TextEdit(new Range(start, end), suggestion);
-            addQuickFix(actions, uri, diagnostic, edit, "変数名を '" + suggestion + "' に修正");
+            addQuickFix(actions, uri, diagnostic, edit, "変数名を '" + suggestion + "' に修正", "rewrite");
         }
 
         private void createTe003StringQuoteFix(

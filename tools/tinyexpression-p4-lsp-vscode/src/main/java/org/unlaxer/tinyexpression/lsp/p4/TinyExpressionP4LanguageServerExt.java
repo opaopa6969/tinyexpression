@@ -237,34 +237,31 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     FormulaSection fs = documentFilter.extract(content);
 
     if (fs != null) {
-      // FormulaInfo file: parse only the formula section content.
-      return parseWithFormulaSection(uri, content, fs);
+      // FormulaInfo file: suppress the parent's whole-file diagnostics, then parse formula portion.
+      if (extClient != null) {
+        extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
+      }
+      return parseAndEnrich(uri, fs.content(), fs.lineOffset());
     }
 
-    // Plain expression file: delegate to parent, then enrich.
-    ParseResult result = super.parseDocument(uri, content);
-
-    TinyExpressionP4AST ast = null;
-    if (result.succeeded() && result.consumedLength() == result.totalLength()) {
-      try { ast = TinyExpressionP4Mapper.parse(content); } catch (Exception ignored) {}
-    }
-
-    ParseFailureDiagnostics failures = buildFailureDiagnostics(result, content);
-    extDocuments.put(uri, new ExtDocumentState(content, result, ast, failures, 0));
-
-    if (extClient != null) {
-      publishEnrichedDiagnostics(uri, content, failures, 0);
-    }
-    return result;
+    // Plain expression file: parse directly (bypasses parent so we can capture ctx diagnostics).
+    return parseAndEnrich(uri, content, 0);
   }
 
-  private ParseResult parseWithFormulaSection(String uri, String fullContent, FormulaSection fs) {
-    String formulaContent = fs.content();
-    int lineOffset = fs.lineOffset();
-
-    // Parse only the formula portion.
+  /**
+   * Core parse + enrich pipeline. Parses {@code formulaContent}, captures
+   * {@link org.unlaxer.context.ParseFailureDiagnostics} from the {@link ParseContext} before
+   * closing it, then publishes enriched LSP diagnostics with parser-derived offset and hints.
+   *
+   * @param uri            document URI
+   * @param formulaContent formula text to parse (may be a sub-section of the full document)
+   * @param lineOffset     number of lines to add to parser positions when publishing diagnostics
+   */
+  private ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset) {
     StringSource source = createRootSource(formulaContent);
     ParseResult result;
+    org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
+
     if (source == null) {
       result = new ParseResult(false, 0, formulaContent.length());
     } else {
@@ -273,6 +270,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       Parsed parsed;
       try {
         parsed = rootParser.parse(ctx);
+        // Capture before close: gives us farthest offset + expected-hint candidates.
+        ctxDiag = ctx.getParseFailureDiagnostics();
       } finally {
         ctx.close();
       }
@@ -284,17 +283,12 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       result = new ParseResult(parsed.isSucceeded(), consumed, formulaContent.length());
     }
 
-    // Suppress parent's whole-file diagnostics by pre-publishing empty list.
-    if (extClient != null) {
-      extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
-    }
-
     TinyExpressionP4AST ast = null;
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
       try { ast = TinyExpressionP4Mapper.parse(formulaContent); } catch (Exception ignored) {}
     }
 
-    ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent);
+    ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent, ctxDiag);
     extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, lineOffset));
 
     if (extClient != null) {
@@ -325,20 +319,62 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   // Private helpers
   // =========================================================================
 
-  private ParseFailureDiagnostics buildFailureDiagnostics(ParseResult result, String content) {
+  /**
+   * Builds typed failure diagnostics from parse result and parser-native context diagnostics.
+   *
+   * <p>Priority:
+   * <ol>
+   *   <li>If parse succeeded fully → {@link ParseFailureDiagnostics#absent()}</li>
+   *   <li>If {@code ctxDiag} is available → use farthest offset + expected-hint candidates</li>
+   *   <li>Otherwise → snippet at {@code result.consumedLength()}</li>
+   * </ol>
+   */
+  private ParseFailureDiagnostics buildFailureDiagnostics(
+      ParseResult result, String content,
+      org.unlaxer.context.ParseFailureDiagnostics ctxDiag) {
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
       return ParseFailureDiagnostics.absent();
     }
+
+    if (ctxDiag != null) {
+      int offset = ctxDiag.getFarthestOffset();
+      List<String> hints = toDisplayHints(ctxDiag);
+      return ParseFailureDiagnostics.present(offset, hints);
+    }
+
+    // Fall back: snippet from consumedLength.
     int offset = result.consumedLength();
-    // Build a simple expected-hint from the character at the failure position.
     List<String> hints = List.of();
     if (offset < content.length()) {
-      String remaining = content.substring(offset, Math.min(offset + 30, content.length())).strip();
+      String remaining = content.substring(offset, Math.min(offset + 20, content.length())).strip();
       if (!remaining.isEmpty()) {
         hints = List.of("near: '" + remaining + "'");
       }
     }
     return ParseFailureDiagnostics.present(offset, hints);
+  }
+
+  /**
+   * Extracts display hints from {@link org.unlaxer.context.ParseFailureDiagnostics}.
+   * Uses {@code expectedHintCandidates} (e.g. "Expected ','") when available,
+   * then falls back to {@code expectedParsers} class names.
+   */
+  private static List<String> toDisplayHints(
+      org.unlaxer.context.ParseFailureDiagnostics ctxDiag) {
+    List<org.unlaxer.context.ParseFailureDiagnostics.ExpectedHintCandidate> candidates =
+        ctxDiag.getExpectedHintCandidates();
+    if (!candidates.isEmpty()) {
+      return candidates.stream()
+          .map(org.unlaxer.context.ParseFailureDiagnostics.ExpectedHintCandidate::getDisplayHint)
+          .filter(h -> h != null && !h.isBlank())
+          .distinct()
+          .toList();
+    }
+    List<String> parsers = ctxDiag.getExpectedParsers();
+    if (!parsers.isEmpty()) {
+      return List.of("Expected: " + parsers.get(0));
+    }
+    return List.of();
   }
 
   private void publishEnrichedDiagnostics(String uri, String content,
@@ -351,7 +387,11 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           .strip();
 
       Position rawStart = offsetToPosition(content, offset);
-      Position rawEnd   = offsetToPosition(content, content.length());
+      // Range end: end of the failing line — more focused than end-of-file.
+      int lineEnd = offset;
+      while (lineEnd < content.length() && content.charAt(lineEnd) != '\n') lineEnd++;
+      Position rawEnd = offsetToPosition(content, lineEnd);
+
       // Shift positions by lineOffset so they point into the original document.
       Position start = new Position(rawStart.getLine() + lineOffset, rawStart.getCharacter());
       Position end   = new Position(rawEnd.getLine()   + lineOffset, rawEnd.getCharacter());
@@ -361,9 +401,16 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSeverity(DiagnosticSeverity.Error);
       d.setSource("tinyexpression-p4");
       d.setCode(Either.forLeft("TE001"));
-      d.setMessage(snippet.isEmpty()
-          ? "Unexpected end of input"
-          : "Unexpected token: '" + snippet + "'");
+      // Prefer explicit expected-hint (e.g. "Expected ','") over generic snippet message.
+      String message;
+      if (!failures.expectedHints().isEmpty()) {
+        message = failures.expectedHints().get(0);
+      } else if (snippet.isEmpty()) {
+        message = "Unexpected end of input";
+      } else {
+        message = "Unexpected token: '" + snippet + "'";
+      }
+      d.setMessage(message);
       diagnostics.add(d);
     }
     extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
@@ -760,4 +807,5 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return CompletableFuture.completedFuture(new SemanticTokens(data));
     }
   }
+
 }

@@ -171,6 +171,11 @@ mvn -q -DskipTests exec:java -Dexec.mainClass=org.unlaxer.dsl.CodegenMain \
 1. `scripts/generate_tinyexpression_p4_from_ubnf.sh` 実行後に
    `./mvnw -q -DskipTests compile` で runtime 自動取り込み状態のビルド成功を確認済み
 
+### Notes
+
+- `scripts/generate_tinyexpression_p4_from_ubnf.sh` も `docs/ubnf/tinyexpression-p4-complete.ubnf` をデフォルトの文法として出力するようになったため、従来の `tinyexpression-p4-draft.ubnf` を使いたい場合は `GRAMMAR_FILE=tinyexpression-p4-draft.ubnf scripts/generate_tinyexpression_p4_from_ubnf.sh` を明示的に指定してください。
+- `tinyexpression/pom.xml` に `org.unlaxer:unlaxer-dsl:0.1.0-SNAPSHOT` 依存を追加し、`mvn -q -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true install` で unlaxer-dsl をローカルにインストールしておくと、`org.unlaxer.dsl.ir` パッケージを含む生成コードを tinyexpression 側が参照できます。
+
 残タスク:
 
 1. generated runtime を使った実評価経路（mapper/evaluator）を AST backend 本体へ段階的に接続
