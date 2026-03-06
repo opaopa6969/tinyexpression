@@ -107,9 +107,23 @@ grammar TinyExpressionP4 {
   token NUMBER     = NumberParser    // 数値 (unlaxer built-in)
   token IDENTIFIER = IdentifierParser
   token STRING     = SingleQuotedParser  // 'hello'
+  token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
+  token CODE_BODY  = org.unlaxer.tinyexpression.parser.javalang.CodeBodyUntilTripleBackticksParser
+  token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
+  token EOF        = EndOfSourceParser
 
   @root
-  Formula ::= { VariableDeclaration } { Annotation } Expression ;
+  Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
+
+  // ── Fenced Java code block ─────────────────────────────────────────────────
+  // Syntax: ```scheme:JavaClassName\n...\n```
+  // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
+
+  @mapping(CodeBlockExpr)
+  CodeBlock ::= CodeStart CodeBody CodeEnd ;
+  CodeStart ::= CODE_START ;
+  CodeBody ::= CODE_BODY ;
+  CodeEnd ::= CODE_END ;
 ```
 
 **ポイント:**
@@ -127,25 +141,51 @@ grammar TinyExpressionP4 {
 // グループ: ( rule1 | rule2 )
 // リテラル: 'keyword'
 
-NumberExpression ::=
-    NUMBER @left
-    { ( '+' | '-' | '*' | '/' ) @op  NUMBER @right } ;
+// Import declaration: import fully.qualified.ClassName#methodName as alias;
+@mapping(ImportDeclarationExpr, params=[method, alias])
+ImportDeclarationWithMethod ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
+
+ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
+
+// Number expression: 1 + 2 * 3
+@mapping(BinaryExpr, params=[left, op, right])
+@leftAssoc
+@precedence(level=10)
+NumberExpression ::= NumberTerm @left { AddOp @op NumberTerm @right } ;
+
+AddOp ::= '+' | '-' ;
+
+// External invocation: external returning as number calculateValue($input)
+@mapping(ExternalNumberInvocationExpr, params=[name])
+ExternalNumberInvocation ::=
+    'external' 'returning' 'as' 'number' IDENTIFIER @name '(' [ Arguments ] ')' ;
+
+Arguments ::= Expression { ',' Expression } ;
 ```
 
 ### 2.3 AST マッピング: `@mapping`
 
 ```ubnf
-@mapping(BinaryExpr, params=[left, op, right])
-BinaryExpr ::=
-    NumberExpression @left
-    ( '+' | '-' | '*' | '/' ) @op
-    NumberExpression @right ;
+// Match expression: match { 1==1 -> 99, default -> 0 }
+@mapping(NumberMatchExpr, params=[firstCase, moreCases, defaultCase])
+NumberMatchExpression ::=
+    'match' '{'
+      NumberCase @firstCase { ',' NumberCase @moreCases }
+      ',' NumberDefaultCase @defaultCase
+    '}' ;
+
+@mapping(NumberCaseExpr, params=[condition, value])
+NumberCase ::= BooleanExpression @condition '->' NumberCaseValue @value ;
+
+@mapping(NumberDefaultCaseExpr, params=[value])
+NumberDefaultCase ::= 'default' '->' NumberCaseValue @value ;
 ```
 
 `@mapping(クラス名, params=[フィールド名, ...])` を付けると:
-- 生成 `TinyExpressionP4AST` に `BinaryExpr` record が追加される
-- `@left`, `@right`, `@op` でキャプチャしたトークンがフィールドになる
+- 生成 `TinyExpressionP4AST` に sealed interface として「NumberMatchExpr」「NumberCaseExpr」「NumberDefaultCaseExpr」が追加される
+- `@firstCase`, `@moreCases`, `@defaultCase` でキャプチャしたトークンがフィールドになる
 - Mapper が Token → AST record への変換コードを自動生成する
+- 複数レベルのネストした record構造も自動対応
 
 ### 2.4 完成した AST sealed interface (自動生成)
 
@@ -843,3 +883,23 @@ CodePointIndex position = new CodePointIndex(formula.indexOf("x"));
 | `tools/.../src/extension.ts` | VSCode 拡張エントリポイント |
 | `src/test/java/.../p4/P4BackendParityTest.java` | パリティテスト |
 | `docs/TINYEXPRESSION-P4-LSP-DAP-TASKS.md` | 実装タスクトラッカー |
+
+---
+
+## 📌 完全な UBNF 文法
+
+上記のスニペットは教育目的の簡略版です。**完全な最新版** は以下を参照してください：
+
+- **ビルド用（主）**: `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` (327行)
+  - CodeBlock トークンと各種パーサー定義を含む
+  - ImportDeclaration (Method版 / Bare版)
+  - ExternalXxxInvocation (Number/String/Boolean/Object)
+  - MethodInvocationHeader (call / call internal / internal)
+  - 全ての式型（Number/String/Boolean/Object）
+  - Variable/Method 宣言の型付きバリエーション
+
+- **ドラフト版**: `docs/ubnf/tinyexpression-p4-draft.ubnf`
+  - 初期段階の P4 実装用
+
+- **生成済み** (参考): `docs/ubnf/tinyexpression-p4-complete.ubnf`
+  - 完全版の古いスナップショット

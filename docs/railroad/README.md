@@ -1,6 +1,8 @@
 # Railroad Diagrams
 
-Auto-generated from: `../tinyexpression/docs/ubnf/tinyexpression-p4-complete.ubnf`
+Auto-generated from: `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` (latest)
+
+**Note:** Latest grammar version includes CodeBlock support and all P4 language features. Previous snapshot was `docs/ubnf/tinyexpression-p4-complete.ubnf`.
 
 ## Table of Contents
 
