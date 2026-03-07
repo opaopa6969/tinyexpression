@@ -64,6 +64,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
+import org.unlaxer.dsl.runtime.ScopeStore;
 
 /**
  * Extended LSP server for TinyExpression P4.
@@ -261,6 +262,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     StringSource source = createRootSource(formulaContent);
     ParseResult result;
     org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
+    List<ScopeStore.SymbolDiagnostic> scopeDiagnostics = List.of();
 
     if (source == null) {
       result = new ParseResult(false, 0, formulaContent.length());
@@ -272,6 +274,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         parsed = rootParser.parse(ctx);
         // Capture before close: gives us farthest offset + expected-hint candidates.
         ctxDiag = ctx.getParseFailureDiagnostics();
+        scopeDiagnostics = ScopeStore.getDiagnostics(ctx);
       } finally {
         ctx.close();
       }
@@ -292,7 +295,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, lineOffset));
 
     if (extClient != null) {
-      publishEnrichedDiagnostics(uri, formulaContent, failures, lineOffset);
+      publishEnrichedDiagnostics(uri, formulaContent, failures, scopeDiagnostics, lineOffset);
     }
     return result;
   }
@@ -378,8 +381,28 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   private void publishEnrichedDiagnostics(String uri, String content,
-      ParseFailureDiagnostics failures, int lineOffset) {
+      ParseFailureDiagnostics failures,
+      List<ScopeStore.SymbolDiagnostic> scopeDiagnostics,
+      int lineOffset) {
     List<Diagnostic> diagnostics = new ArrayList<>();
+    // Semantic diagnostics from ScopeStore (@declares / @backref)
+    for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
+      Position rawStart = offsetToPosition(content, sd.offset());
+      Position rawEnd   = offsetToPosition(content, sd.offset() + sd.length());
+      Position start = new Position(rawStart.getLine() + lineOffset, rawStart.getCharacter());
+      Position end   = new Position(rawEnd.getLine()   + lineOffset, rawEnd.getCharacter());
+      Diagnostic d = new Diagnostic();
+      d.setRange(new Range(start, end));
+      d.setSeverity(switch (sd.severity()) {
+        case ERROR   -> DiagnosticSeverity.Error;
+        case WARNING -> DiagnosticSeverity.Warning;
+        case INFO    -> DiagnosticSeverity.Information;
+        case HINT    -> DiagnosticSeverity.Hint;
+      });
+      d.setSource("tinyexpression-p4-scope");
+      d.setMessage(sd.message());
+      diagnostics.add(d);
+    }
     if (failures.hasFailure()) {
       int offset = failures.failureOffset();
       String snippet = content

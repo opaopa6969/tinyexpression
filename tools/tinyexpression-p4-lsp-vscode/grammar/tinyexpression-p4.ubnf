@@ -13,6 +13,7 @@ grammar TinyExpressionP4 {
   token EOF        = EndOfSourceParser
 
   @root
+  @scopeTree(mode=lexical)
   Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
@@ -52,33 +53,37 @@ grammar TinyExpressionP4 {
     | BooleanVariableDeclaration
     | ObjectVariableDeclaration ;
 
+  @declares(symbol=varName)
   NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ NumberTypeHint ]
     [ NumberSetter ]
     Description
     ';' ;
 
+  @declares(symbol=varName)
   StringVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ StringTypeHint ]
     [ StringSetter ]
     Description
     ';' ;
 
+  @declares(symbol=varName)
   BooleanVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
     [ BooleanSetter ]
     Description
     ';' ;
 
+  @declares(symbol=varName)
   ObjectVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
     [ ObjectSetter ]
     Description
@@ -147,7 +152,8 @@ grammar TinyExpressionP4 {
 
   MethodParameters ::= MethodParameter { ',' MethodParameter } ;
 
-  MethodParameter ::= '$' IDENTIFIER [ 'as' ReturnType ] ;
+  @declares(symbol=paramName)
+  MethodParameter ::= '$' IDENTIFIER @paramName [ 'as' ReturnType ] ;
 
   NumberReturnType ::= 'number' | 'float' ;
   StringReturnType ::= 'string' ;
@@ -180,7 +186,6 @@ grammar TinyExpressionP4 {
   // Matches: "call internal", "call", or "internal" (actual MethodInvocationHeaderParser)
   MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
 
-  @backref(name=methodName)
   @mapping(MethodInvocationExpr, params=[name])
   MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
 
@@ -309,6 +314,7 @@ grammar TinyExpressionP4 {
 
   // ── Variable references ────────────────────────────────────────────────────
 
+  @backref(name=name)
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
 
