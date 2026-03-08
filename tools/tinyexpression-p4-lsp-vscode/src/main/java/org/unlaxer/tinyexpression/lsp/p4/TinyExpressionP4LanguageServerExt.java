@@ -56,6 +56,9 @@ import org.eclipse.lsp4j.SignatureInformation;
 import org.eclipse.lsp4j.ParameterInformation;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensParams;
+import org.eclipse.lsp4j.InlayHint;
+import org.eclipse.lsp4j.InlayHintParams;
+import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -211,6 +214,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setDocumentHighlightProvider(true);
     cap.setSignatureHelpProvider(new org.eclipse.lsp4j.SignatureHelpOptions(List.of("(", ",")));
     cap.setCodeLensProvider(new org.eclipse.lsp4j.CodeLensOptions(false));
+    cap.setInlayHintProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -1345,6 +1349,82 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       return content.substring(start, end).trim();
+    }
+
+    // ── inline hints (variable type hints) ──
+
+    @Override
+    public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      // Find variable assignments and create type hints
+      List<InlayHint> hints = new ArrayList<>();
+      String content = state.content();
+      String lowerContent = content.toLowerCase();
+
+      // Pattern: "var" or "variable" keyword followed by identifier and assignment
+      int searchPos = 0;
+      while ((searchPos = lowerContent.indexOf("var", searchPos)) != -1) {
+        // Check if this is a variable declaration (preceded by non-alphanumeric)
+        if (searchPos == 0 || !Character.isLetterOrDigit(lowerContent.charAt(searchPos - 1))) {
+          int varEnd = searchPos + 3;
+
+          // Skip to identifier
+          while (varEnd < content.length() && Character.isWhitespace(content.charAt(varEnd))) {
+            varEnd++;
+          }
+
+          // Skip identifier (until '=' or whitespace)
+          int idEnd = varEnd;
+          while (idEnd < content.length() && Character.isLetterOrDigit(content.charAt(idEnd))) {
+            idEnd++;
+          }
+
+          if (idEnd > varEnd) {
+            String varName = content.substring(varEnd, idEnd).trim();
+
+            // Look for '=' after identifier
+            int eqPos = idEnd;
+            while (eqPos < content.length() && content.charAt(eqPos) != '=') {
+              if (content.charAt(eqPos) == ';' || content.charAt(eqPos) == '\n') break;
+              eqPos++;
+            }
+
+            if (eqPos < content.length() && content.charAt(eqPos) == '=') {
+              // Extract RHS expression
+              String rhsExpr = extractRhsExpression(content, eqPos + 1);
+              if (!rhsExpr.isEmpty()) {
+                // Infer type
+                String typeHint = evaluateExpressionHint(rhsExpr);
+
+                // Create InlayHint after variable name
+                int[] lc = offsetToLineChar(content, idEnd);
+                Position hintPos = new Position(
+                    lc[0] + state.lineOffset(),
+                    lc[1]
+                );
+
+                InlayHint hint = new InlayHint(
+                    hintPos,
+                    Either.forLeft(" : " + typeHint)
+                );
+                hint.setKind(InlayHintKind.Type);
+                hints.add(hint);
+
+                // Limit to 20 hints per document
+                if (hints.size() >= 20) break;
+              }
+            }
+          }
+        }
+        searchPos++;
+      }
+
+      return CompletableFuture.completedFuture(hints);
     }
 
     /** Provide expression type hint by analyzing expression structure (heuristic, no evaluation). */
