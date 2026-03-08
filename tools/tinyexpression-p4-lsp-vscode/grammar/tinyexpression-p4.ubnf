@@ -107,15 +107,16 @@ grammar TinyExpressionP4 {
   AnnotationParameters ::= AnnotationParameter { ',' AnnotationParameter } ;
   AnnotationParameter ::= IDENTIFIER '=' Expression ;
 
-  @scopeTree(mode=lexical)
   MethodDeclaration ::=
       NumberMethodDeclaration
     | StringMethodDeclaration
     | BooleanMethodDeclaration
     | ObjectMethodDeclaration ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   NumberMethodDeclaration ::=
-    NumberReturnType IDENTIFIER
+    NumberReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -123,8 +124,10 @@ grammar TinyExpressionP4 {
       NumberExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   StringMethodDeclaration ::=
-    StringReturnType IDENTIFIER
+    StringReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -132,8 +135,10 @@ grammar TinyExpressionP4 {
       StringExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   BooleanMethodDeclaration ::=
-    BooleanReturnType IDENTIFIER
+    BooleanReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -141,8 +146,10 @@ grammar TinyExpressionP4 {
       BooleanExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   ObjectMethodDeclaration ::=
-    ObjectReturnType IDENTIFIER
+    ObjectReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -186,6 +193,7 @@ grammar TinyExpressionP4 {
   // Matches: "call internal", "call", or "internal" (actual MethodInvocationHeaderParser)
   MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
 
+  @backref(name=name)
   @mapping(MethodInvocationExpr, params=[name])
   MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
 
