@@ -27,20 +27,14 @@ grammar TinyExpressionP4 {
   CodeEnd ::= CODE_END ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
-  // Syntax: import fully.qualified.ClassName#methodName as alias;
-  //         import fully.qualified.ClassName as alias;
-  // Example: import sample.v1.CheckAlphabets#check as checkAlphabets;
+  // Syntax: import fully.qualified.ClassName [#methodName] as alias;
+  // Examples:
+  //   import sample.v1.CheckAlphabets#check as checkAlphabets;  (with method)
+  //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
   @interleave(profile=javaStyle)
-  ImportDeclaration ::=
-      ImportDeclarationWithMethod
-    | ImportDeclarationBare ;
-
   @mapping(ImportDeclarationExpr, params=[method, alias])
-  ImportDeclarationWithMethod ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
-
-  @mapping(ImportDeclarationBareExpr, params=[alias])
-  ImportDeclarationBare ::= 'import' ClassName 'as' IDENTIFIER @alias ';' ;
+  ImportDeclaration ::= 'import' ClassName [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
   ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
 

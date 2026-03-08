@@ -177,7 +177,6 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.ObjectExpr oe -> {}
       case TinyExpressionP4AST.CodeBlockExpr cb -> {}
       case TinyExpressionP4AST.ImportDeclarationExpr id -> {}
-      case TinyExpressionP4AST.ImportDeclarationBareExpr ib -> {}
       case TinyExpressionP4AST.ExternalBooleanInvocationExpr eb -> {}
       case TinyExpressionP4AST.ExternalNumberInvocationExpr en -> {}
       case TinyExpressionP4AST.ExternalStringInvocationExpr es -> {}
