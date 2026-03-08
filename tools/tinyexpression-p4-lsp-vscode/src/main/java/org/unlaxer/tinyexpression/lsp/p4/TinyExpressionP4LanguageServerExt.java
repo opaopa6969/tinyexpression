@@ -46,6 +46,15 @@ import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.RenameParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
+import org.eclipse.lsp4j.DocumentHighlight;
+import org.eclipse.lsp4j.DocumentHighlightParams;
+import org.eclipse.lsp4j.DocumentHighlightKind;
+import org.eclipse.lsp4j.SignatureHelp;
+import org.eclipse.lsp4j.SignatureHelpParams;
+import org.eclipse.lsp4j.SignatureInformation;
+import org.eclipse.lsp4j.ParameterInformation;
+import org.eclipse.lsp4j.CodeLens;
+import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -198,6 +207,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setCodeActionProvider(true);
     cap.setDocumentSymbolProvider(true);
     cap.setRenameProvider(true);
+    cap.setDocumentHighlightProvider(true);
+    cap.setSignatureHelpProvider(new org.eclipse.lsp4j.SignatureHelpOptions(List.of("(", ",")));
+    cap.setCodeLensProvider(new org.eclipse.lsp4j.CodeLensOptions(false));
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -993,6 +1005,146 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return CompletableFuture.completedFuture(
           new WorkspaceEdit(Map.of(uri, edits))
       );
+    }
+
+    // ── document highlight (same identifier highlighting) ──
+
+    @Override
+    public CompletableFuture<List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.references().isEmpty()) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      List<DocumentHighlight> highlights = state.references().stream()
+          .filter(r -> r.name().equals(word))
+          .map(r -> {
+            Position start = offsetToPosition(state.content(), r.offset());
+            Position end = new Position(start.getLine(), start.getCharacter() + r.length());
+
+            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
+            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+
+            return new DocumentHighlight(
+                new Range(sShifted, eShifted),
+                DocumentHighlightKind.Text
+            );
+          })
+          .collect(java.util.stream.Collectors.toList());
+
+      return CompletableFuture.completedFuture(highlights);
+    }
+
+    // ── signature help (parameter hints) ──
+
+    @Override
+    public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.declarations().isEmpty()) {
+        return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
+      }
+
+      // Adjust position for line offset
+      Position adjustedPos = new Position(
+          params.getPosition().getLine() - state.lineOffset(),
+          params.getPosition().getCharacter()
+      );
+      String content = state.content();
+      int offset = positionToOffset(content, adjustedPos);
+      if (offset < 0 || offset >= content.length()) {
+        return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
+      }
+
+      // Scan backward to find opening parenthesis
+      int parenPos = offset;
+      while (parenPos > 0 && content.charAt(parenPos) != '(') {
+        parenPos--;
+      }
+      if (parenPos <= 0 || content.charAt(parenPos) != '(') {
+        return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
+      }
+
+      // Extract method name before parenthesis
+      int nameEnd = parenPos;
+      int nameStart = parenPos - 1;
+      while (nameStart >= 0 && (Character.isLetterOrDigit(content.charAt(nameStart)) || content.charAt(nameStart) == '_')) {
+        nameStart--;
+      }
+      nameStart++;
+
+      if (nameStart >= nameEnd) {
+        return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
+      }
+
+      String methodName = content.substring(nameStart, nameEnd);
+
+      // Find method in declarations
+      var methodSig = state.declarations().stream()
+          .filter(d -> d.name().equals(methodName))
+          .findFirst();
+
+      if (methodSig.isEmpty()) {
+        return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
+      }
+
+      // Create signature information (simplified: just show method name → type)
+      List<ParameterInformation> params_info = List.of();
+      String returnType = "any"; // Simplified: would need to extract from AST
+      SignatureInformation sig = new SignatureInformation(
+          methodName + "() → " + returnType,
+          "Method: " + methodName,
+          params_info
+      );
+
+      return CompletableFuture.completedFuture(
+          new SignatureHelp(List.of(sig), 0, null)
+      );
+    }
+
+    // ── code lens (DAP-integrated evaluation display) ──
+
+    @Override
+    public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      // Simplified implementation: create code lens for first few "=" operators
+      // In future: enumerate expression AST nodes and create evaluable lenses
+      List<CodeLens> lenses = new ArrayList<>();
+      String content = state.content();
+      int count = 0;
+      int maxLenses = 5; // Limit to avoid overwhelming UI
+
+      for (int i = 0; i < content.length() - 1 && count < maxLenses; i++) {
+        if (content.charAt(i) == '=' && i + 1 < content.length() && content.charAt(i + 1) != '=') {
+          int[] lc = offsetToLineChar(content, i);
+          Position pos = new Position(lc[0] + state.lineOffset(), lc[1]);
+          Range range = new Range(pos, new Position(lc[0] + state.lineOffset(), lc[1] + 1));
+
+          Command cmd = new Command(
+              "▶ Evaluate",  // title
+              "tinyExpressionP4Lsp.evaluateExpression",  // command ID
+              List.of(uri, i)  // arguments: uri and offset
+          );
+
+          CodeLens lens = new CodeLens(range);
+          lens.setCommand(cmd);
+          lenses.add(lens);
+          count++;
+        }
+      }
+
+      return CompletableFuture.completedFuture(lenses);
     }
 
     /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
