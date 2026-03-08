@@ -40,6 +40,10 @@ import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.eclipse.lsp4j.DocumentSymbol;
+import org.eclipse.lsp4j.DocumentSymbolParams;
+import org.eclipse.lsp4j.SymbolInformation;
+import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -190,6 +194,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setSemanticTokensProvider(stOpts);
 
     cap.setCodeActionProvider(true);
+    cap.setDocumentSymbolProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -878,6 +883,54 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           })
           .collect(java.util.stream.Collectors.toList());
       return CompletableFuture.completedFuture(locations);
+    }
+
+    // ── document symbol (outline) ──
+
+    @Override
+    public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
+        DocumentSymbolParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.declarations().isEmpty()) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      List<Either<SymbolInformation, DocumentSymbol>> symbols = state.declarations().stream()
+          .map(decl -> {
+            // Get symbol kind based on declaration name patterns
+            SymbolKind kind = inferSymbolKind(decl.name());
+
+            // Calculate range from offset and estimated length
+            Position start = offsetToPosition(state.content(), decl.sourceOffset());
+            Position end = new Position(start.getLine(), start.getCharacter() + decl.name().length());
+
+            // Apply line offset
+            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
+            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+
+            DocumentSymbol symbol = new DocumentSymbol(
+                decl.name(),
+                kind,
+                new Range(sShifted, eShifted),
+                new Range(sShifted, eShifted),
+                null  // children
+            );
+            return Either.<SymbolInformation, DocumentSymbol>forRight(symbol);
+          })
+          .collect(java.util.stream.Collectors.toList());
+
+      return CompletableFuture.completedFuture(symbols);
+    }
+
+    /** Infer SymbolKind from declaration name pattern */
+    private SymbolKind inferSymbolKind(String declName) {
+      // Variables typically appear with certain patterns
+      if (declName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+        // Default to Variable; in future, could parse UBNF AST node type
+        return SymbolKind.Variable;
+      }
+      return SymbolKind.Variable;
     }
 
     /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
