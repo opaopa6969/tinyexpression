@@ -59,6 +59,9 @@ import org.eclipse.lsp4j.CodeLensParams;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.InlayHintKind;
+import org.eclipse.lsp4j.FoldingRange;
+import org.eclipse.lsp4j.FoldingRangeKind;
+import org.eclipse.lsp4j.FoldingRangeRequestParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -215,6 +218,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setSignatureHelpProvider(new org.eclipse.lsp4j.SignatureHelpOptions(List.of("(", ",")));
     cap.setCodeLensProvider(new org.eclipse.lsp4j.CodeLensOptions(false));
     cap.setInlayHintProvider(true);
+    cap.setFoldingRangeProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -1512,6 +1516,60 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       return CompletableFuture.completedFuture(hints);
+    }
+
+    // ── folding range (code block folding) ──
+
+    @Override
+    public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.ast() == null) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+
+      // Scan content for if/match keywords to create folding ranges
+      List<FoldingRange> ranges = new ArrayList<>();
+      String content = state.content();
+      String lowerContent = content.toLowerCase();
+
+      // Find if/then/else/endif blocks
+      int searchPos = 0;
+      while ((searchPos = lowerContent.indexOf("if ", searchPos)) != -1) {
+        if (searchPos == 0 || !Character.isLetterOrDigit(lowerContent.charAt(searchPos - 1))) {
+          // Find corresponding endif
+          int endPos = lowerContent.indexOf("endif", searchPos);
+          if (endPos > searchPos) {
+            int[] startLC = offsetToLineChar(content, searchPos);
+            int[] endLC = offsetToLineChar(content, endPos + 5);
+
+            FoldingRange range = new FoldingRange(startLC[0], endLC[0]);
+            range.setKind(FoldingRangeKind.Region);
+            ranges.add(range);
+          }
+        }
+        searchPos++;
+      }
+
+      // Find match blocks
+      searchPos = 0;
+      while ((searchPos = lowerContent.indexOf("match ", searchPos)) != -1) {
+        if (searchPos == 0 || !Character.isLetterOrDigit(lowerContent.charAt(searchPos - 1))) {
+          // Find corresponding 'end' or similar keyword
+          int endPos = lowerContent.indexOf(" end", searchPos);
+          if (endPos > searchPos) {
+            int[] startLC = offsetToLineChar(content, searchPos);
+            int[] endLC = offsetToLineChar(content, endPos + 4);
+
+            FoldingRange range = new FoldingRange(startLC[0], endLC[0]);
+            range.setKind(FoldingRangeKind.Region);
+            ranges.add(range);
+          }
+        }
+        searchPos++;
+      }
+
+      return CompletableFuture.completedFuture(ranges);
     }
 
     /** Provide expression type hint by analyzing expression structure (heuristic, no evaluation). */
