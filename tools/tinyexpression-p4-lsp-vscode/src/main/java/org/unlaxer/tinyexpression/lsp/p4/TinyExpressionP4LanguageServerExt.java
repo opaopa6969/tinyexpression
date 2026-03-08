@@ -661,38 +661,84 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     @Override
     public void didSave(DidSaveTextDocumentParams params) {}
 
-    // ── completion ──
+    // ── completion (enhanced with method/variable autocomplete) ──
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
         CompletionParams params) {
 
       List<CompletionItem> items = new ArrayList<>();
-
-      // Keywords
-      for (String kw : COMPLETION_KEYWORDS) {
-        CompletionItem item = new CompletionItem(kw);
-        item.setKind(CompletionItemKind.Keyword);
-        items.add(item);
-      }
-
-      // Variable references extracted from the current document text
       String uri = params.getTextDocument().getUri();
       ExtDocumentState state = server.extDocuments.get(uri);
+
+      // Extract word prefix at cursor position for filtering
+      String prefix = "";
       if (state != null) {
-        Matcher m = VARIABLE_PATTERN.matcher(state.content());
-        Set<String> seen = new LinkedHashSet<>();
-        while (m.find()) {
-          seen.add(m.group(1));
-        }
-        for (String var : seen) {
-          CompletionItem item = new CompletionItem("$" + var);
-          item.setKind(CompletionItemKind.Variable);
+        prefix = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      }
+
+      // 1. Keywords with prefix filtering
+      for (String kw : COMPLETION_KEYWORDS) {
+        if (kw.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(kw);
+          item.setKind(CompletionItemKind.Keyword);
           items.add(item);
         }
       }
 
+      // 2. Methods and variables from ScopeStore
+      if (state != null) {
+        Set<String> seen = new LinkedHashSet<>();
+
+        // Add declared symbols (methods and variables)
+        for (ScopeStore.SymbolInfo decl : state.declarations()) {
+          String symbolName = decl.name();
+          String completionLabel = symbolName.startsWith("$") ? symbolName : symbolName;
+
+          if (completionLabel.startsWith(prefix) && seen.add(completionLabel)) {
+            CompletionItem item = new CompletionItem(completionLabel);
+
+            // Infer kind and type hint from symbol name
+            if (symbolName.startsWith("$")) {
+              item.setKind(CompletionItemKind.Variable);
+              item.setDetail(inferVariableType(symbolName));
+            } else {
+              item.setKind(CompletionItemKind.Method);
+              item.setDetail(inferMethodReturnType(symbolName));
+            }
+
+            items.add(item);
+          }
+        }
+
+        // 3. Variable references from document text (fallback for undeclared variables)
+        Matcher m = VARIABLE_PATTERN.matcher(state.content());
+        while (m.find()) {
+          String varName = "$" + m.group(1);
+          if (varName.startsWith(prefix) && seen.add(varName)) {
+            CompletionItem item = new CompletionItem(varName);
+            item.setKind(CompletionItemKind.Variable);
+            item.setDetail("inferred");
+            items.add(item);
+          }
+        }
+      }
+
       return CompletableFuture.completedFuture(Either.forLeft(items));
+    }
+
+    /** Get inferred type hint for variable. */
+    private String inferVariableType(String varName) {
+      if (varName.contains("count") || varName.contains("number") || varName.contains("age")) {
+        return "number";
+      }
+      if (varName.contains("name") || varName.contains("text") || varName.contains("str")) {
+        return "string";
+      }
+      if (varName.contains("enabled") || varName.contains("flag") || varName.contains("is")) {
+        return "boolean";
+      }
+      return "unknown";
     }
 
     // ── hover ──
