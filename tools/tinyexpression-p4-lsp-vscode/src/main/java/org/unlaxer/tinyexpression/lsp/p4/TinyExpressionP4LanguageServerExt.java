@@ -44,6 +44,8 @@ import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.DocumentSymbolParams;
 import org.eclipse.lsp4j.SymbolInformation;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.RenameParams;
+import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -195,6 +197,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     cap.setCodeActionProvider(true);
     cap.setDocumentSymbolProvider(true);
+    cap.setRenameProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -931,6 +934,65 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return SymbolKind.Variable;
       }
       return SymbolKind.Variable;
+    }
+
+    // ── rename (refactoring) ──
+
+    @Override
+    public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(new WorkspaceEdit(Map.of()));
+      }
+
+      // Extract word at cursor position
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(new WorkspaceEdit(Map.of()));
+      }
+
+      String newName = params.getNewName();
+      if (newName.isEmpty() || !newName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+        return CompletableFuture.completedFuture(new WorkspaceEdit(Map.of()));
+      }
+
+      // Collect all occurrences (definition + references)
+      List<Integer> offsets = new ArrayList<>();
+
+      // Add definition offset if found
+      state.declarations().stream()
+          .filter(d -> d.name().equals(word))
+          .map(ScopeStore.SymbolInfo::sourceOffset)
+          .forEach(offsets::add);
+
+      // Add all reference offsets
+      state.references().stream()
+          .filter(r -> r.name().equals(word))
+          .map(ScopeStore.ReferenceInfo::offset)
+          .forEach(offsets::add);
+
+      if (offsets.isEmpty()) {
+        return CompletableFuture.completedFuture(new WorkspaceEdit(Map.of()));
+      }
+
+      // Create TextEdit[] for all occurrences
+      List<TextEdit> edits = offsets.stream()
+          .map(offset -> {
+            Position start = offsetToPosition(state.content(), offset);
+            Position end = new Position(start.getLine(), start.getCharacter() + word.length());
+
+            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
+            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+
+            return new TextEdit(new Range(sShifted, eShifted), newName);
+          })
+          .collect(java.util.stream.Collectors.toList());
+
+      // Return WorkspaceEdit with single document URI
+      return CompletableFuture.completedFuture(
+          new WorkspaceEdit(Map.of(uri, edits))
+      );
     }
 
     /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
