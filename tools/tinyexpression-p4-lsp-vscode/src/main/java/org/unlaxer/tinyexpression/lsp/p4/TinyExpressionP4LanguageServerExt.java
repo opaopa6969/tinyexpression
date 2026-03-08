@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -911,29 +912,61 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return CompletableFuture.completedFuture(List.of());
       }
 
-      List<Either<SymbolInformation, DocumentSymbol>> symbols = state.declarations().stream()
-          .map(decl -> {
-            // Get symbol kind based on declaration name patterns
-            SymbolKind kind = inferSymbolKind(decl.name());
+      // Group symbols by category for hierarchical display
+      Map<String, List<DocumentSymbol>> symbolsByCategory = new LinkedHashMap<>();
+      symbolsByCategory.put("variables", new ArrayList<>());
+      symbolsByCategory.put("methods", new ArrayList<>());
 
-            // Calculate range from offset and estimated length
-            Position start = offsetToPosition(state.content(), decl.sourceOffset());
-            Position end = new Position(start.getLine(), start.getCharacter() + decl.name().length());
+      String content = state.content();
+      for (ScopeStore.SymbolInfo decl : state.declarations()) {
+        // Get symbol kind based on declaration name patterns
+        SymbolKind kind = inferSymbolKind(decl.name());
 
-            // Apply line offset
-            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
-            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+        // Calculate range from offset and estimated length
+        Position start = offsetToPosition(content, decl.sourceOffset());
+        Position end = new Position(start.getLine(), start.getCharacter() + decl.name().length());
 
-            DocumentSymbol symbol = new DocumentSymbol(
-                decl.name(),
-                kind,
-                new Range(sShifted, eShifted),
-                new Range(sShifted, eShifted),
-                null  // children
-            );
-            return Either.<SymbolInformation, DocumentSymbol>forRight(symbol);
-          })
-          .collect(java.util.stream.Collectors.toList());
+        // Apply line offset
+        Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
+        Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+
+        // Extract child symbols (e.g., method parameters)
+        List<DocumentSymbol> children = extractChildSymbols(decl.name(), decl.sourceOffset(), content, state.lineOffset());
+
+        DocumentSymbol symbol = new DocumentSymbol(
+            decl.name(),
+            kind,
+            new Range(sShifted, eShifted),
+            new Range(sShifted, eShifted),
+            null
+        );
+        if (!children.isEmpty()) {
+          symbol.setChildren(children);
+        }
+
+        // Categorize by symbol type
+        if (decl.name().matches("[a-z][a-zA-Z0-9]*")) {
+          symbolsByCategory.get("methods").add(symbol);
+        } else if (decl.name().startsWith("$") || Character.isLowerCase(decl.name().charAt(0))) {
+          symbolsByCategory.get("variables").add(symbol);
+        }
+      }
+
+      // Build hierarchical symbols with category groups
+      List<Either<SymbolInformation, DocumentSymbol>> symbols = new ArrayList<>();
+      for (Map.Entry<String, List<DocumentSymbol>> entry : symbolsByCategory.entrySet()) {
+        List<DocumentSymbol> categoryItems = entry.getValue();
+        if (!categoryItems.isEmpty()) {
+          DocumentSymbol categorySymbol = new DocumentSymbol(
+              entry.getKey(),
+              SymbolKind.Namespace,
+              new Range(new Position(0, 0), new Position(0, 0)),
+              new Range(new Position(0, 0), new Position(0, 0))
+          );
+          categorySymbol.setChildren(categoryItems);
+          symbols.add(Either.forRight(categorySymbol));
+        }
+      }
 
       return CompletableFuture.completedFuture(symbols);
     }
@@ -942,10 +975,77 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     private SymbolKind inferSymbolKind(String declName) {
       // Variables typically appear with certain patterns
       if (declName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
-        // Default to Variable; in future, could parse UBNF AST node type
-        return SymbolKind.Variable;
+        // Could be a method; in future, check AST
+        return SymbolKind.Method;
       }
       return SymbolKind.Variable;
+    }
+
+    /** Extract child symbols (e.g., method parameters) from method definition */
+    private List<DocumentSymbol> extractChildSymbols(String methodName, int offset, String content, int lineOffset) {
+      // Simplified: attempt to find method parameters in parentheses
+      // Future: walk AST to find MethodParameter nodes
+      List<DocumentSymbol> children = new ArrayList<>();
+
+      // Find opening parenthesis after method name
+      int parenPos = offset + methodName.length();
+      while (parenPos < content.length() && content.charAt(parenPos) != '(') {
+        parenPos++;
+      }
+
+      if (parenPos >= content.length() || content.charAt(parenPos) != '(') {
+        return children;
+      }
+
+      // Find closing parenthesis
+      int closeParenPos = parenPos + 1;
+      int depth = 1;
+      while (closeParenPos < content.length() && depth > 0) {
+        char c = content.charAt(closeParenPos);
+        if (c == '(') depth++;
+        else if (c == ')') depth--;
+        closeParenPos++;
+      }
+
+      if (depth != 0) {
+        return children;
+      }
+
+      // Extract parameters from inside parentheses
+      String paramString = content.substring(parenPos + 1, closeParenPos - 1).trim();
+      if (paramString.isEmpty()) {
+        return children;
+      }
+
+      // Split by comma and create child symbols for each parameter
+      String[] params = paramString.split(",");
+      int paramOffset = parenPos + 1;
+      for (String param : params) {
+        param = param.trim();
+        if (!param.isEmpty()) {
+          // Simple extraction: take first word as parameter name
+          String[] parts = param.split("\\s+");
+          if (parts.length > 0) {
+            String paramName = parts[0];
+            Position start = offsetToPosition(content, paramOffset);
+            Position end = new Position(start.getLine(), start.getCharacter() + paramName.length());
+            Position sShifted = new Position(start.getLine() + lineOffset, start.getCharacter());
+            Position eShifted = new Position(end.getLine() + lineOffset, end.getCharacter());
+
+            DocumentSymbol child = new DocumentSymbol(
+                paramName,
+                SymbolKind.Variable,
+                new Range(sShifted, eShifted),
+                new Range(sShifted, eShifted),
+                null
+            );
+            children.add(child);
+          }
+        }
+        paramOffset += param.length() + 1; // +1 for comma
+      }
+
+      return children;
     }
 
     // ── rename (refactoring) ──
@@ -1094,18 +1194,88 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
       }
 
-      // Create signature information (simplified: just show method name → type)
-      List<ParameterInformation> params_info = List.of();
-      String returnType = "any"; // Simplified: would need to extract from AST
+      // Extract parameter count and return type from method name pattern
+      // In future: would traverse AST to extract actual MethodParameter nodes
+      String returnType = inferReturnType(methodName);
+      int paramCount = estimateParameterCount(content, parenPos);
+
+      // Build simplified parameter info (counts parameters from call site)
+      List<ParameterInformation> params_info = new ArrayList<>();
+      for (int i = 0; i < paramCount; i++) {
+        params_info.add(new ParameterInformation(
+            "$param" + (i + 1),
+            "Parameter " + (i + 1)
+        ));
+      }
+
+      // Create signature with estimated parameters
+      String signature = buildSignature(methodName, paramCount, returnType);
       SignatureInformation sig = new SignatureInformation(
-          methodName + "() → " + returnType,
+          signature,
           "Method: " + methodName,
           params_info
       );
 
+      // Calculate active parameter from cursor position
+      int activeParam = countCommasBeforeCursor(content, offset, parenPos);
+
       return CompletableFuture.completedFuture(
-          new SignatureHelp(List.of(sig), 0, null)
+          new SignatureHelp(List.of(sig), 0, activeParam)
       );
+    }
+
+    /** Infer return type from method name pattern (simplified heuristic) */
+    private String inferReturnType(String methodName) {
+      if (methodName.startsWith("is") || methodName.startsWith("check")) {
+        return "boolean";
+      }
+      if (methodName.startsWith("count") || methodName.startsWith("get_number")) {
+        return "number";
+      }
+      if (methodName.startsWith("get_string") || methodName.startsWith("format")) {
+        return "string";
+      }
+      return "any";
+    }
+
+    /** Estimate parameter count by analyzing method call arguments */
+    private int estimateParameterCount(String content, int openParenPos) {
+      int closeParenPos = openParenPos + 1;
+      int depth = 1;
+      while (closeParenPos < content.length() && depth > 0) {
+        char c = content.charAt(closeParenPos);
+        if (c == '(') depth++;
+        else if (c == ')') depth--;
+        closeParenPos++;
+      }
+
+      if (depth == 0) {
+        String args = content.substring(openParenPos + 1, closeParenPos - 1).trim();
+        if (args.isEmpty()) return 0;
+        // Simple heuristic: count commas + 1
+        return 1 + (int) args.chars().filter(c -> c == ',').count();
+      }
+      return 0;
+    }
+
+    /** Count commas before cursor to determine active parameter */
+    private int countCommasBeforeCursor(String content, int cursorOffset, int openParenPos) {
+      int commaCount = 0;
+      for (int i = openParenPos + 1; i < cursorOffset && i < content.length(); i++) {
+        if (content.charAt(i) == ',') commaCount++;
+      }
+      return commaCount;
+    }
+
+    /** Build signature string from method name, param count, and return type */
+    private String buildSignature(String methodName, int paramCount, String returnType) {
+      StringBuilder sb = new StringBuilder(methodName).append("(");
+      for (int i = 0; i < paramCount; i++) {
+        if (i > 0) sb.append(", ");
+        sb.append("$param").append(i + 1);
+      }
+      sb.append(") → ").append(returnType);
+      return sb.toString();
     }
 
     // ── code lens (DAP-integrated evaluation display) ──
