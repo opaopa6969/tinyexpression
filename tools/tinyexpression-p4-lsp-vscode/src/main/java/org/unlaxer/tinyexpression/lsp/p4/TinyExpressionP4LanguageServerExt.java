@@ -35,7 +35,11 @@ import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.DefinitionParams;
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -263,6 +267,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     ParseResult result;
     org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
     List<ScopeStore.SymbolDiagnostic> scopeDiagnostics = List.of();
+    List<ScopeStore.SymbolInfo>       declarations     = List.of();
+    List<ScopeStore.ReferenceInfo>    references       = List.of();
 
     if (source == null) {
       result = new ParseResult(false, 0, formulaContent.length());
@@ -273,8 +279,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       try {
         parsed = rootParser.parse(ctx);
         // Capture before close: gives us farthest offset + expected-hint candidates.
-        ctxDiag = ctx.getParseFailureDiagnostics();
+        ctxDiag       = ctx.getParseFailureDiagnostics();
         scopeDiagnostics = ScopeStore.getDiagnostics(ctx);
+        declarations  = ScopeStore.getAllDeclarations(ctx);
+        references    = ScopeStore.getAllReferences(ctx);
       } finally {
         ctx.close();
       }
@@ -292,7 +300,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
 
     ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent, ctxDiag);
-    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, lineOffset));
+    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, declarations, references, lineOffset));
 
     if (extClient != null) {
       publishEnrichedDiagnostics(uri, formulaContent, failures, scopeDiagnostics, lineOffset);
@@ -588,6 +596,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       ParseResult parseResult,
       TinyExpressionP4AST ast,
       ParseFailureDiagnostics failures,
+      List<ScopeStore.SymbolInfo> declarations,
+      List<ScopeStore.ReferenceInfo> references,
       int lineOffset) {}
 
   /**
@@ -816,6 +826,77 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       WorkspaceEdit we = new WorkspaceEdit();
       we.setDocumentChanges(List.of(Either.forLeft(docEdit)));
       return we;
+    }
+
+    // ── go-to-definition ──
+
+    @Override
+    public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>>
+        definition(DefinitionParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.declarations().isEmpty()) {
+        return CompletableFuture.completedFuture(Either.forLeft(List.of()));
+      }
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(Either.forLeft(List.of()));
+      }
+      List<Location> locations = state.declarations().stream()
+          .filter(d -> d.name().equals(word))
+          .map(d -> {
+            int abs = d.sourceOffset();
+            Position pos = offsetToPosition(state.content(), abs);
+            Position shifted = new Position(pos.getLine() + state.lineOffset(), pos.getCharacter());
+            return new Location(uri, new Range(shifted, shifted));
+          })
+          .collect(java.util.stream.Collectors.toList());
+      return CompletableFuture.completedFuture(Either.forLeft(locations));
+    }
+
+    // ── find-references ──
+
+    @Override
+    public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null || state.references().isEmpty()) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(List.of());
+      }
+      List<Location> locations = state.references().stream()
+          .filter(r -> r.name().equals(word))
+          .map(r -> {
+            Position start = offsetToPosition(state.content(), r.offset());
+            Position end   = offsetToPosition(state.content(), r.offset() + r.length());
+            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
+            Position eShifted = new Position(end.getLine()   + state.lineOffset(), end.getCharacter());
+            return new Location(uri, new Range(sShifted, eShifted));
+          })
+          .collect(java.util.stream.Collectors.toList());
+      return CompletableFuture.completedFuture(locations);
+    }
+
+    /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
+    private String wordAt(String content, Position position, int lineOffset) {
+      int line = position.getLine() - lineOffset;
+      int col  = position.getCharacter();
+      if (line < 0) return "";
+      int offset = 0;
+      String[] lines = content.split("\n", -1);
+      for (int i = 0; i < line && i < lines.length; i++) offset += lines[i].length() + 1;
+      offset += col;
+      if (offset >= content.length()) return "";
+      // skip '$' prefix if present
+      int start = offset;
+      if (start < content.length() && content.charAt(start) == '$') start++;
+      int s = start, e = start;
+      while (s > 0 && Character.isLetterOrDigit(content.charAt(s - 1))) s--;
+      while (e < content.length() && Character.isLetterOrDigit(content.charAt(e))) e++;
+      return content.substring(s, e);
     }
 
     // ── semantic tokens ──
