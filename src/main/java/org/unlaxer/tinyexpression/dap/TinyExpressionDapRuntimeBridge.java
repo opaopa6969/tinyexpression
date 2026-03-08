@@ -25,6 +25,31 @@ public final class TinyExpressionDapRuntimeBridge {
 
   private TinyExpressionDapRuntimeBridge() {}
 
+  /**
+   * Evaluate a formula and return the normalized result or error message.
+   * Used by LSP code lens for expression evaluation display.
+   * @param formulaSource the expression text to evaluate
+   * @param runtimeMode the execution backend (e.g., "token", "p4")
+   * @return evaluation result string, or error message on failure
+   */
+  public static String evaluateForDisplay(String formulaSource, String runtimeMode) {
+    try {
+      ExecutionBackend backend =
+          ExecutionBackend.fromRuntimeMode(runtimeMode).orElse(ExecutionBackend.JAVA_CODE);
+      SpecifiedExpressionTypes types =
+          new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
+      Calculator calculator = CalculatorCreatorRegistry.forBackend(backend).create(
+          new Source(formulaSource == null ? "" : formulaSource),
+          "TinyExpressionLspCodeLens",
+          types,
+          Thread.currentThread().getContextClassLoader());
+      Object value = calculator.apply(CalculationContext.newConcurrentContext());
+      return truncate(normalizeResult(value));
+    } catch (Throwable error) {
+      return "⚠ " + truncate(error.getClass().getSimpleName());
+    }
+  }
+
   public static Map<String, String> debugVariables(String formulaSource, String runtimeMode) {
     LinkedHashMap<String, String> vars = new LinkedHashMap<>();
     vars.put("bridgeAttached", "true");

@@ -1288,8 +1288,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return CompletableFuture.completedFuture(List.of());
       }
 
-      // Simplified implementation: create code lens for first few "=" operators
-      // In future: enumerate expression AST nodes and create evaluable lenses
+      // Create code lenses for assignment statements with evaluated results
       List<CodeLens> lenses = new ArrayList<>();
       String content = state.content();
       int count = 0;
@@ -1297,24 +1296,130 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       for (int i = 0; i < content.length() - 1 && count < maxLenses; i++) {
         if (content.charAt(i) == '=' && i + 1 < content.length() && content.charAt(i + 1) != '=') {
-          int[] lc = offsetToLineChar(content, i);
-          Position pos = new Position(lc[0] + state.lineOffset(), lc[1]);
-          Range range = new Range(pos, new Position(lc[0] + state.lineOffset(), lc[1] + 1));
+          // Extract the RHS expression (from '=' to next statement boundary)
+          String rhsExpression = extractRhsExpression(content, i + 1);
+          if (!rhsExpression.isEmpty()) {
+            // Evaluate the expression (try to parse and get type/hint)
+            String evaluationResult = evaluateExpressionHint(rhsExpression);
 
-          Command cmd = new Command(
-              "▶ Evaluate",  // title
-              "tinyExpressionP4Lsp.evaluateExpression",  // command ID
-              List.of(uri, i)  // arguments: uri and offset
-          );
+            int[] lc = offsetToLineChar(content, i);
+            Position pos = new Position(lc[0] + state.lineOffset(), lc[1]);
+            Range range = new Range(pos, new Position(lc[0] + state.lineOffset(), lc[1] + 1));
 
-          CodeLens lens = new CodeLens(range);
-          lens.setCommand(cmd);
-          lenses.add(lens);
-          count++;
+            // Create code lens with evaluation result in title
+            String lensTitle = "= " + evaluationResult;
+            Command cmd = new Command(
+                lensTitle,
+                "tinyExpressionP4Lsp.evaluateExpression",
+                List.of(uri, i)
+            );
+
+            CodeLens lens = new CodeLens(range);
+            lens.setCommand(cmd);
+            lenses.add(lens);
+            count++;
+          }
         }
       }
 
       return CompletableFuture.completedFuture(lenses);
+    }
+
+    /** Extract RHS expression from '=' operator position. */
+    private String extractRhsExpression(String content, int afterEqualPos) {
+      // Find the end of the expression (next semicolon or end of line)
+      int start = afterEqualPos;
+      while (start < content.length() && Character.isWhitespace(content.charAt(start))) {
+        start++;
+      }
+      if (start >= content.length()) return "";
+
+      int end = start;
+      int depth = 0;
+      while (end < content.length()) {
+        char c = content.charAt(end);
+        if (c == '(' || c == '[') depth++;
+        else if (c == ')' || c == ']') depth--;
+        else if ((c == ';' || c == '\n') && depth == 0) break;
+        end++;
+      }
+
+      return content.substring(start, end).trim();
+    }
+
+    /** Provide expression type hint by analyzing expression structure (heuristic, no evaluation). */
+    private String evaluateExpressionHint(String expr) {
+      if (expr == null || expr.isEmpty()) return "?";
+
+      // Try to parse and get AST for better type detection
+      try {
+        TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(expr);
+        // Infer type from AST node
+        return inferTypeFromAst(ast);
+      } catch (Exception parseError) {
+        // Fallback to pattern-based heuristics
+        return inferTypeFromPattern(expr);
+      }
+    }
+
+    /** Infer type from parsed AST node. */
+    private String inferTypeFromAst(TinyExpressionP4AST ast) {
+      if (ast == null) return "?";
+
+      return switch (ast) {
+        case TinyExpressionP4AST.StringExpr ignored -> "str";
+        case TinyExpressionP4AST.BooleanExpr ignored -> "bool";
+        case TinyExpressionP4AST.BinaryExpr b -> {
+          // Check operator type from the ops list
+          if (!b.op().isEmpty()) {
+            String op = b.op().get(0);
+            if ("==".equals(op) || "!=".equals(op) || "<".equals(op) || ">".equals(op) || "<=".equals(op) || ">=".equals(op)) {
+              yield "bool";
+            }
+          }
+          yield "num";  // arithmetic ops return number
+        }
+        case TinyExpressionP4AST.VariableRefExpr ignored -> "var";
+        case TinyExpressionP4AST.MethodInvocationExpr m -> inferMethodReturnType(m.name());
+        case TinyExpressionP4AST.ComparisonExpr ignored -> "bool";
+        case TinyExpressionP4AST.StringComparisonExpr ignored -> "bool";
+        default -> "expr";
+      };
+    }
+
+    /** Infer type from expression text pattern. */
+    private String inferTypeFromPattern(String expr) {
+      // Numeric patterns
+      if (expr.matches("^\\d+(\\.\\d+)?$")) return "number";
+      if (expr.matches("^'[^']*'$")) return "string";
+      if ("true".equals(expr) || "false".equals(expr)) return "boolean";
+
+      // Variable reference
+      if (expr.startsWith("$")) return "var";
+
+      // Method call
+      if (expr.contains("(") && expr.contains(")")) {
+        int parenPos = expr.indexOf("(");
+        String methodName = expr.substring(0, parenPos).trim();
+        return inferMethodReturnType(methodName);
+      }
+
+      // Arithmetic operators suggest number
+      if (expr.matches(".*[+\\-*/].*") && !expr.contains("==") && !expr.contains("!=")) return "number";
+
+      // Comparison operators suggest boolean
+      if (expr.matches(".*(==|!=|<|>|<=|>=).*")) return "boolean";
+
+      return "expr";
+    }
+
+    /** Infer return type from method name pattern. */
+    private String inferMethodReturnType(String methodName) {
+      if (methodName == null) return "any";
+      if (methodName.startsWith("is") || methodName.startsWith("check")) return "bool";
+      if (methodName.startsWith("count") || methodName.startsWith("get_number")) return "num";
+      if (methodName.startsWith("get_string") || methodName.startsWith("format")) return "str";
+      return "any";
     }
 
     /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
