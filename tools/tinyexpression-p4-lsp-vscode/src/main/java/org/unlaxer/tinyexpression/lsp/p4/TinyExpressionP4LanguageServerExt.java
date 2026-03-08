@@ -741,7 +741,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return "unknown";
     }
 
-    // ── hover ──
+    // ── hover (enhanced with symbol information) ──
 
     @Override
     public CompletableFuture<Hover> hover(HoverParams params) {
@@ -751,26 +751,67 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return CompletableFuture.completedFuture(null);
       }
 
-      String markdownText = switch (state.failures()) {
-        case ParseFailureDiagnostics.Absent a -> {
-          String astInfo = state.ast() != null
-              ? "\n\nAST root: `" + state.ast().getClass().getSimpleName() + "`"
-              : "";
-          yield "**TinyExpression P4** (valid)" + astInfo;
+      // Extract word at cursor position
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+
+      String markdownText;
+
+      // Try to find symbol information in declarations
+      if (!word.isEmpty()) {
+        var declOpt = state.declarations().stream()
+            .filter(d -> d.name().equals(word))
+            .findFirst();
+
+        if (declOpt.isPresent()) {
+          // Show symbol type information
+          var decl = declOpt.get();
+          markdownText = buildSymbolHover(word);
+        } else {
+          // Fallback to parse status
+          markdownText = buildParseStatusHover(state.failures());
         }
-        case ParseFailureDiagnostics.Present p -> {
-          String hints = p.expectedHints().isEmpty()
-              ? ""
-              : "\n\n" + String.join(", ", p.expectedHints());
-          yield "**TinyExpression P4** — parse error at offset "
-              + p.failureOffset() + hints;
-        }
-      };
+      } else {
+        // No word at cursor, show parse status
+        markdownText = buildParseStatusHover(state.failures());
+      }
 
       MarkupContent content = new MarkupContent();
       content.setKind("markdown");
       content.setValue(markdownText);
       return CompletableFuture.completedFuture(new Hover(content));
+    }
+
+    /** Build hover content for symbol information. */
+    private String buildSymbolHover(String symbolName) {
+      String typeInfo;
+      String prefix = "**" + symbolName + "**";
+
+      if (symbolName.startsWith("$")) {
+        // Variable: show inferred type
+        String varType = inferVariableType(symbolName);
+        typeInfo = prefix + ": `" + varType + "`";
+      } else {
+        // Method: show signature and return type
+        String returnType = inferMethodReturnType(symbolName);
+        typeInfo = prefix + "() → `" + returnType + "`";
+      }
+
+      return typeInfo + "\n\n*TinyExpression P4 symbol*";
+    }
+
+    /** Build hover content for parse status. */
+    private String buildParseStatusHover(ParseFailureDiagnostics failures) {
+      return switch (failures) {
+        case ParseFailureDiagnostics.Absent a -> {
+          yield "**TinyExpression P4**\n\nDocument is valid P4.";
+        }
+        case ParseFailureDiagnostics.Present p -> {
+          String hints = p.expectedHints().isEmpty()
+              ? ""
+              : "\n\n**Expected**: " + String.join(", ", p.expectedHints());
+          yield "**TinyExpression P4** — Parse error at offset " + p.failureOffset() + hints;
+        }
+      };
     }
 
     // ── code actions (quick fixes) ──
