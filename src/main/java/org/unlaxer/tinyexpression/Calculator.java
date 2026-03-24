@@ -123,6 +123,10 @@ public interface Calculator {
 
   public void setDependsOnBy(Calculator calculator);
 
+  public default Object calculate(CalculationContext calculateContext) {
+    return apply(calculateContext);
+  }
+
   public default CalculateResult calculate(CalculationContext calculateContext,
       String formula , ExpressionType resultType) {
     ParseContext parseContext = new ParseContext(new StringSource(formula));

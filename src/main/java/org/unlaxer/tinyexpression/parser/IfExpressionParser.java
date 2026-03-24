@@ -204,7 +204,7 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
       return null;
     }
     // New parser shape: [condition, thenExpr, elseExpr]
-    if (root.filteredChildren.size() >= 3) {
+    if (root.filteredChildren.size() == 3) {
       if (indexInChoice == 0) {
         return root.filteredChildren.get(1);
       }

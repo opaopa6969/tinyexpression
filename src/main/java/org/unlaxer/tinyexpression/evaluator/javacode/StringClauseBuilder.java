@@ -184,7 +184,7 @@ public class StringClauseBuilder {
     return specifier.map(slicerSpecifier ->
         ExpressionOrLiteral.expressionOf(
             "new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(String.valueOf(" + inner
-                + "))).pythonian(\"" + slicerSpecifier + "\").get()"))
+                + "))).pythonian(\"" + slicerSpecifier + "\").get().sourceAsString()"))
         .orElse(inner);
   }
 

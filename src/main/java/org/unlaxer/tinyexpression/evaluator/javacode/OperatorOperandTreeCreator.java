@@ -385,8 +385,15 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
     } else if (parser instanceof DayOfWeekEnumParser) {
       return token;
+
+    } else if (parser instanceof NakedVariableParser ||
+        parser instanceof NumberVariableParser ||
+        parser instanceof StringVariableParser ||
+        parser instanceof BooleanVariableParser) {
+      return token;
+
     }
-    
+
     throw unsupportedParser("apply", token, parser);
       
   }

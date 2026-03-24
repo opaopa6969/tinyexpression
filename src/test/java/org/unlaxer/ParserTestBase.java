@@ -425,10 +425,15 @@ public class ParserTestBase {
 		if(isCI()) {
 			return;
 		}
-		
+
+		String caller = callerClassName.get();
+		if(caller == null || caller.isEmpty()) {
+			return;
+		}
+
 		try {
-			List<CompareResult> results = 
-				Files.walk(Paths.get("build/"+testFolderName , callerClassName.get()))
+			List<CompareResult> results =
+				Files.walk(Paths.get("build/"+testFolderName , caller))
 					.filter(path->path.toFile().isFile())
 					.map(actualLog->{
 						ResultKind compareKind = compare(actualLog);
