@@ -8,8 +8,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Parsed;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.compiler.InstanceAndByteCode;
+import org.unlaxer.context.ParseContext;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -63,6 +67,7 @@ public class AstEvaluatorCalculator implements Calculator {
     this.classNameAndByteCodeListFromStore = List.of();
     this.createdFromByteCode = false;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
+    validateFormulaParseable(source);
   }
 
   public AstEvaluatorCalculator(Source source, String javaCode, String className,
@@ -613,5 +618,25 @@ public class AstEvaluatorCalculator implements Calculator {
       return decimal;
     }
     return new BigDecimal(value.toString());
+  }
+
+  private void validateFormulaParseable(Source source) {
+    String formula = source.source();
+    if (formula == null || formula.isBlank()) {
+      return;
+    }
+    Parser parser = getParser();
+    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    try (parseContext) {
+      Parsed parsed = parser.parse(parseContext);
+      if (!parsed.isSucceeded()) {
+        throw new ParseException("failed to parse:" + formula);
+      }
+      parsed.getRootToken(true);
+    } catch (ParseException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new ParseException("failed to parse:" + formula, e);
+    }
   }
 }
