@@ -252,6 +252,62 @@ public sealed interface ParseFailureDiagnostics
 - `stackTrace`: 生成 AST のノードパスを表示
 - `evaluate` コマンド: 6バックエンド全てで評価し parity を返す
 
+### Phase 5 (追加): DAP 変数入力 + その場計算
+
+#### 変数指定方法（優先度順）
+
+| 方法 | 概要 |
+|---|---|
+| Variables ペイン編集 | `setVariable` 実装、インライン編集 |
+| `variablesFile` in launch.json | JSON ファイルパス指定、セッション開始時に読み込み |
+| Debug Console 代入 | `$x = "alice"` 形式で動的セット |
+| Zero-config launch | launch.json なしで F5 が動く |
+
+#### Zero-config launch の仕組み
+
+`DebugConfigurationProvider.resolveDebugConfiguration()` を実装:
+- launch.json がない場合、アクティブな `.tinyexp` ファイルを自動対象にする
+- `variablesFile` 未指定時は workspace root の `tinyexp-vars.json` を自動検出
+- それも存在しなければ空マップで起動 → Variables ペインで追加
+
+#### Variables ペインのスコープ設計
+
+```
+▼ Eval Variables       ← setVariable で編集可能
+    inputName = "alice"
+    score = "42"
+▼ Document Variables   ← .tinyexp 内の var 宣言（読み取り専用）
+    $result as string
+▼ Catalog Variables    ← catalogResolver 由来（読み取り専用）
+    ForcedRelativeSuspiciousValue1 : BOOLEAN
+```
+
+#### 変数値の優先解決順（セッション開始時）
+
+```
+1. launch.json variables: {...}       最高優先
+2. launch.json variablesFile: path    ファイル参照
+3. workspace tinyexp-vars.json        自動検出
+4. 空マップ                            ペインで追加
+```
+
+#### セッション永続化（オプション）
+- `context.workspaceState` に変数マップを保存し、次回セッション開始時に自動読み込み
+- `variablesFile` が明示指定されている場合は上書きしない
+
+#### Watch 式サポート
+- VS Code Watch パネルは `evaluate(expr, context="watch")` を呼ぶ
+- Debug Console と同じ評価パスを使用; 変数変更時に自動再評価
+
+#### DAP 実装チェックリスト
+- [ ] `capabilities.supportsSetVariable = true`
+- [ ] `setVariable()` ハンドラ実装
+- [ ] `launch()` で `variables` + `variablesFile` を読み込み
+- [ ] `resolveDebugConfiguration()` を `extension.ts` に追加
+- [ ] `tinyexp-vars.json` 自動検出ロジック
+- [ ] Variables スコープ 3 種（Eval / Document / Catalog）を `scopes()` で返す
+- [ ] `workspaceState` への変数マップ保存・復元
+
 ---
 
 ### Phase 5: VSCode 拡張パッケージング
