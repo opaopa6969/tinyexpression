@@ -47,40 +47,40 @@ grammar TinyExpressionP4 {
     | BooleanVariableDeclaration
     | ObjectVariableDeclaration ;
 
-  @declares(symbol=varName)
+  @declares(symbol=varName, description=desc)
   NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ NumberTypeHint ]
     [ NumberSetter ]
-    Description
+    Description @desc
     ';' ;
 
-  @declares(symbol=varName)
+  @declares(symbol=varName, description=desc)
   StringVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ StringTypeHint ]
     [ StringSetter ]
-    Description
+    Description @desc
     ';' ;
 
-  @declares(symbol=varName)
+  @declares(symbol=varName, description=desc)
   BooleanVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
     [ BooleanSetter ]
-    Description
+    Description @desc
     ';' ;
 
-  @declares(symbol=varName)
+  @declares(symbol=varName, description=desc)
   ObjectVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
     [ ObjectSetter ]
-    Description
+    Description @desc
     ';' ;
 
   TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
@@ -316,6 +316,7 @@ grammar TinyExpressionP4 {
 
   // ── Variable references ────────────────────────────────────────────────────
 
+  @catalog(context='variable')
   @backref(name=name)
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;

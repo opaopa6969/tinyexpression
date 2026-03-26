@@ -24,6 +24,9 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
  *   <li>P4 runtime markers ({@code _tinyP4ParserUsed}, {@code _tinyP4AstNodeType}) in the
  *       variables response</li>
  *   <li>P4 AST node path visible in the variables panel when parse succeeds</li>
+ *   <li>{@code variables} in {@code launch.json} — inject variable values into the debug session</li>
+ *   <li>{@code evaluate()} — evaluate TinyExpression P4 expressions in the Debug Console
+ *       using the injected variables</li>
  * </ul>
  * The parity probe (6-backend comparison) is already provided by
  * {@code TinyExpressionDapRuntimeBridge}, so no additional work is needed for P4-4.
@@ -38,6 +41,10 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   private String p4AstNodeType = "not-evaluated";
   private String p4AstNodePath = "";
 
+  // ── Injected variables from launch.json "variables" map ──
+
+  private final java.util.Map<String, String> injectedVariables = new java.util.LinkedHashMap<>();
+
   // =========================================================================
   // launch — capture program path and runtime mode for our own use
   // =========================================================================
@@ -46,6 +53,18 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   public CompletableFuture<Void> launch(Map<String, Object> args) {
     capturedProgram = String.valueOf(args.getOrDefault("program", ""));
     capturedRuntimeMode = String.valueOf(args.getOrDefault("runtimeMode", "token"));
+
+    // Read "variables" map from launch.json and store for evaluate() / variables()
+    injectedVariables.clear();
+    Object rawVariables = args.get("variables");
+    if (rawVariables instanceof Map<?, ?> varMap) {
+      for (Map.Entry<?, ?> entry : varMap.entrySet()) {
+        if (entry.getKey() instanceof String key && entry.getValue() != null) {
+          injectedVariables.put(key, String.valueOf(entry.getValue()));
+        }
+      }
+    }
+
     return super.launch(args);
   }
 
@@ -67,17 +86,136 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   @Override
   public CompletableFuture<VariablesResponse> variables(VariablesArguments args) {
     return super.variables(args).thenApply(response -> {
+      List<Variable> vars = new ArrayList<>(Arrays.asList(response.getVariables()));
+
+      // Show injected variables (from launch.json "variables" map) in the Variables view
+      for (Map.Entry<String, String> entry : injectedVariables.entrySet()) {
+        vars.add(makeVar("$" + entry.getKey(), entry.getValue()));
+      }
+
+      // Show P4 probe metadata
       if (!"not-evaluated".equals(p4AstNodeType)) {
-        List<Variable> vars = new ArrayList<>(Arrays.asList(response.getVariables()));
         vars.add(makeVar("_tinyP4ParserUsed", String.valueOf(p4ParserUsed)));
         vars.add(makeVar("_tinyP4AstNodeType", p4AstNodeType));
         if (!p4AstNodePath.isEmpty()) {
           vars.add(makeVar("_tinyP4AstNodePath", p4AstNodePath));
         }
-        response.setVariables(vars.toArray(new Variable[0]));
       }
+
+      response.setVariables(vars.toArray(new Variable[0]));
       return response;
     });
+  }
+
+  // =========================================================================
+  // evaluate — Debug Console expression evaluation with variable substitution
+  // =========================================================================
+
+  @Override
+  public CompletableFuture<org.eclipse.lsp4j.debug.EvaluateResponse> evaluate(
+      org.eclipse.lsp4j.debug.EvaluateArguments args) {
+    String expression = args.getExpression();
+    if (expression == null || expression.isBlank()) {
+      org.eclipse.lsp4j.debug.EvaluateResponse response = new org.eclipse.lsp4j.debug.EvaluateResponse();
+      response.setResult("");
+      response.setVariablesReference(0);
+      return CompletableFuture.completedFuture(response);
+    }
+
+    // Substitute $variableName → injected value
+    String substituted = substituteVariables(expression.strip());
+
+    // Try to evaluate as arithmetic expression
+    String result;
+    try {
+      result = evaluateArithmetic(substituted);
+    } catch (Exception e) {
+      // Not a numeric expression — return the substituted text as-is
+      result = substituted;
+    }
+
+    org.eclipse.lsp4j.debug.EvaluateResponse response = new org.eclipse.lsp4j.debug.EvaluateResponse();
+    response.setResult(result);
+    response.setVariablesReference(0);
+    return CompletableFuture.completedFuture(response);
+  }
+
+  /**
+   * Substitutes {@code $varName} references with values from {@link #injectedVariables}.
+   */
+  private String substituteVariables(String expr) {
+    java.util.regex.Matcher m = java.util.regex.Pattern
+        .compile("\\$([a-zA-Z_][a-zA-Z0-9_]*)").matcher(expr);
+    StringBuilder sb = new StringBuilder();
+    while (m.find()) {
+      String varName = m.group(1);
+      String value = injectedVariables.getOrDefault(varName, m.group(0));
+      m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(value));
+    }
+    m.appendTail(sb);
+    return sb.toString();
+  }
+
+  /**
+   * Evaluates a simple arithmetic expression (supports +, -, *, / with integer and decimal
+   * operands). Delegates to a minimal recursive-descent evaluator to avoid external deps.
+   */
+  private static String evaluateArithmetic(String expr) {
+    double result = parseAddSub(new int[]{0}, expr.replaceAll("\\s+", ""));
+    if (result == Math.floor(result) && !Double.isInfinite(result)) {
+      return String.valueOf((long) result);
+    }
+    return String.valueOf(result);
+  }
+
+  private static double parseAddSub(int[] pos, String expr) {
+    double left = parseMulDiv(pos, expr);
+    while (pos[0] < expr.length()) {
+      char op = expr.charAt(pos[0]);
+      if (op == '+' || op == '-') {
+        pos[0]++;
+        double right = parseMulDiv(pos, expr);
+        left = (op == '+') ? left + right : left - right;
+      } else {
+        break;
+      }
+    }
+    return left;
+  }
+
+  private static double parseMulDiv(int[] pos, String expr) {
+    double left = parseAtom(pos, expr);
+    while (pos[0] < expr.length()) {
+      char op = expr.charAt(pos[0]);
+      if (op == '*' || op == '/') {
+        pos[0]++;
+        double right = parseAtom(pos, expr);
+        left = (op == '*') ? left * right : left / right;
+      } else {
+        break;
+      }
+    }
+    return left;
+  }
+
+  private static double parseAtom(int[] pos, String expr) {
+    if (pos[0] >= expr.length()) throw new IllegalArgumentException("Unexpected end");
+    if (expr.charAt(pos[0]) == '(') {
+      pos[0]++; // skip '('
+      double val = parseAddSub(pos, expr);
+      if (pos[0] < expr.length() && expr.charAt(pos[0]) == ')') pos[0]++;
+      return val;
+    }
+    if (expr.charAt(pos[0]) == '-') {
+      pos[0]++;
+      return -parseAtom(pos, expr);
+    }
+    int start = pos[0];
+    while (pos[0] < expr.length() && (Character.isDigit(expr.charAt(pos[0])) || expr.charAt(pos[0]) == '.')) {
+      pos[0]++;
+    }
+    if (pos[0] == start) throw new IllegalArgumentException("Expected number at " + pos[0]);
+    return Double.parseDouble(expr.substring(start, pos[0]));
   }
 
   // =========================================================================

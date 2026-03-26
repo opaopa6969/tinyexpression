@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import {
@@ -15,6 +16,43 @@ function getBundledJarPath(context: vscode.ExtensionContext): string {
   );
 }
 
+/**
+ * Returns a path-separator-delimited list of bundled .tecatalog files
+ * from the extension's config/ directory, or an empty string if none exist.
+ */
+function getBundledCatalogPaths(context: vscode.ExtensionContext): string {
+  const configDir = context.asAbsolutePath("config");
+  if (!fs.existsSync(configDir)) {
+    return "";
+  }
+  try {
+    const files = fs.readdirSync(configDir)
+      .filter(f => f.endsWith(".tecatalog"))
+      .map(f => path.join(configDir, f));
+    return files.join(path.delimiter);
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Resolves the effective catalog path from VS Code configuration and bundled files.
+ */
+function resolveEffectiveCatalogPath(
+  config: vscode.WorkspaceConfiguration,
+  context: vscode.ExtensionContext
+): string {
+  const userPath = config.get<string>("catalog.path", "").trim();
+  if (userPath.length > 0) {
+    return userPath;
+  }
+  const useBundled = config.get<boolean>("catalog.useBundledDefault", true);
+  if (useBundled) {
+    return getBundledCatalogPaths(context);
+  }
+  return "";
+}
+
 export async function activate(
   context: vscode.ExtensionContext
 ): Promise<void> {
@@ -29,25 +67,43 @@ export async function activate(
       ? configuredJar
       : getBundledJarPath(context);
 
+  // Resolve catalog path: user setting → bundled config/*.tecatalog → empty
+  const effectiveCatalogPath = resolveEffectiveCatalogPath(config, context);
+
   outputChannel = vscode.window.createOutputChannel("TinyExpression P4 LSP");
 
   // Log startup info so users can diagnose server startup issues
   outputChannel.appendLine("[TinyExpression P4 LSP] Starting server...");
   outputChannel.appendLine(`  java: ${javaPath}`);
   outputChannel.appendLine(`  jar:  ${jarPath}`);
-  outputChannel.appendLine(`  args: --enable-preview -jar ${jarPath}`);
+  if (effectiveCatalogPath.length > 0) {
+    outputChannel.appendLine(`  catalog: ${effectiveCatalogPath}`);
+  }
+
+  // Build JVM args: add catalog path as system property if available
+  const catalogJvmArgs: string[] = effectiveCatalogPath.length > 0
+    ? [`-Dtinyexpressionp4.catalog.path=${effectiveCatalogPath}`]
+    : [];
 
   // ── LSP server ──
   // Launched as a fat jar via -jar; main class is TinyExpressionP4LspLauncherExt
   const serverOptions: ServerOptions = {
     command: javaPath,
-    args: [...jvmArgs, "--enable-preview", "-jar", jarPath],
+    args: [...jvmArgs, ...catalogJvmArgs, "--enable-preview", "-jar", jarPath],
     options: {}
   };
 
+  // Pass catalog path via initializationOptions so the server can use it
+  // even if system property is not available (e.g. wrapped JVM)
+  const initializationOptions: Record<string, unknown> =
+    effectiveCatalogPath.length > 0
+      ? { catalogPath: effectiveCatalogPath }
+      : {};
+
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: "file", language: "tinyexpressionP4" }],
-    outputChannel
+    outputChannel,
+    initializationOptions
   };
 
   client = new LanguageClient(

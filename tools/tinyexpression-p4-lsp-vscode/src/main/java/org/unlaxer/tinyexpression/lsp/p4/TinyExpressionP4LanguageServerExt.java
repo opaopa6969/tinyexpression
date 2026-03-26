@@ -39,6 +39,8 @@ import org.eclipse.lsp4j.PublishDiagnosticsParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.LocationLink;
+import org.eclipse.lsp4j.LinkedEditingRangeParams;
+import org.eclipse.lsp4j.LinkedEditingRanges;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.DocumentSymbol;
@@ -62,6 +64,12 @@ import org.eclipse.lsp4j.InlayHintKind;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
 import org.eclipse.lsp4j.FoldingRangeRequestParams;
+import org.eclipse.lsp4j.CallHierarchyItem;
+import org.eclipse.lsp4j.CallHierarchyIncomingCall;
+import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
+import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
+import org.eclipse.lsp4j.CallHierarchyPrepareParams;
 import org.eclipse.lsp4j.SemanticTokens;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
@@ -150,6 +158,74 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   private static final Pattern VARIABLE_PATTERN =
       Pattern.compile("\\$([a-zA-Z_][a-zA-Z0-9_]*)");
 
+  // =========================================================================
+  // Error Catalog (TE0xx codes)
+  // =========================================================================
+
+  private record ErrorCatalogEntry(String code, String message, String fix) {
+    String fullMessage() { return "[" + code + "] " + message + " 修正例: " + fix; }
+  }
+
+  private static final Map<String, ErrorCatalogEntry> ERROR_CATALOG = new LinkedHashMap<>();
+
+  static {
+    // Ported from tiny-expression-validator docs/error-catalog.md
+    ERROR_CATALOG.put("TE001", new ErrorCatalogEntry("TE001", "else ブロックには数値式が必要です。", "else { 0 } / else { $someNumber } に修正"));
+    ERROR_CATALOG.put("TE002", new ErrorCatalogEntry("TE002", "識別子を式として解釈できません。", "変数は $abc、文字列は 'abc'"));
+    ERROR_CATALOG.put("TE003", new ErrorCatalogEntry("TE003", "文字列リテラルのクォートが不正です。", "'text' 形式に修正"));
+    ERROR_CATALOG.put("TE004", new ErrorCatalogEntry("TE004", "丸カッコが閉じられていません。", "対応する ) を追加"));
+    ERROR_CATALOG.put("TE005", new ErrorCatalogEntry("TE005", "波カッコが閉じられていません。", "対応する } を追加"));
+    ERROR_CATALOG.put("TE006", new ErrorCatalogEntry("TE006", "文末のセミコロンが必要です。", "文の末尾に ; を追加"));
+    ERROR_CATALOG.put("TE007", new ErrorCatalogEntry("TE007", "description の書式が不正です。", "description = '...' 形式に修正"));
+    ERROR_CATALOG.put("TE008", new ErrorCatalogEntry("TE008", "不正な文字が含まれています。", "半角文字に修正"));
+    ERROR_CATALOG.put("TE009", new ErrorCatalogEntry("TE009", "ここに不要なトークンがあります。", "余分な語句を削除"));
+    ERROR_CATALOG.put("TE010", new ErrorCatalogEntry("TE010", "構文の並びが想定と一致しません。", "直前の式と区切り記号を確認"));
+    ERROR_CATALOG.put("TE011", new ErrorCatalogEntry("TE011", "if 条件には booleanExpression が必要です。", "比較式や boolean 値を設定"));
+    ERROR_CATALOG.put("TE012", new ErrorCatalogEntry("TE012", "if の then ブロックには数値式が必要です。", "if (...) { 1 } 形式に修正"));
+    ERROR_CATALOG.put("TE013", new ErrorCatalogEntry("TE013", "match 構文が不正です。", "match { cond -> expr, default -> expr } を確認"));
+    ERROR_CATALOG.put("TE014", new ErrorCatalogEntry("TE014", "default ケースの記述が不正です。", "default -> expr を追加/修正"));
+    ERROR_CATALOG.put("TE015", new ErrorCatalogEntry("TE015", "関数引数の数が不正です。", "関数定義に合わせて引数数を修正"));
+    ERROR_CATALOG.put("TE016", new ErrorCatalogEntry("TE016", "import 宣言の形式が不正です。", "import ... as ...; を確認"));
+    ERROR_CATALOG.put("TE017", new ErrorCatalogEntry("TE017", "variable 宣言の形式が不正です。", "variable $name ... ; を確認"));
+    ERROR_CATALOG.put("TE018", new ErrorCatalogEntry("TE018", "型ヒントの位置が不正です。", "as number/string/boolean の位置を修正"));
+    ERROR_CATALOG.put("TE019", new ErrorCatalogEntry("TE019", "get/orElse 構文が不正です。", "get(...).orElse(...) 形式を確認"));
+    ERROR_CATALOG.put("TE020", new ErrorCatalogEntry("TE020", "構文エラーです。", "エラー行の直前トークンと括弧を確認"));
+    ERROR_CATALOG.put("TE021", new ErrorCatalogEntry("TE021", "利用可能なメソッド名ではありません。", "候補メソッド名へ修正"));
+    ERROR_CATALOG.put("TE022", new ErrorCatalogEntry("TE022", "利用可能な変数名ではありません。", "候補変数名へ修正"));
+    ERROR_CATALOG.put("TE023", new ErrorCatalogEntry("TE023", "演算子/記法不正です。", "&/| の追加、&& -> &、$ の除去など"));
+    ERROR_CATALOG.put("TE024", new ErrorCatalogEntry("TE024", "partialKey 変数のsuffix不足です。", "$prefix_<suffix> 形式に修正"));
+  }
+
+  private String resolveCatalogMessage(String hint, String snippet, String leading) {
+    String code = resolveCode(hint, snippet, leading);
+    ErrorCatalogEntry entry = ERROR_CATALOG.getOrDefault(code, ERROR_CATALOG.get("TE020"));
+    return entry.fullMessage() + " (詳細: " + hint + ")";
+  }
+
+  private String resolveCode(String hint, String snippet, String leading) {
+    if (hint.contains("';'")) return "TE006";
+    if (hint.contains("')'")) return "TE004";
+    if (hint.contains("'}'")) return "TE005";
+    if (hint.contains("'description'")) return "TE007";
+    if (hint.contains("'if'")) return "TE011";
+    if (hint.contains("'match'")) return "TE013";
+    if (hint.contains("'default'")) return "TE014";
+    if (hint.contains("'import'")) return "TE016";
+    if (hint.contains("'variable'") || hint.contains("'var'")) return "TE017";
+    if (hint.contains("'as'")) return "TE018";
+    if (hint.contains("'orElse'")) return "TE019";
+    if (hint.contains("&&") || hint.contains("||")) return "TE023";
+
+    if (snippet.startsWith("if")) return "TE011";
+    if (leading.stripTrailing().endsWith("if")) return "TE011";
+    if (snippet.matches("[A-Za-z_][A-Za-z0-9_]*")) {
+        // Looks like a bare identifier used as expression
+        return "TE002";
+    }
+
+    return "TE020";
+  }
+
   // ── State ──
 
   private final DocumentFilter documentFilter;
@@ -198,6 +274,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   @Override
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
+    // Call super to trigger initCatalogResolver(params) in the generated class.
+    // We discard the returned capabilities and build our own below.
+    super.initialize(params);
+
     ServerCapabilities cap = new ServerCapabilities();
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
 
@@ -219,6 +299,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setCodeLensProvider(new org.eclipse.lsp4j.CodeLensOptions(false));
     cap.setInlayHintProvider(true);
     cap.setFoldingRangeProvider(true);
+    cap.setDefinitionProvider(true);
+    cap.setLinkedEditingRangeProvider(true);
+    cap.setWorkspaceSymbolProvider(true);
+    cap.setDocumentFormattingProvider(true);
 
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
@@ -291,27 +375,29 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
    * @param formulaContent formula text to parse (may be a sub-section of the full document)
    * @param lineOffset     number of lines to add to parser positions when publishing diagnostics
    */
-  private ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset) {
+  public ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset) {
     StringSource source = createRootSource(formulaContent);
     ParseResult result;
     org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
-    List<ScopeStore.SymbolDiagnostic> scopeDiagnostics = List.of();
-    List<ScopeStore.SymbolInfo>       declarations     = List.of();
-    List<ScopeStore.ReferenceInfo>    references       = List.of();
+    List<ScopeStore.SymbolDiagnostic> scopeDiagnostics = new ArrayList<>();
+    List<ScopeStore.SymbolInfo>       declarations     = new ArrayList<>();
+    List<ScopeStore.ReferenceInfo>    references       = new ArrayList<>();
 
     if (source == null) {
       result = new ParseResult(false, 0, formulaContent.length());
     } else {
       Parser rootParser = TinyExpressionP4Parsers.getRootParser();
       ParseContext ctx = new ParseContext(source);
+      ScopeStore.registerDispatcher(ctx);
       Parsed parsed;
       try {
         parsed = rootParser.parse(ctx);
-        // Capture before close: gives us farthest offset + expected-hint candidates.
-        ctxDiag       = ctx.getParseFailureDiagnostics();
-        scopeDiagnostics = ScopeStore.getDiagnostics(ctx);
-        declarations  = ScopeStore.getAllDeclarations(ctx);
-        references    = ScopeStore.getAllReferences(ctx);
+        ctxDiag = ctx.getParseFailureDiagnostics();
+        
+        // Extract scope information BEFORE closing context
+        scopeDiagnostics.addAll(ScopeStore.getDiagnostics(ctx));
+        declarations.addAll(ScopeStore.getAllDeclarations(ctx));
+        references.addAll(ScopeStore.getAllReferences(ctx));
       } finally {
         ctx.close();
       }
@@ -347,12 +433,12 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   // =========================================================================
-  // getWorkspaceService — delegate to generated no-op
+  // getWorkspaceService — return extended implementation
   // =========================================================================
 
   @Override
   public WorkspaceService getWorkspaceService() {
-    return super.getWorkspaceService();
+    return new ExtWorkspaceService(this);
   }
 
   // =========================================================================
@@ -424,10 +510,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     List<Diagnostic> diagnostics = new ArrayList<>();
     // Semantic diagnostics from ScopeStore (@declares / @backref)
     for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
-      Position rawStart = offsetToPosition(content, sd.offset());
-      Position rawEnd   = offsetToPosition(content, sd.offset() + sd.length());
-      Position start = new Position(rawStart.getLine() + lineOffset, rawStart.getCharacter());
-      Position end   = new Position(rawEnd.getLine()   + lineOffset, rawEnd.getCharacter());
+      Position start = offsetToPositionWithOffset(content, sd.offset(), lineOffset);
+      Position end   = offsetToPositionWithOffset(content, sd.offset() + sd.length(), lineOffset);
       Diagnostic d = new Diagnostic();
       d.setRange(new Range(start, end));
       d.setSeverity(switch (sd.severity()) {
@@ -446,42 +530,49 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           .substring(offset, Math.min(offset + 20, content.length()))
           .strip();
 
-      Position rawStart = offsetToPosition(content, offset);
+      Position start = offsetToPositionWithOffset(content, offset, lineOffset);
       // Range end: end of the failing line — more focused than end-of-file.
       int lineEnd = offset;
       while (lineEnd < content.length() && content.charAt(lineEnd) != '\n') lineEnd++;
-      Position rawEnd = offsetToPosition(content, lineEnd);
-
-      // Shift positions by lineOffset so they point into the original document.
-      Position start = new Position(rawStart.getLine() + lineOffset, rawStart.getCharacter());
-      Position end   = new Position(rawEnd.getLine()   + lineOffset, rawEnd.getCharacter());
+      Position end = offsetToPositionWithOffset(content, lineEnd, lineOffset);
 
       Diagnostic d = new Diagnostic();
       d.setRange(new Range(start, end));
       d.setSeverity(DiagnosticSeverity.Error);
       d.setSource("tinyexpression-p4");
-      d.setCode(Either.forLeft("TE001"));
-      // Prefer explicit expected-hint (e.g. "Expected ','") over generic snippet message.
-      String message;
-      if (!failures.expectedHints().isEmpty()) {
-        message = failures.expectedHints().get(0);
-      } else if (snippet.isEmpty()) {
-        message = "Unexpected end of input";
-      } else {
-        message = "Unexpected token: '" + snippet + "'";
-      }
+
+      String hint = failures.expectedHints().isEmpty() ? "" : failures.expectedHints().get(0);
+      String leading = content.substring(0, offset);
+      String code = resolveCode(hint, snippet, leading);
+      d.setCode(Either.forLeft(code));
+
+      String message = resolveCatalogMessage(hint, snippet, leading);
       d.setMessage(message);
       diagnostics.add(d);
     }
     extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
   }
 
-  private static Position offsetToPosition(String content, int offset) {
-    int line = 0, col = 0;
+  /** Convert character offset to Position (line, character), applying line offset. */
+  public static Position offsetToPositionWithOffset(String content, int offset, int lineOffset) {
+    int line = 0;
+    int column = 0;
     for (int i = 0; i < offset && i < content.length(); i++) {
-      if (content.charAt(i) == '\n') { line++; col = 0; } else { col++; }
+      if (content.charAt(i) == '\n') {
+        line++;
+        column = 0;
+      } else {
+        column++;
+      }
     }
-    return new Position(line, col);
+    return new Position(line + lineOffset, column);
+  }
+
+  /** Convert a character offset and length to a Range, applying line offset. */
+  public static Range offsetToRangeWithOffset(String content, int offset, int length, int lineOffset) {
+    Position start = offsetToPositionWithOffset(content, offset, lineOffset);
+    Position end = offsetToPositionWithOffset(content, offset + length, lineOffset);
+    return new Range(start, end);
   }
 
   // =========================================================================
@@ -584,6 +675,12 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (content.charAt(i) == '\n') { line++; col = 0; } else { col++; }
     }
     return new int[]{line, col};
+  }
+
+  /** Exposes {@code setCatalogResolver} publicly for configuration and testing. */
+  @Override
+  public void setCatalogResolver(CatalogResolver r) {
+    super.setCatalogResolver(r);
   }
 
   /** Reflection-compatible StringSource factory (same as generated code). */
@@ -715,7 +812,23 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           }
         }
 
-        // 3. Variable references from document text (fallback for undeclared variables)
+        // 3. Catalog variable completion (from .tecatalog files via CatalogResolver)
+        String dollarPrefix = prefix.startsWith("$") ? prefix.substring(1) : "";
+        if (prefix.isEmpty() || prefix.startsWith("$")) {
+          for (CompletionItem ci : server.catalogCompletion(dollarPrefix)) {
+            String label = "$" + ci.getLabel();
+            if (seen.add(label)) {
+              CompletionItem item = new CompletionItem(label);
+              item.setKind(CompletionItemKind.Variable);
+              if (ci.getDetail() != null) {
+                item.setDetail(ci.getDetail());
+              }
+              items.add(item);
+            }
+          }
+        }
+
+        // 4. Variable references from document text (fallback for undeclared variables)
         Matcher m = VARIABLE_PATTERN.matcher(state.content());
         while (m.find()) {
           String varName = "$" + m.group(1);
@@ -760,19 +873,36 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       String markdownText;
 
-      // Try to find symbol information in declarations
+      // Try to find symbol information: catalog first, then declarations, then parse status
       if (!word.isEmpty()) {
-        var declOpt = state.declarations().stream()
-            .filter(d -> d.name().equals(word))
-            .findFirst();
-
-        if (declOpt.isPresent()) {
-          // Show symbol type information
-          var decl = declOpt.get();
-          markdownText = buildSymbolHover(word);
+        // 1. Catalog hover for $variable names
+        if (word.startsWith("$")) {
+          String varName = word.substring(1);
+          String catalogDescription = server.catalogHover(varName);
+          if (catalogDescription != null) {
+            markdownText = "**" + word + "**\n\n" + catalogDescription + "\n\n*catalog variable*";
+          } else {
+            // 2. ScopeStore declared symbol hover
+            String lookupName = varName;
+            var declOpt = state.declarations().stream()
+                .filter(d -> d.name().equals(lookupName))
+                .findFirst();
+            if (declOpt.isPresent()) {
+              markdownText = buildSymbolHover(word);
+            } else {
+              markdownText = buildParseStatusHover(state.failures());
+            }
+          }
         } else {
-          // Fallback to parse status
-          markdownText = buildParseStatusHover(state.failures());
+          // Non-variable word: check declarations
+          var declOpt = state.declarations().stream()
+              .filter(d -> d.name().equals(word))
+              .findFirst();
+          if (declOpt.isPresent()) {
+            markdownText = buildSymbolHover(word);
+          } else {
+            markdownText = buildParseStatusHover(state.failures());
+          }
         }
       } else {
         // No word at cursor, show parse status
@@ -845,7 +975,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
         if ("TE001".equals(code)) {
           // TE001: parse error — suggest rewriting with P4 syntax
-          actions.addAll(buildTE001QuickFixes(uri, state.content(), diag));
+          actions.addAll(buildTE001QuickFixes(uri, state.content(), diag, state.lineOffset()));
         }
       }
 
@@ -853,10 +983,13 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
 
     private List<Either<Command, CodeAction>> buildTE001QuickFixes(
-        String uri, String content, Diagnostic diag) {
+        String uri, String content, Diagnostic diag, int lineOffset) {
 
       List<Either<Command, CodeAction>> result = new ArrayList<>();
-      int offset = positionToOffset(content, diag.getRange().getStart());
+      int offset = positionToOffsetWithOffset(content, diag.getRange().getStart(), lineOffset);
+      if (offset < 0 || offset >= content.length()) {
+        return result;
+      }
       String remaining = content.substring(offset).stripLeading();
 
       // Quick fix: "if ... else ..." → "if (...) { ... } else { ... }"
@@ -866,10 +999,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         ca.setDiagnostics(List.of(diag));
 
         // Build a template replacement for the whole line
-        Range lineRange = wholeLinesRange(content, diag.getRange());
+        Range lineRange = wholeLinesRangeWithOffset(content, diag.getRange(), lineOffset);
         String oldLine = content.substring(
-            positionToOffset(content, lineRange.getStart()),
-            positionToOffset(content, lineRange.getEnd()));
+            positionToOffsetWithOffset(content, lineRange.getStart(), lineOffset),
+            positionToOffsetWithOffset(content, lineRange.getEnd(), lineOffset));
         String newLine = convertIfToP4Syntax(oldLine);
         if (newLine != null) {
           ca.setEdit(buildEdit(uri, lineRange, newLine));
@@ -903,23 +1036,25 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return result;
     }
 
-    private static int positionToOffset(String content, Position pos) {
+    private static int positionToOffsetWithOffset(String content, Position pos, int lineOffset) {
+      int targetLine = pos.getLine() - lineOffset;
+      if (targetLine < 0) return 0;
       int line = 0, offset = 0;
-      while (offset < content.length() && line < pos.getLine()) {
+      while (offset < content.length() && line < targetLine) {
         if (content.charAt(offset++) == '\n') line++;
       }
       return Math.min(offset + pos.getCharacter(), content.length());
     }
 
-    private static Range wholeLinesRange(String content, Range diag) {
+    private Range wholeLinesRangeWithOffset(String content, Range diag, int lineOffset) {
       Position start = new Position(diag.getStart().getLine(), 0);
       int endLine = diag.getEnd().getLine();
-      int endOffset = positionToOffset(content, new Position(endLine, 0));
+      int endOffset = positionToOffsetWithOffset(content, new Position(endLine, 0), lineOffset);
       // extend to end of the last line
       while (endOffset < content.length() && content.charAt(endOffset) != '\n') endOffset++;
       if (endOffset < content.length()) endOffset++; // include newline
-      int[] lc = offsetToLineChar(content, endOffset);
-      return new Range(start, new Position(lc[0], lc[1]));
+      Position end = offsetToPositionWithOffset(content, endOffset, lineOffset);
+      return new Range(start, end);
     }
 
     /** Simple heuristic: "if a else b" → "if (a) { b_then } else { b_else }". */
@@ -958,16 +1093,20 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (word.isEmpty()) {
         return CompletableFuture.completedFuture(Either.forLeft(List.of()));
       }
-      List<Location> locations = state.declarations().stream()
-          .filter(d -> d.name().equals(word))
-          .map(d -> {
-            int abs = d.sourceOffset();
-            Position pos = offsetToPosition(state.content(), abs);
-            Position shifted = new Position(pos.getLine() + state.lineOffset(), pos.getCharacter());
-            return new Location(uri, new Range(shifted, shifted));
-          })
-          .collect(java.util.stream.Collectors.toList());
-      return CompletableFuture.completedFuture(Either.forLeft(locations));
+
+      String lookupName = word.startsWith("$") ? word.substring(1) : word;
+      List<LocationLink> links = new ArrayList<>();
+      for (var decl : state.declarations()) {
+        if (lookupName.equals(decl.name()) || word.equals(decl.name())) {
+          Range range = offsetToRangeWithOffset(state.content(), decl.sourceOffset(), decl.name().length(), state.lineOffset());
+          LocationLink link = new LocationLink();
+          link.setTargetUri(uri);
+          link.setTargetRange(range);
+          link.setTargetSelectionRange(range);
+          links.add(link);
+        }
+      }
+      return CompletableFuture.completedFuture(Either.forRight(links));
     }
 
     // ── find-references ──
@@ -986,14 +1125,49 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       List<Location> locations = state.references().stream()
           .filter(r -> r.name().equals(word))
           .map(r -> {
-            Position start = offsetToPosition(state.content(), r.offset());
-            Position end   = offsetToPosition(state.content(), r.offset() + r.length());
-            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
-            Position eShifted = new Position(end.getLine()   + state.lineOffset(), end.getCharacter());
-            return new Location(uri, new Range(sShifted, eShifted));
+            Range range = offsetToRangeWithOffset(state.content(), r.offset(), r.length(), state.lineOffset());
+            return new Location(uri, range);
           })
           .collect(java.util.stream.Collectors.toList());
       return CompletableFuture.completedFuture(locations);
+    }
+
+    // ── linked editing range ──
+
+    @Override
+    public CompletableFuture<LinkedEditingRanges> linkedEditingRange(
+        LinkedEditingRangeParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(new LinkedEditingRanges(Collections.emptyList()));
+      }
+
+      // Extract word at cursor position
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(new LinkedEditingRanges(Collections.emptyList()));
+      }
+
+      // Collect ranges for both declarations and references
+      String lookupName = word.startsWith("$") ? word.substring(1) : word;
+      Set<Range> ranges = new LinkedHashSet<>();
+
+      // Add declaration ranges
+      for (var decl : state.declarations()) {
+        if (lookupName.equals(decl.name()) || word.equals(decl.name())) {
+          ranges.add(offsetToRangeWithOffset(state.content(), decl.sourceOffset(), decl.name().length(), state.lineOffset()));
+        }
+      }
+
+      // Add reference ranges
+      for (var ref : state.references()) {
+        if (lookupName.equals(ref.name()) || word.equals(ref.name())) {
+          ranges.add(offsetToRangeWithOffset(state.content(), ref.offset(), ref.length(), state.lineOffset()));
+        }
+      }
+
+      return CompletableFuture.completedFuture(new LinkedEditingRanges(new ArrayList<>(ranges)));
     }
 
     // ── document symbol (outline) ──
@@ -1018,12 +1192,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         SymbolKind kind = inferSymbolKind(decl.name());
 
         // Calculate range from offset and estimated length
-        Position start = offsetToPosition(content, decl.sourceOffset());
-        Position end = new Position(start.getLine(), start.getCharacter() + decl.name().length());
-
-        // Apply line offset
-        Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
-        Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
+        Range range = offsetToRangeWithOffset(content, decl.sourceOffset(), decl.name().length(), state.lineOffset());
 
         // Extract child symbols (e.g., method parameters)
         List<DocumentSymbol> children = extractChildSymbols(decl.name(), decl.sourceOffset(), content, state.lineOffset());
@@ -1031,8 +1200,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         DocumentSymbol symbol = new DocumentSymbol(
             decl.name(),
             kind,
-            new Range(sShifted, eShifted),
-            new Range(sShifted, eShifted),
+            range,
+            range,
             null
         );
         if (!children.isEmpty()) {
@@ -1122,16 +1291,13 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           String[] parts = param.split("\\s+");
           if (parts.length > 0) {
             String paramName = parts[0];
-            Position start = offsetToPosition(content, paramOffset);
-            Position end = new Position(start.getLine(), start.getCharacter() + paramName.length());
-            Position sShifted = new Position(start.getLine() + lineOffset, start.getCharacter());
-            Position eShifted = new Position(end.getLine() + lineOffset, end.getCharacter());
+            Range range = offsetToRangeWithOffset(content, paramOffset, paramName.length(), lineOffset);
 
             DocumentSymbol child = new DocumentSymbol(
                 paramName,
                 SymbolKind.Variable,
-                new Range(sShifted, eShifted),
-                new Range(sShifted, eShifted),
+                range,
+                range,
                 null
             );
             children.add(child);
@@ -1160,7 +1326,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       String newName = params.getNewName();
-      if (newName.isEmpty() || !newName.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+      if (newName.isEmpty() || !newName.matches("[a-zA-Z_][a-zA-Z0-9_$]*")) {
         return CompletableFuture.completedFuture(new WorkspaceEdit(Map.of()));
       }
 
@@ -1186,13 +1352,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       // Create TextEdit[] for all occurrences
       List<TextEdit> edits = offsets.stream()
           .map(offset -> {
-            Position start = offsetToPosition(state.content(), offset);
-            Position end = new Position(start.getLine(), start.getCharacter() + word.length());
-
-            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
-            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
-
-            return new TextEdit(new Range(sShifted, eShifted), newName);
+            Range range = offsetToRangeWithOffset(state.content(), offset, word.length(), state.lineOffset());
+            return new TextEdit(range, newName);
           })
           .collect(java.util.stream.Collectors.toList());
 
@@ -1220,14 +1381,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       List<DocumentHighlight> highlights = state.references().stream()
           .filter(r -> r.name().equals(word))
           .map(r -> {
-            Position start = offsetToPosition(state.content(), r.offset());
-            Position end = new Position(start.getLine(), start.getCharacter() + r.length());
-
-            Position sShifted = new Position(start.getLine() + state.lineOffset(), start.getCharacter());
-            Position eShifted = new Position(end.getLine() + state.lineOffset(), end.getCharacter());
-
+            Range range = offsetToRangeWithOffset(state.content(), r.offset(), r.length(), state.lineOffset());
             return new DocumentHighlight(
-                new Range(sShifted, eShifted),
+                range,
                 DocumentHighlightKind.Text
             );
           })
@@ -1247,12 +1403,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       // Adjust position for line offset
-      Position adjustedPos = new Position(
-          params.getPosition().getLine() - state.lineOffset(),
-          params.getPosition().getCharacter()
-      );
       String content = state.content();
-      int offset = positionToOffset(content, adjustedPos);
+      int offset = positionToOffsetWithOffset(content, params.getPosition(), state.lineOffset());
       if (offset < 0 || offset >= content.length()) {
         return CompletableFuture.completedFuture(new SignatureHelp(List.of(), null, null));
       }
@@ -1397,9 +1549,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
             // Evaluate the expression (try to parse and get type/hint)
             String evaluationResult = evaluateExpressionHint(rhsExpression);
 
-            int[] lc = offsetToLineChar(content, i);
-            Position pos = new Position(lc[0] + state.lineOffset(), lc[1]);
-            Range range = new Range(pos, new Position(lc[0] + state.lineOffset(), lc[1] + 1));
+            Range range = offsetToRangeWithOffset(content, i, 1, state.lineOffset());
 
             // Create code lens with evaluation result in title
             String lensTitle = "= " + evaluationResult;
@@ -1493,11 +1643,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
                 String typeHint = evaluateExpressionHint(rhsExpr);
 
                 // Create InlayHint after variable name
-                int[] lc = offsetToLineChar(content, idEnd);
-                Position hintPos = new Position(
-                    lc[0] + state.lineOffset(),
-                    lc[1]
-                );
+                Position hintPos = offsetToPositionWithOffset(content, idEnd, state.lineOffset());
 
                 InlayHint hint = new InlayHint(
                     hintPos,
@@ -1540,10 +1686,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           // Find corresponding endif
           int endPos = lowerContent.indexOf("endif", searchPos);
           if (endPos > searchPos) {
-            int[] startLC = offsetToLineChar(content, searchPos);
-            int[] endLC = offsetToLineChar(content, endPos + 5);
+            Position start = offsetToPositionWithOffset(content, searchPos, state.lineOffset());
+            Position end = offsetToPositionWithOffset(content, endPos + 5, state.lineOffset());
 
-            FoldingRange range = new FoldingRange(startLC[0], endLC[0]);
+            FoldingRange range = new FoldingRange(start.getLine(), end.getLine());
             range.setKind(FoldingRangeKind.Region);
             ranges.add(range);
           }
@@ -1558,10 +1704,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           // Find corresponding 'end' or similar keyword
           int endPos = lowerContent.indexOf(" end", searchPos);
           if (endPos > searchPos) {
-            int[] startLC = offsetToLineChar(content, searchPos);
-            int[] endLC = offsetToLineChar(content, endPos + 4);
+            Position start = offsetToPositionWithOffset(content, searchPos, state.lineOffset());
+            Position end = offsetToPositionWithOffset(content, endPos + 4, state.lineOffset());
 
-            FoldingRange range = new FoldingRange(startLC[0], endLC[0]);
+            FoldingRange range = new FoldingRange(start.getLine(), end.getLine());
             range.setKind(FoldingRangeKind.Region);
             ranges.add(range);
           }
@@ -1647,7 +1793,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return "any";
     }
 
-    /** カーソル位置の単語を返す（変数名 $x の場合は x のみ）。 */
+    /** カーソル位置の単語を返す（$identifier の場合は $ も含める）。 */
     private String wordAt(String content, Position position, int lineOffset) {
       int line = position.getLine() - lineOffset;
       int col  = position.getCharacter();
@@ -1657,12 +1803,16 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       for (int i = 0; i < line && i < lines.length; i++) offset += lines[i].length() + 1;
       offset += col;
       if (offset >= content.length()) return "";
-      // skip '$' prefix if present
-      int start = offset;
-      if (start < content.length() && content.charAt(start) == '$') start++;
-      int s = start, e = start;
-      while (s > 0 && Character.isLetterOrDigit(content.charAt(s - 1))) s--;
-      while (e < content.length() && Character.isLetterOrDigit(content.charAt(e))) e++;
+
+      int s = offset, e = offset;
+      // move back (including '$')
+      while (s > 0 && (Character.isLetterOrDigit(content.charAt(s - 1)) || content.charAt(s - 1) == '$' || content.charAt(s - 1) == '_')) {
+        s--;
+      }
+      // move forward
+      while (e < content.length() && (Character.isLetterOrDigit(content.charAt(e)) || content.charAt(e) == '$' || content.charAt(e) == '_')) {
+        e++;
+      }
       return content.substring(s, e);
     }
 
@@ -1678,6 +1828,192 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       List<Integer> data = server.computeSemanticTokens(state.content(), state.lineOffset());
       return CompletableFuture.completedFuture(new SemanticTokens(data));
     }
+
+    // ── callHierarchy ──
+
+    public CompletableFuture<List<CallHierarchyItem>> prepareCallHierarchy(
+        CallHierarchyPrepareParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+      }
+
+      // Extract word at cursor position
+      String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
+      if (word.isEmpty()) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+      }
+
+      // Check if it's a declared method name
+      List<CallHierarchyItem> items = new ArrayList<>();
+      for (var symbolInfo : state.declarations()) {
+        if (word.equals(symbolInfo.name())) {
+          // Find the range of the method name
+          Range range = offsetToRangeWithOffset(state.content(), symbolInfo.sourceOffset(), word.length(), state.lineOffset());
+          CallHierarchyItem item = new CallHierarchyItem();
+          item.setName(word);
+          item.setKind(SymbolKind.Method);
+          item.setRange(range);
+          item.setSelectionRange(range);
+          item.setUri(uri);
+          items.add(item);
+          break;
+        }
+      }
+
+      return CompletableFuture.completedFuture(items);
+    }
+
+    public CompletableFuture<List<CallHierarchyIncomingCall>> incomingCalls(
+        CallHierarchyIncomingCallsParams params) {
+      CallHierarchyItem item = params.getItem();
+      String methodName = item.getName();
+      String uri = item.getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+      }
+
+      List<CallHierarchyIncomingCall> incoming = new ArrayList<>();
+
+      // Find all references to methodName
+      for (var ref : state.references()) {
+        if (methodName.equals(ref.name())) {
+          // Get the range of the reference
+          Range range = offsetToRangeWithOffset(state.content(), ref.offset(), methodName.length(), state.lineOffset());
+
+          CallHierarchyIncomingCall call = new CallHierarchyIncomingCall();
+          CallHierarchyItem fromItem = new CallHierarchyItem();
+          fromItem.setName(methodName);
+          fromItem.setKind(SymbolKind.Method);
+          fromItem.setRange(range);
+          fromItem.setSelectionRange(range);
+          fromItem.setUri(uri);
+          call.setFrom(fromItem);
+          call.setFromRanges(List.of(range));
+
+          incoming.add(call);
+        }
+      }
+
+      return CompletableFuture.completedFuture(incoming);
+    }
+
+    public CompletableFuture<List<CallHierarchyOutgoingCall>> outgoingCalls(
+        CallHierarchyOutgoingCallsParams params) {
+      // MVP: Return empty list (outgoing calls not yet implemented)
+      return CompletableFuture.completedFuture(Collections.emptyList());
+    }
+
+    // ── formatting (Alt+Shift+F) ──
+
+    @Override
+    public CompletableFuture<List<? extends TextEdit>> formatting(
+        org.eclipse.lsp4j.DocumentFormattingParams params) {
+      String uri = params.getTextDocument().getUri();
+      ExtDocumentState state = server.extDocuments.get(uri);
+      if (state == null) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+      }
+
+      String content = state.content();
+      org.eclipse.lsp4j.FormattingOptions options = params.getOptions();
+      int tabSize = options.getTabSize();
+      String indentUnit = options.isInsertSpaces() ? " ".repeat(tabSize) : "\t";
+
+      String formatted = formatDocument(content, indentUnit);
+      if (formatted.equals(content)) {
+        return CompletableFuture.completedFuture(Collections.emptyList());
+      }
+
+      // Replace whole document
+      Range range = new Range(new Position(0, 0), offsetToPositionWithOffset(content, content.length(), 0));
+      return CompletableFuture.completedFuture(List.of(new TextEdit(range, formatted)));
+    }
+
+    private String formatDocument(String content, String indentUnit) {
+      StringBuilder sb = new StringBuilder();
+      String[] lines = content.split("\n", -1);
+      int indentLevel = 0;
+
+      for (String line : lines) {
+        String trimmed = line.trim();
+        if (trimmed.isEmpty()) {
+          sb.append("\n");
+          continue;
+        }
+
+        // Simplistic P4 indent logic
+        boolean dedent = trimmed.startsWith("}") || trimmed.startsWith("else") || trimmed.startsWith("default");
+        int currentIndent = dedent ? Math.max(0, indentLevel - 1) : indentLevel;
+
+        sb.append(indentUnit.repeat(currentIndent)).append(trimmed).append("\n");
+
+        // Adjust indent level AFTER appending
+        if (trimmed.endsWith("{") || (trimmed.startsWith("if") && !trimmed.contains("endif"))) {
+          indentLevel++;
+        }
+        if (trimmed.startsWith("}") || trimmed.contains("endif")) {
+          indentLevel = Math.max(0, indentLevel - 1);
+        }
+      }
+
+      // Remove last trailing newline added in loop if original didn't have it
+      String result = sb.toString();
+      if (!content.endsWith("\n") && result.endsWith("\n")) {
+        result = result.substring(0, result.length() - 1);
+      }
+      return result;
+    }
+  }
+
+  /**
+   * Workspace symbols provider.
+   */
+  static class ExtWorkspaceService implements WorkspaceService {
+    private final TinyExpressionP4LanguageServerExt server;
+
+    ExtWorkspaceService(TinyExpressionP4LanguageServerExt server) {
+      this.server = server;
+    }
+
+    @Override
+    public CompletableFuture<Either<List<? extends SymbolInformation>, List<? extends org.eclipse.lsp4j.WorkspaceSymbol>>> symbol(
+        org.eclipse.lsp4j.WorkspaceSymbolParams params) {
+      String query = params.getQuery().toLowerCase();
+      List<SymbolInformation> results = new ArrayList<>();
+
+      for (Map.Entry<String, ExtDocumentState> entry : server.extDocuments.entrySet()) {
+        String uri = entry.getKey();
+        ExtDocumentState state = entry.getValue();
+
+        for (var decl : state.declarations()) {
+          if (decl.name().toLowerCase().contains(query)) {
+            Range range = TinyExpressionP4LanguageServerExt.offsetToRangeWithOffset(state.content(), decl.sourceOffset(), decl.name().length(), state.lineOffset());
+
+            SymbolInformation info = new SymbolInformation();
+            info.setName(decl.name());
+            info.setKind(inferSymbolKind(decl.name()));
+            info.setLocation(new Location(uri, range));
+            results.add(info);
+          }
+        }
+      }
+      return CompletableFuture.completedFuture(Either.forLeft(results));
+    }
+
+    private SymbolKind inferSymbolKind(String name) {
+      if (name.startsWith("$")) return SymbolKind.Variable;
+      if (Character.isUpperCase(name.charAt(0))) return SymbolKind.Class;
+      return SymbolKind.Method;
+    }
+
+    @Override
+    public void didChangeConfiguration(org.eclipse.lsp4j.DidChangeConfigurationParams params) {}
+
+    @Override
+    public void didChangeWatchedFiles(org.eclipse.lsp4j.DidChangeWatchedFilesParams params) {}
   }
 
 }
