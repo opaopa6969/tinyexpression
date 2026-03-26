@@ -23,7 +23,7 @@ import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.TestSideEffector;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 
@@ -398,8 +398,8 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 		    ExpressionTypes._float);
 		assertTrue(result.answer.isPresent());
 		assertTrue(result.success);
-		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed));
-		assertEquals("", result.parseContext.getRemain(TokenKind.consumed));
+		assertEquals("(1+1)/3+sin(30)", result.parseContext.getConsumed(TokenKind.consumed).toString());
+		assertEquals("", result.parseContext.getRemain(TokenKind.consumed).toString());
 		assertTrue(result.tokenAst.isPresent());
 		Token token = result.tokenAst.get();
 		TokenPrinter.output(token,System.out);

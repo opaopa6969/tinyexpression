@@ -1,5 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
+import org.unlaxer.tinyexpression.parser.booltype.*;
+import org.unlaxer.tinyexpression.parser.numbertype.*;
+import org.unlaxer.tinyexpression.parser.stringtype.*;
+import org.unlaxer.tinyexpression.parser.javatype.*;
+
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -203,8 +208,8 @@ public abstract class IfExpressionParser extends JavaStyleDelimitedLazyChain {
     if (root == null || root.filteredChildren == null) {
       return null;
     }
-    // New parser shape: [condition, thenExpr, elseExpr]
-    if (root.filteredChildren.size() >= 3) {
+    // New parser shape (reconstructed): [condition, thenExpr, elseExpr]
+    if (root.filteredChildren.size() == 3) {
       if (indexInChoice == 0) {
         return root.filteredChildren.get(1);
       }

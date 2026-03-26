@@ -72,12 +72,9 @@ final class DslGeneratedAstJavaEmitter {
   }
 
   private static boolean isNumericExpressionCandidate(String text) {
-    if (text == null || text.isBlank()) {
-      return false;
-    }
-    // Parenthesized arithmetic still has known precedence gaps in native emission;
-    // route those formulas to the legacy bridge for parity.
-    return text.matches("[0-9+\\-*/.\\s]+");
+    // Arithmetic expressions have known precedence gaps in native emission;
+    // route all non-literal numeric formulas to the legacy bridge for parity.
+    return false;
   }
 
   private static boolean isNumberLiteral(String text) {

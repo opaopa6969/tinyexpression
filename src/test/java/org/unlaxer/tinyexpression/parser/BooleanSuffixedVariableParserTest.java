@@ -1,5 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
+import org.unlaxer.tinyexpression.parser.booltype.*;
+import org.unlaxer.tinyexpression.parser.numbertype.*;
+import org.unlaxer.tinyexpression.parser.stringtype.*;
+import org.unlaxer.tinyexpression.parser.javatype.*;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;

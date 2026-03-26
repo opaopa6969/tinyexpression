@@ -15,8 +15,12 @@ import org.unlaxer.parser.combinator.Optional;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
-import org.unlaxer.tinyexpression.parser.JavaClassMethodParser.JavaMethodParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassMethodParser.JavaMethodParser;
 import org.unlaxer.tinyexpression.parser.ReturningParser.Returning;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 import org.unlaxer.util.annotation.TokenExtractor;
 import org.unlaxer.util.annotation.VirtualTokenCreator;
@@ -51,7 +55,7 @@ public abstract class SideEffectExpressionParser extends JavaStyleDelimitedLazyC
       );
 	}
 	
-	abstract Parser typedReturningParser();
+	public abstract Parser typedReturningParser();
 
 //	@TokenExtractor
 //  public static java.util.Optional<Token> getReturningClause(Token thisParserParsed) {

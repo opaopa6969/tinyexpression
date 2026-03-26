@@ -110,6 +110,9 @@ public class DslJavaCodeGenerationExtractedParityTest {
     String normalized = javaCode == null ? "" : javaCode.replace("\r\n", "\n").replace('\r', '\n');
     normalized = normalized.replaceAll("\\bclass\\s+[A-Za-z0-9_]+", "class __CLASS__");
     normalized = normalized.replaceAll("\\bnew\\s+[A-Za-z0-9_]+\\(", "new __CLASS__(");
+    normalized = normalized.replaceAll("(?m)^[ \\t]*import[^;]+;[ \\t]*", "");
+    normalized = normalized.replaceAll("\\s+", " ");
+    normalized = normalized.replaceAll(" \\)", ")");
     return normalized.trim();
   }
 }

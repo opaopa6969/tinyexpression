@@ -5,7 +5,7 @@ import org.unlaxer.parser.Parser;
 public class StringSideEffectExpressionParser extends SideEffectExpressionParser implements StringExpression{
 
   @Override
-  Parser typedReturningParser() {
+  public Parser typedReturningParser() {
     return Parser.get(ReturningStringParser.class);
   }
 }

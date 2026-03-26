@@ -14,9 +14,9 @@ import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberTermParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
 import org.unlaxer.util.StringUtil;
 
 public class CalculatorEditableLineModel implements EditableLineModel{

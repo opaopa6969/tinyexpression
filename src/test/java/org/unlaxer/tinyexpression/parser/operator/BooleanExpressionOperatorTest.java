@@ -9,7 +9,7 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
-import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
 
 public class BooleanExpressionOperatorTest {
 

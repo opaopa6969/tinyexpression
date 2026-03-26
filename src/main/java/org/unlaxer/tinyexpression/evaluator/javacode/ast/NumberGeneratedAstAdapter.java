@@ -39,15 +39,28 @@ public class NumberGeneratedAstAdapter {
     Parser parser = token.parser;
     Class<?> parserClass = parser.getClass();
 
-    TinyAstNode nodeSpec = parserClass.getAnnotation(TinyAstNode.class);
-    if (nodeSpec == null) {
+    Class<?> annotatedClass = findAnnotatedClass(parserClass, TinyAstNode.class);
+    if (annotatedClass == null) {
       return Optional.empty();
     }
 
+    TinyAstNode nodeSpec = annotatedClass.getAnnotation(TinyAstNode.class);
     return switch (nodeSpec.kind()) {
-      case NUMBER_LITERAL -> Optional.of(generateLiteral(token, parserClass));
-      case NUMBER_BINARY -> generateBinary(token, parserClass);
+      case NUMBER_LITERAL -> Optional.of(generateLiteral(token, annotatedClass));
+      case NUMBER_BINARY -> generateBinary(token, annotatedClass);
     };
+  }
+
+  private <A extends java.lang.annotation.Annotation> Class<?> findAnnotatedClass(
+      Class<?> clazz, Class<A> annotationType) {
+    Class<?> c = clazz;
+    while (c != null && c != Object.class) {
+      if (c.getAnnotation(annotationType) != null) {
+        return c;
+      }
+      c = c.getSuperclass();
+    }
+    return null;
   }
 
   private NumberGeneratedLiteralAstNode generateLiteral(Token token, Class<?> parserClass) {

@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.NoneChildParser;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 
 
 public class RenderingTest {

@@ -3,7 +3,7 @@ package org.unlaxer.tinyexpression.parser;
 public interface StringExpression extends ExpressionInterface{
   
   @Override
-  default ExpressionTypes expressionType() {
+  default ExpressionType expressionType() {
     return ExpressionTypes.string;
   }
 }

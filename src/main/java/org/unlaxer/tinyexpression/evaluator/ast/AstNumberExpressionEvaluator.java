@@ -20,9 +20,9 @@ import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedBinaryAs
 import org.unlaxer.tinyexpression.evaluator.javacode.ast.NumberGeneratedLiteralAstNode;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
-import org.unlaxer.tinyexpression.parser.NumberTermParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 
 final class AstNumberExpressionEvaluator {

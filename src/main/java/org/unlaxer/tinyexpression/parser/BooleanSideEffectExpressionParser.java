@@ -5,7 +5,7 @@ import org.unlaxer.parser.Parser;
 public class BooleanSideEffectExpressionParser extends SideEffectExpressionParser implements BooleanExpression{
 
   @Override
-  Parser typedReturningParser() {
+  public Parser typedReturningParser() {
     return Parser.get(ReturningBooleanParser.class);
   }
 }

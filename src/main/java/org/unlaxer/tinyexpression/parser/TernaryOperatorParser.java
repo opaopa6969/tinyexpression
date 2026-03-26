@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.parser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.booltype.*;
+import org.unlaxer.tinyexpression.parser.numbertype.*;
 
 public class TernaryOperatorParser extends JavaStyleDelimitedLazyChain{
 

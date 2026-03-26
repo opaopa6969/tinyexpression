@@ -5,7 +5,7 @@ import java.util.List;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.parser.AndParser;
-import org.unlaxer.tinyexpression.parser.BooleanExpressionParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanExpressionParser;
 import org.unlaxer.tinyexpression.parser.EqualEqualParser;
 import org.unlaxer.tinyexpression.parser.NotEqualParser;
 import org.unlaxer.tinyexpression.parser.OrParser;

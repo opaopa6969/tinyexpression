@@ -1,5 +1,10 @@
 package org.unlaxer.tinyexpression.parser;
 
+import org.unlaxer.tinyexpression.parser.booltype.*;
+import org.unlaxer.tinyexpression.parser.numbertype.*;
+import org.unlaxer.tinyexpression.parser.stringtype.*;
+import org.unlaxer.tinyexpression.parser.javatype.*;
+
 import org.unlaxer.Name;
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;

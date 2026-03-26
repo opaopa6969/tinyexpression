@@ -1,0 +1,12 @@
+package org.unlaxer.tinyexpression.parser.stringtype;
+
+import org.unlaxer.tinyexpression.parser.*;
+
+public class StringContainsMethodParser extends StringExpressionMethodParser{
+
+	private static final long serialVersionUID = 1907488130118447199L;
+
+	public StringContainsMethodParser() {
+		super("contains");
+	}
+}

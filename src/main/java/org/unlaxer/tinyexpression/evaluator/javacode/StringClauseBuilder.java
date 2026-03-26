@@ -22,19 +22,19 @@ import org.unlaxer.tinyexpression.parser.IfExpressionParser;
 import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.MethodInvocationParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
-import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.SliceParser;
 import org.unlaxer.tinyexpression.parser.StringExpression;
-import org.unlaxer.tinyexpression.parser.StringExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringFactorParser;
-import org.unlaxer.tinyexpression.parser.StringIfExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringLiteralParser;
-import org.unlaxer.tinyexpression.parser.StringMatchExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringFactorParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringIfExpressionParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringLiteralParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringMatchExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringPlusParser;
-import org.unlaxer.tinyexpression.parser.StringSetterParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringSetterParser;
 import org.unlaxer.tinyexpression.parser.StringSideEffectExpressionParser;
-import org.unlaxer.tinyexpression.parser.StringTermParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringTermParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.ToLowerCaseParser;
 import org.unlaxer.tinyexpression.parser.ToUpperCaseParser;
 import org.unlaxer.tinyexpression.parser.TrimParser;
@@ -184,7 +184,7 @@ public class StringClauseBuilder {
     return specifier.map(slicerSpecifier ->
         ExpressionOrLiteral.expressionOf(
             "new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(String.valueOf(" + inner
-                + "))).pythonian(\"" + slicerSpecifier + "\").get()"))
+                + "))).pythonian(\"" + slicerSpecifier + "\").get().sourceAsString()"))
         .orElse(inner);
   }
 

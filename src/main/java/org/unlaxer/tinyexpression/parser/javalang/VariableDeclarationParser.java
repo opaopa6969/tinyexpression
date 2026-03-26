@@ -17,10 +17,11 @@ import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.tinyexpression.parser.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanVariableParser;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.NumberVariableParser;
-import org.unlaxer.tinyexpression.parser.StringVariableParser;
+import org.unlaxer.tinyexpression.parser.stringtype.StringVariableParser;
 import org.unlaxer.tinyexpression.parser.TypeHint;
 import org.unlaxer.tinyexpression.parser.VariableParser;
 import org.unlaxer.tinyexpression.parser.NakedVariableParser;
@@ -79,16 +80,17 @@ public class VariableDeclarationParser extends LazyChoice implements Transaction
         .findFirst()
         .map(token -> token.typed(TypeHint.class));
 
-    ExpressionTypes expressionType = typed.map(_typed -> _typed.getParser().type())
+    ExpressionType expressionTypeRaw = typed.map(_typed -> _typed.getParser().type())
         .orElse(ExpressionTypes.object);
+    ExpressionTypes expressionType = (expressionTypeRaw instanceof ExpressionTypes) ? (ExpressionTypes) expressionTypeRaw : ExpressionTypes.object;
     String variableName = parser.getVariableName(variableParserToken);
     return new VariableInfo(expressionType, variableName);
   }
-  
-  
-  
+
+
+
   public static class VariableInfo{
-    
+
     public final ExpressionTypes expressionType;
     public String name;
     public VariableInfo(ExpressionTypes expressionType, String name) {

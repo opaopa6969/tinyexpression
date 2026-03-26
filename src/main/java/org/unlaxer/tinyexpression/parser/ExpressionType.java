@@ -42,7 +42,15 @@ public interface ExpressionType{
 //    public static Optional<ExpressionType> of(Class<?> clazz);
     
   public Optional<Class<?>> javaTypePrimitive();
-  
+
+  public default boolean isExternalJavaType() {
+    return false;
+  }
+
+  public default java.util.Optional<String> lowerCaseTypeName() {
+    return java.util.Optional.empty();
+  }
+
   public static record PrePost(String pre,String post) {};
 
   private IllegalArgumentException unsupportedNumberOperation(String operation) {
