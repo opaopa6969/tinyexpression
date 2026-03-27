@@ -1,0 +1,14 @@
+// @eval(kind=variable_ref, strategy=template, strip_prefix="$")
+// Template variables: {{name}}, {{resultType}}, {{numberType}}, {{context}}
+
+String varName = {{name}}.startsWith("$") ? {{name}}.substring(1) : {{name}};
+if ({{resultType}}.isNumber()) {
+    return {{context}}.getNumber(varName).map(Number::{{numberType.accessor}}).orElse({{numberType.zero}});
+}
+if ({{resultType}}.isBoolean()) {
+    return {{context}}.getBoolean(varName).orElse(false);
+}
+if ({{resultType}}.isString()) {
+    return {{context}}.getString(varName).orElse("");
+}
+return {{context}}.getObject(varName, Object.class).orElse(null);

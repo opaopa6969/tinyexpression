@@ -1,0 +1,18 @@
+// @eval(kind=binary_arithmetic, strategy=template)
+// Template variables: {{left}}, {{op}}, {{right}}, {{op[i]}}, {{right[i]}},
+//                     {{node}}, {{numberType}}, {{eval(expr)}}
+
+if ({{node}}.left() == null && {{node}}.right().isEmpty() && {{node}}.op().size() == 1) {
+    return renderLeaf({{node}}.op().get(0));
+}
+if ({{node}}.left() != null && {{node}}.op().isEmpty() && {{node}}.right().isEmpty()) {
+    return {{eval({{node}}.left())}};
+}
+if ({{node}}.left() == null) {
+    return {{node}}.op().size() == 1 ? renderLeaf({{node}}.op().get(0)) : {{numberType.zeroNumber}};
+}
+String expr = {{eval({{node}}.left())}};
+for (int i = 0; i < Math.min({{node}}.op().size(), {{node}}.right().size()); i++) {
+    expr = "(" + expr + {{node}}.op().get(i).strip() + {{eval({{node}}.right().get(i))}} + ")";
+}
+return expr;

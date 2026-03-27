@@ -1,0 +1,17 @@
+// @eval(kind=match_case, strategy=template)
+// Template variables: {{firstCase}}, {{moreCases}}, {{defaultCase}}, {{eval(expr)}}
+
+StringBuilder sb = new StringBuilder("(");
+// first case
+sb.append("((boolean)(").append({{eval({{firstCase}}.condition())}}).append("))?(")
+  .append({{eval({{firstCase}}.value())}}).append("):(");
+// more cases
+for (var moreCase : {{moreCases}}) {
+    sb.append("((boolean)(").append({{eval(moreCase.condition())}}).append("))?(")
+      .append({{eval(moreCase.value())}}).append("):(");
+}
+// default case
+sb.append({{eval({{defaultCase}})}});
+// close parens
+sb.append(")".repeat(1 + {{moreCases}}.size()));
+return sb.toString();

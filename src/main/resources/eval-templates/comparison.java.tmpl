@@ -1,0 +1,20 @@
+// @eval(kind=comparison, strategy=template)
+// Template variables: {{left}}, {{op}}, {{right}}, {{numberType}}, {{eval(expr)}}
+
+String l = {{eval({{left}})}};
+String r = {{eval({{right}})}};
+String op = {{op}} == null ? "==" : {{op}}.strip();
+if ({{numberType}}.isBigDecimal() || {{numberType}}.isBigInteger()) {
+    String cmp = "new java.math.BigDecimal(String.valueOf(" + l + ")).compareTo("
+               + "new java.math.BigDecimal(String.valueOf(" + r + ")))";
+    return switch (op) {
+        case "==" -> "(" + cmp + "==0)";
+        case "!=" -> "(" + cmp + "!=0)";
+        case "<"  -> "(" + cmp + "<0)";
+        case "<=" -> "(" + cmp + "<=0)";
+        case ">"  -> "(" + cmp + ">0)";
+        case ">=" -> "(" + cmp + ">=0)";
+        default   -> "false";
+    };
+}
+return "(" + l + op + r + ")";

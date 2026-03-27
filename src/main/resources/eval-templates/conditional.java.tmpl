@@ -1,0 +1,4 @@
+// @eval(kind=conditional, strategy=template)
+// Template variables: {{condition}}, {{thenExpr}}, {{elseExpr}}, {{eval(expr)}}
+
+return "(((boolean)(" + {{eval({{condition}})}} + "))?(" + {{eval({{thenExpr}})}} + "):(" + {{eval({{elseExpr}})}} + "))";
