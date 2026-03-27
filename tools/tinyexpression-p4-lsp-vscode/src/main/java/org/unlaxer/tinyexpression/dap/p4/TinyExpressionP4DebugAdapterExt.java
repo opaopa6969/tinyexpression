@@ -33,7 +33,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   // ── P4 probe state (populated in launch/configurationDone flow) ──
 
   private String capturedProgram = "";
-  private String capturedRuntimeMode = "token";
+  private String capturedRuntimeMode = "ast-evaluator";
   private boolean p4ParserUsed = false;
   private String p4AstNodeType = "not-evaluated";
   private String p4AstNodePath = "";
@@ -45,7 +45,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   @Override
   public CompletableFuture<Void> launch(Map<String, Object> args) {
     capturedProgram = String.valueOf(args.getOrDefault("program", ""));
-    capturedRuntimeMode = String.valueOf(args.getOrDefault("runtimeMode", "token"));
+    capturedRuntimeMode = String.valueOf(args.getOrDefault("runtimeMode", "ast-evaluator"));
     return super.launch(args);
   }
 
