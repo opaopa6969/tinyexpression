@@ -417,6 +417,12 @@ final class AstTokenTreeEvaluator {
         return unwrapExpression(token.filteredChildren.get(0));
       }
     }
+    if (parser instanceof BooleanExpressionParser
+        || parser instanceof StrictTypedBooleanExpressionParser) {
+      if (!token.filteredChildren.isEmpty() && token.filteredChildren.size() == 1) {
+        return unwrapExpression(token.filteredChildren.get(0));
+      }
+    }
     if (parser instanceof BooleanFactorParser
         || parser instanceof StrictTypedBooleanFactorParser) {
       if (!token.filteredChildren.isEmpty() && token.filteredChildren.size() == 1) {

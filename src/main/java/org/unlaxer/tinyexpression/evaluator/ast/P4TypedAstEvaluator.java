@@ -207,20 +207,28 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalVariableRefExpr(VariableRefExpr node) {
-    String varName = extractVariableName(node.name());
+    String rawName = node.name();
+    String varName = extractVariableName(rawName);
+    // VariableRefExpr may store the name without '$' prefix
+    if (varName == null && rawName != null && !rawName.isEmpty()) {
+      varName = rawName.strip();
+    }
     if (varName == null) {
       return null;
     }
     if (resultType.isNumber()) {
-      return context.getNumber(varName).orElse(null);
+      Object result = context.getNumber(varName).orElse(null);
+      if (result != null) return result;
     }
     if (resultType.isBoolean()) {
-      return context.getBoolean(varName).orElse(null);
+      Object result = context.getBoolean(varName).orElse(null);
+      if (result != null) return result;
     }
     if (resultType.isString()) {
-      return context.getString(varName).orElse(null);
+      Object result = context.getString(varName).orElse(null);
+      if (result != null) return result;
     }
-    // object: try all
+    // Fallback: try all types (handles cross-type contexts like boolean vars in number expressions)
     return resolveVariableAny(varName);
   }
 
@@ -277,7 +285,13 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (value instanceof String text) {
       String stripped = text.strip();
       if (stripped.startsWith("$")) {
-        Object resolved = resolveVariableAny(extractVariableName(stripped));
+        String varName = extractVariableName(stripped);
+        if (varName == null || varName.isEmpty()) {
+          // Incomplete variable reference (e.g. just "$") — mapper lost the name
+          throw new UnsupportedOperationException(
+              "Cannot resolve boolean variable from incomplete reference: " + stripped);
+        }
+        Object resolved = resolveVariableAny(varName);
         return toBoolean(resolved);
       }
       return toBoolean(text);

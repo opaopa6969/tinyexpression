@@ -283,6 +283,12 @@ public class AstEvaluatorCalculator implements Calculator {
           setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", generatedEmbeddedBridgeUsed);
           return generatedAstEvaluated.get();
         }
+        // If the mapped AST was a structural node (if/match) but both evaluators failed,
+        // don't try other AST mappings — they'll produce incorrect results
+        String astClassName = mapped.get().getClass().getSimpleName();
+        if (astClassName.contains("IfExpr") || astClassName.contains("MatchExpr")) {
+          break;
+        }
       }
       setObject("_astEvaluatorMapperAvailable", true);
     } else {

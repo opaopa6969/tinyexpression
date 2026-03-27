@@ -27,8 +27,8 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.NumberFactorParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberExpressionParser;
-import org.unlaxer.tinyexpression.parser.numbertype.NumberTermParser;
+import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
+import org.unlaxer.tinyexpression.parser.NumberTermParser;
 
 /**
  * Comprehensive backend speed comparison — all 5 backends.
