@@ -501,6 +501,72 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     throw new UnsupportedOperationException("ExternalObjectInvocationExpr not yet supported");
   }
 
+  // =========================================================================
+  // Math functions
+  // =========================================================================
+
+  @Override
+  protected Object evalSinExpr(SinExpr node) {
+    return Math.sin(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalCosExpr(CosExpr node) {
+    return Math.cos(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalTanExpr(TanExpr node) {
+    return Math.tan(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalSqrtExpr(SqrtExpr node) {
+    return Math.sqrt(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalMinExpr(MinExpr node) {
+    double left = ((Number) eval(node.left())).doubleValue();
+    double right = ((Number) eval(node.right())).doubleValue();
+    return Math.min(left, right);
+  }
+
+  @Override
+  protected Object evalMaxExpr(MaxExpr node) {
+    double left = ((Number) eval(node.left())).doubleValue();
+    double right = ((Number) eval(node.right())).doubleValue();
+    return Math.max(left, right);
+  }
+
+  @Override
+  protected Object evalRandomExpr(RandomExpr node) {
+    return Math.random();
+  }
+
+  // =========================================================================
+  // Not operator
+  // =========================================================================
+
+  @Override
+  protected Object evalNotExpr(NotExpr node) {
+    return !Boolean.TRUE.equals(toBoolean(eval(node.value())));
+  }
+
+  // =========================================================================
+  // ToNum conversion
+  // =========================================================================
+
+  @Override
+  protected Object evalToNumExpr(ToNumExpr node) {
+    Object strVal = eval(node.value());
+    try {
+      return Double.parseDouble(String.valueOf(strVal));
+    } catch (NumberFormatException e) {
+      return ((Number) eval(node.defaultValue())).doubleValue();
+    }
+  }
+
   @Override
   protected Object evalCodeBlockExpr(CodeBlockExpr node) {
     return null;

@@ -157,4 +157,15 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalExternalObjectInvocationExpr(ExternalObjectInvocationExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalCodeBlockExpr(CodeBlockExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalImportDeclarationExpr(ImportDeclarationExpr n) { return defaultEmitter.eval(n); }
+
+  // Math functions + Not + ToNum
+  @Override protected String evalSinExpr(SinExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalCosExpr(CosExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalTanExpr(TanExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalSqrtExpr(SqrtExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalMinExpr(MinExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalMaxExpr(MaxExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalRandomExpr(RandomExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalNotExpr(NotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalToNumExpr(ToNumExpr n) { return defaultEmitter.eval(n); }
 }

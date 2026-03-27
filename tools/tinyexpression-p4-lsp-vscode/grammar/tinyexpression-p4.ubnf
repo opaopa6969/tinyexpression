@@ -208,9 +208,48 @@ grammar TinyExpressionP4 {
   AddOp ::= '+' | '-' ;
   MulOp ::= '*' | '/' ;
 
+  // ── Math functions ──────────────────────────────────────────────────────
+
+  MathFunction ::=
+      SinFunction
+    | CosFunction
+    | TanFunction
+    | SqrtFunction
+    | MinFunction
+    | MaxFunction
+    | RandomFunction ;
+
+  @mapping(SinExpr, params=[arg])
+  SinFunction ::= 'sin' '(' NumberExpression @arg ')' ;
+
+  @mapping(CosExpr, params=[arg])
+  CosFunction ::= 'cos' '(' NumberExpression @arg ')' ;
+
+  @mapping(TanExpr, params=[arg])
+  TanFunction ::= 'tan' '(' NumberExpression @arg ')' ;
+
+  @mapping(SqrtExpr, params=[arg])
+  SqrtFunction ::= 'sqrt' '(' NumberExpression @arg ')' ;
+
+  @mapping(MinExpr, params=[left, right])
+  MinFunction ::= 'min' '(' NumberExpression @left ',' NumberExpression @right ')' ;
+
+  @mapping(MaxExpr, params=[left, right])
+  MaxFunction ::= 'max' '(' NumberExpression @left ',' NumberExpression @right ')' ;
+
+  @mapping(RandomExpr)
+  RandomFunction ::= 'random' '(' ')' ;
+
+  // ── Type conversion ────────────────────────────────────────────────────
+
+  @mapping(ToNumExpr, params=[value, defaultValue])
+  ToNumFunction ::= 'toNum' '(' StringExpression @value ',' NumberExpression @defaultValue ')' ;
+
   NumberFactor ::=
       NumberMatchExpression
     | IfExpression
+    | MathFunction
+    | ToNumFunction
     | ExternalNumberInvocation
     | NUMBER
     | VariableRef
@@ -229,9 +268,15 @@ grammar TinyExpressionP4 {
 
   // ── Boolean expressions ────────────────────────────────────────────────────
 
+  // ── Not operator ───────────────────────────────────────────────────────
+
+  @mapping(NotExpr, params=[value])
+  NotExpression ::= 'not' '(' BooleanExpression @value ')' ;
+
   @mapping(BooleanExpr, params=[value])
   BooleanExpression ::=
-      BooleanMatchExpression @value
+      NotExpression @value
+    | BooleanMatchExpression @value
     | ExternalBooleanInvocation @value
     | StringComparisonExpression @value
     | ComparisonExpression @value

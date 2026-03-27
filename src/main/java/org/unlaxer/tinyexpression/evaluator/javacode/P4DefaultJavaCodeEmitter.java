@@ -247,6 +247,65 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalImportDeclarationExpr(ImportDeclarationExpr n) { return "null"; }
 
   // =========================================================================
+  // Math functions
+  // =========================================================================
+
+  @Override
+  protected String evalSinExpr(SinExpr node) {
+    return "Math.sin((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalCosExpr(CosExpr node) {
+    return "Math.cos((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalTanExpr(TanExpr node) {
+    return "Math.tan((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalSqrtExpr(SqrtExpr node) {
+    return "Math.sqrt((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalMinExpr(MinExpr node) {
+    return "Math.min((double)" + eval(node.left()) + ",(double)" + eval(node.right()) + ")";
+  }
+
+  @Override
+  protected String evalMaxExpr(MaxExpr node) {
+    return "Math.max((double)" + eval(node.left()) + ",(double)" + eval(node.right()) + ")";
+  }
+
+  @Override
+  protected String evalRandomExpr(RandomExpr node) {
+    return "Math.random()";
+  }
+
+  // =========================================================================
+  // Not operator
+  // =========================================================================
+
+  @Override
+  protected String evalNotExpr(NotExpr node) {
+    return "!((boolean)(" + eval(node.value()) + "))";
+  }
+
+  // =========================================================================
+  // ToNum conversion
+  // =========================================================================
+
+  @Override
+  protected String evalToNumExpr(ToNumExpr node) {
+    String strExpr = eval(node.value());
+    String defExpr = eval(node.defaultValue());
+    return "((() -> { try { return Double.parseDouble(String.valueOf(" + strExpr + ")); } catch (NumberFormatException e) { return (double)" + defExpr + "; } }).get())";
+  }
+
+  // =========================================================================
   // Utility
   // =========================================================================
 
