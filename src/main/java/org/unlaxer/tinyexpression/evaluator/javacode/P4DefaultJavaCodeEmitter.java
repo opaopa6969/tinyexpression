@@ -245,7 +245,6 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalExternalObjectInvocationExpr(ExternalObjectInvocationExpr n) { return "null"; }
   @Override protected String evalCodeBlockExpr(CodeBlockExpr n) { return "null"; }
   @Override protected String evalImportDeclarationExpr(ImportDeclarationExpr n) { return "null"; }
-  @Override protected String evalImportDeclarationBareExpr(ImportDeclarationBareExpr n) { return "null"; }
 
   // =========================================================================
   // Utility

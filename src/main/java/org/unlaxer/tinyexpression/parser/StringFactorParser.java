@@ -2,6 +2,7 @@ package org.unlaxer.tinyexpression.parser;
 
 import java.util.Set;
 
+import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
 import org.unlaxer.util.Singletons;
 
 public class StringFactorParser extends AbstractStringFactorParser implements TypedParser{

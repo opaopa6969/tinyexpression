@@ -1,3 +1,7 @@
+[English](./parser-generator-comparison-and-eval-strategy.en.md) | [日本語](./parser-generator-comparison-and-eval-strategy.ja.md) | [Index](./INDEX.md)
+
+---
+
 # Parser Generator 比較 & @eval Strategy 設計
 
 ## 1. unlaxer-parser vs 世の Parser Generator
@@ -135,3 +139,6 @@ TinyExpressionP4Evaluator<T>           ← 生成 (abstract, GGP base)
         evalMethodInvocationExpr()     ← manual strategy の実装
         evalBinaryExpr()               ← 必要ならオーバーライド
 ```
+
+---
+[← Previous: Implementation Guide](./implementation-guide-dialogue.ja.md) | [Index](./INDEX.md)

@@ -497,11 +497,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return null;
   }
 
-  @Override
-  protected Object evalImportDeclarationBareExpr(ImportDeclarationBareExpr node) {
-    return null;
-  }
-
   // =========================================================================
   // Utility
   // =========================================================================

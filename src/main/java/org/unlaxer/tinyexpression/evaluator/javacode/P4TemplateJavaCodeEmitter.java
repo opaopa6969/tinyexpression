@@ -157,5 +157,4 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalExternalObjectInvocationExpr(ExternalObjectInvocationExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalCodeBlockExpr(CodeBlockExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalImportDeclarationExpr(ImportDeclarationExpr n) { return defaultEmitter.eval(n); }
-  @Override protected String evalImportDeclarationBareExpr(ImportDeclarationBareExpr n) { return defaultEmitter.eval(n); }
 }

@@ -422,11 +422,6 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     return "null";
   }
 
-  @Override
-  protected String evalImportDeclarationBareExpr(ImportDeclarationBareExpr node) {
-    return "null";
-  }
-
   // =========================================================================
   // Utility
   // =========================================================================

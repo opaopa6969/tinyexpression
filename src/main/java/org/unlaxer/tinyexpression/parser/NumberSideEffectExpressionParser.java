@@ -6,7 +6,7 @@ import org.unlaxer.parser.combinator.Optional;
 public class NumberSideEffectExpressionParser extends SideEffectExpressionParser implements NumberExpression{
 
   @Override
-  Parser typedReturningParser() {
+  public Parser typedReturningParser() {
     return new Optional(ReturningNumberParser.class);
   }
 }

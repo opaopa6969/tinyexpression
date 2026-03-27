@@ -20,6 +20,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
 import org.unlaxer.tinyexpression.function.EmbeddedFunction;
 import org.unlaxer.tinyexpression.parser.*;
+import org.unlaxer.tinyexpression.parser.booltype.BooleanFactorParser;
 import org.unlaxer.tinyexpression.parser.function.*;
 import org.unlaxer.util.MultipleParamterStringPredicators;
 import org.unlaxer.util.FactoryBoundCache;

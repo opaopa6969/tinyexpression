@@ -1,3 +1,7 @@
+[English](./implementation-guide-dialogue.en.md) | [日本語](./implementation-guide-dialogue.ja.md) | [Index](./INDEX.md)
+
+---
+
 # tinyexpression 実装ガイド — 会話で学ぶ5つのバックエンド
 
 > **登場人物**
@@ -429,3 +433,6 @@ P4-reflection       ████████████ 〜数µs           ←
 | `TinyExpressionP4AST.java` | ✅ | sealed record 群、人間は操作するだけ |
 | `TinyExpressionP4Mapper.java` | ✅ | 完全生成、触らない |
 | `TinyExpressionP4Parsers.java` | ✅ | 完全生成、触らない |
+
+---
+[Index](./INDEX.md) | [Next: Parser Generator Comparison & @eval Strategy →](./parser-generator-comparison-and-eval-strategy.ja.md)
