@@ -225,6 +225,41 @@ public class AstEvaluatorCalculator implements Calculator {
         }
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
+
+        // --- P4TypedAstEvaluator (sealed-interface switch dispatch) ---
+        if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
+          try {
+            Object p4TypedResult = new P4TypedAstEvaluator(specifiedExpressionTypes, calculationContext).eval(typedAst);
+            if (p4TypedResult != null) {
+              Optional<Object> p4TypedEvaluated = Optional.of(p4TypedResult);
+              ExpressionType evaluatedResultType = resultType();
+              if (evaluatedResultType != null
+                  && evaluatedResultType.isNumber()
+                  && shouldCrossCheckWithTokenAst(formulaText)) {
+                tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+                    source.source(), specifiedExpressionTypes, calculationContext);
+                if (tokenAstEvaluated.isPresent()
+                    && p4TypedResult instanceof Number p4Number
+                    && tokenAstEvaluated.get() instanceof Number tokenNumber
+                    && !numbersEquivalent(p4Number, tokenNumber)) {
+                  p4TypedEvaluated = Optional.empty();
+                }
+              }
+              if (p4TypedEvaluated.isPresent()) {
+                setObject("_astEvaluatorRuntime", "p4-typed");
+                setObject("_astEvaluatorMapperAvailable", true);
+                setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
+                return p4TypedEvaluated.get();
+              }
+            }
+          } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
+            // P4TypedAstEvaluator cannot handle this node type (e.g. MethodInvocation)
+            // or encountered a parse error (e.g. variable ref in numeric context);
+            // fall through to reflection-based evaluator
+          }
+        }
+
+        // --- Reflection-based fallback (GeneratedP4ValueAstEvaluator) ---
         GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());

@@ -25,7 +25,7 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
   }
   
   
-  public class BooleanVariableDeclarationParserTest extends ParserTestBase{
+  public static class BooleanVariableDeclarationParserTest extends ParserTestBase{
 
     @Test
     public void test() {
@@ -46,7 +46,7 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
     }
   }
   
-  public class NumberVariableDeclarationParserTest extends ParserTestBase{
+  public static class NumberVariableDeclarationParserTest extends ParserTestBase{
 
     @Test
     public void test() {
@@ -67,7 +67,7 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
     }
   }
   
-  public class NakedVariableDeclarationParserTest extends ParserTestBase{
+  public static class NakedVariableDeclarationParserTest extends ParserTestBase{
 
     @Test
     public void test() {

@@ -1,6 +1,9 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.util.Set;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -26,7 +29,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(context);
 
     assertEquals(true, value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
     assertEquals(false, ast.getObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", Boolean.class));
   }
 
@@ -43,7 +46,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals("payload", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -61,7 +64,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(context);
 
     assertEquals("ctx-object", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -80,7 +83,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(context);
 
     assertEquals("fallback", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
     assertEquals("fallback", context.getObject("payload", Object.class).orElse(null));
   }
 
@@ -117,7 +120,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals("niku", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -133,7 +136,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals(3f, ((Number) value).floatValue(), 0.0001f);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -149,7 +152,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals("ok", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -167,7 +170,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(context);
 
     assertEquals("local", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -183,7 +186,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals(1f, ((Number) value).floatValue(), 0.0001f);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   @Test
@@ -199,7 +202,7 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(CalculationContext.newConcurrentContext());
 
     assertEquals("ok", value);
-    assertEquals("generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("", ast);
   }
 
   private void assertGeneratedDeclarationFormula(String formula, SpecifiedExpressionTypes types, Object expected) {
@@ -215,6 +218,14 @@ public class AstEvaluatorGeneratedValuePathTest {
     } else {
       assertEquals(expected, value);
     }
-    assertEquals("formula=" + formula, "generated-ast", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertGeneratedAstRuntime("formula=" + formula, ast);
+  }
+
+  private static final Set<String> GENERATED_AST_RUNTIMES = Set.of("generated-ast", "p4-typed");
+
+  private static void assertGeneratedAstRuntime(String message, Calculator calculator) {
+    String runtime = calculator.getObject("_astEvaluatorRuntime", String.class);
+    assertTrue(message + " expected generated-ast or p4-typed but was: " + runtime,
+        GENERATED_AST_RUNTIMES.contains(runtime));
   }
 }
