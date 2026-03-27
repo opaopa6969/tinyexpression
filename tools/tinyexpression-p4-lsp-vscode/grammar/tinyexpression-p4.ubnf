@@ -217,7 +217,14 @@ grammar TinyExpressionP4 {
     | SqrtFunction
     | MinFunction
     | MaxFunction
-    | RandomFunction ;
+    | RandomFunction
+    | AbsFunction
+    | RoundFunction
+    | CeilFunction
+    | FloorFunction
+    | PowFunction
+    | LogFunction
+    | ExpFunction ;
 
   @mapping(SinExpr, params=[arg])
   SinFunction ::= 'sin' '(' NumberExpression @arg ')' ;
@@ -239,6 +246,27 @@ grammar TinyExpressionP4 {
 
   @mapping(RandomExpr)
   RandomFunction ::= 'random' '(' ')' ;
+
+  @mapping(AbsExpr, params=[arg])
+  AbsFunction ::= 'abs' '(' NumberExpression @arg ')' ;
+
+  @mapping(RoundExpr, params=[arg])
+  RoundFunction ::= 'round' '(' NumberExpression @arg ')' ;
+
+  @mapping(CeilExpr, params=[arg])
+  CeilFunction ::= 'ceil' '(' NumberExpression @arg ')' ;
+
+  @mapping(FloorExpr, params=[arg])
+  FloorFunction ::= 'floor' '(' NumberExpression @arg ')' ;
+
+  @mapping(PowExpr, params=[base, exponent])
+  PowFunction ::= 'pow' '(' NumberExpression @base ',' NumberExpression @exponent ')' ;
+
+  @mapping(LogExpr, params=[arg])
+  LogFunction ::= 'log' '(' NumberExpression @arg ')' ;
+
+  @mapping(ExpExpr, params=[arg])
+  ExpFunction ::= 'exp' '(' NumberExpression @arg ')' ;
 
   // ── Type conversion ────────────────────────────────────────────────────
 
@@ -266,15 +294,33 @@ grammar TinyExpressionP4 {
     | VariableRef @value
     | MethodInvocation @value ;
 
-  // ── Boolean expressions ────────────────────────────────────────────────────
+  // ── Boolean expressions (3-level precedence: OR < AND < XOR) ──────────
+
+  // Boolean OR has lowest precedence
+  @mapping(BooleanOrExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=1)
+  BooleanExpression ::= BooleanAndExpression @left { '|' @op BooleanAndExpression @right } ;
+
+  // Boolean AND
+  @mapping(BooleanAndExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=2)
+  BooleanAndExpression ::= BooleanXorExpression @left { '&' @op BooleanXorExpression @right } ;
+
+  // Boolean XOR
+  @mapping(BooleanXorExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=3)
+  BooleanXorExpression ::= BooleanFactor @left { '^' @op BooleanFactor @right } ;
 
   // ── Not operator ───────────────────────────────────────────────────────
 
   @mapping(NotExpr, params=[value])
   NotExpression ::= 'not' '(' BooleanExpression @value ')' ;
 
-  @mapping(BooleanExpr, params=[value])
-  BooleanExpression ::=
+  @mapping(BooleanFactorExpr, params=[value])
+  BooleanFactor ::=
       NotExpression @value
     | BooleanMatchExpression @value
     | ExternalBooleanInvocation @value
@@ -283,7 +329,8 @@ grammar TinyExpressionP4 {
     | 'true' @value
     | 'false' @value
     | VariableRef @value
-    | MethodInvocation @value ;
+    | MethodInvocation @value
+    | '(' BooleanExpression @value ')' ;
 
   // String equality: $var == 'text', 'a' != 'b', etc.
   // Must appear before number ComparisonExpression (actual BooleanExpressionOfStringParser ordering)

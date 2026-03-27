@@ -255,7 +255,14 @@ grammar TinyExpressionP4 {
     | SqrtFunction
     | MinFunction
     | MaxFunction
-    | RandomFunction ;
+    | RandomFunction
+    | AbsFunction
+    | RoundFunction
+    | CeilFunction
+    | FloorFunction
+    | PowFunction
+    | LogFunction
+    | ExpFunction ;
 
   @mapping(SinExpr, params=[arg])
   SinFunction ::= 'sin' '(' NumberExpression @arg ')' ;
@@ -277,6 +284,27 @@ grammar TinyExpressionP4 {
 
   @mapping(RandomExpr)
   RandomFunction ::= 'random' '(' ')' ;
+
+  @mapping(AbsExpr, params=[arg])
+  AbsFunction ::= 'abs' '(' NumberExpression @arg ')' ;
+
+  @mapping(RoundExpr, params=[arg])
+  RoundFunction ::= 'round' '(' NumberExpression @arg ')' ;
+
+  @mapping(CeilExpr, params=[arg])
+  CeilFunction ::= 'ceil' '(' NumberExpression @arg ')' ;
+
+  @mapping(FloorExpr, params=[arg])
+  FloorFunction ::= 'floor' '(' NumberExpression @arg ')' ;
+
+  @mapping(PowExpr, params=[base, exponent])
+  PowFunction ::= 'pow' '(' NumberExpression @base ',' NumberExpression @exponent ')' ;
+
+  @mapping(LogExpr, params=[arg])
+  LogFunction ::= 'log' '(' NumberExpression @arg ')' ;
+
+  @mapping(ExpExpr, params=[arg])
+  ExpFunction ::= 'exp' '(' NumberExpression @arg ')' ;
 
   // ── Type conversion ───────────────────────────────────────────────────────
 

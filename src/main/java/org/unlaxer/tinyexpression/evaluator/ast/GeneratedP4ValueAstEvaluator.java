@@ -162,7 +162,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (booleanMatch.isPresent()) {
         return booleanMatch;
       }
-      return findFirstNode(mappedAst, "BooleanExpr")
+      return findFirstNode(mappedAst, "BooleanOrExpr")
           .flatMap(node -> evaluateBoolean(
               node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(v -> (Object) v);
@@ -242,7 +242,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (stringExpr.isPresent()) {
         return stringExpr;
       }
-      Optional<Object> booleanExpr = findFirstNode(mappedAst, "BooleanExpr")
+      Optional<Object> booleanExpr = findFirstNode(mappedAst, "BooleanOrExpr")
           .flatMap(node -> evaluateBoolean(
               node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(value -> (Object) value);
@@ -392,7 +392,7 @@ final class GeneratedP4ValueAstEvaluator {
       return evaluateString(value, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
           .map(v -> (Object) v);
     }
-    if ("BooleanExpr".equals(simpleName)) {
+    if ("BooleanOrExpr".equals(simpleName)) {
       return evaluateBoolean(value, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
           .map(v -> (Object) v);
     }
@@ -595,7 +595,7 @@ final class GeneratedP4ValueAstEvaluator {
     if (node == null) {
       return Optional.empty();
     }
-    if ("BooleanExpr".equals(node.getClass().getSimpleName())) {
+    if ("BooleanOrExpr".equals(node.getClass().getSimpleName())) {
       return evaluateBoolean(node, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource);
     }
     SpecifiedExpressionTypes booleanTypes =
@@ -1393,7 +1393,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (matchHead) {
         preferred.add("BooleanMatchExpr");
       }
-      preferred.add("BooleanExpr");
+      preferred.add("BooleanOrExpr");
     } else if (type.isObject()) {
       if (matchHead) {
         preferred.add("StringMatchExpr");
@@ -1402,7 +1402,7 @@ final class GeneratedP4ValueAstEvaluator {
       }
       preferred.add("ObjectExpr");
       preferred.add("StringExpr");
-      preferred.add("BooleanExpr");
+      preferred.add("BooleanOrExpr");
       preferred.add("BinaryExpr");
     } else {
       preferred.add(null);

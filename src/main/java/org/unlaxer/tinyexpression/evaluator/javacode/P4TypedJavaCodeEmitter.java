@@ -172,11 +172,53 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   }
 
   // =========================================================================
-  // BooleanExpr
+  // BooleanOrExpr / BooleanAndExpr / BooleanXorExpr  (3-level hierarchy)
   // =========================================================================
 
   @Override
-  protected String evalBooleanExpr(BooleanExpr node) {
+  protected String evalBooleanOrExpr(BooleanOrExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    String current = "(" + eval(node.left()) + ")";
+    List<BooleanAndExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      current = "(" + current + " | " + eval(rights.get(i)) + ")";
+    }
+    return current;
+  }
+
+  @Override
+  protected String evalBooleanAndExpr(BooleanAndExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    String current = "(" + eval(node.left()) + ")";
+    List<BooleanXorExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      current = "(" + current + " & " + eval(rights.get(i)) + ")";
+    }
+    return current;
+  }
+
+  @Override
+  protected String evalBooleanXorExpr(BooleanXorExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    String current = "(" + eval(node.left()) + ")";
+    List<BooleanFactorExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      current = "(" + current + " ^ " + eval(rights.get(i)) + ")";
+    }
+    return current;
+  }
+
+  @Override
+  protected String evalBooleanFactorExpr(BooleanFactorExpr node) {
     Object value = node.value();
     if (value instanceof ComparisonExpr comp) {
       return eval(comp);
@@ -380,7 +422,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalBooleanCaseValueExpr(BooleanCaseValueExpr node) {
-    return evalBooleanExpr(node.value());
+    return evalBooleanOrExpr(node.value());
   }
 
   // =========================================================================

@@ -19,6 +19,13 @@ public class P4TypedJavaCodeEmitterTest {
     return new BinaryExpr(left, List.of(op), List.of(right));
   }
 
+  private static BooleanOrExpr boolWrap(String text) {
+    BooleanFactorExpr factor = new BooleanFactorExpr(text);
+    BooleanXorExpr xor = new BooleanXorExpr(factor, List.of(), List.of());
+    BooleanAndExpr and = new BooleanAndExpr(xor, List.of(), List.of());
+    return new BooleanOrExpr(and, List.of(), List.of());
+  }
+
   // ── Numeric literal ──
 
   @Test
@@ -94,13 +101,13 @@ public class P4TypedJavaCodeEmitterTest {
     assertTrue("Should contain 5.0f", code.contains("5.0f"));
   }
 
-  // ── BooleanExpr ──
+  // ── BooleanOrExpr ──
 
   @Test
   public void testBooleanExprLiteral() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float));
-    String code = emitter.eval(new BooleanExpr("true"));
+    String code = emitter.eval(boolWrap("true"));
     assertEquals("true", code);
   }
 
@@ -110,8 +117,7 @@ public class P4TypedJavaCodeEmitterTest {
   public void testIfExpr() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
-    ComparisonExpr comp = new ComparisonExpr(leaf("$a"), "<", leaf("$b"));
-    BooleanExpr condition = new BooleanExpr(comp);
+    BooleanOrExpr condition = boolWrap("true");
     ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
     ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
@@ -139,7 +145,7 @@ public class P4TypedJavaCodeEmitterTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
 
     NumberCaseExpr case1 = new NumberCaseExpr(
-        new BooleanExpr("true"),
+        boolWrap("true"),
         new NumberCaseValueExpr(leaf("100")));
     NumberDefaultCaseExpr defaultCase = new NumberDefaultCaseExpr(new NumberCaseValueExpr(leaf("300")));
 

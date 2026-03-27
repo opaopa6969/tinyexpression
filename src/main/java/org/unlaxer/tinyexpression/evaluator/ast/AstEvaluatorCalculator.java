@@ -628,7 +628,7 @@ public class AstEvaluatorCalculator implements Calculator {
       if (matchHead) {
         preferred.add("BooleanMatchExpr");
       }
-      preferred.add("BooleanExpr");
+      preferred.add("BooleanOrExpr");
     } else if (type.isObject()) {
       if (matchHead) {
         preferred.add("StringMatchExpr");

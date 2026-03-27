@@ -159,7 +159,37 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   }
 
   @Override
-  protected String evalBooleanExpr(BooleanExpr node) {
+  protected String evalBooleanOrExpr(BooleanOrExpr node) {
+    if (node.op() == null || node.op().isEmpty()) return eval(node.left());
+    String cur = "(" + eval(node.left()) + ")";
+    List<BooleanAndExpr> rights = node.right();
+    int n = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < n; i++) cur = "(" + cur + " | " + eval(rights.get(i)) + ")";
+    return cur;
+  }
+
+  @Override
+  protected String evalBooleanAndExpr(BooleanAndExpr node) {
+    if (node.op() == null || node.op().isEmpty()) return eval(node.left());
+    String cur = "(" + eval(node.left()) + ")";
+    List<BooleanXorExpr> rights = node.right();
+    int n = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < n; i++) cur = "(" + cur + " & " + eval(rights.get(i)) + ")";
+    return cur;
+  }
+
+  @Override
+  protected String evalBooleanXorExpr(BooleanXorExpr node) {
+    if (node.op() == null || node.op().isEmpty()) return eval(node.left());
+    String cur = "(" + eval(node.left()) + ")";
+    List<BooleanFactorExpr> rights = node.right();
+    int n = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < n; i++) cur = "(" + cur + " ^ " + eval(rights.get(i)) + ")";
+    return cur;
+  }
+
+  @Override
+  protected String evalBooleanFactorExpr(BooleanFactorExpr node) {
     Object v = node.value();
     if (v instanceof ComparisonExpr c) return eval(c);
     if (v instanceof StringComparisonExpr c) return eval(c);
@@ -232,7 +262,7 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalStringCaseValueExpr(StringCaseValueExpr n) { return evalStringExpr(n.value()); }
   @Override protected String evalBooleanCaseExpr(BooleanCaseExpr n) { return eval(n.value()); }
   @Override protected String evalBooleanDefaultCaseExpr(BooleanDefaultCaseExpr n) { return eval(n.value()); }
-  @Override protected String evalBooleanCaseValueExpr(BooleanCaseValueExpr n) { return evalBooleanExpr(n.value()); }
+  @Override protected String evalBooleanCaseValueExpr(BooleanCaseValueExpr n) { return evalBooleanOrExpr(n.value()); }
 
   // =========================================================================
   // @eval(kind=invocation, strategy=manual)

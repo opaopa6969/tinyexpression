@@ -264,11 +264,56 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   // =========================================================================
-  // BooleanExpr
+  // BooleanOrExpr / BooleanAndExpr / BooleanXorExpr  (3-level hierarchy)
   // =========================================================================
 
   @Override
-  protected Object evalBooleanExpr(BooleanExpr node) {
+  protected Object evalBooleanOrExpr(BooleanOrExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    boolean current = toBoolean(eval(node.left()));
+    List<BooleanAndExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      boolean r = toBoolean(eval(rights.get(i)));
+      current = current | r;
+    }
+    return current;
+  }
+
+  @Override
+  protected Object evalBooleanAndExpr(BooleanAndExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    boolean current = toBoolean(eval(node.left()));
+    List<BooleanXorExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      boolean r = toBoolean(eval(rights.get(i)));
+      current = current & r;
+    }
+    return current;
+  }
+
+  @Override
+  protected Object evalBooleanXorExpr(BooleanXorExpr node) {
+    if (node.op() == null || node.op().isEmpty()) {
+      return eval(node.left());
+    }
+    boolean current = toBoolean(eval(node.left()));
+    List<BooleanFactorExpr> rights = node.right();
+    int count = Math.min(node.op().size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      boolean r = toBoolean(eval(rights.get(i)));
+      current = current ^ r;
+    }
+    return current;
+  }
+
+  @Override
+  protected Object evalBooleanFactorExpr(BooleanFactorExpr node) {
     Object value = node.value();
     if (value instanceof ComparisonExpr comp) {
       return eval(comp);
@@ -287,7 +332,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       if (stripped.startsWith("$")) {
         String varName = extractVariableName(stripped);
         if (varName == null || varName.isEmpty()) {
-          // Incomplete variable reference (e.g. just "$") — mapper lost the name
           throw new UnsupportedOperationException(
               "Cannot resolve boolean variable from incomplete reference: " + stripped);
         }
@@ -469,7 +513,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalBooleanCaseValueExpr(BooleanCaseValueExpr node) {
-    return evalBooleanExpr(node.value());
+    return evalBooleanOrExpr(node.value());
   }
 
   // =========================================================================

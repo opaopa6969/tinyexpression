@@ -38,6 +38,22 @@ public class P4TypedAstEvaluatorTest {
     return new BinaryExpr(left, List.of(op), List.of(right));
   }
 
+  /** Wrap a raw boolean literal/variable text into BooleanOrExpr(BooleanAndExpr(BooleanXorExpr(BooleanFactorExpr(text)))). */
+  private static BooleanOrExpr boolWrap(String text) {
+    BooleanFactorExpr factor = new BooleanFactorExpr(text);
+    BooleanXorExpr xor = new BooleanXorExpr(factor, List.of(), List.of());
+    BooleanAndExpr and = new BooleanAndExpr(xor, List.of(), List.of());
+    return new BooleanOrExpr(and, List.of(), List.of());
+  }
+
+  /** Wrap a mapped AST node (e.g. ComparisonExpr) into BooleanOrExpr. */
+  private static BooleanOrExpr boolWrap(TinyExpressionP4AST astNode) {
+    BooleanFactorExpr factor = new BooleanFactorExpr(astNode);
+    BooleanXorExpr xor = new BooleanXorExpr(factor, List.of(), List.of());
+    BooleanAndExpr and = new BooleanAndExpr(xor, List.of(), List.of());
+    return new BooleanOrExpr(and, List.of(), List.of());
+  }
+
   // ── Numeric literal ──
 
   @Test
@@ -118,25 +134,24 @@ public class P4TypedAstEvaluatorTest {
     assertEquals(true, result);
   }
 
-  // ── BooleanExpr with literal ──
+  // ── BooleanOrExpr with literal ──
 
   @Test
   public void testBooleanExprLiteral() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new BooleanExpr("true"));
+    Object result = evaluator.eval(boolWrap("true"));
     assertEquals(true, result);
   }
 
-  // ── BooleanExpr wrapping ComparisonExpr ──
+  // ── BooleanOrExpr wrapping ComparisonExpr ──
 
   @Test
   public void testBooleanExprWithComparison() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), newContext());
     ComparisonExpr comp = new ComparisonExpr(leaf("$a"), "<", leaf("$b"));
-    BooleanExpr boolExpr = new BooleanExpr(comp);
-    Object result = evaluator.eval(boolExpr);
+    Object result = evaluator.eval(boolWrap(comp));
     assertEquals(true, result);  // 3 < 4
   }
 
@@ -147,7 +162,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
     ComparisonExpr comp = new ComparisonExpr(leaf("$a"), "<", leaf("$b"));
-    BooleanExpr condition = new BooleanExpr(comp);
+    BooleanOrExpr condition = boolWrap(comp);
     ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
     ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
@@ -160,7 +175,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
     ComparisonExpr comp = new ComparisonExpr(leaf("$a"), ">", leaf("$b"));
-    BooleanExpr condition = new BooleanExpr(comp);
+    BooleanOrExpr condition = boolWrap(comp);
     ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
     ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
@@ -187,10 +202,10 @@ public class P4TypedAstEvaluatorTest {
 
     // match { case($a > 5) => 100; case($a > 2) => 200; default => 300 }
     NumberCaseExpr case1 = new NumberCaseExpr(
-        new BooleanExpr(new ComparisonExpr(leaf("$a"), ">", leaf("5"))),
+        boolWrap(new ComparisonExpr(leaf("$a"), ">", leaf("5"))),
         new NumberCaseValueExpr(leaf("100")));
     NumberCaseExpr case2 = new NumberCaseExpr(
-        new BooleanExpr(new ComparisonExpr(leaf("$a"), ">", leaf("2"))),
+        boolWrap(new ComparisonExpr(leaf("$a"), ">", leaf("2"))),
         new NumberCaseValueExpr(leaf("200")));
     NumberDefaultCaseExpr defaultCase = new NumberDefaultCaseExpr(new NumberCaseValueExpr(leaf("300")));
 

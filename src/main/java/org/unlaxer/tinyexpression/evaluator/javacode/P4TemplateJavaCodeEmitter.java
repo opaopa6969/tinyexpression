@@ -123,7 +123,22 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   }
 
   @Override
-  protected String evalBooleanExpr(BooleanExpr node) {
+  protected String evalBooleanOrExpr(BooleanOrExpr node) {
+    return defaultEmitter.eval(node);
+  }
+
+  @Override
+  protected String evalBooleanAndExpr(BooleanAndExpr node) {
+    return defaultEmitter.eval(node);
+  }
+
+  @Override
+  protected String evalBooleanXorExpr(BooleanXorExpr node) {
+    return defaultEmitter.eval(node);
+  }
+
+  @Override
+  protected String evalBooleanFactorExpr(BooleanFactorExpr node) {
     return defaultEmitter.eval(node);
   }
 
