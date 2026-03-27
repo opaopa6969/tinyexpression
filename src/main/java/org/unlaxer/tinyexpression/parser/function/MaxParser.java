@@ -1,12 +1,17 @@
 package org.unlaxer.tinyexpression.parser.function;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.unlaxer.Token;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
+import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.elementary.WordParser;
+import org.unlaxer.parser.posix.CommaParser;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
 import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
@@ -19,7 +24,7 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 	public MaxParser() {
 		super();
 	}
-	
+
 	public static class MaxFuctionNameParser extends SuggestableParser{
 
 		private static final long serialVersionUID = 796425119167968517L;
@@ -27,21 +32,35 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 		public MaxFuctionNameParser() {
 			super(true, "max");
 		}
-		
+
 		@Override
 		public String getSuggestString(String matchedString) {
 			return "(".concat(matchedString).concat(")");
 		}
 	}
 
-	@TokenExtractor
-	public static Token getLeftExpression(Token thisParserParsed) {
-		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0); //2
+	/** Successor element: comma followed by a NumberExpression */
+	public static class MaxArgSuccessor extends JavaStyleDelimitedLazyChain {
+		private static final long serialVersionUID = 1L;
+
+		@Override
+		public Parsers getLazyParsers() {
+			return new Parsers(
+				Parser.get(CommaParser.class),
+				Parser.get(NumberExpressionParser.class)
+			);
+		}
 	}
-	
-  @TokenExtractor
-	public static Token getRightExpression(Token thisParserParsed) {
-    return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(1); //4
+
+	@TokenExtractor
+	public static Token getFirstExpression(Token thisParserParsed) {
+		return thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class).get(0);
+	}
+
+	@TokenExtractor
+	public static List<Token> getRestExpressions(Token thisParserParsed) {
+		List<Token> all = thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class);
+		return all.stream().skip(1).collect(Collectors.toList());
 	}
 
   @Override
@@ -49,9 +68,8 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
     return new Parsers(
         Parser.get(MaxFuctionNameParser.class),
         Parser.get(LeftParenthesisParser.class),
-        Parser.get(NumberExpressionParser.class),//2
-        Parser.<WordParser>get(()->new WordParser(",")),
-        Parser.get(NumberExpressionParser.class),//4
+        Parser.get(NumberExpressionParser.class),
+        new ZeroOrMore(Parser.get(MaxArgSuccessor.class)),
         Parser.get(RightParenthesisParser.class)
     );
   }

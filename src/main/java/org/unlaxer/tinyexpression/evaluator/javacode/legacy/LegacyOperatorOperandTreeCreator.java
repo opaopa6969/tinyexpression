@@ -525,18 +525,22 @@ public class LegacyOperatorOperandTreeCreator implements TokenReConstructorInter
       return operator.newCreatesOf(apply(SquareRootParser.getExpression(operator)));
       
     }else if(parser instanceof MinParser){
-      
-      return operator.newCreatesOf(
-        apply(MinParser.getLeftExpression(operator)),
-        apply(MinParser.getRightExpression(operator))
-      );
+
+      java.util.List<org.unlaxer.Token> allArgs = new java.util.ArrayList<>();
+      allArgs.add(apply(MinParser.getFirstExpression(operator)));
+      for (org.unlaxer.Token rest : MinParser.getRestExpressions(operator)) {
+        allArgs.add(apply(rest));
+      }
+      return operator.newCreatesOf(allArgs.toArray(new org.unlaxer.Token[0]));
 
     }else if(parser instanceof MaxParser){
-      
-      return operator.newCreatesOf(
-        apply(MaxParser.getLeftExpression(operator)),
-        apply(MaxParser.getRightExpression(operator))
-      );
+
+      java.util.List<org.unlaxer.Token> allArgs = new java.util.ArrayList<>();
+      allArgs.add(apply(MaxParser.getFirstExpression(operator)));
+      for (org.unlaxer.Token rest : MaxParser.getRestExpressions(operator)) {
+        allArgs.add(apply(rest));
+      }
+      return operator.newCreatesOf(allArgs.toArray(new org.unlaxer.Token[0]));
 
     }else if(parser instanceof RandomParser){
       

@@ -238,11 +238,11 @@ grammar TinyExpressionP4 {
   @mapping(SqrtExpr, params=[arg])
   SqrtFunction ::= 'sqrt' '(' NumberExpression @arg ')' ;
 
-  @mapping(MinExpr, params=[left, right])
-  MinFunction ::= 'min' '(' NumberExpression @left ',' NumberExpression @right ')' ;
+  @mapping(MinExpr, params=[first, rest])
+  MinFunction ::= 'min' '(' NumberExpression @first { ',' NumberExpression @rest } ')' ;
 
-  @mapping(MaxExpr, params=[left, right])
-  MaxFunction ::= 'max' '(' NumberExpression @left ',' NumberExpression @right ')' ;
+  @mapping(MaxExpr, params=[first, rest])
+  MaxFunction ::= 'max' '(' NumberExpression @first { ',' NumberExpression @rest } ')' ;
 
   @mapping(RandomExpr)
   RandomFunction ::= 'random' '(' ')' ;

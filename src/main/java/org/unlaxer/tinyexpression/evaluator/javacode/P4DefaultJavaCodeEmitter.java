@@ -302,17 +302,60 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalMinExpr(MinExpr node) {
-    return "Math.min((double)" + eval(node.left()) + ",(double)" + eval(node.right()) + ")";
+    String expr = eval(node.first());
+    for (var r : node.rest()) {
+      expr = "Math.min((double)" + expr + ",(double)" + eval(r) + ")";
+    }
+    return expr;
   }
 
   @Override
   protected String evalMaxExpr(MaxExpr node) {
-    return "Math.max((double)" + eval(node.left()) + ",(double)" + eval(node.right()) + ")";
+    String expr = eval(node.first());
+    for (var r : node.rest()) {
+      expr = "Math.max((double)" + expr + ",(double)" + eval(r) + ")";
+    }
+    return expr;
   }
 
   @Override
   protected String evalRandomExpr(RandomExpr node) {
     return "Math.random()";
+  }
+
+  @Override
+  protected String evalAbsExpr(AbsExpr node) {
+    return "Math.abs((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalRoundExpr(RoundExpr node) {
+    return "(double)Math.round((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalCeilExpr(CeilExpr node) {
+    return "Math.ceil((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalFloorExpr(FloorExpr node) {
+    return "Math.floor((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalPowExpr(PowExpr node) {
+    return "Math.pow((double)" + eval(node.base()) + ",(double)" + eval(node.exponent()) + ")";
+  }
+
+  @Override
+  protected String evalLogExpr(LogExpr node) {
+    return "Math.log((double)" + eval(node.arg()) + ")";
+  }
+
+  @Override
+  protected String evalExpExpr(ExpExpr node) {
+    return "Math.exp((double)" + eval(node.arg()) + ")";
   }
 
   // =========================================================================

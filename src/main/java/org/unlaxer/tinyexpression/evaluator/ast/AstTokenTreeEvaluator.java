@@ -164,6 +164,44 @@ final class AstTokenTreeEvaluator {
       return castToNumberType(result, numberType);
     }
 
+    // ---- Abs / Round / Ceil / Floor / Pow / Log / Exp ----
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.AbsParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.abs(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.RoundParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.round(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.CeilParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.ceil(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.FloorParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.floor(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.PowParser) {
+      Number base = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      Number exponent = evaluateNumber(token.filteredChildren.get(1), numberType, types, ctx);
+      double result = Math.pow(base.doubleValue(), exponent.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.LogParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.log(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+    if (parser instanceof org.unlaxer.tinyexpression.parser.function.ExpParser) {
+      Number arg = evaluateNumber(token.filteredChildren.get(0), numberType, types, ctx);
+      double result = Math.exp(arg.doubleValue());
+      return castToNumberType(result, numberType);
+    }
+
     // ---- Random ----
     if (parser instanceof RandomParser) {
       return castToNumberType(ctx.nextRandom(), numberType);

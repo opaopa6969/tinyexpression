@@ -34,10 +34,17 @@ import org.unlaxer.tinyexpression.parser.SideEffectExpressionParser;
 import org.unlaxer.tinyexpression.parser.StringLengthParser;
 import org.unlaxer.tinyexpression.parser.ToNumParser;
 import org.unlaxer.tinyexpression.parser.VariableParser;
+import org.unlaxer.tinyexpression.parser.function.AbsParser;
+import org.unlaxer.tinyexpression.parser.function.CeilParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
+import org.unlaxer.tinyexpression.parser.function.ExpParser;
+import org.unlaxer.tinyexpression.parser.function.FloorParser;
+import org.unlaxer.tinyexpression.parser.function.LogParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
+import org.unlaxer.tinyexpression.parser.function.PowParser;
 import org.unlaxer.tinyexpression.parser.function.RandomParser;
+import org.unlaxer.tinyexpression.parser.function.RoundParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
@@ -84,6 +91,13 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     registerSimpleHandler(MinParser.class, NumberExpressionBuilder::buildMin);
     registerSimpleHandler(MaxParser.class, NumberExpressionBuilder::buildMax);
     registerSimpleHandler(RandomParser.class, NumberExpressionBuilder::buildRandom);
+    registerSimpleHandler(AbsParser.class, NumberExpressionBuilder::buildAbs);
+    registerSimpleHandler(RoundParser.class, NumberExpressionBuilder::buildRound);
+    registerSimpleHandler(CeilParser.class, NumberExpressionBuilder::buildCeil);
+    registerSimpleHandler(FloorParser.class, NumberExpressionBuilder::buildFloor);
+    registerSimpleHandler(PowParser.class, NumberExpressionBuilder::buildPow);
+    registerSimpleHandler(LogParser.class, NumberExpressionBuilder::buildLog);
+    registerSimpleHandler(ExpParser.class, NumberExpressionBuilder::buildExp);
     registerSimpleHandler(NumberIfExpressionParser.class, NumberExpressionBuilder::buildNumberIf);
     registerSimpleHandler(NumberMatchExpressionParser.class, NumberExpressionBuilder::buildNumberMatch);
     registerSimpleHandler(ToNumParser.class, NumberExpressionBuilder::buildToNum);
@@ -331,6 +345,84 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
 
     builder.append(wrapNumber.pre());
     builder.append("calculateContext.nextRandom()");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildAbs(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.abs((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildRound(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.round((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildCeil(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.ceil((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildFloor(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.floor((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildPow(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.pow((double)");
+    build(builder, token.filteredChildren.get(0), tinyExpressionTokens);
+    builder.append(",(double)");
+    build(builder, token.filteredChildren.get(1), tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildLog(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.log((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
+    builder.append(wrapNumber.post());
+  }
+
+  private void buildExp(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
+
+    Token value = token.filteredChildren.get(0);
+    builder.append(wrapNumber.pre());
+    builder.append(" Math.exp((double)");
+    build(builder, value, tinyExpressionTokens);
+    builder.append(")");
     builder.append(wrapNumber.post());
   }
 

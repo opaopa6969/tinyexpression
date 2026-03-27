@@ -12,7 +12,14 @@ import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
+import org.unlaxer.tinyexpression.parser.function.AbsParser;
+import org.unlaxer.tinyexpression.parser.function.CeilParser;
+import org.unlaxer.tinyexpression.parser.function.ExpParser;
+import org.unlaxer.tinyexpression.parser.function.FloorParser;
+import org.unlaxer.tinyexpression.parser.function.LogParser;
+import org.unlaxer.tinyexpression.parser.function.PowParser;
 import org.unlaxer.tinyexpression.parser.function.RandomParser;
+import org.unlaxer.tinyexpression.parser.function.RoundParser;
 import org.unlaxer.tinyexpression.parser.function.SinParser;
 import org.unlaxer.tinyexpression.parser.function.SquareRootParser;
 import org.unlaxer.tinyexpression.parser.function.TanParser;
@@ -62,6 +69,13 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
     parsers.add(MinParser.class);
     parsers.add(MaxParser.class);
     parsers.add(RandomParser.class);
+    parsers.add(AbsParser.class);
+    parsers.add(RoundParser.class);
+    parsers.add(CeilParser.class);
+    parsers.add(FloorParser.class);
+    parsers.add(PowParser.class);
+    parsers.add(LogParser.class);
+    parsers.add(ExpParser.class);
     parsers.add(FactorOfStringParser.class);
     parsers.add(ToNumParser.class);
     if(MethodInvocationParser.enabled2) {

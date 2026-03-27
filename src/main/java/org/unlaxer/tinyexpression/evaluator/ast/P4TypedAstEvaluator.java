@@ -571,21 +571,62 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalMinExpr(MinExpr node) {
-    double left = ((Number) eval(node.left())).doubleValue();
-    double right = ((Number) eval(node.right())).doubleValue();
-    return Math.min(left, right);
+    double min = ((Number) eval(node.first())).doubleValue();
+    for (var r : node.rest()) {
+      min = Math.min(min, ((Number) eval(r)).doubleValue());
+    }
+    return min;
   }
 
   @Override
   protected Object evalMaxExpr(MaxExpr node) {
-    double left = ((Number) eval(node.left())).doubleValue();
-    double right = ((Number) eval(node.right())).doubleValue();
-    return Math.max(left, right);
+    double max = ((Number) eval(node.first())).doubleValue();
+    for (var r : node.rest()) {
+      max = Math.max(max, ((Number) eval(r)).doubleValue());
+    }
+    return max;
   }
 
   @Override
   protected Object evalRandomExpr(RandomExpr node) {
     return Math.random();
+  }
+
+  @Override
+  protected Object evalAbsExpr(AbsExpr node) {
+    return Math.abs(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalRoundExpr(RoundExpr node) {
+    return (double) Math.round(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalCeilExpr(CeilExpr node) {
+    return Math.ceil(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalFloorExpr(FloorExpr node) {
+    return Math.floor(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalPowExpr(PowExpr node) {
+    double base = ((Number) eval(node.base())).doubleValue();
+    double exponent = ((Number) eval(node.exponent())).doubleValue();
+    return Math.pow(base, exponent);
+  }
+
+  @Override
+  protected Object evalLogExpr(LogExpr node) {
+    return Math.log(((Number) eval(node.arg())).doubleValue());
+  }
+
+  @Override
+  protected Object evalExpExpr(ExpExpr node) {
+    return Math.exp(((Number) eval(node.arg())).doubleValue());
   }
 
   // =========================================================================
