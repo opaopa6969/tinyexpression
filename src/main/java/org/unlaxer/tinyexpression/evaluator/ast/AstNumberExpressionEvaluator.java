@@ -29,6 +29,12 @@ final class AstNumberExpressionEvaluator {
 
   private AstNumberExpressionEvaluator() {}
 
+  /** Package-private: for benchmarking cached AST path (parse done externally). */
+  static Number evaluateAst(NumberGeneratedAstNode ast, ExpressionType numberType,
+      CalculationContext calculationContext) {
+    return evaluate(ast, numberType, calculationContext);
+  }
+
   static Optional<Object> tryEvaluate(String source, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext) {
     try {

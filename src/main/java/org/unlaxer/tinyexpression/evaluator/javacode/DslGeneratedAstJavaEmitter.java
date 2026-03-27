@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.Source;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -32,11 +33,27 @@ final class DslGeneratedAstJavaEmitter {
     if (parsed.isEmpty()) {
       return Optional.empty();
     }
+
+    // ── reflection-based rendering (legacy) ──
     Optional<String> expression = renderExpression(parsed.get(), resultType, specifiedExpressionTypes);
-    if (expression.isEmpty()) {
-      return Optional.empty();
+    if (expression.isPresent()) {
+      return Optional.of(new EmittedJava(buildJavaClass(className, resultType, expression.get()), "native-generated-ast"));
     }
-    return Optional.of(new EmittedJava(buildJavaClass(className, resultType, expression.get()), "native-generated-ast"));
+
+    // ── P4-typed fallback (sealed-interface switch, no reflection) ──
+    if (parsed.get() instanceof TinyExpressionP4AST typedAst) {
+      try {
+        P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes);
+        String typedExpression = emitter.eval(typedAst);
+        if (typedExpression != null && !typedExpression.isBlank()) {
+          return Optional.of(new EmittedJava(
+              emitter.buildJavaClass(className, typedExpression), "p4-typed-emitter"));
+        }
+      } catch (Throwable ignored) {
+        // fall through
+      }
+    }
+    return Optional.empty();
   }
 
   private static boolean isNativeEligible(String formula, ExpressionType resultType) {
@@ -72,8 +89,10 @@ final class DslGeneratedAstJavaEmitter {
   }
 
   private static boolean isNumericExpressionCandidate(String text) {
-    // Arithmetic expressions have known precedence gaps in native emission;
-    // route all non-literal numeric formulas to the legacy bridge for parity.
+    // P4 mapper collapses term-level operators (*, /) into single leaf literals
+    // and produces AST structures that differ from the legacy code generator.
+    // Arithmetic expressions are routed to the legacy bridge until the mapper
+    // produces fully decomposed BinaryExpr trees.
     return false;
   }
 
