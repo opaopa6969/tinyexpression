@@ -68,9 +68,14 @@ final class AstDeclarationRuntime {
           .map(AstDeclarationRuntime::tokenTextCompat)
           .filter(text -> text != null && !text.isBlank())
           .collect(Collectors.joining("\n"));
+
+      // Use a scoped context to avoid leaking variable declarations to the caller's context.
+      // The JavaCode path handles declarations within compiled code scope, so we must match that behavior.
+      CalculationContext scopedContext = createScopedContext(calculationContext);
+
       for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
         applyDeclaration(
-            declarationToken, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource);
+            declarationToken, specifiedExpressionTypes, scopedContext, classLoader, methodDeclarationsSource);
       }
       String expressionSource = tokenTextCompat(tinyExpressionTokens.getExpressionToken());
       if (expressionSource == null || expressionSource.isBlank()) {
@@ -80,12 +85,38 @@ final class AstDeclarationRuntime {
           ? ExpressionTypes.object
           : specifiedExpressionTypes.resultType();
       return evaluateExpressionWithMode(
-          expressionSource, resultType, specifiedExpressionTypes, calculationContext, classLoader,
+          expressionSource, resultType, specifiedExpressionTypes, scopedContext, classLoader,
           methodDeclarationsSource)
           .map(result -> new MainExpressionEvaluation(result.value(), result.runtime()));
     } catch (Throwable ignored) {
       return Optional.empty();
     }
+  }
+
+  /**
+   * Creates a scoped context that contains all entries from the parent context
+   * but does not write back to it. This prevents variable declarations from leaking
+   * to subsequent formula evaluations.
+   */
+  private static CalculationContext createScopedContext(CalculationContext parent) {
+    CalculationContext scoped = new org.unlaxer.tinyexpression.ConcurrentCalculationContext(
+        parent.scale(), parent.roundingMode(), parent.angle());
+    // Copy existing variables from parent to scoped context
+    if (parent instanceof org.unlaxer.tinyexpression.AbstractCalculationContext abc) {
+      abc.valueByName.forEach((k, v) -> {
+        if (k != null && v != null) scoped.set(k, v);
+      });
+      abc.booleanByName.forEach((k, v) -> {
+        if (k != null && v != null) scoped.set(k, v);
+      });
+      abc.stringByName.forEach((k, v) -> {
+        if (k != null && v != null) scoped.set(k, v);
+      });
+      abc.objectByName.forEach((k, v) -> {
+        if (k != null && v != null) scoped.setObject(k, v);
+      });
+    }
+    return scoped;
   }
 
   private static boolean hasInternalJavaCommentAfterLeadingDelimiters(String source) {

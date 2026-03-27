@@ -6,7 +6,7 @@
 
     <groupId>org.unlaxer</groupId>
     <artifactId>tinyexpression-p4-lsp-vscode</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.3</version>
     <packaging>jar</packaging>
     <description>TinyExpression P4 LSP/DAP — UBNF生成による型安全LSP/DAPサーバー</description>
 
@@ -23,12 +23,7 @@
         <dependency>
             <groupId>org.unlaxer</groupId>
             <artifactId>unlaxer-dsl</artifactId>
-            <version>0.1.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.unlaxer</groupId>
-            <artifactId>unlaxer-common</artifactId>
-            <version>2.5.0</version>
+            <version>2.7.0</version>
         </dependency>
         <dependency>
             <groupId>org.unlaxer</groupId>
@@ -49,6 +44,12 @@
             <groupId>org.eclipse.lsp4j</groupId>
             <artifactId>org.eclipse.lsp4j.debug</artifactId>
             <version>${lsp4j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.2</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -195,7 +196,6 @@
                 <version>3.2.5</version>
                 <configuration>
                     <argLine>--enable-preview</argLine>
-                    <skipTests>true</skipTests>
                 </configuration>
             </plugin>
         </plugins>

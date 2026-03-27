@@ -8,11 +8,12 @@ grammar TinyExpressionP4 {
   token IDENTIFIER = IdentifierParser
   token STRING     = SingleQuotedParser
   token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
-  token CODE_BODY  = org.unlaxer.tinyexpression.parser.javalang.CodeBodyUntilTripleBackticksParser
+  token CODE_BODY  = UNTIL('```')
   token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
   token EOF        = EndOfSourceParser
 
   @root
+  @scopeTree(mode=lexical)
   Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
@@ -26,20 +27,14 @@ grammar TinyExpressionP4 {
   CodeEnd ::= CODE_END ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
-  // Syntax: import fully.qualified.ClassName#methodName as alias;
-  //         import fully.qualified.ClassName as alias;
-  // Example: import sample.v1.CheckAlphabets#check as checkAlphabets;
+  // Syntax: import fully.qualified.ClassName [#methodName] as alias;
+  // Examples:
+  //   import sample.v1.CheckAlphabets#check as checkAlphabets;  (with method)
+  //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
   @interleave(profile=javaStyle)
-  ImportDeclaration ::=
-      ImportDeclarationWithMethod
-    | ImportDeclarationBare ;
-
   @mapping(ImportDeclarationExpr, params=[method, alias])
-  ImportDeclarationWithMethod ::= 'import' ClassName '#' IDENTIFIER @method 'as' IDENTIFIER @alias ';' ;
-
-  @mapping(ImportDeclarationBareExpr, params=[alias])
-  ImportDeclarationBare ::= 'import' ClassName 'as' IDENTIFIER @alias ';' ;
+  ImportDeclaration ::= 'import' ClassName [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
   ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
 
@@ -52,36 +47,40 @@ grammar TinyExpressionP4 {
     | BooleanVariableDeclaration
     | ObjectVariableDeclaration ;
 
+  @declares(symbol=varName, description=desc)
   NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ NumberTypeHint ]
     [ NumberSetter ]
-    Description
+    Description @desc
     ';' ;
 
+  @declares(symbol=varName, description=desc)
   StringVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ StringTypeHint ]
     [ StringSetter ]
-    Description
+    Description @desc
     ';' ;
 
+  @declares(symbol=varName, description=desc)
   BooleanVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
     [ BooleanSetter ]
-    Description
+    Description @desc
     ';' ;
 
+  @declares(symbol=varName, description=desc)
   ObjectVariableDeclaration ::=
     ( 'var' | 'variable' )
-    '$' IDENTIFIER
+    '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
     [ ObjectSetter ]
-    Description
+    Description @desc
     ';' ;
 
   TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
@@ -102,15 +101,16 @@ grammar TinyExpressionP4 {
   AnnotationParameters ::= AnnotationParameter { ',' AnnotationParameter } ;
   AnnotationParameter ::= IDENTIFIER '=' Expression ;
 
-  @scopeTree(mode=lexical)
   MethodDeclaration ::=
       NumberMethodDeclaration
     | StringMethodDeclaration
     | BooleanMethodDeclaration
     | ObjectMethodDeclaration ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   NumberMethodDeclaration ::=
-    NumberReturnType IDENTIFIER
+    NumberReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -118,8 +118,10 @@ grammar TinyExpressionP4 {
       NumberExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   StringMethodDeclaration ::=
-    StringReturnType IDENTIFIER
+    StringReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -127,8 +129,10 @@ grammar TinyExpressionP4 {
       StringExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   BooleanMethodDeclaration ::=
-    BooleanReturnType IDENTIFIER
+    BooleanReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -136,8 +140,10 @@ grammar TinyExpressionP4 {
       BooleanExpression
     '}' ;
 
+  @scopeTree(mode=lexical)
+  @declares(symbol=methodName)
   ObjectMethodDeclaration ::=
-    ObjectReturnType IDENTIFIER
+    ObjectReturnType IDENTIFIER @methodName
     '('
       [ MethodParameters ]
     ')'
@@ -147,7 +153,8 @@ grammar TinyExpressionP4 {
 
   MethodParameters ::= MethodParameter { ',' MethodParameter } ;
 
-  MethodParameter ::= '$' IDENTIFIER [ 'as' ReturnType ] ;
+  @declares(symbol=paramName)
+  MethodParameter ::= '$' IDENTIFIER @paramName [ 'as' ReturnType ] ;
 
   NumberReturnType ::= 'number' | 'float' ;
   StringReturnType ::= 'string' ;
@@ -180,7 +187,7 @@ grammar TinyExpressionP4 {
   // Matches: "call internal", "call", or "internal" (actual MethodInvocationHeaderParser)
   MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
 
-  @backref(name=methodName)
+  @backref(name=name)
   @mapping(MethodInvocationExpr, params=[name])
   MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
 
@@ -309,6 +316,8 @@ grammar TinyExpressionP4 {
 
   // ── Variable references ────────────────────────────────────────────────────
 
+  @catalog(context='variable')
+  @backref(name=name)
   @mapping(VariableRefExpr, params=[name])
   VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
 

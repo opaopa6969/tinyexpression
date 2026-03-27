@@ -365,7 +365,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
     if (ifToken == null || ifToken.filteredChildren == null) {
       return null;
     }
-    if (ifToken.filteredChildren.size() >= 3) {
+    if (ifToken.filteredChildren.size() == 3) {
       if (branchIndex == 0) {
         return ifToken.filteredChildren.get(1);
       }

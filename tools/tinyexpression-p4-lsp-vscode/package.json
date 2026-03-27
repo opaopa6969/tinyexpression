@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.1.9",
+  "version": "0.2.3",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
@@ -121,6 +121,13 @@
                 ],
                 "default": "p4-ast",
                 "description": "P4 execution backend."
+              },
+              "variables": {
+                "type": "object",
+                "description": "Variable values to inject into the debug session. Keys are variable names (without $), values are strings. These appear in the Variables view and are available for evaluation in the Debug Console.",
+                "additionalProperties": {
+                  "type": "string"
+                }
               }
             }
           }
@@ -132,6 +139,17 @@
             "name": "Debug TinyExpression P4",
             "formulaSource": "${file}",
             "runtimeMode": "p4-ast"
+          },
+          {
+            "type": "tinyexpressionP4",
+            "request": "launch",
+            "name": "Debug TinyExpression P4 (with variables)",
+            "formulaSource": "${file}",
+            "runtimeMode": "p4-ast",
+            "variables": {
+              "score": "42",
+              "inputName": "alice"
+            }
           }
         ]
       }
@@ -176,6 +194,16 @@
             ".tinyexp"
           ],
           "description": "File extensions to watch for the TinyExpression P4 language (must match contributes.languages.extensions)."
+        },
+        "tinyExpressionP4Lsp.catalog.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path (or OS path-separator-delimited list of paths) to .tecatalog files or directories. When empty, the bundled catalog under config/ is used if present."
+        },
+        "tinyExpressionP4Lsp.catalog.useBundledDefault": {
+          "type": "boolean",
+          "default": true,
+          "description": "When true and catalog.path is empty, automatically include any .tecatalog files bundled in the extension's config/ directory."
         }
       }
     }

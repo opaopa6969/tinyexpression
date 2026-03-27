@@ -47,6 +47,7 @@ final class AstEmbeddedExpressionRuntime {
     return isLikelyStructuredExpression(normalized)
         || isLikelyBooleanComparisonExpression(normalized)
         || normalized.contains("->")
+        || hasDeclarationOrImportKeyword(normalized)
         ;
   }
 
@@ -91,6 +92,28 @@ final class AstEmbeddedExpressionRuntime {
       return false;
     }
     return BOOLEAN_COMPARISON_PATTERN.matcher(normalized).matches();
+  }
+
+  private static boolean hasDeclarationOrImportKeyword(String text) {
+    if (text == null || text.isEmpty()) {
+      return false;
+    }
+    // Check if the text starts with "import" or "var"/"variable" keyword
+    if (TinyExpressionParserCapabilities.hasHead(text, "import", null)) {
+      return true;
+    }
+    for (String keyword : TinyExpressionKeywords.VARIABLE_DECLARATION_HEADS) {
+      if (TinyExpressionParserCapabilities.hasHead(text, keyword, null)) {
+        return true;
+      }
+    }
+    // Check if the text contains "external"/"call"/"internal" anywhere (multi-line formulas)
+    for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
+      if (text.contains(keyword)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isMethodInvocationExpression(String text) {

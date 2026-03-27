@@ -8,8 +8,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
 
+import org.unlaxer.Parsed;
+import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.compiler.InstanceAndByteCode;
+import org.unlaxer.context.ParseContext;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculateResult;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -64,6 +68,7 @@ public class AstEvaluatorCalculator implements Calculator {
     this.classNameAndByteCodeListFromStore = List.of();
     this.createdFromByteCode = false;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
+    validateFormulaParseable(source);
   }
 
   public AstEvaluatorCalculator(Source source, String javaCode, String className,
@@ -195,24 +200,7 @@ public class AstEvaluatorCalculator implements Calculator {
   @Override
   public Object apply(CalculationContext calculationContext) {
     String formulaText = source.source() == null ? "" : source.source();
-    boolean forceLegacyJavaCode = requiresLegacyJavaCodeSemantics(formulaText, resultType());
-    if (forceLegacyJavaCode) {
-      setObject("_astEvaluatorRuntime", "javacode-fallback");
-      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
-      return ensureDelegate().apply(calculationContext);
-    }
-    if (hasDeclarationAndMethodInvocation(formulaText)) {
-      Object delegated = ensureDelegate().apply(calculationContext);
-      setObject("_astEvaluatorRuntime", "token-ast");
-      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
-      return delegated;
-    }
-    if (isKnownDeclarationMatchFormula(formulaText)) {
-      Object delegated = ensureDelegate().apply(calculationContext);
-      setObject("_astEvaluatorRuntime", "generated-ast");
-      setObject("_astEvaluatorMapperAvailable", generatedAstRuntimeAvailable);
-      return delegated;
-    }
+    // No JavaCode fallback — AST evaluator must handle all formulas natively
     Optional<Object> tokenAstEvaluated = Optional.empty();
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
     if (generatedAstRuntimeAvailable) {
@@ -276,8 +264,12 @@ public class AstEvaluatorCalculator implements Calculator {
             && evaluatedResultType != null
             && evaluatedResultType.isNumber()
             && shouldCrossCheckWithTokenAst(formulaText)) {
-          tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+          tokenAstEvaluated = AstTokenTreeEvaluator.tryEvaluate(
               source.source(), specifiedExpressionTypes, calculationContext);
+          if (tokenAstEvaluated.isEmpty()) {
+            tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
+                source.source(), specifiedExpressionTypes, calculationContext);
+          }
           if (tokenAstEvaluated.isPresent()
               && generatedAstEvaluated.get() instanceof Number generatedNumber
               && tokenAstEvaluated.get() instanceof Number tokenNumber
@@ -318,19 +310,31 @@ public class AstEvaluatorCalculator implements Calculator {
 
     Optional<Object> astEvaluated = tokenAstEvaluated.isPresent()
         ? tokenAstEvaluated
-        : AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
+        : AstTokenTreeEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
+    if (astEvaluated.isEmpty()) {
+      // Fallback to number-only evaluator for simple arithmetic
+      astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
+    }
     if (astEvaluated.isPresent()) {
       setObject("_astEvaluatorRuntime", "token-ast");
       return astEvaluated.get();
     }
 
-    Object delegated = ensureDelegate().apply(calculationContext);
-    if (isKnownDeclarationLiteralFormula(formulaText)) {
-      setObject("_astEvaluatorRuntime", "generated-ast");
-    } else {
-      setObject("_astEvaluatorRuntime", "javacode-fallback");
+    // Fallback: use embedded bridge (JavaCode compilation) for formulas that
+    // the token-tree evaluator cannot handle natively (e.g., external/import/side-effect)
+    ExpressionType fallbackResultType = resultType() == null
+        ? org.unlaxer.tinyexpression.parser.ExpressionTypes.object : resultType();
+    Optional<Object> embeddedEvaluated = AstEmbeddedExpressionRuntime.tryEvaluate(
+        source.source(), fallbackResultType, specifiedExpressionTypes, calculationContext,
+        classLoader, source.source());
+    if (embeddedEvaluated.isPresent()) {
+      setObject("_astEvaluatorRuntime", "embedded-bridge");
+      setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", true);
+      return embeddedEvaluated.get();
     }
-    return delegated;
+
+    throw new UnsupportedOperationException(
+        "AST evaluator cannot evaluate formula (no JavaCode fallback): " + formulaText);
   }
 
   private Optional<Object> tryEvaluateSimpleLiteralOrVariable(CalculationContext calculationContext) {
@@ -339,7 +343,12 @@ public class AstEvaluatorCalculator implements Calculator {
       return Optional.empty();
     }
     if (formula.startsWith("$")) {
-      return resolveVariable(extractVariableName(formula), calculationContext);
+      String varName = extractVariableName(formula);
+      // Only treat as simple variable if the entire formula is just the variable reference
+      if (varName != null && ("$" + varName).equals(formula)) {
+        return resolveVariable(varName, calculationContext);
+      }
+      return Optional.empty();
     }
     if (containsExpressionSyntax(formula)) {
       return Optional.empty();
@@ -461,6 +470,11 @@ public class AstEvaluatorCalculator implements Calculator {
     if (formula == null || formula.isEmpty()) {
       return true;
     }
+    // Always cross-check formulas that contain string comparisons or match expressions
+    // since the generated AST may not handle NakedVariable type resolution correctly
+    if (formula.contains("match") || formula.contains("==") || formula.contains("!=")) {
+      return true;
+    }
     return !(formula.indexOf('\n') >= 0 || formula.indexOf(';') >= 0);
   }
 
@@ -574,10 +588,8 @@ public class AstEvaluatorCalculator implements Calculator {
     return List.of();
   }
 
-  @Override
-  public CalculateResult calculate(CalculationContext calculateContext, String formula, ExpressionType resultType) {
-    return ensureDelegate().calculate(calculateContext, formula, resultType);
-  }
+  // Removed: calculate() override that delegated to JavaCodeCalculatorV3
+  // Now uses default Calculator.calculate() which calls getParser() + getCalculatorOperator() → apply()
 
   private List<String> preferredAstSimpleNames() {
     List<String> preferred = new ArrayList<>();
@@ -642,5 +654,25 @@ public class AstEvaluatorCalculator implements Calculator {
       return decimal;
     }
     return new BigDecimal(value.toString());
+  }
+
+  private void validateFormulaParseable(Source source) {
+    String formula = source.source();
+    if (formula == null || formula.isBlank()) {
+      return;
+    }
+    Parser parser = getParser();
+    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    try (parseContext) {
+      Parsed parsed = parser.parse(parseContext);
+      if (!parsed.isSucceeded()) {
+        throw new ParseException("failed to parse:" + formula);
+      }
+      parsed.getRootToken(true);
+    } catch (ParseException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new ParseException("failed to parse:" + formula, e);
+    }
   }
 }
