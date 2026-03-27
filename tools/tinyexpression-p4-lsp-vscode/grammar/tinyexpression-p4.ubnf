@@ -314,12 +314,12 @@ grammar TinyExpressionP4 {
 
   // ── Top-level expression ───────────────────────────────────────────────────
 
-  // BooleanExpression first: comparison/string-eq patterns are more specific than NumberExpression
-  // (actual ExpressionsParser ordering; prevents VariableRef in NumberExpression from eating "$x == y")
+  // NumberExpression first: matches hand-written ExpressionsParser ordering.
+  // NumberExpression consumes "$a+$b" fully; BooleanExpression would only consume "$a".
   @mapping(ExpressionExpr, params=[value])
   Expression ::=
-      BooleanExpression @value
-    | NumberExpression @value
+      NumberExpression @value
+    | BooleanExpression @value
     | StringExpression @value
     | ObjectExpression @value
     | MethodInvocation @value

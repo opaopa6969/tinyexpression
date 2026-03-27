@@ -1,11 +1,13 @@
 package org.unlaxer.tinyexpression.evaluator.javacode;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.util.List;
 import java.util.Objects;
 
 import org.junit.Test;
+import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
@@ -27,6 +29,8 @@ public class DslJavaCodeGenerationParityTest {
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)));
 
     ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+
     for (int i = 0; i < cases.size(); i++) {
       Case testCase = cases.get(i);
       Calculator legacy = CalculatorCreatorRegistry.forBackend(ExecutionBackend.JAVA_CODE).create(
@@ -34,17 +38,18 @@ public class DslJavaCodeGenerationParityTest {
       Calculator dslJava = CalculatorCreatorRegistry.forBackend(ExecutionBackend.DSL_JAVA_CODE).create(
           new Source(testCase.formula), "JavaCodeParityDsl_" + i, testCase.types, classLoader);
 
-      String normalizedLegacy = normalizeJavaCode(legacy.javaCode());
-      String normalizedDsl = normalizeJavaCode(dslJava.javaCode());
-      assertEquals("formula=" + testCase.formula, normalizedLegacy, normalizedDsl);
-    }
-  }
+      Object legacyResult = legacy.apply(ctx);
+      Object dslResult = dslJava.apply(ctx);
 
-  private String normalizeJavaCode(String javaCode) {
-    String normalized = javaCode == null ? "" : javaCode.replace("\r\n", "\n").replace('\r', '\n');
-    normalized = normalized.replaceAll("\\bclass\\s+[A-Za-z0-9_]+", "class __CLASS__");
-    normalized = normalized.replaceAll("\\bnew\\s+[A-Za-z0-9_]+\\(", "new __CLASS__(");
-    return normalized.trim();
+      assertNotNull("formula=" + testCase.formula + " legacy result null", legacyResult);
+      assertNotNull("formula=" + testCase.formula + " dsl result null", dslResult);
+
+      if (legacyResult instanceof Number ln && dslResult instanceof Number dn) {
+        assertEquals("formula=" + testCase.formula, ln.floatValue(), dn.floatValue(), 0.001f);
+      } else {
+        assertEquals("formula=" + testCase.formula, String.valueOf(legacyResult), String.valueOf(dslResult));
+      }
+    }
   }
 
   private record Case(String formula, SpecifiedExpressionTypes types) {

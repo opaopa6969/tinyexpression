@@ -34,23 +34,13 @@ final class DslGeneratedAstJavaEmitter {
       return Optional.empty();
     }
 
-    // ── reflection-based rendering (legacy) ──
-    Optional<String> expression = renderExpression(parsed.get(), resultType, specifiedExpressionTypes);
-    if (expression.isPresent()) {
-      return Optional.of(new EmittedJava(buildJavaClass(className, resultType, expression.get()), "native-generated-ast"));
-    }
-
-    // ── P4-typed fallback (sealed-interface switch, no reflection) ──
+    // ── P4-typed emitter (sealed-interface switch, no reflection) ──
     if (parsed.get() instanceof TinyExpressionP4AST typedAst) {
-      try {
-        P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes);
-        String typedExpression = emitter.eval(typedAst);
-        if (typedExpression != null && !typedExpression.isBlank()) {
-          return Optional.of(new EmittedJava(
-              emitter.buildJavaClass(className, typedExpression), "p4-typed-emitter"));
-        }
-      } catch (Throwable ignored) {
-        // fall through
+      P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes);
+      String typedExpression = emitter.eval(typedAst);
+      if (typedExpression != null && !typedExpression.isBlank()) {
+        return Optional.of(new EmittedJava(
+            emitter.buildJavaClass(className, typedExpression), "p4-typed-emitter"));
       }
     }
     return Optional.empty();
@@ -67,32 +57,39 @@ final class DslGeneratedAstJavaEmitter {
     if (text.contains("\n") || text.contains(";") || text.contains("{") || text.contains("}")) {
       return false;
     }
-    if (text.startsWith("$")) {
-      return false;
-    }
     if (resultType.isNumber()) {
-      return isNumberLiteral(text) || isNumericExpressionCandidate(text);
+      return isNumericExpressionCandidate(text) || isNumberLiteral(text);
     }
     if (resultType.isString()) {
-      return isStringLiteral(text);
+      return isStringLiteral(text) || text.startsWith("$");
     }
     if (resultType.isBoolean()) {
-      return isBooleanLiteral(text);
+      return isBooleanLiteral(text) || text.startsWith("$")
+          || text.contains("==") || text.contains("!=")
+          || text.contains("<=") || text.contains(">=")
+          || text.contains("<") || text.contains(">");
     }
     if (resultType.isObject()) {
+      // Object type is too broad — only handle expressions with clear operators
       return isNumberLiteral(text)
-          || isNumericExpressionCandidate(text)
           || isStringLiteral(text)
-          || isBooleanLiteral(text);
+          || isBooleanLiteral(text)
+          || (isNumericExpressionCandidate(text) && !isBareSingleVariable(text));
     }
     return false;
   }
 
   private static boolean isNumericExpressionCandidate(String text) {
-    // P4 mapper collapses term-level operators (*, /) into single leaf literals
-    // and produces AST structures that differ from the legacy code generator.
-    // Arithmetic expressions are routed to the legacy bridge until the mapper
-    // produces fully decomposed BinaryExpr trees.
+    if (text == null || text.isBlank()) {
+      return false;
+    }
+    // P4 mapper now fully decomposes Expression→Term→Factor hierarchy
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      if (c == '+' || c == '-' || c == '*' || c == '/' || c == '$' || c == '(') {
+        return true;
+      }
+    }
     return false;
   }
 
@@ -109,6 +106,16 @@ final class DslGeneratedAstJavaEmitter {
 
   private static boolean isBooleanLiteral(String text) {
     return "true".equalsIgnoreCase(text) || "false".equalsIgnoreCase(text);
+  }
+
+  private static boolean isBareSingleVariable(String text) {
+    if (text == null || !text.startsWith("$")) return false;
+    String stripped = text.strip();
+    for (int i = 1; i < stripped.length(); i++) {
+      char c = stripped.charAt(i);
+      if (!Character.isLetterOrDigit(c) && c != '_') return false;
+    }
+    return true;
   }
 
   private static String preferredAstSimpleName(ExpressionType resultType) {

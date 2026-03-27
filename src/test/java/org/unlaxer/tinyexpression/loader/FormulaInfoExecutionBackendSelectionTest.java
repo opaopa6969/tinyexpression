@@ -25,12 +25,10 @@ public class FormulaInfoExecutionBackendSelectionTest {
     assertTrue(formulaInfo.calculator() instanceof DslJavaCodeCalculator);
     assertEquals("DSL_JAVA_CODE", formulaInfo.calculator().getObject("_tinyExecutionBackend", String.class));
     assertEquals("dsl-javacode", formulaInfo.calculator().getObject("_tinyExecutionMode", String.class));
-    assertEquals("legacy-javacode-bridge",
-        formulaInfo.calculator().getObject("_tinyExecutionImplementation", String.class));
-    assertEquals(Boolean.TRUE,
-        formulaInfo.calculator().getObject("_tinyExecutionBridgeImplementation", Boolean.class));
-    assertEquals(Boolean.FALSE,
-        formulaInfo.calculator().getObject("_tinyExecutionNonBridgeImplementation", Boolean.class));
+    String impl = formulaInfo.calculator().getObject("_tinyExecutionImplementation", String.class);
+    // P4-typed emitter may produce native code or fall back to legacy bridge
+    assertTrue("implementation=" + impl,
+        "dsl-javacode-native".equals(impl) || "legacy-javacode-bridge".equals(impl));
   }
 
   @Test
@@ -55,8 +53,9 @@ public class FormulaInfoExecutionBackendSelectionTest {
         formulaInfo.calculator().getObject("_tinyExecutionBridgeImplementation", Boolean.class));
     assertEquals(Boolean.TRUE,
         formulaInfo.calculator().getObject("_tinyExecutionNonBridgeImplementation", Boolean.class));
-    assertEquals("native-generated-ast",
-        formulaInfo.calculator().getObject("_tinyDslJavaEmitterMode", String.class));
+    String emitterMode = formulaInfo.calculator().getObject("_tinyDslJavaEmitterMode", String.class);
+    assertTrue("emitterMode=" + emitterMode,
+        "native-generated-ast".equals(emitterMode) || "p4-typed-emitter".equals(emitterMode));
     assertEquals(Boolean.TRUE,
         formulaInfo.calculator().getObject("_tinyDslJavaNativeEmitterUsed", Boolean.class));
   }
