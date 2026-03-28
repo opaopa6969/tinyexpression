@@ -42,6 +42,7 @@
 		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
+		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
 	</properties>
 
 	<dependencies>
@@ -128,6 +129,24 @@
 								<argument>${tinyexpression.p4.generated.runtime}</argument>
 								<argument>--generators</argument>
 								<argument>Parser,AST,Mapper,Evaluator</argument>
+							</arguments>
+							<includeProjectDependencies>true</includeProjectDependencies>
+							<includePluginDependencies>false</includePluginDependencies>
+						</configuration>
+					</execution>
+					<execution>
+						<id>generate-tinyexpression-p4-railroad</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
+							<arguments>
+								<argument>${tinyexpression.p4.grammar}</argument>
+								<argument>${tinyexpression.p4.railroad.output}</argument>
+								<argument>--format</argument>
+								<argument>svg</argument>
 							</arguments>
 							<includeProjectDependencies>true</includeProjectDependencies>
 							<includePluginDependencies>false</includePluginDependencies>
