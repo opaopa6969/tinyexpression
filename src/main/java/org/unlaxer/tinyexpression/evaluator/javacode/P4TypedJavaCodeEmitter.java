@@ -460,22 +460,22 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalSinExpr(SinExpr node) {
-    return "Math.sin((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.sin(calculateContext.radianAngle(" + eval(node.arg()) + "))");
   }
 
   @Override
   protected String evalCosExpr(CosExpr node) {
-    return "Math.cos((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.cos(calculateContext.radianAngle(" + eval(node.arg()) + "))");
   }
 
   @Override
   protected String evalTanExpr(TanExpr node) {
-    return "Math.tan((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.tan(calculateContext.radianAngle(" + eval(node.arg()) + "))");
   }
 
   @Override
   protected String evalSqrtExpr(SqrtExpr node) {
-    return "Math.sqrt((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.sqrt((double)" + eval(node.arg()) + ")");
   }
 
   @Override
@@ -484,7 +484,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     for (var r : node.rest()) {
       expr = "Math.min((double)" + expr + ",(double)" + eval(r) + ")";
     }
-    return expr;
+    return castToNumberType(expr);
   }
 
   @Override
@@ -493,47 +493,79 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     for (var r : node.rest()) {
       expr = "Math.max((double)" + expr + ",(double)" + eval(r) + ")";
     }
-    return expr;
+    return castToNumberType(expr);
   }
 
   @Override
   protected String evalRandomExpr(RandomExpr node) {
-    return "Math.random()";
+    return castToNumberType("Math.random()");
   }
 
   @Override
   protected String evalAbsExpr(AbsExpr node) {
-    return "Math.abs((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.abs((double)" + eval(node.arg()) + ")");
   }
 
   @Override
   protected String evalRoundExpr(RoundExpr node) {
-    return "(double)Math.round((double)" + eval(node.arg()) + ")";
+    return castToNumberType("(double)Math.round((double)" + eval(node.arg()) + ")");
   }
 
   @Override
   protected String evalCeilExpr(CeilExpr node) {
-    return "Math.ceil((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.ceil((double)" + eval(node.arg()) + ")");
   }
 
   @Override
   protected String evalFloorExpr(FloorExpr node) {
-    return "Math.floor((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.floor((double)" + eval(node.arg()) + ")");
   }
 
   @Override
   protected String evalPowExpr(PowExpr node) {
-    return "Math.pow((double)" + eval(node.base()) + ",(double)" + eval(node.exponent()) + ")";
+    return castToNumberType("Math.pow((double)" + eval(node.base()) + ",(double)" + eval(node.exponent()) + ")");
   }
 
   @Override
   protected String evalLogExpr(LogExpr node) {
-    return "Math.log((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.log((double)" + eval(node.arg()) + ")");
   }
 
   @Override
   protected String evalExpExpr(ExpExpr node) {
-    return "Math.exp((double)" + eval(node.arg()) + ")";
+    return castToNumberType("Math.exp((double)" + eval(node.arg()) + ")");
+  }
+
+  /** Wraps a double-producing expression with a cast to the result number type (e.g., float). */
+  private String castToNumberType(String expression) {
+    if (resultType != null && resultType.isFloat()) {
+      return "((float) " + expression + ")";
+    }
+    return expression;
+  }
+
+  // =========================================================================
+  // String methods (function form)
+  // =========================================================================
+
+  @Override
+  protected String evalToUpperCaseExpr(ToUpperCaseExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toUpperCase()";
+  }
+
+  @Override
+  protected String evalToLowerCaseExpr(ToLowerCaseExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toLowerCase()";
+  }
+
+  @Override
+  protected String evalTrimExpr(TrimExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").trim()";
+  }
+
+  @Override
+  protected String evalLengthExpr(LengthExpr node) {
+    return castToNumberType("(double)String.valueOf(" + eval(node.value()) + ").length()");
   }
 
   // =========================================================================

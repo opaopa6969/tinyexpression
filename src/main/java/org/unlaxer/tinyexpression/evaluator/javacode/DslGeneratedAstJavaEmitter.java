@@ -29,7 +29,7 @@ final class DslGeneratedAstJavaEmitter {
       return Optional.empty();
     }
 
-    Optional<Object> parsed = tryParseAst(formula, preferredAstSimpleName(resultType), classLoader);
+    Optional<Object> parsed = tryParseAst(formula, preferredAstSimpleName(resultType, formula), classLoader);
     if (parsed.isEmpty()) {
       return Optional.empty();
     }
@@ -55,6 +55,12 @@ final class DslGeneratedAstJavaEmitter {
       return false;
     }
     if (text.contains("\n") || text.contains(";") || text.contains("{") || text.contains("}")) {
+      return false;
+    }
+    // Math functions (sin, cos, etc.) are not yet properly handled by the P4 mapper's
+    // BinaryExpr path — the mapper loses the function wrapper when mapping NumberFactor.
+    // Fall back to legacy code generation for these.
+    if (containsMathFunction(text)) {
       return false;
     }
     if (resultType.isNumber()) {
@@ -108,6 +114,21 @@ final class DslGeneratedAstJavaEmitter {
     return "true".equalsIgnoreCase(text) || "false".equalsIgnoreCase(text);
   }
 
+  private static final java.util.Set<String> MATH_FUNCTION_PREFIXES = java.util.Set.of(
+      "sin(", "cos(", "tan(", "sqrt(", "min(", "max(", "abs(", "round(",
+      "ceil(", "floor(", "pow(", "log(", "exp(", "random(");
+
+  private static boolean containsMathFunction(String text) {
+    if (text == null || text.isEmpty()) return false;
+    String lower = text.toLowerCase(java.util.Locale.ROOT);
+    for (String prefix : MATH_FUNCTION_PREFIXES) {
+      if (lower.contains(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private static boolean isBareSingleVariable(String text) {
     if (text == null || !text.startsWith("$")) return false;
     String stripped = text.strip();
@@ -126,9 +147,27 @@ final class DslGeneratedAstJavaEmitter {
       return "StringExpr";
     }
     if (resultType.isBoolean()) {
-      return "BooleanExpr";
+      return "BooleanOrExpr";
     }
     return "ObjectExpr";
+  }
+
+  private static String preferredAstSimpleName(ExpressionType resultType, String formula) {
+    if (resultType.isNumber() && formula != null) {
+      String normalized = formula.strip().toLowerCase(java.util.Locale.ROOT);
+      // If the formula starts with a math function, use null (any type) so the
+      // mapper picks the function node rather than drilling into its numeric argument.
+      if (normalized.startsWith("sin(") || normalized.startsWith("cos(")
+          || normalized.startsWith("tan(") || normalized.startsWith("sqrt(")
+          || normalized.startsWith("min(") || normalized.startsWith("max(")
+          || normalized.startsWith("abs(") || normalized.startsWith("round(")
+          || normalized.startsWith("ceil(") || normalized.startsWith("floor(")
+          || normalized.startsWith("pow(") || normalized.startsWith("log(")
+          || normalized.startsWith("exp(") || normalized.startsWith("random(")) {
+        return null;
+      }
+    }
+    return preferredAstSimpleName(resultType);
   }
 
   private static Optional<Object> tryParseAst(String formula, String preferredAstSimpleName, ClassLoader classLoader) {

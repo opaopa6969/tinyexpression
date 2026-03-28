@@ -203,7 +203,12 @@ public class AstEvaluatorCalculator implements Calculator {
     // No JavaCode fallback — AST evaluator must handle all formulas natively
     Optional<Object> tokenAstEvaluated = Optional.empty();
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
-    if (generatedAstRuntimeAvailable) {
+    boolean hasDeclarations = hasVariableDeclarations(formulaText);
+    boolean hasMixedDeclarationsAndInvocations = hasDeclarations
+        && (formulaText.contains("external ") || formulaText.contains("import ") || formulaText.contains("call "));
+    // Only skip P4 AST mapping for pure declaration formulas (var+expression).
+    // Mixed formulas (declarations + external/import/call) still need the P4 AST mapping path.
+    if (generatedAstRuntimeAvailable && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
@@ -226,6 +231,10 @@ public class AstEvaluatorCalculator implements Calculator {
                   && shouldCrossCheckWithTokenAst(formulaText)) {
                 tokenAstEvaluated = AstNumberExpressionEvaluator.tryEvaluate(
                     source.source(), specifiedExpressionTypes, calculationContext);
+                if (tokenAstEvaluated.isEmpty()) {
+                  tokenAstEvaluated = AstTokenTreeEvaluator.tryEvaluate(
+                      source.source(), specifiedExpressionTypes, calculationContext);
+                }
                 if (tokenAstEvaluated.isPresent()
                     && p4TypedResult instanceof Number p4Number
                     && tokenAstEvaluated.get() instanceof Number tokenNumber
@@ -291,8 +300,11 @@ public class AstEvaluatorCalculator implements Calculator {
         }
       }
       setObject("_astEvaluatorMapperAvailable", true);
-    } else {
+    } else if (!generatedAstRuntimeAvailable) {
       setObject("_astEvaluatorMapperAvailable", false);
+    } else {
+      // declarations present — skip direct P4 AST mapping, use declaration runtime below
+      setObject("_astEvaluatorMapperAvailable", true);
     }
 
     Optional<Object> simpleLiteralOrVariable = tryEvaluateSimpleLiteralOrVariable(calculationContext);
@@ -305,6 +317,11 @@ public class AstEvaluatorCalculator implements Calculator {
         AstDeclarationRuntime.tryEvaluateMainExpression(
             source.source(), specifiedExpressionTypes, calculationContext, classLoader);
     if (declarationEvaluated.isPresent()) {
+      // Apply declarations to the caller's context for side-effects (e.g., setObject for payload).
+      // Only for pure declaration formulas (not mixed with external/import/call).
+      if (hasDeclarations && !hasMixedDeclarationsAndInvocations) {
+        AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+      }
       String declarationRuntime = declarationEvaluated.get().runtime();
       if (isKnownDeclarationLiteralFormula(formulaText)
           && ("token-ast".equals(declarationRuntime) || "embedded-bridge".equals(declarationRuntime))) {
@@ -500,6 +517,16 @@ public class AstEvaluatorCalculator implements Calculator {
         || normalized.contains(">");
   }
 
+  private static boolean hasVariableDeclarations(String formula) {
+    if (formula == null || formula.isEmpty()) {
+      return false;
+    }
+    String normalized = formula.strip();
+    return normalized.startsWith("var ") || normalized.startsWith("variable ")
+        || normalized.contains("\nvar ") || normalized.contains("\nvariable ")
+        || normalized.contains(";var ") || normalized.contains(";variable ");
+  }
+
   private boolean hasDeclarationAndMethodInvocation(String formula) {
     if (formula == null) {
       return false;
@@ -606,7 +633,8 @@ public class AstEvaluatorCalculator implements Calculator {
     if (methodInvocationHead) {
       preferred.add("MethodInvocationExpr");
     }
-    if (ifHead) {
+    boolean ternaryHead = hasTernaryHead(formula);
+    if (ifHead || ternaryHead) {
       preferred.add("IfExpr");
     }
     ExpressionType type = resultType();
@@ -646,6 +674,15 @@ public class AstEvaluatorCalculator implements Calculator {
     return preferred.stream().distinct().toList();
   }
 
+  /**
+   * Detect ternary expression: starts with '(' and contains '?' ... ':'.
+   */
+  private static boolean hasTernaryHead(String formula) {
+    if (formula == null || formula.isEmpty()) return false;
+    String stripped = formula.strip();
+    return stripped.startsWith("(") && stripped.contains("?") && stripped.contains(":");
+  }
+
   private boolean numbersEquivalent(Number left, Number right) {
     BigDecimal l = toBigDecimal(left);
     BigDecimal r = toBigDecimal(right);
@@ -666,6 +703,17 @@ public class AstEvaluatorCalculator implements Calculator {
     String formula = source.source();
     if (formula == null || formula.isBlank()) {
       return;
+    }
+    // Try P4 parser first — it handles newer syntax (ternary, math functions, etc.)
+    if (generatedAstRuntimeAvailable) {
+      try {
+        Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(formula, classLoader, null);
+        if (mapped.isPresent()) {
+          return; // P4 parser succeeded, formula is valid
+        }
+      } catch (Throwable ignored) {
+        // P4 parse failed, fall through to legacy parser
+      }
     }
     Parser parser = getParser();
     ParseContext parseContext = new ParseContext(new StringSource(formula));

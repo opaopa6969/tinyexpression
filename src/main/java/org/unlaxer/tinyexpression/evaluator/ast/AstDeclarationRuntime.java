@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
 
@@ -44,7 +45,7 @@ final class AstDeclarationRuntime {
       boolean changed = false;
       for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
         changed |= applyDeclaration(
-            declarationToken, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource);
+            declarationToken, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource, source);
       }
       return changed;
     } catch (Throwable ignored) {
@@ -70,14 +71,18 @@ final class AstDeclarationRuntime {
           .collect(Collectors.joining("\n"));
 
       // Use a scoped context to avoid leaking variable declarations to the caller's context.
-      // The JavaCode path handles declarations within compiled code scope, so we must match that behavior.
       CalculationContext scopedContext = createScopedContext(calculationContext);
 
       for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
         applyDeclaration(
-            declarationToken, specifiedExpressionTypes, scopedContext, classLoader, methodDeclarationsSource);
+            declarationToken, specifiedExpressionTypes, scopedContext, classLoader, methodDeclarationsSource, source);
       }
       String expressionSource = tokenTextCompat(tinyExpressionTokens.getExpressionToken());
+      // Fallback: if token text extraction is unreliable, extract expression from raw source
+      if (expressionSource == null || expressionSource.isBlank()
+          || !isPlausibleExpression(expressionSource, source)) {
+        expressionSource = extractExpressionFromSource(source);
+      }
       if (expressionSource == null || expressionSource.isBlank()) {
         return Optional.empty();
       }
@@ -124,7 +129,7 @@ final class AstDeclarationRuntime {
   }
 
   private static boolean applyDeclaration(Token declarationToken, SpecifiedExpressionTypes specifiedExpressionTypes,
-      CalculationContext calculationContext, ClassLoader classLoader, String methodDeclarationsSource) {
+      CalculationContext calculationContext, ClassLoader classLoader, String methodDeclarationsSource, String fullSource) {
     Optional<Token> setterToken = declarationToken.getChildAsOptional(TokenPredicators.parserImplements(SetterParser.class));
     if (setterToken.isEmpty()) {
       return false;
@@ -143,6 +148,14 @@ final class AstDeclarationRuntime {
       return false;
     }
     String expressionSource = tokenTextCompat(expressionToken.get());
+    // Validate: if expressionSource doesn't look right, try extracting from the full source
+    if (expressionSource == null || expressionSource.isBlank()
+        || !isPlausibleSetterExpression(expressionSource, fullSource)) {
+      String extracted = extractSetterExpression(fullSource, variableInfo.name);
+      if (extracted != null && !extracted.isBlank()) {
+        expressionSource = extracted;
+      }
+    }
     if (expressionSource == null || expressionSource.isBlank()) {
       return false;
     }
@@ -179,6 +192,17 @@ final class AstDeclarationRuntime {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
             expressionSource, classLoader, preferredAstSimpleName);
         if (mapped.isPresent()) {
+          // Try P4TypedAstEvaluator first (sealed-interface dispatch, context-aware)
+          if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
+            try {
+              Object p4Result = new P4TypedAstEvaluator(evalTypes, calculationContext).eval(typedAst);
+              if (p4Result != null) {
+                return Optional.of(new EvalResult(p4Result, "p4-typed"));
+              }
+            } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
+              // fall through to reflection-based evaluator
+            }
+          }
           Optional<Object> generatedValue =
               GeneratedP4ValueAstEvaluator.tryEvaluate(
                   mapped.get(), evalTypes, calculationContext, classLoader, embeddedFormulaSource);
@@ -403,6 +427,96 @@ final class AstDeclarationRuntime {
         return value == null ? null : String.valueOf(value);
       }
     } catch (Throwable ignored) {
+    }
+    return null;
+  }
+
+  /**
+   * Check if the setter expression text is plausible given the declaration text.
+   */
+  private static boolean isPlausibleSetterExpression(String expressionText, String declarationText) {
+    if (expressionText == null || expressionText.isBlank()) {
+      return false;
+    }
+    if (declarationText == null) {
+      return true;
+    }
+    // If the expression text appears in the declaration, it's plausible
+    return declarationText.contains(expressionText.strip());
+  }
+
+  /**
+   * Extract the setter default value from the full source, searching for a declaration
+   * of the given variable name.
+   * Handles: var $x as type set [if not exists] EXPRESSION description='...';
+   */
+  private static String extractSetterExpression(String fullSource, String variableName) {
+    if (fullSource == null || variableName == null) return null;
+    // Find the declaration for this variable
+    String varRef = "$" + variableName;
+    int varIdx = fullSource.indexOf(varRef);
+    if (varIdx < 0) return null;
+    // Find "set" after the variable
+    int setIdx = fullSource.indexOf(" set ", varIdx);
+    if (setIdx < 0) return null;
+    int exprStart = setIdx + " set ".length();
+    // Skip "if not exists" if present
+    String afterSet = fullSource.substring(exprStart).stripLeading();
+    if (afterSet.startsWith("if not exists ")) {
+      exprStart = fullSource.indexOf("if not exists ", exprStart) + "if not exists ".length();
+      afterSet = fullSource.substring(exprStart).stripLeading();
+      exprStart = fullSource.length() - afterSet.length();
+    }
+    // Find "description=" or ";" boundary
+    int descIdx = fullSource.indexOf(" description=", exprStart);
+    int semiIdx = fullSource.indexOf(';', exprStart);
+    int boundary = -1;
+    if (descIdx >= 0 && semiIdx >= 0) {
+      boundary = Math.min(descIdx, semiIdx);
+    } else if (descIdx >= 0) {
+      boundary = descIdx;
+    } else if (semiIdx >= 0) {
+      boundary = semiIdx;
+    }
+    if (boundary < 0) {
+      return fullSource.substring(exprStart).strip();
+    }
+    return fullSource.substring(exprStart, boundary).strip();
+  }
+
+  /**
+   * Check if the extracted expression text looks plausible.
+   * Guard against mangled token text (e.g. "+$price2" instead of "$price+2").
+   */
+  private static boolean isPlausibleExpression(String expressionText, String fullSource) {
+    if (expressionText == null || expressionText.isBlank()) {
+      return false;
+    }
+    String trimmed = expressionText.strip();
+    // If the expression text appears literally in the source, it's plausible
+    if (fullSource != null && fullSource.contains(trimmed)) {
+      return true;
+    }
+    // A leading binary operator is suspicious
+    if (trimmed.startsWith("+") || trimmed.startsWith("*") || trimmed.startsWith("/")) {
+      return false;
+    }
+    return true;
+  }
+
+  /**
+   * Extract the expression (after the last semicolon or last newline that follows a declaration).
+   */
+  private static String extractExpressionFromSource(String source) {
+    if (source == null || source.isBlank()) {
+      return null;
+    }
+    // Find the last declaration boundary (semicolon or newline after description)
+    int lastSemicolon = source.lastIndexOf(';');
+    int lastNewline = source.lastIndexOf('\n');
+    int boundary = Math.max(lastSemicolon, lastNewline);
+    if (boundary >= 0 && boundary < source.length() - 1) {
+      return source.substring(boundary + 1).strip();
     }
     return null;
   }

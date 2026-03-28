@@ -11,29 +11,29 @@
   .end-circle-inner { fill: #333; stroke: none; }
   rect, g { transition: all 0.3s; }
 </style>
-<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CeilFunction</text>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TrimFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1595910934">
-<g id="1776922281">
+<g id="638092870">
+<g id="1361212266">
 <rect x="40" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="71" y="62" text-anchor="middle" class="terminal-text">'ceil'</text>
+<text x="71" y="62" text-anchor="middle" class="terminal-text">'trim'</text>
 </g>
 <line x1="102" y1="58" x2="122" y2="58" class="rail"/>
 <polygon points="109,55 115,58 109,61" class="arrow"/>
-<g id="859513650">
+<g id="2113398221">
 <rect x="122" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="142" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="163" y1="58" x2="183" y2="58" class="rail"/>
 <polygon points="170,55 176,58 170,61" class="arrow"/>
-<g id="1833051771">
+<g id="1725060620">
 <rect x="183" y="44" width="132" height="28" class="nonterminal-box"/>
-<text x="249" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<text x="249" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="315" y1="58" x2="335" y2="58" class="rail"/>
 <polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="2074594861">
+<g id="1685262465">
 <rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

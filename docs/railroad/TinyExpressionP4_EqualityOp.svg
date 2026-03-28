@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">EqualityOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="366004251">
-<g id="394714818">
+<g id="582692100">
+<g id="1753236896">
 <rect x="56" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="62" text-anchor="middle" class="terminal-text">'=='</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="104" y1="58" x2="104" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="104" y1="58" x2="120" y2="58" class="rail"/>
-<g id="1952779858">
+<g id="1207866433">
 <rect x="56" y="82" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="100" text-anchor="middle" class="terminal-text">'!='</text>
 </g>

@@ -94,6 +94,10 @@
   <a href="#ExpFunction">ExpFunction</a>
   <a href="#ToNumFunction">ToNumFunction</a>
   <a href="#NumberFactor">NumberFactor</a>
+  <a href="#ToUpperCaseFunction">ToUpperCaseFunction</a>
+  <a href="#ToLowerCaseFunction">ToLowerCaseFunction</a>
+  <a href="#TrimFunction">TrimFunction</a>
+  <a href="#LengthFunction">LengthFunction</a>
   <a href="#StringExpression">StringExpression</a>
   <a href="#BooleanExpression">BooleanExpression</a>
   <a href="#BooleanAndExpression">BooleanAndExpression</a>
@@ -106,6 +110,7 @@
   <a href="#CompareOp">CompareOp</a>
   <a href="#ObjectExpression">ObjectExpression</a>
   <a href="#IfExpression">IfExpression</a>
+  <a href="#TernaryExpression">TernaryExpression</a>
   <a href="#NumberMatchExpression">NumberMatchExpression</a>
   <a href="#NumberCase">NumberCase</a>
   <a href="#NumberDefaultCase">NumberDefaultCase</a>
@@ -142,9 +147,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Formula</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="99347477">
-<g id="796533847">
-<g id="2137589296">
+<g id="1136772167">
+<g id="1906384900">
+<g id="1896094276">
 <rect x="56" y="68" width="83" height="28" class="nonterminal-box"/>
 <text x="97" y="86" text-anchor="middle" class="nonterminal-text">CodeBlock</text>
 </g>
@@ -164,8 +169,8 @@
 </g>
 <line x1="155" y1="58" x2="175" y2="58" class="rail"/>
 <polygon points="162,55 168,58 162,61" class="arrow"/>
-<g id="1627960023">
-<g id="1449621165">
+<g id="700634150">
+<g id="2053010684">
 <rect x="191" y="68" width="139" height="28" class="nonterminal-box"/>
 <text x="260" y="86" text-anchor="middle" class="nonterminal-text">ImportDeclaration</text>
 </g>
@@ -185,8 +190,8 @@
 </g>
 <line x1="346" y1="58" x2="366" y2="58" class="rail"/>
 <polygon points="353,55 359,58 353,61" class="arrow"/>
-<g id="1811044090">
-<g id="357863579">
+<g id="1206430394">
+<g id="1068571720">
 <rect x="382" y="68" width="153" height="28" class="nonterminal-box"/>
 <text x="458" y="86" text-anchor="middle" class="nonterminal-text">VariableDeclaration</text>
 </g>
@@ -206,8 +211,8 @@
 </g>
 <line x1="551" y1="58" x2="571" y2="58" class="rail"/>
 <polygon points="558,55 564,58 558,61" class="arrow"/>
-<g id="586617651">
-<g id="114132791">
+<g id="1900298542">
+<g id="1310248751">
 <rect x="587" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="632" y="86" text-anchor="middle" class="nonterminal-text">Annotation</text>
 </g>
@@ -227,14 +232,14 @@
 </g>
 <line x1="693" y1="58" x2="713" y2="58" class="rail"/>
 <polygon points="700,55 706,58 700,61" class="arrow"/>
-<g id="328638398">
+<g id="1176518674">
 <rect x="713" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="758" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="803" y1="58" x2="823" y2="58" class="rail"/>
 <polygon points="810,55 816,58 810,61" class="arrow"/>
-<g id="3447021">
-<g id="1789550256">
+<g id="1282822429">
+<g id="1151307542">
 <rect x="839" y="68" width="139" height="28" class="nonterminal-box"/>
 <text x="908" y="86" text-anchor="middle" class="nonterminal-text">MethodDeclaration</text>
 </g>
@@ -254,7 +259,7 @@
 </g>
 <line x1="994" y1="58" x2="1014" y2="58" class="rail"/>
 <polygon points="1001,55 1007,58 1001,61" class="arrow"/>
-<g id="440434003">
+<g id="526922892">
 <rect x="1014" y="44" width="41" height="28" class="nonterminal-box"/>
 <text x="1034" y="62" text-anchor="middle" class="nonterminal-text">EOF</text>
 </g>
@@ -283,20 +288,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CodeBlock</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1068934215">
-<g id="1720435669">
+<g id="1329678129">
+<g id="2127405651">
 <rect x="40" y="44" width="83" height="28" class="nonterminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="nonterminal-text">CodeStart</text>
 </g>
 <line x1="123" y1="58" x2="143" y2="58" class="rail"/>
 <polygon points="130,55 136,58 130,61" class="arrow"/>
-<g id="1020923989">
+<g id="96605485">
 <rect x="143" y="44" width="76" height="28" class="nonterminal-box"/>
 <text x="181" y="62" text-anchor="middle" class="nonterminal-text">CodeBody</text>
 </g>
 <line x1="219" y1="58" x2="239" y2="58" class="rail"/>
 <polygon points="226,55 232,58 226,61" class="arrow"/>
-<g id="2052915500">
+<g id="40851655">
 <rect x="239" y="44" width="69" height="28" class="nonterminal-box"/>
 <text x="273" y="62" text-anchor="middle" class="nonterminal-text">CodeEnd</text>
 </g>
@@ -325,7 +330,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CodeStart</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="127618319">
+<g id="1552792496">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">CODE_START</text>
 </g>
@@ -353,7 +358,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CodeBody</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1798286609">
+<g id="1232320113">
 <rect x="40" y="44" width="83" height="28" class="nonterminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="nonterminal-text">CODE_BODY</text>
 </g>
@@ -381,7 +386,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CodeEnd</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2036958521">
+<g id="832730872">
 <rect x="40" y="44" width="76" height="28" class="nonterminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="nonterminal-text">CODE_END</text>
 </g>
@@ -409,28 +414,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ImportDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="2017354584">
-<g id="785992331">
+<g id="733570607">
+<g id="870184377">
 <rect x="40" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="80" text-anchor="middle" class="terminal-text">'import'</text>
 </g>
 <line x1="116" y1="76" x2="136" y2="76" class="rail"/>
 <polygon points="123,73 129,76 123,79" class="arrow"/>
-<g id="940060004">
+<g id="972133031">
 <rect x="136" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="177" y="80" text-anchor="middle" class="nonterminal-text">ClassName</text>
 </g>
 <line x1="219" y1="76" x2="239" y2="76" class="rail"/>
 <polygon points="226,73 232,76 226,79" class="arrow"/>
-<g id="998351292">
-<g id="649734728">
-<g id="234698513">
+<g id="1627251589">
+<g id="369952250">
+<g id="154044609">
 <rect x="255" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="275" y="80" text-anchor="middle" class="terminal-text">'#'</text>
 </g>
 <line x1="296" y1="76" x2="316" y2="76" class="rail"/>
 <polygon points="303,73 309,76 303,79" class="arrow"/>
-<g id="1121172875">
+<g id="1243697466">
 <rect x="316" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="361" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
@@ -445,19 +450,19 @@
 </g>
 <line x1="422" y1="76" x2="442" y2="76" class="rail"/>
 <polygon points="429,73 435,76 429,79" class="arrow"/>
-<g id="1684106402">
+<g id="623707077">
 <rect x="442" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="466" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="490" y1="76" x2="510" y2="76" class="rail"/>
 <polygon points="497,73 503,76 497,79" class="arrow"/>
-<g id="335471116">
+<g id="853259193">
 <rect x="510" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="555" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="600" y1="76" x2="620" y2="76" class="rail"/>
 <polygon points="607,73 613,76 607,79" class="arrow"/>
-<g id="1308927845">
+<g id="609700075">
 <rect x="620" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="640" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>
@@ -486,22 +491,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ClassName</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="610984013">
-<g id="391447681">
+<g id="1359942772">
+<g id="1715960758">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="745160567">
-<g id="321142942">
-<g id="1935637221">
+<g id="709853243">
+<g id="1997070247">
+<g id="166615740">
 <rect x="166" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="86" text-anchor="middle" class="terminal-text">'.'</text>
 </g>
 <line x1="207" y1="82" x2="227" y2="82" class="rail"/>
 <polygon points="214,79 220,82 214,85" class="arrow"/>
-<g id="403424356">
+<g id="392190842">
 <rect x="227" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="272" y="86" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
@@ -545,8 +550,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">VariableDeclaration</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1622006612">
-<g id="1644443712">
+<g id="446303452">
+<g id="1143029412">
 <rect x="59" y="44" width="195" height="28" class="nonterminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="nonterminal-text">NumberVariableDeclaration</text>
 </g>
@@ -554,7 +559,7 @@
 <line x1="254" y1="58" x2="258" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="258" y1="58" x2="274" y2="58" class="rail"/>
-<g id="1393931310">
+<g id="1977951328">
 <rect x="59" y="82" width="195" height="28" class="nonterminal-box"/>
 <text x="156" y="100" text-anchor="middle" class="nonterminal-text">StringVariableDeclaration</text>
 </g>
@@ -564,7 +569,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M258,96 Q266,96 266,88" class="rail" fill="none"/>
 <path d="M266,66 Q266,58 274,58" class="rail" fill="none"/>
-<g id="788117692">
+<g id="595410111">
 <rect x="56" y="120" width="202" height="28" class="nonterminal-box"/>
 <text x="157" y="138" text-anchor="middle" class="nonterminal-text">BooleanVariableDeclaration</text>
 </g>
@@ -574,7 +579,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M258,134 Q266,134 266,126" class="rail" fill="none"/>
 <path d="M266,66 Q266,58 274,58" class="rail" fill="none"/>
-<g id="1566723494">
+<g id="175648784">
 <rect x="59" y="158" width="195" height="28" class="nonterminal-box"/>
 <text x="156" y="176" text-anchor="middle" class="nonterminal-text">ObjectVariableDeclaration</text>
 </g>
@@ -609,9 +614,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="362239120">
-<g id="1874154700">
-<g id="66233253">
+<g id="1303155441">
+<g id="1749171485">
+<g id="1969513937">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -619,7 +624,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="1286783232">
+<g id="324945885">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -632,20 +637,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="760563749">
+<g id="17484211">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="1753447031">
+<g id="346583255">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="895947612">
-<g id="1810132623">
+<g id="1991882810">
+<g id="1847613133">
 <rect x="369" y="62" width="118" height="28" class="nonterminal-box"/>
 <text x="428" y="80" text-anchor="middle" class="nonterminal-text">NumberTypeHint</text>
 </g>
@@ -659,8 +664,8 @@
 </g>
 <line x1="503" y1="76" x2="523" y2="76" class="rail"/>
 <polygon points="510,73 516,76 510,79" class="arrow"/>
-<g id="1096283470">
-<g id="846492085">
+<g id="1993359909">
+<g id="564764687">
 <rect x="539" y="62" width="104" height="28" class="nonterminal-box"/>
 <text x="591" y="80" text-anchor="middle" class="nonterminal-text">NumberSetter</text>
 </g>
@@ -674,13 +679,13 @@
 </g>
 <line x1="659" y1="76" x2="679" y2="76" class="rail"/>
 <polygon points="666,73 672,76 666,79" class="arrow"/>
-<g id="152005629">
+<g id="447407116">
 <rect x="679" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="727" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="776" y1="76" x2="796" y2="76" class="rail"/>
 <polygon points="783,73 789,76 783,79" class="arrow"/>
-<g id="75457651">
+<g id="560588555">
 <rect x="796" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="816" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>
@@ -709,9 +714,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1018937824">
-<g id="1712669532">
-<g id="1796488937">
+<g id="1149373726">
+<g id="451004831">
+<g id="966340619">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -719,7 +724,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="423031029">
+<g id="1960716720">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -732,20 +737,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="60830820">
+<g id="1134206005">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="759156157">
+<g id="1183624799">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="1698156408">
-<g id="1635546341">
+<g id="2117284325">
+<g id="1379215904">
 <rect x="369" y="62" width="118" height="28" class="nonterminal-box"/>
 <text x="428" y="80" text-anchor="middle" class="nonterminal-text">StringTypeHint</text>
 </g>
@@ -759,8 +764,8 @@
 </g>
 <line x1="503" y1="76" x2="523" y2="76" class="rail"/>
 <polygon points="510,73 516,76 510,79" class="arrow"/>
-<g id="884457408">
-<g id="1740035246">
+<g id="1250083856">
+<g id="1776251170">
 <rect x="539" y="62" width="104" height="28" class="nonterminal-box"/>
 <text x="591" y="80" text-anchor="middle" class="nonterminal-text">StringSetter</text>
 </g>
@@ -774,13 +779,13 @@
 </g>
 <line x1="659" y1="76" x2="679" y2="76" class="rail"/>
 <polygon points="666,73 672,76 666,79" class="arrow"/>
-<g id="913190639">
+<g id="832406346">
 <rect x="679" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="727" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="776" y1="76" x2="796" y2="76" class="rail"/>
 <polygon points="783,73 789,76 783,79" class="arrow"/>
-<g id="1845066581">
+<g id="1455825029">
 <rect x="796" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="816" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>
@@ -809,9 +814,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="592179046">
-<g id="1419810764">
-<g id="905654280">
+<g id="1933682015">
+<g id="570652261">
+<g id="410842074">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -819,7 +824,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="1915058446">
+<g id="1160164428">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -832,20 +837,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="1516369375">
+<g id="161528568">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="55909012">
+<g id="2035608404">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="1387228415">
-<g id="1394336709">
+<g id="1565770957">
+<g id="1079839301">
 <rect x="369" y="62" width="125" height="28" class="nonterminal-box"/>
 <text x="431" y="80" text-anchor="middle" class="nonterminal-text">BooleanTypeHint</text>
 </g>
@@ -859,8 +864,8 @@
 </g>
 <line x1="510" y1="76" x2="530" y2="76" class="rail"/>
 <polygon points="517,73 523,76 517,79" class="arrow"/>
-<g id="748658608">
-<g id="120960120">
+<g id="267947487">
+<g id="1361625829">
 <rect x="546" y="62" width="111" height="28" class="nonterminal-box"/>
 <text x="601" y="80" text-anchor="middle" class="nonterminal-text">BooleanSetter</text>
 </g>
@@ -874,13 +879,13 @@
 </g>
 <line x1="673" y1="76" x2="693" y2="76" class="rail"/>
 <polygon points="680,73 686,76 680,79" class="arrow"/>
-<g id="546718765">
+<g id="668971335">
 <rect x="693" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="741" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="790" y1="76" x2="810" y2="76" class="rail"/>
 <polygon points="797,73 803,76 797,79" class="arrow"/>
-<g id="167185492">
+<g id="1684634845">
 <rect x="810" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="830" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>
@@ -909,9 +914,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="329611835">
-<g id="1358444045">
-<g id="1937348256">
+<g id="609887763">
+<g id="1295221851">
+<g id="949766301">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -919,7 +924,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="1641808846">
+<g id="1653838656">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -932,20 +937,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="331844619">
+<g id="1764017574">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="310656974">
+<g id="399721041">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="159259014">
-<g id="64830413">
+<g id="1089253330">
+<g id="1175653804">
 <rect x="369" y="62" width="118" height="28" class="nonterminal-box"/>
 <text x="428" y="80" text-anchor="middle" class="nonterminal-text">ObjectTypeHint</text>
 </g>
@@ -959,8 +964,8 @@
 </g>
 <line x1="503" y1="76" x2="523" y2="76" class="rail"/>
 <polygon points="510,73 516,76 510,79" class="arrow"/>
-<g id="356473385">
-<g id="653687670">
+<g id="40255970">
+<g id="254430108">
 <rect x="539" y="62" width="104" height="28" class="nonterminal-box"/>
 <text x="591" y="80" text-anchor="middle" class="nonterminal-text">ObjectSetter</text>
 </g>
@@ -974,13 +979,13 @@
 </g>
 <line x1="659" y1="76" x2="679" y2="76" class="rail"/>
 <polygon points="666,73 672,76 666,79" class="arrow"/>
-<g id="2136344592">
+<g id="1548108399">
 <rect x="679" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="727" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="776" y1="76" x2="796" y2="76" class="rail"/>
 <polygon points="783,73 789,76 783,79" class="arrow"/>
-<g id="110992469">
+<g id="2037511178">
 <rect x="796" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="816" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>
@@ -1009,9 +1014,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1556595366">
-<g id="863831416">
-<g id="2091156596">
+<g id="1144778485">
+<g id="2050516974">
+<g id="344136235">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -1025,8 +1030,8 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="2034688500">
-<g id="1508395126">
+<g id="946016924">
+<g id="203365639">
 <rect x="159" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="80" text-anchor="middle" class="terminal-text">'number'</text>
 </g>
@@ -1034,7 +1039,7 @@
 <line x1="235" y1="76" x2="239" y2="76" class="rail"/>
 <line x1="140" y1="76" x2="156" y2="76" class="rail"/>
 <line x1="239" y1="76" x2="255" y2="76" class="rail"/>
-<g id="1638172114">
+<g id="2038487081">
 <rect x="159" y="100" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="118" text-anchor="middle" class="terminal-text">'string'</text>
 </g>
@@ -1044,7 +1049,7 @@
 <path d="M148,106 Q148,114 156,114" class="rail" fill="none"/>
 <path d="M239,114 Q247,114 247,106" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="972765878">
+<g id="1969145712">
 <rect x="156" y="138" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="156" text-anchor="middle" class="terminal-text">'boolean'</text>
 </g>
@@ -1054,7 +1059,7 @@
 <path d="M148,144 Q148,152 156,152" class="rail" fill="none"/>
 <path d="M239,152 Q247,152 247,144" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="1651945012">
+<g id="1289799970">
 <rect x="159" y="176" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="194" text-anchor="middle" class="terminal-text">'object'</text>
 </g>
@@ -1090,9 +1095,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="591723622">
-<g id="1167116739">
-<g id="194494468">
+<g id="1356033326">
+<g id="772772412">
+<g id="249075337">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -1106,8 +1111,8 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1702146597">
-<g id="853993923">
+<g id="1454099654">
+<g id="131753816">
 <rect x="156" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="194" y="80" text-anchor="middle" class="terminal-text">'number'</text>
 </g>
@@ -1115,7 +1120,7 @@
 <line x1="232" y1="76" x2="232" y2="76" class="rail"/>
 <line x1="140" y1="76" x2="156" y2="76" class="rail"/>
 <line x1="232" y1="76" x2="248" y2="76" class="rail"/>
-<g id="1347870667">
+<g id="470646032">
 <rect x="159" y="100" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="193" y="118" text-anchor="middle" class="terminal-text">'float'</text>
 </g>
@@ -1151,9 +1156,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1778535015">
-<g id="95395916">
-<g id="1166726978">
+<g id="1509793046">
+<g id="788810251">
+<g id="658599897">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -1167,7 +1172,7 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1856056345">
+<g id="302786660">
 <rect x="140" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="178" y="80" text-anchor="middle" class="terminal-text">'string'</text>
 </g>
@@ -1196,9 +1201,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="519821334">
-<g id="24433162">
-<g id="2032251042">
+<g id="1051408323">
+<g id="2016892643">
+<g id="1970150999">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -1212,7 +1217,7 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1725097945">
+<g id="193666697">
 <rect x="140" y="62" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="181" y="80" text-anchor="middle" class="terminal-text">'boolean'</text>
 </g>
@@ -1241,9 +1246,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="2081303229">
-<g id="1307096070">
-<g id="1781256139">
+<g id="1294912106">
+<g id="2037433132">
+<g id="993139431">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -1257,7 +1262,7 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1014328909">
+<g id="719119837">
 <rect x="140" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="178" y="80" text-anchor="middle" class="terminal-text">'object'</text>
 </g>
@@ -1286,28 +1291,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberSetter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1836643189">
-<g id="1223685984">
+<g id="717434479">
+<g id="1725957130">
 <rect x="40" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="80" text-anchor="middle" class="terminal-text">'set'</text>
 </g>
 <line x1="95" y1="76" x2="115" y2="76" class="rail"/>
 <polygon points="102,73 108,76 102,79" class="arrow"/>
-<g id="1418428263">
-<g id="1837760739">
-<g id="1076835071">
+<g id="643966231">
+<g id="153705057">
+<g id="427213401">
 <rect x="131" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="155" y="80" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="1463757745">
+<g id="1422470823">
 <rect x="199" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="226" y="80" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="254" y1="76" x2="274" y2="76" class="rail"/>
 <polygon points="261,73 267,76 261,79" class="arrow"/>
-<g id="1525262377">
+<g id="1871696846">
 <rect x="274" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="312" y="80" text-anchor="middle" class="terminal-text">'exists'</text>
 </g>
@@ -1322,7 +1327,7 @@
 </g>
 <line x1="366" y1="76" x2="386" y2="76" class="rail"/>
 <polygon points="373,73 379,76 373,79" class="arrow"/>
-<g id="2059904228">
+<g id="994286442">
 <rect x="386" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="452" y="80" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -1351,28 +1356,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringSetter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="600746945">
-<g id="1355316001">
+<g id="1068363796">
+<g id="1778029316">
 <rect x="40" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="80" text-anchor="middle" class="terminal-text">'set'</text>
 </g>
 <line x1="95" y1="76" x2="115" y2="76" class="rail"/>
 <polygon points="102,73 108,76 102,79" class="arrow"/>
-<g id="1144648478">
-<g id="559670971">
-<g id="1597462040">
+<g id="332051874">
+<g id="2003050558">
+<g id="1577535921">
 <rect x="131" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="155" y="80" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="403716510">
+<g id="2042102224">
 <rect x="199" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="226" y="80" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="254" y1="76" x2="274" y2="76" class="rail"/>
 <polygon points="261,73 267,76 261,79" class="arrow"/>
-<g id="853119666">
+<g id="1253832926">
 <rect x="274" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="312" y="80" text-anchor="middle" class="terminal-text">'exists'</text>
 </g>
@@ -1387,7 +1392,7 @@
 </g>
 <line x1="366" y1="76" x2="386" y2="76" class="rail"/>
 <polygon points="373,73 379,76 373,79" class="arrow"/>
-<g id="1576861390">
+<g id="709197962">
 <rect x="386" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="452" y="80" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -1416,28 +1421,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanSetter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="57494364">
-<g id="1566502717">
+<g id="177264164">
+<g id="1763594767">
 <rect x="40" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="80" text-anchor="middle" class="terminal-text">'set'</text>
 </g>
 <line x1="95" y1="76" x2="115" y2="76" class="rail"/>
 <polygon points="102,73 108,76 102,79" class="arrow"/>
-<g id="1681595665">
-<g id="269468037">
-<g id="1458849419">
+<g id="831903060">
+<g id="1653656296">
+<g id="792698155">
 <rect x="131" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="155" y="80" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="1824835605">
+<g id="695732630">
 <rect x="199" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="226" y="80" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="254" y1="76" x2="274" y2="76" class="rail"/>
 <polygon points="261,73 267,76 261,79" class="arrow"/>
-<g id="981661423">
+<g id="2038788605">
 <rect x="274" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="312" y="80" text-anchor="middle" class="terminal-text">'exists'</text>
 </g>
@@ -1452,7 +1457,7 @@
 </g>
 <line x1="366" y1="76" x2="386" y2="76" class="rail"/>
 <polygon points="373,73 379,76 373,79" class="arrow"/>
-<g id="787867107">
+<g id="1481133641">
 <rect x="386" y="62" width="139" height="28" class="nonterminal-box"/>
 <text x="455" y="80" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
@@ -1481,28 +1486,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectSetter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1659791576">
-<g id="1828757853">
+<g id="403097529">
+<g id="1857260052">
 <rect x="40" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="80" text-anchor="middle" class="terminal-text">'set'</text>
 </g>
 <line x1="95" y1="76" x2="115" y2="76" class="rail"/>
 <polygon points="102,73 108,76 102,79" class="arrow"/>
-<g id="2140832232">
-<g id="1359484306">
-<g id="1374677625">
+<g id="2057100144">
+<g id="361750775">
+<g id="1905511907">
 <rect x="131" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="155" y="80" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="1345636186">
+<g id="1806958494">
 <rect x="199" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="226" y="80" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="254" y1="76" x2="274" y2="76" class="rail"/>
 <polygon points="261,73 267,76 261,79" class="arrow"/>
-<g id="963269035">
+<g id="1738417466">
 <rect x="274" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="312" y="80" text-anchor="middle" class="terminal-text">'exists'</text>
 </g>
@@ -1517,7 +1522,7 @@
 </g>
 <line x1="366" y1="76" x2="386" y2="76" class="rail"/>
 <polygon points="373,73 379,76 373,79" class="arrow"/>
-<g id="157456214">
+<g id="237474994">
 <rect x="386" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="452" y="80" text-anchor="middle" class="nonterminal-text">ObjectExpression</text>
 </g>
@@ -1546,20 +1551,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Description</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1410986873">
-<g id="1935365522">
+<g id="1922740791">
+<g id="1919161366">
 <rect x="40" y="44" width="111" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="95" y="62" text-anchor="middle" class="terminal-text">'description'</text>
 </g>
 <line x1="151" y1="58" x2="171" y2="58" class="rail"/>
 <polygon points="158,55 164,58 158,61" class="arrow"/>
-<g id="1483022288">
+<g id="1858016881">
 <rect x="171" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="191" y="62" text-anchor="middle" class="terminal-text">'='</text>
 </g>
 <line x1="212" y1="58" x2="232" y2="58" class="rail"/>
 <polygon points="219,55 225,58 219,61" class="arrow"/>
-<g id="1159785389">
+<g id="1552915728">
 <rect x="232" y="44" width="62" height="28" class="nonterminal-box"/>
 <text x="263" y="62" text-anchor="middle" class="nonterminal-text">STRING</text>
 </g>
@@ -1588,27 +1593,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Annotation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="707610042">
-<g id="2110245805">
+<g id="1818955990">
+<g id="546098390">
 <rect x="40" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="80" text-anchor="middle" class="terminal-text">'@'</text>
 </g>
 <line x1="81" y1="76" x2="101" y2="76" class="rail"/>
 <polygon points="88,73 94,76 88,79" class="arrow"/>
-<g id="221036634">
+<g id="907434536">
 <rect x="101" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="146" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="191" y1="76" x2="211" y2="76" class="rail"/>
 <polygon points="198,73 204,76 198,79" class="arrow"/>
-<g id="1335050193">
+<g id="382809831">
 <rect x="211" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="231" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="252" y1="76" x2="272" y2="76" class="rail"/>
 <polygon points="259,73 265,76 259,79" class="arrow"/>
-<g id="391359742">
-<g id="1418370913">
+<g id="2001839509">
+<g id="838677760">
 <rect x="288" y="62" width="160" height="28" class="nonterminal-box"/>
 <text x="368" y="80" text-anchor="middle" class="nonterminal-text">AnnotationParameters</text>
 </g>
@@ -1622,7 +1627,7 @@
 </g>
 <line x1="464" y1="76" x2="484" y2="76" class="rail"/>
 <polygon points="471,73 477,76 471,79" class="arrow"/>
-<g id="2081853534">
+<g id="1938978381">
 <rect x="484" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="504" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -1651,22 +1656,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AnnotationParameters</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1364614850">
-<g id="710714889">
+<g id="1527649780">
+<g id="887516526">
 <rect x="40" y="44" width="153" height="28" class="nonterminal-box"/>
 <text x="116" y="62" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
 </g>
 <line x1="193" y1="58" x2="213" y2="58" class="rail"/>
 <polygon points="200,55 206,58 200,61" class="arrow"/>
-<g id="1734161410">
-<g id="687780858">
-<g id="551734240">
+<g id="494073723">
+<g id="452490327">
+<g id="1314986858">
 <rect x="229" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="249" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="270" y1="82" x2="290" y2="82" class="rail"/>
 <polygon points="277,79 283,82 277,85" class="arrow"/>
-<g id="1757293506">
+<g id="782318837">
 <rect x="290" y="68" width="153" height="28" class="nonterminal-box"/>
 <text x="366" y="86" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
 </g>
@@ -1710,20 +1715,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AnnotationParameter</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2015601401">
-<g id="1211076369">
+<g id="69576367">
+<g id="2087701748">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="361993357">
+<g id="627856866">
 <rect x="150" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="170" y="62" text-anchor="middle" class="terminal-text">'='</text>
 </g>
 <line x1="191" y1="58" x2="211" y2="58" class="rail"/>
 <polygon points="198,55 204,58 198,61" class="arrow"/>
-<g id="459296537">
+<g id="800044827">
 <rect x="211" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="256" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
@@ -1752,8 +1757,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodDeclaration</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1917513796">
-<g id="1287712235">
+<g id="1117101871">
+<g id="103793331">
 <rect x="59" y="44" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="nonterminal-text">NumberMethodDeclaration</text>
 </g>
@@ -1761,7 +1766,7 @@
 <line x1="240" y1="58" x2="244" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1165897474">
+<g id="1101743313">
 <rect x="59" y="82" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="100" text-anchor="middle" class="nonterminal-text">StringMethodDeclaration</text>
 </g>
@@ -1771,7 +1776,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1551870003">
+<g id="334378128">
 <rect x="56" y="120" width="188" height="28" class="nonterminal-box"/>
 <text x="150" y="138" text-anchor="middle" class="nonterminal-text">BooleanMethodDeclaration</text>
 </g>
@@ -1781,7 +1786,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="967765295">
+<g id="987232412">
 <rect x="59" y="158" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="176" text-anchor="middle" class="nonterminal-text">ObjectMethodDeclaration</text>
 </g>
@@ -1816,27 +1821,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberMethodDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1268650975">
-<g id="1182320432">
+<g id="2083518287">
+<g id="1493423712">
 <rect x="40" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="80" text-anchor="middle" class="nonterminal-text">NumberReturnType</text>
 </g>
 <line x1="172" y1="76" x2="192" y2="76" class="rail"/>
 <polygon points="179,73 185,76 179,79" class="arrow"/>
-<g id="1734853116">
+<g id="992682852">
 <rect x="192" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="282" y1="76" x2="302" y2="76" class="rail"/>
 <polygon points="289,73 295,76 289,79" class="arrow"/>
-<g id="703504298">
+<g id="1052585861">
 <rect x="302" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="322" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="343" y1="76" x2="363" y2="76" class="rail"/>
 <polygon points="350,73 356,76 350,79" class="arrow"/>
-<g id="214074868">
-<g id="201556483">
+<g id="399040299">
+<g id="1346352026">
 <rect x="379" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="445" y="80" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
 </g>
@@ -1850,25 +1855,25 @@
 </g>
 <line x1="527" y1="76" x2="547" y2="76" class="rail"/>
 <polygon points="534,73 540,76 534,79" class="arrow"/>
-<g id="1442045361">
+<g id="1973087925">
 <rect x="547" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="567" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="588" y1="76" x2="608" y2="76" class="rail"/>
 <polygon points="595,73 601,76 595,79" class="arrow"/>
-<g id="146611050">
+<g id="571221636">
 <rect x="608" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="628" y="80" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="649" y1="76" x2="669" y2="76" class="rail"/>
 <polygon points="656,73 662,76 656,79" class="arrow"/>
-<g id="415138788">
+<g id="251847228">
 <rect x="669" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="735" y="80" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="801" y1="76" x2="821" y2="76" class="rail"/>
 <polygon points="808,73 814,76 808,79" class="arrow"/>
-<g id="13326370">
+<g id="1583498608">
 <rect x="821" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="841" y="80" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -1897,27 +1902,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringMethodDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1509563803">
-<g id="731395981">
+<g id="1364013762">
+<g id="1062520392">
 <rect x="40" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="80" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
 <line x1="172" y1="76" x2="192" y2="76" class="rail"/>
 <polygon points="179,73 185,76 179,79" class="arrow"/>
-<g id="1196765369">
+<g id="668979356">
 <rect x="192" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="282" y1="76" x2="302" y2="76" class="rail"/>
 <polygon points="289,73 295,76 289,79" class="arrow"/>
-<g id="486898233">
+<g id="1801078994">
 <rect x="302" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="322" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="343" y1="76" x2="363" y2="76" class="rail"/>
 <polygon points="350,73 356,76 350,79" class="arrow"/>
-<g id="1282473384">
-<g id="650023597">
+<g id="1899213486">
+<g id="1758224249">
 <rect x="379" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="445" y="80" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
 </g>
@@ -1931,25 +1936,25 @@
 </g>
 <line x1="527" y1="76" x2="547" y2="76" class="rail"/>
 <polygon points="534,73 540,76 534,79" class="arrow"/>
-<g id="575593575">
+<g id="674350884">
 <rect x="547" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="567" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="588" y1="76" x2="608" y2="76" class="rail"/>
 <polygon points="595,73 601,76 595,79" class="arrow"/>
-<g id="346861221">
+<g id="294917672">
 <rect x="608" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="628" y="80" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="649" y1="76" x2="669" y2="76" class="rail"/>
 <polygon points="656,73 662,76 656,79" class="arrow"/>
-<g id="1188392295">
+<g id="464106740">
 <rect x="669" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="735" y="80" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="801" y1="76" x2="821" y2="76" class="rail"/>
 <polygon points="808,73 814,76 808,79" class="arrow"/>
-<g id="226710952">
+<g id="2003031021">
 <rect x="821" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="841" y="80" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -1978,27 +1983,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanMethodDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="892529689">
-<g id="684874119">
+<g id="1559325251">
+<g id="1624853397">
 <rect x="40" y="62" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="80" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="1157740463">
+<g id="914443630">
 <rect x="199" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="244" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="289" y1="76" x2="309" y2="76" class="rail"/>
 <polygon points="296,73 302,76 296,79" class="arrow"/>
-<g id="1379435698">
+<g id="1595153640">
 <rect x="309" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="329" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="350" y1="76" x2="370" y2="76" class="rail"/>
 <polygon points="357,73 363,76 357,79" class="arrow"/>
-<g id="1635985705">
-<g id="1529306539">
+<g id="1297646690">
+<g id="1744305898">
 <rect x="386" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="452" y="80" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
 </g>
@@ -2012,25 +2017,25 @@
 </g>
 <line x1="534" y1="76" x2="554" y2="76" class="rail"/>
 <polygon points="541,73 547,76 541,79" class="arrow"/>
-<g id="695682681">
+<g id="1896762010">
 <rect x="554" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="574" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="595" y1="76" x2="615" y2="76" class="rail"/>
 <polygon points="602,73 608,76 602,79" class="arrow"/>
-<g id="1073502961">
+<g id="243460879">
 <rect x="615" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="635" y="80" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="656" y1="76" x2="676" y2="76" class="rail"/>
 <polygon points="663,73 669,76 663,79" class="arrow"/>
-<g id="1582797472">
+<g id="1457144987">
 <rect x="676" y="62" width="139" height="28" class="nonterminal-box"/>
 <text x="745" y="80" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="815" y1="76" x2="835" y2="76" class="rail"/>
 <polygon points="822,73 828,76 822,79" class="arrow"/>
-<g id="644166178">
+<g id="1604886966">
 <rect x="835" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="855" y="80" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -2059,27 +2064,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectMethodDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="32017212">
-<g id="1757676444">
+<g id="1227237610">
+<g id="1160915009">
 <rect x="40" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="80" text-anchor="middle" class="nonterminal-text">ObjectReturnType</text>
 </g>
 <line x1="172" y1="76" x2="192" y2="76" class="rail"/>
 <polygon points="179,73 185,76 179,79" class="arrow"/>
-<g id="182738614">
+<g id="1095254752">
 <rect x="192" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="282" y1="76" x2="302" y2="76" class="rail"/>
 <polygon points="289,73 295,76 289,79" class="arrow"/>
-<g id="94345706">
+<g id="1542975086">
 <rect x="302" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="322" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="343" y1="76" x2="363" y2="76" class="rail"/>
 <polygon points="350,73 356,76 350,79" class="arrow"/>
-<g id="1870647526">
-<g id="670035812">
+<g id="1478981072">
+<g id="209921057">
 <rect x="379" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="445" y="80" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
 </g>
@@ -2093,25 +2098,25 @@
 </g>
 <line x1="527" y1="76" x2="547" y2="76" class="rail"/>
 <polygon points="534,73 540,76 534,79" class="arrow"/>
-<g id="1204167249">
+<g id="1543205750">
 <rect x="547" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="567" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="588" y1="76" x2="608" y2="76" class="rail"/>
 <polygon points="595,73 601,76 595,79" class="arrow"/>
-<g id="1047503754">
+<g id="1058759417">
 <rect x="608" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="628" y="80" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="649" y1="76" x2="669" y2="76" class="rail"/>
 <polygon points="656,73 662,76 656,79" class="arrow"/>
-<g id="1722023916">
+<g id="715975447">
 <rect x="669" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="735" y="80" text-anchor="middle" class="nonterminal-text">ObjectExpression</text>
 </g>
 <line x1="801" y1="76" x2="821" y2="76" class="rail"/>
 <polygon points="808,73 814,76 808,79" class="arrow"/>
-<g id="2009787198">
+<g id="1237750375">
 <rect x="821" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="841" y="80" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -2140,22 +2145,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodParameters</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="152134087">
-<g id="1121454968">
+<g id="1701356296">
+<g id="768509853">
 <rect x="40" y="44" width="125" height="28" class="nonterminal-box"/>
 <text x="102" y="62" text-anchor="middle" class="nonterminal-text">MethodParameter</text>
 </g>
 <line x1="165" y1="58" x2="185" y2="58" class="rail"/>
 <polygon points="172,55 178,58 172,61" class="arrow"/>
-<g id="1547425104">
-<g id="1580893732">
-<g id="1006485584">
+<g id="1022188992">
+<g id="1707527306">
+<g id="1618425184">
 <rect x="201" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="221" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="242" y1="82" x2="262" y2="82" class="rail"/>
 <polygon points="249,79 255,82 249,85" class="arrow"/>
-<g id="466505482">
+<g id="501208739">
 <rect x="262" y="68" width="125" height="28" class="nonterminal-box"/>
 <text x="324" y="86" text-anchor="middle" class="nonterminal-text">MethodParameter</text>
 </g>
@@ -2199,28 +2204,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodParameter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1620303253">
-<g id="1615780336">
+<g id="1361858641">
+<g id="115416008">
 <rect x="40" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="81" y1="76" x2="101" y2="76" class="rail"/>
 <polygon points="88,73 94,76 88,79" class="arrow"/>
-<g id="1783593083">
+<g id="1427121410">
 <rect x="101" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="146" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="191" y1="76" x2="211" y2="76" class="rail"/>
 <polygon points="198,73 204,76 198,79" class="arrow"/>
-<g id="1833638914">
-<g id="2094411587">
-<g id="1750905143">
+<g id="2043189964">
+<g id="757371487">
+<g id="63271229">
 <rect x="227" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="251" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="275" y1="76" x2="295" y2="76" class="rail"/>
 <polygon points="282,73 288,76 282,79" class="arrow"/>
-<g id="1782704802">
+<g id="588640942">
 <rect x="295" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="340" y="80" text-anchor="middle" class="nonterminal-text">ReturnType</text>
 </g>
@@ -2258,8 +2263,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2107447833">
-<g id="90320863">
+<g id="1765564780">
+<g id="1562400856">
 <rect x="56" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="94" y="62" text-anchor="middle" class="terminal-text">'number'</text>
 </g>
@@ -2267,7 +2272,7 @@
 <line x1="132" y1="58" x2="132" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="132" y1="58" x2="148" y2="58" class="rail"/>
-<g id="1216590855">
+<g id="1419747273">
 <rect x="59" y="82" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="93" y="100" text-anchor="middle" class="terminal-text">'float'</text>
 </g>
@@ -2302,7 +2307,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="60559178">
+<g id="1520507586">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="terminal-text">'string'</text>
 </g>
@@ -2330,7 +2335,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="395629617">
+<g id="94137174">
 <rect x="40" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="terminal-text">'boolean'</text>
 </g>
@@ -2358,7 +2363,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1122134344">
+<g id="768986619">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="terminal-text">'object'</text>
 </g>
@@ -2386,8 +2391,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1418621776">
-<g id="1471868639">
+<g id="1882045462">
+<g id="661188140">
 <rect x="59" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="62" text-anchor="middle" class="nonterminal-text">NumberReturnType</text>
 </g>
@@ -2395,7 +2400,7 @@
 <line x1="191" y1="58" x2="195" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="195" y1="58" x2="211" y2="58" class="rail"/>
-<g id="876563773">
+<g id="1968019209">
 <rect x="59" y="82" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="100" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
@@ -2405,7 +2410,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M195,96 Q203,96 203,88" class="rail" fill="none"/>
 <path d="M203,66 Q203,58 211,58" class="rail" fill="none"/>
-<g id="87765719">
+<g id="334332973">
 <rect x="56" y="120" width="139" height="28" class="nonterminal-box"/>
 <text x="125" y="138" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
 </g>
@@ -2415,7 +2420,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M195,134 Q203,134 203,126" class="rail" fill="none"/>
 <path d="M203,66 Q203,58 211,58" class="rail" fill="none"/>
-<g id="1413653265">
+<g id="273951166">
 <rect x="59" y="158" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="176" text-anchor="middle" class="nonterminal-text">ObjectReturnType</text>
 </g>
@@ -2450,45 +2455,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalBooleanInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1179381257">
-<g id="446073433">
+<g id="6777271">
+<g id="1774295237">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="1181199958">
+<g id="376616252">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="125622176">
+<g id="668628885">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="542060780">
+<g id="973775476">
 <rect x="335" y="62" width="139" height="28" class="nonterminal-box"/>
 <text x="404" y="80" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
 </g>
 <line x1="474" y1="76" x2="494" y2="76" class="rail"/>
 <polygon points="481,73 487,76 481,79" class="arrow"/>
-<g id="237351678">
+<g id="1600651840">
 <rect x="494" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="539" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="584" y1="76" x2="604" y2="76" class="rail"/>
 <polygon points="591,73 597,76 591,79" class="arrow"/>
-<g id="1967892594">
+<g id="1546688452">
 <rect x="604" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="624" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="645" y1="76" x2="665" y2="76" class="rail"/>
 <polygon points="652,73 658,76 652,79" class="arrow"/>
-<g id="1308244637">
-<g id="342597804">
+<g id="1205091194">
+<g id="673326344">
 <rect x="681" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="722" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -2502,7 +2507,7 @@
 </g>
 <line x1="780" y1="76" x2="800" y2="76" class="rail"/>
 <polygon points="787,73 793,76 787,79" class="arrow"/>
-<g id="1860944798">
+<g id="1479629762">
 <rect x="800" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="820" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -2531,45 +2536,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalNumberInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1597249648">
-<g id="258754732">
+<g id="795697014">
+<g id="961812182">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="333362446">
+<g id="1597891949">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="597255128">
+<g id="218126851">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="985397764">
+<g id="915513541">
 <rect x="335" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="401" y="80" text-anchor="middle" class="nonterminal-text">NumberReturnType</text>
 </g>
 <line x1="467" y1="76" x2="487" y2="76" class="rail"/>
 <polygon points="474,73 480,76 474,79" class="arrow"/>
-<g id="1476394199">
+<g id="795538023">
 <rect x="487" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="532" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="577" y1="76" x2="597" y2="76" class="rail"/>
 <polygon points="584,73 590,76 584,79" class="arrow"/>
-<g id="837764579">
+<g id="525106282">
 <rect x="597" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="617" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="638" y1="76" x2="658" y2="76" class="rail"/>
 <polygon points="645,73 651,76 645,79" class="arrow"/>
-<g id="1007603019">
-<g id="1501587365">
+<g id="725610653">
+<g id="278134210">
 <rect x="674" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="715" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -2583,7 +2588,7 @@
 </g>
 <line x1="773" y1="76" x2="793" y2="76" class="rail"/>
 <polygon points="780,73 786,76 780,79" class="arrow"/>
-<g id="348100441">
+<g id="1396627031">
 <rect x="793" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="813" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -2612,45 +2617,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalStringInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="795372831">
-<g id="89387388">
+<g id="1734777609">
+<g id="538958516">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="1333592072">
+<g id="1961913650">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="655381473">
+<g id="1373213077">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="1486371051">
+<g id="344646199">
 <rect x="335" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="401" y="80" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
 <line x1="467" y1="76" x2="487" y2="76" class="rail"/>
 <polygon points="474,73 480,76 474,79" class="arrow"/>
-<g id="1121647253">
+<g id="1243496552">
 <rect x="487" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="532" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="577" y1="76" x2="597" y2="76" class="rail"/>
 <polygon points="584,73 590,76 584,79" class="arrow"/>
-<g id="1694556038">
+<g id="1039154660">
 <rect x="597" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="617" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="638" y1="76" x2="658" y2="76" class="rail"/>
 <polygon points="645,73 651,76 645,79" class="arrow"/>
-<g id="1508646930">
-<g id="1076496284">
+<g id="1667269532">
+<g id="540559094">
 <rect x="674" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="715" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -2664,7 +2669,7 @@
 </g>
 <line x1="773" y1="76" x2="793" y2="76" class="rail"/>
 <polygon points="780,73 786,76 780,79" class="arrow"/>
-<g id="1291286504">
+<g id="1531282072">
 <rect x="793" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="813" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -2693,45 +2698,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalObjectInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="832947102">
-<g id="1072601481">
+<g id="1097571553">
+<g id="93028069">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="121295574">
+<g id="1645240747">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="1887813102">
+<g id="364277299">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="485041780">
+<g id="1188757855">
 <rect x="335" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="401" y="80" text-anchor="middle" class="nonterminal-text">ObjectReturnType</text>
 </g>
 <line x1="467" y1="76" x2="487" y2="76" class="rail"/>
 <polygon points="474,73 480,76 474,79" class="arrow"/>
-<g id="1459672753">
+<g id="418984759">
 <rect x="487" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="532" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="577" y1="76" x2="597" y2="76" class="rail"/>
 <polygon points="584,73 590,76 584,79" class="arrow"/>
-<g id="117244645">
+<g id="2038760634">
 <rect x="597" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="617" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="638" y1="76" x2="658" y2="76" class="rail"/>
 <polygon points="645,73 651,76 645,79" class="arrow"/>
-<g id="239465106">
-<g id="1540011289">
+<g id="1093339413">
+<g id="1608788559">
 <rect x="674" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="715" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -2745,7 +2750,7 @@
 </g>
 <line x1="773" y1="76" x2="793" y2="76" class="rail"/>
 <polygon points="780,73 786,76 780,79" class="arrow"/>
-<g id="1596000437">
+<g id="270199436">
 <rect x="793" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="813" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -2774,16 +2779,16 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodInvocationHeader</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1926764753">
-<g id="1454127753">
-<g id="1061804750">
+<g id="861822982">
+<g id="2084663571">
+<g id="1067671761">
 <rect x="56" y="62" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="87" y="80" text-anchor="middle" class="terminal-text">'call'</text>
 </g>
 <line x1="118" y1="76" x2="138" y2="76" class="rail"/>
 <polygon points="125,73 131,76 125,79" class="arrow"/>
-<g id="1225439493">
-<g id="507084503">
+<g id="1632658764">
+<g id="651802001">
 <rect x="154" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="199" y="80" text-anchor="middle" class="terminal-text">'internal'</text>
 </g>
@@ -2800,7 +2805,7 @@
 <line x1="260" y1="76" x2="260" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="260" y1="76" x2="276" y2="76" class="rail"/>
-<g id="667026744">
+<g id="1480598434">
 <rect x="113" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="158" y="118" text-anchor="middle" class="terminal-text">'internal'</text>
 </g>
@@ -2835,27 +2840,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1458540918">
-<g id="1845904670">
+<g id="614480196">
+<g id="1371937060">
 <rect x="40" y="62" width="174" height="28" class="nonterminal-box"/>
 <text x="127" y="80" text-anchor="middle" class="nonterminal-text">MethodInvocationHeader</text>
 </g>
 <line x1="214" y1="76" x2="234" y2="76" class="rail"/>
 <polygon points="221,73 227,76 221,79" class="arrow"/>
-<g id="1497973285">
+<g id="653796326">
 <rect x="234" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="279" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="324" y1="76" x2="344" y2="76" class="rail"/>
 <polygon points="331,73 337,76 331,79" class="arrow"/>
-<g id="1846896625">
+<g id="2147240360">
 <rect x="344" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="364" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="385" y1="76" x2="405" y2="76" class="rail"/>
 <polygon points="392,73 398,76 392,79" class="arrow"/>
-<g id="13329486">
-<g id="1555690610">
+<g id="1586260464">
+<g id="1063405569">
 <rect x="421" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="462" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -2869,7 +2874,7 @@
 </g>
 <line x1="520" y1="76" x2="540" y2="76" class="rail"/>
 <polygon points="527,73 533,76 527,79" class="arrow"/>
-<g id="327177752">
+<g id="965514964">
 <rect x="540" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="560" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -2898,22 +2903,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Arguments</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1776957250">
-<g id="1164371389">
+<g id="9626157">
+<g id="154099601">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="1459794865">
-<g id="633070006">
-<g id="517210187">
+<g id="1062800743">
+<g id="1282998446">
+<g id="886138029">
 <rect x="166" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="207" y1="82" x2="227" y2="82" class="rail"/>
 <polygon points="214,79 220,82 214,85" class="arrow"/>
-<g id="267760927">
+<g id="1765179093">
 <rect x="227" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="272" y="86" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
@@ -2957,22 +2962,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1447689627">
-<g id="1268066861">
+<g id="2049006568">
+<g id="1518920764">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="701141022">
-<g id="1273765644">
-<g id="827966648">
+<g id="588601666">
+<g id="1050796974">
+<g id="1584456627">
 <rect x="166" y="68" width="55" height="28" class="nonterminal-box"/>
 <text x="193" y="86" text-anchor="middle" class="nonterminal-text">AddOp</text>
 </g>
 <line x1="221" y1="82" x2="241" y2="82" class="rail"/>
 <polygon points="228,79 234,82 228,85" class="arrow"/>
-<g id="1938056729">
+<g id="691404591">
 <rect x="241" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="286" y="86" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
 </g>
@@ -3016,22 +3021,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberTerm</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="422250493">
-<g id="112061925">
+<g id="1819206000">
+<g id="2095779588">
 <rect x="40" y="44" width="104" height="28" class="nonterminal-box"/>
 <text x="92" y="62" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
 </g>
 <line x1="144" y1="58" x2="164" y2="58" class="rail"/>
 <polygon points="151,55 157,58 151,61" class="arrow"/>
-<g id="540159270">
-<g id="1234776885">
-<g id="764577347">
+<g id="269084618">
+<g id="876498278">
+<g id="1306935204">
 <rect x="180" y="68" width="55" height="28" class="nonterminal-box"/>
 <text x="207" y="86" text-anchor="middle" class="nonterminal-text">MulOp</text>
 </g>
 <line x1="235" y1="82" x2="255" y2="82" class="rail"/>
 <polygon points="242,79 248,82 242,85" class="arrow"/>
-<g id="1344645519">
+<g id="1144037395">
 <rect x="255" y="68" width="104" height="28" class="nonterminal-box"/>
 <text x="307" y="86" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
 </g>
@@ -3075,8 +3080,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AddOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1440047379">
-<g id="1690287238">
+<g id="887374962">
+<g id="765453526">
 <rect x="56" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="62" text-anchor="middle" class="terminal-text">'+'</text>
 </g>
@@ -3084,7 +3089,7 @@
 <line x1="97" y1="58" x2="97" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="97" y1="58" x2="113" y2="58" class="rail"/>
-<g id="1690254271">
+<g id="1804392830">
 <rect x="56" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="100" text-anchor="middle" class="terminal-text">'-'</text>
 </g>
@@ -3119,8 +3124,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MulOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="280884709">
-<g id="343965883">
+<g id="1891360631">
+<g id="798643967">
 <rect x="56" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="62" text-anchor="middle" class="terminal-text">'*'</text>
 </g>
@@ -3128,7 +3133,7 @@
 <line x1="97" y1="58" x2="97" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="97" y1="58" x2="113" y2="58" class="rail"/>
-<g id="230835489">
+<g id="2104602254">
 <rect x="56" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="100" text-anchor="middle" class="terminal-text">'/'</text>
 </g>
@@ -3163,8 +3168,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MathFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1310540333">
-<g id="1847509784">
+<g id="394920521">
+<g id="1726661318">
 <rect x="66" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="62" text-anchor="middle" class="nonterminal-text">SinFunction</text>
 </g>
@@ -3172,7 +3177,7 @@
 <line x1="163" y1="58" x2="174" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="174" y1="58" x2="190" y2="58" class="rail"/>
-<g id="2114650936">
+<g id="465198410">
 <rect x="66" y="82" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="100" text-anchor="middle" class="nonterminal-text">CosFunction</text>
 </g>
@@ -3182,7 +3187,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M174,96 Q182,96 182,88" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="1635756693">
+<g id="1808766317">
 <rect x="66" y="120" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="138" text-anchor="middle" class="nonterminal-text">TanFunction</text>
 </g>
@@ -3192,7 +3197,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M174,134 Q182,134 182,126" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="504527234">
+<g id="1159835396">
 <rect x="63" y="158" width="104" height="28" class="nonterminal-box"/>
 <text x="115" y="176" text-anchor="middle" class="nonterminal-text">SqrtFunction</text>
 </g>
@@ -3202,7 +3207,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M174,172 Q182,172 182,164" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="101478235">
+<g id="1970121108">
 <rect x="66" y="196" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="214" text-anchor="middle" class="nonterminal-text">MinFunction</text>
 </g>
@@ -3212,7 +3217,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M174,210 Q182,210 182,202" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="540585569">
+<g id="1014295166">
 <rect x="66" y="234" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="252" text-anchor="middle" class="nonterminal-text">MaxFunction</text>
 </g>
@@ -3222,7 +3227,7 @@
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M174,248 Q182,248 182,240" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="1007653873">
+<g id="730293344">
 <rect x="56" y="272" width="118" height="28" class="nonterminal-box"/>
 <text x="115" y="290" text-anchor="middle" class="nonterminal-text">RandomFunction</text>
 </g>
@@ -3232,7 +3237,7 @@
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
 <path d="M174,286 Q182,286 182,278" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="836514715">
+<g id="1670821787">
 <rect x="66" y="310" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="328" text-anchor="middle" class="nonterminal-text">AbsFunction</text>
 </g>
@@ -3242,7 +3247,7 @@
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
 <path d="M174,324 Q182,324 182,316" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="1414521932">
+<g id="2066715508">
 <rect x="59" y="348" width="111" height="28" class="nonterminal-box"/>
 <text x="114" y="366" text-anchor="middle" class="nonterminal-text">RoundFunction</text>
 </g>
@@ -3252,7 +3257,7 @@
 <path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
 <path d="M174,362 Q182,362 182,354" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="828441346">
+<g id="1611903349">
 <rect x="63" y="386" width="104" height="28" class="nonterminal-box"/>
 <text x="115" y="404" text-anchor="middle" class="nonterminal-text">CeilFunction</text>
 </g>
@@ -3262,7 +3267,7 @@
 <path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
 <path d="M174,400 Q182,400 182,392" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="1899073220">
+<g id="1890020723">
 <rect x="59" y="424" width="111" height="28" class="nonterminal-box"/>
 <text x="114" y="442" text-anchor="middle" class="nonterminal-text">FloorFunction</text>
 </g>
@@ -3272,7 +3277,7 @@
 <path d="M48,430 Q48,438 56,438" class="rail" fill="none"/>
 <path d="M174,438 Q182,438 182,430" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="555826066">
+<g id="643511955">
 <rect x="66" y="462" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="480" text-anchor="middle" class="nonterminal-text">PowFunction</text>
 </g>
@@ -3282,7 +3287,7 @@
 <path d="M48,468 Q48,476 56,476" class="rail" fill="none"/>
 <path d="M174,476 Q182,476 182,468" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="174573182">
+<g id="560510239">
 <rect x="66" y="500" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="518" text-anchor="middle" class="nonterminal-text">LogFunction</text>
 </g>
@@ -3292,7 +3297,7 @@
 <path d="M48,506 Q48,514 56,514" class="rail" fill="none"/>
 <path d="M174,514 Q182,514 182,506" class="rail" fill="none"/>
 <path d="M182,66 Q182,58 190,58" class="rail" fill="none"/>
-<g id="858242339">
+<g id="1552752734">
 <rect x="66" y="538" width="97" height="28" class="nonterminal-box"/>
 <text x="114" y="556" text-anchor="middle" class="nonterminal-text">ExpFunction</text>
 </g>
@@ -3327,26 +3332,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SinFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1589683045">
-<g id="1715998167">
+<g id="1157081801">
+<g id="1754939781">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'sin'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="1386767190">
+<g id="213832132">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1558712965">
+<g id="964988893">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="2025864991">
+<g id="2119912174">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3375,26 +3380,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CosFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="540642172">
-<g id="1340328248">
+<g id="735658673">
+<g id="1044214626">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'cos'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="1401132667">
+<g id="593160479">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="717386707">
+<g id="124963744">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1900164709">
+<g id="2125109349">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3423,26 +3428,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TanFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="36202360">
-<g id="1875308878">
+<g id="542350499">
+<g id="1606370500">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'tan'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="1445157774">
+<g id="1317120856">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="909295153">
+<g id="1682078557">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1522311648">
+<g id="91185582">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3471,26 +3476,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SqrtFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="3213500">
-<g id="1318822808">
+<g id="1820822722">
+<g id="1674262682">
 <rect x="40" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="71" y="62" text-anchor="middle" class="terminal-text">'sqrt'</text>
 </g>
 <line x1="102" y1="58" x2="122" y2="58" class="rail"/>
 <polygon points="109,55 115,58 109,61" class="arrow"/>
-<g id="1836797772">
+<g id="346304301">
 <rect x="122" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="142" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="163" y1="58" x2="183" y2="58" class="rail"/>
 <polygon points="170,55 176,58 170,61" class="arrow"/>
-<g id="1383547042">
+<g id="1790467590">
 <rect x="183" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="249" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="315" y1="58" x2="335" y2="58" class="rail"/>
 <polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="329645619">
+<g id="1446142326">
 <rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3519,34 +3524,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MinFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1815546035">
-<g id="923219673">
+<g id="2034101993">
+<g id="1500449592">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'min'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="1604125387">
+<g id="1905211005">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1668627309">
+<g id="880005355">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="418304857">
-<g id="1376400422">
-<g id="1795799895">
+<g id="1732236678">
+<g id="1306636377">
+<g id="1682094907">
 <rect x="344" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="364" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="385" y1="82" x2="405" y2="82" class="rail"/>
 <polygon points="392,79 398,82 392,85" class="arrow"/>
-<g id="1698097425">
+<g id="1171606080">
 <rect x="405" y="68" width="132" height="28" class="nonterminal-box"/>
 <text x="471" y="86" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -3567,7 +3572,7 @@
 </g>
 <line x1="553" y1="58" x2="573" y2="58" class="rail"/>
 <polygon points="560,55 566,58 560,61" class="arrow"/>
-<g id="1050349584">
+<g id="383070521">
 <rect x="573" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="593" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3596,34 +3601,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MaxFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1465085305">
-<g id="1864350231">
+<g id="289539654">
+<g id="966716143">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'max'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="25548982">
+<g id="538221503">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1735934726">
+<g id="527907453">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="724125922">
-<g id="250370634">
-<g id="861842890">
+<g id="1701004158">
+<g id="1130446269">
+<g id="153867740">
 <rect x="344" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="364" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="385" y1="82" x2="405" y2="82" class="rail"/>
 <polygon points="392,79 398,82 392,85" class="arrow"/>
-<g id="553871028">
+<g id="1194102660">
 <rect x="405" y="68" width="132" height="28" class="nonterminal-box"/>
 <text x="471" y="86" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -3644,7 +3649,7 @@
 </g>
 <line x1="553" y1="58" x2="573" y2="58" class="rail"/>
 <polygon points="560,55 566,58 560,61" class="arrow"/>
-<g id="1843368112">
+<g id="850521915">
 <rect x="573" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="593" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3673,20 +3678,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">RandomFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="120694604">
-<g id="989938643">
+<g id="411509625">
+<g id="1535401222">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="terminal-text">'random'</text>
 </g>
 <line x1="116" y1="58" x2="136" y2="58" class="rail"/>
 <polygon points="123,55 129,58 123,61" class="arrow"/>
-<g id="1519280649">
+<g id="604216763">
 <rect x="136" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="177" y1="58" x2="197" y2="58" class="rail"/>
 <polygon points="184,55 190,58 184,61" class="arrow"/>
-<g id="1262822392">
+<g id="435582519">
 <rect x="197" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="217" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3715,26 +3720,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AbsFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="979294118">
-<g id="916419490">
+<g id="587095193">
+<g id="1636970754">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'abs'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="522764626">
+<g id="1506051790">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="2106620844">
+<g id="1940456463">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="2006034581">
+<g id="1385463272">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3763,26 +3768,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">RoundFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1709366259">
-<g id="1663411182">
+<g id="281073256">
+<g id="1601260798">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'round'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="488044861">
+<g id="1690542691">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="1740189450">
+<g id="365557806">
 <rect x="190" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="256" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="731260860">
+<g id="1166238874">
 <rect x="342" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="362" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3811,26 +3816,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CeilFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2142003995">
-<g id="1335298403">
+<g id="1595910934">
+<g id="1776922281">
 <rect x="40" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="71" y="62" text-anchor="middle" class="terminal-text">'ceil'</text>
 </g>
 <line x1="102" y1="58" x2="122" y2="58" class="rail"/>
 <polygon points="109,55 115,58 109,61" class="arrow"/>
-<g id="1643691748">
+<g id="859513650">
 <rect x="122" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="142" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="163" y1="58" x2="183" y2="58" class="rail"/>
 <polygon points="170,55 176,58 170,61" class="arrow"/>
-<g id="2068434592">
+<g id="1833051771">
 <rect x="183" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="249" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="315" y1="58" x2="335" y2="58" class="rail"/>
 <polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="143110009">
+<g id="2074594861">
 <rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3859,26 +3864,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">FloorFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="601893033">
-<g id="1535634836">
+<g id="578573391">
+<g id="894902644">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'floor'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="1846412426">
+<g id="1230682203">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="1539805781">
+<g id="206164475">
 <rect x="190" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="256" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="1206883981">
+<g id="774671487">
 <rect x="342" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="362" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3907,38 +3912,38 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">PowFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1651855867">
-<g id="1037324811">
+<g id="1860686293">
+<g id="1056483387">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'pow'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="1525037790">
+<g id="2088525846">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1627821297">
+<g id="913921170">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1132547352">
+<g id="1986502718">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="369" y1="58" x2="389" y2="58" class="rail"/>
 <polygon points="376,55 382,58 376,61" class="arrow"/>
-<g id="1549409129">
+<g id="220559289">
 <rect x="389" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="455" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="521" y1="58" x2="541" y2="58" class="rail"/>
 <polygon points="528,55 534,58 528,61" class="arrow"/>
-<g id="922872566">
+<g id="315022043">
 <rect x="541" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="561" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -3967,26 +3972,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LogFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1427810650">
-<g id="727001376">
+<g id="93457009">
+<g id="625666663">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'log'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="660143728">
+<g id="66378184">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="523691575">
+<g id="658561903">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1468303011">
+<g id="2004471595">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -4015,26 +4020,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExpFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1354011814">
-<g id="902919927">
+<g id="1624652583">
+<g id="546158994">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'exp'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="503195940">
+<g id="20419919">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1857815974">
+<g id="948835029">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1852584274">
+<g id="760895031">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -4063,38 +4068,38 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ToNumFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1232306490">
-<g id="1022308509">
+<g id="188341952">
+<g id="1568036767">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'toNum'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="846238611">
+<g id="354872926">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="1033490990">
+<g id="1781725475">
 <rect x="190" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="256" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="1241276575">
+<g id="996997185">
 <rect x="342" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="362" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="383" y1="58" x2="403" y2="58" class="rail"/>
 <polygon points="390,55 396,58 390,61" class="arrow"/>
-<g id="215145189">
+<g id="1422498332">
 <rect x="403" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="469" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="535" y1="58" x2="555" y2="58" class="rail"/>
 <polygon points="542,55 548,58 542,61" class="arrow"/>
-<g id="982007015">
+<g id="1983896261">
 <rect x="555" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="575" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -4107,7 +4112,7 @@
 </div>
 <div class="rule-section" id="NumberFactor">
   <div class="rule-header"><a href="#NumberFactor">NumberFactor</a></div>
-  <svg xmlns="http://www.w3.org/2000/svg" width="366" height="396">
+  <svg xmlns="http://www.w3.org/2000/svg" width="366" height="472">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -4123,28 +4128,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberFactor</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="817406040">
-<g id="1663166483">
-<rect x="99" y="44" width="167" height="28" class="nonterminal-box"/>
-<text x="182" y="62" text-anchor="middle" class="nonterminal-text">NumberMatchExpression</text>
+<g id="1026305299">
+<g id="1472954646">
+<rect x="113" y="44" width="139" height="28" class="nonterminal-box"/>
+<text x="182" y="62" text-anchor="middle" class="nonterminal-text">TernaryExpression</text>
 </g>
-<line x1="56" y1="58" x2="99" y2="58" class="rail"/>
-<line x1="266" y1="58" x2="310" y2="58" class="rail"/>
+<line x1="56" y1="58" x2="113" y2="58" class="rail"/>
+<line x1="252" y1="58" x2="310" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="310" y1="58" x2="326" y2="58" class="rail"/>
-<g id="2042495840">
-<rect x="131" y="82" width="104" height="28" class="nonterminal-box"/>
-<text x="183" y="100" text-anchor="middle" class="nonterminal-text">IfExpression</text>
+<g id="1338697865">
+<rect x="99" y="82" width="167" height="28" class="nonterminal-box"/>
+<text x="182" y="100" text-anchor="middle" class="nonterminal-text">NumberMatchExpression</text>
 </g>
-<line x1="56" y1="96" x2="131" y2="96" class="rail"/>
-<line x1="235" y1="96" x2="310" y2="96" class="rail"/>
+<line x1="56" y1="96" x2="99" y2="96" class="rail"/>
+<line x1="266" y1="96" x2="310" y2="96" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M310,96 Q318,96 318,88" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="36333492">
+<g id="1194064455">
 <rect x="131" y="120" width="104" height="28" class="nonterminal-box"/>
-<text x="183" y="138" text-anchor="middle" class="nonterminal-text">MathFunction</text>
+<text x="183" y="138" text-anchor="middle" class="nonterminal-text">IfExpression</text>
 </g>
 <line x1="56" y1="134" x2="131" y2="134" class="rail"/>
 <line x1="235" y1="134" x2="310" y2="134" class="rail"/>
@@ -4152,79 +4157,99 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M310,134 Q318,134 318,126" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="1468357786">
-<rect x="127" y="158" width="111" height="28" class="nonterminal-box"/>
-<text x="182" y="176" text-anchor="middle" class="nonterminal-text">ToNumFunction</text>
+<g id="35775420">
+<rect x="131" y="158" width="104" height="28" class="nonterminal-box"/>
+<text x="183" y="176" text-anchor="middle" class="nonterminal-text">MathFunction</text>
 </g>
-<line x1="56" y1="172" x2="127" y2="172" class="rail"/>
-<line x1="238" y1="172" x2="310" y2="172" class="rail"/>
+<line x1="56" y1="172" x2="131" y2="172" class="rail"/>
+<line x1="235" y1="172" x2="310" y2="172" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M310,172 Q318,172 318,164" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="990398217">
-<rect x="89" y="196" width="188" height="28" class="nonterminal-box"/>
-<text x="183" y="214" text-anchor="middle" class="nonterminal-text">ExternalNumberInvocation</text>
+<g id="166265311">
+<rect x="127" y="196" width="111" height="28" class="nonterminal-box"/>
+<text x="182" y="214" text-anchor="middle" class="nonterminal-text">ToNumFunction</text>
 </g>
-<line x1="56" y1="210" x2="89" y2="210" class="rail"/>
-<line x1="277" y1="210" x2="310" y2="210" class="rail"/>
+<line x1="56" y1="210" x2="127" y2="210" class="rail"/>
+<line x1="238" y1="210" x2="310" y2="210" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M310,210 Q318,210 318,202" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="841283083">
-<rect x="152" y="234" width="62" height="28" class="nonterminal-box"/>
-<text x="183" y="252" text-anchor="middle" class="nonterminal-text">NUMBER</text>
+<g id="293551819">
+<rect x="124" y="234" width="118" height="28" class="nonterminal-box"/>
+<text x="183" y="252" text-anchor="middle" class="nonterminal-text">LengthFunction</text>
 </g>
-<line x1="56" y1="248" x2="152" y2="248" class="rail"/>
-<line x1="214" y1="248" x2="310" y2="248" class="rail"/>
+<line x1="56" y1="248" x2="124" y2="248" class="rail"/>
+<line x1="242" y1="248" x2="310" y2="248" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M310,248 Q318,248 318,240" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="1675763772">
-<rect x="134" y="272" width="97" height="28" class="nonterminal-box"/>
-<text x="182" y="290" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+<g id="161355617">
+<rect x="89" y="272" width="188" height="28" class="nonterminal-box"/>
+<text x="183" y="290" text-anchor="middle" class="nonterminal-text">ExternalNumberInvocation</text>
 </g>
-<line x1="56" y1="286" x2="134" y2="286" class="rail"/>
-<line x1="231" y1="286" x2="310" y2="286" class="rail"/>
+<line x1="56" y1="286" x2="89" y2="286" class="rail"/>
+<line x1="277" y1="286" x2="310" y2="286" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
 <path d="M310,286 Q318,286 318,278" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="520016214">
-<rect x="117" y="310" width="132" height="28" class="nonterminal-box"/>
-<text x="183" y="328" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+<g id="70203885">
+<rect x="152" y="310" width="62" height="28" class="nonterminal-box"/>
+<text x="183" y="328" text-anchor="middle" class="nonterminal-text">NUMBER</text>
 </g>
-<line x1="56" y1="324" x2="117" y2="324" class="rail"/>
-<line x1="249" y1="324" x2="310" y2="324" class="rail"/>
+<line x1="56" y1="324" x2="152" y2="324" class="rail"/>
+<line x1="214" y1="324" x2="310" y2="324" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
 <path d="M310,324 Q318,324 318,316" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
-<g id="1757143877">
-<g id="1731722639">
-<rect x="56" y="348" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="76" y="366" text-anchor="middle" class="terminal-text">'('</text>
+<g id="1158227790">
+<rect x="134" y="348" width="97" height="28" class="nonterminal-box"/>
+<text x="182" y="366" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
-<line x1="97" y1="362" x2="117" y2="362" class="rail"/>
-<polygon points="104,359 110,362 104,365" class="arrow"/>
-<g id="1924582348">
-<rect x="117" y="348" width="132" height="28" class="nonterminal-box"/>
-<text x="183" y="366" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
-</g>
-<line x1="249" y1="362" x2="269" y2="362" class="rail"/>
-<polygon points="256,359 262,362 256,365" class="arrow"/>
-<g id="11003494">
-<rect x="269" y="348" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="289" y="366" text-anchor="middle" class="terminal-text">')'</text>
-</g>
-</g>
-<line x1="56" y1="362" x2="56" y2="362" class="rail"/>
-<line x1="310" y1="362" x2="310" y2="362" class="rail"/>
+<line x1="56" y1="362" x2="134" y2="362" class="rail"/>
+<line x1="231" y1="362" x2="310" y2="362" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
 <path d="M310,362 Q318,362 318,354" class="rail" fill="none"/>
+<path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
+<g id="770232386">
+<rect x="117" y="386" width="132" height="28" class="nonterminal-box"/>
+<text x="183" y="404" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+</g>
+<line x1="56" y1="400" x2="117" y2="400" class="rail"/>
+<line x1="249" y1="400" x2="310" y2="400" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
+<path d="M310,400 Q318,400 318,392" class="rail" fill="none"/>
+<path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
+<g id="1310165927">
+<g id="1421148033">
+<rect x="56" y="424" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="76" y="442" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="97" y1="438" x2="117" y2="438" class="rail"/>
+<polygon points="104,435 110,438 104,441" class="arrow"/>
+<g id="690574507">
+<rect x="117" y="424" width="132" height="28" class="nonterminal-box"/>
+<text x="183" y="442" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</g>
+<line x1="249" y1="438" x2="269" y2="438" class="rail"/>
+<polygon points="256,435 262,438 256,441" class="arrow"/>
+<g id="630597015">
+<rect x="269" y="424" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="289" y="442" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="56" y1="438" x2="56" y2="438" class="rail"/>
+<line x1="310" y1="438" x2="310" y2="438" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,430 Q48,438 56,438" class="rail" fill="none"/>
+<path d="M310,438 Q318,438 318,430" class="rail" fill="none"/>
 <path d="M318,66 Q318,58 326,58" class="rail" fill="none"/>
 </g>
 <line x1="326" y1="58" x2="334" y2="58" class="rail"/>
@@ -4233,9 +4258,201 @@
 </svg>
 
 </div>
+<div class="rule-section" id="ToUpperCaseFunction">
+  <div class="rule-header"><a href="#ToUpperCaseFunction">ToUpperCaseFunction</a></div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="465" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ToUpperCaseFunction</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="656227740">
+<g id="1581496849">
+<rect x="40" y="44" width="111" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="95" y="62" text-anchor="middle" class="terminal-text">'toUpperCase'</text>
+</g>
+<line x1="151" y1="58" x2="171" y2="58" class="rail"/>
+<polygon points="158,55 164,58 158,61" class="arrow"/>
+<g id="1248696019">
+<rect x="171" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="191" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="212" y1="58" x2="232" y2="58" class="rail"/>
+<polygon points="219,55 225,58 219,61" class="arrow"/>
+<g id="945125002">
+<rect x="232" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="298" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="364" y1="58" x2="384" y2="58" class="rail"/>
+<polygon points="371,55 377,58 371,61" class="arrow"/>
+<g id="1691193382">
+<rect x="384" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="404" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="425" y1="58" x2="433" y2="58" class="rail"/>
+<circle cx="439" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="439" cy="58" r="3" class="end-circle-inner"/>
+</svg>
+
+</div>
+<div class="rule-section" id="ToLowerCaseFunction">
+  <div class="rule-header"><a href="#ToLowerCaseFunction">ToLowerCaseFunction</a></div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="465" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ToLowerCaseFunction</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1382680878">
+<g id="23129250">
+<rect x="40" y="44" width="111" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="95" y="62" text-anchor="middle" class="terminal-text">'toLowerCase'</text>
+</g>
+<line x1="151" y1="58" x2="171" y2="58" class="rail"/>
+<polygon points="158,55 164,58 158,61" class="arrow"/>
+<g id="311573282">
+<rect x="171" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="191" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="212" y1="58" x2="232" y2="58" class="rail"/>
+<polygon points="219,55 225,58 219,61" class="arrow"/>
+<g id="450282998">
+<rect x="232" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="298" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="364" y1="58" x2="384" y2="58" class="rail"/>
+<polygon points="371,55 377,58 371,61" class="arrow"/>
+<g id="1424620269">
+<rect x="384" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="404" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="425" y1="58" x2="433" y2="58" class="rail"/>
+<circle cx="439" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="439" cy="58" r="3" class="end-circle-inner"/>
+</svg>
+
+</div>
+<div class="rule-section" id="TrimFunction">
+  <div class="rule-header"><a href="#TrimFunction">TrimFunction</a></div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="416" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TrimFunction</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="638092870">
+<g id="1361212266">
+<rect x="40" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="71" y="62" text-anchor="middle" class="terminal-text">'trim'</text>
+</g>
+<line x1="102" y1="58" x2="122" y2="58" class="rail"/>
+<polygon points="109,55 115,58 109,61" class="arrow"/>
+<g id="2113398221">
+<rect x="122" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="142" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="163" y1="58" x2="183" y2="58" class="rail"/>
+<polygon points="170,55 176,58 170,61" class="arrow"/>
+<g id="1725060620">
+<rect x="183" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="249" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="315" y1="58" x2="335" y2="58" class="rail"/>
+<polygon points="322,55 328,58 322,61" class="arrow"/>
+<g id="1685262465">
+<rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="376" y1="58" x2="384" y2="58" class="rail"/>
+<circle cx="390" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="390" cy="58" r="3" class="end-circle-inner"/>
+</svg>
+
+</div>
+<div class="rule-section" id="LengthFunction">
+  <div class="rule-header"><a href="#LengthFunction">LengthFunction</a></div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="430" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LengthFunction</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1955182708">
+<g id="1687406279">
+<rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="78" y="62" text-anchor="middle" class="terminal-text">'length'</text>
+</g>
+<line x1="116" y1="58" x2="136" y2="58" class="rail"/>
+<polygon points="123,55 129,58 123,61" class="arrow"/>
+<g id="277188207">
+<rect x="136" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="156" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="177" y1="58" x2="197" y2="58" class="rail"/>
+<polygon points="184,55 190,58 184,61" class="arrow"/>
+<g id="1821275110">
+<rect x="197" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="263" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="329" y1="58" x2="349" y2="58" class="rail"/>
+<polygon points="336,55 342,58 336,61" class="arrow"/>
+<g id="240579207">
+<rect x="349" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="369" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="390" y1="58" x2="398" y2="58" class="rail"/>
+<circle cx="404" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="404" cy="58" r="3" class="end-circle-inner"/>
+</svg>
+
+</div>
 <div class="rule-section" id="StringExpression">
   <div class="rule-header"><a href="#StringExpression">StringExpression</a></div>
-  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="244">
+  <svg xmlns="http://www.w3.org/2000/svg" width="300" height="358">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -4251,8 +4468,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1816757085">
-<g id="1955915048">
+<g id="466888497">
+<g id="1220781692">
 <rect x="66" y="44" width="167" height="28" class="nonterminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="nonterminal-text">StringMatchExpression</text>
 </g>
@@ -4260,7 +4477,7 @@
 <line x1="233" y1="58" x2="244" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1270855946">
+<g id="1473117633">
 <rect x="56" y="82" width="188" height="28" class="nonterminal-box"/>
 <text x="150" y="100" text-anchor="middle" class="nonterminal-text">ExternalStringInvocation</text>
 </g>
@@ -4270,35 +4487,65 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="2083117811">
-<rect x="119" y="120" width="62" height="28" class="nonterminal-box"/>
-<text x="150" y="138" text-anchor="middle" class="nonterminal-text">STRING</text>
+<g id="1849098101">
+<rect x="73" y="120" width="153" height="28" class="nonterminal-box"/>
+<text x="149" y="138" text-anchor="middle" class="nonterminal-text">ToUpperCaseFunction</text>
 </g>
-<line x1="56" y1="134" x2="119" y2="134" class="rail"/>
-<line x1="181" y1="134" x2="244" y2="134" class="rail"/>
+<line x1="56" y1="134" x2="73" y2="134" class="rail"/>
+<line x1="226" y1="134" x2="244" y2="134" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="157683534">
-<rect x="101" y="158" width="97" height="28" class="nonterminal-box"/>
-<text x="149" y="176" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+<g id="1472569567">
+<rect x="73" y="158" width="153" height="28" class="nonterminal-box"/>
+<text x="149" y="176" text-anchor="middle" class="nonterminal-text">ToLowerCaseFunction</text>
 </g>
-<line x1="56" y1="172" x2="101" y2="172" class="rail"/>
-<line x1="198" y1="172" x2="244" y2="172" class="rail"/>
+<line x1="56" y1="172" x2="73" y2="172" class="rail"/>
+<line x1="226" y1="172" x2="244" y2="172" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M244,172 Q252,172 252,164" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1518864111">
-<rect x="84" y="196" width="132" height="28" class="nonterminal-box"/>
-<text x="150" y="214" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+<g id="39848989">
+<rect x="98" y="196" width="104" height="28" class="nonterminal-box"/>
+<text x="150" y="214" text-anchor="middle" class="nonterminal-text">TrimFunction</text>
 </g>
-<line x1="56" y1="210" x2="84" y2="210" class="rail"/>
-<line x1="216" y1="210" x2="244" y2="210" class="rail"/>
+<line x1="56" y1="210" x2="98" y2="210" class="rail"/>
+<line x1="202" y1="210" x2="244" y2="210" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M244,210 Q252,210 252,202" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="981191269">
+<rect x="119" y="234" width="62" height="28" class="nonterminal-box"/>
+<text x="150" y="252" text-anchor="middle" class="nonterminal-text">STRING</text>
+</g>
+<line x1="56" y1="248" x2="119" y2="248" class="rail"/>
+<line x1="181" y1="248" x2="244" y2="248" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
+<path d="M244,248 Q252,248 252,240" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="1668237064">
+<rect x="101" y="272" width="97" height="28" class="nonterminal-box"/>
+<text x="149" y="290" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="56" y1="286" x2="101" y2="286" class="rail"/>
+<line x1="198" y1="286" x2="244" y2="286" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
+<path d="M244,286 Q252,286 252,278" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="425119970">
+<rect x="84" y="310" width="132" height="28" class="nonterminal-box"/>
+<text x="150" y="328" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+</g>
+<line x1="56" y1="324" x2="84" y2="324" class="rail"/>
+<line x1="216" y1="324" x2="244" y2="324" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
+<path d="M244,324 Q252,324 252,316" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
 </g>
 <line x1="260" y1="58" x2="268" y2="58" class="rail"/>
@@ -4325,22 +4572,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1325808650">
-<g id="1585787493">
+<g id="413531706">
+<g id="2140729036">
 <rect x="40" y="44" width="160" height="28" class="nonterminal-box"/>
 <text x="120" y="62" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
 </g>
 <line x1="200" y1="58" x2="220" y2="58" class="rail"/>
 <polygon points="207,55 213,58 207,61" class="arrow"/>
-<g id="706197430">
-<g id="1568059495">
-<g id="1730173572">
+<g id="1261017438">
+<g id="1937762163">
+<g id="1725346096">
 <rect x="236" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="256" y="86" text-anchor="middle" class="terminal-text">'|'</text>
 </g>
 <line x1="277" y1="82" x2="297" y2="82" class="rail"/>
 <polygon points="284,79 290,82 284,85" class="arrow"/>
-<g id="2097514481">
+<g id="1227402440">
 <rect x="297" y="68" width="160" height="28" class="nonterminal-box"/>
 <text x="377" y="86" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
 </g>
@@ -4384,22 +4631,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanAndExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="473581465">
-<g id="510464020">
+<g id="1709256378">
+<g id="350703370">
 <rect x="40" y="44" width="160" height="28" class="nonterminal-box"/>
 <text x="120" y="62" text-anchor="middle" class="nonterminal-text">BooleanXorExpression</text>
 </g>
 <line x1="200" y1="58" x2="220" y2="58" class="rail"/>
 <polygon points="207,55 213,58 207,61" class="arrow"/>
-<g id="1766724936">
-<g id="525683462">
-<g id="1987083830">
+<g id="110695237">
+<g id="682137157">
+<g id="414148250">
 <rect x="236" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="256" y="86" text-anchor="middle" class="terminal-text">'&amp;'</text>
 </g>
 <line x1="277" y1="82" x2="297" y2="82" class="rail"/>
 <polygon points="284,79 290,82 284,85" class="arrow"/>
-<g id="1632492873">
+<g id="525074360">
 <rect x="297" y="68" width="160" height="28" class="nonterminal-box"/>
 <text x="377" y="86" text-anchor="middle" class="nonterminal-text">BooleanXorExpression</text>
 </g>
@@ -4443,22 +4690,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanXorExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="133250414">
-<g id="319977154">
+<g id="846811024">
+<g id="630696833">
 <rect x="40" y="44" width="111" height="28" class="nonterminal-box"/>
 <text x="95" y="62" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
 </g>
 <line x1="151" y1="58" x2="171" y2="58" class="rail"/>
 <polygon points="158,55 164,58 158,61" class="arrow"/>
-<g id="1908143486">
-<g id="1897871865">
-<g id="648680157">
+<g id="1938240883">
+<g id="1800683579">
+<g id="1239489480">
 <rect x="187" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="207" y="86" text-anchor="middle" class="terminal-text">'^'</text>
 </g>
 <line x1="228" y1="82" x2="248" y2="82" class="rail"/>
 <polygon points="235,79 241,82 235,85" class="arrow"/>
-<g id="1071097621">
+<g id="128727690">
 <rect x="248" y="68" width="111" height="28" class="nonterminal-box"/>
 <text x="303" y="86" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
 </g>
@@ -4502,26 +4749,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NotExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1316864772">
-<g id="85777802">
+<g id="1093686973">
+<g id="1424448319">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="222624801">
+<g id="503024640">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="603650290">
+<g id="1461526113">
 <rect x="176" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="245" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="315" y1="58" x2="335" y2="58" class="rail"/>
 <polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="762227630">
+<g id="803266269">
 <rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -4550,8 +4797,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanFactor</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="377478451">
-<g id="1685232414">
+<g id="2022491782">
+<g id="15354135">
 <rect x="131" y="44" width="111" height="28" class="nonterminal-box"/>
 <text x="186" y="62" text-anchor="middle" class="nonterminal-text">NotExpression</text>
 </g>
@@ -4559,7 +4806,7 @@
 <line x1="242" y1="58" x2="317" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="317" y1="58" x2="333" y2="58" class="rail"/>
-<g id="280744458">
+<g id="1069265277">
 <rect x="99" y="82" width="174" height="28" class="nonterminal-box"/>
 <text x="186" y="100" text-anchor="middle" class="nonterminal-text">BooleanMatchExpression</text>
 </g>
@@ -4569,7 +4816,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M317,96 Q325,96 325,88" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1213216872">
+<g id="369395297">
 <rect x="89" y="120" width="195" height="28" class="nonterminal-box"/>
 <text x="186" y="138" text-anchor="middle" class="nonterminal-text">ExternalBooleanInvocation</text>
 </g>
@@ -4579,7 +4826,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M317,134 Q325,134 325,126" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1754638213">
+<g id="1430437794">
 <rect x="85" y="158" width="202" height="28" class="nonterminal-box"/>
 <text x="186" y="176" text-anchor="middle" class="nonterminal-text">StringComparisonExpression</text>
 </g>
@@ -4589,7 +4836,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M317,172 Q325,172 325,164" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="407858146">
+<g id="129169132">
 <rect x="106" y="196" width="160" height="28" class="nonterminal-box"/>
 <text x="186" y="214" text-anchor="middle" class="nonterminal-text">ComparisonExpression</text>
 </g>
@@ -4599,7 +4846,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M317,210 Q325,210 325,202" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1454031203">
+<g id="1709215550">
 <rect x="155" y="234" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="252" text-anchor="middle" class="terminal-text">'true'</text>
 </g>
@@ -4609,7 +4856,7 @@
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M317,248 Q325,248 325,240" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="527446182">
+<g id="1474636397">
 <rect x="152" y="272" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="290" text-anchor="middle" class="terminal-text">'false'</text>
 </g>
@@ -4619,7 +4866,7 @@
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
 <path d="M317,286 Q325,286 325,278" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1511785794">
+<g id="395976860">
 <rect x="138" y="310" width="97" height="28" class="nonterminal-box"/>
 <text x="186" y="328" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
@@ -4629,7 +4876,7 @@
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
 <path d="M317,324 Q325,324 325,316" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="963601816">
+<g id="126857493">
 <rect x="120" y="348" width="132" height="28" class="nonterminal-box"/>
 <text x="186" y="366" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
 </g>
@@ -4639,20 +4886,20 @@
 <path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
 <path d="M317,362 Q325,362 325,354" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1596467899">
-<g id="961419791">
+<g id="614131663">
+<g id="1727485861">
 <rect x="56" y="386" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="404" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="97" y1="400" x2="117" y2="400" class="rail"/>
 <polygon points="104,397 110,400 104,403" class="arrow"/>
-<g id="665188480">
+<g id="415219540">
 <rect x="117" y="386" width="139" height="28" class="nonterminal-box"/>
 <text x="186" y="404" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="256" y1="400" x2="276" y2="400" class="rail"/>
 <polygon points="263,397 269,400 263,403" class="arrow"/>
-<g id="489279267">
+<g id="1592255007">
 <rect x="276" y="386" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="296" y="404" text-anchor="middle" class="terminal-text">')'</text>
 </g>
@@ -4688,20 +4935,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringComparisonExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="990416209">
-<g id="513169028">
+<g id="298522150">
+<g id="489456604">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="172" y1="58" x2="192" y2="58" class="rail"/>
 <polygon points="179,55 185,58 179,61" class="arrow"/>
-<g id="1301664418">
+<g id="2084203900">
 <rect x="192" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="62" text-anchor="middle" class="nonterminal-text">EqualityOp</text>
 </g>
 <line x1="282" y1="58" x2="302" y2="58" class="rail"/>
 <polygon points="289,55 295,58 289,61" class="arrow"/>
-<g id="1408652377">
+<g id="267209131">
 <rect x="302" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="368" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -4730,8 +4977,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">EqualityOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="366004251">
-<g id="394714818">
+<g id="582692100">
+<g id="1753236896">
 <rect x="56" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="62" text-anchor="middle" class="terminal-text">'=='</text>
 </g>
@@ -4739,7 +4986,7 @@
 <line x1="104" y1="58" x2="104" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="104" y1="58" x2="120" y2="58" class="rail"/>
-<g id="1952779858">
+<g id="1207866433">
 <rect x="56" y="82" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="100" text-anchor="middle" class="terminal-text">'!='</text>
 </g>
@@ -4774,20 +5021,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ComparisonExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="81009902">
-<g id="1791868405">
+<g id="1225300078">
+<g id="1804100947">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="172" y1="58" x2="192" y2="58" class="rail"/>
 <polygon points="179,55 185,58 179,61" class="arrow"/>
-<g id="1260134048">
+<g id="21991623">
 <rect x="192" y="44" width="83" height="28" class="nonterminal-box"/>
 <text x="233" y="62" text-anchor="middle" class="nonterminal-text">CompareOp</text>
 </g>
 <line x1="275" y1="58" x2="295" y2="58" class="rail"/>
 <polygon points="282,55 288,58 282,61" class="arrow"/>
-<g id="391618063">
+<g id="849362995">
 <rect x="295" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="361" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -4816,8 +5063,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CompareOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1684890795">
-<g id="57748372">
+<g id="1830428037">
+<g id="1627573985">
 <rect x="56" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="62" text-anchor="middle" class="terminal-text">'=='</text>
 </g>
@@ -4825,7 +5072,7 @@
 <line x1="104" y1="58" x2="104" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="104" y1="58" x2="120" y2="58" class="rail"/>
-<g id="674483268">
+<g id="473346990">
 <rect x="56" y="82" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="100" text-anchor="middle" class="terminal-text">'!='</text>
 </g>
@@ -4835,7 +5082,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M104,96 Q112,96 112,88" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="54495403">
+<g id="749193667">
 <rect x="56" y="120" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="138" text-anchor="middle" class="terminal-text">'&lt;='</text>
 </g>
@@ -4845,7 +5092,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M104,134 Q112,134 112,126" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="665372494">
+<g id="560066513">
 <rect x="56" y="158" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="176" text-anchor="middle" class="terminal-text">'&gt;='</text>
 </g>
@@ -4855,7 +5102,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M104,172 Q112,172 112,164" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="764372388">
+<g id="1457739994">
 <rect x="59" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="79" y="214" text-anchor="middle" class="terminal-text">'&lt;'</text>
 </g>
@@ -4865,7 +5112,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M104,210 Q112,210 112,202" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="459857341">
+<g id="2145462891">
 <rect x="59" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="79" y="252" text-anchor="middle" class="terminal-text">'&gt;'</text>
 </g>
@@ -4900,8 +5147,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1860513229">
-<g id="94264799">
+<g id="203542073">
+<g id="1126918288">
 <rect x="84" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="150" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -4909,7 +5156,7 @@
 <line x1="216" y1="58" x2="244" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1399499405">
+<g id="264424871">
 <rect x="84" y="82" width="132" height="28" class="nonterminal-box"/>
 <text x="150" y="100" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -4919,7 +5166,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="238157928">
+<g id="2030443590">
 <rect x="80" y="120" width="139" height="28" class="nonterminal-box"/>
 <text x="149" y="138" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
@@ -4929,7 +5176,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="32863545">
+<g id="1145946326">
 <rect x="56" y="158" width="188" height="28" class="nonterminal-box"/>
 <text x="150" y="176" text-anchor="middle" class="nonterminal-text">ExternalObjectInvocation</text>
 </g>
@@ -4939,7 +5186,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M244,172 Q252,172 252,164" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1995616381">
+<g id="1547325223">
 <rect x="101" y="196" width="97" height="28" class="nonterminal-box"/>
 <text x="149" y="214" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
@@ -4949,7 +5196,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M244,210 Q252,210 252,202" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1883919084">
+<g id="1158422258">
 <rect x="84" y="234" width="132" height="28" class="nonterminal-box"/>
 <text x="150" y="252" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
 </g>
@@ -4984,68 +5231,68 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">IfExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1384722895">
-<g id="1150538133">
+<g id="272561440">
+<g id="641791003">
 <rect x="40" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="64" y="62" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="88" y1="58" x2="108" y2="58" class="rail"/>
 <polygon points="95,55 101,58 95,61" class="arrow"/>
-<g id="662822946">
+<g id="680379523">
 <rect x="108" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="128" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="149" y1="58" x2="169" y2="58" class="rail"/>
 <polygon points="156,55 162,58 156,61" class="arrow"/>
-<g id="92150540">
+<g id="231974126">
 <rect x="169" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="238" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="1110623531">
+<g id="260174699">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="369" y1="58" x2="389" y2="58" class="rail"/>
 <polygon points="376,55 382,58 376,61" class="arrow"/>
-<g id="410495873">
+<g id="775962284">
 <rect x="389" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="409" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="430" y1="58" x2="450" y2="58" class="rail"/>
 <polygon points="437,55 443,58 437,61" class="arrow"/>
-<g id="811587677">
+<g id="1747930683">
 <rect x="450" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="495" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="540" y1="58" x2="560" y2="58" class="rail"/>
 <polygon points="547,55 553,58 547,61" class="arrow"/>
-<g id="1166807841">
+<g id="2018210564">
 <rect x="560" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="580" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
 <line x1="601" y1="58" x2="621" y2="58" class="rail"/>
 <polygon points="608,55 614,58 608,61" class="arrow"/>
-<g id="289639718">
+<g id="2018627021">
 <rect x="621" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="652" y="62" text-anchor="middle" class="terminal-text">'else'</text>
 </g>
 <line x1="683" y1="58" x2="703" y2="58" class="rail"/>
 <polygon points="690,55 696,58 690,61" class="arrow"/>
-<g id="885851948">
+<g id="1472932149">
 <rect x="703" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="723" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="744" y1="58" x2="764" y2="58" class="rail"/>
 <polygon points="751,55 757,58 751,61" class="arrow"/>
-<g id="2048834776">
+<g id="1158146913">
 <rect x="764" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="809" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="854" y1="58" x2="874" y2="58" class="rail"/>
 <polygon points="861,55 867,58 861,61" class="arrow"/>
-<g id="1605283233">
+<g id="1727493014">
 <rect x="874" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="894" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -5053,6 +5300,72 @@
 <line x1="915" y1="58" x2="923" y2="58" class="rail"/>
 <circle cx="929" cy="58" r="6" class="end-circle-outer"/>
 <circle cx="929" cy="58" r="3" class="end-circle-inner"/>
+</svg>
+
+</div>
+<div class="rule-section" id="TernaryExpression">
+  <div class="rule-header"><a href="#TernaryExpression">TernaryExpression</a></div>
+  <svg xmlns="http://www.w3.org/2000/svg" width="683" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TernaryExpression</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1969420123">
+<g id="515044499">
+<rect x="40" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="60" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="81" y1="58" x2="101" y2="58" class="rail"/>
+<polygon points="88,55 94,58 88,61" class="arrow"/>
+<g id="1679050951">
+<rect x="101" y="44" width="139" height="28" class="nonterminal-box"/>
+<text x="170" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
+</g>
+<line x1="240" y1="58" x2="260" y2="58" class="rail"/>
+<polygon points="247,55 253,58 247,61" class="arrow"/>
+<g id="958594064">
+<rect x="260" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="280" y="62" text-anchor="middle" class="terminal-text">'?'</text>
+</g>
+<line x1="301" y1="58" x2="321" y2="58" class="rail"/>
+<polygon points="308,55 314,58 308,61" class="arrow"/>
+<g id="1582467553">
+<rect x="321" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="366" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+</g>
+<line x1="411" y1="58" x2="431" y2="58" class="rail"/>
+<polygon points="418,55 424,58 418,61" class="arrow"/>
+<g id="1473116372">
+<rect x="431" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="451" y="62" text-anchor="middle" class="terminal-text">':'</text>
+</g>
+<line x1="472" y1="58" x2="492" y2="58" class="rail"/>
+<polygon points="479,55 485,58 479,61" class="arrow"/>
+<g id="299483290">
+<rect x="492" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="537" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+</g>
+<line x1="582" y1="58" x2="602" y2="58" class="rail"/>
+<polygon points="589,55 595,58 589,61" class="arrow"/>
+<g id="1068854477">
+<rect x="602" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="622" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="643" y1="58" x2="651" y2="58" class="rail"/>
+<circle cx="657" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="657" cy="58" r="3" class="end-circle-inner"/>
 </svg>
 
 </div>
@@ -5074,34 +5387,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberMatchExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="809762318">
-<g id="245475541">
+<g id="872091583">
+<g id="1305590395">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'match'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="22429093">
+<g id="307461707">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="733957003">
+<g id="102017992">
 <rect x="190" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="235" y="62" text-anchor="middle" class="nonterminal-text">NumberCase</text>
 </g>
 <line x1="280" y1="58" x2="300" y2="58" class="rail"/>
 <polygon points="287,55 293,58 287,61" class="arrow"/>
-<g id="1392425346">
-<g id="55331187">
-<g id="815992954">
+<g id="246224777">
+<g id="767865618">
+<g id="1680755838">
 <rect x="316" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="336" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="357" y1="82" x2="377" y2="82" class="rail"/>
 <polygon points="364,79 370,82 364,85" class="arrow"/>
-<g id="868737467">
+<g id="619454690">
 <rect x="377" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="422" y="86" text-anchor="middle" class="nonterminal-text">NumberCase</text>
 </g>
@@ -5122,19 +5435,19 @@
 </g>
 <line x1="483" y1="58" x2="503" y2="58" class="rail"/>
 <polygon points="490,55 496,58 490,61" class="arrow"/>
-<g id="2054574951">
+<g id="418834334">
 <rect x="503" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="523" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="544" y1="58" x2="564" y2="58" class="rail"/>
 <polygon points="551,55 557,58 551,61" class="arrow"/>
-<g id="1991294891">
+<g id="1574453074">
 <rect x="564" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="633" y="62" text-anchor="middle" class="nonterminal-text">NumberDefaultCase</text>
 </g>
 <line x1="703" y1="58" x2="723" y2="58" class="rail"/>
 <polygon points="710,55 716,58 710,61" class="arrow"/>
-<g id="399931359">
+<g id="1435261912">
 <rect x="723" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="743" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -5163,20 +5476,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="525571">
-<g id="2028371466">
+<g id="1554572496">
+<g id="480166985">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="179" y1="58" x2="199" y2="58" class="rail"/>
 <polygon points="186,55 192,58 186,61" class="arrow"/>
-<g id="198761306">
+<g id="10504743">
 <rect x="199" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="223" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="247" y1="58" x2="267" y2="58" class="rail"/>
 <polygon points="254,55 260,58 254,61" class="arrow"/>
-<g id="798244209">
+<g id="927302512">
 <rect x="267" y="44" width="125" height="28" class="nonterminal-box"/>
 <text x="329" y="62" text-anchor="middle" class="nonterminal-text">NumberCaseValue</text>
 </g>
@@ -5205,20 +5518,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberDefaultCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1208736537">
-<g id="1263877414">
+<g id="886959797">
+<g id="922668928">
 <rect x="40" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="terminal-text">'default'</text>
 </g>
 <line x1="123" y1="58" x2="143" y2="58" class="rail"/>
 <polygon points="130,55 136,58 130,61" class="arrow"/>
-<g id="110771485">
+<g id="873286154">
 <rect x="143" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="167" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="191" y1="58" x2="211" y2="58" class="rail"/>
 <polygon points="198,55 204,58 198,61" class="arrow"/>
-<g id="141289226">
+<g id="801640952">
 <rect x="211" y="44" width="125" height="28" class="nonterminal-box"/>
 <text x="273" y="62" text-anchor="middle" class="nonterminal-text">NumberCaseValue</text>
 </g>
@@ -5247,7 +5560,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberCaseValue</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="710239027">
+<g id="1956619617">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -5275,34 +5588,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringMatchExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1863932867">
-<g id="2104545713">
+<g id="503756098">
+<g id="714931426">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'match'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="712256162">
+<g id="1161068440">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="1018298342">
+<g id="508008909">
 <rect x="190" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="235" y="62" text-anchor="middle" class="nonterminal-text">StringCase</text>
 </g>
 <line x1="280" y1="58" x2="300" y2="58" class="rail"/>
 <polygon points="287,55 293,58 287,61" class="arrow"/>
-<g id="2116908859">
-<g id="1297149880">
-<g id="1039949752">
+<g id="516490726">
+<g id="1021475398">
+<g id="402297801">
 <rect x="316" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="336" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="357" y1="82" x2="377" y2="82" class="rail"/>
 <polygon points="364,79 370,82 364,85" class="arrow"/>
-<g id="1182461167">
+<g id="1523324472">
 <rect x="377" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="422" y="86" text-anchor="middle" class="nonterminal-text">StringCase</text>
 </g>
@@ -5323,19 +5636,19 @@
 </g>
 <line x1="483" y1="58" x2="503" y2="58" class="rail"/>
 <polygon points="490,55 496,58 490,61" class="arrow"/>
-<g id="561247961">
+<g id="1575921965">
 <rect x="503" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="523" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="544" y1="58" x2="564" y2="58" class="rail"/>
 <polygon points="551,55 557,58 551,61" class="arrow"/>
-<g id="813656972">
+<g id="1730746750">
 <rect x="564" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="633" y="62" text-anchor="middle" class="nonterminal-text">StringDefaultCase</text>
 </g>
 <line x1="703" y1="58" x2="723" y2="58" class="rail"/>
 <polygon points="710,55 716,58 710,61" class="arrow"/>
-<g id="2048425748">
+<g id="1211527063">
 <rect x="723" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="743" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -5364,20 +5677,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="103887628">
-<g id="1373810119">
+<g id="1232226025">
+<g id="906608750">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="179" y1="58" x2="199" y2="58" class="rail"/>
 <polygon points="186,55 192,58 186,61" class="arrow"/>
-<g id="445288316">
+<g id="432327992">
 <rect x="199" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="223" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="247" y1="58" x2="267" y2="58" class="rail"/>
 <polygon points="254,55 260,58 254,61" class="arrow"/>
-<g id="592688102">
+<g id="1651856192">
 <rect x="267" y="44" width="125" height="28" class="nonterminal-box"/>
 <text x="329" y="62" text-anchor="middle" class="nonterminal-text">StringCaseValue</text>
 </g>
@@ -5406,20 +5719,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringDefaultCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1032986144">
-<g id="1123629720">
+<g id="497790444">
+<g id="822146329">
 <rect x="40" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="terminal-text">'default'</text>
 </g>
 <line x1="123" y1="58" x2="143" y2="58" class="rail"/>
 <polygon points="130,55 136,58 130,61" class="arrow"/>
-<g id="205962452">
+<g id="244470540">
 <rect x="143" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="167" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="191" y1="58" x2="211" y2="58" class="rail"/>
 <polygon points="198,55 204,58 198,61" class="arrow"/>
-<g id="842326585">
+<g id="1177939661">
 <rect x="211" y="44" width="125" height="28" class="nonterminal-box"/>
 <text x="273" y="62" text-anchor="middle" class="nonterminal-text">StringCaseValue</text>
 </g>
@@ -5448,7 +5761,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringCaseValue</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="917819120">
+<g id="724904829">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -5476,34 +5789,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanMatchExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1484594489">
-<g id="263025902">
+<g id="1418676012">
+<g id="933431076">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'match'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="438135304">
+<g id="1577698459">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="936580213">
+<g id="504223355">
 <rect x="190" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="238" y="62" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
 </g>
 <line x1="287" y1="58" x2="307" y2="58" class="rail"/>
 <polygon points="294,55 300,58 294,61" class="arrow"/>
-<g id="495792375">
-<g id="852687460">
-<g id="662736689">
+<g id="1403475310">
+<g id="594145654">
+<g id="476149764">
 <rect x="323" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="343" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="364" y1="82" x2="384" y2="82" class="rail"/>
 <polygon points="371,79 377,82 371,85" class="arrow"/>
-<g id="1131316523">
+<g id="869582475">
 <rect x="384" y="68" width="97" height="28" class="nonterminal-box"/>
 <text x="432" y="86" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
 </g>
@@ -5524,19 +5837,19 @@
 </g>
 <line x1="497" y1="58" x2="517" y2="58" class="rail"/>
 <polygon points="504,55 510,58 504,61" class="arrow"/>
-<g id="1045941616">
+<g id="1142011462">
 <rect x="517" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="537" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="558" y1="58" x2="578" y2="58" class="rail"/>
 <polygon points="565,55 571,58 565,61" class="arrow"/>
-<g id="161960012">
+<g id="1365561553">
 <rect x="578" y="44" width="146" height="28" class="nonterminal-box"/>
 <text x="651" y="62" text-anchor="middle" class="nonterminal-text">BooleanDefaultCase</text>
 </g>
 <line x1="724" y1="58" x2="744" y2="58" class="rail"/>
 <polygon points="731,55 737,58 731,61" class="arrow"/>
-<g id="738433734">
+<g id="1030388170">
 <rect x="744" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="764" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>
@@ -5565,20 +5878,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1805013491">
-<g id="1489069835">
+<g id="706924665">
+<g id="493185149">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="179" y1="58" x2="199" y2="58" class="rail"/>
 <polygon points="186,55 192,58 186,61" class="arrow"/>
-<g id="1800890735">
+<g id="1794167128">
 <rect x="199" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="223" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="247" y1="58" x2="267" y2="58" class="rail"/>
 <polygon points="254,55 260,58 254,61" class="arrow"/>
-<g id="1538399081">
+<g id="79319525">
 <rect x="267" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="333" y="62" text-anchor="middle" class="nonterminal-text">BooleanCaseValue</text>
 </g>
@@ -5607,20 +5920,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanDefaultCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2056418216">
-<g id="951880373">
+<g id="450552894">
+<g id="473064384">
 <rect x="40" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="81" y="62" text-anchor="middle" class="terminal-text">'default'</text>
 </g>
 <line x1="123" y1="58" x2="143" y2="58" class="rail"/>
 <polygon points="130,55 136,58 130,61" class="arrow"/>
-<g id="1752203484">
+<g id="1889803023">
 <rect x="143" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="167" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="191" y1="58" x2="211" y2="58" class="rail"/>
 <polygon points="198,55 204,58 198,61" class="arrow"/>
-<g id="601008104">
+<g id="650598791">
 <rect x="211" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="277" y="62" text-anchor="middle" class="nonterminal-text">BooleanCaseValue</text>
 </g>
@@ -5649,7 +5962,7 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanCaseValue</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="648525677">
+<g id="368687302">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
@@ -5677,21 +5990,21 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">VariableRef</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="699780352">
-<g id="1253946629">
+<g id="604434193">
+<g id="1171633429">
 <rect x="40" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="81" y1="76" x2="101" y2="76" class="rail"/>
 <polygon points="88,73 94,76 88,79" class="arrow"/>
-<g id="2095490653">
+<g id="1505937225">
 <rect x="101" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="146" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="191" y1="76" x2="211" y2="76" class="rail"/>
 <polygon points="198,73 204,76 198,79" class="arrow"/>
-<g id="243745864">
-<g id="352359770">
+<g id="1276352155">
+<g id="343159643">
 <rect x="227" y="62" width="76" height="28" class="nonterminal-box"/>
 <text x="265" y="80" text-anchor="middle" class="nonterminal-text">TypeHint</text>
 </g>
@@ -5728,8 +6041,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Expression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="19717364">
-<g id="1613255205">
+<g id="601162609">
+<g id="1798409303">
 <rect x="96" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="162" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -5737,7 +6050,7 @@
 <line x1="228" y1="58" x2="268" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="268" y1="58" x2="284" y2="58" class="rail"/>
-<g id="1897115967">
+<g id="1592427649">
 <rect x="92" y="82" width="139" height="28" class="nonterminal-box"/>
 <text x="161" y="100" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
@@ -5747,7 +6060,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M268,96 Q276,96 276,88" class="rail" fill="none"/>
 <path d="M276,66 Q276,58 284,58" class="rail" fill="none"/>
-<g id="1166151249">
+<g id="236807817">
 <rect x="96" y="120" width="132" height="28" class="nonterminal-box"/>
 <text x="162" y="138" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -5757,7 +6070,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M268,134 Q276,134 276,126" class="rail" fill="none"/>
 <path d="M276,66 Q276,58 284,58" class="rail" fill="none"/>
-<g id="1121453612">
+<g id="502300220">
 <rect x="96" y="158" width="132" height="28" class="nonterminal-box"/>
 <text x="162" y="176" text-anchor="middle" class="nonterminal-text">ObjectExpression</text>
 </g>
@@ -5767,7 +6080,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M268,172 Q276,172 276,164" class="rail" fill="none"/>
 <path d="M276,66 Q276,58 284,58" class="rail" fill="none"/>
-<g id="1615056168">
+<g id="2051279585">
 <rect x="96" y="196" width="132" height="28" class="nonterminal-box"/>
 <text x="162" y="214" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
 </g>
@@ -5777,20 +6090,20 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M268,210 Q276,210 276,202" class="rail" fill="none"/>
 <path d="M276,66 Q276,58 284,58" class="rail" fill="none"/>
-<g id="632249781">
-<g id="213193302">
+<g id="1360708497">
+<g id="1887455140">
 <rect x="56" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="252" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="97" y1="248" x2="117" y2="248" class="rail"/>
 <polygon points="104,245 110,248 104,251" class="arrow"/>
-<g id="1502635287">
+<g id="357322259">
 <rect x="117" y="234" width="90" height="28" class="nonterminal-box"/>
 <text x="162" y="252" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="207" y1="248" x2="227" y2="248" class="rail"/>
 <polygon points="214,245 220,248 214,251" class="arrow"/>
-<g id="1543237999">
+<g id="190038808">
 <rect x="227" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="247" y="252" text-anchor="middle" class="terminal-text">')'</text>
 </g>

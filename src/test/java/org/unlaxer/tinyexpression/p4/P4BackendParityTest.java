@@ -65,15 +65,13 @@ public class P4BackendParityTest {
   // ── Formulas NOT parseable by P4 (use old tinyexpression syntax) ──────────
 
   /**
-   * Formulas that P4 grammar cannot parse (function calls without the {@code call} keyword)
-   * but that the tinyexpression JAVA_CODE backend evaluates correctly.
-   * P4 grammar uses {@code call funcName(...)} syntax; bare {@code sin(30)} is not P4-parseable.
-   * The P4 backends fall back to the AST evaluator for these formulas.
+   * Formulas that P4 grammar cannot parse but that the tinyexpression JAVA_CODE backend
+   * evaluates correctly.
+   * Note: sin(30) and max(3,7) were moved to P4_PARSEABLE_NUMBER_FORMULAS after
+   * Math functions were added to the P4 grammar.
+   * Currently empty — all float-returning formulas are now parseable by P4.
    */
-  private static final List<String> P4_UNPARSEABLE_BUT_VALID_FORMULAS = List.of(
-      "sin(30)",
-      "max(3,7)"
-  );
+  private static final List<String> P4_UNPARSEABLE_BUT_VALID_FORMULAS = List.of();
 
   // =========================================================================
   // P6-2-a: All 6 backends agree on number arithmetic

@@ -282,17 +282,17 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalSinExpr(SinExpr node) {
-    return "Math.sin((double)" + eval(node.arg()) + ")";
+    return "Math.sin(calculateContext.radianAngle(" + eval(node.arg()) + "))";
   }
 
   @Override
   protected String evalCosExpr(CosExpr node) {
-    return "Math.cos((double)" + eval(node.arg()) + ")";
+    return "Math.cos(calculateContext.radianAngle(" + eval(node.arg()) + "))";
   }
 
   @Override
   protected String evalTanExpr(TanExpr node) {
-    return "Math.tan((double)" + eval(node.arg()) + ")";
+    return "Math.tan(calculateContext.radianAngle(" + eval(node.arg()) + "))";
   }
 
   @Override
@@ -356,6 +356,30 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override
   protected String evalExpExpr(ExpExpr node) {
     return "Math.exp((double)" + eval(node.arg()) + ")";
+  }
+
+  // =========================================================================
+  // String methods (function form)
+  // =========================================================================
+
+  @Override
+  protected String evalToUpperCaseExpr(ToUpperCaseExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toUpperCase()";
+  }
+
+  @Override
+  protected String evalToLowerCaseExpr(ToLowerCaseExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toLowerCase()";
+  }
+
+  @Override
+  protected String evalTrimExpr(TrimExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").trim()";
+  }
+
+  @Override
+  protected String evalLengthExpr(LengthExpr node) {
+    return "(double)String.valueOf(" + eval(node.value()) + ").length()";
   }
 
   // =========================================================================

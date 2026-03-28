@@ -551,22 +551,25 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalSinExpr(SinExpr node) {
-    return Math.sin(((Number) eval(node.arg())).doubleValue());
+    double arg = ((Number) eval(node.arg())).doubleValue();
+    return castToNumberType(Math.sin(context.radianAngle(arg)));
   }
 
   @Override
   protected Object evalCosExpr(CosExpr node) {
-    return Math.cos(((Number) eval(node.arg())).doubleValue());
+    double arg = ((Number) eval(node.arg())).doubleValue();
+    return castToNumberType(Math.cos(context.radianAngle(arg)));
   }
 
   @Override
   protected Object evalTanExpr(TanExpr node) {
-    return Math.tan(((Number) eval(node.arg())).doubleValue());
+    double arg = ((Number) eval(node.arg())).doubleValue();
+    return castToNumberType(Math.tan(context.radianAngle(arg)));
   }
 
   @Override
   protected Object evalSqrtExpr(SqrtExpr node) {
-    return Math.sqrt(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.sqrt(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
@@ -575,7 +578,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     for (var r : node.rest()) {
       min = Math.min(min, ((Number) eval(r)).doubleValue());
     }
-    return min;
+    return castToNumberType(min);
   }
 
   @Override
@@ -584,49 +587,49 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     for (var r : node.rest()) {
       max = Math.max(max, ((Number) eval(r)).doubleValue());
     }
-    return max;
+    return castToNumberType(max);
   }
 
   @Override
   protected Object evalRandomExpr(RandomExpr node) {
-    return Math.random();
+    return castToNumberType(Math.random());
   }
 
   @Override
   protected Object evalAbsExpr(AbsExpr node) {
-    return Math.abs(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.abs(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
   protected Object evalRoundExpr(RoundExpr node) {
-    return (double) Math.round(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType((double) Math.round(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
   protected Object evalCeilExpr(CeilExpr node) {
-    return Math.ceil(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.ceil(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
   protected Object evalFloorExpr(FloorExpr node) {
-    return Math.floor(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.floor(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
   protected Object evalPowExpr(PowExpr node) {
     double base = ((Number) eval(node.base())).doubleValue();
     double exponent = ((Number) eval(node.exponent())).doubleValue();
-    return Math.pow(base, exponent);
+    return castToNumberType(Math.pow(base, exponent));
   }
 
   @Override
   protected Object evalLogExpr(LogExpr node) {
-    return Math.log(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.log(((Number) eval(node.arg())).doubleValue()));
   }
 
   @Override
   protected Object evalExpExpr(ExpExpr node) {
-    return Math.exp(((Number) eval(node.arg())).doubleValue());
+    return castToNumberType(Math.exp(((Number) eval(node.arg())).doubleValue()));
   }
 
   // =========================================================================
@@ -636,6 +639,30 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalNotExpr(NotExpr node) {
     return !Boolean.TRUE.equals(toBoolean(eval(node.value())));
+  }
+
+  // =========================================================================
+  // String methods (function form)
+  // =========================================================================
+
+  @Override
+  protected Object evalToUpperCaseExpr(ToUpperCaseExpr node) {
+    return String.valueOf(eval(node.value())).toUpperCase();
+  }
+
+  @Override
+  protected Object evalToLowerCaseExpr(ToLowerCaseExpr node) {
+    return String.valueOf(eval(node.value())).toLowerCase();
+  }
+
+  @Override
+  protected Object evalTrimExpr(TrimExpr node) {
+    return String.valueOf(eval(node.value())).trim();
+  }
+
+  @Override
+  protected Object evalLengthExpr(LengthExpr node) {
+    return castToNumberType(String.valueOf(eval(node.value())).length());
   }
 
   // =========================================================================
@@ -694,5 +721,20 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   private static BigDecimal toBigDecimal(Number value) {
     if (value instanceof BigDecimal bd) return bd;
     return new BigDecimal(String.valueOf(value));
+  }
+
+  /**
+   * Cast a raw double result to the configured number type (float, BigDecimal, etc.).
+   */
+  private Number castToNumberType(double value) {
+    if (numberType.isFloat()) return (float) value;
+    if (numberType.isDouble()) return value;
+    if (numberType.isBigDecimal()) return BigDecimal.valueOf(value);
+    if (numberType.isBigInteger()) return BigInteger.valueOf(Math.round(value));
+    if (numberType.isInt()) return (int) value;
+    if (numberType.isLong()) return (long) value;
+    if (numberType.isShort()) return (short) value;
+    if (numberType.isByte()) return (byte) value;
+    return (float) value;
   }
 }

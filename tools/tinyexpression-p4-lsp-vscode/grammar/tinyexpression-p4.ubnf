@@ -274,15 +274,31 @@ grammar TinyExpressionP4 {
   ToNumFunction ::= 'toNum' '(' StringExpression @value ',' NumberExpression @defaultValue ')' ;
 
   NumberFactor ::=
-      NumberMatchExpression
+      TernaryExpression
+    | NumberMatchExpression
     | IfExpression
     | MathFunction
     | ToNumFunction
+    | LengthFunction
     | ExternalNumberInvocation
     | NUMBER
     | VariableRef
     | MethodInvocation
     | '(' NumberExpression ')' ;
+
+  // ── String functions (function form) ────────────────────────────────────
+
+  @mapping(ToUpperCaseExpr, params=[value])
+  ToUpperCaseFunction ::= 'toUpperCase' '(' StringExpression @value ')' ;
+
+  @mapping(ToLowerCaseExpr, params=[value])
+  ToLowerCaseFunction ::= 'toLowerCase' '(' StringExpression @value ')' ;
+
+  @mapping(TrimExpr, params=[value])
+  TrimFunction ::= 'trim' '(' StringExpression @value ')' ;
+
+  @mapping(LengthExpr, params=[value])
+  LengthFunction ::= 'length' '(' StringExpression @value ')' ;
 
   // ── String expressions ─────────────────────────────────────────────────────
 
@@ -290,6 +306,9 @@ grammar TinyExpressionP4 {
   StringExpression ::=
       StringMatchExpression @value
     | ExternalStringInvocation @value
+    | ToUpperCaseFunction @value
+    | ToLowerCaseFunction @value
+    | TrimFunction @value
     | STRING @value
     | VariableRef @value
     | MethodInvocation @value ;
@@ -361,6 +380,11 @@ grammar TinyExpressionP4 {
     '{' Expression @thenExpr '}'
     'else'
     '{' Expression @elseExpr '}' ;
+
+  // ── Ternary expression (mandatory outer parentheses) ──────────────────
+  // Maps to same IfExpr AST — Evaluator changes: zero
+  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
+  TernaryExpression ::= '(' BooleanExpression @condition '?' Expression @thenExpr ':' Expression @elseExpr ')' ;
 
   // ── Match expressions ──────────────────────────────────────────────────────
 

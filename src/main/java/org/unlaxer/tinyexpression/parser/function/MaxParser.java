@@ -59,8 +59,12 @@ public class MaxParser extends JavaStyleDelimitedLazyChain implements NumberExpr
 
 	@TokenExtractor
 	public static List<Token> getRestExpressions(Token thisParserParsed) {
-		List<Token> all = thisParserParsed.getChildrenWithParserAsList(NumberExpressionParser.class);
-		return all.stream().skip(1).collect(Collectors.toList());
+		// Rest arguments are inside MaxArgSuccessor wrappers (comma + NumberExpression)
+		return thisParserParsed.filteredChildren.stream()
+			.filter(child -> child.parser instanceof MaxArgSuccessor)
+			.map(successor -> successor.getChildWithParser(NumberExpressionParser.class))
+			.filter(java.util.Objects::nonNull)
+			.collect(Collectors.toList());
 	}
 
   @Override

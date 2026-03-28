@@ -320,11 +320,7 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
 
     builder.append(wrapNumber.pre());
-    builder.append(" Math.min(");
-    build(builder, token.filteredChildren.get(0), tinyExpressionTokens);
-    builder.append(",");
-    build(builder, token.filteredChildren.get(1), tinyExpressionTokens);
-    builder.append(")");
+    buildVariadicMathFunction(builder, token, tinyExpressionTokens, "Math.min");
     builder.append(wrapNumber.post());
   }
 
@@ -332,12 +328,34 @@ public class NumberExpressionBuilder implements TokenCodeBuilder {
       TinyExpressionTokens tinyExpressionTokens, ExpressionType numberType, PrePost wrapNumber) {
 
     builder.append(wrapNumber.pre());
-    builder.append(" Math.max(");
-    build(builder, token.filteredChildren.get(0), tinyExpressionTokens);
-    builder.append(",");
-    build(builder, token.filteredChildren.get(1), tinyExpressionTokens);
-    builder.append(")");
+    buildVariadicMathFunction(builder, token, tinyExpressionTokens, "Math.max");
     builder.append(wrapNumber.post());
+  }
+
+  private void buildVariadicMathFunction(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens, String functionName) {
+    java.util.List<Token> args = token.filteredChildren;
+    if (args.size() == 1) {
+      // Single argument — just emit the value
+      build(builder, args.get(0), tinyExpressionTokens);
+    } else if (args.size() == 2) {
+      builder.append(" " + functionName + "(");
+      build(builder, args.get(0), tinyExpressionTokens);
+      builder.append(",");
+      build(builder, args.get(1), tinyExpressionTokens);
+      builder.append(")");
+    } else {
+      // Nest: Math.max(a, Math.max(b, Math.max(c, d)))
+      for (int i = 0; i < args.size() - 1; i++) {
+        builder.append(" " + functionName + "(");
+        build(builder, args.get(i), tinyExpressionTokens);
+        builder.append(",");
+      }
+      build(builder, args.get(args.size() - 1), tinyExpressionTokens);
+      for (int i = 0; i < args.size() - 1; i++) {
+        builder.append(")");
+      }
+    }
   }
 
   private void buildRandom(SimpleJavaCodeBuilder builder, Token token,

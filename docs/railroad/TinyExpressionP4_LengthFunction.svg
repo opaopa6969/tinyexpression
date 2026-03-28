@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="278" height="92">
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="92">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -11,28 +11,34 @@
   .end-circle-inner { fill: #333; stroke: none; }
   rect, g { transition: all 0.3s; }
 </style>
-<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">RandomFunction</text>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LengthFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="411509625">
-<g id="1535401222">
+<g id="1955182708">
+<g id="1687406279">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="78" y="62" text-anchor="middle" class="terminal-text">'random'</text>
+<text x="78" y="62" text-anchor="middle" class="terminal-text">'length'</text>
 </g>
 <line x1="116" y1="58" x2="136" y2="58" class="rail"/>
 <polygon points="123,55 129,58 123,61" class="arrow"/>
-<g id="604216763">
+<g id="277188207">
 <rect x="136" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="177" y1="58" x2="197" y2="58" class="rail"/>
 <polygon points="184,55 190,58 184,61" class="arrow"/>
-<g id="435582519">
-<rect x="197" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="217" y="62" text-anchor="middle" class="terminal-text">')'</text>
+<g id="1821275110">
+<rect x="197" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="263" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="329" y1="58" x2="349" y2="58" class="rail"/>
+<polygon points="336,55 342,58 336,61" class="arrow"/>
+<g id="240579207">
+<rect x="349" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="369" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 </g>
-<line x1="238" y1="58" x2="246" y2="58" class="rail"/>
-<circle cx="252" cy="58" r="6" class="end-circle-outer"/>
-<circle cx="252" cy="58" r="3" class="end-circle-inner"/>
+<line x1="390" y1="58" x2="398" y2="58" class="rail"/>
+<circle cx="404" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="404" cy="58" r="3" class="end-circle-inner"/>
 </svg>
