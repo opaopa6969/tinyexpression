@@ -127,7 +127,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (stringMatch.isPresent()) {
         return stringMatch;
       }
-      return findFirstNode(mappedAst, "StringExpr")
+      return findFirstNode(mappedAst, "StringConcatExpr")
           .flatMap(node -> evaluateString(
               node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(v -> (Object) v);
@@ -235,7 +235,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (objectExpr.isPresent()) {
         return objectExpr;
       }
-      Optional<Object> stringExpr = findFirstNode(mappedAst, "StringExpr")
+      Optional<Object> stringExpr = findFirstNode(mappedAst, "StringConcatExpr")
           .flatMap(node -> evaluateString(
               node, calculationContext, specifiedExpressionTypes, classLoader, fallbackFormulaSource))
           .map(value -> (Object) value);
@@ -388,7 +388,7 @@ final class GeneratedP4ValueAstEvaluator {
     if ("BinaryExpr".equals(simpleName)) {
       return GeneratedP4NumberAstEvaluator.tryEvaluate(value, specifiedExpressionTypes, context);
     }
-    if ("StringExpr".equals(simpleName)) {
+    if ("StringConcatExpr".equals(simpleName)) {
       return evaluateString(value, context, specifiedExpressionTypes, classLoader, fallbackFormulaSource)
           .map(v -> (Object) v);
     }
@@ -846,7 +846,7 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.empty();
   }
 
-  private static Optional<Object> parseLiteralArgument(String source, ExpressionType parameterType,
+  static Optional<Object> parseLiteralArgument(String source, ExpressionType parameterType,
       ExpressionType defaultNumberType) {
     if (source.isEmpty()) {
       return Optional.empty();
@@ -868,7 +868,7 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.empty();
   }
 
-  private static Optional<Object> coerceToParameterType(Object value, ExpressionType parameterType,
+  static Optional<Object> coerceToParameterType(Object value, ExpressionType parameterType,
       ExpressionType defaultNumberType) {
     if (value == null || parameterType == null) {
       return Optional.ofNullable(value);
@@ -897,7 +897,7 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.of(value);
   }
 
-  private static Number castNumber(Number number, ExpressionType targetType) {
+  static Number castNumber(Number number, ExpressionType targetType) {
     if (targetType == null) {
       return number;
     }
@@ -925,7 +925,7 @@ final class GeneratedP4ValueAstEvaluator {
     return number.floatValue();
   }
 
-  private static ExpressionType resolveNumberTypeForEvaluation(ExpressionType resultType, ExpressionType numberType) {
+  static ExpressionType resolveNumberTypeForEvaluation(ExpressionType resultType, ExpressionType numberType) {
     if (resultType != null && resultType.isNumber() && resultType != ExpressionTypes.number) {
       return resultType;
     }
@@ -935,7 +935,7 @@ final class GeneratedP4ValueAstEvaluator {
     return ExpressionTypes._float;
   }
 
-  private static List<String> resolveInvocationArgumentExpressions(Object methodInvocationNode, String sourceFormula,
+  static List<String> resolveInvocationArgumentExpressions(Object methodInvocationNode, String sourceFormula,
       String methodName) {
     Optional<String> invocationSnippet = sourceSnippetOfNode(methodInvocationNode, sourceFormula);
     if (invocationSnippet.isPresent()) {
@@ -947,7 +947,7 @@ final class GeneratedP4ValueAstEvaluator {
     return findInvocationArguments(sourceFormula, methodName);
   }
 
-  private static Optional<String> sourceSnippetOfNode(Object node, String sourceFormula) {
+  static Optional<String> sourceSnippetOfNode(Object node, String sourceFormula) {
     if (node == null || sourceFormula == null || sourceFormula.isEmpty()) {
       return Optional.empty();
     }
@@ -974,7 +974,7 @@ final class GeneratedP4ValueAstEvaluator {
     }
   }
 
-  private static List<String> parseMethodInvocationArguments(String invocationSource) {
+  static List<String> parseMethodInvocationArguments(String invocationSource) {
     if (invocationSource == null) {
       return null;
     }
@@ -990,7 +990,7 @@ final class GeneratedP4ValueAstEvaluator {
     return splitTopLevelCommaSeparated(arguments);
   }
 
-  private static List<String> findInvocationArguments(String sourceFormula, String methodName) {
+  static List<String> findInvocationArguments(String sourceFormula, String methodName) {
     if (sourceFormula == null || methodName == null || methodName.isBlank()) {
       return List.of();
     }
@@ -1026,7 +1026,7 @@ final class GeneratedP4ValueAstEvaluator {
     return List.of();
   }
 
-  private static boolean isDirectSelfCall(String expression, String methodName) {
+  static boolean isDirectSelfCall(String expression, String methodName) {
     if (expression == null || methodName == null || methodName.isBlank()) {
       return false;
     }
@@ -1043,7 +1043,7 @@ final class GeneratedP4ValueAstEvaluator {
     return openParen < expression.length() && expression.charAt(openParen) == '(';
   }
 
-  private static List<MethodParameterSpec> parseMethodParameterSpecs(String parameterSection) {
+  static List<MethodParameterSpec> parseMethodParameterSpecs(String parameterSection) {
     if (parameterSection == null || parameterSection.isBlank()) {
       return List.of();
     }
@@ -1059,7 +1059,7 @@ final class GeneratedP4ValueAstEvaluator {
     return parameters;
   }
 
-  private static Optional<MethodParameterSpec> parseMethodParameterSpec(String parameterSpec) {
+  static Optional<MethodParameterSpec> parseMethodParameterSpec(String parameterSpec) {
     if (parameterSpec == null) {
       return Optional.empty();
     }
@@ -1094,7 +1094,7 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.of(new MethodParameterSpec(name, type));
   }
 
-  private static Optional<ExpressionType> parseExpressionType(String token) {
+  static Optional<ExpressionType> parseExpressionType(String token) {
     String type = token == null ? "" : token.strip().toLowerCase();
     return switch (type) {
       case "number" -> Optional.of(ExpressionTypes.number);
@@ -1106,7 +1106,7 @@ final class GeneratedP4ValueAstEvaluator {
     };
   }
 
-  private static List<String> splitTopLevelCommaSeparated(String source) {
+  static List<String> splitTopLevelCommaSeparated(String source) {
     String text = source == null ? "" : source.strip();
     if (text.isEmpty()) {
       return List.of();
@@ -1222,7 +1222,7 @@ final class GeneratedP4ValueAstEvaluator {
     return values;
   }
 
-  private static MethodSource findMethodSource(String sourceFormula, String methodName) {
+  static MethodSource findMethodSource(String sourceFormula, String methodName) {
     if (sourceFormula == null || methodName == null || methodName.isBlank()) {
       return null;
     }
@@ -1275,7 +1275,7 @@ final class GeneratedP4ValueAstEvaluator {
     return null;
   }
 
-  private static int skipTypeStart(String source, int typeEndExclusive) {
+  static int skipTypeStart(String source, int typeEndExclusive) {
     int i = typeEndExclusive - 1;
     while (i >= 0 && Character.isWhitespace(source.charAt(i))) {
       i--;
@@ -1287,7 +1287,7 @@ final class GeneratedP4ValueAstEvaluator {
     return start < typeEndExclusive ? start : -1;
   }
 
-  private static boolean isMethodReturnType(String token) {
+  static boolean isMethodReturnType(String token) {
     String t = token == null ? "" : token.strip();
     return "number".equals(t)
         || "float".equals(t)
@@ -1296,7 +1296,7 @@ final class GeneratedP4ValueAstEvaluator {
         || "object".equals(t);
   }
 
-  private static int findMatching(String source, int openIndex, char open, char close) {
+  static int findMatching(String source, int openIndex, char open, char close) {
     if (openIndex < 0 || openIndex >= source.length() || source.charAt(openIndex) != open) {
       return -1;
     }
@@ -1388,7 +1388,7 @@ final class GeneratedP4ValueAstEvaluator {
       if (matchHead) {
         preferred.add("StringMatchExpr");
       }
-      preferred.add("StringExpr");
+      preferred.add("StringConcatExpr");
     } else if (type.isBoolean()) {
       if (matchHead) {
         preferred.add("BooleanMatchExpr");
@@ -1401,7 +1401,7 @@ final class GeneratedP4ValueAstEvaluator {
         preferred.add("NumberMatchExpr");
       }
       preferred.add("ObjectExpr");
-      preferred.add("StringExpr");
+      preferred.add("StringConcatExpr");
       preferred.add("BooleanOrExpr");
       preferred.add("BinaryExpr");
     } else {
@@ -1414,7 +1414,7 @@ final class GeneratedP4ValueAstEvaluator {
     return preferred.stream().distinct().collect(Collectors.toList());
   }
 
-  private static boolean isNumericLiteral(String source) {
+  static boolean isNumericLiteral(String source) {
     if (source == null || source.isBlank()) {
       return false;
     }
@@ -1443,16 +1443,16 @@ final class GeneratedP4ValueAstEvaluator {
     return hasDigit;
   }
 
-  private record MethodSource(String name, String parameterSection, String expression) {}
+  record MethodSource(String name, String parameterSection, String expression) {}
 
-  private record MethodParameterSpec(String name, ExpressionType type) {}
+  record MethodParameterSpec(String name, ExpressionType type) {}
 
-  private static final class ScopedCalculationContext implements CalculationContext {
+  static final class ScopedCalculationContext implements CalculationContext {
 
     private final CalculationContext delegate;
     private final Map<String, Object> localValues;
 
-    private ScopedCalculationContext(CalculationContext delegate, Map<String, Object> initialValues) {
+    ScopedCalculationContext(CalculationContext delegate, Map<String, Object> initialValues) {
       this.delegate = delegate;
       this.localValues = new HashMap<>(initialValues);
     }
@@ -1587,7 +1587,7 @@ final class GeneratedP4ValueAstEvaluator {
     return new BigDecimal(String.valueOf(value));
   }
 
-  private static Optional<Object> resolveVariableAny(String variableName, CalculationContext context) {
+  static Optional<Object> resolveVariableAny(String variableName, CalculationContext context) {
     if (variableName == null || variableName.isEmpty()) {
       return Optional.empty();
     }
@@ -1659,7 +1659,7 @@ final class GeneratedP4ValueAstEvaluator {
     return value.getClass().getName().contains("TinyExpressionP4AST");
   }
 
-  private static String extractVariableName(String raw) {
+  static String extractVariableName(String raw) {
     if (raw == null) {
       return null;
     }
@@ -1679,7 +1679,7 @@ final class GeneratedP4ValueAstEvaluator {
     return end > 1 ? text.substring(1, end) : null;
   }
 
-  private static Optional<Boolean> toBoolean(Object value) {
+  static Optional<Boolean> toBoolean(Object value) {
     if (value == null) {
       return Optional.empty();
     }

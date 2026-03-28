@@ -29,9 +29,9 @@
 | String methods (ドット形式) | ✅ | ✅ | ❌ | ❌ | ❌ |
 | String predicates | ✅ | ✅ | ❌ | ❌ | ❌ |
 | isPresent() | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **MethodInvocation (call)** | ✅ | **❌ fallback** | ✅ | ❌ | ✅ |
-| **External呼び出し** | ✅ | **❌ fallback** | ✅ | ❌ | ✅ |
-| **Side effect** | ✅ | **❌ fallback** | **❌** | ❌ | ✅ |
+| **MethodInvocation (call)** | ✅ | ✅ | ✅ | ❌ | ✅ |
+| **External呼び出し** | ✅ | ✅ | ✅ | ❌ | ✅ |
+| **Side effect** | ✅ | ✅ | **❌** | ❌ | ✅ |
 | 変数宣言 (var) | ✅ | 部分的 | ✅ | ❌ | ✅ |
 | String連結 (+) | ✅ | ❌ | ❌ | ❌ | ❌ |
 | String slice ($s[0:3]) | ✅ | ❌ | ❌ | ❌ | ❌ |
@@ -51,14 +51,16 @@ AstEvaluatorCalculator.apply():
   4. JavaCodeCalculatorV3 (compile-hand) ← 最終 fallback
 ```
 
-## P4TypedAstEvaluator の未実装 (UnsupportedOperationException)
+## P4TypedAstEvaluator の実装済み (v1.4.10+)
+
+以下のノードタイプは P4TypedAstEvaluator で native に処理される（fallback 不要）:
 
 ```java
-MethodInvocationExpr          // call identity(1) 等のUDF呼び出し
-ExternalBooleanInvocationExpr // external returning as boolean ...
-ExternalNumberInvocationExpr  // external returning as number ...
-ExternalStringInvocationExpr  // external returning as string ...
-ExternalObjectInvocationExpr  // external returning as object ...
+MethodInvocationExpr          // call identity(1) 等のUDF呼び出し ✅
+ExternalBooleanInvocationExpr // external returning as boolean ... ✅
+ExternalNumberInvocationExpr  // external returning as number ... ✅
+ExternalStringInvocationExpr  // external returning as string ... ✅
+ExternalObjectInvocationExpr  // external returning as object ... ✅
 ```
 
 ## ゴール

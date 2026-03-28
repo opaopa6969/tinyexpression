@@ -14,22 +14,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ClassName</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1931844483">
-<g id="626626369">
+<g id="1038416948">
+<g id="720531209">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="50625004">
-<g id="1791934579">
-<g id="910742332">
+<g id="255338443">
+<g id="906730532">
+<g id="1825297580">
 <rect x="166" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="86" text-anchor="middle" class="terminal-text">'.'</text>
 </g>
 <line x1="207" y1="82" x2="227" y2="82" class="rail"/>
 <polygon points="214,79 220,82 214,85" class="arrow"/>
-<g id="372528003">
+<g id="882615643">
 <rect x="227" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="272" y="86" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>

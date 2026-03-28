@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="472">
+<svg xmlns="http://www.w3.org/2000/svg" width="373" height="120">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,117 +14,42 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="9075029">
-<g id="1470722803">
-<rect x="66" y="44" width="167" height="28" class="nonterminal-box"/>
-<text x="149" y="62" text-anchor="middle" class="nonterminal-text">StringMatchExpression</text>
+<g id="316561858">
+<g id="1716869829">
+<rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="85" y="62" text-anchor="middle" class="nonterminal-text">StringTerm</text>
 </g>
-<line x1="56" y1="58" x2="66" y2="58" class="rail"/>
-<line x1="233" y1="58" x2="244" y2="58" class="rail"/>
-<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
-<line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1449430726">
-<rect x="56" y="82" width="188" height="28" class="nonterminal-box"/>
-<text x="150" y="100" text-anchor="middle" class="nonterminal-text">ExternalStringInvocation</text>
+<line x1="130" y1="58" x2="150" y2="58" class="rail"/>
+<polygon points="137,55 143,58 137,61" class="arrow"/>
+<g id="1846207008">
+<g id="583337935">
+<g id="932800045">
+<rect x="166" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="186" y="86" text-anchor="middle" class="terminal-text">'+'</text>
 </g>
-<line x1="56" y1="96" x2="56" y2="96" class="rail"/>
-<line x1="244" y1="96" x2="244" y2="96" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
-<path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1266300167">
-<rect x="70" y="120" width="160" height="28" class="nonterminal-box"/>
-<text x="150" y="138" text-anchor="middle" class="nonterminal-text">ToUpperCaseDotMethod</text>
+<line x1="207" y1="82" x2="227" y2="82" class="rail"/>
+<polygon points="214,79 220,82 214,85" class="arrow"/>
+<g id="998400839">
+<rect x="227" y="68" width="90" height="28" class="nonterminal-box"/>
+<text x="272" y="86" text-anchor="middle" class="nonterminal-text">StringTerm</text>
 </g>
-<line x1="56" y1="134" x2="70" y2="134" class="rail"/>
-<line x1="230" y1="134" x2="244" y2="134" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
-<path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1111102484">
-<rect x="70" y="158" width="160" height="28" class="nonterminal-box"/>
-<text x="150" y="176" text-anchor="middle" class="nonterminal-text">ToLowerCaseDotMethod</text>
 </g>
-<line x1="56" y1="172" x2="70" y2="172" class="rail"/>
-<line x1="230" y1="172" x2="244" y2="172" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
-<path d="M244,172 Q252,172 252,164" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1587071050">
-<rect x="94" y="196" width="111" height="28" class="nonterminal-box"/>
-<text x="149" y="214" text-anchor="middle" class="nonterminal-text">TrimDotMethod</text>
+<line x1="150" y1="58" x2="333" y2="58" class="rail"/>
+<path d="M166,58 Q158,58 158,66" class="rail" fill="none"/>
+<path d="M158,74 Q158,82 150,82" class="rail" fill="none"/>
+<line x1="150" y1="82" x2="166" y2="82" class="rail"/>
+<line x1="317" y1="82" x2="333" y2="82" class="rail"/>
+<path d="M333,82 Q325,82 325,74" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 317,58" class="rail" fill="none"/>
+<path d="M325,82 Q333,82 333,90" class="rail" fill="none"/>
+<path d="M333,98 Q333,106 325,106" class="rail" fill="none"/>
+<line x1="158" y1="106" x2="325" y2="106" class="rail"/>
+<polygon points="247,103 241,106 247,109" class="arrow"/>
+<path d="M158,106 Q150,106 150,98" class="rail" fill="none"/>
+<path d="M150,90 Q150,82 158,82" class="rail" fill="none"/>
 </g>
-<line x1="56" y1="210" x2="94" y2="210" class="rail"/>
-<line x1="205" y1="210" x2="244" y2="210" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
-<path d="M244,210 Q252,210 252,202" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="754483169">
-<rect x="73" y="234" width="153" height="28" class="nonterminal-box"/>
-<text x="149" y="252" text-anchor="middle" class="nonterminal-text">ToUpperCaseFunction</text>
 </g>
-<line x1="56" y1="248" x2="73" y2="248" class="rail"/>
-<line x1="226" y1="248" x2="244" y2="248" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
-<path d="M244,248 Q252,248 252,240" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="909161844">
-<rect x="73" y="272" width="153" height="28" class="nonterminal-box"/>
-<text x="149" y="290" text-anchor="middle" class="nonterminal-text">ToLowerCaseFunction</text>
-</g>
-<line x1="56" y1="286" x2="73" y2="286" class="rail"/>
-<line x1="226" y1="286" x2="244" y2="286" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
-<path d="M244,286 Q252,286 252,278" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="607685906">
-<rect x="98" y="310" width="104" height="28" class="nonterminal-box"/>
-<text x="150" y="328" text-anchor="middle" class="nonterminal-text">TrimFunction</text>
-</g>
-<line x1="56" y1="324" x2="98" y2="324" class="rail"/>
-<line x1="202" y1="324" x2="244" y2="324" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
-<path d="M244,324 Q252,324 252,316" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1023068999">
-<rect x="119" y="348" width="62" height="28" class="nonterminal-box"/>
-<text x="150" y="366" text-anchor="middle" class="nonterminal-text">STRING</text>
-</g>
-<line x1="56" y1="362" x2="119" y2="362" class="rail"/>
-<line x1="181" y1="362" x2="244" y2="362" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
-<path d="M244,362 Q252,362 252,354" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1402125390">
-<rect x="101" y="386" width="97" height="28" class="nonterminal-box"/>
-<text x="149" y="404" text-anchor="middle" class="nonterminal-text">VariableRef</text>
-</g>
-<line x1="56" y1="400" x2="101" y2="400" class="rail"/>
-<line x1="198" y1="400" x2="244" y2="400" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
-<path d="M244,400 Q252,400 252,392" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1614428253">
-<rect x="84" y="424" width="132" height="28" class="nonterminal-box"/>
-<text x="150" y="442" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
-</g>
-<line x1="56" y1="438" x2="84" y2="438" class="rail"/>
-<line x1="216" y1="438" x2="244" y2="438" class="rail"/>
-<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
-<path d="M48,430 Q48,438 56,438" class="rail" fill="none"/>
-<path d="M244,438 Q252,438 252,430" class="rail" fill="none"/>
-<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-</g>
-<line x1="260" y1="58" x2="268" y2="58" class="rail"/>
-<circle cx="274" cy="58" r="6" class="end-circle-outer"/>
-<circle cx="274" cy="58" r="3" class="end-circle-inner"/>
+<line x1="333" y1="58" x2="341" y2="58" class="rail"/>
+<circle cx="347" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="347" cy="58" r="3" class="end-circle-inner"/>
 </svg>

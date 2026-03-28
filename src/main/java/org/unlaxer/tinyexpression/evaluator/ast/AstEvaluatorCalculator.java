@@ -222,7 +222,7 @@ public class AstEvaluatorCalculator implements Calculator {
         // --- P4TypedAstEvaluator (sealed-interface switch dispatch) ---
         if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
           try {
-            Object p4TypedResult = new P4TypedAstEvaluator(specifiedExpressionTypes, calculationContext).eval(typedAst);
+            Object p4TypedResult = new P4TypedAstEvaluator(specifiedExpressionTypes, calculationContext, source.source(), classLoader).eval(typedAst);
             if (p4TypedResult != null) {
               Optional<Object> p4TypedEvaluated = Optional.of(p4TypedResult);
               ExpressionType evaluatedResultType = resultType();
@@ -669,7 +669,7 @@ public class AstEvaluatorCalculator implements Calculator {
       if (matchHead) {
         preferred.add("StringMatchExpr");
       }
-      preferred.add("StringExpr");
+      preferred.add("StringConcatExpr");
     } else if (type.isBoolean()) {
       if (matchHead) {
         preferred.add("BooleanMatchExpr");

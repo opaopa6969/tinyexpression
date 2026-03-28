@@ -2,14 +2,19 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.DayOfWeek;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.function.EmbeddedFunction;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -25,11 +30,22 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   private final ExpressionType resultType;
   private final ExpressionType numberType;
   private final CalculationContext context;
+  private final SpecifiedExpressionTypes specifiedExpressionTypes;
+  private final String sourceFormula;
+  private final ClassLoader classLoader;
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context) {
+    this(types, context, null, null);
+  }
+
+  public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
+      String sourceFormula, ClassLoader classLoader) {
     this.resultType = types.resultType() != null ? types.resultType() : ExpressionTypes.object;
     this.numberType = resolveNumberType(types);
     this.context = context;
+    this.specifiedExpressionTypes = types;
+    this.sourceFormula = sourceFormula;
+    this.classLoader = classLoader;
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
@@ -243,24 +259,42 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   // =========================================================================
-  // StringExpr
+  // StringConcatExpr — string concatenation with '+'
   // =========================================================================
 
   @Override
-  protected Object evalStringExpr(StringExpr node) {
-    Object value = node.value();
+  protected Object evalStringConcatExpr(StringConcatExpr node) {
+    String leftStr = resolveStringLeaf(node.left());
+    List<String> ops = node.op();
+    List<String> rights = node.right();
+    if (ops == null || ops.isEmpty()) {
+      return leftStr;
+    }
+    StringBuilder sb = new StringBuilder(leftStr);
+    int count = Math.min(ops.size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      sb.append(resolveStringLeaf(rights.get(i)));
+    }
+    return sb.toString();
+  }
+
+  /**
+   * Resolve a string leaf value from StringConcatExpr (could be a variable ref, string literal, or AST node).
+   */
+  private String resolveStringLeaf(Object value) {
     if (value instanceof TinyExpressionP4AST ast) {
-      return eval(ast);
+      Object result = eval(ast);
+      return result == null ? "" : String.valueOf(result);
     }
     if (value instanceof String text) {
       String stripped = text.strip();
       if (stripped.startsWith("$")) {
         Object resolved = resolveVariableAny(extractVariableName(stripped));
-        if (resolved != null) return String.valueOf(resolved);
+        return resolved == null ? "" : String.valueOf(resolved);
       }
       return text;
     }
-    return value == null ? null : String.valueOf(value);
+    return value == null ? "" : String.valueOf(value);
   }
 
   // =========================================================================
@@ -369,8 +403,8 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalStringComparisonExpr(StringComparisonExpr node) {
-    String left = String.valueOf(evalStringExpr(node.left()));
-    String right = String.valueOf(evalStringExpr(node.right()));
+    String left = String.valueOf(evalStringConcatExpr(node.left()));
+    String right = String.valueOf(evalStringConcatExpr(node.right()));
     String op = node.op() == null ? "" : node.op().strip();
     return switch (op) {
       case "==" -> left.equals(right);
@@ -517,7 +551,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalStringCaseValueExpr(StringCaseValueExpr node) {
-    return evalStringExpr(node.value());
+    return evalStringConcatExpr(node.value());
   }
 
   @Override
@@ -541,27 +575,415 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalMethodInvocationExpr(MethodInvocationExpr node) {
-    throw new UnsupportedOperationException("MethodInvocationExpr not yet supported in P4TypedAstEvaluator");
+    String methodName = node.name() == null ? "" : node.name().strip();
+    if (methodName.isEmpty() || sourceFormula == null || sourceFormula.isEmpty()) {
+      throw new UnsupportedOperationException(
+          "MethodInvocationExpr requires sourceFormula; method=" + methodName);
+    }
+
+    // 1. Find the method definition in the source formula
+    GeneratedP4ValueAstEvaluator.MethodSource method =
+        GeneratedP4ValueAstEvaluator.findMethodSource(sourceFormula, methodName);
+    if (method == null || method.expression().isBlank()) {
+      throw new UnsupportedOperationException(
+          "Method definition not found for: " + methodName);
+    }
+    if (GeneratedP4ValueAstEvaluator.isDirectSelfCall(method.expression(), method.name())) {
+      throw new UnsupportedOperationException(
+          "Direct self-call detected for: " + methodName);
+    }
+
+    // 2. Parse parameter specs from method definition
+    List<GeneratedP4ValueAstEvaluator.MethodParameterSpec> parameterSpecs =
+        GeneratedP4ValueAstEvaluator.parseMethodParameterSpecs(method.parameterSection());
+
+    // 3. Resolve invocation arguments from source text
+    List<String> argumentExpressions =
+        GeneratedP4ValueAstEvaluator.resolveInvocationArgumentExpressions(
+            node, sourceFormula, methodName);
+
+    if (parameterSpecs.size() != argumentExpressions.size()) {
+      throw new UnsupportedOperationException(
+          "Argument count mismatch for method " + methodName
+              + ": expected " + parameterSpecs.size() + " but got " + argumentExpressions.size());
+    }
+
+    // 4. Evaluate arguments and bind to parameter names
+    Map<String, Object> localBindings = evaluateAndBindArguments(
+        parameterSpecs, argumentExpressions);
+
+    // 5. Create scoped context with local bindings
+    CalculationContext scopedContext = localBindings.isEmpty()
+        ? context
+        : new GeneratedP4ValueAstEvaluator.ScopedCalculationContext(context, localBindings);
+
+    // 6. Parse method body and evaluate with P4TypedAstEvaluator
+    String bodyExpression = method.expression().strip();
+    try {
+      TinyExpressionP4AST bodyAst = TinyExpressionP4Mapper.parse(bodyExpression);
+      if (bodyAst != null) {
+        P4TypedAstEvaluator bodyEvaluator = new P4TypedAstEvaluator(
+            specifiedExpressionTypes, scopedContext, sourceFormula, classLoader);
+        Object result = bodyEvaluator.eval(bodyAst);
+        if (result != null) {
+          return result;
+        }
+      }
+    } catch (Exception ignored) {
+      // P4 parse failed for method body; fall through to embedded runtime
+    }
+
+    // 7. Fallback: use embedded expression runtime for the body
+    ClassLoader effectiveClassLoader = classLoader != null
+        ? classLoader : Thread.currentThread().getContextClassLoader();
+    ExpressionType expectedType = resultType;
+    SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
+        expectedType,
+        GeneratedP4ValueAstEvaluator.resolveNumberTypeForEvaluation(
+            expectedType, specifiedExpressionTypes.numberType()));
+    Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+        bodyExpression, expectedType, evalTypes, scopedContext,
+        effectiveClassLoader, sourceFormula);
+    if (embedded.isPresent()) {
+      return embedded.get();
+    }
+
+    throw new UnsupportedOperationException(
+        "Failed to evaluate method body for: " + methodName);
+  }
+
+  private Map<String, Object> evaluateAndBindArguments(
+      List<GeneratedP4ValueAstEvaluator.MethodParameterSpec> parameterSpecs,
+      List<String> argumentExpressions) {
+    if (parameterSpecs.isEmpty()) {
+      return Map.of();
+    }
+    Map<String, Object> bindings = new LinkedHashMap<>();
+    for (int i = 0; i < parameterSpecs.size(); i++) {
+      GeneratedP4ValueAstEvaluator.MethodParameterSpec param = parameterSpecs.get(i);
+      String argExpr = argumentExpressions.get(i) == null ? "" : argumentExpressions.get(i).strip();
+      Object value = evaluateArgumentExpression(argExpr, param.type());
+      bindings.put(param.name(), value);
+    }
+    return bindings;
+  }
+
+  private Object evaluateArgumentExpression(String argExpr, ExpressionType parameterType) {
+    if (argExpr.isEmpty()) {
+      return null;
+    }
+    // Try variable reference
+    if (argExpr.startsWith("$")) {
+      String varName = extractVariableName(argExpr);
+      if (varName != null) {
+        Object resolved = resolveVariableAny(varName);
+        if (resolved != null) {
+          return coerceToType(resolved, parameterType);
+        }
+      }
+    }
+    // Try P4 parse and eval
+    try {
+      TinyExpressionP4AST argAst = TinyExpressionP4Mapper.parse(argExpr);
+      if (argAst != null) {
+        Object result = eval(argAst);
+        if (result != null) {
+          return coerceToType(result, parameterType);
+        }
+      }
+    } catch (Exception ignored) {
+    }
+    // Try literal
+    if (parameterType != null && parameterType.isNumber()) {
+      try {
+        return numberType.parseNumber(argExpr);
+      } catch (Exception ignored) {
+      }
+    }
+    if (parameterType != null && parameterType.isBoolean()) {
+      if ("true".equalsIgnoreCase(argExpr)) return true;
+      if ("false".equalsIgnoreCase(argExpr)) return false;
+    }
+    // String literal (quoted)
+    if (argExpr.length() >= 2 && argExpr.charAt(0) == '\'' && argExpr.charAt(argExpr.length() - 1) == '\'') {
+      return argExpr.substring(1, argExpr.length() - 1);
+    }
+    // Return as-is for object type
+    if (parameterType != null && parameterType.isString()) {
+      return argExpr;
+    }
+    return argExpr;
+  }
+
+  private Object coerceToType(Object value, ExpressionType targetType) {
+    if (value == null || targetType == null) return value;
+    if (targetType.isString()) return String.valueOf(value);
+    if (targetType.isBoolean()) {
+      if (value instanceof Boolean) return value;
+      return "true".equalsIgnoreCase(String.valueOf(value));
+    }
+    if (targetType.isNumber() && value instanceof Number number) {
+      return castToNumberType(number.doubleValue());
+    }
+    return value;
   }
 
   @Override
   protected Object evalExternalBooleanInvocationExpr(ExternalBooleanInvocationExpr node) {
-    throw new UnsupportedOperationException("ExternalBooleanInvocationExpr not yet supported");
+    return evaluateExternalInvocation(node, ExpressionTypes._boolean);
   }
 
   @Override
   protected Object evalExternalNumberInvocationExpr(ExternalNumberInvocationExpr node) {
-    throw new UnsupportedOperationException("ExternalNumberInvocationExpr not yet supported");
+    return evaluateExternalInvocation(node, resultType.isNumber() ? resultType : ExpressionTypes._float);
   }
 
   @Override
   protected Object evalExternalStringInvocationExpr(ExternalStringInvocationExpr node) {
-    throw new UnsupportedOperationException("ExternalStringInvocationExpr not yet supported");
+    return evaluateExternalInvocation(node, ExpressionTypes.string);
   }
 
   @Override
   protected Object evalExternalObjectInvocationExpr(ExternalObjectInvocationExpr node) {
-    throw new UnsupportedOperationException("ExternalObjectInvocationExpr not yet supported");
+    return evaluateExternalInvocation(node, ExpressionTypes.object);
+  }
+
+  private Object evaluateExternalInvocation(Object node, ExpressionType expectedReturnType) {
+    if (sourceFormula == null || sourceFormula.isEmpty()) {
+      throw new UnsupportedOperationException(
+          "External invocation requires sourceFormula");
+    }
+
+    // Get the source snippet for this external invocation node
+    String externalSource = null;
+    Optional<String> snippet = GeneratedP4ValueAstEvaluator.sourceSnippetOfNode(node, sourceFormula);
+    if (snippet.isPresent()) {
+      externalSource = snippet.get().strip();
+    }
+    if (externalSource == null || externalSource.isEmpty()) {
+      // Fallback: use the full sourceFormula if it looks like an external invocation
+      externalSource = sourceFormula.strip();
+    }
+
+    // Parse external invocation: extract class#method and arguments
+    // Format: external returning as <type> [default <expr>] [: ] <class>#<method>(<args>)
+    ExternalInvocationInfo info = parseExternalInvocation(externalSource);
+    if (info == null) {
+      // Fallback: delegate to embedded expression runtime
+      ClassLoader effectiveClassLoader = classLoader != null
+          ? classLoader : Thread.currentThread().getContextClassLoader();
+      SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
+          expectedReturnType,
+          GeneratedP4ValueAstEvaluator.resolveNumberTypeForEvaluation(
+              expectedReturnType, specifiedExpressionTypes.numberType()));
+      Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+          externalSource, expectedReturnType, evalTypes, context,
+          effectiveClassLoader, sourceFormula);
+      if (embedded.isPresent()) {
+        return embedded.get();
+      }
+      throw new UnsupportedOperationException(
+          "Failed to parse external invocation: " + externalSource);
+    }
+
+    // Resolve the class and method via reflection
+    ClassLoader effectiveClassLoader = classLoader != null
+        ? classLoader : Thread.currentThread().getContextClassLoader();
+    try {
+      Class<?> clazz = Class.forName(info.className, true, effectiveClassLoader);
+
+      // Evaluate arguments
+      List<Object> argValues = new java.util.ArrayList<>();
+      List<ExpressionType> argTypes = new java.util.ArrayList<>();
+      for (ExternalArgSpec argSpec : info.args) {
+        Object value = evaluateArgumentExpression(argSpec.expression, argSpec.type);
+        argValues.add(value);
+        argTypes.add(argSpec.type);
+      }
+
+      // Find matching method
+      // External methods have CalculationContext as first parameter
+      java.lang.reflect.Method method = findExternalMethod(clazz, info.methodName, argTypes, argValues);
+      if (method == null) {
+        throw new UnsupportedOperationException(
+            "Method not found: " + info.className + "#" + info.methodName);
+      }
+
+      // Build actual parameters: CalculationContext + evaluated arguments
+      Object instance = clazz.getDeclaredConstructor().newInstance();
+      Object[] params = buildMethodParams(method, argValues);
+      Object result = method.invoke(instance, params);
+
+      // Coerce result to expected type
+      if (result != null) {
+        return coerceToType(result, expectedReturnType);
+      }
+
+      // If result is null and there's a default expression, evaluate it
+      if (info.defaultExpression != null && !info.defaultExpression.isEmpty()) {
+        return evaluateArgumentExpression(info.defaultExpression, expectedReturnType);
+      }
+
+      return result;
+    } catch (UnsupportedOperationException e) {
+      throw e;
+    } catch (Exception e) {
+      // Fallback: delegate to embedded expression runtime
+      SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
+          expectedReturnType,
+          GeneratedP4ValueAstEvaluator.resolveNumberTypeForEvaluation(
+              expectedReturnType, specifiedExpressionTypes.numberType()));
+      Optional<Object> embedded = AstEmbeddedExpressionRuntime.tryEvaluate(
+          externalSource, expectedReturnType, evalTypes, context,
+          effectiveClassLoader, sourceFormula);
+      if (embedded.isPresent()) {
+        return embedded.get();
+      }
+      throw new UnsupportedOperationException(
+          "External invocation failed: " + info.className + "#" + info.methodName, e);
+    }
+  }
+
+  private Object[] buildMethodParams(java.lang.reflect.Method method, List<Object> argValues) {
+    Class<?>[] paramTypes = method.getParameterTypes();
+    Object[] params = new Object[paramTypes.length];
+    int argIndex = 0;
+    for (int i = 0; i < paramTypes.length; i++) {
+      if (CalculationContext.class.isAssignableFrom(paramTypes[i])) {
+        params[i] = context;
+      } else {
+        if (argIndex < argValues.size()) {
+          params[i] = convertToParamType(argValues.get(argIndex), paramTypes[i]);
+          argIndex++;
+        }
+      }
+    }
+    return params;
+  }
+
+  private static Object convertToParamType(Object value, Class<?> targetType) {
+    if (value == null) return null;
+    if (targetType.isInstance(value)) return value;
+    if (targetType == float.class || targetType == Float.class) {
+      if (value instanceof Number n) return n.floatValue();
+      try { return Float.parseFloat(String.valueOf(value)); } catch (Exception e) { return 0f; }
+    }
+    if (targetType == double.class || targetType == Double.class) {
+      if (value instanceof Number n) return n.doubleValue();
+      try { return Double.parseDouble(String.valueOf(value)); } catch (Exception e) { return 0.0; }
+    }
+    if (targetType == int.class || targetType == Integer.class) {
+      if (value instanceof Number n) return n.intValue();
+      try { return Integer.parseInt(String.valueOf(value)); } catch (Exception e) { return 0; }
+    }
+    if (targetType == long.class || targetType == Long.class) {
+      if (value instanceof Number n) return n.longValue();
+      try { return Long.parseLong(String.valueOf(value)); } catch (Exception e) { return 0L; }
+    }
+    if (targetType == boolean.class || targetType == Boolean.class) {
+      if (value instanceof Boolean b) return b;
+      return "true".equalsIgnoreCase(String.valueOf(value));
+    }
+    if (targetType == String.class) {
+      return String.valueOf(value);
+    }
+    return value;
+  }
+
+  private static java.lang.reflect.Method findExternalMethod(Class<?> clazz, String methodName,
+      List<ExpressionType> argTypes, List<Object> argValues) {
+    java.lang.reflect.Method[] methods = clazz.getMethods();
+    for (java.lang.reflect.Method m : methods) {
+      if (!m.getName().equals(methodName)) continue;
+      Class<?>[] paramTypes = m.getParameterTypes();
+      // Count non-CalculationContext params
+      int expectedArgs = 0;
+      for (Class<?> pt : paramTypes) {
+        if (!CalculationContext.class.isAssignableFrom(pt)) {
+          expectedArgs++;
+        }
+      }
+      if (expectedArgs == argValues.size()) {
+        return m;
+      }
+    }
+    return null;
+  }
+
+  // --- External invocation parsing ---
+
+  private record ExternalArgSpec(String expression, ExpressionType type) {}
+  private record ExternalInvocationInfo(String className, String methodName,
+      List<ExternalArgSpec> args, String defaultExpression) {}
+
+  private ExternalInvocationInfo parseExternalInvocation(String source) {
+    if (source == null || !source.startsWith("external")) {
+      return null;
+    }
+
+    // Find the class#method reference
+    int hashIndex = source.indexOf('#');
+    if (hashIndex < 0) return null;
+
+    // Extract class name: look backwards from # for the qualified name
+    int classNameStart = hashIndex - 1;
+    while (classNameStart >= 0) {
+      char c = source.charAt(classNameStart);
+      if (Character.isJavaIdentifierPart(c) || c == '.') {
+        classNameStart--;
+      } else {
+        break;
+      }
+    }
+    classNameStart++;
+    String className = source.substring(classNameStart, hashIndex).strip();
+
+    // Extract method name and arguments
+    int methodStart = hashIndex + 1;
+    int openParen = source.indexOf('(', methodStart);
+    if (openParen < 0) return null;
+    String methodName = source.substring(methodStart, openParen).strip();
+
+    int closeParen = GeneratedP4ValueAstEvaluator.findMatching(source, openParen, '(', ')');
+    if (closeParen < 0) return null;
+    String argsString = source.substring(openParen + 1, closeParen).strip();
+
+    // Parse arguments
+    List<String> argStrings = GeneratedP4ValueAstEvaluator.splitTopLevelCommaSeparated(argsString);
+    List<ExternalArgSpec> argSpecs = new java.util.ArrayList<>();
+    for (String arg : argStrings) {
+      String trimmed = arg.strip();
+      // Check for type annotation: $var as type
+      ExpressionType argType = ExpressionTypes.object;
+      String expr = trimmed;
+      int asIndex = trimmed.toLowerCase().indexOf(" as ");
+      if (asIndex >= 0) {
+        expr = trimmed.substring(0, asIndex).strip();
+        String typeStr = trimmed.substring(asIndex + 4).strip();
+        Optional<ExpressionType> parsed = GeneratedP4ValueAstEvaluator.parseExpressionType(typeStr);
+        if (parsed.isPresent()) {
+          argType = parsed.get();
+        }
+      }
+      argSpecs.add(new ExternalArgSpec(expr, argType));
+    }
+
+    // Parse default expression
+    String defaultExpression = null;
+    String beforeHash = source.substring(0, classNameStart).strip();
+    int defaultIndex = beforeHash.indexOf("default ");
+    if (defaultIndex >= 0) {
+      int defaultStart = defaultIndex + "default ".length();
+      // Default expression ends at ':'
+      int colonIndex = beforeHash.indexOf(':', defaultStart);
+      if (colonIndex >= 0) {
+        defaultExpression = beforeHash.substring(defaultStart, colonIndex).strip();
+      } else {
+        defaultExpression = beforeHash.substring(defaultStart).strip();
+      }
+    }
+
+    return new ExternalInvocationInfo(className, methodName, argSpecs, defaultExpression);
   }
 
   // =========================================================================
@@ -754,6 +1176,28 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalIsPresentExpr(IsPresentExpr node) {
     String varName = node.value().name();
     return context.isExists(varName);
+  }
+
+  // =========================================================================
+  // InTimeRangeExpr / InDayTimeRangeExpr
+  // =========================================================================
+
+  @Override
+  protected Object evalInTimeRangeExpr(InTimeRangeExpr node) {
+    float startHour = evalBinaryAsNumber(node.startHour()).floatValue();
+    float endHour = evalBinaryAsNumber(node.endHour()).floatValue();
+    return EmbeddedFunction.inTimeRange(context, startHour, endHour);
+  }
+
+  @Override
+  protected Object evalInDayTimeRangeExpr(InDayTimeRangeExpr node) {
+    String startDayStr = node.startDay().strip();
+    float startHour = evalBinaryAsNumber(node.startHour()).floatValue();
+    String endDayStr = node.endDay().strip();
+    float endHour = evalBinaryAsNumber(node.endHour()).floatValue();
+    return context.inDayTimeRange(
+        DayOfWeek.valueOf(startDayStr), startHour,
+        DayOfWeek.valueOf(endDayStr), endHour);
   }
 
   // =========================================================================

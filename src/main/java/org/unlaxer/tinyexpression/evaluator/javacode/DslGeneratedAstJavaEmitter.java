@@ -144,7 +144,7 @@ final class DslGeneratedAstJavaEmitter {
       return "BinaryExpr";
     }
     if (resultType.isString()) {
-      return "StringExpr";
+      return "StringConcatExpr";
     }
     if (resultType.isBoolean()) {
       return "BooleanOrExpr";
@@ -216,7 +216,7 @@ final class DslGeneratedAstJavaEmitter {
       return renderNumberExpressionFromBinary(ast, numberType);
     }
     if (resultType.isString()) {
-      if (!"StringExpr".equals(simpleName)) {
+      if (!"StringConcatExpr".equals(simpleName)) {
         return Optional.empty();
       }
       return renderStringLiteral(ast);
@@ -231,7 +231,7 @@ final class DslGeneratedAstJavaEmitter {
       if ("BinaryExpr".equals(simpleName)) {
         return renderNumberExpressionFromBinary(ast, ExpressionTypes._float);
       }
-      if ("StringExpr".equals(simpleName)) {
+      if ("StringConcatExpr".equals(simpleName)) {
         return renderStringLiteral(ast);
       }
       if ("BooleanExpr".equals(simpleName)) {
@@ -248,7 +248,7 @@ final class DslGeneratedAstJavaEmitter {
       if ("BinaryExpr".equals(nested)) {
         return renderNumberExpressionFromBinary(value, ExpressionTypes._float);
       }
-      if ("StringExpr".equals(nested)) {
+      if ("StringConcatExpr".equals(nested)) {
         return renderStringLiteral(value);
       }
       if ("BooleanExpr".equals(nested)) {

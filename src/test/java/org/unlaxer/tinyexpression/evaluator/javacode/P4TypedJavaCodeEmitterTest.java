@@ -127,13 +127,13 @@ public class P4TypedJavaCodeEmitterTest {
     assertTrue("Should contain 200", code.contains("200"));
   }
 
-  // ── StringExpr ──
+  // ── StringConcatExpr ──
 
   @Test
-  public void testStringExprLiteral() {
+  public void testStringConcatExprLiteral() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float));
-    String code = emitter.eval(new StringExpr("hello"));
+    String code = emitter.eval(new StringConcatExpr("hello", List.of(), List.of()));
     assertEquals("\"hello\"", code);
   }
 

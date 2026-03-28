@@ -267,7 +267,7 @@ final class AstDeclarationRuntime {
       if (matchHead) {
         preferred.add("StringMatchExpr");
       }
-      preferred.add("StringExpr");
+      preferred.add("StringConcatExpr");
     } else if (resultType.isBoolean()) {
       if (matchHead) {
         preferred.add("BooleanMatchExpr");

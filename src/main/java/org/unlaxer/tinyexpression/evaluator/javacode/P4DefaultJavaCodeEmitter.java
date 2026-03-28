@@ -132,8 +132,8 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalStringComparisonExpr(StringComparisonExpr node) {
-    String l = evalStringExpr(node.left());
-    String r = evalStringExpr(node.right());
+    String l = evalStringConcatExpr(node.left());
+    String r = evalStringConcatExpr(node.right());
     String op = node.op() == null ? "==" : node.op().strip();
     return switch (op) {
       case "==" -> "(" + l + ").equals(" + r + ")";
@@ -147,8 +147,21 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   // =========================================================================
 
   @Override
-  protected String evalStringExpr(StringExpr node) {
-    Object v = node.value();
+  protected String evalStringConcatExpr(StringConcatExpr node) {
+    String leftExpr = renderStringLeaf(node.left());
+    List<String> ops = node.op();
+    List<String> rights = node.right();
+    if (ops == null || ops.isEmpty()) return leftExpr;
+    StringBuilder sb = new StringBuilder("(String.valueOf(").append(leftExpr).append(")");
+    int count = Math.min(ops.size(), rights.size());
+    for (int i = 0; i < count; i++) {
+      sb.append("+String.valueOf(").append(renderStringLeaf(rights.get(i))).append(")");
+    }
+    sb.append(")");
+    return sb.toString();
+  }
+
+  private String renderStringLeaf(Object v) {
     if (v instanceof TinyExpressionP4AST ast) return eval(ast);
     if (v instanceof String t) {
       String s = t.strip();
@@ -268,7 +281,7 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalNumberCaseValueExpr(NumberCaseValueExpr n) { return evalBinaryExpr(n.value()); }
   @Override protected String evalStringCaseExpr(StringCaseExpr n) { return eval(n.value()); }
   @Override protected String evalStringDefaultCaseExpr(StringDefaultCaseExpr n) { return eval(n.value()); }
-  @Override protected String evalStringCaseValueExpr(StringCaseValueExpr n) { return evalStringExpr(n.value()); }
+  @Override protected String evalStringCaseValueExpr(StringCaseValueExpr n) { return evalStringConcatExpr(n.value()); }
   @Override protected String evalBooleanCaseExpr(BooleanCaseExpr n) { return eval(n.value()); }
   @Override protected String evalBooleanDefaultCaseExpr(BooleanDefaultCaseExpr n) { return eval(n.value()); }
   @Override protected String evalBooleanCaseValueExpr(BooleanCaseValueExpr n) { return evalBooleanOrExpr(n.value()); }
@@ -460,6 +473,22 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override
   protected String evalIsPresentExpr(IsPresentExpr node) {
     return "calculateContext.isExists(\"" + node.value().name() + "\")";
+  }
+
+  // =========================================================================
+  // InTimeRange / InDayTimeRange
+  // =========================================================================
+
+  @Override
+  protected String evalInTimeRangeExpr(InTimeRangeExpr node) {
+    return "org.unlaxer.tinyexpression.function.EmbeddedFunction.inTimeRange(calculateContext,(float)" + evalBinaryExpr(node.startHour()) + ",(float)" + evalBinaryExpr(node.endHour()) + ")";
+  }
+
+  @Override
+  protected String evalInDayTimeRangeExpr(InDayTimeRangeExpr node) {
+    String startDay = node.startDay().strip();
+    String endDay = node.endDay().strip();
+    return "calculateContext.inDayTimeRange(java.time.DayOfWeek.valueOf(\"" + esc(startDay) + "\"),(float)" + evalBinaryExpr(node.startHour()) + ",java.time.DayOfWeek.valueOf(\"" + esc(endDay) + "\"),(float)" + evalBinaryExpr(node.endHour()) + ")";
   }
 
   // =========================================================================

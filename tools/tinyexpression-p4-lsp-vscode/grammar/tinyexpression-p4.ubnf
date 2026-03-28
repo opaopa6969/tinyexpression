@@ -353,21 +353,31 @@ grammar TinyExpressionP4 {
   @mapping(IsPresentExpr, params=[value])
   IsPresentFunction ::= 'isPresent' '(' VariableRef @value ')' ;
 
+  // ── Time range functions (boolean-returning) ──────────────────────────
+
+  @mapping(InTimeRangeExpr, params=[startHour, endHour])
+  InTimeRangeFunction ::= 'inTimeRange' '(' NumberExpression @startHour ',' NumberExpression @endHour ')' ;
+
+  @mapping(InDayTimeRangeExpr, params=[startDay, startHour, endDay, endHour])
+  InDayTimeRangeFunction ::= 'inDayTimeRange' '(' DayOfWeek @startDay ',' NumberExpression @startHour ',' DayOfWeek @endDay ',' NumberExpression @endHour ')' ;
+
+  DayOfWeek ::= 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY' ;
+
   // ── String expressions ─────────────────────────────────────────────────────
 
-  @mapping(StringExpr, params=[value])
-  StringExpression ::=
-      StringMatchExpression @value
-    | ExternalStringInvocation @value
-    | ToUpperCaseDotMethod @value
-    | ToLowerCaseDotMethod @value
-    | TrimDotMethod @value
-    | ToUpperCaseFunction @value
-    | ToLowerCaseFunction @value
-    | TrimFunction @value
-    | STRING @value
-    | VariableRef @value
-    | MethodInvocation @value ;
+  @mapping(StringConcatExpr, params=[left, op, right])
+  @leftAssoc
+  @precedence(level=10)
+  StringExpression ::= StringTerm @left { '+' @op StringTerm @right } ;
+
+  StringTerm ::=
+      StringMatchExpression
+    | ExternalStringInvocation
+    | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
+    | ToUpperCaseDotMethod | ToLowerCaseDotMethod | TrimDotMethod
+    | STRING
+    | VariableRef
+    | MethodInvocation ;
 
   // ── Boolean expressions (3-level precedence: OR < AND < XOR) ──────────
 
@@ -406,6 +416,8 @@ grammar TinyExpressionP4 {
     | EndsWithFunction @value
     | ContainsFunction @value
     | IsPresentFunction @value
+    | InTimeRangeFunction @value
+    | InDayTimeRangeFunction @value
     | StringComparisonExpression @value
     | ComparisonExpression @value
     | 'true' @value

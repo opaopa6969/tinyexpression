@@ -183,13 +183,13 @@ public class P4TypedAstEvaluatorTest {
     assertEquals(200.0f, ((Number) result).floatValue(), 0.001f);
   }
 
-  // ── StringExpr ──
+  // ── StringConcatExpr ──
 
   @Test
-  public void testStringExprLiteral() {
+  public void testStringConcatExprLiteral() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new StringExpr("hello world"));
+    Object result = evaluator.eval(new StringConcatExpr("hello world", List.of(), List.of()));
     assertEquals("hello world", result);
   }
 

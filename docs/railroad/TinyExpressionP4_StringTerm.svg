@@ -1,100 +1,130 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="394" height="318">
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="472">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringTerm</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#StringMatchExpression" target="_top">
-<rect x="92" y="44" width="209" height="26" class="nonterminal-box"/>
-<text x="196" y="62" text-anchor="middle" class="nonterminal-text">StringMatchExpression</text>
-</a>
-<line x1="70" y1="57" x2="92" y2="57" class="rail"/>
-<line x1="301" y1="57" x2="324" y2="57" class="rail"/>
-<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
-<line x1="324" y1="57" x2="344" y2="57" class="rail"/>
-<a xlink:href="#ExternalStringInvocation" target="_top">
-<rect x="79" y="82" width="236" height="26" class="nonterminal-box"/>
-<text x="197" y="100" text-anchor="middle" class="nonterminal-text">ExternalStringInvocation</text>
-</a>
-<line x1="70" y1="95" x2="79" y2="95" class="rail"/>
-<line x1="315" y1="95" x2="324" y2="95" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
-<path d="M 60,85 Q 60,95 70,95" class="rail"/>
-<path d="M 324,95 Q 334,95 334,85" class="rail"/>
-<line x1="334" y1="85" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<a xlink:href="#SideEffectStringExpression" target="_top">
-<rect x="70" y="120" width="254" height="26" class="nonterminal-box"/>
-<text x="197" y="138" text-anchor="middle" class="nonterminal-text">SideEffectStringExpression</text>
-</a>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
-<path d="M 60,123 Q 60,133 70,133" class="rail"/>
-<path d="M 324,133 Q 334,133 334,123" class="rail"/>
-<line x1="334" y1="123" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<a xlink:href="#StringMethodCall" target="_top">
-<rect x="115" y="158" width="164" height="26" class="nonterminal-box"/>
-<text x="197" y="176" text-anchor="middle" class="nonterminal-text">StringMethodCall</text>
-</a>
-<line x1="70" y1="171" x2="115" y2="171" class="rail"/>
-<line x1="279" y1="171" x2="324" y2="171" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="161" class="rail"/>
-<path d="M 60,161 Q 60,171 70,171" class="rail"/>
-<path d="M 324,171 Q 334,171 334,161" class="rail"/>
-<line x1="334" y1="161" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<a xlink:href="#STRING" target="_top">
-<rect x="160" y="196" width="74" height="26" class="nonterminal-box"/>
-<text x="197" y="214" text-anchor="middle" class="nonterminal-text">STRING</text>
-</a>
-<line x1="70" y1="209" x2="160" y2="209" class="rail"/>
-<line x1="234" y1="209" x2="324" y2="209" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="199" class="rail"/>
-<path d="M 60,199 Q 60,209 70,209" class="rail"/>
-<path d="M 324,209 Q 334,209 334,199" class="rail"/>
-<line x1="334" y1="199" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<a xlink:href="#VariableRef" target="_top">
-<rect x="137" y="234" width="119" height="26" class="nonterminal-box"/>
-<text x="196" y="252" text-anchor="middle" class="nonterminal-text">VariableRef</text>
-</a>
-<line x1="70" y1="247" x2="137" y2="247" class="rail"/>
-<line x1="256" y1="247" x2="324" y2="247" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="237" class="rail"/>
-<path d="M 60,237 Q 60,247 70,247" class="rail"/>
-<path d="M 324,247 Q 334,247 334,237" class="rail"/>
-<line x1="334" y1="237" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<a xlink:href="#MethodInvocation" target="_top">
-<rect x="115" y="272" width="164" height="26" class="nonterminal-box"/>
-<text x="197" y="290" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
-</a>
-<line x1="70" y1="285" x2="115" y2="285" class="rail"/>
-<line x1="279" y1="285" x2="324" y2="285" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="275" class="rail"/>
-<path d="M 60,275 Q 60,285 70,285" class="rail"/>
-<path d="M 324,285 Q 334,285 334,275" class="rail"/>
-<line x1="334" y1="275" x2="334" y2="67" class="rail"/>
-<path d="M 334,67 Q 334,57 344,57" class="rail"/>
-<line x1="344" y1="57" x2="358" y2="57" class="rail"/>
-<circle cx="366" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="366" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1747836752">
+<g id="988711045">
+<rect x="66" y="44" width="167" height="28" class="nonterminal-box"/>
+<text x="149" y="62" text-anchor="middle" class="nonterminal-text">StringMatchExpression</text>
+</g>
+<line x1="56" y1="58" x2="66" y2="58" class="rail"/>
+<line x1="233" y1="58" x2="244" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="244" y1="58" x2="260" y2="58" class="rail"/>
+<g id="815729512">
+<rect x="56" y="82" width="188" height="28" class="nonterminal-box"/>
+<text x="150" y="100" text-anchor="middle" class="nonterminal-text">ExternalStringInvocation</text>
+</g>
+<line x1="56" y1="96" x2="56" y2="96" class="rail"/>
+<line x1="244" y1="96" x2="244" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="155051193">
+<rect x="73" y="120" width="153" height="28" class="nonterminal-box"/>
+<text x="149" y="138" text-anchor="middle" class="nonterminal-text">ToUpperCaseFunction</text>
+</g>
+<line x1="56" y1="134" x2="73" y2="134" class="rail"/>
+<line x1="226" y1="134" x2="244" y2="134" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
+<path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="1766702101">
+<rect x="73" y="158" width="153" height="28" class="nonterminal-box"/>
+<text x="149" y="176" text-anchor="middle" class="nonterminal-text">ToLowerCaseFunction</text>
+</g>
+<line x1="56" y1="172" x2="73" y2="172" class="rail"/>
+<line x1="226" y1="172" x2="244" y2="172" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
+<path d="M244,172 Q252,172 252,164" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="665434905">
+<rect x="98" y="196" width="104" height="28" class="nonterminal-box"/>
+<text x="150" y="214" text-anchor="middle" class="nonterminal-text">TrimFunction</text>
+</g>
+<line x1="56" y1="210" x2="98" y2="210" class="rail"/>
+<line x1="202" y1="210" x2="244" y2="210" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
+<path d="M244,210 Q252,210 252,202" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="1864708303">
+<rect x="70" y="234" width="160" height="28" class="nonterminal-box"/>
+<text x="150" y="252" text-anchor="middle" class="nonterminal-text">ToUpperCaseDotMethod</text>
+</g>
+<line x1="56" y1="248" x2="70" y2="248" class="rail"/>
+<line x1="230" y1="248" x2="244" y2="248" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
+<path d="M244,248 Q252,248 252,240" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="165349822">
+<rect x="70" y="272" width="160" height="28" class="nonterminal-box"/>
+<text x="150" y="290" text-anchor="middle" class="nonterminal-text">ToLowerCaseDotMethod</text>
+</g>
+<line x1="56" y1="286" x2="70" y2="286" class="rail"/>
+<line x1="230" y1="286" x2="244" y2="286" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
+<path d="M244,286 Q252,286 252,278" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="225616260">
+<rect x="94" y="310" width="111" height="28" class="nonterminal-box"/>
+<text x="149" y="328" text-anchor="middle" class="nonterminal-text">TrimDotMethod</text>
+</g>
+<line x1="56" y1="324" x2="94" y2="324" class="rail"/>
+<line x1="205" y1="324" x2="244" y2="324" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
+<path d="M244,324 Q252,324 252,316" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="1734980160">
+<rect x="119" y="348" width="62" height="28" class="nonterminal-box"/>
+<text x="150" y="366" text-anchor="middle" class="nonterminal-text">STRING</text>
+</g>
+<line x1="56" y1="362" x2="119" y2="362" class="rail"/>
+<line x1="181" y1="362" x2="244" y2="362" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
+<path d="M244,362 Q252,362 252,354" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="562840874">
+<rect x="101" y="386" width="97" height="28" class="nonterminal-box"/>
+<text x="149" y="404" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="56" y1="400" x2="101" y2="400" class="rail"/>
+<line x1="198" y1="400" x2="244" y2="400" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
+<path d="M244,400 Q252,400 252,392" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+<g id="1883979356">
+<rect x="84" y="424" width="132" height="28" class="nonterminal-box"/>
+<text x="150" y="442" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+</g>
+<line x1="56" y1="438" x2="84" y2="438" class="rail"/>
+<line x1="216" y1="438" x2="244" y2="438" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,430 Q48,438 56,438" class="rail" fill="none"/>
+<path d="M244,438 Q252,438 252,430" class="rail" fill="none"/>
+<path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
+</g>
+<line x1="260" y1="58" x2="268" y2="58" class="rail"/>
+<circle cx="274" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="274" cy="58" r="3" class="end-circle-inner"/>
 </svg>

@@ -1,68 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1173" height="90">
+<svg xmlns="http://www.w3.org/2000/svg" width="1027" height="92">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">InDayTimeRangeFunction</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<rect x="50" y="44" width="164" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="132" y="62" text-anchor="middle" class="terminal-text">'inDayTimeRange'</text>
-<line x1="214" y1="57" x2="230" y2="57" class="rail"/>
-<polygon points="219,54 225,57 219,60" class="arrow"/>
-<rect x="230" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="253" y="62" text-anchor="middle" class="terminal-text">'('</text>
-<line x1="277" y1="57" x2="293" y2="57" class="rail"/>
-<polygon points="282,54 288,57 282,60" class="arrow"/>
-<a xlink:href="#DayOfWeek" target="_top">
-<rect x="293" y="44" width="101" height="26" class="nonterminal-box"/>
-<text x="343" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
-</a>
-<line x1="394" y1="57" x2="410" y2="57" class="rail"/>
-<polygon points="399,54 405,57 399,60" class="arrow"/>
-<rect x="410" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="433" y="62" text-anchor="middle" class="terminal-text">','</text>
-<line x1="457" y1="57" x2="473" y2="57" class="rail"/>
-<polygon points="462,54 468,57 462,60" class="arrow"/>
-<a xlink:href="#NumberExpression" target="_top">
-<rect x="473" y="44" width="164" height="26" class="nonterminal-box"/>
-<text x="555" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
-</a>
-<line x1="637" y1="57" x2="653" y2="57" class="rail"/>
-<polygon points="642,54 648,57 642,60" class="arrow"/>
-<rect x="653" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="676" y="62" text-anchor="middle" class="terminal-text">','</text>
-<line x1="700" y1="57" x2="716" y2="57" class="rail"/>
-<polygon points="705,54 711,57 705,60" class="arrow"/>
-<a xlink:href="#DayOfWeek" target="_top">
-<rect x="716" y="44" width="101" height="26" class="nonterminal-box"/>
-<text x="766" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
-</a>
-<line x1="817" y1="57" x2="833" y2="57" class="rail"/>
-<polygon points="822,54 828,57 822,60" class="arrow"/>
-<rect x="833" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="856" y="62" text-anchor="middle" class="terminal-text">','</text>
-<line x1="880" y1="57" x2="896" y2="57" class="rail"/>
-<polygon points="885,54 891,57 885,60" class="arrow"/>
-<a xlink:href="#NumberExpression" target="_top">
-<rect x="896" y="44" width="164" height="26" class="nonterminal-box"/>
-<text x="978" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
-</a>
-<line x1="1060" y1="57" x2="1076" y2="57" class="rail"/>
-<polygon points="1065,54 1071,57 1065,60" class="arrow"/>
-<rect x="1076" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="1099" y="62" text-anchor="middle" class="terminal-text">')'</text>
-<line x1="1123" y1="57" x2="1137" y2="57" class="rail"/>
-<circle cx="1145" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="1145" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1670583286">
+<g id="293489960">
+<rect x="40" y="44" width="132" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="106" y="62" text-anchor="middle" class="terminal-text">'inDayTimeRange'</text>
+</g>
+<line x1="172" y1="58" x2="192" y2="58" class="rail"/>
+<polygon points="179,55 185,58 179,61" class="arrow"/>
+<g id="433911935">
+<rect x="192" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="212" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="233" y1="58" x2="253" y2="58" class="rail"/>
+<polygon points="240,55 246,58 240,61" class="arrow"/>
+<g id="1186177150">
+<rect x="253" y="44" width="83" height="28" class="nonterminal-box"/>
+<text x="294" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
+</g>
+<line x1="336" y1="58" x2="356" y2="58" class="rail"/>
+<polygon points="343,55 349,58 343,61" class="arrow"/>
+<g id="1660424372">
+<rect x="356" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="376" y="62" text-anchor="middle" class="terminal-text">','</text>
+</g>
+<line x1="397" y1="58" x2="417" y2="58" class="rail"/>
+<polygon points="404,55 410,58 404,61" class="arrow"/>
+<g id="25958094">
+<rect x="417" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="483" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</g>
+<line x1="549" y1="58" x2="569" y2="58" class="rail"/>
+<polygon points="556,55 562,58 556,61" class="arrow"/>
+<g id="2146244992">
+<rect x="569" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="589" y="62" text-anchor="middle" class="terminal-text">','</text>
+</g>
+<line x1="610" y1="58" x2="630" y2="58" class="rail"/>
+<polygon points="617,55 623,58 617,61" class="arrow"/>
+<g id="604431955">
+<rect x="630" y="44" width="83" height="28" class="nonterminal-box"/>
+<text x="671" y="62" text-anchor="middle" class="nonterminal-text">DayOfWeek</text>
+</g>
+<line x1="713" y1="58" x2="733" y2="58" class="rail"/>
+<polygon points="720,55 726,58 720,61" class="arrow"/>
+<g id="106512343">
+<rect x="733" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="753" y="62" text-anchor="middle" class="terminal-text">','</text>
+</g>
+<line x1="774" y1="58" x2="794" y2="58" class="rail"/>
+<polygon points="781,55 787,58 781,61" class="arrow"/>
+<g id="1736602548">
+<rect x="794" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="860" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+</g>
+<line x1="926" y1="58" x2="946" y2="58" class="rail"/>
+<polygon points="933,55 939,58 933,61" class="arrow"/>
+<g id="1882474461">
+<rect x="946" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="966" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="987" y1="58" x2="995" y2="58" class="rail"/>
+<circle cx="1001" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="1001" cy="58" r="3" class="end-circle-inner"/>
 </svg>
