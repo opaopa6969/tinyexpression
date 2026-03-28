@@ -1739,7 +1739,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       return switch (ast) {
         case TinyExpressionP4AST.StringExpr ignored -> "str";
-        case TinyExpressionP4AST.BooleanExpr ignored -> "bool";
+        case TinyExpressionP4AST.BooleanOrExpr ignored -> "bool";
         case TinyExpressionP4AST.BinaryExpr b -> {
           // Check operator type from the ops list
           if (!b.op().isEmpty()) {

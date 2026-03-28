@@ -311,7 +311,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
         collectAstTypeNames(bv.value(), path, depth + 1, maxDepth);
       }
       case TinyExpressionP4AST.StringExpr se -> {}
-      case TinyExpressionP4AST.BooleanExpr be -> {}
+      case TinyExpressionP4AST.BooleanOrExpr be -> {}
       case TinyExpressionP4AST.ObjectExpr oe -> {}
       case TinyExpressionP4AST.CodeBlockExpr cb -> {}
       case TinyExpressionP4AST.ImportDeclarationExpr id -> {}
@@ -319,6 +319,25 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.ExternalNumberInvocationExpr en -> {}
       case TinyExpressionP4AST.ExternalStringInvocationExpr es -> {}
       case TinyExpressionP4AST.ExternalObjectInvocationExpr eo -> {}
+      case TinyExpressionP4AST.BooleanAndExpr ba -> {}
+      case TinyExpressionP4AST.BooleanXorExpr bx -> {}
+      case TinyExpressionP4AST.BooleanFactorExpr bf -> {}
+      case TinyExpressionP4AST.SinExpr s -> {}
+      case TinyExpressionP4AST.CosExpr s -> {}
+      case TinyExpressionP4AST.TanExpr s -> {}
+      case TinyExpressionP4AST.SqrtExpr s -> {}
+      case TinyExpressionP4AST.MinExpr s -> {}
+      case TinyExpressionP4AST.MaxExpr s -> {}
+      case TinyExpressionP4AST.RandomExpr s -> {}
+      case TinyExpressionP4AST.AbsExpr s -> {}
+      case TinyExpressionP4AST.RoundExpr s -> {}
+      case TinyExpressionP4AST.CeilExpr s -> {}
+      case TinyExpressionP4AST.FloorExpr s -> {}
+      case TinyExpressionP4AST.PowExpr s -> {}
+      case TinyExpressionP4AST.LogExpr s -> {}
+      case TinyExpressionP4AST.ExpExpr s -> {}
+      case TinyExpressionP4AST.NotExpr s -> {}
+      case TinyExpressionP4AST.ToNumExpr s -> {}
     }
   }
 
