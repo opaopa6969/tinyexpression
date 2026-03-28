@@ -14,34 +14,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanMatchExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="540469042">
-<g id="1992085128">
+<g id="734954686">
+<g id="1921710598">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'match'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="1755646902">
+<g id="1907267316">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="424629270">
+<g id="1689674608">
 <rect x="190" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="238" y="62" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
 </g>
 <line x1="287" y1="58" x2="307" y2="58" class="rail"/>
 <polygon points="294,55 300,58 294,61" class="arrow"/>
-<g id="1905033564">
-<g id="302024942">
-<g id="1113628654">
+<g id="2009437727">
+<g id="541056139">
+<g id="6055722">
 <rect x="323" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="343" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="364" y1="82" x2="384" y2="82" class="rail"/>
 <polygon points="371,79 377,82 371,85" class="arrow"/>
-<g id="1379455396">
+<g id="623114221">
 <rect x="384" y="68" width="97" height="28" class="nonterminal-box"/>
 <text x="432" y="86" text-anchor="middle" class="nonterminal-text">BooleanCase</text>
 </g>
@@ -62,19 +62,19 @@
 </g>
 <line x1="497" y1="58" x2="517" y2="58" class="rail"/>
 <polygon points="504,55 510,58 504,61" class="arrow"/>
-<g id="928382828">
+<g id="339987194">
 <rect x="517" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="537" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="558" y1="58" x2="578" y2="58" class="rail"/>
 <polygon points="565,55 571,58 565,61" class="arrow"/>
-<g id="603241939">
+<g id="786815744">
 <rect x="578" y="44" width="146" height="28" class="nonterminal-box"/>
 <text x="651" y="62" text-anchor="middle" class="nonterminal-text">BooleanDefaultCase</text>
 </g>
 <line x1="724" y1="58" x2="744" y2="58" class="rail"/>
 <polygon points="731,55 737,58 731,61" class="arrow"/>
-<g id="900007611">
+<g id="1893765587">
 <rect x="744" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="764" y="62" text-anchor="middle" class="terminal-text">'}'</text>
 </g>

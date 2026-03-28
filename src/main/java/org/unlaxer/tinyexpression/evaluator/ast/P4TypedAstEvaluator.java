@@ -392,6 +392,25 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   // =========================================================================
+  // ArgumentExpressionExpr — unwrap (bare ternary or expression inside function args)
+  // =========================================================================
+
+  @Override
+  protected Object evalArgumentExpressionExpr(ArgumentExpressionExpr node) {
+    Object value = node.value();
+    if (value instanceof TinyExpressionP4AST ast) {
+      return eval(ast);
+    }
+    if (value instanceof String text) {
+      String stripped = text.strip();
+      if (stripped.startsWith("$")) {
+        return resolveVariableAny(extractVariableName(stripped));
+      }
+    }
+    return value;
+  }
+
+  // =========================================================================
   // ExpressionExpr — unwrap
   // =========================================================================
 
@@ -662,6 +681,30 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalLengthExpr(LengthExpr node) {
+    return castToNumberType(String.valueOf(eval(node.value())).length());
+  }
+
+  // =========================================================================
+  // String dot methods (delegate to same logic as function form)
+  // =========================================================================
+
+  @Override
+  protected Object evalToUpperCaseDotExpr(ToUpperCaseDotExpr node) {
+    return String.valueOf(eval(node.value())).toUpperCase();
+  }
+
+  @Override
+  protected Object evalToLowerCaseDotExpr(ToLowerCaseDotExpr node) {
+    return String.valueOf(eval(node.value())).toLowerCase();
+  }
+
+  @Override
+  protected Object evalTrimDotExpr(TrimDotExpr node) {
+    return String.valueOf(eval(node.value())).trim();
+  }
+
+  @Override
+  protected Object evalLengthDotExpr(LengthDotExpr node) {
     return castToNumberType(String.valueOf(eval(node.value())).length());
   }
 

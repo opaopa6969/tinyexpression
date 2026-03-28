@@ -210,6 +210,15 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   // =========================================================================
 
   @Override
+  protected String evalArgumentExpressionExpr(ArgumentExpressionExpr node) {
+    Object v = node.value();
+    if (v instanceof TinyExpressionP4AST ast) return eval(ast);
+    if (v instanceof String t && t.strip().startsWith("$"))
+      return renderVarAccess(stripDollar(t.strip()), resultType);
+    return String.valueOf(v);
+  }
+
+  @Override
   protected String evalExpressionExpr(ExpressionExpr node) {
     Object v = node.value();
     if (v instanceof TinyExpressionP4AST ast) return eval(ast);
@@ -379,6 +388,30 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalLengthExpr(LengthExpr node) {
+    return "(double)String.valueOf(" + eval(node.value()) + ").length()";
+  }
+
+  // =========================================================================
+  // String dot methods (delegate to same logic as function form)
+  // =========================================================================
+
+  @Override
+  protected String evalToUpperCaseDotExpr(ToUpperCaseDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toUpperCase()";
+  }
+
+  @Override
+  protected String evalToLowerCaseDotExpr(ToLowerCaseDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toLowerCase()";
+  }
+
+  @Override
+  protected String evalTrimDotExpr(TrimDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").trim()";
+  }
+
+  @Override
+  protected String evalLengthDotExpr(LengthDotExpr node) {
     return "(double)String.valueOf(" + eval(node.value()) + ").length()";
   }
 

@@ -236,4 +236,44 @@ public class P4TypedAstEvaluatorTest {
     Object result = evaluator.eval(add);
     assertEquals(7, ((Number) result).intValue());
   }
+
+  // ── String dot methods ──
+
+  @Test
+  public void testToUpperCaseDotMethod() {
+    // $name.toUpperCase() → "HELLO"
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
+    Object result = evaluator.eval(new ToUpperCaseDotExpr(new VariableRefExpr("$name")));
+    assertEquals("HELLO", result);
+  }
+
+  @Test
+  public void testToLowerCaseDotMethod() {
+    // $name.toLowerCase() → "hello" (already lowercase)
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
+    Object result = evaluator.eval(new ToLowerCaseDotExpr(new VariableRefExpr("$name")));
+    assertEquals("hello", result);
+  }
+
+  @Test
+  public void testTrimDotMethod() {
+    // $spacey.trim() → "hello"
+    CalculationContext ctx = newContext();
+    ctx.set("spacey", "  hello  ");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new TrimDotExpr(new VariableRefExpr("$spacey")));
+    assertEquals("hello", result);
+  }
+
+  @Test
+  public void testLengthDotMethod() {
+    // $name.length() → 5.0
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
+    Object result = evaluator.eval(new LengthDotExpr(new VariableRefExpr("$name")));
+    assertEquals(5.0f, ((Number) result).floatValue(), 0.001f);
+  }
 }

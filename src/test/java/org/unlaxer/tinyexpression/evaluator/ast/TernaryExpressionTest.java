@@ -213,6 +213,62 @@ public class TernaryExpressionTest {
   }
 
   // =========================================================================
+  // ArgumentExpression — bare ternary inside function parens (no double parens)
+  // =========================================================================
+
+  @Test
+  public void testTernaryInSin() {
+    context.set("a", 3.0f);
+    // sin($a > 0 ? $a : 0) — no double parens needed!
+    float expected = (float) Math.sin(Math.toRadians(3.0));
+    assertEval("sin($a > 0 ? $a : 0)", expected);
+  }
+
+  @Test
+  public void testTernaryInAbs() {
+    context.set("a", -5.0f);
+    // abs($a > 0 ? $a : 0) — bare ternary in abs()
+    assertEval("abs($a > 0 ? $a : 0)", 0.0f);
+  }
+
+  @Test
+  public void testTernaryInAbsTrueBranch() {
+    context.set("a", 5.0f);
+    assertEval("abs($a > 0 ? $a : 0)", 5.0f);
+  }
+
+  @Test
+  public void testTernaryInMin() {
+    context.set("a", 3.0f);
+    context.set("b", 7.0f);
+    // min($a > 0 ? $a : 0, $b) — bare ternary as first arg
+    assertEval("min($a > 0 ? $a : 0, $b)", 3.0f);
+  }
+
+  @Test
+  public void testTernaryInMax() {
+    context.set("a", 3.0f);
+    context.set("b", 7.0f);
+    // max($a > 0 ? $a : 0, $b > 0 ? $b : 0) — both args are bare ternaries
+    assertEval("max($a > 0 ? $a : 0, $b > 0 ? $b : 0)", 7.0f);
+  }
+
+  @Test
+  public void testTernaryWithParensStillWorks() {
+    context.set("a", 3.0f);
+    // Original paren form still works
+    assertEval("($a > 0 ? $a : 0)", 3.0f);
+  }
+
+  @Test
+  public void testTernaryInSinWithDoubleParensStillWorks() {
+    context.set("a", 3.0f);
+    // Old double-paren form: sin(($a > 0 ? $a : 0)) still works
+    float expected = (float) Math.sin(Math.toRadians(3.0));
+    assertEval("sin(($a > 0 ? $a : 0))", expected);
+  }
+
+  // =========================================================================
   // P4 typed evaluator path
   // =========================================================================
 

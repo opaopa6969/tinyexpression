@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="653129230">
-<g id="1386665170">
-<g id="1430835998">
+<g id="1666745104">
+<g id="1622078465">
+<g id="1414448062">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -30,7 +30,7 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1397219088">
+<g id="888428310">
 <rect x="140" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="178" y="80" text-anchor="middle" class="terminal-text">'string'</text>
 </g>

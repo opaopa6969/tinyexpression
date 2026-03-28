@@ -637,6 +637,12 @@ public class AstEvaluatorCalculator implements Calculator {
     if (ifHead || ternaryHead) {
       preferred.add("IfExpr");
     }
+    // Math/string functions: prefer the specific function AST node so the mapper
+    // extracts the full function call rather than an inner BinaryExpr argument.
+    String functionAstName = mathOrStringFunctionAstName(formula);
+    if (functionAstName != null) {
+      preferred.add(functionAstName);
+    }
     ExpressionType type = resultType();
     if (type == null) {
       preferred.add(null);
@@ -681,6 +687,41 @@ public class AstEvaluatorCalculator implements Calculator {
     if (formula == null || formula.isEmpty()) return false;
     String stripped = formula.strip();
     return stripped.startsWith("(") && stripped.contains("?") && stripped.contains(":");
+  }
+
+  private static final java.util.Map<String, String> FUNCTION_AST_NAMES = java.util.Map.ofEntries(
+      java.util.Map.entry("sin", "SinExpr"),
+      java.util.Map.entry("cos", "CosExpr"),
+      java.util.Map.entry("tan", "TanExpr"),
+      java.util.Map.entry("sqrt", "SqrtExpr"),
+      java.util.Map.entry("min", "MinExpr"),
+      java.util.Map.entry("max", "MaxExpr"),
+      java.util.Map.entry("random", "RandomExpr"),
+      java.util.Map.entry("abs", "AbsExpr"),
+      java.util.Map.entry("round", "RoundExpr"),
+      java.util.Map.entry("ceil", "CeilExpr"),
+      java.util.Map.entry("floor", "FloorExpr"),
+      java.util.Map.entry("pow", "PowExpr"),
+      java.util.Map.entry("log", "LogExpr"),
+      java.util.Map.entry("exp", "ExpExpr"),
+      java.util.Map.entry("toNum", "ToNumExpr"),
+      java.util.Map.entry("toUpperCase", "ToUpperCaseExpr"),
+      java.util.Map.entry("toLowerCase", "ToLowerCaseExpr"),
+      java.util.Map.entry("trim", "TrimExpr"),
+      java.util.Map.entry("length", "LengthExpr"));
+
+  /**
+   * If the formula starts with a built-in function name, return its corresponding AST class
+   * simple name. This ensures the mapper extracts the full function node rather than an inner
+   * BinaryExpr from the argument.
+   */
+  private static String mathOrStringFunctionAstName(String formula) {
+    if (formula == null || formula.isEmpty()) return null;
+    String stripped = formula.strip();
+    int parenIdx = stripped.indexOf('(');
+    if (parenIdx <= 0) return null;
+    String head = stripped.substring(0, parenIdx).strip();
+    return FUNCTION_AST_NAMES.get(head);
   }
 
   private boolean numbersEquivalent(Number left, Number right) {

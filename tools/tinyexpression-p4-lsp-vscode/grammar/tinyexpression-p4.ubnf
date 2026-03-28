@@ -191,7 +191,15 @@ grammar TinyExpressionP4 {
   @mapping(MethodInvocationExpr, params=[name])
   MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
 
-  Arguments ::= Expression { ',' Expression } ;
+  // ── Argument expression (allows bare ternary inside function parens) ───
+  // ArgumentTernary maps to same IfExpr AST — no new evaluator methods needed
+  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
+  ArgumentTernary ::= BooleanExpression @condition '?' Expression @thenExpr ':' Expression @elseExpr ;
+
+  @mapping(ArgumentExpressionExpr, params=[value])
+  ArgumentExpression ::= ArgumentTernary @value | Expression @value ;
+
+  Arguments ::= ArgumentExpression { ',' ArgumentExpression } ;
 
   // ── Numeric expressions ────────────────────────────────────────────────────
 
@@ -227,51 +235,51 @@ grammar TinyExpressionP4 {
     | ExpFunction ;
 
   @mapping(SinExpr, params=[arg])
-  SinFunction ::= 'sin' '(' NumberExpression @arg ')' ;
+  SinFunction ::= 'sin' '(' ArgumentExpression @arg ')' ;
 
   @mapping(CosExpr, params=[arg])
-  CosFunction ::= 'cos' '(' NumberExpression @arg ')' ;
+  CosFunction ::= 'cos' '(' ArgumentExpression @arg ')' ;
 
   @mapping(TanExpr, params=[arg])
-  TanFunction ::= 'tan' '(' NumberExpression @arg ')' ;
+  TanFunction ::= 'tan' '(' ArgumentExpression @arg ')' ;
 
   @mapping(SqrtExpr, params=[arg])
-  SqrtFunction ::= 'sqrt' '(' NumberExpression @arg ')' ;
+  SqrtFunction ::= 'sqrt' '(' ArgumentExpression @arg ')' ;
 
   @mapping(MinExpr, params=[first, rest])
-  MinFunction ::= 'min' '(' NumberExpression @first { ',' NumberExpression @rest } ')' ;
+  MinFunction ::= 'min' '(' ArgumentExpression @first { ',' ArgumentExpression @rest } ')' ;
 
   @mapping(MaxExpr, params=[first, rest])
-  MaxFunction ::= 'max' '(' NumberExpression @first { ',' NumberExpression @rest } ')' ;
+  MaxFunction ::= 'max' '(' ArgumentExpression @first { ',' ArgumentExpression @rest } ')' ;
 
   @mapping(RandomExpr)
   RandomFunction ::= 'random' '(' ')' ;
 
   @mapping(AbsExpr, params=[arg])
-  AbsFunction ::= 'abs' '(' NumberExpression @arg ')' ;
+  AbsFunction ::= 'abs' '(' ArgumentExpression @arg ')' ;
 
   @mapping(RoundExpr, params=[arg])
-  RoundFunction ::= 'round' '(' NumberExpression @arg ')' ;
+  RoundFunction ::= 'round' '(' ArgumentExpression @arg ')' ;
 
   @mapping(CeilExpr, params=[arg])
-  CeilFunction ::= 'ceil' '(' NumberExpression @arg ')' ;
+  CeilFunction ::= 'ceil' '(' ArgumentExpression @arg ')' ;
 
   @mapping(FloorExpr, params=[arg])
-  FloorFunction ::= 'floor' '(' NumberExpression @arg ')' ;
+  FloorFunction ::= 'floor' '(' ArgumentExpression @arg ')' ;
 
   @mapping(PowExpr, params=[base, exponent])
-  PowFunction ::= 'pow' '(' NumberExpression @base ',' NumberExpression @exponent ')' ;
+  PowFunction ::= 'pow' '(' ArgumentExpression @base ',' ArgumentExpression @exponent ')' ;
 
   @mapping(LogExpr, params=[arg])
-  LogFunction ::= 'log' '(' NumberExpression @arg ')' ;
+  LogFunction ::= 'log' '(' ArgumentExpression @arg ')' ;
 
   @mapping(ExpExpr, params=[arg])
-  ExpFunction ::= 'exp' '(' NumberExpression @arg ')' ;
+  ExpFunction ::= 'exp' '(' ArgumentExpression @arg ')' ;
 
   // ── Type conversion ────────────────────────────────────────────────────
 
   @mapping(ToNumExpr, params=[value, defaultValue])
-  ToNumFunction ::= 'toNum' '(' StringExpression @value ',' NumberExpression @defaultValue ')' ;
+  ToNumFunction ::= 'toNum' '(' StringExpression @value ',' ArgumentExpression @defaultValue ')' ;
 
   NumberFactor ::=
       TernaryExpression
@@ -279,6 +287,7 @@ grammar TinyExpressionP4 {
     | IfExpression
     | MathFunction
     | ToNumFunction
+    | LengthDotMethod
     | LengthFunction
     | ExternalNumberInvocation
     | NUMBER
@@ -300,12 +309,31 @@ grammar TinyExpressionP4 {
   @mapping(LengthExpr, params=[value])
   LengthFunction ::= 'length' '(' StringExpression @value ')' ;
 
+  // ── String dot methods (backward compatible addition) ──────────────────
+  // Dot form uses own AST types; evaluator delegates to same logic as function form.
+  // Receiver is VariableRef only (avoids left recursion). Phase 2: full chaining.
+
+  @mapping(ToUpperCaseDotExpr, params=[value])
+  ToUpperCaseDotMethod ::= VariableRef @value '.toUpperCase' '(' ')' ;
+
+  @mapping(ToLowerCaseDotExpr, params=[value])
+  ToLowerCaseDotMethod ::= VariableRef @value '.toLowerCase' '(' ')' ;
+
+  @mapping(TrimDotExpr, params=[value])
+  TrimDotMethod ::= VariableRef @value '.trim' '(' ')' ;
+
+  @mapping(LengthDotExpr, params=[value])
+  LengthDotMethod ::= VariableRef @value '.length' '(' ')' ;
+
   // ── String expressions ─────────────────────────────────────────────────────
 
   @mapping(StringExpr, params=[value])
   StringExpression ::=
       StringMatchExpression @value
     | ExternalStringInvocation @value
+    | ToUpperCaseDotMethod @value
+    | ToLowerCaseDotMethod @value
+    | TrimDotMethod @value
     | ToUpperCaseFunction @value
     | ToLowerCaseFunction @value
     | TrimFunction @value

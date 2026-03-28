@@ -300,6 +300,22 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   // =========================================================================
 
   @Override
+  protected String evalArgumentExpressionExpr(ArgumentExpressionExpr node) {
+    Object value = node.value();
+    if (value instanceof TinyExpressionP4AST ast) {
+      return eval(ast);
+    }
+    if (value instanceof String text) {
+      String stripped = text.strip();
+      if (stripped.startsWith("$")) {
+        String varName = extractVariableName(stripped);
+        return renderVariableAccess(varName, resultType);
+      }
+    }
+    return String.valueOf(value);
+  }
+
+  @Override
   protected String evalExpressionExpr(ExpressionExpr node) {
     Object value = node.value();
     if (value instanceof TinyExpressionP4AST ast) {
@@ -565,6 +581,30 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalLengthExpr(LengthExpr node) {
+    return castToNumberType("(double)String.valueOf(" + eval(node.value()) + ").length()");
+  }
+
+  // =========================================================================
+  // String dot methods (delegate to same logic as function form)
+  // =========================================================================
+
+  @Override
+  protected String evalToUpperCaseDotExpr(ToUpperCaseDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toUpperCase()";
+  }
+
+  @Override
+  protected String evalToLowerCaseDotExpr(ToLowerCaseDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").toLowerCase()";
+  }
+
+  @Override
+  protected String evalTrimDotExpr(TrimDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").trim()";
+  }
+
+  @Override
+  protected String evalLengthDotExpr(LengthDotExpr node) {
     return castToNumberType("(double)String.valueOf(" + eval(node.value()) + ").length()");
   }
 

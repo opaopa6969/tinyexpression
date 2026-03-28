@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="416" height="92">
+<svg xmlns="http://www.w3.org/2000/svg" width="430" height="92">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,31 +14,31 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CeilFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1201064314">
-<g id="1233101904">
+<g id="999351932">
+<g id="616135411">
 <rect x="40" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="71" y="62" text-anchor="middle" class="terminal-text">'ceil'</text>
 </g>
 <line x1="102" y1="58" x2="122" y2="58" class="rail"/>
 <polygon points="109,55 115,58 109,61" class="arrow"/>
-<g id="406065545">
+<g id="1031396417">
 <rect x="122" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="142" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="163" y1="58" x2="183" y2="58" class="rail"/>
 <polygon points="170,55 176,58 170,61" class="arrow"/>
-<g id="691265165">
-<rect x="183" y="44" width="132" height="28" class="nonterminal-box"/>
-<text x="249" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<g id="286110415">
+<rect x="183" y="44" width="146" height="28" class="nonterminal-box"/>
+<text x="256" y="62" text-anchor="middle" class="nonterminal-text">ArgumentExpression</text>
 </g>
-<line x1="315" y1="58" x2="335" y2="58" class="rail"/>
-<polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="1937747553">
-<rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="329" y1="58" x2="349" y2="58" class="rail"/>
+<polygon points="336,55 342,58 336,61" class="arrow"/>
+<g id="1418813695">
+<rect x="349" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="369" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 </g>
-<line x1="376" y1="58" x2="384" y2="58" class="rail"/>
-<circle cx="390" cy="58" r="6" class="end-circle-outer"/>
-<circle cx="390" cy="58" r="3" class="end-circle-inner"/>
+<line x1="390" y1="58" x2="398" y2="58" class="rail"/>
+<circle cx="404" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="404" cy="58" r="3" class="end-circle-inner"/>
 </svg>

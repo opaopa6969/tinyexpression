@@ -14,45 +14,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalStringInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="902030486">
-<g id="1062389022">
+<g id="1982483346">
+<g id="1504991736">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="796294177">
+<g id="532852505">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="434824029">
+<g id="1261929350">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="1145154147">
+<g id="785355466">
 <rect x="335" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="401" y="80" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
 <line x1="467" y1="76" x2="487" y2="76" class="rail"/>
 <polygon points="474,73 480,76 474,79" class="arrow"/>
-<g id="1829957056">
+<g id="1439655282">
 <rect x="487" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="532" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="577" y1="76" x2="597" y2="76" class="rail"/>
 <polygon points="584,73 590,76 584,79" class="arrow"/>
-<g id="1905853239">
+<g id="1610588853">
 <rect x="597" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="617" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="638" y1="76" x2="658" y2="76" class="rail"/>
 <polygon points="645,73 651,76 645,79" class="arrow"/>
-<g id="1987858791">
-<g id="1059583570">
+<g id="2049486691">
+<g id="681783679">
 <rect x="674" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="715" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -66,7 +66,7 @@
 </g>
 <line x1="773" y1="76" x2="793" y2="76" class="rail"/>
 <polygon points="780,73 786,76 780,79" class="arrow"/>
-<g id="217763461">
+<g id="1415750049">
 <rect x="793" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="813" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>

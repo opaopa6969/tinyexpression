@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="237" height="130">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ArgumentExpression</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="969273353">
+<g id="223685957">
+<rect x="56" y="44" width="125" height="28" class="nonterminal-box"/>
+<text x="118" y="62" text-anchor="middle" class="nonterminal-text">ArgumentTernary</text>
+</g>
+<line x1="56" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="181" y1="58" x2="181" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="181" y1="58" x2="197" y2="58" class="rail"/>
+<g id="502838547">
+<rect x="73" y="82" width="90" height="28" class="nonterminal-box"/>
+<text x="118" y="100" text-anchor="middle" class="nonterminal-text">Expression</text>
+</g>
+<line x1="56" y1="96" x2="73" y2="96" class="rail"/>
+<line x1="163" y1="96" x2="181" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M181,96 Q189,96 189,88" class="rail" fill="none"/>
+<path d="M189,66 Q189,58 197,58" class="rail" fill="none"/>
+</g>
+<line x1="197" y1="58" x2="205" y2="58" class="rail"/>
+<circle cx="211" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="211" cy="58" r="3" class="end-circle-inner"/>
+</svg>

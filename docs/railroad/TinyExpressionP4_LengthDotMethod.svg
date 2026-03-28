@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="402" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LengthDotMethod</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1284515324">
+<g id="59411731">
+<rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
+<text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="137" y1="58" x2="157" y2="58" class="rail"/>
+<polygon points="144,55 150,58 144,61" class="arrow"/>
+<g id="1336638025">
+<rect x="157" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="198" y="62" text-anchor="middle" class="terminal-text">'.length'</text>
+</g>
+<line x1="240" y1="58" x2="260" y2="58" class="rail"/>
+<polygon points="247,55 253,58 247,61" class="arrow"/>
+<g id="1987604249">
+<rect x="260" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="280" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="301" y1="58" x2="321" y2="58" class="rail"/>
+<polygon points="308,55 314,58 308,61" class="arrow"/>
+<g id="455463326">
+<rect x="321" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="341" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="362" y1="58" x2="370" y2="58" class="rail"/>
+<circle cx="376" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="376" cy="58" r="3" class="end-circle-inner"/>
+</svg>
