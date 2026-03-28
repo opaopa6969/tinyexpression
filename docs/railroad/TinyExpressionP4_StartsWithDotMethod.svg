@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="582" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StartsWithDotMethod</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1603519663">
+<g id="395675331">
+<rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
+<text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="137" y1="58" x2="157" y2="58" class="rail"/>
+<polygon points="144,55 150,58 144,61" class="arrow"/>
+<g id="59051463">
+<rect x="157" y="44" width="111" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="212" y="62" text-anchor="middle" class="terminal-text">'.startsWith'</text>
+</g>
+<line x1="268" y1="58" x2="288" y2="58" class="rail"/>
+<polygon points="275,55 281,58 275,61" class="arrow"/>
+<g id="499117681">
+<rect x="288" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="308" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="329" y1="58" x2="349" y2="58" class="rail"/>
+<polygon points="336,55 342,58 336,61" class="arrow"/>
+<g id="1338712179">
+<rect x="349" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="415" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="481" y1="58" x2="501" y2="58" class="rail"/>
+<polygon points="488,55 494,58 488,61" class="arrow"/>
+<g id="1951597783">
+<rect x="501" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="521" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="542" y1="58" x2="550" y2="58" class="rail"/>
+<circle cx="556" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="556" cy="58" r="3" class="end-circle-inner"/>
+</svg>

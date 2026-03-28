@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1548641320">
-<g id="1493002005">
+<g id="9075029">
+<g id="1470722803">
 <rect x="66" y="44" width="167" height="28" class="nonterminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="nonterminal-text">StringMatchExpression</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="233" y1="58" x2="244" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1833487284">
+<g id="1449430726">
 <rect x="56" y="82" width="188" height="28" class="nonterminal-box"/>
 <text x="150" y="100" text-anchor="middle" class="nonterminal-text">ExternalStringInvocation</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1490312866">
+<g id="1266300167">
 <rect x="70" y="120" width="160" height="28" class="nonterminal-box"/>
 <text x="150" y="138" text-anchor="middle" class="nonterminal-text">ToUpperCaseDotMethod</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="363216769">
+<g id="1111102484">
 <rect x="70" y="158" width="160" height="28" class="nonterminal-box"/>
 <text x="150" y="176" text-anchor="middle" class="nonterminal-text">ToLowerCaseDotMethod</text>
 </g>
@@ -53,7 +53,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M244,172 Q252,172 252,164" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="651180015">
+<g id="1587071050">
 <rect x="94" y="196" width="111" height="28" class="nonterminal-box"/>
 <text x="149" y="214" text-anchor="middle" class="nonterminal-text">TrimDotMethod</text>
 </g>
@@ -63,7 +63,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M244,210 Q252,210 252,202" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="225336810">
+<g id="754483169">
 <rect x="73" y="234" width="153" height="28" class="nonterminal-box"/>
 <text x="149" y="252" text-anchor="middle" class="nonterminal-text">ToUpperCaseFunction</text>
 </g>
@@ -73,7 +73,7 @@
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M244,248 Q252,248 252,240" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1999975339">
+<g id="909161844">
 <rect x="73" y="272" width="153" height="28" class="nonterminal-box"/>
 <text x="149" y="290" text-anchor="middle" class="nonterminal-text">ToLowerCaseFunction</text>
 </g>
@@ -83,7 +83,7 @@
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
 <path d="M244,286 Q252,286 252,278" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1397444859">
+<g id="607685906">
 <rect x="98" y="310" width="104" height="28" class="nonterminal-box"/>
 <text x="150" y="328" text-anchor="middle" class="nonterminal-text">TrimFunction</text>
 </g>
@@ -93,7 +93,7 @@
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
 <path d="M244,324 Q252,324 252,316" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1946384946">
+<g id="1023068999">
 <rect x="119" y="348" width="62" height="28" class="nonterminal-box"/>
 <text x="150" y="366" text-anchor="middle" class="nonterminal-text">STRING</text>
 </g>
@@ -103,7 +103,7 @@
 <path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
 <path d="M244,362 Q252,362 252,354" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="201193557">
+<g id="1402125390">
 <rect x="101" y="386" width="97" height="28" class="nonterminal-box"/>
 <text x="149" y="404" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
@@ -113,7 +113,7 @@
 <path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
 <path d="M244,400 Q252,400 252,392" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="1435187946">
+<g id="1614428253">
 <rect x="84" y="424" width="132" height="28" class="nonterminal-box"/>
 <text x="150" y="442" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
 </g>

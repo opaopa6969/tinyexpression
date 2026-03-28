@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AddOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="579921885">
-<g id="689006008">
+<g id="866599565">
+<g id="824987182">
 <rect x="56" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="62" text-anchor="middle" class="terminal-text">'+'</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="97" y1="58" x2="97" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="97" y1="58" x2="113" y2="58" class="rail"/>
-<g id="633850038">
+<g id="764994725">
 <rect x="56" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="100" text-anchor="middle" class="terminal-text">'-'</text>
 </g>

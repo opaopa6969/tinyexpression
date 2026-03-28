@@ -187,6 +187,13 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalToLowerCaseDotExpr(ToLowerCaseDotExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalTrimDotExpr(TrimDotExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalLengthDotExpr(LengthDotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalStartsWithExpr(StartsWithExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalEndsWithExpr(EndsWithExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalContainsExpr(ContainsExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalStartsWithDotExpr(StartsWithDotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalEndsWithDotExpr(EndsWithDotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalContainsDotExpr(ContainsDotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalIsPresentExpr(IsPresentExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalSinExpr(SinExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalCosExpr(CosExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalTanExpr(TanExpr n) { return defaultEmitter.eval(n); }

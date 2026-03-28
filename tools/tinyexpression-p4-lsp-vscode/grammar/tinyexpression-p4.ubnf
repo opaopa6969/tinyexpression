@@ -325,6 +325,34 @@ grammar TinyExpressionP4 {
   @mapping(LengthDotExpr, params=[value])
   LengthDotMethod ::= VariableRef @value '.length' '(' ')' ;
 
+  // ── String predicates (boolean-returning, function form) ─────────────────
+  // These return boolean: startsWith, endsWith, contains
+
+  @mapping(StartsWithExpr, params=[value, pattern])
+  StartsWithFunction ::= 'startsWith' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+
+  @mapping(EndsWithExpr, params=[value, pattern])
+  EndsWithFunction ::= 'endsWith' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+
+  @mapping(ContainsExpr, params=[value, pattern])
+  ContainsFunction ::= 'contains' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+
+  // ── String predicates (boolean-returning, dot form) ─────────────────────
+
+  @mapping(StartsWithDotExpr, params=[value, pattern])
+  StartsWithDotMethod ::= VariableRef @value '.startsWith' '(' StringExpression @pattern ')' ;
+
+  @mapping(EndsWithDotExpr, params=[value, pattern])
+  EndsWithDotMethod ::= VariableRef @value '.endsWith' '(' StringExpression @pattern ')' ;
+
+  @mapping(ContainsDotExpr, params=[value, pattern])
+  ContainsDotMethod ::= VariableRef @value '.contains' '(' StringExpression @pattern ')' ;
+
+  // ── isPresent (boolean-returning) ───────────────────────────────────────
+
+  @mapping(IsPresentExpr, params=[value])
+  IsPresentFunction ::= 'isPresent' '(' VariableRef @value ')' ;
+
   // ── String expressions ─────────────────────────────────────────────────────
 
   @mapping(StringExpr, params=[value])
@@ -371,6 +399,13 @@ grammar TinyExpressionP4 {
       NotExpression @value
     | BooleanMatchExpression @value
     | ExternalBooleanInvocation @value
+    | StartsWithDotMethod @value
+    | EndsWithDotMethod @value
+    | ContainsDotMethod @value
+    | StartsWithFunction @value
+    | EndsWithFunction @value
+    | ContainsFunction @value
+    | IsPresentFunction @value
     | StringComparisonExpression @value
     | ComparisonExpression @value
     | 'true' @value

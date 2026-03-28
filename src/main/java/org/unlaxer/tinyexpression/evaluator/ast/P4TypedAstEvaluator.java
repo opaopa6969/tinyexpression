@@ -709,6 +709,54 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   // =========================================================================
+  // String predicates (function form — boolean-returning)
+  // =========================================================================
+
+  @Override
+  protected Object evalStartsWithExpr(StartsWithExpr node) {
+    return String.valueOf(eval(node.value())).startsWith(String.valueOf(eval(node.pattern())));
+  }
+
+  @Override
+  protected Object evalEndsWithExpr(EndsWithExpr node) {
+    return String.valueOf(eval(node.value())).endsWith(String.valueOf(eval(node.pattern())));
+  }
+
+  @Override
+  protected Object evalContainsExpr(ContainsExpr node) {
+    return String.valueOf(eval(node.value())).contains(String.valueOf(eval(node.pattern())));
+  }
+
+  // =========================================================================
+  // String predicates (dot form — boolean-returning)
+  // =========================================================================
+
+  @Override
+  protected Object evalStartsWithDotExpr(StartsWithDotExpr node) {
+    return String.valueOf(eval(node.value())).startsWith(String.valueOf(eval(node.pattern())));
+  }
+
+  @Override
+  protected Object evalEndsWithDotExpr(EndsWithDotExpr node) {
+    return String.valueOf(eval(node.value())).endsWith(String.valueOf(eval(node.pattern())));
+  }
+
+  @Override
+  protected Object evalContainsDotExpr(ContainsDotExpr node) {
+    return String.valueOf(eval(node.value())).contains(String.valueOf(eval(node.pattern())));
+  }
+
+  // =========================================================================
+  // isPresent
+  // =========================================================================
+
+  @Override
+  protected Object evalIsPresentExpr(IsPresentExpr node) {
+    String varName = node.value().name();
+    return context.isExists(varName);
+  }
+
+  // =========================================================================
   // ToNum conversion
   // =========================================================================
 

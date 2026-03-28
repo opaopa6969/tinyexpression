@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CompareOp</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="259979402">
-<g id="1406704985">
+<g id="43715199">
+<g id="704170496">
 <rect x="56" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="62" text-anchor="middle" class="terminal-text">'=='</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="104" y1="58" x2="104" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="104" y1="58" x2="120" y2="58" class="rail"/>
-<g id="2039207474">
+<g id="2097029642">
 <rect x="56" y="82" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="100" text-anchor="middle" class="terminal-text">'!='</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M104,96 Q112,96 112,88" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="1188679079">
+<g id="1579708884">
 <rect x="56" y="120" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="138" text-anchor="middle" class="terminal-text">'&lt;='</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M104,134 Q112,134 112,126" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="939172012">
+<g id="2105839044">
 <rect x="56" y="158" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="176" text-anchor="middle" class="terminal-text">'&gt;='</text>
 </g>
@@ -53,7 +53,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M104,172 Q112,172 112,164" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="551539039">
+<g id="306438334">
 <rect x="59" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="79" y="214" text-anchor="middle" class="terminal-text">'&lt;'</text>
 </g>
@@ -63,7 +63,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M104,210 Q112,210 112,202" class="rail" fill="none"/>
 <path d="M112,66 Q112,58 120,58" class="rail" fill="none"/>
-<g id="121813296">
+<g id="530611854">
 <rect x="59" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="79" y="252" text-anchor="middle" class="terminal-text">'&gt;'</text>
 </g>

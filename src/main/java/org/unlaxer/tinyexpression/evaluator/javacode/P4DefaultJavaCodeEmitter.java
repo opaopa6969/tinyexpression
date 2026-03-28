@@ -416,6 +416,53 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   }
 
   // =========================================================================
+  // String predicates (function form — boolean-returning)
+  // =========================================================================
+
+  @Override
+  protected String evalStartsWithExpr(StartsWithExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").startsWith(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  @Override
+  protected String evalEndsWithExpr(EndsWithExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").endsWith(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  @Override
+  protected String evalContainsExpr(ContainsExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").contains(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  // =========================================================================
+  // String predicates (dot form — boolean-returning)
+  // =========================================================================
+
+  @Override
+  protected String evalStartsWithDotExpr(StartsWithDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").startsWith(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  @Override
+  protected String evalEndsWithDotExpr(EndsWithDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").endsWith(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  @Override
+  protected String evalContainsDotExpr(ContainsDotExpr node) {
+    return "String.valueOf(" + eval(node.value()) + ").contains(String.valueOf(" + eval(node.pattern()) + "))";
+  }
+
+  // =========================================================================
+  // isPresent
+  // =========================================================================
+
+  @Override
+  protected String evalIsPresentExpr(IsPresentExpr node) {
+    return "calculateContext.isExists(\"" + node.value().name() + "\")";
+  }
+
+  // =========================================================================
   // Not operator
   // =========================================================================
 
