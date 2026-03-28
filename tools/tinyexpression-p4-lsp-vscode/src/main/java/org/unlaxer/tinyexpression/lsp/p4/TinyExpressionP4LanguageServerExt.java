@@ -359,11 +359,11 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (extClient != null) {
         extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
       }
-      return parseAndEnrich(uri, fs.content(), fs.lineOffset());
+      return parseAndEnrich(uri, fs.content(), fs.lineOffset(), content);
     }
 
     // Plain expression file: parse directly (bypasses parent so we can capture ctx diagnostics).
-    return parseAndEnrich(uri, content, 0);
+    return parseAndEnrich(uri, content, 0, content);
   }
 
   /**
@@ -374,8 +374,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
    * @param uri            document URI
    * @param formulaContent formula text to parse (may be a sub-section of the full document)
    * @param lineOffset     number of lines to add to parser positions when publishing diagnostics
+   * @param fullContent    full document content (includes metadata headers)
    */
-  public ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset) {
+  public ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset, String fullContent) {
     StringSource source = createRootSource(formulaContent);
     ParseResult result;
     org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
@@ -415,10 +416,11 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
 
     ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent, ctxDiag);
-    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, declarations, references, lineOffset));
+    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, declarations, references, lineOffset, fullContent));
 
     if (extClient != null) {
-      publishEnrichedDiagnostics(uri, formulaContent, failures, scopeDiagnostics, lineOffset);
+      List<Diagnostic> formulaInfoDiags = computeFormulaInfoDiagnostics(uri, fullContent);
+      publishEnrichedDiagnostics(uri, formulaContent, failures, scopeDiagnostics, lineOffset, formulaInfoDiags);
     }
     return result;
   }
@@ -506,8 +508,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   private void publishEnrichedDiagnostics(String uri, String content,
       ParseFailureDiagnostics failures,
       List<ScopeStore.SymbolDiagnostic> scopeDiagnostics,
-      int lineOffset) {
-    List<Diagnostic> diagnostics = new ArrayList<>();
+      int lineOffset,
+      List<Diagnostic> formulaInfoDiags) {
+    List<Diagnostic> diagnostics = new ArrayList<>(formulaInfoDiags);
     // Semantic diagnostics from ScopeStore (@declares / @backref)
     for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
       Position start = offsetToPositionWithOffset(content, sd.offset(), lineOffset);
@@ -706,6 +709,127 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   // =========================================================================
+  // FormulaInfo metadata — field names, value suggestions, dependsOn diagnostics
+  // =========================================================================
+
+  /** Metadata field names that may appear before the formula: line. */
+  private static final List<String> METADATA_FIELD_NAMES = List.of(
+      "calculatorName", "resultType", "numberType", "tags", "description",
+      "dependsOn", "executionBackend",
+      "periodStartInclusive", "periodEndExclusive");
+
+  /** Suggested values for resultType: field. */
+  private static final List<String> RESULT_TYPE_VALUES = List.of(
+      "float", "string", "boolean", "object", "double", "int", "long", "bigDecimal");
+
+  /** Suggested values for executionBackend: field. */
+  private static final List<String> EXECUTION_BACKEND_VALUES = List.of(
+      "JAVA_CODE", "AST_EVALUATOR", "DSL_JAVA_CODE");
+
+  /**
+   * Returns true if the given line (0-based, in the full document) is in the
+   * metadata section — i.e. before the first {@code formula:} line.
+   */
+  static boolean isMetadataLine(String fullContent, int line) {
+    String[] lines = fullContent.split("\n", -1);
+    // Find the first formula: line
+    for (int i = 0; i < lines.length; i++) {
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (FORMULA_LINE_MARKER.equals(stripped)) {
+        return line < i;
+      }
+    }
+    return false; // no formula: marker — not a FormulaInfo document
+  }
+
+  /**
+   * Returns the text of the given line (0-based) from the full document content.
+   */
+  static String lineText(String fullContent, int line) {
+    String[] lines = fullContent.split("\n", -1);
+    if (line < 0 || line >= lines.length) return "";
+    return lines[line].replace("\r", "");
+  }
+
+  /**
+   * Parses a FormulaInfo multi-section document and collects all calculatorName values
+   * mapped to their line numbers (0-based, in the full document).
+   */
+  static Map<String, Integer> collectCalculatorNames(String fullContent) {
+    Map<String, Integer> result = new LinkedHashMap<>();
+    String[] lines = fullContent.split("\n", -1);
+    for (int i = 0; i < lines.length; i++) {
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (stripped.startsWith("calculatorName:")) {
+        String name = stripped.substring("calculatorName:".length()).strip();
+        if (!name.isEmpty()) {
+          result.put(name, i);
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Collects all dependsOn values with their line numbers (0-based).
+   * Each entry is [dependsOnValue, lineNumber].
+   */
+  static List<Map.Entry<String, Integer>> collectDependsOn(String fullContent) {
+    List<Map.Entry<String, Integer>> result = new ArrayList<>();
+    String[] lines = fullContent.split("\n", -1);
+    for (int i = 0; i < lines.length; i++) {
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (stripped.startsWith("dependsOn:")) {
+        String value = stripped.substring("dependsOn:".length()).strip();
+        if (!value.isEmpty()) {
+          // Support comma-separated dependsOn values
+          for (String dep : value.split(",")) {
+            String trimmed = dep.strip();
+            if (!trimmed.isEmpty()) {
+              result.add(Map.entry(trimmed, i));
+            }
+          }
+        }
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Computes diagnostics for FormulaInfo metadata: warns when dependsOn references
+   * a calculatorName that does not exist within the same document.
+   */
+  private List<Diagnostic> computeFormulaInfoDiagnostics(String uri, String fullContent) {
+    List<Diagnostic> diags = new ArrayList<>();
+    if (fullContent == null) return diags;
+
+    Map<String, Integer> calcNames = collectCalculatorNames(fullContent);
+    List<Map.Entry<String, Integer>> deps = collectDependsOn(fullContent);
+
+    for (Map.Entry<String, Integer> dep : deps) {
+      String depName = dep.getKey();
+      int lineNum = dep.getValue();
+      if (!calcNames.containsKey(depName)) {
+        String lineContent = lineText(fullContent, lineNum);
+        // Find the column of the depName within the line
+        int col = lineContent.indexOf(depName);
+        if (col < 0) col = 0;
+
+        Position start = new Position(lineNum, col);
+        Position end = new Position(lineNum, col + depName.length());
+        Diagnostic d = new Diagnostic();
+        d.setRange(new Range(start, end));
+        d.setSeverity(DiagnosticSeverity.Warning);
+        d.setSource("formulainfo");
+        d.setCode(Either.forLeft("FI001"));
+        d.setMessage("dependsOn: '" + depName + "' does not match any calculatorName in this document.");
+        diags.add(d);
+      }
+    }
+    return diags;
+  }
+
+  // =========================================================================
   // Inner types
   // =========================================================================
 
@@ -724,7 +848,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       ParseFailureDiagnostics failures,
       List<ScopeStore.SymbolInfo> declarations,
       List<ScopeStore.ReferenceInfo> references,
-      int lineOffset) {}
+      int lineOffset,
+      String fullContent) {}
 
   /**
    * Extended TextDocumentService that replaces the generated no-op implementations
@@ -762,7 +887,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     @Override
     public void didSave(DidSaveTextDocumentParams params) {}
 
-    // ── completion (enhanced with method/variable autocomplete) ──
+    // ── completion (enhanced with method/variable autocomplete + metadata) ──
 
     @Override
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
@@ -771,6 +896,16 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       List<CompletionItem> items = new ArrayList<>();
       String uri = params.getTextDocument().getUri();
       ExtDocumentState state = server.extDocuments.get(uri);
+
+      // ── FormulaInfo metadata completion ──
+      if (state != null && state.fullContent() != null) {
+        int cursorLine = params.getPosition().getLine();
+        if (isMetadataLine(state.fullContent(), cursorLine)) {
+          String line = lineText(state.fullContent(), cursorLine);
+          return CompletableFuture.completedFuture(
+              Either.forLeft(metadataCompletion(line, state.fullContent())));
+        }
+      }
 
       // Extract word prefix at cursor position for filtering
       String prefix = "";
@@ -856,6 +991,55 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return "boolean";
       }
       return "unknown";
+    }
+
+    /**
+     * Provides metadata field name and value completion for FormulaInfo documents.
+     * When the line contains a colon, suggests values for the field;
+     * otherwise suggests field names.
+     */
+    private List<CompletionItem> metadataCompletion(String line, String fullContent) {
+      List<CompletionItem> items = new ArrayList<>();
+      String trimmed = line.stripLeading();
+
+      // If line already has "fieldName:" — offer value completion
+      if (trimmed.contains(":")) {
+        String fieldName = trimmed.substring(0, trimmed.indexOf(':')).strip();
+        String valuePrefix = trimmed.substring(trimmed.indexOf(':') + 1).strip();
+
+        List<String> values = switch (fieldName) {
+          case "resultType", "numberType" -> RESULT_TYPE_VALUES;
+          case "executionBackend" -> EXECUTION_BACKEND_VALUES;
+          case "dependsOn" -> {
+            // Suggest existing calculatorName values
+            Map<String, Integer> calcNames = collectCalculatorNames(fullContent);
+            yield new ArrayList<>(calcNames.keySet());
+          }
+          default -> List.of();
+        };
+
+        for (String v : values) {
+          if (v.startsWith(valuePrefix) || valuePrefix.isEmpty()) {
+            CompletionItem item = new CompletionItem(v);
+            item.setKind(CompletionItemKind.Value);
+            item.setDetail(fieldName + " value");
+            items.add(item);
+          }
+        }
+        return items;
+      }
+
+      // No colon yet — offer field name completion
+      for (String field : METADATA_FIELD_NAMES) {
+        if (field.startsWith(trimmed) || trimmed.isEmpty()) {
+          CompletionItem item = new CompletionItem(field + ":");
+          item.setKind(CompletionItemKind.Property);
+          item.setDetail("FormulaInfo field");
+          item.setInsertText(field + ":");
+          items.add(item);
+        }
+      }
+      return items;
     }
 
     // ── hover (enhanced with symbol information) ──
@@ -1079,14 +1263,53 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return we;
     }
 
-    // ── go-to-definition ──
+    // ── go-to-definition (formula symbols + dependsOn) ──
 
     @Override
     public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>>
         definition(DefinitionParams params) {
       String uri = params.getTextDocument().getUri();
       ExtDocumentState state = server.extDocuments.get(uri);
-      if (state == null || state.declarations().isEmpty()) {
+      if (state == null) {
+        return CompletableFuture.completedFuture(Either.forLeft(List.of()));
+      }
+
+      // ── dependsOn go-to-definition ──
+      // If cursor is on a dependsOn: line in the metadata section, jump to the
+      // calculatorName: line that matches the referenced name.
+      if (state.fullContent() != null) {
+        int cursorLine = params.getPosition().getLine();
+        String line = lineText(state.fullContent(), cursorLine);
+        if (line.stripLeading().startsWith("dependsOn:")) {
+          String depValue = line.substring(line.indexOf(':') + 1).strip();
+          // Handle comma-separated: find which token the cursor is on
+          int col = params.getPosition().getCharacter();
+          String targetName = findDependsOnTokenAtColumn(line, col);
+          if (targetName == null || targetName.isEmpty()) {
+            targetName = depValue; // fallback: use whole value
+          }
+
+          Map<String, Integer> calcNames = collectCalculatorNames(state.fullContent());
+          Integer targetLine = calcNames.get(targetName);
+          if (targetLine != null) {
+            String targetLineText = lineText(state.fullContent(), targetLine);
+            int nameCol = targetLineText.indexOf(targetName);
+            if (nameCol < 0) nameCol = 0;
+            Range targetRange = new Range(
+                new Position(targetLine, nameCol),
+                new Position(targetLine, nameCol + targetName.length()));
+            LocationLink link = new LocationLink();
+            link.setTargetUri(uri);
+            link.setTargetRange(targetRange);
+            link.setTargetSelectionRange(targetRange);
+            return CompletableFuture.completedFuture(Either.forRight(List.of(link)));
+          }
+          return CompletableFuture.completedFuture(Either.forLeft(List.of()));
+        }
+      }
+
+      // ── formula symbol go-to-definition ──
+      if (state.declarations().isEmpty()) {
         return CompletableFuture.completedFuture(Either.forLeft(List.of()));
       }
       String word = wordAt(state.content(), params.getPosition(), state.lineOffset());
@@ -1107,6 +1330,27 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         }
       }
       return CompletableFuture.completedFuture(Either.forRight(links));
+    }
+
+    /**
+     * Given a dependsOn: line and cursor column, returns the comma-separated
+     * token that the cursor is positioned within.
+     */
+    private String findDependsOnTokenAtColumn(String line, int col) {
+      int colonIdx = line.indexOf(':');
+      if (colonIdx < 0 || col <= colonIdx) return null;
+      String valuePart = line.substring(colonIdx + 1);
+      int relCol = col - (colonIdx + 1);
+      // Split by comma and find which segment contains relCol
+      int pos = 0;
+      for (String segment : valuePart.split(",", -1)) {
+        int segEnd = pos + segment.length();
+        if (relCol >= pos && relCol <= segEnd) {
+          return segment.strip();
+        }
+        pos = segEnd + 1; // +1 for comma
+      }
+      return valuePart.strip();
     }
 
     // ── find-references ──

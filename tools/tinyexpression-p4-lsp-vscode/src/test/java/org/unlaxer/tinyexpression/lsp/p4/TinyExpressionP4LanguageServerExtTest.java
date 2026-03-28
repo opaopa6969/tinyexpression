@@ -42,7 +42,7 @@ public class TinyExpressionP4LanguageServerExtTest {
     public void testCompletion() throws Exception {
         // Use MethodDeclaration to check ScopeStore completion
         String content = "10\nnumber myMethod($p) { $p }";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         CompletionParams params = new CompletionParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
@@ -74,7 +74,7 @@ public class TinyExpressionP4LanguageServerExtTest {
     public void testDefinition() throws Exception {
         // Variable declaration then reference
         String content = "var $x description = 'd';\n$x";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         DefinitionParams params = new DefinitionParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
@@ -94,7 +94,7 @@ public class TinyExpressionP4LanguageServerExtTest {
     @Test
     public void testLinkedEditingRange() throws Exception {
         String content = "var $x description = 'd';\n$x";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         LinkedEditingRangeParams params = new LinkedEditingRangeParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));

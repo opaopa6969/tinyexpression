@@ -49,7 +49,7 @@ public class TinyExpressionP4CatalogIntegrationTest {
     public void testCatalogCompletionReturnsAllEntries() throws Exception {
         installTestCatalog();
         String content = "$";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         CompletionParams params = new CompletionParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
@@ -70,7 +70,7 @@ public class TinyExpressionP4CatalogIntegrationTest {
     public void testCatalogCompletionWithPrefix() throws Exception {
         installTestCatalog();
         String content = "$risk";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         CompletionParams params = new CompletionParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
@@ -87,7 +87,7 @@ public class TinyExpressionP4CatalogIntegrationTest {
     public void testCatalogHoverReturnsDescription() throws Exception {
         installTestCatalog();
         String content = "$ForcedRelativeSuspiciousValue1";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         HoverParams params = new HoverParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
@@ -105,7 +105,7 @@ public class TinyExpressionP4CatalogIntegrationTest {
     public void testNoCatalogHoverWhenResolverEmpty() throws Exception {
         // No catalog installed — hover falls back to parse status
         String content = "$someVar";
-        server.parseAndEnrich(TEST_URI, content, 0);
+        server.parseAndEnrich(TEST_URI, content, 0, content);
 
         HoverParams params = new HoverParams();
         params.setTextDocument(new TextDocumentIdentifier(TEST_URI));

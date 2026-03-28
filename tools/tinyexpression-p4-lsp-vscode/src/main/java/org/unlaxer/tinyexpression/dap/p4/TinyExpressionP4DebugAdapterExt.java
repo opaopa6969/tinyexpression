@@ -338,6 +338,15 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.ExpExpr s -> {}
       case TinyExpressionP4AST.NotExpr s -> {}
       case TinyExpressionP4AST.ToNumExpr s -> {}
+      case TinyExpressionP4AST.ToUpperCaseExpr s -> {}
+      case TinyExpressionP4AST.ToLowerCaseExpr s -> {}
+      case TinyExpressionP4AST.TrimExpr s -> {}
+      case TinyExpressionP4AST.LengthExpr s -> {}
+      case TinyExpressionP4AST.ToUpperCaseDotExpr s -> {}
+      case TinyExpressionP4AST.ToLowerCaseDotExpr s -> {}
+      case TinyExpressionP4AST.TrimDotExpr s -> {}
+      case TinyExpressionP4AST.LengthDotExpr s -> {}
+      case TinyExpressionP4AST.ArgumentExpressionExpr s -> {}
     }
   }
 
