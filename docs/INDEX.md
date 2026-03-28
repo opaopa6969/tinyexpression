@@ -11,6 +11,13 @@
 | 1 | [Implementation Guide](./implementation-guide-dialogue.en.md) | Learn the 5 backends through dialogue between Senior and Newcomer |
 | 2 | [Parser Generator Comparison & @eval Strategy](./parser-generator-comparison-and-eval-strategy.en.md) | unlaxer vs ANTLR/PEG.js/Tree-sitter comparison and @eval annotation design |
 
+## Analysis
+
+| Document | Description |
+|----------|-------------|
+| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | Backend coverage matrix for the 5 execution backends |
+| [feature-parity-diff.md](./feature-parity-diff.md) | Feature parity diff between hand-written path and UBNF (P4) path |
+
 ## Other Documentation
 
 | Document | Description |

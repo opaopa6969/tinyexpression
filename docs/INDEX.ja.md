@@ -11,6 +11,13 @@
 | 1 | [実装ガイド](./implementation-guide-dialogue.ja.md) | 先輩と新人の会話で学ぶ5つのバックエンド |
 | 2 | [Parser Generator 比較 & @eval Strategy](./parser-generator-comparison-and-eval-strategy.ja.md) | unlaxer vs ANTLR/PEG.js/Tree-sitter 比較と @eval アノテーション設計 |
 
+## 分析
+
+| ドキュメント | 説明 |
+|-------------|------|
+| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 5つの実行バックエンドのカバレッジマトリクス |
+| [feature-parity-diff.md](./feature-parity-diff.md) | 手書きパスと UBNF (P4) パスの機能パリティ差分 |
+
 ## その他のドキュメント
 
 | ドキュメント | 説明 |
