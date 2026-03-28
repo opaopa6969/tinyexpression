@@ -14,28 +14,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodParameter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1361858641">
-<g id="115416008">
+<g id="441502702">
+<g id="1023628158">
 <rect x="40" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="81" y1="76" x2="101" y2="76" class="rail"/>
 <polygon points="88,73 94,76 88,79" class="arrow"/>
-<g id="1427121410">
+<g id="1874775444">
 <rect x="101" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="146" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="191" y1="76" x2="211" y2="76" class="rail"/>
 <polygon points="198,73 204,76 198,79" class="arrow"/>
-<g id="2043189964">
-<g id="757371487">
-<g id="63271229">
+<g id="2140413946">
+<g id="1717546184">
+<g id="1844517404">
 <rect x="227" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="251" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="275" y1="76" x2="295" y2="76" class="rail"/>
 <polygon points="282,73 288,76 282,79" class="arrow"/>
-<g id="588640942">
+<g id="1096847161">
 <rect x="295" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="340" y="80" text-anchor="middle" class="nonterminal-text">ReturnType</text>
 </g>

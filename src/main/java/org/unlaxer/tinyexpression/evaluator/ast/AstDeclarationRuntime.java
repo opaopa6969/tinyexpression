@@ -497,6 +497,10 @@ final class AstDeclarationRuntime {
     if (fullSource != null && fullSource.contains(trimmed)) {
       return true;
     }
+    // Expression text not found in full source — likely mangled token text
+    if (fullSource != null) {
+      return false;
+    }
     // A leading binary operator is suspicious
     if (trimmed.startsWith("+") || trimmed.startsWith("*") || trimmed.startsWith("/")) {
       return false;

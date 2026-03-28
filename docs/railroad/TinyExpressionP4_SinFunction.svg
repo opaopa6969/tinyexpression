@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SinFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1157081801">
-<g id="1754939781">
+<g id="2073232104">
+<g id="776044029">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'sin'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="213832132">
+<g id="294562841">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="964988893">
+<g id="1187086607">
 <rect x="176" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="242" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="2119912174">
+<g id="1578644035">
 <rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

@@ -14,44 +14,44 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TernaryExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1969420123">
-<g id="515044499">
+<g id="2082734372">
+<g id="727468861">
 <rect x="40" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="81" y1="58" x2="101" y2="58" class="rail"/>
 <polygon points="88,55 94,58 88,61" class="arrow"/>
-<g id="1679050951">
+<g id="788253217">
 <rect x="101" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="170" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="240" y1="58" x2="260" y2="58" class="rail"/>
 <polygon points="247,55 253,58 247,61" class="arrow"/>
-<g id="958594064">
+<g id="1165108831">
 <rect x="260" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="280" y="62" text-anchor="middle" class="terminal-text">'?'</text>
 </g>
 <line x1="301" y1="58" x2="321" y2="58" class="rail"/>
 <polygon points="308,55 314,58 308,61" class="arrow"/>
-<g id="1582467553">
+<g id="1867655945">
 <rect x="321" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="366" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="411" y1="58" x2="431" y2="58" class="rail"/>
 <polygon points="418,55 424,58 418,61" class="arrow"/>
-<g id="1473116372">
+<g id="647921789">
 <rect x="431" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="451" y="62" text-anchor="middle" class="terminal-text">':'</text>
 </g>
 <line x1="472" y1="58" x2="492" y2="58" class="rail"/>
 <polygon points="479,55 485,58 479,61" class="arrow"/>
-<g id="299483290">
+<g id="1455750221">
 <rect x="492" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="537" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
 </g>
 <line x1="582" y1="58" x2="602" y2="58" class="rail"/>
 <polygon points="589,55 595,58 589,61" class="arrow"/>
-<g id="1068854477">
+<g id="47212564">
 <rect x="602" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="622" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

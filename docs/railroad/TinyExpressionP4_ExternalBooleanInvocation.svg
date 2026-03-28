@@ -14,45 +14,45 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ExternalBooleanInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="6777271">
-<g id="1774295237">
+<g id="1464376913">
+<g id="1928933944">
 <rect x="40" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="85" y="80" text-anchor="middle" class="terminal-text">'external'</text>
 </g>
 <line x1="130" y1="76" x2="150" y2="76" class="rail"/>
 <polygon points="137,73 143,76 137,79" class="arrow"/>
-<g id="376616252">
+<g id="697049525">
 <rect x="150" y="62" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="80" text-anchor="middle" class="terminal-text">'returning'</text>
 </g>
 <line x1="247" y1="76" x2="267" y2="76" class="rail"/>
 <polygon points="254,73 260,76 254,79" class="arrow"/>
-<g id="668628885">
+<g id="622119230">
 <rect x="267" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="291" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="315" y1="76" x2="335" y2="76" class="rail"/>
 <polygon points="322,73 328,76 322,79" class="arrow"/>
-<g id="973775476">
+<g id="131396367">
 <rect x="335" y="62" width="139" height="28" class="nonterminal-box"/>
 <text x="404" y="80" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
 </g>
 <line x1="474" y1="76" x2="494" y2="76" class="rail"/>
 <polygon points="481,73 487,76 481,79" class="arrow"/>
-<g id="1600651840">
+<g id="1015511359">
 <rect x="494" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="539" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="584" y1="76" x2="604" y2="76" class="rail"/>
 <polygon points="591,73 597,76 591,79" class="arrow"/>
-<g id="1546688452">
+<g id="1951295123">
 <rect x="604" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="624" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="645" y1="76" x2="665" y2="76" class="rail"/>
 <polygon points="652,73 658,76 652,79" class="arrow"/>
-<g id="1205091194">
-<g id="673326344">
+<g id="1467794811">
+<g id="1997544477">
 <rect x="681" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="722" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -66,7 +66,7 @@
 </g>
 <line x1="780" y1="76" x2="800" y2="76" class="rail"/>
 <polygon points="787,73 793,76 787,79" class="arrow"/>
-<g id="1479629762">
+<g id="1354043434">
 <rect x="800" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="820" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>

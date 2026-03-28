@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodDeclaration</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1117101871">
-<g id="103793331">
+<g id="715015893">
+<g id="1897949286">
 <rect x="59" y="44" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="nonterminal-text">NumberMethodDeclaration</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="240" y1="58" x2="244" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="244" y1="58" x2="260" y2="58" class="rail"/>
-<g id="1101743313">
+<g id="1578926328">
 <rect x="59" y="82" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="100" text-anchor="middle" class="nonterminal-text">StringMethodDeclaration</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M244,96 Q252,96 252,88" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="334378128">
+<g id="1350169281">
 <rect x="56" y="120" width="188" height="28" class="nonterminal-box"/>
 <text x="150" y="138" text-anchor="middle" class="nonterminal-text">BooleanMethodDeclaration</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M244,134 Q252,134 252,126" class="rail" fill="none"/>
 <path d="M252,66 Q252,58 260,58" class="rail" fill="none"/>
-<g id="987232412">
+<g id="1477408490">
 <rect x="59" y="158" width="181" height="28" class="nonterminal-box"/>
 <text x="149" y="176" text-anchor="middle" class="nonterminal-text">ObjectMethodDeclaration</text>
 </g>

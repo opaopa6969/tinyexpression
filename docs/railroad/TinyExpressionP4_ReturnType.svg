@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ReturnType</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1882045462">
-<g id="661188140">
+<g id="591410271">
+<g id="1176749219">
 <rect x="59" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="62" text-anchor="middle" class="nonterminal-text">NumberReturnType</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="191" y1="58" x2="195" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="195" y1="58" x2="211" y2="58" class="rail"/>
-<g id="1968019209">
+<g id="192627301">
 <rect x="59" y="82" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="100" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M195,96 Q203,96 203,88" class="rail" fill="none"/>
 <path d="M203,66 Q203,58 211,58" class="rail" fill="none"/>
-<g id="334332973">
+<g id="1928670065">
 <rect x="56" y="120" width="139" height="28" class="nonterminal-box"/>
 <text x="125" y="138" text-anchor="middle" class="nonterminal-text">BooleanReturnType</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M195,134 Q203,134 203,126" class="rail" fill="none"/>
 <path d="M203,66 Q203,58 211,58" class="rail" fill="none"/>
-<g id="273951166">
+<g id="2065621315">
 <rect x="59" y="158" width="132" height="28" class="nonterminal-box"/>
 <text x="125" y="176" text-anchor="middle" class="nonterminal-text">ObjectReturnType</text>
 </g>
