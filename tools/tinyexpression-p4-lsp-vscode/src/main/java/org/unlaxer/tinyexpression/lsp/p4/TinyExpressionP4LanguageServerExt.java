@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionOptions;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.CompletionItem;
@@ -291,7 +292,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     stOpts.setLegend(new SemanticTokensLegend(SEMANTIC_TOKEN_TYPES, List.of()));
     cap.setSemanticTokensProvider(stOpts);
 
-    cap.setCodeActionProvider(true);
+    CodeActionOptions caOpts = new CodeActionOptions(
+        List.of(CodeActionKind.QuickFix, CodeActionKind.RefactorRewrite));
+    cap.setCodeActionProvider(caOpts);
     cap.setDocumentSymbolProvider(true);
     cap.setRenameProvider(true);
     cap.setDocumentHighlightProvider(true);
@@ -1146,22 +1149,24 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         return CompletableFuture.completedFuture(actions);
       }
 
+      // ── Diagnostic-based quick fixes ──
       CodeActionContext ctx = params.getContext();
       List<Diagnostic> diagnostics = ctx.getDiagnostics();
-      if (diagnostics == null || diagnostics.isEmpty()) {
-        return CompletableFuture.completedFuture(actions);
-      }
+      if (diagnostics != null && !diagnostics.isEmpty()) {
+        for (Diagnostic diag : diagnostics) {
+          String code = diag.getCode() instanceof Either<?,?> e
+              ? (e.isLeft() ? String.valueOf(e.getLeft()) : String.valueOf(e.getRight()))
+              : "";
 
-      for (Diagnostic diag : diagnostics) {
-        String code = diag.getCode() instanceof Either<?,?> e
-            ? (e.isLeft() ? String.valueOf(e.getLeft()) : String.valueOf(e.getRight()))
-            : "";
-
-        if ("TE001".equals(code)) {
-          // TE001: parse error — suggest rewriting with P4 syntax
-          actions.addAll(buildTE001QuickFixes(uri, state.content(), diag, state.lineOffset()));
+          if ("TE001".equals(code)) {
+            // TE001: parse error — suggest rewriting with P4 syntax
+            actions.addAll(buildTE001QuickFixes(uri, state.content(), diag, state.lineOffset()));
+          }
         }
       }
+
+      // ── Refactor: if ↔ ternary conversion ──
+      actions.addAll(buildIfTernaryRefactoring(uri, state, params.getRange()));
 
       return CompletableFuture.completedFuture(actions);
     }
@@ -1216,6 +1221,71 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       hint.setKind(CodeActionKind.Empty);
       hint.setDiagnostics(List.of(diag));
       result.add(Either.forRight(hint));
+
+      return result;
+    }
+
+    // ── if ↔ ternary bidirectional refactoring ──
+
+    private static final Pattern IF_EXPR_PATTERN = Pattern.compile(
+        "if\\s*\\((.+?)\\)\\s*\\{(.+?)\\}\\s*else\\s*\\{(.+?)\\}");
+
+    private static final Pattern TERNARY_PATTERN = Pattern.compile(
+        "\\(([^?]+?)\\?([^:]+?):([^)]+?)\\)");
+
+    private List<Either<Command, CodeAction>> buildIfTernaryRefactoring(
+        String uri, ExtDocumentState state, Range cursorRange) {
+
+      List<Either<Command, CodeAction>> result = new ArrayList<>();
+      String content = state.content();
+      int lineOffset = state.lineOffset();
+      if (content == null) return result;
+
+      // Determine the line the cursor is on
+      int cursorLine = cursorRange.getStart().getLine() - lineOffset;
+      String[] lines = content.split("\n", -1);
+      if (cursorLine < 0 || cursorLine >= lines.length) return result;
+      String line = lines[cursorLine];
+
+      // Try if-expression → ternary
+      Matcher ifMatcher = IF_EXPR_PATTERN.matcher(line);
+      if (ifMatcher.find()) {
+        String condition = ifMatcher.group(1).strip();
+        String thenExpr  = ifMatcher.group(2).strip();
+        String elseExpr  = ifMatcher.group(3).strip();
+        String ternary   = "(" + condition + " ? " + thenExpr + " : " + elseExpr + ")";
+
+        int matchStart = ifMatcher.start();
+        int matchEnd   = ifMatcher.end();
+        Range replaceRange = new Range(
+            new Position(cursorLine + lineOffset, matchStart),
+            new Position(cursorLine + lineOffset, matchEnd));
+
+        CodeAction ca = new CodeAction("Convert to ternary (condition ? then : else)");
+        ca.setKind(CodeActionKind.RefactorRewrite);
+        ca.setEdit(buildEdit(uri, replaceRange, ternary));
+        result.add(Either.forRight(ca));
+      }
+
+      // Try ternary → if-expression
+      Matcher ternaryMatcher = TERNARY_PATTERN.matcher(line);
+      if (ternaryMatcher.find()) {
+        String condition = ternaryMatcher.group(1).strip();
+        String thenExpr  = ternaryMatcher.group(2).strip();
+        String elseExpr  = ternaryMatcher.group(3).strip();
+        String ifExpr    = "if(" + condition + "){ " + thenExpr + " }else{ " + elseExpr + " }";
+
+        int matchStart = ternaryMatcher.start();
+        int matchEnd   = ternaryMatcher.end();
+        Range replaceRange = new Range(
+            new Position(cursorLine + lineOffset, matchStart),
+            new Position(cursorLine + lineOffset, matchEnd));
+
+        CodeAction ca = new CodeAction("Convert to if-else");
+        ca.setKind(CodeActionKind.RefactorRewrite);
+        ca.setEdit(buildEdit(uri, replaceRange, ifExpr));
+        result.add(Either.forRight(ca));
+      }
 
       return result;
     }
