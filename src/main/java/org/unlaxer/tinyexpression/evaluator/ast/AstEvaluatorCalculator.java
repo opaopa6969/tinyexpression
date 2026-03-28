@@ -240,6 +240,8 @@ public class AstEvaluatorCalculator implements Calculator {
                     && tokenAstEvaluated.get() instanceof Number tokenNumber
                     && !numbersEquivalent(p4Number, tokenNumber)) {
                   p4TypedEvaluated = Optional.empty();
+                  setObject("_p4FallbackFormula", formulaText);
+                  setObject("_p4FallbackReason", "cross-check mismatch: p4=" + p4Number + " vs token=" + tokenNumber);
                 }
               }
               if (p4TypedEvaluated.isPresent()) {
@@ -248,11 +250,16 @@ public class AstEvaluatorCalculator implements Calculator {
                 setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
                 return p4TypedEvaluated.get();
               }
+            } else {
+              setObject("_p4FallbackFormula", formulaText);
+              setObject("_p4FallbackReason", "result was null");
             }
-          } catch (UnsupportedOperationException | IllegalArgumentException ignored) {
+          } catch (UnsupportedOperationException | IllegalArgumentException p4Ex) {
             // P4TypedAstEvaluator cannot handle this node type (e.g. MethodInvocation)
             // or encountered a parse error (e.g. variable ref in numeric context);
             // fall through to reflection-based evaluator
+            setObject("_p4FallbackFormula", formulaText);
+            setObject("_p4FallbackReason", p4Ex.getClass().getSimpleName() + ": " + p4Ex.getMessage());
           }
         }
 
@@ -291,6 +298,11 @@ public class AstEvaluatorCalculator implements Calculator {
           setObject("_astEvaluatorMapperAvailable", true);
           setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", generatedEmbeddedBridgeUsed);
           return generatedAstEvaluated.get();
+        }
+        // Both P4-typed and reflection-based evaluators failed for this AST mapping
+        if (objectByKey.get("_p4FallbackReason") == null) {
+          setObject("_p4FallbackFormula", formulaText);
+          setObject("_p4FallbackReason", "parse failed: no evaluator accepted AST node " + mapped.get().getClass().getSimpleName());
         }
         // If the mapped AST was a structural node (if/match) but both evaluators failed,
         // don't try other AST mappings — they'll produce incorrect results
