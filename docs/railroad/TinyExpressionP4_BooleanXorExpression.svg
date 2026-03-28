@@ -1,46 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="493" height="112">
+<svg xmlns="http://www.w3.org/2000/svg" width="415" height="120">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanXorExpression</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#BooleanFactor" target="_top">
-<rect x="50" y="44" width="137" height="26" class="nonterminal-box"/>
-<text x="118" y="62" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
-</a>
-<line x1="187" y1="57" x2="203" y2="57" class="rail"/>
-<polygon points="192,54 198,57 192,60" class="arrow"/>
-<rect x="223" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="246" y="62" text-anchor="middle" class="terminal-text">'^'</text>
-<line x1="270" y1="57" x2="286" y2="57" class="rail"/>
-<polygon points="275,54 281,57 275,60" class="arrow"/>
-<a xlink:href="#BooleanFactor" target="_top">
-<rect x="286" y="44" width="137" height="26" class="nonterminal-box"/>
-<text x="354" y="62" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
-</a>
-<line x1="203" y1="57" x2="223" y2="57" class="rail"/>
-<line x1="423" y1="57" x2="443" y2="57" class="rail"/>
-<path d="M 213,57 Q 203,57 203,67" class="rail"/>
-<line x1="203" y1="67" x2="203" y2="72" class="rail"/>
-<path d="M 203,72 Q 203,82 213,82" class="rail"/>
-<line x1="213" y1="82" x2="433" y2="82" class="rail"/>
-<polygon points="326,79 320,82 326,85" class="arrow"/>
-<path d="M 433,82 Q 443,82 443,72" class="rail"/>
-<line x1="443" y1="72" x2="443" y2="67" class="rail"/>
-<path d="M 443,67 Q 443,57 433,57" class="rail"/>
-<line x1="443" y1="57" x2="457" y2="57" class="rail"/>
-<circle cx="465" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="465" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="133250414">
+<g id="319977154">
+<rect x="40" y="44" width="111" height="28" class="nonterminal-box"/>
+<text x="95" y="62" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
+</g>
+<line x1="151" y1="58" x2="171" y2="58" class="rail"/>
+<polygon points="158,55 164,58 158,61" class="arrow"/>
+<g id="1908143486">
+<g id="1897871865">
+<g id="648680157">
+<rect x="187" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="207" y="86" text-anchor="middle" class="terminal-text">'^'</text>
+</g>
+<line x1="228" y1="82" x2="248" y2="82" class="rail"/>
+<polygon points="235,79 241,82 235,85" class="arrow"/>
+<g id="1071097621">
+<rect x="248" y="68" width="111" height="28" class="nonterminal-box"/>
+<text x="303" y="86" text-anchor="middle" class="nonterminal-text">BooleanFactor</text>
+</g>
+</g>
+<line x1="171" y1="58" x2="375" y2="58" class="rail"/>
+<path d="M187,58 Q179,58 179,66" class="rail" fill="none"/>
+<path d="M179,74 Q179,82 171,82" class="rail" fill="none"/>
+<line x1="171" y1="82" x2="187" y2="82" class="rail"/>
+<line x1="359" y1="82" x2="375" y2="82" class="rail"/>
+<path d="M375,82 Q367,82 367,74" class="rail" fill="none"/>
+<path d="M367,66 Q367,58 359,58" class="rail" fill="none"/>
+<path d="M367,82 Q375,82 375,90" class="rail" fill="none"/>
+<path d="M375,98 Q375,106 367,106" class="rail" fill="none"/>
+<line x1="179" y1="106" x2="367" y2="106" class="rail"/>
+<polygon points="279,103 273,106 279,109" class="arrow"/>
+<path d="M179,106 Q171,106 171,98" class="rail" fill="none"/>
+<path d="M171,90 Q171,82 179,82" class="rail" fill="none"/>
+</g>
+</g>
+<line x1="375" y1="58" x2="383" y2="58" class="rail"/>
+<circle cx="389" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="389" cy="58" r="3" class="end-circle-inner"/>
 </svg>

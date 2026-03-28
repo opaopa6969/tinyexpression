@@ -1,86 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1041" height="128">
+<svg xmlns="http://www.w3.org/2000/svg" width="891" height="130">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanVariableDeclaration</text>
-<circle cx="26" cy="79" r="6" class="start-circle"/>
-<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
-<rect x="92" y="66" width="65" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="124" y="84" text-anchor="middle" class="terminal-text">'var'</text>
-<line x1="70" y1="79" x2="92" y2="79" class="rail"/>
-<line x1="157" y1="79" x2="180" y2="79" class="rail"/>
-<line x1="50" y1="79" x2="70" y2="79" class="rail"/>
-<line x1="180" y1="79" x2="200" y2="79" class="rail"/>
-<rect x="70" y="104" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="125" y="122" text-anchor="middle" class="terminal-text">'variable'</text>
-<path d="M 50,79 Q 60,79 60,89" class="rail"/>
-<line x1="60" y1="89" x2="60" y2="107" class="rail"/>
-<path d="M 60,107 Q 60,117 70,117" class="rail"/>
-<path d="M 180,117 Q 190,117 190,107" class="rail"/>
-<line x1="190" y1="107" x2="190" y2="89" class="rail"/>
-<path d="M 190,89 Q 190,79 200,79" class="rail"/>
-<line x1="200" y1="79" x2="216" y2="79" class="rail"/>
-<polygon points="205,76 211,79 205,82" class="arrow"/>
-<rect x="216" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="239" y="84" text-anchor="middle" class="terminal-text">'$'</text>
-<line x1="263" y1="79" x2="279" y2="79" class="rail"/>
-<polygon points="268,76 274,79 268,82" class="arrow"/>
-<a xlink:href="#IDENTIFIER" target="_top">
-<rect x="279" y="66" width="110" height="26" class="nonterminal-box"/>
-<text x="334" y="84" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
-</a>
-<line x1="389" y1="79" x2="405" y2="79" class="rail"/>
-<polygon points="394,76 400,79 394,82" class="arrow"/>
-<a xlink:href="#BooleanTypeHint" target="_top">
-<rect x="425" y="66" width="155" height="26" class="nonterminal-box"/>
-<text x="502" y="84" text-anchor="middle" class="nonterminal-text">BooleanTypeHint</text>
-</a>
-<line x1="405" y1="79" x2="425" y2="79" class="rail"/>
-<line x1="580" y1="79" x2="600" y2="79" class="rail"/>
-<path d="M 405,79 Q 415,79 415,69" class="rail"/>
-<line x1="415" y1="69" x2="415" y2="64" class="rail"/>
-<path d="M 415,64 Q 415,54 425,54" class="rail"/>
-<line x1="425" y1="54" x2="580" y2="54" class="rail"/>
-<path d="M 580,54 Q 590,54 590,64" class="rail"/>
-<line x1="590" y1="64" x2="590" y2="69" class="rail"/>
-<path d="M 590,69 Q 590,79 600,79" class="rail"/>
-<line x1="600" y1="79" x2="616" y2="79" class="rail"/>
-<polygon points="605,76 611,79 605,82" class="arrow"/>
-<a xlink:href="#BooleanSetter" target="_top">
-<rect x="636" y="66" width="137" height="26" class="nonterminal-box"/>
-<text x="704" y="84" text-anchor="middle" class="nonterminal-text">BooleanSetter</text>
-</a>
-<line x1="616" y1="79" x2="636" y2="79" class="rail"/>
-<line x1="773" y1="79" x2="793" y2="79" class="rail"/>
-<path d="M 616,79 Q 626,79 626,69" class="rail"/>
-<line x1="626" y1="69" x2="626" y2="64" class="rail"/>
-<path d="M 626,64 Q 626,54 636,54" class="rail"/>
-<line x1="636" y1="54" x2="773" y2="54" class="rail"/>
-<path d="M 773,54 Q 783,54 783,64" class="rail"/>
-<line x1="783" y1="64" x2="783" y2="69" class="rail"/>
-<path d="M 783,69 Q 783,79 793,79" class="rail"/>
-<line x1="793" y1="79" x2="809" y2="79" class="rail"/>
-<polygon points="798,76 804,79 798,82" class="arrow"/>
-<a xlink:href="#Description" target="_top">
-<rect x="809" y="66" width="119" height="26" class="nonterminal-box"/>
-<text x="868" y="84" text-anchor="middle" class="nonterminal-text">Description</text>
-</a>
-<line x1="928" y1="79" x2="944" y2="79" class="rail"/>
-<polygon points="933,76 939,79 933,82" class="arrow"/>
-<rect x="944" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="967" y="84" text-anchor="middle" class="terminal-text">';'</text>
-<line x1="991" y1="79" x2="1005" y2="79" class="rail"/>
-<circle cx="1013" cy="79" r="8" class="end-circle-outer"/>
-<circle cx="1013" cy="79" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="76" r="4" class="start-circle"/>
+<line x1="28" y1="76" x2="40" y2="76" class="rail"/>
+<g id="592179046">
+<g id="1419810764">
+<g id="905654280">
+<rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
+</g>
+<line x1="56" y1="76" x2="73" y2="76" class="rail"/>
+<line x1="128" y1="76" x2="146" y2="76" class="rail"/>
+<line x1="40" y1="76" x2="56" y2="76" class="rail"/>
+<line x1="146" y1="76" x2="162" y2="76" class="rail"/>
+<g id="1915058446">
+<rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
+</g>
+<line x1="56" y1="114" x2="56" y2="114" class="rail"/>
+<line x1="146" y1="114" x2="146" y2="114" class="rail"/>
+<path d="M40,76 Q48,76 48,84" class="rail" fill="none"/>
+<path d="M48,106 Q48,114 56,114" class="rail" fill="none"/>
+<path d="M146,114 Q154,114 154,106" class="rail" fill="none"/>
+<path d="M154,84 Q154,76 162,76" class="rail" fill="none"/>
+</g>
+<line x1="162" y1="76" x2="182" y2="76" class="rail"/>
+<polygon points="169,73 175,76 169,79" class="arrow"/>
+<g id="1516369375">
+<rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
+</g>
+<line x1="223" y1="76" x2="243" y2="76" class="rail"/>
+<polygon points="230,73 236,76 230,79" class="arrow"/>
+<g id="55909012">
+<rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
+<text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</g>
+<line x1="333" y1="76" x2="353" y2="76" class="rail"/>
+<polygon points="340,73 346,76 340,79" class="arrow"/>
+<g id="1387228415">
+<g id="1394336709">
+<rect x="369" y="62" width="125" height="28" class="nonterminal-box"/>
+<text x="431" y="80" text-anchor="middle" class="nonterminal-text">BooleanTypeHint</text>
+</g>
+<line x1="353" y1="76" x2="369" y2="76" class="rail"/>
+<line x1="494" y1="76" x2="510" y2="76" class="rail"/>
+<path d="M353,76 Q361,76 361,68" class="rail" fill="none"/>
+<path d="M361,60 Q361,52 369,52" class="rail" fill="none"/>
+<line x1="369" y1="52" x2="494" y2="52" class="rail"/>
+<path d="M494,52 Q502,52 502,60" class="rail" fill="none"/>
+<path d="M502,68 Q502,76 510,76" class="rail" fill="none"/>
+</g>
+<line x1="510" y1="76" x2="530" y2="76" class="rail"/>
+<polygon points="517,73 523,76 517,79" class="arrow"/>
+<g id="748658608">
+<g id="120960120">
+<rect x="546" y="62" width="111" height="28" class="nonterminal-box"/>
+<text x="601" y="80" text-anchor="middle" class="nonterminal-text">BooleanSetter</text>
+</g>
+<line x1="530" y1="76" x2="546" y2="76" class="rail"/>
+<line x1="657" y1="76" x2="673" y2="76" class="rail"/>
+<path d="M530,76 Q538,76 538,68" class="rail" fill="none"/>
+<path d="M538,60 Q538,52 546,52" class="rail" fill="none"/>
+<line x1="546" y1="52" x2="657" y2="52" class="rail"/>
+<path d="M657,52 Q665,52 665,60" class="rail" fill="none"/>
+<path d="M665,68 Q665,76 673,76" class="rail" fill="none"/>
+</g>
+<line x1="673" y1="76" x2="693" y2="76" class="rail"/>
+<polygon points="680,73 686,76 680,79" class="arrow"/>
+<g id="546718765">
+<rect x="693" y="62" width="97" height="28" class="nonterminal-box"/>
+<text x="741" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
+</g>
+<line x1="790" y1="76" x2="810" y2="76" class="rail"/>
+<polygon points="797,73 803,76 797,79" class="arrow"/>
+<g id="167185492">
+<rect x="810" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="830" y="80" text-anchor="middle" class="terminal-text">';'</text>
+</g>
+</g>
+<line x1="851" y1="76" x2="859" y2="76" class="rail"/>
+<circle cx="865" cy="76" r="6" class="end-circle-outer"/>
+<circle cx="865" cy="76" r="3" class="end-circle-inner"/>
 </svg>

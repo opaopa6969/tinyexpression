@@ -1,48 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="493" height="112">
+<svg xmlns="http://www.w3.org/2000/svg" width="415" height="120">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberTerm</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#NumberFactor" target="_top">
-<rect x="50" y="44" width="128" height="26" class="nonterminal-box"/>
-<text x="114" y="62" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
-</a>
-<line x1="178" y1="57" x2="194" y2="57" class="rail"/>
-<polygon points="183,54 189,57 183,60" class="arrow"/>
-<a xlink:href="#MulOp" target="_top">
-<rect x="214" y="44" width="65" height="26" class="nonterminal-box"/>
-<text x="246" y="62" text-anchor="middle" class="nonterminal-text">MulOp</text>
-</a>
-<line x1="279" y1="57" x2="295" y2="57" class="rail"/>
-<polygon points="284,54 290,57 284,60" class="arrow"/>
-<a xlink:href="#NumberFactor" target="_top">
-<rect x="295" y="44" width="128" height="26" class="nonterminal-box"/>
-<text x="359" y="62" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
-</a>
-<line x1="194" y1="57" x2="214" y2="57" class="rail"/>
-<line x1="423" y1="57" x2="443" y2="57" class="rail"/>
-<path d="M 204,57 Q 194,57 194,67" class="rail"/>
-<line x1="194" y1="67" x2="194" y2="72" class="rail"/>
-<path d="M 194,72 Q 194,82 204,82" class="rail"/>
-<line x1="204" y1="82" x2="433" y2="82" class="rail"/>
-<polygon points="321,79 315,82 321,85" class="arrow"/>
-<path d="M 433,82 Q 443,82 443,72" class="rail"/>
-<line x1="443" y1="72" x2="443" y2="67" class="rail"/>
-<path d="M 443,67 Q 443,57 433,57" class="rail"/>
-<line x1="443" y1="57" x2="457" y2="57" class="rail"/>
-<circle cx="465" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="465" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="422250493">
+<g id="112061925">
+<rect x="40" y="44" width="104" height="28" class="nonterminal-box"/>
+<text x="92" y="62" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
+</g>
+<line x1="144" y1="58" x2="164" y2="58" class="rail"/>
+<polygon points="151,55 157,58 151,61" class="arrow"/>
+<g id="540159270">
+<g id="1234776885">
+<g id="764577347">
+<rect x="180" y="68" width="55" height="28" class="nonterminal-box"/>
+<text x="207" y="86" text-anchor="middle" class="nonterminal-text">MulOp</text>
+</g>
+<line x1="235" y1="82" x2="255" y2="82" class="rail"/>
+<polygon points="242,79 248,82 242,85" class="arrow"/>
+<g id="1344645519">
+<rect x="255" y="68" width="104" height="28" class="nonterminal-box"/>
+<text x="307" y="86" text-anchor="middle" class="nonterminal-text">NumberFactor</text>
+</g>
+</g>
+<line x1="164" y1="58" x2="375" y2="58" class="rail"/>
+<path d="M180,58 Q172,58 172,66" class="rail" fill="none"/>
+<path d="M172,74 Q172,82 164,82" class="rail" fill="none"/>
+<line x1="164" y1="82" x2="180" y2="82" class="rail"/>
+<line x1="359" y1="82" x2="375" y2="82" class="rail"/>
+<path d="M375,82 Q367,82 367,74" class="rail" fill="none"/>
+<path d="M367,66 Q367,58 359,58" class="rail" fill="none"/>
+<path d="M367,82 Q375,82 375,90" class="rail" fill="none"/>
+<path d="M375,98 Q375,106 367,106" class="rail" fill="none"/>
+<line x1="172" y1="106" x2="367" y2="106" class="rail"/>
+<polygon points="275,103 269,106 275,109" class="arrow"/>
+<path d="M172,106 Q164,106 164,98" class="rail" fill="none"/>
+<path d="M164,90 Q164,82 172,82" class="rail" fill="none"/>
+</g>
+</g>
+<line x1="375" y1="58" x2="383" y2="58" class="rail"/>
+<circle cx="389" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="389" cy="58" r="3" class="end-circle-inner"/>
 </svg>

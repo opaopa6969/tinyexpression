@@ -1,70 +1,86 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1065" height="90">
+<svg xmlns="http://www.w3.org/2000/svg" width="955" height="92">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">IfExpression</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<rect x="50" y="44" width="56" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="78" y="62" text-anchor="middle" class="terminal-text">'if'</text>
-<line x1="106" y1="57" x2="122" y2="57" class="rail"/>
-<polygon points="111,54 117,57 111,60" class="arrow"/>
-<rect x="122" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="145" y="62" text-anchor="middle" class="terminal-text">'('</text>
-<line x1="169" y1="57" x2="185" y2="57" class="rail"/>
-<polygon points="174,54 180,57 174,60" class="arrow"/>
-<a xlink:href="#BooleanExpression" target="_top">
-<rect x="185" y="44" width="173" height="26" class="nonterminal-box"/>
-<text x="271" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
-</a>
-<line x1="358" y1="57" x2="374" y2="57" class="rail"/>
-<polygon points="363,54 369,57 363,60" class="arrow"/>
-<rect x="374" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="397" y="62" text-anchor="middle" class="terminal-text">')'</text>
-<line x1="421" y1="57" x2="437" y2="57" class="rail"/>
-<polygon points="426,54 432,57 426,60" class="arrow"/>
-<rect x="437" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="460" y="62" text-anchor="middle" class="terminal-text">'{'</text>
-<line x1="484" y1="57" x2="500" y2="57" class="rail"/>
-<polygon points="489,54 495,57 489,60" class="arrow"/>
-<a xlink:href="#Expression" target="_top">
-<rect x="500" y="44" width="110" height="26" class="nonterminal-box"/>
-<text x="555" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
-</a>
-<line x1="610" y1="57" x2="626" y2="57" class="rail"/>
-<polygon points="615,54 621,57 615,60" class="arrow"/>
-<rect x="626" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="649" y="62" text-anchor="middle" class="terminal-text">'}'</text>
-<line x1="673" y1="57" x2="689" y2="57" class="rail"/>
-<polygon points="678,54 684,57 678,60" class="arrow"/>
-<rect x="689" y="44" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="726" y="62" text-anchor="middle" class="terminal-text">'else'</text>
-<line x1="763" y1="57" x2="779" y2="57" class="rail"/>
-<polygon points="768,54 774,57 768,60" class="arrow"/>
-<rect x="779" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="802" y="62" text-anchor="middle" class="terminal-text">'{'</text>
-<line x1="826" y1="57" x2="842" y2="57" class="rail"/>
-<polygon points="831,54 837,57 831,60" class="arrow"/>
-<a xlink:href="#Expression" target="_top">
-<rect x="842" y="44" width="110" height="26" class="nonterminal-box"/>
-<text x="897" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
-</a>
-<line x1="952" y1="57" x2="968" y2="57" class="rail"/>
-<polygon points="957,54 963,57 957,60" class="arrow"/>
-<rect x="968" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="991" y="62" text-anchor="middle" class="terminal-text">'}'</text>
-<line x1="1015" y1="57" x2="1029" y2="57" class="rail"/>
-<circle cx="1037" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="1037" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1384722895">
+<g id="1150538133">
+<rect x="40" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="64" y="62" text-anchor="middle" class="terminal-text">'if'</text>
+</g>
+<line x1="88" y1="58" x2="108" y2="58" class="rail"/>
+<polygon points="95,55 101,58 95,61" class="arrow"/>
+<g id="662822946">
+<rect x="108" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="128" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="149" y1="58" x2="169" y2="58" class="rail"/>
+<polygon points="156,55 162,58 156,61" class="arrow"/>
+<g id="92150540">
+<rect x="169" y="44" width="139" height="28" class="nonterminal-box"/>
+<text x="238" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
+</g>
+<line x1="308" y1="58" x2="328" y2="58" class="rail"/>
+<polygon points="315,55 321,58 315,61" class="arrow"/>
+<g id="1110623531">
+<rect x="328" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="348" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+<line x1="369" y1="58" x2="389" y2="58" class="rail"/>
+<polygon points="376,55 382,58 376,61" class="arrow"/>
+<g id="410495873">
+<rect x="389" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="409" y="62" text-anchor="middle" class="terminal-text">'{'</text>
+</g>
+<line x1="430" y1="58" x2="450" y2="58" class="rail"/>
+<polygon points="437,55 443,58 437,61" class="arrow"/>
+<g id="811587677">
+<rect x="450" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="495" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+</g>
+<line x1="540" y1="58" x2="560" y2="58" class="rail"/>
+<polygon points="547,55 553,58 547,61" class="arrow"/>
+<g id="1166807841">
+<rect x="560" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="580" y="62" text-anchor="middle" class="terminal-text">'}'</text>
+</g>
+<line x1="601" y1="58" x2="621" y2="58" class="rail"/>
+<polygon points="608,55 614,58 608,61" class="arrow"/>
+<g id="289639718">
+<rect x="621" y="44" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="652" y="62" text-anchor="middle" class="terminal-text">'else'</text>
+</g>
+<line x1="683" y1="58" x2="703" y2="58" class="rail"/>
+<polygon points="690,55 696,58 690,61" class="arrow"/>
+<g id="885851948">
+<rect x="703" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="723" y="62" text-anchor="middle" class="terminal-text">'{'</text>
+</g>
+<line x1="744" y1="58" x2="764" y2="58" class="rail"/>
+<polygon points="751,55 757,58 751,61" class="arrow"/>
+<g id="2048834776">
+<rect x="764" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="809" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+</g>
+<line x1="854" y1="58" x2="874" y2="58" class="rail"/>
+<polygon points="861,55 867,58 861,61" class="arrow"/>
+<g id="1605283233">
+<rect x="874" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="894" y="62" text-anchor="middle" class="terminal-text">'}'</text>
+</g>
+</g>
+<line x1="915" y1="58" x2="923" y2="58" class="rail"/>
+<circle cx="929" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="929" cy="58" r="3" class="end-circle-inner"/>
 </svg>

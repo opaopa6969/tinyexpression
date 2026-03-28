@@ -1,40 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="403" height="128">
+<svg xmlns="http://www.w3.org/2000/svg" width="701" height="110">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ImportDeclaration</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#ImportDeclarationWithMethod" target="_top">
-<rect x="70" y="44" width="263" height="26" class="nonterminal-box"/>
-<text x="201" y="62" text-anchor="middle" class="nonterminal-text">ImportDeclarationWithMethod</text>
-</a>
-<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
-<line x1="333" y1="57" x2="353" y2="57" class="rail"/>
-<a xlink:href="#ImportDeclarationBare" target="_top">
-<rect x="97" y="82" width="209" height="26" class="nonterminal-box"/>
-<text x="201" y="100" text-anchor="middle" class="nonterminal-text">ImportDeclarationBare</text>
-</a>
-<line x1="70" y1="95" x2="97" y2="95" class="rail"/>
-<line x1="306" y1="95" x2="333" y2="95" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
-<path d="M 60,85 Q 60,95 70,95" class="rail"/>
-<path d="M 333,95 Q 343,95 343,85" class="rail"/>
-<line x1="343" y1="85" x2="343" y2="67" class="rail"/>
-<path d="M 343,67 Q 343,57 353,57" class="rail"/>
-<line x1="353" y1="57" x2="367" y2="57" class="rail"/>
-<circle cx="375" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="375" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="76" r="4" class="start-circle"/>
+<line x1="28" y1="76" x2="40" y2="76" class="rail"/>
+<g id="2017354584">
+<g id="785992331">
+<rect x="40" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="78" y="80" text-anchor="middle" class="terminal-text">'import'</text>
+</g>
+<line x1="116" y1="76" x2="136" y2="76" class="rail"/>
+<polygon points="123,73 129,76 123,79" class="arrow"/>
+<g id="940060004">
+<rect x="136" y="62" width="83" height="28" class="nonterminal-box"/>
+<text x="177" y="80" text-anchor="middle" class="nonterminal-text">ClassName</text>
+</g>
+<line x1="219" y1="76" x2="239" y2="76" class="rail"/>
+<polygon points="226,73 232,76 226,79" class="arrow"/>
+<g id="998351292">
+<g id="649734728">
+<g id="234698513">
+<rect x="255" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="275" y="80" text-anchor="middle" class="terminal-text">'#'</text>
+</g>
+<line x1="296" y1="76" x2="316" y2="76" class="rail"/>
+<polygon points="303,73 309,76 303,79" class="arrow"/>
+<g id="1121172875">
+<rect x="316" y="62" width="90" height="28" class="nonterminal-box"/>
+<text x="361" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</g>
+</g>
+<line x1="239" y1="76" x2="255" y2="76" class="rail"/>
+<line x1="406" y1="76" x2="422" y2="76" class="rail"/>
+<path d="M239,76 Q247,76 247,68" class="rail" fill="none"/>
+<path d="M247,60 Q247,52 255,52" class="rail" fill="none"/>
+<line x1="255" y1="52" x2="406" y2="52" class="rail"/>
+<path d="M406,52 Q414,52 414,60" class="rail" fill="none"/>
+<path d="M414,68 Q414,76 422,76" class="rail" fill="none"/>
+</g>
+<line x1="422" y1="76" x2="442" y2="76" class="rail"/>
+<polygon points="429,73 435,76 429,79" class="arrow"/>
+<g id="1684106402">
+<rect x="442" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="466" y="80" text-anchor="middle" class="terminal-text">'as'</text>
+</g>
+<line x1="490" y1="76" x2="510" y2="76" class="rail"/>
+<polygon points="497,73 503,76 497,79" class="arrow"/>
+<g id="335471116">
+<rect x="510" y="62" width="90" height="28" class="nonterminal-box"/>
+<text x="555" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</g>
+<line x1="600" y1="76" x2="620" y2="76" class="rail"/>
+<polygon points="607,73 613,76 607,79" class="arrow"/>
+<g id="1308927845">
+<rect x="620" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="640" y="80" text-anchor="middle" class="terminal-text">';'</text>
+</g>
+</g>
+<line x1="661" y1="76" x2="669" y2="76" class="rail"/>
+<circle cx="675" cy="76" r="6" class="end-circle-outer"/>
+<circle cx="675" cy="76" r="3" class="end-circle-inner"/>
 </svg>

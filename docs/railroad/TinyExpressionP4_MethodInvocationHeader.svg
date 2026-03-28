@@ -1,49 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="380" height="150">
+<svg xmlns="http://www.w3.org/2000/svg" width="316" height="148">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodInvocationHeader</text>
-<circle cx="26" cy="79" r="6" class="start-circle"/>
-<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
-<rect x="70" y="66" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="107" y="84" text-anchor="middle" class="terminal-text">'call'</text>
-<line x1="144" y1="79" x2="160" y2="79" class="rail"/>
-<polygon points="149,76 155,79 149,82" class="arrow"/>
-<rect x="180" y="66" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="235" y="84" text-anchor="middle" class="terminal-text">'internal'</text>
-<line x1="160" y1="79" x2="180" y2="79" class="rail"/>
-<line x1="290" y1="79" x2="310" y2="79" class="rail"/>
-<path d="M 160,79 Q 170,79 170,69" class="rail"/>
-<line x1="170" y1="69" x2="170" y2="64" class="rail"/>
-<path d="M 170,64 Q 170,54 180,54" class="rail"/>
-<line x1="180" y1="54" x2="290" y2="54" class="rail"/>
-<path d="M 290,54 Q 300,54 300,64" class="rail"/>
-<line x1="300" y1="64" x2="300" y2="69" class="rail"/>
-<path d="M 300,69 Q 300,79 310,79" class="rail"/>
-<line x1="50" y1="79" x2="70" y2="79" class="rail"/>
-<line x1="310" y1="79" x2="330" y2="79" class="rail"/>
-<rect x="135" y="104" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="190" y="122" text-anchor="middle" class="terminal-text">'internal'</text>
-<line x1="70" y1="117" x2="135" y2="117" class="rail"/>
-<line x1="245" y1="117" x2="310" y2="117" class="rail"/>
-<path d="M 50,79 Q 60,79 60,89" class="rail"/>
-<line x1="60" y1="89" x2="60" y2="107" class="rail"/>
-<path d="M 60,107 Q 60,117 70,117" class="rail"/>
-<path d="M 310,117 Q 320,117 320,107" class="rail"/>
-<line x1="320" y1="107" x2="320" y2="89" class="rail"/>
-<path d="M 320,89 Q 320,79 330,79" class="rail"/>
-<line x1="330" y1="79" x2="344" y2="79" class="rail"/>
-<circle cx="352" cy="79" r="8" class="end-circle-outer"/>
-<circle cx="352" cy="79" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="76" r="4" class="start-circle"/>
+<line x1="28" y1="76" x2="40" y2="76" class="rail"/>
+<g id="1926764753">
+<g id="1454127753">
+<g id="1061804750">
+<rect x="56" y="62" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="87" y="80" text-anchor="middle" class="terminal-text">'call'</text>
+</g>
+<line x1="118" y1="76" x2="138" y2="76" class="rail"/>
+<polygon points="125,73 131,76 125,79" class="arrow"/>
+<g id="1225439493">
+<g id="507084503">
+<rect x="154" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="199" y="80" text-anchor="middle" class="terminal-text">'internal'</text>
+</g>
+<line x1="138" y1="76" x2="154" y2="76" class="rail"/>
+<line x1="244" y1="76" x2="260" y2="76" class="rail"/>
+<path d="M138,76 Q146,76 146,68" class="rail" fill="none"/>
+<path d="M146,60 Q146,52 154,52" class="rail" fill="none"/>
+<line x1="154" y1="52" x2="244" y2="52" class="rail"/>
+<path d="M244,52 Q252,52 252,60" class="rail" fill="none"/>
+<path d="M252,68 Q252,76 260,76" class="rail" fill="none"/>
+</g>
+</g>
+<line x1="56" y1="76" x2="56" y2="76" class="rail"/>
+<line x1="260" y1="76" x2="260" y2="76" class="rail"/>
+<line x1="40" y1="76" x2="56" y2="76" class="rail"/>
+<line x1="260" y1="76" x2="276" y2="76" class="rail"/>
+<g id="667026744">
+<rect x="113" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="158" y="118" text-anchor="middle" class="terminal-text">'internal'</text>
+</g>
+<line x1="56" y1="114" x2="113" y2="114" class="rail"/>
+<line x1="203" y1="114" x2="260" y2="114" class="rail"/>
+<path d="M40,76 Q48,76 48,84" class="rail" fill="none"/>
+<path d="M48,106 Q48,114 56,114" class="rail" fill="none"/>
+<path d="M260,114 Q268,114 268,106" class="rail" fill="none"/>
+<path d="M268,84 Q268,76 276,76" class="rail" fill="none"/>
+</g>
+<line x1="276" y1="76" x2="284" y2="76" class="rail"/>
+<circle cx="290" cy="76" r="6" class="end-circle-outer"/>
+<circle cx="290" cy="76" r="3" class="end-circle-inner"/>
 </svg>

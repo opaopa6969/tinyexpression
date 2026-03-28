@@ -1,48 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="457" height="112">
+<svg xmlns="http://www.w3.org/2000/svg" width="387" height="120">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberExpression</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#NumberTerm" target="_top">
-<rect x="50" y="44" width="110" height="26" class="nonterminal-box"/>
-<text x="105" y="62" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
-</a>
-<line x1="160" y1="57" x2="176" y2="57" class="rail"/>
-<polygon points="165,54 171,57 165,60" class="arrow"/>
-<a xlink:href="#AddOp" target="_top">
-<rect x="196" y="44" width="65" height="26" class="nonterminal-box"/>
-<text x="228" y="62" text-anchor="middle" class="nonterminal-text">AddOp</text>
-</a>
-<line x1="261" y1="57" x2="277" y2="57" class="rail"/>
-<polygon points="266,54 272,57 266,60" class="arrow"/>
-<a xlink:href="#NumberTerm" target="_top">
-<rect x="277" y="44" width="110" height="26" class="nonterminal-box"/>
-<text x="332" y="62" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
-</a>
-<line x1="176" y1="57" x2="196" y2="57" class="rail"/>
-<line x1="387" y1="57" x2="407" y2="57" class="rail"/>
-<path d="M 186,57 Q 176,57 176,67" class="rail"/>
-<line x1="176" y1="67" x2="176" y2="72" class="rail"/>
-<path d="M 176,72 Q 176,82 186,82" class="rail"/>
-<line x1="186" y1="82" x2="397" y2="82" class="rail"/>
-<polygon points="294,79 288,82 294,85" class="arrow"/>
-<path d="M 397,82 Q 407,82 407,72" class="rail"/>
-<line x1="407" y1="72" x2="407" y2="67" class="rail"/>
-<path d="M 407,67 Q 407,57 397,57" class="rail"/>
-<line x1="407" y1="57" x2="421" y2="57" class="rail"/>
-<circle cx="429" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="429" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1447689627">
+<g id="1268066861">
+<rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
+<text x="85" y="62" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
+</g>
+<line x1="130" y1="58" x2="150" y2="58" class="rail"/>
+<polygon points="137,55 143,58 137,61" class="arrow"/>
+<g id="701141022">
+<g id="1273765644">
+<g id="827966648">
+<rect x="166" y="68" width="55" height="28" class="nonterminal-box"/>
+<text x="193" y="86" text-anchor="middle" class="nonterminal-text">AddOp</text>
+</g>
+<line x1="221" y1="82" x2="241" y2="82" class="rail"/>
+<polygon points="228,79 234,82 228,85" class="arrow"/>
+<g id="1938056729">
+<rect x="241" y="68" width="90" height="28" class="nonterminal-box"/>
+<text x="286" y="86" text-anchor="middle" class="nonterminal-text">NumberTerm</text>
+</g>
+</g>
+<line x1="150" y1="58" x2="347" y2="58" class="rail"/>
+<path d="M166,58 Q158,58 158,66" class="rail" fill="none"/>
+<path d="M158,74 Q158,82 150,82" class="rail" fill="none"/>
+<line x1="150" y1="82" x2="166" y2="82" class="rail"/>
+<line x1="331" y1="82" x2="347" y2="82" class="rail"/>
+<path d="M347,82 Q339,82 339,74" class="rail" fill="none"/>
+<path d="M339,66 Q339,58 331,58" class="rail" fill="none"/>
+<path d="M339,82 Q347,82 347,90" class="rail" fill="none"/>
+<path d="M347,98 Q347,106 339,106" class="rail" fill="none"/>
+<line x1="158" y1="106" x2="339" y2="106" class="rail"/>
+<polygon points="254,103 248,106 254,109" class="arrow"/>
+<path d="M158,106 Q150,106 150,98" class="rail" fill="none"/>
+<path d="M150,90 Q150,82 158,82" class="rail" fill="none"/>
+</g>
+</g>
+<line x1="347" y1="58" x2="355" y2="58" class="rail"/>
+<circle cx="361" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="361" cy="58" r="3" class="end-circle-inner"/>
 </svg>

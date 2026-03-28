@@ -1,86 +1,96 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1023" height="128">
+<svg xmlns="http://www.w3.org/2000/svg" width="877" height="130">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectVariableDeclaration</text>
-<circle cx="26" cy="79" r="6" class="start-circle"/>
-<line x1="32" y1="79" x2="50" y2="79" class="rail"/>
-<rect x="92" y="66" width="65" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="124" y="84" text-anchor="middle" class="terminal-text">'var'</text>
-<line x1="70" y1="79" x2="92" y2="79" class="rail"/>
-<line x1="157" y1="79" x2="180" y2="79" class="rail"/>
-<line x1="50" y1="79" x2="70" y2="79" class="rail"/>
-<line x1="180" y1="79" x2="200" y2="79" class="rail"/>
-<rect x="70" y="104" width="110" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="125" y="122" text-anchor="middle" class="terminal-text">'variable'</text>
-<path d="M 50,79 Q 60,79 60,89" class="rail"/>
-<line x1="60" y1="89" x2="60" y2="107" class="rail"/>
-<path d="M 60,107 Q 60,117 70,117" class="rail"/>
-<path d="M 180,117 Q 190,117 190,107" class="rail"/>
-<line x1="190" y1="107" x2="190" y2="89" class="rail"/>
-<path d="M 190,89 Q 190,79 200,79" class="rail"/>
-<line x1="200" y1="79" x2="216" y2="79" class="rail"/>
-<polygon points="205,76 211,79 205,82" class="arrow"/>
-<rect x="216" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="239" y="84" text-anchor="middle" class="terminal-text">'$'</text>
-<line x1="263" y1="79" x2="279" y2="79" class="rail"/>
-<polygon points="268,76 274,79 268,82" class="arrow"/>
-<a xlink:href="#IDENTIFIER" target="_top">
-<rect x="279" y="66" width="110" height="26" class="nonterminal-box"/>
-<text x="334" y="84" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
-</a>
-<line x1="389" y1="79" x2="405" y2="79" class="rail"/>
-<polygon points="394,76 400,79 394,82" class="arrow"/>
-<a xlink:href="#ObjectTypeHint" target="_top">
-<rect x="425" y="66" width="146" height="26" class="nonterminal-box"/>
-<text x="498" y="84" text-anchor="middle" class="nonterminal-text">ObjectTypeHint</text>
-</a>
-<line x1="405" y1="79" x2="425" y2="79" class="rail"/>
-<line x1="571" y1="79" x2="591" y2="79" class="rail"/>
-<path d="M 405,79 Q 415,79 415,69" class="rail"/>
-<line x1="415" y1="69" x2="415" y2="64" class="rail"/>
-<path d="M 415,64 Q 415,54 425,54" class="rail"/>
-<line x1="425" y1="54" x2="571" y2="54" class="rail"/>
-<path d="M 571,54 Q 581,54 581,64" class="rail"/>
-<line x1="581" y1="64" x2="581" y2="69" class="rail"/>
-<path d="M 581,69 Q 581,79 591,79" class="rail"/>
-<line x1="591" y1="79" x2="607" y2="79" class="rail"/>
-<polygon points="596,76 602,79 596,82" class="arrow"/>
-<a xlink:href="#ObjectSetter" target="_top">
-<rect x="627" y="66" width="128" height="26" class="nonterminal-box"/>
-<text x="691" y="84" text-anchor="middle" class="nonterminal-text">ObjectSetter</text>
-</a>
-<line x1="607" y1="79" x2="627" y2="79" class="rail"/>
-<line x1="755" y1="79" x2="775" y2="79" class="rail"/>
-<path d="M 607,79 Q 617,79 617,69" class="rail"/>
-<line x1="617" y1="69" x2="617" y2="64" class="rail"/>
-<path d="M 617,64 Q 617,54 627,54" class="rail"/>
-<line x1="627" y1="54" x2="755" y2="54" class="rail"/>
-<path d="M 755,54 Q 765,54 765,64" class="rail"/>
-<line x1="765" y1="64" x2="765" y2="69" class="rail"/>
-<path d="M 765,69 Q 765,79 775,79" class="rail"/>
-<line x1="775" y1="79" x2="791" y2="79" class="rail"/>
-<polygon points="780,76 786,79 780,82" class="arrow"/>
-<a xlink:href="#Description" target="_top">
-<rect x="791" y="66" width="119" height="26" class="nonterminal-box"/>
-<text x="850" y="84" text-anchor="middle" class="nonterminal-text">Description</text>
-</a>
-<line x1="910" y1="79" x2="926" y2="79" class="rail"/>
-<polygon points="915,76 921,79 915,82" class="arrow"/>
-<rect x="926" y="66" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="949" y="84" text-anchor="middle" class="terminal-text">';'</text>
-<line x1="973" y1="79" x2="987" y2="79" class="rail"/>
-<circle cx="995" cy="79" r="8" class="end-circle-outer"/>
-<circle cx="995" cy="79" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="76" r="4" class="start-circle"/>
+<line x1="28" y1="76" x2="40" y2="76" class="rail"/>
+<g id="329611835">
+<g id="1358444045">
+<g id="1937348256">
+<rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
+</g>
+<line x1="56" y1="76" x2="73" y2="76" class="rail"/>
+<line x1="128" y1="76" x2="146" y2="76" class="rail"/>
+<line x1="40" y1="76" x2="56" y2="76" class="rail"/>
+<line x1="146" y1="76" x2="162" y2="76" class="rail"/>
+<g id="1641808846">
+<rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
+</g>
+<line x1="56" y1="114" x2="56" y2="114" class="rail"/>
+<line x1="146" y1="114" x2="146" y2="114" class="rail"/>
+<path d="M40,76 Q48,76 48,84" class="rail" fill="none"/>
+<path d="M48,106 Q48,114 56,114" class="rail" fill="none"/>
+<path d="M146,114 Q154,114 154,106" class="rail" fill="none"/>
+<path d="M154,84 Q154,76 162,76" class="rail" fill="none"/>
+</g>
+<line x1="162" y1="76" x2="182" y2="76" class="rail"/>
+<polygon points="169,73 175,76 169,79" class="arrow"/>
+<g id="331844619">
+<rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
+</g>
+<line x1="223" y1="76" x2="243" y2="76" class="rail"/>
+<polygon points="230,73 236,76 230,79" class="arrow"/>
+<g id="310656974">
+<rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
+<text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
+</g>
+<line x1="333" y1="76" x2="353" y2="76" class="rail"/>
+<polygon points="340,73 346,76 340,79" class="arrow"/>
+<g id="159259014">
+<g id="64830413">
+<rect x="369" y="62" width="118" height="28" class="nonterminal-box"/>
+<text x="428" y="80" text-anchor="middle" class="nonterminal-text">ObjectTypeHint</text>
+</g>
+<line x1="353" y1="76" x2="369" y2="76" class="rail"/>
+<line x1="487" y1="76" x2="503" y2="76" class="rail"/>
+<path d="M353,76 Q361,76 361,68" class="rail" fill="none"/>
+<path d="M361,60 Q361,52 369,52" class="rail" fill="none"/>
+<line x1="369" y1="52" x2="487" y2="52" class="rail"/>
+<path d="M487,52 Q495,52 495,60" class="rail" fill="none"/>
+<path d="M495,68 Q495,76 503,76" class="rail" fill="none"/>
+</g>
+<line x1="503" y1="76" x2="523" y2="76" class="rail"/>
+<polygon points="510,73 516,76 510,79" class="arrow"/>
+<g id="356473385">
+<g id="653687670">
+<rect x="539" y="62" width="104" height="28" class="nonterminal-box"/>
+<text x="591" y="80" text-anchor="middle" class="nonterminal-text">ObjectSetter</text>
+</g>
+<line x1="523" y1="76" x2="539" y2="76" class="rail"/>
+<line x1="643" y1="76" x2="659" y2="76" class="rail"/>
+<path d="M523,76 Q531,76 531,68" class="rail" fill="none"/>
+<path d="M531,60 Q531,52 539,52" class="rail" fill="none"/>
+<line x1="539" y1="52" x2="643" y2="52" class="rail"/>
+<path d="M643,52 Q651,52 651,60" class="rail" fill="none"/>
+<path d="M651,68 Q651,76 659,76" class="rail" fill="none"/>
+</g>
+<line x1="659" y1="76" x2="679" y2="76" class="rail"/>
+<polygon points="666,73 672,76 666,79" class="arrow"/>
+<g id="2136344592">
+<rect x="679" y="62" width="97" height="28" class="nonterminal-box"/>
+<text x="727" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
+</g>
+<line x1="776" y1="76" x2="796" y2="76" class="rail"/>
+<polygon points="783,73 789,76 783,79" class="arrow"/>
+<g id="110992469">
+<rect x="796" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="816" y="80" text-anchor="middle" class="terminal-text">';'</text>
+</g>
+</g>
+<line x1="837" y1="76" x2="845" y2="76" class="rail"/>
+<circle cx="851" cy="76" r="6" class="end-circle-outer"/>
+<circle cx="851" cy="76" r="3" class="end-circle-inner"/>
 </svg>

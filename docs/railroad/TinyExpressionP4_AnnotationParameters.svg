@@ -1,46 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="601" height="112">
+<svg xmlns="http://www.w3.org/2000/svg" width="499" height="120">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AnnotationParameters</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#AnnotationParameter" target="_top">
-<rect x="50" y="44" width="191" height="26" class="nonterminal-box"/>
-<text x="145" y="62" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
-</a>
-<line x1="241" y1="57" x2="257" y2="57" class="rail"/>
-<polygon points="246,54 252,57 246,60" class="arrow"/>
-<rect x="277" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="300" y="62" text-anchor="middle" class="terminal-text">','</text>
-<line x1="324" y1="57" x2="340" y2="57" class="rail"/>
-<polygon points="329,54 335,57 329,60" class="arrow"/>
-<a xlink:href="#AnnotationParameter" target="_top">
-<rect x="340" y="44" width="191" height="26" class="nonterminal-box"/>
-<text x="435" y="62" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
-</a>
-<line x1="257" y1="57" x2="277" y2="57" class="rail"/>
-<line x1="531" y1="57" x2="551" y2="57" class="rail"/>
-<path d="M 267,57 Q 257,57 257,67" class="rail"/>
-<line x1="257" y1="67" x2="257" y2="72" class="rail"/>
-<path d="M 257,72 Q 257,82 267,82" class="rail"/>
-<line x1="267" y1="82" x2="541" y2="82" class="rail"/>
-<polygon points="407,79 401,82 407,85" class="arrow"/>
-<path d="M 541,82 Q 551,82 551,72" class="rail"/>
-<line x1="551" y1="72" x2="551" y2="67" class="rail"/>
-<path d="M 551,67 Q 551,57 541,57" class="rail"/>
-<line x1="551" y1="57" x2="565" y2="57" class="rail"/>
-<circle cx="573" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="573" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1364614850">
+<g id="710714889">
+<rect x="40" y="44" width="153" height="28" class="nonterminal-box"/>
+<text x="116" y="62" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
+</g>
+<line x1="193" y1="58" x2="213" y2="58" class="rail"/>
+<polygon points="200,55 206,58 200,61" class="arrow"/>
+<g id="1734161410">
+<g id="687780858">
+<g id="551734240">
+<rect x="229" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="249" y="86" text-anchor="middle" class="terminal-text">','</text>
+</g>
+<line x1="270" y1="82" x2="290" y2="82" class="rail"/>
+<polygon points="277,79 283,82 277,85" class="arrow"/>
+<g id="1757293506">
+<rect x="290" y="68" width="153" height="28" class="nonterminal-box"/>
+<text x="366" y="86" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
+</g>
+</g>
+<line x1="213" y1="58" x2="459" y2="58" class="rail"/>
+<path d="M229,58 Q221,58 221,66" class="rail" fill="none"/>
+<path d="M221,74 Q221,82 213,82" class="rail" fill="none"/>
+<line x1="213" y1="82" x2="229" y2="82" class="rail"/>
+<line x1="443" y1="82" x2="459" y2="82" class="rail"/>
+<path d="M459,82 Q451,82 451,74" class="rail" fill="none"/>
+<path d="M451,66 Q451,58 443,58" class="rail" fill="none"/>
+<path d="M451,82 Q459,82 459,90" class="rail" fill="none"/>
+<path d="M459,98 Q459,106 451,106" class="rail" fill="none"/>
+<line x1="221" y1="106" x2="451" y2="106" class="rail"/>
+<polygon points="342,103 336,106 342,109" class="arrow"/>
+<path d="M221,106 Q213,106 213,98" class="rail" fill="none"/>
+<path d="M213,90 Q213,82 221,82" class="rail" fill="none"/>
+</g>
+</g>
+<line x1="459" y1="58" x2="467" y2="58" class="rail"/>
+<circle cx="473" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="473" cy="58" r="3" class="end-circle-inner"/>
 </svg>

@@ -1,36 +1,40 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="232" height="128">
+<svg xmlns="http://www.w3.org/2000/svg" width="188" height="130">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NumberReturnType</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<rect x="70" y="44" width="92" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="116" y="62" text-anchor="middle" class="terminal-text">'number'</text>
-<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
-<line x1="162" y1="57" x2="182" y2="57" class="rail"/>
-<rect x="74" y="82" width="83" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="115" y="100" text-anchor="middle" class="terminal-text">'float'</text>
-<line x1="70" y1="95" x2="74" y2="95" class="rail"/>
-<line x1="157" y1="95" x2="162" y2="95" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
-<path d="M 60,85 Q 60,95 70,95" class="rail"/>
-<path d="M 162,95 Q 172,95 172,85" class="rail"/>
-<line x1="172" y1="85" x2="172" y2="67" class="rail"/>
-<path d="M 172,67 Q 172,57 182,57" class="rail"/>
-<line x1="182" y1="57" x2="196" y2="57" class="rail"/>
-<circle cx="204" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="204" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="2107447833">
+<g id="90320863">
+<rect x="56" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="94" y="62" text-anchor="middle" class="terminal-text">'number'</text>
+</g>
+<line x1="56" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="132" y1="58" x2="132" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="132" y1="58" x2="148" y2="58" class="rail"/>
+<g id="1216590855">
+<rect x="59" y="82" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="93" y="100" text-anchor="middle" class="terminal-text">'float'</text>
+</g>
+<line x1="56" y1="96" x2="59" y2="96" class="rail"/>
+<line x1="128" y1="96" x2="132" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M132,96 Q140,96 140,88" class="rail" fill="none"/>
+<path d="M140,66 Q140,58 148,58" class="rail" fill="none"/>
+</g>
+<line x1="148" y1="58" x2="156" y2="58" class="rail"/>
+<circle cx="162" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="162" cy="58" r="3" class="end-circle-inner"/>
 </svg>

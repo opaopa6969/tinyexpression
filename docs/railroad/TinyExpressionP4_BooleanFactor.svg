@@ -1,200 +1,134 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="439" height="622">
+<svg xmlns="http://www.w3.org/2000/svg" width="373" height="434">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanFactor</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#NotExpression" target="_top">
-<rect x="151" y="44" width="137" height="26" class="nonterminal-box"/>
-<text x="219" y="62" text-anchor="middle" class="nonterminal-text">NotExpression</text>
-</a>
-<line x1="70" y1="57" x2="151" y2="57" class="rail"/>
-<line x1="288" y1="57" x2="369" y2="57" class="rail"/>
-<line x1="50" y1="57" x2="70" y2="57" class="rail"/>
-<line x1="369" y1="57" x2="389" y2="57" class="rail"/>
-<a xlink:href="#BooleanMatchExpression" target="_top">
-<rect x="110" y="82" width="218" height="26" class="nonterminal-box"/>
-<text x="219" y="100" text-anchor="middle" class="nonterminal-text">BooleanMatchExpression</text>
-</a>
-<line x1="70" y1="95" x2="110" y2="95" class="rail"/>
-<line x1="328" y1="95" x2="369" y2="95" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="85" class="rail"/>
-<path d="M 60,85 Q 60,95 70,95" class="rail"/>
-<path d="M 369,95 Q 379,95 379,85" class="rail"/>
-<line x1="379" y1="85" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#StringComparisonExpression" target="_top">
-<rect x="92" y="120" width="254" height="26" class="nonterminal-box"/>
-<text x="219" y="138" text-anchor="middle" class="nonterminal-text">StringComparisonExpression</text>
-</a>
-<line x1="70" y1="133" x2="92" y2="133" class="rail"/>
-<line x1="346" y1="133" x2="369" y2="133" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="123" class="rail"/>
-<path d="M 60,123 Q 60,133 70,133" class="rail"/>
-<path d="M 369,133 Q 379,133 379,123" class="rail"/>
-<line x1="379" y1="123" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#ComparisonExpression" target="_top">
-<rect x="119" y="158" width="200" height="26" class="nonterminal-box"/>
-<text x="219" y="176" text-anchor="middle" class="nonterminal-text">ComparisonExpression</text>
-</a>
-<line x1="70" y1="171" x2="119" y2="171" class="rail"/>
-<line x1="319" y1="171" x2="369" y2="171" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="161" class="rail"/>
-<path d="M 60,161 Q 60,171 70,171" class="rail"/>
-<path d="M 369,171 Q 379,171 379,161" class="rail"/>
-<line x1="379" y1="161" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#IsPresentFunction" target="_top">
-<rect x="133" y="196" width="173" height="26" class="nonterminal-box"/>
-<text x="219" y="214" text-anchor="middle" class="nonterminal-text">IsPresentFunction</text>
-</a>
-<line x1="70" y1="209" x2="133" y2="209" class="rail"/>
-<line x1="306" y1="209" x2="369" y2="209" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="199" class="rail"/>
-<path d="M 60,199 Q 60,209 70,209" class="rail"/>
-<path d="M 369,209 Q 379,209 379,199" class="rail"/>
-<line x1="379" y1="199" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#InTimeRangeFunction" target="_top">
-<rect x="124" y="234" width="191" height="26" class="nonterminal-box"/>
-<text x="219" y="252" text-anchor="middle" class="nonterminal-text">InTimeRangeFunction</text>
-</a>
-<line x1="70" y1="247" x2="124" y2="247" class="rail"/>
-<line x1="315" y1="247" x2="369" y2="247" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="237" class="rail"/>
-<path d="M 60,237 Q 60,247 70,247" class="rail"/>
-<path d="M 369,247 Q 379,247 379,237" class="rail"/>
-<line x1="379" y1="237" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#InDayTimeRangeFunction" target="_top">
-<rect x="110" y="272" width="218" height="26" class="nonterminal-box"/>
-<text x="219" y="290" text-anchor="middle" class="nonterminal-text">InDayTimeRangeFunction</text>
-</a>
-<line x1="70" y1="285" x2="110" y2="285" class="rail"/>
-<line x1="328" y1="285" x2="369" y2="285" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="275" class="rail"/>
-<path d="M 60,275 Q 60,285 70,285" class="rail"/>
-<path d="M 369,285 Q 379,285 379,275" class="rail"/>
-<line x1="379" y1="275" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#StringPredicateMethod" target="_top">
-<rect x="115" y="310" width="209" height="26" class="nonterminal-box"/>
-<text x="219" y="328" text-anchor="middle" class="nonterminal-text">StringPredicateMethod</text>
-</a>
-<line x1="70" y1="323" x2="115" y2="323" class="rail"/>
-<line x1="324" y1="323" x2="369" y2="323" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="313" class="rail"/>
-<path d="M 60,313 Q 60,323 70,323" class="rail"/>
-<path d="M 369,323 Q 379,323 379,313" class="rail"/>
-<line x1="379" y1="313" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#ExternalBooleanInvocation" target="_top">
-<rect x="97" y="348" width="245" height="26" class="nonterminal-box"/>
-<text x="219" y="366" text-anchor="middle" class="nonterminal-text">ExternalBooleanInvocation</text>
-</a>
-<line x1="70" y1="361" x2="97" y2="361" class="rail"/>
-<line x1="342" y1="361" x2="369" y2="361" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="351" class="rail"/>
-<path d="M 60,351 Q 60,361 70,361" class="rail"/>
-<path d="M 369,361 Q 379,361 379,351" class="rail"/>
-<line x1="379" y1="351" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#SideEffectBooleanExpression" target="_top">
-<rect x="88" y="386" width="263" height="26" class="nonterminal-box"/>
-<text x="219" y="404" text-anchor="middle" class="nonterminal-text">SideEffectBooleanExpression</text>
-</a>
-<line x1="70" y1="399" x2="88" y2="399" class="rail"/>
-<line x1="351" y1="399" x2="369" y2="399" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="389" class="rail"/>
-<path d="M 60,389 Q 60,399 70,399" class="rail"/>
-<path d="M 369,399 Q 379,399 379,389" class="rail"/>
-<line x1="379" y1="389" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<rect x="182" y="424" width="74" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="219" y="442" text-anchor="middle" class="terminal-text">'true'</text>
-<line x1="70" y1="437" x2="182" y2="437" class="rail"/>
-<line x1="256" y1="437" x2="369" y2="437" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="427" class="rail"/>
-<path d="M 60,427 Q 60,437 70,437" class="rail"/>
-<path d="M 369,437 Q 379,437 379,427" class="rail"/>
-<line x1="379" y1="427" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<rect x="178" y="462" width="83" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="219" y="480" text-anchor="middle" class="terminal-text">'false'</text>
-<line x1="70" y1="475" x2="178" y2="475" class="rail"/>
-<line x1="261" y1="475" x2="369" y2="475" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="465" class="rail"/>
-<path d="M 60,465 Q 60,475 70,475" class="rail"/>
-<path d="M 369,475 Q 379,475 379,465" class="rail"/>
-<line x1="379" y1="465" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#VariableRef" target="_top">
-<rect x="160" y="500" width="119" height="26" class="nonterminal-box"/>
-<text x="219" y="518" text-anchor="middle" class="nonterminal-text">VariableRef</text>
-</a>
-<line x1="70" y1="513" x2="160" y2="513" class="rail"/>
-<line x1="279" y1="513" x2="369" y2="513" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="503" class="rail"/>
-<path d="M 60,503 Q 60,513 70,513" class="rail"/>
-<path d="M 369,513 Q 379,513 379,503" class="rail"/>
-<line x1="379" y1="503" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<a xlink:href="#MethodInvocation" target="_top">
-<rect x="137" y="538" width="164" height="26" class="nonterminal-box"/>
-<text x="219" y="556" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
-</a>
-<line x1="70" y1="551" x2="137" y2="551" class="rail"/>
-<line x1="301" y1="551" x2="369" y2="551" class="rail"/>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="541" class="rail"/>
-<path d="M 60,541 Q 60,551 70,551" class="rail"/>
-<path d="M 369,551 Q 379,551 379,541" class="rail"/>
-<line x1="379" y1="541" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<rect x="70" y="576" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="93" y="594" text-anchor="middle" class="terminal-text">'('</text>
-<line x1="117" y1="589" x2="133" y2="589" class="rail"/>
-<polygon points="122,586 128,589 122,592" class="arrow"/>
-<a xlink:href="#BooleanExpression" target="_top">
-<rect x="133" y="576" width="173" height="26" class="nonterminal-box"/>
-<text x="219" y="594" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
-</a>
-<line x1="306" y1="589" x2="322" y2="589" class="rail"/>
-<polygon points="311,586 317,589 311,592" class="arrow"/>
-<rect x="322" y="576" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="345" y="594" text-anchor="middle" class="terminal-text">')'</text>
-<path d="M 50,57 Q 60,57 60,67" class="rail"/>
-<line x1="60" y1="67" x2="60" y2="579" class="rail"/>
-<path d="M 60,579 Q 60,589 70,589" class="rail"/>
-<path d="M 369,589 Q 379,589 379,579" class="rail"/>
-<line x1="379" y1="579" x2="379" y2="67" class="rail"/>
-<path d="M 379,67 Q 379,57 389,57" class="rail"/>
-<line x1="389" y1="57" x2="403" y2="57" class="rail"/>
-<circle cx="411" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="411" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="377478451">
+<g id="1685232414">
+<rect x="131" y="44" width="111" height="28" class="nonterminal-box"/>
+<text x="186" y="62" text-anchor="middle" class="nonterminal-text">NotExpression</text>
+</g>
+<line x1="56" y1="58" x2="131" y2="58" class="rail"/>
+<line x1="242" y1="58" x2="317" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="317" y1="58" x2="333" y2="58" class="rail"/>
+<g id="280744458">
+<rect x="99" y="82" width="174" height="28" class="nonterminal-box"/>
+<text x="186" y="100" text-anchor="middle" class="nonterminal-text">BooleanMatchExpression</text>
+</g>
+<line x1="56" y1="96" x2="99" y2="96" class="rail"/>
+<line x1="273" y1="96" x2="317" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M317,96 Q325,96 325,88" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="1213216872">
+<rect x="89" y="120" width="195" height="28" class="nonterminal-box"/>
+<text x="186" y="138" text-anchor="middle" class="nonterminal-text">ExternalBooleanInvocation</text>
+</g>
+<line x1="56" y1="134" x2="89" y2="134" class="rail"/>
+<line x1="284" y1="134" x2="317" y2="134" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
+<path d="M317,134 Q325,134 325,126" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="1754638213">
+<rect x="85" y="158" width="202" height="28" class="nonterminal-box"/>
+<text x="186" y="176" text-anchor="middle" class="nonterminal-text">StringComparisonExpression</text>
+</g>
+<line x1="56" y1="172" x2="85" y2="172" class="rail"/>
+<line x1="287" y1="172" x2="317" y2="172" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
+<path d="M317,172 Q325,172 325,164" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="407858146">
+<rect x="106" y="196" width="160" height="28" class="nonterminal-box"/>
+<text x="186" y="214" text-anchor="middle" class="nonterminal-text">ComparisonExpression</text>
+</g>
+<line x1="56" y1="210" x2="106" y2="210" class="rail"/>
+<line x1="266" y1="210" x2="317" y2="210" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
+<path d="M317,210 Q325,210 325,202" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="1454031203">
+<rect x="155" y="234" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="186" y="252" text-anchor="middle" class="terminal-text">'true'</text>
+</g>
+<line x1="56" y1="248" x2="155" y2="248" class="rail"/>
+<line x1="217" y1="248" x2="317" y2="248" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
+<path d="M317,248 Q325,248 325,240" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="527446182">
+<rect x="152" y="272" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="186" y="290" text-anchor="middle" class="terminal-text">'false'</text>
+</g>
+<line x1="56" y1="286" x2="152" y2="286" class="rail"/>
+<line x1="221" y1="286" x2="317" y2="286" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
+<path d="M317,286 Q325,286 325,278" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="1511785794">
+<rect x="138" y="310" width="97" height="28" class="nonterminal-box"/>
+<text x="186" y="328" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="56" y1="324" x2="138" y2="324" class="rail"/>
+<line x1="235" y1="324" x2="317" y2="324" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
+<path d="M317,324 Q325,324 325,316" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="963601816">
+<rect x="120" y="348" width="132" height="28" class="nonterminal-box"/>
+<text x="186" y="366" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
+</g>
+<line x1="56" y1="362" x2="120" y2="362" class="rail"/>
+<line x1="252" y1="362" x2="317" y2="362" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
+<path d="M317,362 Q325,362 325,354" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+<g id="1596467899">
+<g id="961419791">
+<rect x="56" y="386" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="76" y="404" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="97" y1="400" x2="117" y2="400" class="rail"/>
+<polygon points="104,397 110,400 104,403" class="arrow"/>
+<g id="665188480">
+<rect x="117" y="386" width="139" height="28" class="nonterminal-box"/>
+<text x="186" y="404" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
+</g>
+<line x1="256" y1="400" x2="276" y2="400" class="rail"/>
+<polygon points="263,397 269,400 263,403" class="arrow"/>
+<g id="489279267">
+<rect x="276" y="386" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="296" y="404" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="56" y1="400" x2="56" y2="400" class="rail"/>
+<line x1="317" y1="400" x2="317" y2="400" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
+<path d="M317,400 Q325,400 325,392" class="rail" fill="none"/>
+<path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
+</g>
+<line x1="333" y1="58" x2="341" y2="58" class="rail"/>
+<circle cx="347" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="347" cy="58" r="3" class="end-circle-inner"/>
 </svg>
