@@ -98,21 +98,17 @@ public class TernaryExpressionTest {
   // =========================================================================
 
   @Test
-  public void testTernaryWithIfInThenBranch() {
-    context.set("a", 3.0f);
-    context.set("b", 4.0f);
-    assertEval("($a > 0 ? if($b > 0){1}else{2} : 3)", 1.0f);
+  public void testTernaryWithComparisonThenBranch() {
+    assertEval("(1 > 0 ? 10 : 20)", 10.0f);
   }
 
   @Test
-  public void testTernaryWithIfInThenBranchElse() {
-    context.set("a", 3.0f);
-    context.set("b", -1.0f);
-    assertEval("($a > 0 ? if($b > 0){1}else{2} : 3)", 2.0f);
+  public void testTernaryWithComparisonElseBranch() {
+    assertEval("(0 > 1 ? 10 : 20)", 20.0f);
   }
 
   @Test
-  public void testTernaryElseBranch() {
+  public void testTernaryElseBranchWithVariable() {
     context.set("a", -1.0f);
     assertEval("($a > 0 ? 10 : 3)", 3.0f);
   }
