@@ -33,9 +33,9 @@
 | **External呼び出し** | ✅ | ✅ | ✅ | ❌ | ✅ |
 | **Side effect** | ✅ | ✅ | **❌** | ❌ | ✅ |
 | 変数宣言 (var) | ✅ | 部分的 | ✅ | ❌ | ✅ |
-| String連結 (+) | ✅ | ❌ | ❌ | ❌ | ❌ |
+| String連結 (+) | ✅ | ✅ | ❌ | ❌ | ✅ |
 | String slice ($s[0:3]) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| inTimeRange/inDayTimeRange | ✅ | ❌ | ❌ | ❌ | ❌ |
+| inTimeRange/inDayTimeRange | ✅ | ✅ | ❌ | ❌ | ✅ |
 
 ## Fallback Chain
 
@@ -61,6 +61,9 @@ ExternalBooleanInvocationExpr // external returning as boolean ... ✅
 ExternalNumberInvocationExpr  // external returning as number ... ✅
 ExternalStringInvocationExpr  // external returning as string ... ✅
 ExternalObjectInvocationExpr  // external returning as object ... ✅
+StringConcatExpr              // $firstName + ' ' + $lastName ✅
+InTimeRangeExpr               // inTimeRange(9, 17) ✅
+InDayTimeRangeExpr            // inDayTimeRange(MONDAY, 9, FRIDAY, 17) ✅
 ```
 
 ## ゴール
