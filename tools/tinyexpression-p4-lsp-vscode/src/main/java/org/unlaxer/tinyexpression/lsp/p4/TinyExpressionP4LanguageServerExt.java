@@ -90,6 +90,7 @@ import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.incremental.IncrementalParseCache;
 import org.unlaxer.parser.clang.CPPComment;
 import org.unlaxer.parser.clang.IdentifierParser;
 import org.unlaxer.parser.elementary.NumberParser;
@@ -124,9 +125,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   private static final int TOKEN_TYPE_OPERATOR = 4;
   private static final int TOKEN_TYPE_FUNCTION = 5;
   private static final int TOKEN_TYPE_COMMENT  = 6;
+  private static final int TOKEN_TYPE_TYPE     = 7;
 
   private static final List<String> SEMANTIC_TOKEN_TYPES = List.of(
-      "keyword", "variable", "number", "string", "operator", "function", "comment");
+      "keyword", "variable", "number", "string", "operator", "function", "comment", "type");
 
   // ── TinyExpression P4 keyword set ──
 
@@ -232,6 +234,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   private final DocumentFilter documentFilter;
   private LanguageClient extClient;
   private final Map<String, ExtDocumentState> extDocuments = new HashMap<>();
+  /** Per-document incremental parse cache keyed by document URI. */
+  private final Map<String, IncrementalParseCache> incrementalCaches = new HashMap<>();
 
   // =========================================================================
   // Constructors
@@ -380,6 +384,30 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
    * @param fullContent    full document content (includes metadata headers)
    */
   public ParseResult parseAndEnrich(String uri, String formulaContent, int lineOffset, String fullContent) {
+    // ── Incremental parse cache: detect unchanged content and skip reparse ──
+    IncrementalParseCache cache = incrementalCaches.computeIfAbsent(uri, k -> new IncrementalParseCache());
+    List<String> chunks = cache.splitIntoChunks(formulaContent, ",", ";");
+
+    boolean hasChangedChunk = false;
+    for (String chunk : chunks) {
+      if (cache.getCached(chunk) == null) {
+        hasChangedChunk = true;
+        break;
+      }
+    }
+
+    // If no chunks changed, reuse the previous ExtDocumentState entirely
+    if (!hasChangedChunk) {
+      ExtDocumentState prev = extDocuments.get(uri);
+      if (prev != null) {
+        IncrementalParseCache.CacheStats stats = cache.stats();
+        System.err.printf("[IncrementalParseCache] uri=%s ALL_CACHED chunks=%d entries=%d hitRate=%.1f%%%n",
+            uri, chunks.size(), stats.entries(), stats.hitRate() * 100);
+        return prev.parseResult();
+      }
+    }
+
+    // ── Full reparse (at least one chunk changed) ──
     StringSource source = createRootSource(formulaContent);
     ParseResult result;
     org.unlaxer.context.ParseFailureDiagnostics ctxDiag = null;
@@ -397,7 +425,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       try {
         parsed = rootParser.parse(ctx);
         ctxDiag = ctx.getParseFailureDiagnostics();
-        
+
         // Extract scope information BEFORE closing context
         scopeDiagnostics.addAll(ScopeStore.getDiagnostics(ctx));
         declarations.addAll(ScopeStore.getAllDeclarations(ctx));
@@ -412,6 +440,41 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
       result = new ParseResult(parsed.isSucceeded(), consumed, formulaContent.length());
     }
+
+    // ── Update incremental cache with the current chunks ──
+    int chunkLineOffset = lineOffset;
+    for (String chunk : chunks) {
+      if (cache.getCached(chunk) == null) {
+        // Parse each changed chunk individually for cache storage
+        Token chunkToken = null;
+        try {
+          StringSource chunkSource = createRootSource(chunk);
+          if (chunkSource != null) {
+            Parser chunkParser = TinyExpressionP4Parsers.getRootParser();
+            ParseContext chunkCtx = new ParseContext(chunkSource);
+            try {
+              Parsed chunkParsed = chunkParser.parse(chunkCtx);
+              if (chunkParsed.isSucceeded() && chunkParsed.getConsumed() != null) {
+                chunkToken = chunkParsed.getConsumed();
+              }
+            } finally {
+              chunkCtx.close();
+            }
+          }
+        } catch (Exception ignored) {
+          // Chunk-level parse failure is fine; the full parse result is authoritative
+        }
+        cache.put(chunk, chunkToken, chunkLineOffset);
+      }
+      // Advance line offset by the number of newlines in this chunk
+      for (int i = 0; i < chunk.length(); i++) {
+        if (chunk.charAt(i) == '\n') chunkLineOffset++;
+      }
+    }
+
+    IncrementalParseCache.CacheStats stats = cache.stats();
+    System.err.printf("[IncrementalParseCache] uri=%s REPARSED chunks=%d entries=%d hits=%d misses=%d hitRate=%.1f%%%n",
+        uri, chunks.size(), stats.entries(), stats.hits(), stats.misses(), stats.hitRate() * 100);
 
     TinyExpressionP4AST ast = null;
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
@@ -683,6 +746,236 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return new int[]{line, col};
   }
 
+  // =========================================================================
+  // Java code block detection and tokenization (FormulaInfo Phase 2)
+  // =========================================================================
+
+  /** Pattern matching the opening fence of a Java code block: ```java or ```java:ClassName */
+  private static final Pattern JAVA_FENCE_OPEN  = Pattern.compile("^\\s*```java(:\\w+)?\\s*$");
+  /** Pattern matching the closing fence of a code block: ``` */
+  private static final Pattern JAVA_FENCE_CLOSE = Pattern.compile("^\\s*```\\s*$");
+
+  /** Java keywords for syntax highlighting inside ```java blocks. */
+  private static final Set<String> JAVA_KEYWORD_SET = Set.of(
+      "abstract", "assert", "boolean", "break", "byte", "case", "catch",
+      "char", "class", "const", "continue", "default", "do", "double",
+      "else", "enum", "extends", "final", "finally", "float", "for",
+      "goto", "if", "implements", "import", "instanceof", "int",
+      "interface", "long", "native", "new", "package", "private",
+      "protected", "public", "return", "short", "static", "strictfp",
+      "super", "switch", "synchronized", "this", "throw", "throws",
+      "transient", "try", "void", "volatile", "while",
+      "true", "false", "null");
+
+  /** Java built-in / common type names highlighted as "type" tokens. */
+  private static final Set<String> JAVA_TYPE_SET = Set.of(
+      "String", "Integer", "Long", "Double", "Float", "Boolean",
+      "Object", "List", "Map", "Set", "Optional", "BigDecimal",
+      "Override", "Deprecated", "SuppressWarnings");
+
+  /** Regex patterns for Java token extraction (order matters — first match wins). */
+  private static final Pattern JAVA_LINE_COMMENT  = Pattern.compile("//.*");
+  private static final Pattern JAVA_STRING_LITERAL = Pattern.compile("\"(?:[^\"\\\\]|\\\\.)*\"");
+  private static final Pattern JAVA_CHAR_LITERAL   = Pattern.compile("'(?:[^'\\\\]|\\\\.)*'");
+  private static final Pattern JAVA_NUMBER_LITERAL = Pattern.compile("\\b(?:0[xX][0-9a-fA-F_]+|0[bB][01_]+|[0-9][0-9_]*(?:\\.[0-9_]*)?(?:[eE][+-]?[0-9_]+)?[fFdDlL]?)\\b");
+  private static final Pattern JAVA_ANNOTATION     = Pattern.compile("@[A-Za-z_]\\w*");
+  private static final Pattern JAVA_IDENTIFIER     = Pattern.compile("[A-Za-z_$][A-Za-z0-9_$]*");
+
+  /**
+   * Checks whether the given line (0-based, in the full document) falls inside
+   * a {@code ```java} fenced code block.
+   *
+   * @param fullContent the full document text
+   * @param line        0-based line number in the full document
+   * @return true if the line is inside a Java code block (not on the fence lines themselves)
+   */
+  static boolean isInsideJavaCodeBlock(String fullContent, int line) {
+    if (fullContent == null) return false;
+    String[] lines = fullContent.split("\n", -1);
+    boolean inside = false;
+    for (int i = 0; i < lines.length && i <= line; i++) {
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (!inside && JAVA_FENCE_OPEN.matcher(stripped).matches()) {
+        inside = true;
+        continue;
+      }
+      if (inside && JAVA_FENCE_CLOSE.matcher(stripped).matches()) {
+        inside = false;
+        continue;
+      }
+    }
+    return inside;
+  }
+
+  /**
+   * Represents a range of lines forming a Java code block inside a FormulaInfo document.
+   * {@code startLine} is the first content line (after the opening fence),
+   * {@code endLine} is exclusive (the closing fence line or end of document).
+   */
+  record JavaCodeBlock(int startLine, int endLine) {}
+
+  /**
+   * Finds all Java code block ranges (content lines only, excluding fences)
+   * in the full document.
+   */
+  static List<JavaCodeBlock> findJavaCodeBlocks(String fullContent) {
+    if (fullContent == null) return Collections.emptyList();
+    String[] lines = fullContent.split("\n", -1);
+    List<JavaCodeBlock> blocks = new ArrayList<>();
+    boolean inside = false;
+    int blockStart = -1;
+    for (int i = 0; i < lines.length; i++) {
+      String stripped = lines[i].stripTrailing().replace("\r", "");
+      if (!inside && JAVA_FENCE_OPEN.matcher(stripped).matches()) {
+        inside = true;
+        blockStart = i + 1;
+        continue;
+      }
+      if (inside && JAVA_FENCE_CLOSE.matcher(stripped).matches()) {
+        blocks.add(new JavaCodeBlock(blockStart, i));
+        inside = false;
+        continue;
+      }
+    }
+    // Unclosed block — treat rest of document as Java
+    if (inside && blockStart >= 0) {
+      blocks.add(new JavaCodeBlock(blockStart, lines.length));
+    }
+    return blocks;
+  }
+
+  /**
+   * Simple record to hold a semantic token before it is delta-encoded.
+   */
+  record SemanticToken(int line, int startChar, int length, int tokenType) {}
+
+  /**
+   * Tokenizes a single line of Java code using regex-based pattern matching.
+   * Returns a list of {@link SemanticToken} entries with absolute positions.
+   *
+   * @param line       the text of the line
+   * @param lineNumber 0-based line number in the full document
+   * @return list of semantic tokens found on this line
+   */
+  static List<SemanticToken> tokenizeJavaLine(String line, int lineNumber) {
+    List<SemanticToken> tokens = new ArrayList<>();
+    // Track which character positions are already claimed
+    boolean[] claimed = new boolean[line.length()];
+
+    // Pass 1: line comments (highest priority — claims rest of line)
+    Matcher m = JAVA_LINE_COMMENT.matcher(line);
+    while (m.find()) {
+      markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), TOKEN_TYPE_COMMENT);
+    }
+
+    // Pass 2: string literals
+    m = JAVA_STRING_LITERAL.matcher(line);
+    while (m.find()) {
+      markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), TOKEN_TYPE_STRING);
+    }
+
+    // Pass 3: char literals
+    m = JAVA_CHAR_LITERAL.matcher(line);
+    while (m.find()) {
+      markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), TOKEN_TYPE_STRING);
+    }
+
+    // Pass 4: number literals
+    m = JAVA_NUMBER_LITERAL.matcher(line);
+    while (m.find()) {
+      if (!anyClaimed(claimed, m.start(), m.end())) {
+        markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), TOKEN_TYPE_NUMBER);
+      }
+    }
+
+    // Pass 5: annotations
+    m = JAVA_ANNOTATION.matcher(line);
+    while (m.find()) {
+      if (!anyClaimed(claimed, m.start(), m.end())) {
+        markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), TOKEN_TYPE_FUNCTION);
+      }
+    }
+
+    // Pass 6: identifiers (keywords, types, or variables)
+    m = JAVA_IDENTIFIER.matcher(line);
+    while (m.find()) {
+      if (!anyClaimed(claimed, m.start(), m.end())) {
+        String word = m.group();
+        int type;
+        if (JAVA_KEYWORD_SET.contains(word)) {
+          type = TOKEN_TYPE_KEYWORD;
+        } else if (JAVA_TYPE_SET.contains(word)) {
+          type = TOKEN_TYPE_TYPE;
+        } else {
+          continue; // plain identifier — skip
+        }
+        markAndAdd(tokens, claimed, lineNumber, m.start(), m.end() - m.start(), type);
+      }
+    }
+
+    // Sort by start position
+    tokens.sort(Comparator.comparingInt(t -> t.startChar()));
+    return tokens;
+  }
+
+  /** Marks positions as claimed and adds the token, only if no overlap. */
+  private static void markAndAdd(List<SemanticToken> tokens, boolean[] claimed,
+      int lineNumber, int start, int length, int tokenType) {
+    if (anyClaimed(claimed, start, start + length)) return;
+    for (int i = start; i < start + length && i < claimed.length; i++) {
+      claimed[i] = true;
+    }
+    tokens.add(new SemanticToken(lineNumber, start, length, tokenType));
+  }
+
+  private static boolean anyClaimed(boolean[] claimed, int start, int end) {
+    for (int i = start; i < end && i < claimed.length; i++) {
+      if (claimed[i]) return true;
+    }
+    return false;
+  }
+
+  /**
+   * Computes semantic tokens for all Java code blocks in the full document.
+   * Returns delta-encoded token data ready to merge with formula tokens.
+   */
+  List<Integer> computeJavaBlockSemanticTokens(String fullContent) {
+    if (fullContent == null) return Collections.emptyList();
+    List<JavaCodeBlock> blocks = findJavaCodeBlocks(fullContent);
+    if (blocks.isEmpty()) return Collections.emptyList();
+
+    String[] lines = fullContent.split("\n", -1);
+
+    // Collect all tokens from all Java blocks
+    List<SemanticToken> allTokens = new ArrayList<>();
+    for (JavaCodeBlock block : blocks) {
+      for (int i = block.startLine(); i < block.endLine() && i < lines.length; i++) {
+        allTokens.addAll(tokenizeJavaLine(lines[i].replace("\r", ""), i));
+      }
+    }
+
+    if (allTokens.isEmpty()) return Collections.emptyList();
+
+    // Sort by (line, startChar) and delta-encode
+    allTokens.sort(Comparator.comparingInt(SemanticToken::line)
+        .thenComparingInt(SemanticToken::startChar));
+
+    List<Integer> data = new ArrayList<>();
+    int prevLine = 0, prevChar = 0;
+    for (SemanticToken t : allTokens) {
+      int deltaLine = t.line() - prevLine;
+      int deltaChar = (deltaLine == 0) ? (t.startChar() - prevChar) : t.startChar();
+      data.add(deltaLine);
+      data.add(deltaChar);
+      data.add(t.length());
+      data.add(t.tokenType());
+      data.add(0); // no modifiers
+      prevLine = t.line();
+      prevChar = t.startChar();
+    }
+    return data;
+  }
+
   /** Exposes {@code setCatalogResolver} publicly for configuration and testing. */
   @Override
   public void setCatalogResolver(CatalogResolver r) {
@@ -884,7 +1177,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
-      server.extDocuments.remove(params.getTextDocument().getUri());
+      String closedUri = params.getTextDocument().getUri();
+      server.extDocuments.remove(closedUri);
+      server.incrementalCaches.remove(closedUri);
     }
 
     @Override
@@ -2052,7 +2347,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (ast == null) return "?";
 
       return switch (ast) {
-        case TinyExpressionP4AST.StringExpr ignored -> "str";
+        case TinyExpressionP4AST.StringConcatExpr ignored -> "str";
         case TinyExpressionP4AST.BooleanOrExpr ignored -> "bool";
         case TinyExpressionP4AST.BinaryExpr b -> {
           // Check operator type from the ops list
@@ -2139,8 +2434,64 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (state == null) {
         return CompletableFuture.completedFuture(new SemanticTokens(Collections.emptyList()));
       }
-      List<Integer> data = server.computeSemanticTokens(state.content(), state.lineOffset());
-      return CompletableFuture.completedFuture(new SemanticTokens(data));
+      // Formula section tokens (TinyExpression parse tree)
+      List<Integer> formulaData = server.computeSemanticTokens(state.content(), state.lineOffset());
+
+      // Java code block tokens (regex-based highlighting)
+      List<Integer> javaData = server.computeJavaBlockSemanticTokens(state.fullContent());
+
+      // Merge: decode both streams into absolute tokens, sort, re-encode
+      List<Integer> merged = mergeSemanticTokenData(formulaData, javaData);
+      return CompletableFuture.completedFuture(new SemanticTokens(merged));
+    }
+
+    /**
+     * Decodes delta-encoded semantic token data into absolute SemanticToken records.
+     */
+    private static List<SemanticToken> decodeTokenData(List<Integer> data) {
+      List<SemanticToken> tokens = new ArrayList<>();
+      int line = 0, chr = 0;
+      for (int i = 0; i + 4 < data.size(); i += 5) {
+        int deltaLine = data.get(i);
+        int deltaChar = data.get(i + 1);
+        int length    = data.get(i + 2);
+        int tokenType = data.get(i + 3);
+        // data.get(i + 4) is modifiers — ignored for merge
+        if (deltaLine > 0) { line += deltaLine; chr = deltaChar; }
+        else { chr += deltaChar; }
+        tokens.add(new SemanticToken(line, chr, length, tokenType));
+      }
+      return tokens;
+    }
+
+    /**
+     * Merges two delta-encoded semantic token streams into a single stream.
+     * Tokens are sorted by (line, startChar) and re-encoded as deltas.
+     */
+    private static List<Integer> mergeSemanticTokenData(List<Integer> a, List<Integer> b) {
+      if (a.isEmpty()) return b;
+      if (b.isEmpty()) return a;
+
+      List<SemanticToken> all = new ArrayList<>();
+      all.addAll(decodeTokenData(a));
+      all.addAll(decodeTokenData(b));
+      all.sort(Comparator.comparingInt(SemanticToken::line)
+          .thenComparingInt(SemanticToken::startChar));
+
+      List<Integer> result = new ArrayList<>();
+      int prevLine = 0, prevChar = 0;
+      for (SemanticToken t : all) {
+        int deltaLine = t.line() - prevLine;
+        int deltaChar = (deltaLine == 0) ? (t.startChar() - prevChar) : t.startChar();
+        result.add(deltaLine);
+        result.add(deltaChar);
+        result.add(t.length());
+        result.add(t.tokenType());
+        result.add(0);
+        prevLine = t.line();
+        prevChar = t.startChar();
+      }
+      return result;
     }
 
     // ── callHierarchy ──

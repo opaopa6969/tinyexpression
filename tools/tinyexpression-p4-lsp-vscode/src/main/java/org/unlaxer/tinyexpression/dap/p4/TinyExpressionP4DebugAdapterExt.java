@@ -310,7 +310,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.BooleanCaseValueExpr bv -> {
         collectAstTypeNames(bv.value(), path, depth + 1, maxDepth);
       }
-      case TinyExpressionP4AST.StringExpr se -> {}
+      case TinyExpressionP4AST.StringConcatExpr se -> {}
       case TinyExpressionP4AST.BooleanOrExpr be -> {}
       case TinyExpressionP4AST.ObjectExpr oe -> {}
       case TinyExpressionP4AST.CodeBlockExpr cb -> {}
@@ -347,6 +347,16 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.TrimDotExpr s -> {}
       case TinyExpressionP4AST.LengthDotExpr s -> {}
       case TinyExpressionP4AST.ArgumentExpressionExpr s -> {}
+      case TinyExpressionP4AST.StartsWithExpr s -> {}
+      case TinyExpressionP4AST.StartsWithDotExpr s -> {}
+      case TinyExpressionP4AST.EndsWithExpr s -> {}
+      case TinyExpressionP4AST.EndsWithDotExpr s -> {}
+      case TinyExpressionP4AST.ContainsExpr s -> {}
+      case TinyExpressionP4AST.ContainsDotExpr s -> {}
+      case TinyExpressionP4AST.IsPresentExpr s -> {}
+      case TinyExpressionP4AST.InTimeRangeExpr s -> {}
+      case TinyExpressionP4AST.InDayTimeRangeExpr s -> {}
+      case TinyExpressionP4AST.SliceExpr s -> {}
     }
   }
 

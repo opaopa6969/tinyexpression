@@ -212,4 +212,5 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalExpExpr(ExpExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalNotExpr(NotExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalToNumExpr(ToNumExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalSliceExpr(SliceExpr n) { return defaultEmitter.eval(n); }
 }

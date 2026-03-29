@@ -363,6 +363,11 @@ grammar TinyExpressionP4 {
 
   DayOfWeek ::= 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY' ;
 
+  // ── String slice (Python-style) ─────────────────────────────────────────
+  // Syntax: $s[0:3], $s[1:], $s[:3], $s[::2], $s[::-1]
+  @mapping(SliceExpr, params=[value, start, end, step])
+  SliceExpression ::= VariableRef @value '[' [ NumberExpression @start ] ':' [ NumberExpression @end ] [ ':' NumberExpression @step ] ']' ;
+
   // ── String expressions ─────────────────────────────────────────────────────
 
   @mapping(StringConcatExpr, params=[left, op, right])
@@ -372,6 +377,7 @@ grammar TinyExpressionP4 {
 
   StringTerm ::=
       StringMatchExpression
+    | SliceExpression
     | ExternalStringInvocation
     | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
     | ToUpperCaseDotMethod | ToLowerCaseDotMethod | TrimDotMethod

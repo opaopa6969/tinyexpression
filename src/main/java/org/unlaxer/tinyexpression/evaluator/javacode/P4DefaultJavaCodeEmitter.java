@@ -512,6 +512,31 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   }
 
   // =========================================================================
+  // String slice (Python-style)
+  // =========================================================================
+
+  @Override
+  protected String evalSliceExpr(SliceExpr node) {
+    String valueExpr = "String.valueOf(" + eval(node.value()) + ")";
+    String startExpr = node.start() != null ? evalBinaryExpr(node.start()) : null;
+    String endExpr = node.end() != null ? evalBinaryExpr(node.end()) : null;
+    String stepExpr = node.step() != null ? evalBinaryExpr(node.step()) : null;
+    StringBuilder sb = new StringBuilder();
+    sb.append("new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(").append(valueExpr).append("))");
+    if (startExpr != null) {
+      sb.append(".begin(new org.unlaxer.CodePointIndex((int)").append(startExpr).append("))");
+    }
+    if (endExpr != null) {
+      sb.append(".end(new org.unlaxer.CodePointIndex((int)").append(endExpr).append("))");
+    }
+    if (stepExpr != null) {
+      sb.append(".step((int)").append(stepExpr).append(")");
+    }
+    sb.append(".get().sourceAsString()");
+    return sb.toString();
+  }
+
+  // =========================================================================
   // Utility
   // =========================================================================
 
