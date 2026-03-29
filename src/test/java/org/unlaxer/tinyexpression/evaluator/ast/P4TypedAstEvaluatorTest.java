@@ -276,4 +276,90 @@ public class P4TypedAstEvaluatorTest {
     Object result = evaluator.eval(new LengthDotExpr(new VariableRefExpr("$name")));
     assertEquals(5.0f, ((Number) result).floatValue(), 0.001f);
   }
+
+  // ── String slice (Python-style) ──
+
+  @Test
+  public void testSliceStartEnd() {
+    // $s[0:3] on "hello" → "hel"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), leaf("0"), leaf("3"), null));
+    assertEquals("hel", result);
+  }
+
+  @Test
+  public void testSliceStartOnly() {
+    // $s[1:] on "hello" → "ello"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), leaf("1"), null, null));
+    assertEquals("ello", result);
+  }
+
+  @Test
+  public void testSliceEndOnly() {
+    // $s[:3] on "hello" → "hel"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), null, leaf("3"), null));
+    assertEquals("hel", result);
+  }
+
+  @Test
+  public void testSliceWithStep() {
+    // $s[::2] on "hello" → "hlo"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), null, null, leaf("2")));
+    assertEquals("hlo", result);
+  }
+
+  @Test
+  public void testSliceReverse() {
+    // $s[::-1] on "hello" → "olleh"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), null, null, leaf("-1")));
+    assertEquals("olleh", result);
+  }
+
+  @Test
+  public void testSliceNegativeIndices() {
+    // $s[-3:] on "hello" → "llo"
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), leaf("-3"), null, null));
+    assertEquals("llo", result);
+  }
+
+  @Test
+  public void testSliceEmptyResult() {
+    // $s[3:3] on "hello" → ""
+    CalculationContext ctx = newContext();
+    ctx.set("s", "hello");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
+    Object result = evaluator.eval(new SliceExpr(
+        new VariableRefExpr("$s"), leaf("3"), leaf("3"), null));
+    assertEquals("", result);
+  }
 }
