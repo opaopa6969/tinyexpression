@@ -706,9 +706,9 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   @Override
   protected String evalSliceExpr(SliceExpr node) {
     String valueExpr = "String.valueOf(" + eval(node.value()) + ")";
-    String startExpr = node.start() != null ? evalBinaryExpr(node.start()) : null;
-    String endExpr = node.end() != null ? evalBinaryExpr(node.end()) : null;
-    String stepExpr = node.step() != null ? evalBinaryExpr(node.step()) : null;
+    String startExpr = node.start().isPresent() ? evalBinaryExpr(node.start().get()) : null;
+    String endExpr = node.end().isPresent() ? evalBinaryExpr(node.end().get()) : null;
+    String stepExpr = node.step().isPresent() ? evalBinaryExpr(node.step().get()) : null;
     // Generate inline Java for the slice operation using Slicer
     StringBuilder sb = new StringBuilder();
     sb.append("new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(").append(valueExpr).append("))");

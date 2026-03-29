@@ -14,27 +14,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodInvocation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="474359666">
-<g id="1187003037">
+<g id="1198317276">
+<g id="1179332906">
 <rect x="40" y="62" width="174" height="28" class="nonterminal-box"/>
 <text x="127" y="80" text-anchor="middle" class="nonterminal-text">MethodInvocationHeader</text>
 </g>
 <line x1="214" y1="76" x2="234" y2="76" class="rail"/>
 <polygon points="221,73 227,76 221,79" class="arrow"/>
-<g id="1052136774">
+<g id="1717851461">
 <rect x="234" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="279" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="324" y1="76" x2="344" y2="76" class="rail"/>
 <polygon points="331,73 337,76 331,79" class="arrow"/>
-<g id="1447962732">
+<g id="1676159740">
 <rect x="344" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="364" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="385" y1="76" x2="405" y2="76" class="rail"/>
 <polygon points="392,73 398,76 392,79" class="arrow"/>
-<g id="939264743">
-<g id="1890570941">
+<g id="570097747">
+<g id="1042719964">
 <rect x="421" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="462" y="80" text-anchor="middle" class="nonterminal-text">Arguments</text>
 </g>
@@ -48,7 +48,7 @@
 </g>
 <line x1="520" y1="76" x2="540" y2="76" class="rail"/>
 <polygon points="527,73 533,76 527,79" class="arrow"/>
-<g id="996959547">
+<g id="1710339924">
 <rect x="540" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="560" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>

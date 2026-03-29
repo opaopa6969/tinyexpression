@@ -14,22 +14,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1476935904">
-<g id="1115458471">
+<g id="736911526">
+<g id="2071077699">
 <rect x="40" y="44" width="160" height="28" class="nonterminal-box"/>
 <text x="120" y="62" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
 </g>
 <line x1="200" y1="58" x2="220" y2="58" class="rail"/>
 <polygon points="207,55 213,58 207,61" class="arrow"/>
-<g id="148655783">
-<g id="777767288">
-<g id="18494423">
+<g id="50178977">
+<g id="1761605062">
+<g id="551627563">
 <rect x="236" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="256" y="86" text-anchor="middle" class="terminal-text">'|'</text>
 </g>
 <line x1="277" y1="82" x2="297" y2="82" class="rail"/>
 <polygon points="284,79 290,82 284,85" class="arrow"/>
-<g id="671761526">
+<g id="1190345987">
 <rect x="297" y="68" width="160" height="28" class="nonterminal-box"/>
 <text x="377" y="86" text-anchor="middle" class="nonterminal-text">BooleanAndExpression</text>
 </g>

@@ -1208,18 +1208,21 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalSliceExpr(SliceExpr node) {
     String value = String.valueOf(eval(node.value()));
     int len = value.length();
-    int step = node.step() != null ? evalBinaryAsNumber(node.step()).intValue() : 1;
+    BinaryExpr stepNode = node.step().orElse(null);
+    BinaryExpr startNode = node.start().orElse(null);
+    BinaryExpr endNode = node.end().orElse(null);
+    int step = stepNode != null ? evalBinaryAsNumber(stepNode).intValue() : 1;
     if (step == 0) {
       throw new IllegalArgumentException("slice step cannot be zero");
     }
     int start;
     int end;
     if (step > 0) {
-      start = node.start() != null ? normalizeIndex(evalBinaryAsNumber(node.start()).intValue(), len) : 0;
-      end = node.end() != null ? normalizeIndex(evalBinaryAsNumber(node.end()).intValue(), len) : len;
+      start = startNode != null ? normalizeIndex(evalBinaryAsNumber(startNode).intValue(), len) : 0;
+      end = endNode != null ? normalizeIndex(evalBinaryAsNumber(endNode).intValue(), len) : len;
     } else {
-      start = node.start() != null ? normalizeIndex(evalBinaryAsNumber(node.start()).intValue(), len) : len - 1;
-      end = node.end() != null ? normalizeIndex(evalBinaryAsNumber(node.end()).intValue(), len) : -1;
+      start = startNode != null ? normalizeIndex(evalBinaryAsNumber(startNode).intValue(), len) : len - 1;
+      end = endNode != null ? normalizeIndex(evalBinaryAsNumber(endNode).intValue(), len) : -1;
     }
     StringBuilder sb = new StringBuilder();
     if (step > 0) {

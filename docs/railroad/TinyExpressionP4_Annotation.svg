@@ -14,27 +14,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">Annotation</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="2003626910">
-<g id="1503672761">
+<g id="1561538712">
+<g id="1054941596">
 <rect x="40" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="80" text-anchor="middle" class="terminal-text">'@'</text>
 </g>
 <line x1="81" y1="76" x2="101" y2="76" class="rail"/>
 <polygon points="88,73 94,76 88,79" class="arrow"/>
-<g id="1830910765">
+<g id="165102264">
 <rect x="101" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="146" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="191" y1="76" x2="211" y2="76" class="rail"/>
 <polygon points="198,73 204,76 198,79" class="arrow"/>
-<g id="173046991">
+<g id="1441673962">
 <rect x="211" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="231" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="252" y1="76" x2="272" y2="76" class="rail"/>
 <polygon points="259,73 265,76 259,79" class="arrow"/>
-<g id="416132776">
-<g id="1090005759">
+<g id="1254059348">
+<g id="2103795365">
 <rect x="288" y="62" width="160" height="28" class="nonterminal-box"/>
 <text x="368" y="80" text-anchor="middle" class="nonterminal-text">AnnotationParameters</text>
 </g>
@@ -48,7 +48,7 @@
 </g>
 <line x1="464" y1="76" x2="484" y2="76" class="rail"/>
 <polygon points="471,73 477,76 471,79" class="arrow"/>
-<g id="2127779471">
+<g id="2035168313">
 <rect x="484" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="504" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>

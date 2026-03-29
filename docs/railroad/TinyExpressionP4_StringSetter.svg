@@ -14,28 +14,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringSetter</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="911277149">
-<g id="871279421">
+<g id="10995778">
+<g id="2121849274">
 <rect x="40" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="80" text-anchor="middle" class="terminal-text">'set'</text>
 </g>
 <line x1="95" y1="76" x2="115" y2="76" class="rail"/>
 <polygon points="102,73 108,76 102,79" class="arrow"/>
-<g id="469082943">
-<g id="909575661">
-<g id="22386523">
+<g id="137784018">
+<g id="618370715">
+<g id="1607361003">
 <rect x="131" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="155" y="80" text-anchor="middle" class="terminal-text">'if'</text>
 </g>
 <line x1="179" y1="76" x2="199" y2="76" class="rail"/>
 <polygon points="186,73 192,76 186,79" class="arrow"/>
-<g id="593050984">
+<g id="997445161">
 <rect x="199" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="226" y="80" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="254" y1="76" x2="274" y2="76" class="rail"/>
 <polygon points="261,73 267,76 261,79" class="arrow"/>
-<g id="1892089739">
+<g id="475408802">
 <rect x="274" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="312" y="80" text-anchor="middle" class="terminal-text">'exists'</text>
 </g>
@@ -50,7 +50,7 @@
 </g>
 <line x1="366" y1="76" x2="386" y2="76" class="rail"/>
 <polygon points="373,73 379,76 373,79" class="arrow"/>
-<g id="1898803028">
+<g id="756150139">
 <rect x="386" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="452" y="80" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>

@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="898025332">
-<g id="1665271857">
-<g id="39524329">
+<g id="1694294254">
+<g id="1583396058">
+<g id="493698228">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -24,7 +24,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="1098342899">
+<g id="1827910665">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -37,20 +37,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="1460578263">
+<g id="1040000299">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="764161084">
+<g id="1281334625">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="1404029457">
-<g id="1593621052">
+<g id="1472353455">
+<g id="390215252">
 <rect x="369" y="62" width="125" height="28" class="nonterminal-box"/>
 <text x="431" y="80" text-anchor="middle" class="nonterminal-text">BooleanTypeHint</text>
 </g>
@@ -64,8 +64,8 @@
 </g>
 <line x1="510" y1="76" x2="530" y2="76" class="rail"/>
 <polygon points="517,73 523,76 517,79" class="arrow"/>
-<g id="1033683051">
-<g id="1908277164">
+<g id="860280477">
+<g id="54720257">
 <rect x="546" y="62" width="111" height="28" class="nonterminal-box"/>
 <text x="601" y="80" text-anchor="middle" class="nonterminal-text">BooleanSetter</text>
 </g>
@@ -79,13 +79,13 @@
 </g>
 <line x1="673" y1="76" x2="693" y2="76" class="rail"/>
 <polygon points="680,73 686,76 680,79" class="arrow"/>
-<g id="109752510">
+<g id="892380727">
 <rect x="693" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="741" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="790" y1="76" x2="810" y2="76" class="rail"/>
 <polygon points="797,73 803,76 797,79" class="arrow"/>
-<g id="735579452">
+<g id="1880288018">
 <rect x="810" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="830" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>

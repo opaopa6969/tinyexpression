@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="276505712">
-<g id="443355625">
-<g id="1181631197">
+<g id="634442914">
+<g id="1091998125">
+<g id="1002872596">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -30,8 +30,8 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1117963260">
-<g id="1890849152">
+<g id="573885705">
+<g id="483652126">
 <rect x="159" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="80" text-anchor="middle" class="terminal-text">'number'</text>
 </g>
@@ -39,7 +39,7 @@
 <line x1="235" y1="76" x2="239" y2="76" class="rail"/>
 <line x1="140" y1="76" x2="156" y2="76" class="rail"/>
 <line x1="239" y1="76" x2="255" y2="76" class="rail"/>
-<g id="1410766698">
+<g id="1529608866">
 <rect x="159" y="100" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="118" text-anchor="middle" class="terminal-text">'string'</text>
 </g>
@@ -49,7 +49,7 @@
 <path d="M148,106 Q148,114 156,114" class="rail" fill="none"/>
 <path d="M239,114 Q247,114 247,106" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="1616531359">
+<g id="1411051756">
 <rect x="156" y="138" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="156" text-anchor="middle" class="terminal-text">'boolean'</text>
 </g>
@@ -59,7 +59,7 @@
 <path d="M148,144 Q148,152 156,152" class="rail" fill="none"/>
 <path d="M239,152 Q247,152 247,144" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="306903076">
+<g id="561289275">
 <rect x="159" y="176" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="194" text-anchor="middle" class="terminal-text">'object'</text>
 </g>
