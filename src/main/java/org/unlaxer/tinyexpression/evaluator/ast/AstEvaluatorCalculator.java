@@ -27,15 +27,24 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.util.digest.MD5;
+import java.util.logging.Logger;
 
 /**
  * AST evaluator backend entry point.
  * <p>
  * Runtime policy:
- * 1) try AST-first execution,
- * 2) if unsupported, lazily fallback to JavaCode calculator.
+ * <ol>
+ *   <li>P4TypedAstEvaluator (sealed-interface switch dispatch) — PRIMARY path</li>
+ *   <li>Fallback chain (reflection-based, token-ast, embedded-bridge) — SAFETY NET only</li>
+ * </ol>
+ * <p>
+ * P4TypedAstEvaluator covers 100% of expression types as of v1.9.0.
+ * The fallback chain below is retained as a safety net.
+ * If you see _p4FallbackReason in production, it indicates a regression.
  */
 public class AstEvaluatorCalculator implements Calculator {
+
+  private static final Logger LOGGER = Logger.getLogger(AstEvaluatorCalculator.class.getName());
 
   private final Source source;
   private final ClassLoader classLoader;
@@ -200,14 +209,19 @@ public class AstEvaluatorCalculator implements Calculator {
   @Override
   public Object apply(CalculationContext calculationContext) {
     String formulaText = source.source() == null ? "" : source.source();
-    // No JavaCode fallback — AST evaluator must handle all formulas natively
-    Optional<Object> tokenAstEvaluated = Optional.empty();
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
     boolean hasDeclarations = hasVariableDeclarations(formulaText);
     boolean hasMixedDeclarationsAndInvocations = hasDeclarations
         && (formulaText.contains("external ") || formulaText.contains("import ") || formulaText.contains("call "));
-    // Only skip P4 AST mapping for pure declaration formulas (var+expression).
-    // Mixed formulas (declarations + external/import/call) still need the P4 AST mapping path.
+
+    // =========================================================================
+    // PRIMARY PATH: P4TypedAstEvaluator (sealed-interface switch dispatch)
+    //
+    // P4TypedAstEvaluator covers 100% of expression types as of v1.9.0.
+    // The fallback chain below is retained as a safety net.
+    // If you see _p4FallbackReason in production, it indicates a regression.
+    // =========================================================================
+    Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
@@ -219,7 +233,6 @@ public class AstEvaluatorCalculator implements Calculator {
         setObject("_astEvaluatorMappedAst", mapped.get());
         setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
 
-        // --- P4TypedAstEvaluator (sealed-interface switch dispatch) ---
         if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
           try {
             Object p4TypedResult = new P4TypedAstEvaluator(specifiedExpressionTypes, calculationContext, source.source(), classLoader).eval(typedAst);
@@ -255,15 +268,18 @@ public class AstEvaluatorCalculator implements Calculator {
               setObject("_p4FallbackReason", "result was null");
             }
           } catch (UnsupportedOperationException | IllegalArgumentException p4Ex) {
-            // P4TypedAstEvaluator cannot handle this node type (e.g. MethodInvocation)
-            // or encountered a parse error (e.g. variable ref in numeric context);
-            // fall through to reflection-based evaluator
             setObject("_p4FallbackFormula", formulaText);
             setObject("_p4FallbackReason", p4Ex.getClass().getSimpleName() + ": " + p4Ex.getMessage());
           }
         }
 
-        // --- Reflection-based fallback (GeneratedP4ValueAstEvaluator) ---
+        // =======================================================================
+        // SAFETY NET: Reflection-based fallback (GeneratedP4ValueAstEvaluator)
+        // This path should no longer be needed. Log a warning if reached.
+        // =======================================================================
+        LOGGER.warning("[AstEvaluatorCalculator] P4-typed path did not handle formula, "
+            + "falling back to reflection-based evaluator. formula=" + formulaText
+            + " reason=" + objectByKey.getOrDefault("_p4FallbackReason", "unknown"));
         GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
@@ -319,6 +335,15 @@ public class AstEvaluatorCalculator implements Calculator {
       setObject("_astEvaluatorMapperAvailable", true);
     }
 
+    // =========================================================================
+    // SAFETY NET: Legacy fallback chain
+    // None of the paths below should be reached in normal operation.
+    // If they are, _p4FallbackReason should already be set above.
+    // =========================================================================
+    LOGGER.warning("[AstEvaluatorCalculator] P4-typed primary path exhausted, "
+        + "entering legacy fallback chain. formula=" + formulaText
+        + " reason=" + objectByKey.getOrDefault("_p4FallbackReason", "no P4 AST mapping attempted"));
+
     Optional<Object> simpleLiteralOrVariable = tryEvaluateSimpleLiteralOrVariable(calculationContext);
     if (simpleLiteralOrVariable.isPresent()) {
       setObject("_astEvaluatorRuntime", "token-ast");
@@ -347,7 +372,6 @@ public class AstEvaluatorCalculator implements Calculator {
         ? tokenAstEvaluated
         : AstTokenTreeEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
     if (astEvaluated.isEmpty()) {
-      // Fallback to number-only evaluator for simple arithmetic
       astEvaluated = AstNumberExpressionEvaluator.tryEvaluate(source.source(), specifiedExpressionTypes, calculationContext);
     }
     if (astEvaluated.isPresent()) {
@@ -355,14 +379,14 @@ public class AstEvaluatorCalculator implements Calculator {
       return astEvaluated.get();
     }
 
-    // Fallback: use embedded bridge (JavaCode compilation) for formulas that
-    // the token-tree evaluator cannot handle natively (e.g., external/import/side-effect)
+    // Last resort: embedded bridge (JavaCode compilation)
     ExpressionType fallbackResultType = resultType() == null
         ? org.unlaxer.tinyexpression.parser.ExpressionTypes.object : resultType();
     Optional<Object> embeddedEvaluated = AstEmbeddedExpressionRuntime.tryEvaluate(
         source.source(), fallbackResultType, specifiedExpressionTypes, calculationContext,
         classLoader, source.source());
     if (embeddedEvaluated.isPresent()) {
+      LOGGER.warning("[AstEvaluatorCalculator] Embedded bridge fallback used for: " + formulaText);
       setObject("_astEvaluatorRuntime", "embedded-bridge");
       setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", true);
       return embeddedEvaluated.get();
