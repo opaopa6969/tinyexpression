@@ -4,11 +4,13 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.SuggestableParser;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.combinator.NoneChildCollectingParser;
+import org.unlaxer.parser.CollectingParser;
+import org.unlaxer.parser.NonTerminallSymbol;
+import org.unlaxer.parser.combinator.NoneChildParser;
 import org.unlaxer.parser.combinator.WhiteSpaceDelimitedChain;
 import org.unlaxer.tinyexpression.parser.NumberExpression;
 
-public class RandomParser extends NoneChildCollectingParser implements NumberExpression{
+public class RandomParser extends NoneChildParser implements NumberExpression, CollectingParser, NonTerminallSymbol{
 
 	private static final long serialVersionUID = 7928239004297872018L;
 
