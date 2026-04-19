@@ -4,6 +4,23 @@
 
 # tinyexpression Documentation Index
 
+## Primary Guides
+
+| Document | Description |
+|----------|-------------|
+| [getting-started.md](./getting-started.md) | Maven setup, single formula, multi-formula executor |
+| [language-guide.md](./language-guide.md) | Complete language specification |
+| [backends.md](./backends.md) | 6 backend comparison, fallback chain, parity contract |
+| [architecture.md](./architecture.md) | Parser combinators, AST, 6 evaluators, type system |
+
+## Architecture Decisions
+
+| Document | Description |
+|----------|-------------|
+| [decisions/ADR-001-p4-primary.md](./decisions/ADR-001-p4-primary.md) | Why P4TypedAstEvaluator was promoted to PRIMARY |
+| [decisions/ADR-002-type-promotion.md](./decisions/ADR-002-type-promotion.md) | Numeric type promotion rules |
+| [decisions/ADR-003-java-codeblock-safety.md](./decisions/ADR-003-java-codeblock-safety.md) | Java code block security model |
+
 ## Dialogue-Style Guides
 
 | # | Document | Description |

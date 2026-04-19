@@ -4,31 +4,42 @@
 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression)
 
-TinyExpression is a Java-embedded expression engine (UDF style) for:
+A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 
-- runtime formula evaluation
-- multi-formula execution with dependency ordering
-- optional Java code generation and AST-based execution
+- Runtime formula evaluation
+- Multi-formula execution with dependency ordering
+- 6 execution backends (JavaCode / AST / P4 series)
+- LSP / DAP support (VS Code extension)
 
-Roadmap: [docs/TINYEXPRESSION-DSL-ROADMAP.md](docs/TINYEXPRESSION-DSL-ROADMAP.md)
+**Docs**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md)
 
-## Current Backend Lineup (2026-02-26)
+**IDE**: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide) — VS Code extension (LSP + DAP)
 
-TinyExpression currently supports four execution backends:
+---
 
-1. `JAVA_CODE` (current production JavaCode path)
-2. `JAVA_CODE_LEGACY_ASTCREATOR` (pre-refactor baseline)
-3. `AST_EVALUATOR` (AST traversal evaluator)
-4. `DSL_JAVA_CODE` (UnlaxerDSL JavaCode seam)
+## Table of Contents
 
-Detailed contract: [docs/TINYEXPRESSION-BACKEND-CONTRACT.md](docs/TINYEXPRESSION-BACKEND-CONTRACT.md)
+- [Requirements](#requirements)
+- [Maven Dependency](#maven-dependency)
+- [Quick Start](#quick-start)
+- [Multi-Formula Execution](#multi-formula-execution)
+- [FormulaInfo Format](#formulainfo-format)
+- [Java Code Blocks (Security Warning)](#java-code-blocks-security-warning)
+- [Backend Configuration](#backend-configuration)
+- [Language Quick Reference](#language-quick-reference)
+- [LSP / DAP](#lsp--dap)
+- [Development](#development)
+
+---
 
 ## Requirements
 
 - Java 21+
 - Maven 3.8+
 
-Note: tests/runtime use reflective access and require add-opens options (already configured in [`pom.xml`](pom.xml) surefire/argLine context).
+Note: tests/runtime use reflective access and require `add-opens` options (configured in [`pom.xml`](pom.xml)).
+
+---
 
 ## Maven Dependency
 
@@ -40,7 +51,9 @@ Note: tests/runtime use reflective access and require add-opens options (already
 </dependency>
 ```
 
-## Quick Start (Single Formula)
+---
+
+## Quick Start
 
 ```java
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -72,24 +85,20 @@ public class QuickStart {
 }
 ```
 
-## Multi Formula Execution (`TinyExpressionsExecutor`)
+---
 
-Class name is `TinyExpressionsExecutor` (plural).
+## Multi-Formula Execution
 
-`TinyExpressionsExecutor` itself does not choose backend. It executes cached calculators.  
-Backend selection is done while parsing `FormulaInfo` (details in "Backend Configuration").
+`TinyExpressionsExecutor` (plural) executes multiple formulas in dependency order.
 
-### 1. Directory Layout
-
-`FileBaseTinyExpressionInstancesCache` expects:
+### Directory Layout
 
 ```text
 <root>/
-  <tenant-id-1>/formulaInfo.txt
-  <tenant-id-2>/formulaInfo.txt
+  <tenant-id>/formulaInfo.txt
 ```
 
-### 2. `formulaInfo.txt` Minimal Example
+### formulaInfo.txt Example
 
 ```text
 tags:NORMAL
@@ -115,108 +124,67 @@ $baseScore + 10
 ---END_OF_PART---
 ```
 
-### 3. Executor Usage Example
+### Executor Code
 
 ```java
-import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.List;
+FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
+    "siteId",
+    info -> info.calculatorName);
+fields.setExecutionBackend(ExecutionBackend.JAVA_CODE);
 
-import org.unlaxer.tinyexpression.CalculationContext;
-import org.unlaxer.tinyexpression.Calculator;
-import org.unlaxer.tinyexpression.instances.CalculationResult;
-import org.unlaxer.tinyexpression.instances.FileBaseTinyExpressionInstancesCache;
-import org.unlaxer.tinyexpression.instances.ResultConsumer;
-import org.unlaxer.tinyexpression.instances.TenantID;
-import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutor;
-import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
-import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
-import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
+FileBaseTinyExpressionInstancesCache cache = new FileBaseTinyExpressionInstancesCache(
+    Path.of("src", "main", "resources", "formula-root"),
+    fields);
 
-public class ExecutorExample {
-  public static void main(String[] args) {
-    FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
-        "siteId",
-        info -> info.calculatorName);
+CalculationContext ctx = CalculationContext.newConcurrentContext();
+ctx.set("age", 30);
 
-    // Global default backend for formulas that do not specify backend/executionBackend.
-    fields.setExecutionBackend(ExecutionBackend.JAVA_CODE);
-
-    FileBaseTinyExpressionInstancesCache cache = new FileBaseTinyExpressionInstancesCache(
-        Path.of("src", "main", "resources", "formula-root"),
-        fields);
-
-    CalculationContext ctx = CalculationContext.newConcurrentContext();
-    ctx.set("age", 30);
-
-    ResultConsumer resultConsumer = new ResultConsumer() {
-      @Override
-      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Number result) {
-        info.getValue("var").ifPresent(name -> c.set(name, result));
-      }
-
-      @Override
-      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, String result) {
-        info.getValue("var").ifPresent(name -> c.set(name, result));
-      }
-
-      @Override
-      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Boolean result) {
-        info.getValue("var").ifPresent(name -> c.set(name, result));
-      }
-
-      @Override
-      public void accept(CalculationContext c, Calculator calculator, FormulaInfo info, Object result) {
-        info.getValue("var").ifPresent(name -> c.setObject(name, result));
-      }
-    };
-
-    TinyExpressionsExecutor executor = new TinyExpressionsExecutor();
-    List<CalculationResult> results = executor.execute(
-        TenantID.create(69),
-        ctx,
-        resultConsumer,
-        cache,
-        Comparator.comparingInt(Calculator::dependsOnByNestLevel),
-        calculator -> true,
-        Thread.currentThread().getContextClassLoader());
-
-    System.out.println("executed calculators: " + results.size());
-  }
-}
+TinyExpressionsExecutor executor = new TinyExpressionsExecutor();
+List<CalculationResult> results = executor.execute(
+    TenantID.create(69),
+    ctx,
+    resultConsumer,
+    cache,
+    Comparator.comparingInt(Calculator::dependsOnByNestLevel),
+    calculator -> true,
+    Thread.currentThread().getContextClassLoader());
 ```
 
-## `FormulaInfo` Format
+See [docs/getting-started.md](docs/getting-started.md) for a full walkthrough.
 
-Each block is key-value metadata + formula body, delimited by `---END_OF_PART---`.
+---
 
-Common keys:
+## FormulaInfo Format
 
-- `calculatorName`: formula identifier
-- `dependsOn`: comma-separated calculator names
-- `resultType`: return type (`string`, `boolean`, `byte`, `short`, `int`, `long`, `float`, `double`, fully qualified Java type)
-- `numberType`: default number literal type
-- `formula`: TinyExpression body
-- `executionBackend` or `backend`: backend override
-- `tags`, `description`: optional metadata
-- custom keys (example: `var`, `field`, `checkKind`) are preserved in `FormulaInfo.extraValueByKey`
+Each block is `key:value` metadata + formula body, delimited by `---END_OF_PART---`.
 
-Practical semantics used in many production integrations:
+| Key | Description |
+|-----|-------------|
+| `calculatorName` | formula identifier |
+| `dependsOn` | comma-separated dependency names |
+| `resultType` | return type (`string`, `boolean`, `float`, `double`, FQCN, etc.) |
+| `numberType` | default number literal type inside the formula |
+| `formula` | formula body |
+| `executionBackend` / `backend` | backend override |
+| `var` | write result to `CalculationContext` variable |
+| `field` | write result to domain object field |
+| `checkKind` | output key for score/risk maps |
 
-- `var`: write result into `CalculationContext` variable (typically handled in custom `ResultConsumer`)
-- `field`: write result into domain object field (also via `ResultConsumer`)
-- `checkKind`: logical output key for score maps / risk maps
-- `calculatorName`: stable ID used by `dependsOn`
+---
 
-Embedded Java class block in `formula` is also supported:
+## Java Code Blocks (Security Warning)
+
+> **Warning**: Java code blocks execute arbitrary code on the JVM. Do **not** use this feature in environments where untrusted users can submit formulas.
+
+You can embed a Java class directly inside a `formula` field:
 
 ~~~text
 formula:
 ```java:sample.v1.CheckDigits
 package sample.v1;
 import org.unlaxer.tinyexpression.CalculationContext;
-public class CheckDigits{
-  public boolean check(CalculationContext context, String target){
+public class CheckDigits {
+  public boolean check(CalculationContext context, String target) {
     return target.matches("\\d+");
   }
 }
@@ -225,278 +193,82 @@ import sample.v1.CheckDigits#check as checkDigits;
 if(external returning as boolean checkDigits($input)){1}else{0}
 ~~~
 
+See [docs/language-guide.md](docs/language-guide.md) for details.
+
+---
+
 ## Backend Configuration
 
-Backend choice is resolved in this order:
+Resolution order:
 
-1. global default: `FormulaInfoAdditionalFields.executionBackend`  
-   (default value is `JAVA_CODE`)
-2. per-formula override by `executionBackend` or `backend` key
-3. mapped to concrete calculator creator by `CalculatorCreatorRegistry.forBackend(...)`
+1. Global default: `FormulaInfoAdditionalFields.setExecutionBackend(...)` (default: `JAVA_CODE`)
+2. Per-formula override: `executionBackend` / `backend` key
+3. Implementation mapping: `CalculatorCreatorRegistry.forBackend(...)`
 
-Canonical backend names:
+| Backend Name | Description |
+|-------------|-------------|
+| `JAVA_CODE` | Current production JavaCode (recommended) |
+| `JAVA_CODE_LEGACY_ASTCREATOR` | Pre-refactor baseline (frozen) |
+| `AST_EVALUATOR` | AST traversal evaluator |
+| `DSL_JAVA_CODE` | DSL JavaCode seam (hybrid) |
+| `P4_AST_EVALUATOR` | UBNF-generated parser + AST evaluation (PRIMARY) |
+| `P4_DSL_JAVA_CODE` | UBNF-generated parser + DSL JavaCode |
 
-- `JAVA_CODE`
-- `JAVA_CODE_LEGACY_ASTCREATOR`
-- `AST_EVALUATOR`
-- `DSL_JAVA_CODE`
+DAP/runtime aliases: `token`, `ast`, `dsl-javacode`, `p4-ast`, `p4-dsl-javacode`
 
-DAP/runtime aliases (`runtimeMode`) include:
+See [docs/backends.md](docs/backends.md) for details.
 
-- `token` -> `JAVA_CODE`
-- `legacy-astcreator` or `ootc` -> `JAVA_CODE_LEGACY_ASTCREATOR`
-- `ast` -> `AST_EVALUATOR`
-- `dsl-javacode` -> `DSL_JAVA_CODE`
+---
 
-Related code:
-
-- [src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java](src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java)
-- [src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java](src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java)
-- [src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java](src/main/java/org/unlaxer/tinyexpression/loader/model/CalculatorCreatorRegistry.java)
-- [src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java](src/main/java/org/unlaxer/tinyexpression/runtime/ExecutionBackend.java)
-
-## TinyExpression Language Quick Reference
-
-This section is a practical syntax guide (not a complete grammar).
-
-### Values and Variables
+## Language Quick Reference
 
 ```text
-123
-3.14
-'text'
-"text"
-true
-false
-$age
-$name
-```
+# Variables
+$age  $name  $isMember
 
-### Numeric / Boolean Operators
+# Arithmetic
+1 + 2 * 3    (1 + 2) / 3
 
-```text
-1 + 2 * 3
-(1 + 2) / 3
-10 >= 3
-10 == 3
-10 != 3
-true | false
-true & false
-true ^ false
-not(false)
-```
+# Comparison / Logic
+10 >= 3    10 == 3    10 != 3
+true | false    true & false    not(false)
 
-### Conditional and Match
-
-```text
+# Conditional
 if($age >= 20){100}else{0}
 
+# match
 match{
-  $countryCode == 'JP' -> 1,
+  $code == 'JP' -> 1,
   default -> 0
 }
-```
 
-### String Utilities (examples)
+# Strings
+toUpperCase($name)    $msg.startsWith('hello')    $msg[0:3]
 
-```text
-toUpperCase($name)
-toLowerCase($name)
-$message.startsWith('hello')
-$message.endsWith('world')
-$message.contains('abc')
-$message[0:3]
-```
-
-### Variable Declaration in Formula
-
-```text
+# Variable declaration
 variable $gender as string set if not exists 'male' description='gender';
-variable $age as number set 18 description='age';
-variable $isMember as boolean description='member flag';
+
+# External method
+import sample.v1.Checker#check as check;
+if(external returning as boolean check($input)){1}else{0}
 ```
 
-### External Java Method Call (in formula)
+Full specification: [docs/language-guide.md](docs/language-guide.md)
 
-```text
-import sample.v1.CheckDigits#check as checkDigits;
-if(external returning as boolean checkDigits($input)){1}else{0}
-```
+---
 
-At runtime, register the Java object in `CalculationContext`:
+## LSP / DAP
 
-```java
-context.set(new sample.v1.CheckDigits());
-```
+The [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode/README.md) VS Code extension provides:
 
-### User-defined Methods (advanced)
+- Syntax highlighting and semantic tokens
+- Diagnostics (TE001 parse errors)
+- Completion and hover
+- DAP debugging with 6-backend parity comparison
 
-```text
-float main(){
-  match{
-    $age < 18 -> 500,
-    default -> call feeByGender($gender)
-  }
-}
+External repository: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
 
-float feeByGender($gender as string){
-  match{
-    $gender == 'female' -> 1000,
-    default -> 1800
-  }
-}
-```
-
-### Comments and Whitespace
-
-- FormulaInfo metadata supports `#` line comments.
-- Formula expressions support whitespace and C-style comments such as `/* ... */`.
-
-## How To Integrate TinyExpression Into Your System
-
-### Pattern A: Single Formula Embedded in Service
-
-Use this when formulas are static or deployed with code.
-
-1. Build `CalculationContext` from request/domain model.
-2. Compile formula with `JavaCodeCalculatorV3` (or your selected backend).
-3. Execute `calculator.apply(context)` and map result.
-
-Good for:
-
-- small number of formulas
-- low operational complexity
-
-### Pattern B: Formula Repository + `TinyExpressionsExecutor`
-
-Use this when formulas are tenant-specific or updated outside code release.
-
-1. Store formulas as `formulaInfo.txt` blocks (or your own source mapped to `FormulaInfo`).
-2. Load/cache by tenant via `TinyExpressionInstancesCache` implementation.
-3. Execute by `TinyExpressionsExecutor` with:
-   - `Comparator<Calculator>` for execution order
-   - `Predicate<Calculator>` for filtering
-   - `ResultConsumer` for output mapping (`var`, `field`, `checkKind` etc.)
-4. Keep domain objects/services in `CalculationContext` for external calls.
-
-Good for:
-
-- multitenancy
-- business-managed rule updates
-- dependency-controlled formula pipelines
-
-### Formula Name Strategy (`FormulaInfoAdditionalFields`)
-
-`FormulaInfo` name resolution is pluggable.  
-This is important when some formulas use `calculatorName`, others use `checkKind`.
-
-```java
-FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
-    "siteId",
-    formulaInfo -> {
-      String checkKind = formulaInfo.extraValueByKey.get("checkKind");
-      return formulaInfo.calculatorName != null ? formulaInfo.calculatorName : checkKind;
-    });
-```
-
-This extracted name is used by cache/executor-level orchestration logic.
-
-### Result Handling Strategy (`ResultConsumer`)
-
-`TinyExpressionsExecutor` intentionally delegates result handling to `ResultConsumer`.
-This design enables:
-
-- writing to context variable (`var`)
-- writing to domain object field (`field`)
-- writing to custom sinks (logs, metrics, alerting, Slack, queue, DB)
-
-Minimal pattern:
-
-```java
-public final class ResultConsumerExample implements ResultConsumer {
-  private final CheckResult checkResult;
-
-  public ResultConsumerExample(CheckResult checkResult) {
-    this.checkResult = checkResult;
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Number result) {
-    info.getValue("checkKind").ifPresent(name -> checkResult.suspiciousByKind.put(name, result.floatValue()));
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, String result) {
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Boolean result) {
-    info.getValue("var").ifPresent(name -> ctx.set(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  @Override
-  public void accept(CalculationContext ctx, Calculator c, FormulaInfo info, Object result) {
-    info.getValue("var").ifPresent(name -> ctx.setObject(name, result));
-    info.getValue("field").ifPresent(name -> setField(checkResult, name, result));
-  }
-
-  private static void setField(Object target, String fieldName, Object value) {
-    try {
-      target.getClass().getDeclaredField(fieldName).set(target, value);
-    } catch (ReflectiveOperationException e) {
-      throw new RuntimeException(e);
-    }
-  }
-}
-```
-
-### Number Type and Return Type
-
-Two common knobs in `FormulaInfo`:
-
-1. `resultType`: final return type of the formula  
-   example: `float`, `double`, `boolean`, `String`
-2. `numberType`: numeric literal/arithmetic default type inside the formula  
-   example: `numberType:long`
-
-This pair is useful when you need:
-
-- large integer behavior in conditions/arithmetic
-- boolean/string return with explicit numeric evaluation type
-
-### Backend Rollout Strategy (Recommended)
-
-1. Keep global default in `FormulaInfoAdditionalFields.setExecutionBackend(...)`.
-2. Roll out per-formula using `backend`/`executionBackend`.
-3. Compare outputs across backends in test/probe before production switch.
-
-### Recommended Production Boundaries
-
-1. Formula authoring/validation boundary:
-   - lint and parser validation before persisting formulas
-2. Runtime boundary:
-   - deterministic context values only
-   - explicit object registration for external functions
-3. Observability boundary:
-   - log calculator name, backend, tenant, result/error
-   - track fallback usage when using AST path
-
-## LSP / DAP / DSL Migration Docs
-
-- grammar UBNF (source of truth): [docs/ubnf/tinyexpression-p4-draft.ubnf](docs/ubnf/tinyexpression-p4-draft.ubnf)
-- grammar parser-ir: [docs/ubnf/tinyexpression-p4-draft.parser-ir.json](docs/ubnf/tinyexpression-p4-draft.parser-ir.json)
-- grammar BNF (reconstructed): [docs/grammar/tinyexpression-p4-draft.bnf](docs/grammar/tinyexpression-p4-draft.bnf)
-- railroad diagrams (Mermaid): [docs/grammar/tinyexpression-p4-railroad.md](docs/grammar/tinyexpression-p4-railroad.md)
-- backend contract: [docs/TINYEXPRESSION-BACKEND-CONTRACT.md](docs/TINYEXPRESSION-BACKEND-CONTRACT.md)
-- UnlaxerDSL handbook: [docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md)
-- migration guide: [docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md](docs/TINYEXPRESSION-UNLAXERDSL-MIGRATION-GUIDE.md)
-- DAP dual-evaluator plan: [docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md](docs/TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md)
-- final gap audit: [docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md](docs/TINYEXPRESSION-FINAL-GAP-AUDIT.md)
+---
 
 ## Development
 
@@ -504,7 +276,4 @@ This pair is useful when you need:
 mvn -q test
 ```
 
-For roadmap context and work history:
-
-- [docs/TINYEXPRESSION-DSL-ROADMAP.md](docs/TINYEXPRESSION-DSL-ROADMAP.md)
-- [docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md](docs/TINYEXPRESSION-DSL-HANDOVER-2026-02-20.md)
+Document index: [docs/INDEX.md](docs/INDEX.md)

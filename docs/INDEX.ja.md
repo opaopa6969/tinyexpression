@@ -4,6 +4,23 @@
 
 # tinyexpression ドキュメント索引
 
+## 主要ガイド
+
+| ドキュメント | 説明 |
+|-------------|------|
+| [getting-started-ja.md](./getting-started-ja.md) | Maven 設定、単発式、複数式エグゼキュータ |
+| [language-guide-ja.md](./language-guide-ja.md) | 完全な言語仕様 |
+| [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、フォールバックチェーン、パリティ契約 |
+| [architecture-ja.md](./architecture-ja.md) | パーサーコンビネータ、AST、6 エバリュエータ、型システム |
+
+## アーキテクチャ決定記録
+
+| ドキュメント | 説明 |
+|-------------|------|
+| [decisions/ADR-001-p4-primary.md](./decisions/ADR-001-p4-primary.md) | P4TypedAstEvaluator を PRIMARY に昇格した理由 |
+| [decisions/ADR-002-type-promotion.md](./decisions/ADR-002-type-promotion.md) | 数値型昇格ルール |
+| [decisions/ADR-003-java-codeblock-safety.md](./decisions/ADR-003-java-codeblock-safety.md) | Java コードブロックのセキュリティモデル |
+
 ## 会話形式ガイド
 
 | # | ドキュメント | 説明 |
