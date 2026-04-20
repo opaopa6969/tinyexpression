@@ -39,7 +39,7 @@ public abstract class PreConstructedCalculator_ implements Calculator {
     //　互換性のためTokenBaseCalculatorがあるが、ContextCalculatorにした方が良い（現在消してしまったので後で復活させる）
     if(createToken) {
       
-      parseContext = new ParseContext(new StringSource(formula));
+      parseContext = new ParseContext(StringSource.createRootSource(formula));
       transactionListeners().forEach(listenser->{
           parseContext.addTransactionListener(Name.of(listenser.getClass()), listenser);
         }

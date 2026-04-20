@@ -129,7 +129,7 @@ public interface Calculator {
 
   public default CalculateResult calculate(CalculationContext calculateContext,
       String formula , ExpressionType resultType) {
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     Parsed parsed = getParser().parse(parseContext);
     try {
       Token rootToken = tokenReduer().apply(parsed.getRootToken(true));

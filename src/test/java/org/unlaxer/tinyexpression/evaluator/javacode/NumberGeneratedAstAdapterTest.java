@@ -52,7 +52,7 @@ public class NumberGeneratedAstAdapterTest {
 
   private TinyExpressionTokens tinyExpressionTokens(String expression) {
     TinyExpressionParser parser = new TinyExpressionParser();
-    ParseContext parseContext = new ParseContext(new StringSource(expression));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(expression));
     Parsed parsed = parser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true);
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);

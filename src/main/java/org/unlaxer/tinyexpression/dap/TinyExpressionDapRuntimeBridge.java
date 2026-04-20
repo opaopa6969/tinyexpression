@@ -94,6 +94,8 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_astEvaluatorGeneratedEmbeddedBridgeUsed", vars);
       copyMappedAstType(calculator, vars);
       copyMarker(calculator, "_tinyP4ParserUsed", vars);
+      copyMarker(calculator, "_tinyP4ParserExact", vars);
+      copyMarker(calculator, "_tinyP4ParserProbeMode", vars);
       copyMarker(calculator, "_tinyP4AstNodeType", vars);
       collectParityProbe(formulaSource, classLoader, vars);
     } catch (Throwable createError) {

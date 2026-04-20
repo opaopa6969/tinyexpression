@@ -16,7 +16,7 @@ public class BooleanExpressionOperatorTest {
 	@Test
 	public void test() {
 		BooleanExpressionParser booleanExpressionParser = Parser.get(BooleanExpressionParser.class);
-		StringSource source = new StringSource("not(false)");
+		StringSource source = StringSource.createRootSource("not(false)");
 		ParseContext parseContext = new ParseContext(source);
 		
 		Parsed parsed = booleanExpressionParser.parse(parseContext);
@@ -45,7 +45,7 @@ public class BooleanExpressionOperatorTest {
 			
 			System.out.format("\n\ncondition = %s\n" ,condition);
 			
-			StringSource source = new StringSource(condition);
+			StringSource source = StringSource.createRootSource(condition);
 			ParseContext parseContext = new ParseContext(source);
 			
 			Parsed parsed = booleanExpressionParser.parse(parseContext);

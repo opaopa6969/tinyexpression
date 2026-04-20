@@ -14,27 +14,27 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringMethodDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1904667833">
-<g id="325993577">
+<g id="1422438162">
+<g id="1748719047">
 <rect x="40" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="80" text-anchor="middle" class="nonterminal-text">StringReturnType</text>
 </g>
 <line x1="172" y1="76" x2="192" y2="76" class="rail"/>
 <polygon points="179,73 185,76 179,79" class="arrow"/>
-<g id="1189526718">
+<g id="1892460996">
 <rect x="192" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="282" y1="76" x2="302" y2="76" class="rail"/>
 <polygon points="289,73 295,76 289,79" class="arrow"/>
-<g id="82397445">
+<g id="1692106777">
 <rect x="302" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="322" y="80" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="343" y1="76" x2="363" y2="76" class="rail"/>
 <polygon points="350,73 356,76 350,79" class="arrow"/>
-<g id="759678506">
-<g id="1290510034">
+<g id="947600392">
+<g id="173856233">
 <rect x="379" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="445" y="80" text-anchor="middle" class="nonterminal-text">MethodParameters</text>
 </g>
@@ -48,25 +48,25 @@
 </g>
 <line x1="527" y1="76" x2="547" y2="76" class="rail"/>
 <polygon points="534,73 540,76 534,79" class="arrow"/>
-<g id="1580698736">
+<g id="762064970">
 <rect x="547" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="567" y="80" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 <line x1="588" y1="76" x2="608" y2="76" class="rail"/>
 <polygon points="595,73 601,76 595,79" class="arrow"/>
-<g id="282609618">
+<g id="353351350">
 <rect x="608" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="628" y="80" text-anchor="middle" class="terminal-text">'{'</text>
 </g>
 <line x1="649" y1="76" x2="669" y2="76" class="rail"/>
 <polygon points="656,73 662,76 656,79" class="arrow"/>
-<g id="5592597">
+<g id="2039536227">
 <rect x="669" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="735" y="80" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="801" y1="76" x2="821" y2="76" class="rail"/>
 <polygon points="808,73 814,76 808,79" class="arrow"/>
-<g id="321955491">
+<g id="418001445">
 <rect x="821" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="841" y="80" text-anchor="middle" class="terminal-text">'}'</text>
 </g>

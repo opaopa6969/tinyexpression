@@ -14,7 +14,7 @@ import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.VariablesResponse;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4DebugAdapter;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 
 /**
  * Extended DAP adapter for TinyExpression P4.
@@ -232,7 +232,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       return;
     }
     try {
-      TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(content.strip());
+      TinyExpressionP4AST ast = P4PreferredAstMapper.parse(content.strip());
       p4ParserUsed = true;
       p4AstNodeType = ast.getClass().getSimpleName();
       p4AstNodePath = buildAstNodePath(ast);

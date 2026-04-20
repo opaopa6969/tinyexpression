@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LengthDotMethod</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1862164747">
-<g id="1154212705">
+<g id="680127196">
+<g id="565531514">
 <rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
 <line x1="137" y1="58" x2="157" y2="58" class="rail"/>
 <polygon points="144,55 150,58 144,61" class="arrow"/>
-<g id="1440209345">
+<g id="1713256714">
 <rect x="157" y="44" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="198" y="62" text-anchor="middle" class="terminal-text">'.length'</text>
 </g>
 <line x1="240" y1="58" x2="260" y2="58" class="rail"/>
 <polygon points="247,55 253,58 247,61" class="arrow"/>
-<g id="437705735">
+<g id="2013245068">
 <rect x="260" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="280" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="301" y1="58" x2="321" y2="58" class="rail"/>
 <polygon points="308,55 314,58 308,61" class="arrow"/>
-<g id="1974817847">
+<g id="590107456">
 <rect x="321" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="341" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

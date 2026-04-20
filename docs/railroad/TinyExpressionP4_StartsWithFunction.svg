@@ -14,38 +14,38 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StartsWithFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="194571187">
-<g id="93107396">
+<g id="279053101">
+<g id="1061703854">
 <rect x="40" y="44" width="104" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="92" y="62" text-anchor="middle" class="terminal-text">'startsWith'</text>
 </g>
 <line x1="144" y1="58" x2="164" y2="58" class="rail"/>
 <polygon points="151,55 157,58 151,61" class="arrow"/>
-<g id="693548694">
+<g id="893981189">
 <rect x="164" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="184" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="205" y1="58" x2="225" y2="58" class="rail"/>
 <polygon points="212,55 218,58 212,61" class="arrow"/>
-<g id="1990024039">
+<g id="1950278079">
 <rect x="225" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="291" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="357" y1="58" x2="377" y2="58" class="rail"/>
 <polygon points="364,55 370,58 364,61" class="arrow"/>
-<g id="1802934918">
+<g id="327564014">
 <rect x="377" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="397" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="418" y1="58" x2="438" y2="58" class="rail"/>
 <polygon points="425,55 431,58 425,61" class="arrow"/>
-<g id="196880824">
+<g id="1849087248">
 <rect x="438" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="504" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="570" y1="58" x2="590" y2="58" class="rail"/>
 <polygon points="577,55 583,58 577,61" class="arrow"/>
-<g id="390257759">
+<g id="319962089">
 <rect x="590" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="610" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

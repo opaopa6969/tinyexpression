@@ -16,7 +16,7 @@ public class ExpressionBuilderTest {
   @Test
   public void test() {
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
-    ParseContext parseContext = new ParseContext(new StringSource("1+(8/4)"));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource("1+(8/4)"));
     Parsed parsed= tinyExpressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true); // ASTノードのみにしないとOperatorOperandTreeCreatorがうまく動かない
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);

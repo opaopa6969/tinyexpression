@@ -29,7 +29,7 @@ public class TinyExpressionTokensTest {
   @Test
   public void testRejectsNonTinyExpressionParserToken() {
     NumberParser numberParser = new NumberParser();
-    ParseContext parseContext = new ParseContext(new StringSource("123"));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource("123"));
     Parsed parsed = numberParser.parse(parseContext);
     Token numberToken = parsed.getRootToken(true);
 

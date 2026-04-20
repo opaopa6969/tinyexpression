@@ -52,7 +52,7 @@ final class AstTokenTreeEvaluator {
 
   private static Token parseAndReduce(String source) {
     Parser parser = Parser.get(TinyExpressionParser.class);
-    ParseContext parseContext = new ParseContext(new StringSource(source));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(source));
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       if (!parsed.isSucceeded()) {
@@ -831,7 +831,7 @@ final class AstTokenTreeEvaluator {
         .map(wrapped -> wrapped.substring(1, wrapped.length() - 1));
 
     if (specifier.isPresent()) {
-      return new org.unlaxer.util.Slicer(new StringSource(inner))
+      return new org.unlaxer.util.Slicer(StringSource.createRootSource(inner))
           .pythonian(specifier.get()).get().sourceAsString();
     }
     return inner;

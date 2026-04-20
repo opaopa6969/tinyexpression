@@ -14,22 +14,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">AnnotationParameters</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1715408731">
-<g id="173329897">
+<g id="516672145">
+<g id="1882554187">
 <rect x="40" y="44" width="153" height="28" class="nonterminal-box"/>
 <text x="116" y="62" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
 </g>
 <line x1="193" y1="58" x2="213" y2="58" class="rail"/>
 <polygon points="200,55 206,58 200,61" class="arrow"/>
-<g id="1536364823">
-<g id="1996796315">
-<g id="1001444410">
+<g id="322103552">
+<g id="1210456168">
+<g id="1675478306">
 <rect x="229" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="249" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="270" y1="82" x2="290" y2="82" class="rail"/>
 <polygon points="277,79 283,82 277,85" class="arrow"/>
-<g id="869777545">
+<g id="2045176500">
 <rect x="290" y="68" width="153" height="28" class="nonterminal-box"/>
 <text x="366" y="86" text-anchor="middle" class="nonterminal-text">AnnotationParameter</text>
 </g>

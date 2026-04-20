@@ -12,8 +12,6 @@ import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.parser.Parser;
 
@@ -28,7 +26,9 @@ import org.unlaxer.parser.Parser;
  * <p>
  * Runtime markers set:
  * <ul>
- *   <li>{@code _tinyP4ParserUsed} — whether the P4 grammar successfully parsed the formula</li>
+ *   <li>{@code _tinyP4ParserUsed} — whether the formula is considered P4-compatible</li>
+ *   <li>{@code _tinyP4ParserExact} — whether the decision came from an exact mapper parse</li>
+ *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code heuristic}, or {@code failed}</li>
  *   <li>{@code _tinyP4AstNodeType} — simple class name of the mapped P4 AST root node</li>
  * </ul>
  */
@@ -44,7 +44,7 @@ public class P4AstEvaluatorCalculator implements Calculator {
   public P4AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     this.delegate = new AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader);
-    initP4Markers(source.source());
+    initP4Markers(source.source(), specifiedExpressionTypes);
   }
 
   public P4AstEvaluatorCalculator(Source source, String javaCode, String className,
@@ -52,18 +52,15 @@ public class P4AstEvaluatorCalculator implements Calculator {
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     this.delegate = new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
         byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
-    initP4Markers(source.source());
+    initP4Markers(source.source(), specifiedExpressionTypes);
   }
 
-  private void initP4Markers(String formula) {
-    try {
-      TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(formula);
-      p4Markers.put("_tinyP4ParserUsed", true);
-      p4Markers.put("_tinyP4AstNodeType", ast.getClass().getSimpleName());
-    } catch (Exception e) {
-      p4Markers.put("_tinyP4ParserUsed", false);
-      p4Markers.put("_tinyP4AstNodeType", "parse-failed");
-    }
+  private void initP4Markers(String formula, SpecifiedExpressionTypes specifiedExpressionTypes) {
+    P4ParseProbe.Result probe = P4ParseProbe.probe(formula, specifiedExpressionTypes);
+    p4Markers.put("_tinyP4ParserUsed", probe.parserUsed);
+    p4Markers.put("_tinyP4ParserExact", probe.exactParse);
+    p4Markers.put("_tinyP4ParserProbeMode", probe.probeMode);
+    p4Markers.put("_tinyP4AstNodeType", probe.astNodeType);
   }
 
   // =========================================================================

@@ -21,7 +21,7 @@ public class FormulaParserTest {
 
 		for(String formula : new String[]{"(1.5+2e+1)/3","1+1-1+1","-1.35e+5"}){
 			
-			try(ParseContext parseContext = new ParseContext(new StringSource(formula))){
+			try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula))){
 				
 				FormulaParser formulaParser = Parser.get(FormulaParser.class);
 				Parsed parsed = formulaParser.parse(parseContext);
@@ -39,7 +39,7 @@ public class FormulaParserTest {
 	public void emptyFormula()  {
 		
 		String formula= "";
-		try(ParseContext parseContext = new ParseContext(new StringSource(formula))){
+		try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula))){
 			
 			FormulaParser formulaParser = Parser.get(FormulaParser.class);
 			Parsed parsed = formulaParser.parse(parseContext);
@@ -56,7 +56,7 @@ public class FormulaParserTest {
 	public void invalidFormula()  {
 		
 		String formula= "+-*/";
-		try(ParseContext parseContext = new ParseContext(new StringSource(formula))){
+		try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula))){
 			
 			FormulaParser formulaParser = Parser.get(FormulaParser.class);
 			Parsed parsed = formulaParser.parse(parseContext);

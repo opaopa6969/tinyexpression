@@ -157,7 +157,7 @@ public class TypeSystemRoadmapTest {
 
   private String buildNumberExpression(String expression, ExpressionType numberType) {
     TinyExpressionParser parser = new TinyExpressionParser();
-    ParseContext parseContext = new ParseContext(new StringSource(expression));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(expression));
     Parsed parsed = parser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true);
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);

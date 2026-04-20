@@ -12,7 +12,7 @@ public interface ObjectCalculator extends Calculator {
 
   public default CalculateResult calculate(CalculationContext calculateContext,
       String formula , ResultType resultType) {
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     Parsed parsed = getParser().parse(parseContext);
     try {
       Token rootToken = tokenReduer().apply(parsed.getRootToken(true));

@@ -26,7 +26,7 @@ public class StringContentsTest extends ParserTestBase{
 	}
 	
 	static Supplier<ParseContext> create(String source) {
-		StringSource stringSource = new StringSource(source);
+		StringSource stringSource = StringSource.createRootSource(source);
 		return ()->new ParseContext(stringSource);
 		
 	}

@@ -24,7 +24,7 @@ public class TokenNodeTest{
         )
         ;
     
-    StringSource stringSource = new StringSource("abc");
+    StringSource stringSource = StringSource.createRootSource("abc");
     ParseContext parseContext = new ParseContext(stringSource);
     
     Parsed parse = parser.parse(parseContext);

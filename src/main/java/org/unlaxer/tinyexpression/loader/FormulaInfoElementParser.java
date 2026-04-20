@@ -9,7 +9,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChain;
-import org.unlaxer.parser.elementary.WildCardStringTerninatorParser;
+import org.unlaxer.parser.elementary.WildCardStringTerminatorParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoParser.Kind;
 import org.unlaxer.util.annotation.TokenExtractor;
 
@@ -19,7 +19,7 @@ public class FormulaInfoElementParser extends LazyChain{
   public Parsers getLazyParsers() {
     return new Parsers(
         Parser.get(FormulaInfoElementHeaderParser.class),
-        new WildCardStringTerninatorParser(true , Parser.get(FormulaInfoElementTerminatorParser.class))
+        new WildCardStringTerminatorParser(true , Parser.get(FormulaInfoElementTerminatorParser.class))
           .addTag(Kind.value.tag())
     );
   }

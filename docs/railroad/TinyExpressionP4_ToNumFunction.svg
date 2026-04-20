@@ -14,38 +14,38 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ToNumFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1813638677">
-<g id="708143061">
+<g id="547992937">
+<g id="16201592">
 <rect x="40" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="74" y="62" text-anchor="middle" class="terminal-text">'toNum'</text>
 </g>
 <line x1="109" y1="58" x2="129" y2="58" class="rail"/>
 <polygon points="116,55 122,58 116,61" class="arrow"/>
-<g id="964455025">
+<g id="1690196412">
 <rect x="129" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="149" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="170" y1="58" x2="190" y2="58" class="rail"/>
 <polygon points="177,55 183,58 177,61" class="arrow"/>
-<g id="1775264841">
+<g id="958415045">
 <rect x="190" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="256" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="1568553224">
+<g id="883199494">
 <rect x="342" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="362" y="62" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="383" y1="58" x2="403" y2="58" class="rail"/>
 <polygon points="390,55 396,58 390,61" class="arrow"/>
-<g id="1559553725">
+<g id="223421213">
 <rect x="403" y="44" width="146" height="28" class="nonterminal-box"/>
 <text x="476" y="62" text-anchor="middle" class="nonterminal-text">ArgumentExpression</text>
 </g>
 <line x1="549" y1="58" x2="569" y2="58" class="rail"/>
 <polygon points="556,55 562,58 556,61" class="arrow"/>
-<g id="100737200">
+<g id="464840882">
 <rect x="569" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="589" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

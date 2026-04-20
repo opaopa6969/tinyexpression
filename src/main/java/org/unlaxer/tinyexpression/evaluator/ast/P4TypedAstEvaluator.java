@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.function.EmbeddedFunction;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
@@ -621,6 +622,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     String bodyExpression = method.expression().strip();
     try {
       TinyExpressionP4AST bodyAst = TinyExpressionP4Mapper.parse(bodyExpression);
+      P4StrictMatchTypingValidator.validateOrThrow(bodyAst, bodyExpression);
       if (bodyAst != null) {
         P4TypedAstEvaluator bodyEvaluator = new P4TypedAstEvaluator(
             specifiedExpressionTypes, scopedContext, sourceFormula, classLoader);
@@ -685,6 +687,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     // Try P4 parse and eval
     try {
       TinyExpressionP4AST argAst = TinyExpressionP4Mapper.parse(argExpr);
+      P4StrictMatchTypingValidator.validateOrThrow(argAst, argExpr);
       if (argAst != null) {
         Object result = eval(argAst);
         if (result != null) {

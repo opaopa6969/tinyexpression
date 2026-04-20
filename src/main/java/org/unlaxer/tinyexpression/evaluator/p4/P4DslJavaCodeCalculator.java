@@ -7,9 +7,6 @@ import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
-
 /**
  * P4 DSL Java Code backend.
  * <p>
@@ -19,13 +16,18 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
  * <p>
  * Runtime markers set (in addition to DslJavaCodeCalculator markers):
  * <ul>
- *   <li>{@code _tinyP4ParserUsed} — whether the P4 grammar successfully parsed the formula</li>
+ *   <li>{@code _tinyP4ParserUsed} — whether the formula is considered P4-compatible</li>
+ *   <li>{@code _tinyP4ParserExact} — whether the decision came from an exact mapper parse</li>
+ *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code heuristic}, or {@code failed}</li>
  *   <li>{@code _tinyP4AstNodeType} — simple class name of the mapped P4 AST root node</li>
  * </ul>
  */
 public class P4DslJavaCodeCalculator extends DslJavaCodeCalculator {
 
+  private final SpecifiedExpressionTypes specifiedExpressionTypes;
   private boolean p4ParserUsed = false;
+  private boolean p4ParserExact = false;
+  private String p4ParserProbeMode = "not-evaluated";
   private String p4AstNodeType = "not-evaluated";
 
   // =========================================================================
@@ -35,6 +37,7 @@ public class P4DslJavaCodeCalculator extends DslJavaCodeCalculator {
   public P4DslJavaCodeCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     super(source, className, specifiedExpressionTypes, classLoader);
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
   }
 
   public P4DslJavaCodeCalculator(Source source, String javaCode, String className,
@@ -42,6 +45,7 @@ public class P4DslJavaCodeCalculator extends DslJavaCodeCalculator {
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     super(source, javaCode, className, specifiedExpressionTypes,
         byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+    this.specifiedExpressionTypes = specifiedExpressionTypes;
   }
 
   // =========================================================================
@@ -52,6 +56,8 @@ public class P4DslJavaCodeCalculator extends DslJavaCodeCalculator {
   public Object apply(CalculationContext calculationContext) {
     probeP4Parser();
     setObject("_tinyP4ParserUsed", p4ParserUsed);
+    setObject("_tinyP4ParserExact", p4ParserExact);
+    setObject("_tinyP4ParserProbeMode", p4ParserProbeMode);
     setObject("_tinyP4AstNodeType", p4AstNodeType);
     return super.apply(calculationContext);
   }
@@ -60,14 +66,11 @@ public class P4DslJavaCodeCalculator extends DslJavaCodeCalculator {
     if (!"not-evaluated".equals(p4AstNodeType)) {
       return; // already probed
     }
-    try {
-      TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(source().source());
-      p4ParserUsed = true;
-      p4AstNodeType = ast.getClass().getSimpleName();
-    } catch (Exception e) {
-      p4ParserUsed = false;
-      p4AstNodeType = "parse-failed";
-    }
+    P4ParseProbe.Result probe = P4ParseProbe.probe(source().source(), specifiedExpressionTypes);
+    p4ParserUsed = probe.parserUsed;
+    p4ParserExact = probe.exactParse;
+    p4ParserProbeMode = probe.probeMode;
+    p4AstNodeType = probe.astNodeType;
   }
 
   public boolean p4ParserUsed() { return p4ParserUsed; }

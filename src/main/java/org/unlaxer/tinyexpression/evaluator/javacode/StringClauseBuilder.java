@@ -183,8 +183,8 @@ public class StringClauseBuilder {
 
     return specifier.map(slicerSpecifier ->
         ExpressionOrLiteral.expressionOf(
-            "new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(String.valueOf(" + inner
-                + "))).pythonian(\"" + slicerSpecifier + "\").get().sourceAsString()"))
+            "new org.unlaxer.util.Slicer(org.unlaxer.StringSource.createRootSource(String.valueOf("
+                + inner + "))).pythonian(\"" + slicerSpecifier + "\").get().sourceAsString()"))
         .orElse(inner);
   }
 

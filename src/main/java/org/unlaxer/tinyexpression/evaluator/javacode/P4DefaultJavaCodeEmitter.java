@@ -522,7 +522,8 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     String endExpr = node.end().isPresent() ? evalBinaryExpr(node.end().get()) : null;
     String stepExpr = node.step().isPresent() ? evalBinaryExpr(node.step().get()) : null;
     StringBuilder sb = new StringBuilder();
-    sb.append("new org.unlaxer.util.Slicer(new org.unlaxer.StringSource(").append(valueExpr).append("))");
+    sb.append("new org.unlaxer.util.Slicer(org.unlaxer.StringSource.createRootSource(")
+        .append(valueExpr).append("))");
     if (startExpr != null) {
       sb.append(".begin(new org.unlaxer.CodePointIndex((int)").append(startExpr).append("))");
     }

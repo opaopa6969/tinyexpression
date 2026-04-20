@@ -20,7 +20,7 @@ public class SideEffectStringExpressionBuilderTest extends ParserTestBase {
 
     testAllMatch(parser, formula);
 
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     Parsed parsed = parser.parse(parseContext);
     Token rootToken = parsed.getRootToken();
     Token sideEffectToken = rootToken.flatten().stream()

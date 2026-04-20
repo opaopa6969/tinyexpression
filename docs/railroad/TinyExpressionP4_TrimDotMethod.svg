@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TrimDotMethod</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1622278053">
-<g id="27537054">
+<g id="1516358855">
+<g id="605089771">
 <rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
 <line x1="137" y1="58" x2="157" y2="58" class="rail"/>
 <polygon points="144,55 150,58 144,61" class="arrow"/>
-<g id="1437478428">
+<g id="1358265178">
 <rect x="157" y="44" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="191" y="62" text-anchor="middle" class="terminal-text">'.trim'</text>
 </g>
 <line x1="226" y1="58" x2="246" y2="58" class="rail"/>
 <polygon points="233,55 239,58 233,61" class="arrow"/>
-<g id="1039507222">
+<g id="914235972">
 <rect x="246" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="266" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="287" y1="58" x2="307" y2="58" class="rail"/>
 <polygon points="294,55 300,58 294,61" class="arrow"/>
-<g id="1078065645">
+<g id="2032995262">
 <rect x="307" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="327" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

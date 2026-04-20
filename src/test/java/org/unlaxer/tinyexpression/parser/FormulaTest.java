@@ -39,7 +39,7 @@ public class FormulaTest extends ParserTestBase{
 		
 		Parser formulaParser = Parser.get(FormulaParser.class);
 
-		try(ParseContext parseContext = new ParseContext(new StringSource(formula))){
+		try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula))){
 			
 			Parsed parsed = formulaParser.parse(parseContext);
 			

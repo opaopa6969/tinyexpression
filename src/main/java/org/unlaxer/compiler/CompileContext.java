@@ -1,14 +1,22 @@
 package org.unlaxer.compiler;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -88,7 +96,7 @@ public class CompileContext implements Closeable{
 
       JavaCompiler.CompilationTask task = compiler.getTask(
           new PrintWriter(output), memoryFileManager, null,
-          null, null, Arrays.asList(javaFileObjectForJava));
+          compilationOptions(), null, Arrays.asList(javaFileObjectForJava));
 
       boolean success = task.call();
 
@@ -123,6 +131,49 @@ public class CompileContext implements Closeable{
   public Optional<Path> outputPath(){
     
     return Optional.ofNullable(outputPath);
+  }
+
+  List<String> compilationOptions() {
+    LinkedHashSet<String> classPathEntries = new LinkedHashSet<>();
+    addClassPathEntries(classPathEntries, System.getProperty("surefire.test.class.path"));
+    addClassPathEntries(classPathEntries, System.getProperty("java.class.path"));
+    addClassLoaderEntries(classPathEntries, classLoader);
+    if (classPathEntries.isEmpty()) {
+      return List.of();
+    }
+    return List.of("-classpath", String.join(File.pathSeparator, classPathEntries));
+  }
+
+  private static void addClassPathEntries(Set<String> classPathEntries, String classPath) {
+    if (classPath == null || classPath.isBlank()) {
+      return;
+    }
+    Arrays.stream(classPath.split(File.pathSeparator))
+        .filter(path -> path != null && !path.isBlank())
+        .forEach(classPathEntries::add);
+  }
+
+  private static void addClassLoaderEntries(Set<String> classPathEntries, ClassLoader classLoader) {
+    ArrayList<ClassLoader> visited = new ArrayList<>();
+    for (ClassLoader current = classLoader; current != null && !visited.contains(current); current = current.getParent()) {
+      visited.add(current);
+      if (current instanceof URLClassLoader urlClassLoader) {
+        for (URL url : urlClassLoader.getURLs()) {
+          toClassPathEntry(url).ifPresent(classPathEntries::add);
+        }
+      }
+    }
+  }
+
+  private static Optional<String> toClassPathEntry(URL url) {
+    try {
+      if ("file".equals(url.getProtocol())) {
+        return Optional.of(Paths.get(url.toURI()).toString());
+      }
+    } catch (URISyntaxException e) {
+      return Optional.empty();
+    }
+    return Optional.empty();
   }
   
   

@@ -793,7 +793,7 @@ public class AstEvaluatorCalculator implements Calculator {
       }
     }
     Parser parser = getParser();
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       if (!parsed.isSucceeded()) {

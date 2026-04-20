@@ -228,7 +228,7 @@ public class BackendSpeedComparisonTest {
 
   private static NumberGeneratedAstNode buildCachedAst(String formula) {
     Parser parser = Parser.get(TinyExpressionParser.class);
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       Token root = parsed.getRootToken(true);

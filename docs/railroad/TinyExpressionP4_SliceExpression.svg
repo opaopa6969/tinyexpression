@@ -14,21 +14,21 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SliceExpression</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="2043299592">
-<g id="1012347617">
+<g id="1295832779">
+<g id="742153266">
 <rect x="40" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="88" y="80" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
 <line x1="137" y1="76" x2="157" y2="76" class="rail"/>
 <polygon points="144,73 150,76 144,79" class="arrow"/>
-<g id="1157343059">
+<g id="1409386449">
 <rect x="157" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="177" y="80" text-anchor="middle" class="terminal-text">'['</text>
 </g>
 <line x1="198" y1="76" x2="218" y2="76" class="rail"/>
 <polygon points="205,73 211,76 205,79" class="arrow"/>
-<g id="437809852">
-<g id="733310682">
+<g id="252779572">
+<g id="778456640">
 <rect x="234" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="300" y="80" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -42,14 +42,14 @@
 </g>
 <line x1="382" y1="76" x2="402" y2="76" class="rail"/>
 <polygon points="389,73 395,76 389,79" class="arrow"/>
-<g id="534616868">
+<g id="1099045928">
 <rect x="402" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="422" y="80" text-anchor="middle" class="terminal-text">':'</text>
 </g>
 <line x1="443" y1="76" x2="463" y2="76" class="rail"/>
 <polygon points="450,73 456,76 450,79" class="arrow"/>
-<g id="105253639">
-<g id="109409971">
+<g id="99450356">
+<g id="434451654">
 <rect x="479" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="545" y="80" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -63,15 +63,15 @@
 </g>
 <line x1="627" y1="76" x2="647" y2="76" class="rail"/>
 <polygon points="634,73 640,76 634,79" class="arrow"/>
-<g id="936400454">
-<g id="33061709">
-<g id="1603409121">
+<g id="230129667">
+<g id="1666925377">
+<g id="35267009">
 <rect x="663" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="683" y="80" text-anchor="middle" class="terminal-text">':'</text>
 </g>
 <line x1="704" y1="76" x2="724" y2="76" class="rail"/>
 <polygon points="711,73 717,76 711,79" class="arrow"/>
-<g id="753246348">
+<g id="1403522806">
 <rect x="724" y="62" width="132" height="28" class="nonterminal-box"/>
 <text x="790" y="80" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
 </g>
@@ -86,7 +86,7 @@
 </g>
 <line x1="872" y1="76" x2="892" y2="76" class="rail"/>
 <polygon points="879,73 885,76 879,79" class="arrow"/>
-<g id="2016049473">
+<g id="1592835165">
 <rect x="892" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="912" y="80" text-anchor="middle" class="terminal-text">']'</text>
 </g>

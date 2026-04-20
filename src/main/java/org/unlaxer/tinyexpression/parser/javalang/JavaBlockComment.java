@@ -2,7 +2,7 @@ package org.unlaxer.tinyexpression.parser.javalang;
 import org.unlaxer.Name;
 import org.unlaxer.parser.ChainParsers;
 import org.unlaxer.parser.combinator.LazyChain;
-import org.unlaxer.parser.elementary.WildCardStringTerninatorParser;
+import org.unlaxer.parser.elementary.WildCardStringTerminatorParser;
 import org.unlaxer.parser.elementary.WordParser;
 
 public class JavaBlockComment extends LazyChain{
@@ -22,7 +22,7 @@ public class JavaBlockComment extends LazyChain{
 	public org.unlaxer.parser.Parsers getLazyParsers() {
 		return new ChainParsers(
 			new WordParser("/*"),
-			new WildCardStringTerninatorParser("*/"),
+			new WildCardStringTerminatorParser("*/"),
 			new WordParser("*/")
 		);
 	}

@@ -3,6 +3,8 @@ package org.unlaxer.tinyexpression.evaluator.ast;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class GeneratedAstRuntimeProbe {
@@ -53,6 +55,10 @@ final class GeneratedAstRuntimeProbe {
       } catch (NoSuchMethodException ignored) {
         Method parse = mapperClass.getMethod("parse", String.class);
         ast = parse.invoke(null, source);
+      }
+      if (ast instanceof TinyExpressionP4AST typedAst
+          && P4StrictMatchTypingValidator.firstViolation(typedAst, source).isPresent()) {
+        return Optional.empty();
       }
       return Optional.ofNullable(ast);
     } catch (Throwable e) {

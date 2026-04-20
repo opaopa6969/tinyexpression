@@ -39,6 +39,70 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
+    public void testStrictMatchTypingDiagnosticForBareVariable() throws Exception {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "match{1==1->$val,default->0}");
+
+        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
+        assertNotNull("TE025 diagnostic should be published", diag);
+        assertTrue(diag.getMessage().contains("inline type hint"));
+
+        Hover hover = service.hover(hoverParams(0, 0)).get();
+        assertNotNull(hover);
+        assertNotNull(hover.getContents().getRight());
+        assertTrue(hover.getContents().getRight().getValue().contains("TE025"));
+    }
+
+    @Test
+    public void testStrictMatchTypingAllowsHintedVariable() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "match{1==1->$val as number,default->0}");
+
+        assertFalse("TE025 should not be published for hinted variable", client.hasDiagnosticCode("TE025"));
+    }
+
+    @Test
+    public void testHoverShowsPreferredMatchAstRoot() throws Exception {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "match{1==1->$val as number,default->0}");
+
+        Hover hover = service.hover(hoverParams(0, 0)).get();
+        assertNotNull(hover);
+        assertNotNull(hover.getContents().getRight());
+        assertTrue(hover.getContents().getRight().getValue().contains("NumberMatchExpr"));
+    }
+
+    @Test
+    public void testStrictMatchTypingDiagnosticForParenthesizedBareVariable() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "match{1==1->($val),default->0}");
+
+        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
+        assertNotNull("TE025 diagnostic should be published for parenthesized bare variable", diag);
+        assertTrue(diag.getMessage().contains("inline type hint"));
+    }
+
+    @Test
+    public void testStrictMatchTypingDiagnosticForDirectMethodInvocation() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "match{1==1->internal score(),default->0}");
+
+        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
+        assertNotNull("TE025 diagnostic should be published", diag);
+        assertTrue(diag.getMessage().contains("method invocation"));
+    }
+
+    @Test
     public void testCompletion() throws Exception {
         // Use MethodDeclaration to check ScopeStore completion
         String content = "10\nnumber myMethod($p) { $p }";
@@ -111,5 +175,34 @@ public class TinyExpressionP4LanguageServerExtTest {
         @Override public void showMessage(MessageParams messageParams) {}
         @Override public CompletableFuture<MessageActionItem> showMessageRequest(ShowMessageRequestParams showMessageRequestParams) { return null; }
         @Override public void logMessage(MessageParams message) {}
+    }
+
+    private HoverParams hoverParams(int line, int character) {
+        HoverParams params = new HoverParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(line, character));
+        return params;
+    }
+
+    private static class CapturingLanguageClient extends DummyLanguageClient {
+        private List<Diagnostic> lastDiagnostics = List.of();
+
+        @Override
+        public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {
+            lastDiagnostics = diagnostics.getDiagnostics();
+        }
+
+        boolean hasDiagnosticCode(String code) {
+            return firstDiagnosticWithCode(code) != null;
+        }
+
+        Diagnostic firstDiagnosticWithCode(String code) {
+            return lastDiagnostics.stream()
+                .filter(diag -> diag.getCode() != null)
+                .filter(diag -> diag.getCode().isLeft())
+                .filter(diag -> code.equals(diag.getCode().getLeft()))
+                .findFirst()
+                .orElse(null);
+        }
     }
 }

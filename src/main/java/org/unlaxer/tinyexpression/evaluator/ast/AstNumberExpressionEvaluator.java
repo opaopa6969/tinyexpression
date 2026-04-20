@@ -55,7 +55,7 @@ final class AstNumberExpressionEvaluator {
 
   private static Token parseAndReduce(String source) {
     Parser parser = Parser.get(TinyExpressionParser.class);
-    ParseContext parseContext = new ParseContext(new StringSource(source));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(source));
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       if (!parsed.isSucceeded()) {

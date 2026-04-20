@@ -20,7 +20,7 @@ public class CodeGenComparison4 {
     
     // Parse using legacy FormulaParser
     TinyExpressionParser tinyExpressionParser = new TinyExpressionParser();
-    ParseContext parseContext = new ParseContext(new StringSource(formula));
+    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
     Parsed parsed = tinyExpressionParser.parse(parseContext);
     Token rootToken = parsed.getRootToken(true);
     rootToken = OperatorOperandTreeCreator.SINGLETON.apply(rootToken);

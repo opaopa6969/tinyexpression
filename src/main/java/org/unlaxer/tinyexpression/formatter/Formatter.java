@@ -23,7 +23,7 @@ public class Formatter {
   public static String format(String expression) {
     
     
-    try(ParseContext parseContext = new ParseContext(new StringSource(expression))){
+    try(ParseContext parseContext = new ParseContext(StringSource.createRootSource(expression))){
       FormatterContext formatterContext = new FormatterContext(0);
       
       FormulaParser formulaParser = Parser.get(FormulaParser.class);

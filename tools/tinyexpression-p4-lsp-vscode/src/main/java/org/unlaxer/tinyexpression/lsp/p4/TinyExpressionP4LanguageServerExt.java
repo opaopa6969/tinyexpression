@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Matcher;
@@ -98,8 +99,9 @@ import org.unlaxer.parser.elementary.SingleQuotedParser;
 import org.unlaxer.parser.posix.SpaceParser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.dsl.runtime.ScopeStore;
 
 /**
@@ -197,6 +199,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     ERROR_CATALOG.put("TE022", new ErrorCatalogEntry("TE022", "利用可能な変数名ではありません。", "候補変数名へ修正"));
     ERROR_CATALOG.put("TE023", new ErrorCatalogEntry("TE023", "演算子/記法不正です。", "&/| の追加、&& -> &、$ の除去など"));
     ERROR_CATALOG.put("TE024", new ErrorCatalogEntry("TE024", "partialKey 変数のsuffix不足です。", "$prefix_<suffix> 形式に修正"));
+    ERROR_CATALOG.put("TE025", new ErrorCatalogEntry("TE025", "match case value の型が曖昧です。", "変数には as number/string/boolean を付けるか、直接の method invocation を避ける"));
   }
 
   private String resolveCatalogMessage(String hint, String snippet, String leading) {
@@ -478,15 +481,25 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     TinyExpressionP4AST ast = null;
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
-      try { ast = TinyExpressionP4Mapper.parse(formulaContent); } catch (Exception ignored) {}
+      try { ast = P4PreferredAstMapper.parse(formulaContent); } catch (Exception ignored) {}
     }
+    List<SemanticIssue> semanticIssues = computeStrictMatchSemanticIssues(formulaContent, ast, result);
 
     ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent, ctxDiag);
-    extDocuments.put(uri, new ExtDocumentState(formulaContent, result, ast, failures, declarations, references, lineOffset, fullContent));
+    extDocuments.put(uri, new ExtDocumentState(
+        formulaContent,
+        result,
+        ast,
+        failures,
+        semanticIssues,
+        declarations,
+        references,
+        lineOffset,
+        fullContent));
 
     if (extClient != null) {
       List<Diagnostic> formulaInfoDiags = computeFormulaInfoDiagnostics(uri, fullContent);
-      publishEnrichedDiagnostics(uri, formulaContent, failures, scopeDiagnostics, lineOffset, formulaInfoDiags);
+      publishEnrichedDiagnostics(uri, formulaContent, failures, semanticIssues, scopeDiagnostics, lineOffset, formulaInfoDiags);
     }
     return result;
   }
@@ -573,6 +586,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   private void publishEnrichedDiagnostics(String uri, String content,
       ParseFailureDiagnostics failures,
+      List<SemanticIssue> semanticIssues,
       List<ScopeStore.SymbolDiagnostic> scopeDiagnostics,
       int lineOffset,
       List<Diagnostic> formulaInfoDiags) {
@@ -591,6 +605,15 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       });
       d.setSource("tinyexpression-p4-scope");
       d.setMessage(sd.message());
+      diagnostics.add(d);
+    }
+    for (SemanticIssue semanticIssue : semanticIssues) {
+      Diagnostic d = new Diagnostic();
+      d.setRange(offsetToRangeWithOffset(content, semanticIssue.offset(), semanticIssue.length(), lineOffset));
+      d.setSeverity(DiagnosticSeverity.Error);
+      d.setSource("tinyexpression-p4-semantic");
+      d.setCode(Either.forLeft(semanticIssue.code()));
+      d.setMessage(semanticIssue.message());
       diagnostics.add(d);
     }
     if (failures.hasFailure()) {
@@ -620,6 +643,44 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       diagnostics.add(d);
     }
     extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
+  }
+
+  private List<SemanticIssue> computeStrictMatchSemanticIssues(
+      String content,
+      TinyExpressionP4AST ast,
+      ParseResult result) {
+    if (content == null
+        || content.isBlank()
+        || result == null
+        || !result.succeeded()
+        || result.consumedLength() != result.totalLength()) {
+      return List.of();
+    }
+
+    P4StrictMatchTypingValidator.Violation violation = ast != null
+        ? P4StrictMatchTypingValidator.firstViolationDetail(ast, content).orElse(null)
+        : null;
+    if (violation == null) {
+      violation = P4StrictMatchTypingValidator.firstHeuristicViolationAnyExpectedType(content).orElse(null);
+    }
+    if (violation == null) {
+      return List.of();
+    }
+    return List.of(toStrictMatchSemanticIssue(violation));
+  }
+
+  private SemanticIssue toStrictMatchSemanticIssue(P4StrictMatchTypingValidator.Violation violation) {
+    String message = switch (violation.kind()) {
+      case DIRECT_VARIABLE_CASE_VALUE ->
+          "[TE025] match の case value で直接変数を返す場合は inline type hint が必要です。"
+              + " 修正例: $value as number / $value as string / $value as boolean"
+              + " (詳細: " + violation.snippet() + ")";
+      case DIRECT_METHOD_INVOCATION ->
+          "[TE025] match の case value で直接 method invocation は使えません。"
+              + " 修正例: 事前に変数化するか、型の確定する式へ分解してください"
+              + " (詳細: " + violation.snippet() + ")";
+    };
+    return new SemanticIssue("TE025", message, violation.startOffset(), violation.length());
   }
 
   /** Convert character offset to Position (line, character), applying line offset. */
@@ -727,7 +788,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     if (parser instanceof SpaceParser) return -1;
     if (parser instanceof NumberParser) return TOKEN_TYPE_NUMBER;
     if (parser instanceof SingleQuotedParser) return TOKEN_TYPE_STRING;
-    if (parser instanceof org.unlaxer.parser.elementary.WildCardStringTerninatorParser) return TOKEN_TYPE_STRING;
+    if (parser instanceof org.unlaxer.parser.elementary.WildCardStringTerminatorParser) return TOKEN_TYPE_STRING;
 
     // Text-based classification
     if (KEYWORD_SET.contains(stripped)) return TOKEN_TYPE_KEYWORD;
@@ -1142,10 +1203,13 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       ParseResult parseResult,
       TinyExpressionP4AST ast,
       ParseFailureDiagnostics failures,
+      List<SemanticIssue> semanticIssues,
       List<ScopeStore.SymbolInfo> declarations,
       List<ScopeStore.ReferenceInfo> references,
       int lineOffset,
       String fullContent) {}
+
+  private record SemanticIssue(String code, String message, int offset, int length) {}
 
   /**
    * Extended TextDocumentService that replaces the generated no-op implementations
@@ -1372,7 +1436,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
             if (declOpt.isPresent()) {
               markdownText = buildSymbolHover(word);
             } else {
-              markdownText = buildParseStatusHover(state.failures());
+              markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
             }
           }
         } else {
@@ -1383,12 +1447,12 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           if (declOpt.isPresent()) {
             markdownText = buildSymbolHover(word);
           } else {
-            markdownText = buildParseStatusHover(state.failures());
+            markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
           }
         }
       } else {
         // No word at cursor, show parse status
-        markdownText = buildParseStatusHover(state.failures());
+        markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
       }
 
       MarkupContent content = new MarkupContent();
@@ -1416,16 +1480,28 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
 
     /** Build hover content for parse status. */
-    private String buildParseStatusHover(ParseFailureDiagnostics failures) {
+    private String buildParseStatusHover(
+        TinyExpressionP4AST ast,
+        ParseFailureDiagnostics failures,
+        List<SemanticIssue> semanticIssues) {
+      String astRootSuffix = ast == null
+          ? ""
+          : "\n\nAST root: `" + ast.getClass().getSimpleName() + "`";
+      if (semanticIssues != null && !semanticIssues.isEmpty()) {
+        SemanticIssue issue = semanticIssues.get(0);
+        return "**TinyExpression P4**" + astRootSuffix
+            + "\n\nSemantic issue: `" + issue.code() + "`\n\n" + issue.message();
+      }
       return switch (failures) {
         case ParseFailureDiagnostics.Absent a -> {
-          yield "**TinyExpression P4**\n\nDocument is valid P4.";
+          yield "**TinyExpression P4**" + astRootSuffix + "\n\nDocument is valid P4.";
         }
         case ParseFailureDiagnostics.Present p -> {
           String hints = p.expectedHints().isEmpty()
               ? ""
               : "\n\n**Expected**: " + String.join(", ", p.expectedHints());
-          yield "**TinyExpression P4** — Parse error at offset " + p.failureOffset() + hints;
+          yield "**TinyExpression P4**" + astRootSuffix
+              + "\n\nParse error at offset " + p.failureOffset() + hints;
         }
       };
     }
@@ -2333,7 +2409,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       // Try to parse and get AST for better type detection
       try {
-        TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(expr);
+        TinyExpressionP4AST ast = P4PreferredAstMapper.parse(expr);
         // Infer type from AST node
         return inferTypeFromAst(ast);
       } catch (Exception parseError) {
@@ -2347,6 +2423,12 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       if (ast == null) return "?";
 
       return switch (ast) {
+        case TinyExpressionP4AST.ExpressionExpr e -> {
+          if (e.value() instanceof TinyExpressionP4AST nested) {
+            yield inferTypeFromAst(nested);
+          }
+          yield "expr";
+        }
         case TinyExpressionP4AST.StringConcatExpr ignored -> "str";
         case TinyExpressionP4AST.BooleanOrExpr ignored -> "bool";
         case TinyExpressionP4AST.BinaryExpr b -> {
@@ -2361,6 +2443,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         }
         case TinyExpressionP4AST.VariableRefExpr ignored -> "var";
         case TinyExpressionP4AST.MethodInvocationExpr m -> inferMethodReturnType(m.name());
+        case TinyExpressionP4AST.NumberMatchExpr ignored -> "num";
+        case TinyExpressionP4AST.StringMatchExpr ignored -> "str";
+        case TinyExpressionP4AST.BooleanMatchExpr ignored -> "bool";
+        case TinyExpressionP4AST.IfExpr i -> inferTypeFromAst(i.thenExpr());
         case TinyExpressionP4AST.ComparisonExpr ignored -> "bool";
         case TinyExpressionP4AST.StringComparisonExpr ignored -> "bool";
         default -> "expr";

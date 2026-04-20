@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TanFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1956334464">
-<g id="1123752103">
+<g id="125993925">
+<g id="1903582249">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'tan'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="546735553">
+<g id="1891264229">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="152329193">
+<g id="4459700">
 <rect x="176" y="44" width="146" height="28" class="nonterminal-box"/>
 <text x="249" y="62" text-anchor="middle" class="nonterminal-text">ArgumentExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="1858033872">
+<g id="1154881634">
 <rect x="342" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="362" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

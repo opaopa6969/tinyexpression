@@ -114,7 +114,7 @@ public class FormulaInfoList {
     try {
       FormulaInfoBlocksParser formulaInfoBlocksParser = new FormulaInfoBlocksParser();
 
-      StringSource stringSource = new StringSource(text);
+      StringSource stringSource = StringSource.createRootSource(text);
       ParseContext parseContext = new ParseContext(stringSource);
       Parsed parsed = formulaInfoBlocksParser.parse(parseContext);
       TypedToken<FormulaInfoBlocksParser> typedToken =
