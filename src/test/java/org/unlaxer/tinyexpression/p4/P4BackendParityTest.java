@@ -35,9 +35,8 @@ public class P4BackendParityTest {
 
   /**
    * Simple arithmetic formulas — P4 grammar handles NumberExpression fully.
-   * Note: (10-2)*(7-3) is excluded here because DSL_JAVA_CODE has a known bug
-   * with nested parenthesis multiplication (returns 3.0 instead of 32.0).
-   * See testFourBackendParityOnParenthesizedArithmetic for P4-vs-JAVA_CODE parity.
+   * (10-2)*(7-3) is now included: the nested-parenthesis multiplication bug in
+   * DSL_JAVA_CODE / P4_DSL_JAVA_CODE was fixed in v1.4.11 via P4TypedJavaCodeEmitter.
    */
   private static final List<String> P4_PARSEABLE_NUMBER_FORMULAS = List.of(
       "1",
@@ -46,7 +45,8 @@ public class P4BackendParityTest {
       "3*4-5",
       "1+2*3",
       "100/4",
-      "7-3+1"
+      "7-3+1",
+      "(10-2)*(7-3)"
   );
 
   /** Boolean literals — P4 grammar handles 'true' / 'false'. */
@@ -154,6 +154,61 @@ public class P4BackendParityTest {
     }
   }
 
+  @Test
+  public void testP4ExactParseRejectsAmbiguousDirectMatchVariableWithoutHint() {
+    String formula = "match{1==1->$val,default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(formula), "MatchStrictRef_jc", types, cl);
+    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchStrictRef_p4ast", types, cl);
+
+    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+    ctx.set("val", 10f);
+    float ref = floatValue(javaCode.apply(ctx));
+    float actual = floatValue(p4Ast.apply(ctx));
+    assertEquals("semantic rejection should still preserve legacy result", ref, actual, 0.001f);
+    assertFalse("strict-typing rejection should avoid p4-typed runtime",
+        "p4-typed".equals(p4Ast.getObject("_astEvaluatorRuntime", String.class)));
+  }
+
+  @Test
+  public void testP4ExactParseAcceptsHintedDirectMatchVariable() {
+    String formula = "match{1==1->$val as number,default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchStrictHint_p4ast", types, cl);
+
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertFalse("hinted direct variable should not be semantically rejected",
+        "semantic".equals(p4Ast.getObject("_tinyP4ParserProbeMode", String.class)));
+  }
+
+  @Test
+  public void testP4ExactParseRejectsDirectMatchMethodInvocation() {
+    String formula = "match{1==1->internal score(),default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchStrictMethod_p4ast", types, cl);
+
+    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+  }
+
   // =========================================================================
   // P6-2-c: P4 backends fall back gracefully for non-P4 syntax
   // =========================================================================
@@ -185,30 +240,37 @@ public class P4BackendParityTest {
   }
 
   // =========================================================================
-  // P6-2-c-2: P4_AST_EVALUATOR agrees with JAVA_CODE for parenthesized arithmetic
-  //            (Both DSL_JAVA_CODE and P4_DSL_JAVA_CODE have a known bug with
-  //             nested-parenthesis multiplication, e.g. (10-2)*(7-3) → 3.0)
+  // P6-2-c-2: All 6 backends agree on nested-parenthesis multiplication — v1.4.11 fix
   // =========================================================================
 
   @Test
-  public void testP4AstParityOnParenthesizedArithmetic() {
+  public void testAllSixBackendsParityOnParenthesizedArithmetic() {
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-    String formula = "(10-2)*(7-3)";   // DSL-based backends return 3.0 (known bug)
+    String formula = "(10-2)*(7-3)";
     Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
         .create(new Source(formula), "Paren3_jc", types, cl);
     Calculator legacy = CalculatorCreatorRegistry.legacyAstCreatorJavaCodeCreator()
         .create(new Source(formula), "Paren3_leg", types, cl);
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator()
+        .create(new Source(formula), "Paren3_ast", types, cl);
+    Calculator dsl = CalculatorCreatorRegistry.dslJavaCodeCreator()
+        .create(new Source(formula), "Paren3_dsl", types, cl);
     Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
         .create(new Source(formula), "Paren3_p4ast", types, cl);
+    Calculator p4Dsl = CalculatorCreatorRegistry.p4DslJavaCodeCreator()
+        .create(new Source(formula), "Paren3_p4dsl", types, cl);
 
     CalculationContext ctx = CalculationContext.newConcurrentContext();
     float ref = floatValue(javaCode.apply(ctx));
     assertEquals(32f, ref, 0.001f);
     assertEquals("legacy parity, formula=" + formula, ref, floatValue(legacy.apply(ctx)), 0.001f);
+    assertEquals("ast parity, formula=" + formula, ref, floatValue(ast.apply(ctx)), 0.001f);
+    assertEquals("dsl parity, formula=" + formula, ref, floatValue(dsl.apply(ctx)), 0.001f);
     assertEquals("p4-ast parity, formula=" + formula, ref, floatValue(p4Ast.apply(ctx)), 0.001f);
+    assertEquals("p4-dsl parity, formula=" + formula, ref, floatValue(p4Dsl.apply(ctx)), 0.001f);
   }
 
   // =========================================================================

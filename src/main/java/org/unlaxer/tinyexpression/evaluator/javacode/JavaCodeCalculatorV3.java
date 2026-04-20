@@ -295,6 +295,12 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
 
   static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
 
+    // Opt-out check: if JavaCodeBlockPolicy disables code block execution,
+    // return an empty list without compiling or executing any embedded Java code.
+    if (!JavaCodeBlockPolicy.isEnabled()) {
+      return new ArrayList<>();
+    }
+
     List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
 
     List<InstanceAndByteCode> instanceAndByteCodeList = new ArrayList<>();

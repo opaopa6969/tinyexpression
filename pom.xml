@@ -6,7 +6,7 @@
 
 	<groupId>org.unlaxer</groupId>
 	<artifactId>tinyexpression</artifactId>
-	<version>1.4.10</version>
+	<version>1.4.11</version>
 	<name>tinyexpression</name>
 	<packaging>jar</packaging>
 
@@ -55,12 +55,12 @@
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-common</artifactId>
-			<version>2.8.0</version>
+			<version>3.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-dsl</artifactId>
-			<version>2.8.0</version>
+			<version>3.0.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>

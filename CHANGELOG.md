@@ -3,6 +3,15 @@
 All notable changes to TinyExpression are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.4.11] - 2026-04-21
+
+### Fixed
+- `DSL_JAVA_CODE` / `P4_DSL_JAVA_CODE`: nested parenthesis multiplication bug resolved — `(10-2)*(7-3)` now correctly returns `32.0` across all 6 backends via `P4TypedJavaCodeEmitter`
+- `P4BackendParityTest`: stale comment and missing coverage for `(10-2)*(7-3)` corrected; formula added to six-backend parity corpus
+
+### Added
+- `JavaCodeBlockPolicy`: opt-in disable of Java code block (triple-backtick `` ```java:ClassName `` fence) execution. Default is `true` (backward compatible). Call `JavaCodeBlockPolicy.setEnabled(false)` before creating calculators to prevent arbitrary code execution when formula sources come from untrusted input.
+
 ## [1.4.10] - 2026-02-26
 
 ### Changed
