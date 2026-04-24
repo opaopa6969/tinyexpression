@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and verify (main)
+        run: mvn -B verify -Dgpg.skip=true
+
+      - name: Install main artifact to local repo
+        run: mvn -B install -DskipTests -Dgpg.skip=true
+
+      - name: Set up Node.js (for vsce packaging in tools)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build and verify tools/tinyexpression-p4-lsp-vscode
+        run: mvn -B verify -Dgpg.skip=true
+        working-directory: tools/tinyexpression-p4-lsp-vscode
+        env:
+          MAVEN_OPTS: >-
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/java.lang=ALL-UNNAMED
