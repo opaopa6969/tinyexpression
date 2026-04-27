@@ -180,3 +180,4 @@ docs と CI が同じ smoke set を gate する状態を維持すること。
 
 1. `install` / `deploy` は writable な `maven.repo.local`、`GNUPGHOME`、ネットワークが必要
 2. 制約付き環境では `-Dmaven.repo.local=/tmp/m2repo` のような逃がし先が必要
+3. `package` / `install` / `deploy` の再現手順は [TINYEXPRESSION-RELEASE-RUNBOOK.md](./TINYEXPRESSION-RELEASE-RUNBOOK.md) に集約してある
