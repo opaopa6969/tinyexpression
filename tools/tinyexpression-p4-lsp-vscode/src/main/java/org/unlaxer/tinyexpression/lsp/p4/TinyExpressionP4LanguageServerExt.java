@@ -1517,7 +1517,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
                 .filter(d -> d.name().equals(lookupName))
                 .findFirst();
             if (declOpt.isPresent()) {
-              markdownText = buildSymbolHover(word);
+              markdownText = buildSymbolHover(word, state);
             } else {
               markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
             }
@@ -1528,7 +1528,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
               .filter(d -> d.name().equals(word))
               .findFirst();
           if (declOpt.isPresent()) {
-            markdownText = buildSymbolHover(word);
+            markdownText = buildSymbolHover(word, state);
           } else {
             markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
           }
@@ -1546,20 +1546,58 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     /** Build hover content for symbol information. */
     private String buildSymbolHover(String symbolName) {
+      return buildSymbolHover(symbolName, null);
+    }
+
+    /**
+     * Build hover content for symbol information. When {@code state} is
+     * provided and the symbol is a $variable declared in this document with a
+     * {@code set <expr>} clause, the set-expression text is appended as the
+     * hover's "computed/source value" — issue #11 §3 「ホバー上の計算値表示」
+     * の最小実装。リテラル set 値はそのまま読めるので「計算値」として機能し、
+     * 複雑な式は source 表示として有用。
+     */
+    private String buildSymbolHover(String symbolName, ExtDocumentState state) {
       String typeInfo;
       String prefix = "**" + symbolName + "**";
 
       if (symbolName.startsWith("$")) {
-        // Variable: show inferred type
         String varType = inferVariableType(symbolName);
         typeInfo = prefix + ": `" + varType + "`";
       } else {
-        // Method: show signature and return type
         String returnType = inferMethodReturnType(symbolName);
         typeInfo = prefix + "() → `" + returnType + "`";
       }
 
-      return typeInfo + "\n\n*TinyExpression P4 symbol*";
+      String setValue = (state != null && symbolName.startsWith("$"))
+          ? extractSetValue(state.content(), symbolName.substring(1))
+          : null;
+
+      String setLine = setValue == null
+          ? ""
+          : "\n\nSet: `" + setValue + "`";
+
+      return typeInfo + setLine + "\n\n*TinyExpression P4 symbol*";
+    }
+
+    /**
+     * Extract the {@code set} expression text for a variable declaration of
+     * the form {@code var|variable $name [as TYPE] set [if not exists] EXPR
+     * description='...';}. Returns the trimmed EXPR text, or {@code null} if
+     * the declaration is missing or has no setter.
+     */
+    static String extractSetValue(String content, String varName) {
+      if (content == null || varName == null) return null;
+      // Locate "var|variable $varName" then look for "set <EXPR>" up to "description" or ";".
+      Pattern declPat = Pattern.compile(
+          "\\b(?:var|variable)\\s+\\$" + Pattern.quote(varName)
+              + "\\b[^;]*?\\bset\\b\\s*(?:if\\s+not\\s+exists\\s+)?(.+?)(?=\\s+description\\b|\\s*;)",
+          Pattern.DOTALL);
+      Matcher m = declPat.matcher(content);
+      if (m.find()) {
+        return m.group(1).strip();
+      }
+      return null;
     }
 
     /** Build hover content for parse status. */

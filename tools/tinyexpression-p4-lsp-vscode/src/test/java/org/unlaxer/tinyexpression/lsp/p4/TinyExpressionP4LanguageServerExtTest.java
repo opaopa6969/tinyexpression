@@ -313,6 +313,48 @@ public class TinyExpressionP4LanguageServerExtTest {
         assertTrue("Should offer 'Prefix $' quick fix for TE002", found);
     }
 
+    /**
+     * issue #11 §3 「ホバー上の計算値表示」の最小実装。
+     * `var $x as number set 100 description='..';` 型の宣言があるとき、
+     * 変数参照位置の hover に Set: `100` が含まれる。リテラル set の場合は
+     * 計算値そのものとして読める。
+     */
+    @Test
+    public void testHoverShowsVariableSetValue() throws Exception {
+        String content = "var $amount as number set 250 description='amt';\n$amount";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        Hover hover = service.hover(hoverParams(1, 1)).get();
+        assertNotNull("Hover should be returned over $amount reference", hover);
+        String md = hover.getContents().getRight().getValue();
+        assertTrue("Hover should contain Set: marker, got:\n" + md,
+            md.contains("Set:"));
+        assertTrue("Hover should expose the set expression `250`, got:\n" + md,
+            md.contains("250"));
+    }
+
+    /** Direct unit-test for the regex extractor that backs the hover. */
+    @Test
+    public void testExtractSetValueLiteral() {
+        String src = "var $x as number set 42 description='d';";
+        assertEquals("42",
+            TinyExpressionP4LanguageServerExt.ExtTextDocumentService.extractSetValue(src, "x"));
+    }
+
+    @Test
+    public void testExtractSetValueIfNotExists() {
+        String src = "var $price as number set if not exists 1000 description='p';";
+        assertEquals("1000",
+            TinyExpressionP4LanguageServerExt.ExtTextDocumentService.extractSetValue(src, "price"));
+    }
+
+    @Test
+    public void testExtractSetValueAbsent() {
+        String src = "var $x as number description='no setter';";
+        assertNull(
+            TinyExpressionP4LanguageServerExt.ExtTextDocumentService.extractSetValue(src, "x"));
+    }
+
     @Test
     public void testFormatting() throws Exception {
         String unformatted = "if($x){\ncall func();\n}else{\ncall other();\n}";
