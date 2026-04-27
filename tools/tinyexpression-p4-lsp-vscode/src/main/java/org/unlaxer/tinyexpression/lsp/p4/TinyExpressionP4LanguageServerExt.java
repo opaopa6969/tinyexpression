@@ -558,7 +558,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     if (extClient != null) {
       List<Diagnostic> formulaInfoDiags = computeFormulaInfoDiagnostics(uri, fullContent);
-      publishEnrichedDiagnostics(uri, formulaContent, failures, semanticIssues, scopeDiagnostics, lineOffset, formulaInfoDiags);
+      List<Diagnostic> catalogDiags = computeCatalogDiagnostics(formulaContent, declarations, lineOffset);
+      publishEnrichedDiagnostics(uri, formulaContent, failures, semanticIssues, scopeDiagnostics, lineOffset, formulaInfoDiags, catalogDiags);
     }
     return result;
   }
@@ -643,13 +644,58 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return List.of();
   }
 
+  /**
+   * Compute TE022 ("利用可能な変数名ではありません") diagnostics for $variable
+   * references that are neither declared in-document nor present in the
+   * catalog. issue #11 §3 「変数カタログ補完が未移植」 の診断 port。
+   *
+   * <p>Skipped entirely when no catalog is configured — without an authoritative
+   * allow-list, flagging arbitrary variables would be noisy and wrong.
+   */
+  private List<Diagnostic> computeCatalogDiagnostics(
+      String content, List<ScopeStore.SymbolInfo> declarations, int lineOffset) {
+    if (content == null || catalogResolver == null || catalogResolver.isEmpty()) {
+      return List.of();
+    }
+    Set<String> declaredVarNames = new java.util.HashSet<>();
+    for (ScopeStore.SymbolInfo d : declarations) {
+      String n = d.name();
+      if (n != null && n.startsWith("$")) declaredVarNames.add(n);
+    }
+    List<Diagnostic> out = new ArrayList<>();
+    Set<Integer> reportedOffsets = new java.util.HashSet<>();
+    Matcher m = VARIABLE_PATTERN.matcher(content);
+    while (m.find()) {
+      String dollarName = "$" + m.group(1);
+      String bareName = m.group(1);
+      if (declaredVarNames.contains(dollarName)) continue;
+      if (catalogResolver.lookup(bareName) != null) continue;
+      int offset = m.start();
+      if (!reportedOffsets.add(offset)) continue;
+      int length = dollarName.length();
+      Position start = offsetToPositionWithOffset(content, offset, lineOffset);
+      Position end = offsetToPositionWithOffset(content, offset + length, lineOffset);
+      Diagnostic d = new Diagnostic();
+      d.setRange(new Range(start, end));
+      d.setSeverity(DiagnosticSeverity.Warning);
+      d.setSource("tinyexpression-p4-catalog");
+      d.setCode(Either.forLeft("TE022"));
+      d.setMessage(ERROR_CATALOG.get("TE022").fullMessage()
+          + " (catalog 未登録の変数: " + dollarName + ")");
+      out.add(d);
+    }
+    return out;
+  }
+
   private void publishEnrichedDiagnostics(String uri, String content,
       ParseFailureDiagnostics failures,
       List<SemanticIssue> semanticIssues,
       List<ScopeStore.SymbolDiagnostic> scopeDiagnostics,
       int lineOffset,
-      List<Diagnostic> formulaInfoDiags) {
+      List<Diagnostic> formulaInfoDiags,
+      List<Diagnostic> catalogDiagnostics) {
     List<Diagnostic> diagnostics = new ArrayList<>(formulaInfoDiags);
+    diagnostics.addAll(catalogDiagnostics);
     // Semantic diagnostics from ScopeStore (@declares / @backref)
     for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
       Position start = offsetToPositionWithOffset(content, sd.offset(), lineOffset);

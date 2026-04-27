@@ -314,6 +314,56 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     /**
+     * issue #11 §3 「変数カタログ補完」 port — TE022 catalog-aware diagnostic.
+     * When a catalog is configured, references to $variables that are
+     * neither declared in-document nor in the catalog raise TE022.
+     */
+    @Test
+    public void testTE022FlagsUnknownVariableWhenCatalogConfigured() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        var amount = new org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry(
+            "amount", "知っている変数", "FA", "/tmp/sample.tecatalog");
+        server.setCatalogResolver(new org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogResolver() {
+            @Override public List<org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry> listAll() {
+                return List.of(amount);
+            }
+            @Override public org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry lookup(String name) {
+                return amount.name().equals(name) ? amount : null;
+            }
+        });
+
+        // $amount is in catalog (no TE022); $unknown is not (TE022 expected).
+        server.parseDocument(TEST_URI, "$amount + $unknown");
+
+        Diagnostic te022 = client.firstDiagnosticWithCode("TE022");
+        assertNotNull("TE022 should be raised for $unknown", te022);
+        assertTrue("TE022 message should name $unknown, got: " + te022.getMessage(),
+            te022.getMessage().contains("$unknown"));
+
+        // Make sure $amount did NOT get a TE022 (only one TE022 total)
+        long te022Count = client.allDiagnosticsWithCode("TE022").size();
+        assertEquals("Only $unknown should trigger TE022", 1, te022Count);
+    }
+
+    /**
+     * Without a catalog, TE022 must not fire — otherwise every $variable in a
+     * doc with no catalog would be falsely flagged.
+     */
+    @Test
+    public void testTE022SilentWhenNoCatalogConfigured() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+        server.setCatalogResolver(null);
+
+        server.parseDocument(TEST_URI, "$x + $y");
+
+        assertFalse("TE022 must not fire when no catalog is configured",
+            client.hasDiagnosticCode("TE022"));
+    }
+
+    /**
      * issue #11 §3 「変数カタログ補完」 port. Inject a CatalogResolver carrying
      * context / sourcePath, trigger completion at "$" position, and verify
      * the catalog entry surfaces detail / documentation / sortText (which
@@ -492,6 +542,14 @@ public class TinyExpressionP4LanguageServerExtTest {
                 .filter(diag -> code.equals(diag.getCode().getLeft()))
                 .findFirst()
                 .orElse(null);
+        }
+
+        List<Diagnostic> allDiagnosticsWithCode(String code) {
+            return lastDiagnostics.stream()
+                .filter(diag -> diag.getCode() != null)
+                .filter(diag -> diag.getCode().isLeft())
+                .filter(diag -> code.equals(diag.getCode().getLeft()))
+                .toList();
         }
     }
 }
