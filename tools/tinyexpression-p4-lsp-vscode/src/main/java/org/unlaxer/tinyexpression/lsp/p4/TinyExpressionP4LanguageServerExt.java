@@ -1615,6 +1615,18 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           if ("TE001".equals(code)) {
             // TE001: parse error — suggest rewriting with P4 syntax
             actions.addAll(buildTE001QuickFixes(uri, state.content(), diag, state.lineOffset()));
+          } else if ("TE004".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert ')' to close paren", uri, diag, ")")));
+          } else if ("TE005".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert '}' to close brace", uri, diag, "}")));
+          } else if ("TE006".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert ';' at statement end", uri, diag, ";")));
+          } else if ("TE002".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Prefix '$' to make a variable reference", uri, diag, "$")));
           }
         }
       }
@@ -1623,6 +1635,20 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       actions.addAll(buildIfTernaryRefactoring(uri, state, params.getRange()));
 
       return CompletableFuture.completedFuture(actions);
+    }
+
+    /**
+     * Generic quick-fix builder: insert {@code insertText} at the diagnostic
+     * start position. issue #11 §3 "クイックフィックス群が薄い" を埋める。
+     */
+    private CodeAction buildInsertQuickFix(
+        String title, String uri, Diagnostic diag, String insertText) {
+      CodeAction ca = new CodeAction(title);
+      ca.setKind(CodeActionKind.QuickFix);
+      ca.setDiagnostics(List.of(diag));
+      Position pos = diag.getRange().getStart();
+      ca.setEdit(buildEdit(uri, new Range(pos, pos), insertText));
+      return ca;
     }
 
     private List<Either<Command, CodeAction>> buildTE001QuickFixes(

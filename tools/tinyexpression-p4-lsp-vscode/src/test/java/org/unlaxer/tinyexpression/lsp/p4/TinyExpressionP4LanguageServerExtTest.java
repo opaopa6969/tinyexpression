@@ -216,6 +216,103 @@ public class TinyExpressionP4LanguageServerExtTest {
             co.getTriggerCharacters().contains("$"));
     }
 
+    /**
+     * issue #11 §3 「クイックフィックス群が薄い」の解消。TE006 (missing ;) /
+     * TE004 (missing )) / TE005 (missing }) / TE002 (bare identifier) の
+     * insert quick fix を確認する。
+     */
+    @Test
+    public void testQuickFixTE006InsertSemicolon() throws Exception {
+        String content = "var $a as number set 1 description='x'";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        Diagnostic diag = new Diagnostic();
+        diag.setCode(Either.forLeft("TE006"));
+        Position end = new Position(0, content.length());
+        diag.setRange(new Range(end, end));
+        diag.setMessage("[TE006] ;");
+
+        CodeActionContext ctx = new CodeActionContext(List.of(diag));
+        CodeActionParams params = new CodeActionParams(
+            new TextDocumentIdentifier(TEST_URI), diag.getRange(), ctx);
+
+        var actions = service.codeAction(params).get();
+        boolean found = actions.stream()
+            .filter(Either::isRight)
+            .map(Either::getRight)
+            .anyMatch(ca -> ca.getTitle().contains("Insert ';'"));
+        assertTrue("Should offer 'Insert ;' quick fix for TE006", found);
+    }
+
+    @Test
+    public void testQuickFixTE004InsertCloseParen() throws Exception {
+        String content = "(1+2";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        Diagnostic diag = new Diagnostic();
+        diag.setCode(Either.forLeft("TE004"));
+        Position end = new Position(0, content.length());
+        diag.setRange(new Range(end, end));
+        diag.setMessage("[TE004] )");
+
+        CodeActionContext ctx = new CodeActionContext(List.of(diag));
+        CodeActionParams params = new CodeActionParams(
+            new TextDocumentIdentifier(TEST_URI), diag.getRange(), ctx);
+
+        var actions = service.codeAction(params).get();
+        boolean found = actions.stream()
+            .filter(Either::isRight)
+            .map(Either::getRight)
+            .anyMatch(ca -> ca.getTitle().contains("Insert ')'"));
+        assertTrue("Should offer 'Insert )' quick fix for TE004", found);
+    }
+
+    @Test
+    public void testQuickFixTE005InsertCloseBrace() throws Exception {
+        String content = "if (true) {1";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        Diagnostic diag = new Diagnostic();
+        diag.setCode(Either.forLeft("TE005"));
+        Position end = new Position(0, content.length());
+        diag.setRange(new Range(end, end));
+        diag.setMessage("[TE005] }");
+
+        CodeActionContext ctx = new CodeActionContext(List.of(diag));
+        CodeActionParams params = new CodeActionParams(
+            new TextDocumentIdentifier(TEST_URI), diag.getRange(), ctx);
+
+        var actions = service.codeAction(params).get();
+        boolean found = actions.stream()
+            .filter(Either::isRight)
+            .map(Either::getRight)
+            .anyMatch(ca -> ca.getTitle().contains("Insert '}'"));
+        assertTrue("Should offer 'Insert }' quick fix for TE005", found);
+    }
+
+    @Test
+    public void testQuickFixTE002PrefixDollar() throws Exception {
+        String content = "amount";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        Diagnostic diag = new Diagnostic();
+        diag.setCode(Either.forLeft("TE002"));
+        Position start = new Position(0, 0);
+        diag.setRange(new Range(start, start));
+        diag.setMessage("[TE002] bare identifier");
+
+        CodeActionContext ctx = new CodeActionContext(List.of(diag));
+        CodeActionParams params = new CodeActionParams(
+            new TextDocumentIdentifier(TEST_URI), diag.getRange(), ctx);
+
+        var actions = service.codeAction(params).get();
+        boolean found = actions.stream()
+            .filter(Either::isRight)
+            .map(Either::getRight)
+            .anyMatch(ca -> ca.getTitle().contains("Prefix '$'"));
+        assertTrue("Should offer 'Prefix $' quick fix for TE002", found);
+    }
+
     @Test
     public void testFormatting() throws Exception {
         String unformatted = "if($x){\ncall func();\n}else{\ncall other();\n}";
