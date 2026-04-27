@@ -170,6 +170,7 @@ mvn -P p4-smoke test
 | AST parity | `AstEvaluatorParityCorpusTest` / `AstEvaluatorBackendParityTest` |
 | 3-backend parity | `ThreeExecutionBackendParityTest` |
 | P4 backend parity | `P4BackendParityTest` |
+| P4 facade precedence | `P4PreferredAstMapperPrecedenceTest` |
 | LSP slice | `TinyExpressionP4LanguageServerExtTest` (LSP module) |
 
 CI (`.github/workflows/ci.yml`) も同じ profile を `smoke` ジョブで回し、

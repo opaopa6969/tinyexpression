@@ -247,7 +247,7 @@
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-surefire-plugin</artifactId>
 						<configuration>
-							<test>org.unlaxer.tinyexpression.evaluator.ast.P4TypedAstEvaluatorTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorParityCorpusTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorBackendParityTest,org.unlaxer.tinyexpression.evaluator.ast.ThreeExecutionBackendParityTest,org.unlaxer.tinyexpression.p4.P4BackendParityTest</test>
+							<test>org.unlaxer.tinyexpression.evaluator.ast.P4TypedAstEvaluatorTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorParityCorpusTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorBackendParityTest,org.unlaxer.tinyexpression.evaluator.ast.ThreeExecutionBackendParityTest,org.unlaxer.tinyexpression.p4.P4BackendParityTest,org.unlaxer.tinyexpression.p4.P4PreferredAstMapperPrecedenceTest</test>
 							<failIfNoTests>true</failIfNoTests>
 						</configuration>
 					</plugin>

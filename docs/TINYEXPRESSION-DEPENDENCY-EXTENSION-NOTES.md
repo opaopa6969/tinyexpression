@@ -10,6 +10,66 @@
 
 ---
 
+## 2026-04-28: P4PreferredAstMapper facade contract gap (detailed inventory)
+
+### Context
+
+issue #11 §2 「preferred root / compat parse が local facade のまま」の解消準備。
+`P4PreferredAstMapper` を将来的に薄くするため、現状 facade が tinyexpression
+側で吸収している reflection / private method 呼び出しと heuristic を棚卸しする。
+
+unlaxer-dsl 側で何を public 化 / codegen-native 化すべきかが具体的に分かる
+状態にする。slim 化 PR の対象設計リストとしてこのエントリを使う。
+
+### facade が呼んでいる private API (reflection 経由)
+
+`TinyExpressionP4Mapper` の private 要素を `setAccessible(true)` で叩いている:
+
+| facade 呼出元 (file:line) | 対象 private シンボル | 用途 |
+|---|---|---|
+| `P4PreferredAstMapper.java:931` | `TinyExpressionP4Mapper.NODE_SOURCE_SPANS` (field) | mapper internal state のクリア |
+| `P4PreferredAstMapper.java:943-945` | `TinyExpressionP4Mapper.findBestMappedToken(Token, String)` | preferred-AST トークン選択 |
+| `P4PreferredAstMapper.java:954-956` | `TinyExpressionP4Mapper.mapToken(Token)` | トークン → AST マッピング |
+| `P4PreferredAstMapper.java:972` | `Token#getToken()` (compat shim) | Token API バージョン互換 |
+| `P4PreferredAstMapper.java:981` | `Token#tokenString` field | Token API バージョン互換 |
+| `P4PreferredAstMapper.java:990` | `Token#source` field + `sourceAsString()` | Token API バージョン互換 |
+| `P4PreferredAstMapper.java:1004` | `StringSource.createRootSource(String)` | StringSource API バージョン互換 |
+| `P4PreferredAstMapper.java:1012` | `StringSource.getDeclaredConstructors()` | StringSource fallback |
+
+### heuristic ロジック (現状 facade が hard-code している)
+
+`preferredAstSimpleNames(formula, preferredResultType)` が抱えている判定:
+
+1. `match{` プリフィックス → `*MatchExpr` 優先 (`MATCH_AST_SIMPLE_NAMES`)
+2. `if(` / `if (` プリフィックス → `IfExpr`
+3. top-level ternary → `IfExpr`
+4. 関数名 → `FUNCTION_AST_NAMES` (sin/cos/.../inDayTimeRange の 28 entry)
+5. dot method → `DOT_METHOD_AST_NAMES` (.toUpperCase / .in 等の 8 entry)
+6. slice 形 (`[...]`) → `SliceExpr`
+
+これらは `tinyexpression-p4.ubnf` の grammar から導出可能 (関数名は
+`@mapping` annotation で AST 名と既に紐づいている)。generator が
+grammar から precedence list を生成すれば facade 側のテーブルは消せる。
+
+### 受入条件達成のために unlaxer-dsl 側で必要なこと
+
+1. 生成された Mapper が public な `parse(String, String preferredAstSimpleName)`
+   を持つ (現状 reflection 経由)
+2. `findBestMappedToken` / `mapToken` を public method として公開する
+3. `NODE_SOURCE_SPANS` 相当の reset 機能を public API として用意する
+4. 生成 Mapper が `preferredAstSimpleNames(formula, type)` 相当の
+   precedence list helper を持つ (grammar から codegen)
+5. `Token` / `StringSource` API を 3.0.x で安定させ、compat shim 不要にする
+
+### 参考
+
+- `src/main/java/org/unlaxer/tinyexpression/p4/P4PreferredAstMapper.java`
+- `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/GeneratedAstRuntimeProbe.java`
+- `src/test/java/org/unlaxer/tinyexpression/p4/P4PreferredAstMapperPrecedenceTest.java`
+  — facade slim 化時のレグレッションを catch する pin test
+
+---
+
 ## 2026-04-24: unlaxer-dsl / unlaxer-common 3.0.2 適用後の follow-up
 
 ### Context
