@@ -238,6 +238,24 @@
 		</plugins>
 	</build>
 
+	<profiles>
+		<profile>
+			<id>p4-smoke</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<test>org.unlaxer.tinyexpression.evaluator.ast.P4TypedAstEvaluatorTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorParityCorpusTest,org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorBackendParityTest,org.unlaxer.tinyexpression.evaluator.ast.ThreeExecutionBackendParityTest,org.unlaxer.tinyexpression.p4.P4BackendParityTest</test>
+							<failIfNoTests>true</failIfNoTests>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>

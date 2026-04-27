@@ -7,8 +7,38 @@ on:
     branches: [ master, main ]
 
 jobs:
-  build:
+  smoke:
+    name: P4 smoke (targeted matrix)
     runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Smoke — root (P4 typed AST + parity matrix)
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+
+      - name: Install main artifact to local repo (for LSP smoke)
+        run: mvn -B install -DskipTests -Dgpg.skip=true
+
+      - name: Smoke — LSP module
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+        working-directory: tools/tinyexpression-p4-lsp-vscode
+        env:
+          MAVEN_OPTS: >-
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/java.lang=ALL-UNNAMED
+
+  build:
+    name: Full verify
+    runs-on: ubuntu-latest
+    needs: smoke
 
     steps:
       - uses: actions/checkout@v4

@@ -158,9 +158,23 @@ TinyExpression では次の3段階で実行:
 scripts/generate_tinyexpression_p4_from_ubnf.sh
 mvn -q -DskipTests compile
 mvn -q -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true package
-mvn -q -Dtest=org.unlaxer.tinyexpression.evaluator.ast.P4TypedAstEvaluatorTest test
-mvn -q -Dtest=org.unlaxer.tinyexpression.p4.P4BackendParityTest test
+mvn -P p4-smoke test
+(cd tools/tinyexpression-p4-lsp-vscode && mvn -P p4-smoke test)
 ```
+
+`p4-smoke` profile が gate する acceptance matrix:
+
+| layer | 対象テスト |
+|---|---|
+| P4 typed AST | `P4TypedAstEvaluatorTest` |
+| AST parity | `AstEvaluatorParityCorpusTest` / `AstEvaluatorBackendParityTest` |
+| 3-backend parity | `ThreeExecutionBackendParityTest` |
+| P4 backend parity | `P4BackendParityTest` |
+| LSP slice | `TinyExpressionP4LanguageServerExtTest` (LSP module) |
+
+CI (`.github/workflows/ci.yml`) も同じ profile を `smoke` ジョブで回し、
+green のときだけ `build` ジョブが `mvn verify` でフル検証する。
+docs と CI が同じ smoke set を gate する状態を維持すること。
 
 補足:
 
