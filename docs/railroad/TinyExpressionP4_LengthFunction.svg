@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">LengthFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="906899750">
-<g id="1822269883">
+<g id="930751215">
+<g id="544562857">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="terminal-text">'length'</text>
 </g>
 <line x1="116" y1="58" x2="136" y2="58" class="rail"/>
 <polygon points="123,55 129,58 123,61" class="arrow"/>
-<g id="1980218926">
+<g id="35544865">
 <rect x="136" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="177" y1="58" x2="197" y2="58" class="rail"/>
 <polygon points="184,55 190,58 184,61" class="arrow"/>
-<g id="2141473716">
+<g id="382761148">
 <rect x="197" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="263" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="329" y1="58" x2="349" y2="58" class="rail"/>
 <polygon points="336,55 342,58 336,61" class="arrow"/>
-<g id="924831239">
+<g id="1030796286">
 <rect x="349" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="369" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

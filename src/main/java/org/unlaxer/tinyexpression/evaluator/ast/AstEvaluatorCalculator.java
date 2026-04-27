@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.UnaryOperator;
+import java.util.regex.Pattern;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
@@ -23,7 +24,9 @@ import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeCalculatorV3;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
 import org.unlaxer.util.digest.MD5;
@@ -45,6 +48,8 @@ import java.util.logging.Logger;
 public class AstEvaluatorCalculator implements Calculator {
 
   private static final Logger LOGGER = Logger.getLogger(AstEvaluatorCalculator.class.getName());
+  private static final Pattern DIRECT_DECLARATION_RETURN_PATTERN = Pattern.compile(
+      "(?s)^var\\s+\\$(\\w+)(?:\\s+as\\s+\\w+)?\\s+set\\s+if\\s+not\\s+exists\\s+(.+?)\\s+description\\s*=\\s*(['\"]).*?\\3\\s*;\\s*\\$(\\w+)\\s*$");
 
   private final Source source;
   private final ClassLoader classLoader;
@@ -213,6 +218,17 @@ public class AstEvaluatorCalculator implements Calculator {
     boolean hasDeclarations = hasVariableDeclarations(formulaText);
     boolean hasMixedDeclarationsAndInvocations = hasDeclarations
         && (formulaText.contains("external ") || formulaText.contains("import ") || formulaText.contains("call "));
+    boolean syntheticInvocationFormula =
+        syntheticMethodInvocationAst(formulaText).isPresent() || hasInvocationWithMethodBody(formulaText);
+    Optional<P4StrictMatchTypingValidator.Violation> rootSemanticViolation =
+        P4StrictMatchTypingValidator.firstHeuristicViolationDetail(formulaText, resultType());
+    if (rootSemanticViolation.isPresent()) {
+      setObject("_p4FallbackFormula", formulaText);
+      setObject("_p4FallbackReason", rootSemanticViolation.get().message());
+    } else if (hasDeclarations && !hasMixedDeclarationsAndInvocations) {
+      setObject("_p4FallbackFormula", formulaText);
+      setObject("_p4FallbackReason", "declaration-aware fallback: generated P4 AST has no declaration root");
+    }
 
     // =========================================================================
     // PRIMARY PATH: P4TypedAstEvaluator (sealed-interface switch dispatch)
@@ -222,7 +238,10 @@ public class AstEvaluatorCalculator implements Calculator {
     // If you see _p4FallbackReason in production, it indicates a regression.
     // =========================================================================
     Optional<Object> tokenAstEvaluated = Optional.empty();
-    if (generatedAstRuntimeAvailable && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
+    if (generatedAstRuntimeAvailable
+        && !syntheticInvocationFormula
+        && rootSemanticViolation.isEmpty()
+        && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
@@ -331,8 +350,40 @@ public class AstEvaluatorCalculator implements Calculator {
     } else if (!generatedAstRuntimeAvailable) {
       setObject("_astEvaluatorMapperAvailable", false);
     } else {
-      // declarations present — skip direct P4 AST mapping, use declaration runtime below
+      // semantic reject or declarations present — skip direct P4 AST mapping, use fallback below
       setObject("_astEvaluatorMapperAvailable", true);
+    }
+
+    if (generatedAstRuntimeAvailable && rootSemanticViolation.isEmpty()) {
+      Optional<TinyExpressionP4AST.MethodInvocationExpr> syntheticMethodInvocation =
+          syntheticMethodInvocationAst(formulaText);
+      if (syntheticMethodInvocation.isPresent()) {
+        TinyExpressionP4AST.MethodInvocationExpr invocationAst = syntheticMethodInvocation.get();
+        setObject("_astEvaluatorMappedAst", invocationAst);
+        try {
+          Object p4TypedResult = new P4TypedAstEvaluator(
+              specifiedExpressionTypes, calculationContext, source.source(), classLoader).eval(invocationAst);
+          if (p4TypedResult != null) {
+            setObject("_astEvaluatorRuntime", "p4-typed");
+            setObject("_astEvaluatorMapperAvailable", true);
+            setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
+            return p4TypedResult;
+          }
+        } catch (UnsupportedOperationException | IllegalArgumentException p4Ex) {
+          setObject("_p4FallbackFormula", formulaText);
+          setObject("_p4FallbackReason", p4Ex.getClass().getSimpleName() + ": " + p4Ex.getMessage());
+        }
+        GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
+        Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
+            invocationAst, specifiedExpressionTypes, calculationContext, classLoader, source.source());
+        boolean generatedEmbeddedBridgeUsed = GeneratedP4ValueAstEvaluator.consumeEmbeddedBridgeUsageFlag();
+        if (generatedAstEvaluated.isPresent()) {
+          setObject("_astEvaluatorRuntime", "generated-ast");
+          setObject("_astEvaluatorMapperAvailable", true);
+          setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", generatedEmbeddedBridgeUsed);
+          return generatedAstEvaluated.get();
+        }
+      }
     }
 
     // =========================================================================
@@ -340,9 +391,16 @@ public class AstEvaluatorCalculator implements Calculator {
     // None of the paths below should be reached in normal operation.
     // If they are, _p4FallbackReason should already be set above.
     // =========================================================================
-    LOGGER.warning("[AstEvaluatorCalculator] P4-typed primary path exhausted, "
-        + "entering legacy fallback chain. formula=" + formulaText
-        + " reason=" + objectByKey.getOrDefault("_p4FallbackReason", "no P4 AST mapping attempted"));
+    String primaryPathFallbackReason = String.valueOf(
+        objectByKey.getOrDefault("_p4FallbackReason", "no P4 AST mapping attempted"));
+    if (isExpectedStructuredFallbackReason(primaryPathFallbackReason)) {
+      LOGGER.fine("[AstEvaluatorCalculator] Expected structured fallback. formula=" + formulaText
+          + " reason=" + primaryPathFallbackReason);
+    } else {
+      LOGGER.warning("[AstEvaluatorCalculator] P4-typed primary path exhausted, "
+          + "entering legacy fallback chain. formula=" + formulaText
+          + " reason=" + primaryPathFallbackReason);
+    }
 
     Optional<Object> simpleLiteralOrVariable = tryEvaluateSimpleLiteralOrVariable(calculationContext);
     if (simpleLiteralOrVariable.isPresent()) {
@@ -350,9 +408,13 @@ public class AstEvaluatorCalculator implements Calculator {
       return simpleLiteralOrVariable.get();
     }
 
+    boolean allowDeclarationMainExpression = hasDeclarations
+        || objectByKey.get("_p4FallbackReason") == null;
     Optional<AstDeclarationRuntime.MainExpressionEvaluation> declarationEvaluated =
-        AstDeclarationRuntime.tryEvaluateMainExpression(
-            source.source(), specifiedExpressionTypes, calculationContext, classLoader);
+        allowDeclarationMainExpression
+            ? AstDeclarationRuntime.tryEvaluateMainExpression(
+                source.source(), specifiedExpressionTypes, calculationContext, classLoader)
+            : Optional.empty();
     if (declarationEvaluated.isPresent()) {
       // Apply declarations to the caller's context for side-effects (e.g., setObject for payload).
       // Only for pure declaration formulas (not mixed with external/import/call).
@@ -537,6 +599,12 @@ public class AstEvaluatorCalculator implements Calculator {
     return !(formula.indexOf('\n') >= 0 || formula.indexOf(';') >= 0);
   }
 
+  private static boolean isExpectedStructuredFallbackReason(String fallbackReason) {
+    return fallbackReason != null
+        && (fallbackReason.startsWith("P4 strict match typing rejected")
+            || fallbackReason.startsWith("declaration-aware fallback:"));
+  }
+
   private boolean requiresLegacyJavaCodeSemantics(String formula, ExpressionType resultType) {
     if (resultType == null || !resultType.isNumber() || formula == null) {
       return false;
@@ -575,13 +643,52 @@ public class AstEvaluatorCalculator implements Calculator {
       return false;
     }
     String normalized = formula.strip();
+    if (isDirectDeclarationReturnFormula(normalized)) {
+      return true;
+    }
     return (normalized.contains("var $price as number set if not exists 3 description='price';")
             && normalized.endsWith("$price+2"))
-        || (normalized.contains("var $enabled as boolean set if not exists true description='enabled';")
-            && normalized.endsWith("$enabled"))
         || (normalized.contains("var $base as number set if not exists 10 description='base';")
             && normalized.contains("var $delta as number set if not exists 2 description='delta';")
             && normalized.endsWith("$base+$delta"));
+  }
+
+  private boolean isDirectDeclarationReturnFormula(String formula) {
+    var matcher = DIRECT_DECLARATION_RETURN_PATTERN.matcher(formula);
+    if (!matcher.matches()) {
+      return false;
+    }
+    String declaredVariableName = matcher.group(1);
+    String defaultExpression = matcher.group(2) == null ? "" : matcher.group(2).strip();
+    String returnedVariableName = matcher.group(4);
+    return declaredVariableName.equals(returnedVariableName)
+        && isSimpleGeneratedDeclarationDefault(defaultExpression);
+  }
+
+  private boolean isSimpleGeneratedDeclarationDefault(String expression) {
+    if (expression == null || expression.isBlank()) {
+      return false;
+    }
+    String normalized = expression.strip();
+    if ((normalized.startsWith("'") && normalized.endsWith("'"))
+        || (normalized.startsWith("\"") && normalized.endsWith("\""))) {
+      return true;
+    }
+    if ("true".equalsIgnoreCase(normalized) || "false".equalsIgnoreCase(normalized)) {
+      return true;
+    }
+    try {
+      new BigDecimal(normalized);
+      return true;
+    } catch (NumberFormatException ignored) {
+    }
+    if (normalized.startsWith("match{") || normalized.startsWith("match {")) {
+      return true;
+    }
+    if (normalized.startsWith("if(") || normalized.startsWith("if (")) {
+      return true;
+    }
+    return P4PreferredAstMapper.preferredAstSimpleNames(normalized).contains("IfExpr");
   }
 
   private boolean isKnownDeclarationMatchFormula(String formula) {
@@ -661,103 +768,7 @@ public class AstEvaluatorCalculator implements Calculator {
   // Now uses default Calculator.calculate() which calls getParser() + getCalculatorOperator() → apply()
 
   private List<String> preferredAstSimpleNames() {
-    List<String> preferred = new ArrayList<>();
-    String formula = source.source() == null ? "" : source.source().strip();
-    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(formula);
-    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(formula);
-    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(formula);
-    if (methodInvocationHead) {
-      preferred.add("MethodInvocationExpr");
-    }
-    boolean ternaryHead = hasTernaryHead(formula);
-    if (ifHead || ternaryHead) {
-      preferred.add("IfExpr");
-    }
-    // Math/string functions: prefer the specific function AST node so the mapper
-    // extracts the full function call rather than an inner BinaryExpr argument.
-    String functionAstName = mathOrStringFunctionAstName(formula);
-    if (functionAstName != null) {
-      preferred.add(functionAstName);
-    }
-    ExpressionType type = resultType();
-    if (type == null) {
-      preferred.add(null);
-      return preferred;
-    }
-    if (type.isNumber()) {
-      if (matchHead) {
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("BinaryExpr");
-    } else if (type.isString()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-      }
-      preferred.add("StringConcatExpr");
-    } else if (type.isBoolean()) {
-      if (matchHead) {
-        preferred.add("BooleanMatchExpr");
-      }
-      preferred.add("BooleanOrExpr");
-    } else if (type.isObject()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-        preferred.add("BooleanMatchExpr");
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("ObjectExpr");
-    } else {
-      preferred.add(null);
-    }
-    preferred.add("MethodInvocationExpr");
-    preferred.add("VariableRefExpr");
-    preferred.add("BinaryExpr");
-    preferred.add(null);
-    return preferred.stream().distinct().toList();
-  }
-
-  /**
-   * Detect ternary expression: starts with '(' and contains '?' ... ':'.
-   */
-  private static boolean hasTernaryHead(String formula) {
-    if (formula == null || formula.isEmpty()) return false;
-    String stripped = formula.strip();
-    return stripped.startsWith("(") && stripped.contains("?") && stripped.contains(":");
-  }
-
-  private static final java.util.Map<String, String> FUNCTION_AST_NAMES = java.util.Map.ofEntries(
-      java.util.Map.entry("sin", "SinExpr"),
-      java.util.Map.entry("cos", "CosExpr"),
-      java.util.Map.entry("tan", "TanExpr"),
-      java.util.Map.entry("sqrt", "SqrtExpr"),
-      java.util.Map.entry("min", "MinExpr"),
-      java.util.Map.entry("max", "MaxExpr"),
-      java.util.Map.entry("random", "RandomExpr"),
-      java.util.Map.entry("abs", "AbsExpr"),
-      java.util.Map.entry("round", "RoundExpr"),
-      java.util.Map.entry("ceil", "CeilExpr"),
-      java.util.Map.entry("floor", "FloorExpr"),
-      java.util.Map.entry("pow", "PowExpr"),
-      java.util.Map.entry("log", "LogExpr"),
-      java.util.Map.entry("exp", "ExpExpr"),
-      java.util.Map.entry("toNum", "ToNumExpr"),
-      java.util.Map.entry("toUpperCase", "ToUpperCaseExpr"),
-      java.util.Map.entry("toLowerCase", "ToLowerCaseExpr"),
-      java.util.Map.entry("trim", "TrimExpr"),
-      java.util.Map.entry("length", "LengthExpr"));
-
-  /**
-   * If the formula starts with a built-in function name, return its corresponding AST class
-   * simple name. This ensures the mapper extracts the full function node rather than an inner
-   * BinaryExpr from the argument.
-   */
-  private static String mathOrStringFunctionAstName(String formula) {
-    if (formula == null || formula.isEmpty()) return null;
-    String stripped = formula.strip();
-    int parenIdx = stripped.indexOf('(');
-    if (parenIdx <= 0) return null;
-    String head = stripped.substring(0, parenIdx).strip();
-    return FUNCTION_AST_NAMES.get(head);
+    return P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(source.source(), resultType());
   }
 
   private boolean numbersEquivalent(Number left, Number right) {
@@ -779,6 +790,9 @@ public class AstEvaluatorCalculator implements Calculator {
   private void validateFormulaParseable(Source source) {
     String formula = source.source();
     if (formula == null || formula.isBlank()) {
+      return;
+    }
+    if (syntheticMethodInvocationAst(formula).isPresent() || hasInvocationWithMethodBody(formula)) {
       return;
     }
     // Try P4 parser first — it handles newer syntax (ternary, math functions, etc.)
@@ -805,5 +819,83 @@ public class AstEvaluatorCalculator implements Calculator {
     } catch (Exception e) {
       throw new ParseException("failed to parse:" + formula, e);
     }
+  }
+
+  private Optional<TinyExpressionP4AST.MethodInvocationExpr> syntheticMethodInvocationAst(String formula) {
+    String invocationHead = extractInvocationHeadLine(formula);
+    if (invocationHead == null) {
+      return Optional.empty();
+    }
+    String methodName = extractInvocationMethodName(invocationHead);
+    if (methodName == null || methodName.isBlank()) {
+      return Optional.empty();
+    }
+    return GeneratedP4ValueAstEvaluator.findMethodSource(formula, methodName) == null
+        ? Optional.empty()
+        : Optional.of(new TinyExpressionP4AST.MethodInvocationExpr(methodName));
+  }
+
+  private static String extractInvocationHeadLine(String formula) {
+    if (formula == null || formula.isBlank()) {
+      return null;
+    }
+    String normalized = formula.replace("\r\n", "\n");
+    for (String line : normalized.split("\n")) {
+      String trimmed = line.stripLeading();
+      if (trimmed.startsWith("call ")
+          || trimmed.startsWith("internal ")
+          || trimmed.startsWith("external ")) {
+        String head = trimmed.strip();
+        return head.isEmpty() ? null : head;
+      }
+    }
+    return null;
+  }
+
+  private static String extractInvocationMethodName(String invocationHead) {
+    if (invocationHead == null || invocationHead.isBlank()) {
+      return null;
+    }
+    int openParen = invocationHead.indexOf('(');
+    if (openParen < 0) {
+      return null;
+    }
+    String prefix = invocationHead.substring(0, openParen).strip();
+    if (prefix.startsWith("call internal ")) {
+      prefix = prefix.substring("call internal ".length()).strip();
+    } else if (prefix.startsWith("call ")) {
+      prefix = prefix.substring("call ".length()).strip();
+    } else if (prefix.startsWith("internal ")) {
+      prefix = prefix.substring("internal ".length()).strip();
+    } else if (prefix.startsWith("external ")) {
+      prefix = prefix.substring("external ".length()).strip();
+    }
+    if (prefix.isEmpty()) {
+      return null;
+    }
+    int end = 0;
+    while (end < prefix.length()) {
+      char c = prefix.charAt(end);
+      if (Character.isLetterOrDigit(c) || c == '_') {
+        end++;
+        continue;
+      }
+      break;
+    }
+    if (end != prefix.length() || end == 0) {
+      return null;
+    }
+    return prefix;
+  }
+
+  private static boolean hasInvocationWithMethodBody(String formula) {
+    String invocationHead = extractInvocationHeadLine(formula);
+    if (invocationHead == null) {
+      return false;
+    }
+    return formula != null
+        && formula.indexOf('\n') >= 0
+        && formula.indexOf('{') >= 0
+        && formula.indexOf('}') >= 0;
   }
 }

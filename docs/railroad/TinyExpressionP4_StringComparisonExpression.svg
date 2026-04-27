@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringComparisonExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="297904407">
-<g id="1928381456">
+<g id="1747084960">
+<g id="1833876244">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="172" y1="58" x2="192" y2="58" class="rail"/>
 <polygon points="179,55 185,58 179,61" class="arrow"/>
-<g id="1808532117">
+<g id="1956725548">
 <rect x="192" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="237" y="62" text-anchor="middle" class="nonterminal-text">EqualityOp</text>
 </g>
 <line x1="282" y1="58" x2="302" y2="58" class="rail"/>
 <polygon points="289,55 295,58 289,61" class="arrow"/>
-<g id="1347265331">
+<g id="359743536">
 <rect x="302" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="368" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>

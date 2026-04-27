@@ -21,6 +21,7 @@ public class NumberSetterParserTest extends ParserTestBase{
     testAllMatch(setterParser, "set 1");
     testAllMatch(setterParser, "set 10/5");
     testAllMatch(setterParser, "set if not exists 10/5");
+    testAllMatch(setterParser, "set if /*c1*/ not /*c2*/ exists /*c3*/ match/*c4*/{1==1->3,default->5}");
     testUnMatch(setterParser, "set $hoge as String");
   }
 

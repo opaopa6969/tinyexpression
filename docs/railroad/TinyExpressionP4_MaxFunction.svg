@@ -14,34 +14,34 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MaxFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1305094879">
-<g id="661558123">
+<g id="233991583">
+<g id="1384739151">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'max'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="914022270">
+<g id="751029021">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1950248454">
+<g id="2077145329">
 <rect x="176" y="44" width="146" height="28" class="nonterminal-box"/>
 <text x="249" y="62" text-anchor="middle" class="nonterminal-text">ArgumentExpression</text>
 </g>
 <line x1="322" y1="58" x2="342" y2="58" class="rail"/>
 <polygon points="329,55 335,58 329,61" class="arrow"/>
-<g id="794835474">
-<g id="673787727">
-<g id="468628938">
+<g id="1150474396">
+<g id="1242949663">
+<g id="1629903172">
 <rect x="358" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="378" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="399" y1="82" x2="419" y2="82" class="rail"/>
 <polygon points="406,79 412,82 406,85" class="arrow"/>
-<g id="1212717079">
+<g id="2017218342">
 <rect x="419" y="68" width="146" height="28" class="nonterminal-box"/>
 <text x="492" y="86" text-anchor="middle" class="nonterminal-text">ArgumentExpression</text>
 </g>
@@ -62,7 +62,7 @@
 </g>
 <line x1="581" y1="58" x2="601" y2="58" class="rail"/>
 <polygon points="588,55 594,58 588,61" class="arrow"/>
-<g id="1104059089">
+<g id="397235507">
 <rect x="601" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="621" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

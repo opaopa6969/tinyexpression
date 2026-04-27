@@ -1,11 +1,14 @@
 # P4 Feature Gap Analysis: calculator-lsp 0.2.31 vs tinyexpression-p4-lsp
 
-Last updated: 2026-03-20
+Last updated: 2026-04-24
 
 ## 概要
 
 旧拡張（`calculator-lsp-vscode` VSIX 0.2.31）と新P4拡張（`tinyexpression-p4-lsp-vscode` VSIX 0.2.3）の機能差分。
 P4拡張へ機能を移植する際の作業基準として使用する。
+
+2026-04-24 時点では、P4 側に strict `match` typing (`TE025`)、preferred-root hover、parser exact/probe 観測が追加済み。
+以下の表はその反映後の差分として読む。
 
 ---
 
@@ -13,10 +16,10 @@ P4拡張へ機能を移植する際の作業基準として使用する。
 
 | 観点 | 0.2.31 | P4現行 |
 |------|--------|--------|
-| TEコード数 | TE001〜TE024（24種） | TE001〜TE024（ハードコード、実装薄い） |
+| TEコード数 | TE001〜TE024（24種） | TE001〜TE025 |
 | 検出方法 | 15以上のヒューリスティック関数で文脈解析 | パーサーネイティブヒント + ScopeStoreセマンティクス |
 | スコープ診断 | ❌ | ✅（未宣言・重複宣言の検出） |
-| 実用上の差 | TEエラーが細かく出る | シンプルな実装のため出ないケースが多い |
+| 実用上の差 | TEエラーが細かく出る | `TE025` は追加済みだが、編集支援系 TE はまだ不足が多い |
 
 ### 0.2.31 で実装されている主なTE診断
 - TE003: 文字列クォート不正
@@ -32,6 +35,7 @@ P4拡張へ機能を移植する際の作業基準として使用する。
 - TE022: 未定義変数（カタログ連携あり）
 - TE023: 演算子表記不正（`&&`→`&` 等）
 - TE024: partialKey変数のサフィックス欠如（カタログ連携）
+- TE025: `match` case value の strict typing 不正
 
 ---
 
@@ -81,6 +85,7 @@ P4拡張へ機能を移植する際の作業基準として使用する。
 | 式の計算値 | ✅ `= 結果` 表示 | ❌ |
 | シンボル（変数名）上 | ❌ | ✅ `$var: type` をMarkdown表示 |
 | シンボル（メソッド名）上 | ❌ | ✅ `method() → type` をMarkdown表示 |
+| AST root / parse観測 | ❌ | ✅ AST root 表示、strict match typing 反映 |
 
 ---
 
@@ -146,10 +151,24 @@ P4拡張へ機能を移植する際の作業基準として使用する。
 - エラーメッセージ多言語化（errorCode → i18n）
 - 式の評価値ホバー表示
 - `$` トリガー変数補完
+- ホバーでの計算値表示
 
 ### 低優先度（P4で既に上位互換あり）
 - セマンティックトークン（P4の方が正確）
 - コードレンズ（P4でインライン対応済み）
+
+---
+
+## 9. 2026-04 時点で解消済みの項目
+
+1. strict `match` typing のセマンティック診断
+   - `TE025` を追加し、runtime / LSP の条件を統一
+2. `match` / `if` / ternary の root 選択
+   - preferred AST root を導入し、shallow root への吸い込みを低減
+3. DAP / runtime observability
+   - `_tinyP4ParserExact` と `_tinyP4ParserProbeMode` を公開
+4. context-light だけでなく contextful parity の検証
+   - `.in(...)` と `inDayTimeRange(...)` を parity corpus に追加
 
 ---
 

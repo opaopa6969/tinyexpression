@@ -64,7 +64,8 @@ public class AstEvaluatorGeneratedValuePathTest {
     Object value = ast.apply(context);
 
     assertEquals("ctx-object", value);
-    assertGeneratedAstRuntime("", ast);
+    assertEquals("p4-typed", ast.getObject("_astEvaluatorRuntime", String.class));
+    assertEquals(null, ast.getObject("_p4FallbackReason", String.class));
   }
 
   @Test
@@ -95,6 +96,10 @@ public class AstEvaluatorGeneratedValuePathTest {
         5f);
     assertGeneratedDeclarationFormula(
         "var $price as number set if not exists match{1==1->3,default->5} description='price';\n$price+2",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        5f);
+    assertGeneratedDeclarationFormula(
+        "var $price as number set if not exists /*pre*/match/*m*/{1==1->3,default->5} description='price';\n$price+2",
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
         5f);
     assertGeneratedDeclarationFormula(
@@ -174,6 +179,27 @@ public class AstEvaluatorGeneratedValuePathTest {
   }
 
   @Test
+  public void testMethodInvocationWithBareTernaryArgumentUsesGeneratedAstPath() {
+    String formula = "call identity($flag == 1 ? $a : $b)\nfloat identity($amount as number){\n$amount\n}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstMethodInvocationWithTernaryArgGeneratedPath", types, classLoader);
+
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    context.set("flag", 1.0f);
+    context.set("a", 3.0f);
+    context.set("b", 4.0f);
+    Object value = ast.apply(context);
+
+    assertEquals(3f, ((Number) value).floatValue(), 0.0001f);
+    assertGeneratedAstRuntime("", ast);
+    assertEquals(false, ast.getObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", Boolean.class));
+  }
+
+  @Test
   public void testNumberIfExpressionUsesGeneratedAstPath() {
     String formula = "if   (true){1}else{2}";
     SpecifiedExpressionTypes types =
@@ -187,6 +213,44 @@ public class AstEvaluatorGeneratedValuePathTest {
 
     assertEquals(1f, ((Number) value).floatValue(), 0.0001f);
     assertGeneratedAstRuntime("", ast);
+  }
+
+  @Test
+  public void testCommentPrefixedStructuredExpressionsUseGeneratedAstPath() {
+    assertStructuredGeneratedFormula(
+        "/*head*/if(true){1}else{2}",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        1f);
+    assertStructuredGeneratedFormula(
+        "/*head*/match/*c*/{1==1->3,default->5}",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        3f);
+  }
+
+  @Test
+  public void testStringFunctionComparisonUsesGeneratedAstPath() {
+    assertStructuredGeneratedFormula(
+        "if(trim(' opa 133 ')=='opa 133'){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if(toUpperCase('AlmondChocolate')=='ALMONDCHOCOLATE'){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if(toLowerCase('AlmondChocolate')!='almondchocolate'){1}else{0}", 0f);
+  }
+
+  @Test
+  public void testQuotedAndSlicedIfComparisonsUseGeneratedAstPath() {
+    assertStructuredGeneratedFormula(
+        "if(\"opa\"==\"opa\"){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if((\"opa\"+\"opa\"+\"6969\")==\"opaopa6969\"){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if('deadbeaf'[1:3]=='ea'){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if('gateman'[::-1]=='nametag'){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if('1a2b3'[::2]=='123'){1}else{0}", 1f);
+    assertStructuredGeneratedFormula(
+        "if('1a2b3'[1::2]=='ab'){1}else{0}", 1f);
   }
 
   @Test
@@ -219,6 +283,25 @@ public class AstEvaluatorGeneratedValuePathTest {
       assertEquals(expected, value);
     }
     assertGeneratedAstRuntime("formula=" + formula, ast);
+  }
+
+  private void assertStructuredGeneratedFormula(String formula, SpecifiedExpressionTypes types, float expected) {
+    ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+    Calculator ast = CalculatorCreatorRegistry.astEvaluatorCreator().create(
+        new Source(formula), "AstStructuredGeneratedPath", types, classLoader);
+
+    Object value = ast.apply(CalculationContext.newConcurrentContext());
+
+    assertEquals(expected, ((Number) value).floatValue(), 0.0001f);
+    assertGeneratedAstRuntime("formula=" + formula, ast);
+    assertEquals(null, ast.getObject("_p4FallbackReason", String.class));
+  }
+
+  private void assertStructuredGeneratedFormula(String formula, float expected) {
+    assertStructuredGeneratedFormula(
+        formula,
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        expected);
   }
 
   private static final Set<String> GENERATED_AST_RUNTIMES = Set.of("generated-ast", "p4-typed");

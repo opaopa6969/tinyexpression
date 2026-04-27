@@ -7,6 +7,8 @@ import java.util.List;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class P4TypedJavaCodeEmitterTest {
@@ -46,6 +48,42 @@ public class P4TypedJavaCodeEmitterTest {
     BinaryExpr add = binary(mul, "+", leaf("2"));
     String code = emitter.eval(add);
     assertEquals("((3.0f*4.0f)+2.0f)", code);
+  }
+
+  @Test
+  public void testBinaryArithmeticWithStructuredNumberLeaf() {
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
+    BinaryExpr addSin = binary(leaf("1"), "+", leaf("sin(30)"));
+    BinaryExpr addMax = binary(leaf("1"), "+", leaf("max(3,7)"));
+    String sinCode = emitter.eval(addSin);
+    String maxCode = emitter.eval(addMax);
+    assertTrue(sinCode.contains("Math.sin"));
+    assertTrue(maxCode.contains("Math.max"));
+  }
+
+  @Test
+  public void testMixedArithmeticWithNestedMathFunctionFromParsedAst() {
+    String formula = "(1+1)/3+sin(30)";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        formula);
+    String code = emitter.eval(ast);
+    assertTrue(code.contains("Math.sin"));
+    assertTrue(code.contains("/3.0f"));
+  }
+
+  @Test
+  public void testMixedArithmeticWithLeadingMathFunctionFromParsedAst() {
+    String formula = "sin(30)*2";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        formula);
+    String code = emitter.eval(ast);
+    assertTrue(code.contains("Math.sin"));
+    assertTrue(code.contains("*2.0f"));
   }
 
   // ── Variable in BinaryExpr: $a * $b ──
@@ -109,6 +147,17 @@ public class P4TypedJavaCodeEmitterTest {
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float));
     String code = emitter.eval(boolWrap("true"));
     assertEquals("true", code);
+  }
+
+  @Test
+  public void testStandaloneIsPresentUsesSourceAwareVariableName() {
+    String formula = "isPresent($presentName)";
+    IsPresentExpr ast = (IsPresentExpr) TinyExpressionP4Mapper.parse(formula, "IsPresentExpr");
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
+        formula);
+    String code = emitter.eval(ast);
+    assertEquals("calculateContext.isExists(\"presentName\")", code);
   }
 
   // ── IfExpr ──

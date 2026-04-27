@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">NotExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1088939353">
-<g id="1873431305">
+<g id="12775056">
+<g id="392059312">
 <rect x="40" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="67" y="62" text-anchor="middle" class="terminal-text">'not'</text>
 </g>
 <line x1="95" y1="58" x2="115" y2="58" class="rail"/>
 <polygon points="102,55 108,58 102,61" class="arrow"/>
-<g id="2087597908">
+<g id="1711204971">
 <rect x="115" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="135" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="156" y1="58" x2="176" y2="58" class="rail"/>
 <polygon points="163,55 169,58 163,61" class="arrow"/>
-<g id="1566708867">
+<g id="1007446155">
 <rect x="176" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="245" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="315" y1="58" x2="335" y2="58" class="rail"/>
 <polygon points="322,55 328,58 322,61" class="arrow"/>
-<g id="2108169190">
+<g id="1697953887">
 <rect x="335" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="355" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

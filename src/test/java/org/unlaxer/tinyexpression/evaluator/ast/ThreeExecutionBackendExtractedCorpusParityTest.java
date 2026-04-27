@@ -157,20 +157,12 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
       return false;
     }
     // Keep this extracted corpus context-light and deterministic.
-    // Also exclude math functions (sin, cos, tan, etc.) since DSL_JAVA_CODE
-    // does not handle them — it treats them as bare numbers.
     return !normalized.contains("$")
         && !normalized.contains("?")
         && !normalized.contains("call ")
         && !normalized.contains("external ")
         && !normalized.contains("internal ")
-        && !normalized.contains("var ")
-        && !normalized.contains("sin(")
-        && !normalized.contains("cos(")
-        && !normalized.contains("tan(")
-        && !normalized.contains("sqrt(")
-        && !normalized.contains("log(")
-        && !normalized.contains("exp(");
+        && !normalized.contains("var ");
   }
 
   private String unescapeJava(String escaped) {
@@ -241,7 +233,12 @@ public class ThreeExecutionBackendExtractedCorpusParityTest {
     }
     if (normalized.contains("sin(")
         || normalized.contains("cos(")
-        || normalized.contains("tan(")) {
+        || normalized.contains("tan(")
+        || normalized.contains("sqrt(")
+        || normalized.contains("log(")
+        || normalized.contains("exp(")
+        || normalized.contains("min(")
+        || normalized.contains("max(")) {
       return "math-fn";
     }
     if (normalized.contains("not(")

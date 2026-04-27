@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">DayOfWeek</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1537165625">
-<g id="6619939">
+<g id="1356601834">
+<g id="1771871885">
 <rect x="66" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="62" text-anchor="middle" class="terminal-text">'MONDAY'</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="142" y1="58" x2="153" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="153" y1="58" x2="169" y2="58" class="rail"/>
-<g id="1784089558">
+<g id="1850559365">
 <rect x="63" y="82" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="100" text-anchor="middle" class="terminal-text">'TUESDAY'</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M153,96 Q161,96 161,88" class="rail" fill="none"/>
 <path d="M161,66 Q161,58 169,58" class="rail" fill="none"/>
-<g id="833862982">
+<g id="204863426">
 <rect x="56" y="120" width="97" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="138" text-anchor="middle" class="terminal-text">'WEDNESDAY'</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M153,134 Q161,134 161,126" class="rail" fill="none"/>
 <path d="M161,66 Q161,58 169,58" class="rail" fill="none"/>
-<g id="1909564208">
+<g id="1699693433">
 <rect x="59" y="158" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="176" text-anchor="middle" class="terminal-text">'THURSDAY'</text>
 </g>
@@ -53,7 +53,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M153,172 Q161,172 161,164" class="rail" fill="none"/>
 <path d="M161,66 Q161,58 169,58" class="rail" fill="none"/>
-<g id="1501944370">
+<g id="1747632555">
 <rect x="66" y="196" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="214" text-anchor="middle" class="terminal-text">'FRIDAY'</text>
 </g>
@@ -63,7 +63,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M153,210 Q161,210 161,202" class="rail" fill="none"/>
 <path d="M161,66 Q161,58 169,58" class="rail" fill="none"/>
-<g id="190739311">
+<g id="1824501320">
 <rect x="59" y="234" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="252" text-anchor="middle" class="terminal-text">'SATURDAY'</text>
 </g>
@@ -73,7 +73,7 @@
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M153,248 Q161,248 161,240" class="rail" fill="none"/>
 <path d="M161,66 Q161,58 169,58" class="rail" fill="none"/>
-<g id="657172175">
+<g id="1326960634">
 <rect x="66" y="272" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="104" y="290" text-anchor="middle" class="terminal-text">'SUNDAY'</text>
 </g>

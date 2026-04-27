@@ -190,6 +190,7 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalStartsWithExpr(StartsWithExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalEndsWithExpr(EndsWithExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalContainsExpr(ContainsExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalInExpr(InExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalStartsWithDotExpr(StartsWithDotExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalEndsWithDotExpr(EndsWithDotExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalContainsDotExpr(ContainsDotExpr n) { return defaultEmitter.eval(n); }
@@ -211,6 +212,7 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalLogExpr(LogExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalExpExpr(ExpExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalNotExpr(NotExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalBooleanEqualityExpr(BooleanEqualityExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalToNumExpr(ToNumExpr n) { return defaultEmitter.eval(n); }
   @Override protected String evalSliceExpr(SliceExpr n) { return defaultEmitter.eval(n); }
 }

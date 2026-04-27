@@ -20,7 +20,12 @@ public class DslJavaCodeGenerationParityTest {
   public void testLegacyAndDslJavaCodeGenerateEquivalentJavaSource() {
     List<Case> cases = List.of(
         new Case("1+(8/4)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
+        new Case("sin(30)*2", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
         new Case("if(true){1}else{2}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
+        new Case("if(len(\"AlmondChocolate\")==15){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
+        new Case("if(10==20 /*test*/) /*test*/{ /*test*/ 10/*test*/ }/*test*/ else/*test*/ {/*test*/ 0/*test*/}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
         new Case("match{1==1->3,default->5}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float)),
         new Case("match{1==1->'A',default->'B'}", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float)),
         new Case("var $price as number set if not exists 3 description='price';\n$price+2",

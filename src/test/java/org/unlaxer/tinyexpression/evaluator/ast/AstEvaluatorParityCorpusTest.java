@@ -35,6 +35,15 @@ public class AstEvaluatorParityCorpusTest {
             new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),
         new Case("var $name as string set if not exists 'neo' description='name';\n$name",
             new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
+        new Case("if($country.in('ca','jp','us')){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+            context -> context.set("country", "jp")),
+        new Case("if(inDayTimeRange(MONDAY,10,FRIDAY,23)==true){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+            context -> {
+              context.set("nowDayOfWeek", 3f);
+              context.set("nowHour", 12f);
+            }),
         new Case("var $price as number set if not exists 3 description='price';\n$price+2",
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null));
 

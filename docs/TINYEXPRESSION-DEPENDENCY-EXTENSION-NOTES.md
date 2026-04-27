@@ -10,6 +10,45 @@
 
 ---
 
+## 2026-04-24: unlaxer-dsl / unlaxer-common 3.0.2 適用後の follow-up
+
+### Context
+
+- Target versions:
+  - `org.unlaxer:unlaxer-common:3.0.2`
+  - `org.unlaxer:unlaxer-dsl:3.0.2`
+- Goal:
+  1. 最新 UBNF 文法を tinyexpression の P4 runtime / LSP / DAP へ反映する
+  2. dependency repo を追加修正せず tinyexpression 側で追従可能か確認する
+
+### Implemented in tinyexpression
+
+1. UBNF token parser を fully-qualified 名へ更新
+2. `CompileContext` で dynamic `javac` classpath を補強
+3. `P4PreferredAstMapper` で preferred root 選択と compat parse を共通化
+4. `P4TypedAstEvaluator` / Java emitter 側で source-aware な slice / nested function 補正を追加
+5. strict `match` typing を runtime / LSP / DAP で統一
+
+### Resolution status
+
+- 現時点では dependency repo への追加修正は不要。
+- latest upgrade は tinyexpression 側の調整で吸収できている。
+
+### Remaining extension candidates
+
+1. generated mapper 自体が `preferredAstSimpleName` を codegen-native に扱えること
+2. `ParseContext.close()` の nested transaction cleanup 例外を upstream で再現・整理できること
+3. local facade (`P4PreferredAstMapper`) へ寄せている compat parse を将来的に削除できること
+
+### References
+
+- `src/main/java/org/unlaxer/tinyexpression/p4/P4PreferredAstMapper.java`
+- `src/main/java/org/unlaxer/compiler/CompileContext.java`
+- `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/P4TypedAstEvaluator.java`
+- `docs/TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md`
+
+---
+
 ## 2026-02-25: P4 UBNF associativity validation gap
 
 ### Context

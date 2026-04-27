@@ -1,7 +1,6 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.util.Optional;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -16,6 +15,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.OperatorOperandTreeCreator;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.evaluator.javacode.TinyExpressionTokens;
 import org.unlaxer.tinyexpression.evaluator.javacode.VariableTypeResolver;
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.parser.IfNotExistsParser;
 import org.unlaxer.tinyexpression.parser.SetterParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.VariableDeclarationParser.VariableInfo;
@@ -57,9 +58,6 @@ final class AstDeclarationRuntime {
       String source, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext, ClassLoader classLoader) {
     try {
-      if (hasInternalJavaCommentAfterLeadingDelimiters(source)) {
-        return Optional.empty();
-      }
       Token rootToken = parseAndReduce(source);
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken, specifiedExpressionTypes);
       if (tinyExpressionTokens.getVariableDeclarationTokens().isEmpty()) {
@@ -78,10 +76,14 @@ final class AstDeclarationRuntime {
             declarationToken, specifiedExpressionTypes, scopedContext, classLoader, methodDeclarationsSource, source);
       }
       String expressionSource = tokenTextCompat(tinyExpressionTokens.getExpressionToken());
+      String rawExpressionSource = methodDeclarationsSource.isBlank()
+          ? extractExpressionFromSource(source)
+          : null;
       // Fallback: if token text extraction is unreliable, extract expression from raw source
       if (expressionSource == null || expressionSource.isBlank()
-          || !isPlausibleExpression(expressionSource, source)) {
-        expressionSource = extractExpressionFromSource(source);
+          || !isPlausibleExpression(expressionSource, source)
+          || shouldPreferRawMainExpression(expressionSource, rawExpressionSource)) {
+        expressionSource = rawExpressionSource != null ? rawExpressionSource : extractExpressionFromSource(source);
       }
       if (expressionSource == null || expressionSource.isBlank()) {
         return Optional.empty();
@@ -124,10 +126,6 @@ final class AstDeclarationRuntime {
     return scoped;
   }
 
-  private static boolean hasInternalJavaCommentAfterLeadingDelimiters(String source) {
-    return TinyExpressionParserCapabilities.containsCommentAfterLeadingJavaStyleDelimiters(source);
-  }
-
   private static boolean applyDeclaration(Token declarationToken, SpecifiedExpressionTypes specifiedExpressionTypes,
       CalculationContext calculationContext, ClassLoader classLoader, String methodDeclarationsSource, String fullSource) {
     Optional<Token> setterToken = declarationToken.getChildAsOptional(TokenPredicators.parserImplements(SetterParser.class));
@@ -144,10 +142,7 @@ final class AstDeclarationRuntime {
     }
     Optional<Token> expressionToken =
         setterToken.get().getChildAsOptional(TokenPredicators.parserImplements(ExpressionInterface.class));
-    if (expressionToken.isEmpty()) {
-      return false;
-    }
-    String expressionSource = tokenTextCompat(expressionToken.get());
+    String expressionSource = expressionToken.map(AstDeclarationRuntime::tokenTextCompat).orElse(null);
     // Validate: if expressionSource doesn't look right, try extracting from the full source
     if (expressionSource == null || expressionSource.isBlank()
         || !isPlausibleSetterExpression(expressionSource, fullSource)) {
@@ -187,7 +182,9 @@ final class AstDeclarationRuntime {
     String embeddedFormulaSource = joinExpressionWithMethods(expressionSource, methodDeclarationsSource);
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
-    if (GeneratedAstRuntimeProbe.isAvailable(classLoader)) {
+    Optional<P4StrictMatchTypingValidator.Violation> semanticViolation =
+        P4StrictMatchTypingValidator.firstHeuristicViolationDetail(expressionSource, resultType);
+    if (GeneratedAstRuntimeProbe.isAvailable(classLoader) && semanticViolation.isEmpty()) {
       for (String preferredAstSimpleName : preferredAstSimpleNames(expressionSource, resultType)) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
             expressionSource, classLoader, preferredAstSimpleName);
@@ -243,51 +240,7 @@ final class AstDeclarationRuntime {
   }
 
   private static List<String> preferredAstSimpleNames(String expressionSource, ExpressionType resultType) {
-    List<String> preferred = new ArrayList<>();
-    String source = expressionSource == null ? "" : expressionSource.strip();
-    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(source);
-    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(source);
-    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(source);
-    if (methodInvocationHead) {
-      preferred.add("MethodInvocationExpr");
-    }
-    if (ifHead) {
-      preferred.add("IfExpr");
-    }
-    if (resultType == null) {
-      preferred.add(null);
-      return preferred;
-    }
-    if (resultType.isNumber()) {
-      if (matchHead) {
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("BinaryExpr");
-    } else if (resultType.isString()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-      }
-      preferred.add("StringConcatExpr");
-    } else if (resultType.isBoolean()) {
-      if (matchHead) {
-        preferred.add("BooleanMatchExpr");
-      }
-      preferred.add("BooleanExpr");
-    } else if (resultType.isObject()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-        preferred.add("BooleanMatchExpr");
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("ObjectExpr");
-    } else {
-      preferred.add(null);
-    }
-    preferred.add("MethodInvocationExpr");
-    preferred.add("VariableRefExpr");
-    preferred.add("BinaryExpr");
-    preferred.add(null);
-    return preferred.stream().distinct().toList();
+    return P4PreferredAstMapper.declarationCandidateAstSimpleNames(expressionSource, resultType);
   }
 
   private static Optional<Object> parseLiteralOrVariable(String expressionSource, ExpressionType resultType,
@@ -297,7 +250,10 @@ final class AstDeclarationRuntime {
       return Optional.empty();
     }
     if (text.startsWith("$")) {
-      return resolveVariable(extractVariableName(text), calculationContext);
+      String variableName = extractVariableName(text);
+      if (variableName != null && ("$" + variableName).equals(text)) {
+        return resolveVariable(variableName, calculationContext);
+      }
     }
     if (text.length() >= 2
         && ((text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'')
@@ -460,13 +416,7 @@ final class AstDeclarationRuntime {
     int setIdx = fullSource.indexOf(" set ", varIdx);
     if (setIdx < 0) return null;
     int exprStart = setIdx + " set ".length();
-    // Skip "if not exists" if present
-    String afterSet = fullSource.substring(exprStart).stripLeading();
-    if (afterSet.startsWith("if not exists ")) {
-      exprStart = fullSource.indexOf("if not exists ", exprStart) + "if not exists ".length();
-      afterSet = fullSource.substring(exprStart).stripLeading();
-      exprStart = fullSource.length() - afterSet.length();
-    }
+    exprStart = skipOptionalIfNotExists(fullSource, exprStart);
     // Find "description=" or ";" boundary
     int descIdx = fullSource.indexOf(" description=", exprStart);
     int semiIdx = fullSource.indexOf(';', exprStart);
@@ -482,6 +432,22 @@ final class AstDeclarationRuntime {
       return fullSource.substring(exprStart).strip();
     }
     return fullSource.substring(exprStart, boundary).strip();
+  }
+
+  private static int skipOptionalIfNotExists(String source, int from) {
+    int cursor = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, from);
+    if (!TinyExpressionParserCapabilities.matchesWordAt(source, cursor, "if")) {
+      return cursor;
+    }
+    int next = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, cursor + "if".length());
+    if (!TinyExpressionParserCapabilities.matchesWordAt(source, next, "not")) {
+      return cursor;
+    }
+    next = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, next + "not".length());
+    if (!TinyExpressionParserCapabilities.matchesWordAt(source, next, "exists")) {
+      return cursor;
+    }
+    return TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, next + "exists".length());
   }
 
   /**
@@ -506,6 +472,16 @@ final class AstDeclarationRuntime {
       return false;
     }
     return true;
+  }
+
+  private static boolean shouldPreferRawMainExpression(String expressionText, String rawExpressionText) {
+    if (rawExpressionText == null || rawExpressionText.isBlank()) {
+      return false;
+    }
+    if (expressionText == null || expressionText.isBlank()) {
+      return true;
+    }
+    return !expressionText.strip().equals(rawExpressionText.strip());
   }
 
   /**

@@ -4,9 +4,9 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class NumberSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/
+public class NumberSetterParser extends JavaStyleDelimitedLazyChain
   implements NumberExpression , SetterParser{
 
   @Override

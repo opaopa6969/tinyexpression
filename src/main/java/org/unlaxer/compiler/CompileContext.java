@@ -137,11 +137,48 @@ public class CompileContext implements Closeable{
     LinkedHashSet<String> classPathEntries = new LinkedHashSet<>();
     addClassPathEntries(classPathEntries, System.getProperty("surefire.test.class.path"));
     addClassPathEntries(classPathEntries, System.getProperty("java.class.path"));
+    addProjectOutputEntries(classPathEntries);
+    addCodeSourceEntry(classPathEntries, CompileContext.class);
+    addAnchorClassEntries(classPathEntries, classLoader,
+        "org.unlaxer.tinyexpression.CalculationContext",
+        "org.unlaxer.tinyexpression.TokenBaseCalculator",
+        "org.unlaxer.tinyexpression.NormalCalculationContext",
+        "org.unlaxer.tinyexpression.p4.P4PreferredAstMapper",
+        "org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper");
     addClassLoaderEntries(classPathEntries, classLoader);
     if (classPathEntries.isEmpty()) {
       return List.of();
     }
     return List.of("-classpath", String.join(File.pathSeparator, classPathEntries));
+  }
+
+  private static void addProjectOutputEntries(Set<String> classPathEntries) {
+    Path workingDirectory = Paths.get("").toAbsolutePath();
+    addExistingPath(classPathEntries, workingDirectory.resolve("target/classes"));
+    addExistingPath(classPathEntries, workingDirectory.resolve("target/test-classes"));
+  }
+
+  private static void addExistingPath(Set<String> classPathEntries, Path path) {
+    if (path != null && java.nio.file.Files.exists(path)) {
+      classPathEntries.add(path.toString());
+    }
+  }
+
+  private static void addAnchorClassEntries(Set<String> classPathEntries, ClassLoader classLoader, String... classNames) {
+    for (String className : classNames) {
+      try {
+        Class<?> anchor = Class.forName(className, false, classLoader);
+        addCodeSourceEntry(classPathEntries, anchor);
+      } catch (ClassNotFoundException ignored) {
+      }
+    }
+  }
+
+  private static void addCodeSourceEntry(Set<String> classPathEntries, Class<?> anchor) {
+    if (anchor == null || anchor.getProtectionDomain() == null || anchor.getProtectionDomain().getCodeSource() == null) {
+      return;
+    }
+    toClassPathEntry(anchor.getProtectionDomain().getCodeSource().getLocation()).ifPresent(classPathEntries::add);
   }
 
   private static void addClassPathEntries(Set<String> classPathEntries, String classPath) {

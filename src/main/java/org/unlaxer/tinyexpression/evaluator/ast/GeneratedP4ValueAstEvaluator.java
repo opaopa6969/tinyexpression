@@ -11,16 +11,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.p4.P4TernarySourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TinyExpressionKeywords;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class GeneratedP4ValueAstEvaluator {
+
+  private static final String CALL_KEYWORD = "call";
+  private static final String INTERNAL_KEYWORD = "internal";
 
   private static final ThreadLocal<Boolean> EMBEDDED_BRIDGE_USED =
       ThreadLocal.withInitial(() -> false);
@@ -57,6 +60,12 @@ final class GeneratedP4ValueAstEvaluator {
       return tryEvaluate(unwrapped, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
     }
     if (resultType.isNumber()) {
+      if ("VariableRefExpr".equals(rootSimpleName)) {
+        Optional<Object> variableRef = evaluateVariableRef(mappedAst, calculationContext, fallbackFormulaSource);
+        if (variableRef.isPresent() && variableRef.get() instanceof Number) {
+          return variableRef;
+        }
+      }
       if ("IfExpr".equals(rootSimpleName)) {
         Optional<Object> ifValue = evaluateIfExpression(
             mappedAst, resultType, specifiedExpressionTypes, calculationContext, classLoader, fallbackFormulaSource);
@@ -250,7 +259,7 @@ final class GeneratedP4ValueAstEvaluator {
         return booleanExpr;
       }
       Optional<Object> variableRef = findFirstNode(mappedAst, "VariableRefExpr")
-          .flatMap(node -> evaluateVariableRef(node, calculationContext));
+          .flatMap(node -> evaluateVariableRef(node, calculationContext, fallbackFormulaSource));
       if (variableRef.isPresent()) {
         return variableRef;
       }
@@ -310,7 +319,7 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.empty();
     }
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
-      return evaluateVariableRef(value, context).map(String::valueOf);
+      return evaluateVariableRef(value, context, fallbackFormulaSource).map(String::valueOf);
     }
     if ("MethodInvocationExpr".equals(value.getClass().getSimpleName())) {
       Optional<Object> invocation = evaluateMethodInvocation(value, ExpressionTypes.string,
@@ -340,6 +349,23 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.of(text);
   }
 
+  private static String unquoteStringLiteral(String text) {
+    if (text == null || text.length() < 2) {
+      return null;
+    }
+    char start = text.charAt(0);
+    char end = text.charAt(text.length() - 1);
+    if ((start != '\'' || end != '\'') && (start != '"' || end != '"')) {
+      return null;
+    }
+    for (int i = 1; i < text.length() - 1; i++) {
+      if (text.charAt(i) == start && text.charAt(i - 1) != '\\') {
+        return null;
+      }
+    }
+    return text.substring(1, text.length() - 1);
+  }
+
   private static Optional<Boolean> evaluateBoolean(Object node, CalculationContext context,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader, String fallbackFormulaSource) {
     Object value = invokeZeroArg(node, "value").orElse(null);
@@ -347,7 +373,8 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.empty();
     }
     if ("VariableRefExpr".equals(value.getClass().getSimpleName())) {
-      return evaluateVariableRef(value, context).flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
+      return evaluateVariableRef(value, context, fallbackFormulaSource)
+          .flatMap(GeneratedP4ValueAstEvaluator::toBoolean);
     }
     if ("MethodInvocationExpr".equals(value.getClass().getSimpleName())) {
       return evaluateMethodInvocation(value, ExpressionTypes._boolean,
@@ -397,7 +424,7 @@ final class GeneratedP4ValueAstEvaluator {
           .map(v -> (Object) v);
     }
     if ("VariableRefExpr".equals(simpleName)) {
-      return evaluateVariableRef(value, context);
+      return evaluateVariableRef(value, context, fallbackFormulaSource);
     }
     if ("MethodInvocationExpr".equals(simpleName)) {
       return evaluateMethodInvocation(value, ExpressionTypes.object,
@@ -453,9 +480,10 @@ final class GeneratedP4ValueAstEvaluator {
         classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
     SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
         expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
+    String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(text);
     for (String preferredAstSimpleName : preferredAstSimpleNames(expectedType, text)) {
       Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-          text, effectiveClassLoader, preferredAstSimpleName);
+          parseSource, effectiveClassLoader, preferredAstSimpleName);
       if (mapped.isEmpty()) {
         continue;
       }
@@ -501,8 +529,9 @@ final class GeneratedP4ValueAstEvaluator {
     if (text.startsWith("$")) {
       return resolveVariableAny(extractVariableName(text), context);
     }
-    if (text.length() >= 2 && text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\'') {
-      return Optional.of(text.substring(1, text.length() - 1));
+    String unquoted = unquoteStringLiteral(text);
+    if (unquoted != null) {
+      return Optional.of(unquoted);
     }
     if ("true".equalsIgnoreCase(text)) {
       return Optional.of(true);
@@ -513,12 +542,28 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.empty();
   }
 
-  private static Optional<Object> evaluateVariableRef(Object variableRefNode, CalculationContext context) {
+  private static Optional<Object> evaluateVariableRef(
+      Object variableRefNode, CalculationContext context, String fallbackFormulaSource) {
     Object name = invokeZeroArg(variableRefNode, "name").orElse(null);
-    if (name == null) {
+    String variableName = name == null ? null : extractVariableName(String.valueOf(name));
+    if ((variableName == null || variableName.isEmpty())
+        && fallbackFormulaSource != null
+        && !fallbackFormulaSource.isBlank()) {
+      Optional<String> snippet = sourceSnippetOfNode(variableRefNode, fallbackFormulaSource);
+      if (snippet.isPresent()) {
+        String stripped = snippet.get().strip();
+        String snippetName = extractVariableName(stripped);
+        if (snippetName != null && !snippetName.isEmpty()) {
+          variableName = snippetName;
+        } else if (!stripped.isEmpty()) {
+          variableName = stripped;
+        }
+      }
+    }
+    if (variableName == null || variableName.isEmpty()) {
       return Optional.empty();
     }
-    return resolveVariableAny(extractVariableName(String.valueOf(name)), context);
+    return resolveVariableAny(variableName, context);
   }
 
   private static Optional<Boolean> evaluateComparison(Object comparisonNode,
@@ -736,10 +781,8 @@ final class GeneratedP4ValueAstEvaluator {
       SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
       String sourceFormula) {
     Object name = invokeZeroArg(methodInvocationNode, "name").orElse(null);
-    if (name == null) {
-      return Optional.empty();
-    }
-    String methodName = String.valueOf(name).strip();
+    String methodName = name == null ? "" : String.valueOf(name).strip();
+    methodName = resolveInvocationMethodName(methodInvocationNode, sourceFormula, methodName);
     if (methodName.isEmpty()) {
       return Optional.empty();
     }
@@ -770,6 +813,7 @@ final class GeneratedP4ValueAstEvaluator {
         localBindings.isEmpty() ? context : new ScopedCalculationContext(context, localBindings);
     SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
         expectedType, resolveNumberTypeForEvaluation(expectedType, specifiedExpressionTypes.numberType()));
+    String methodSourceFormula = selectSnippetSource(method.expression(), sourceFormula);
     for (String preferredAstSimpleName : preferredAstSimpleNames(expectedType, method.expression())) {
       Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
           method.expression(), effectiveClassLoader, preferredAstSimpleName);
@@ -777,7 +821,7 @@ final class GeneratedP4ValueAstEvaluator {
         continue;
       }
       Optional<Object> evaluated = tryEvaluate(
-          mapped.get(), evalTypes, scopedContext, effectiveClassLoader, sourceFormula);
+          mapped.get(), evalTypes, scopedContext, effectiveClassLoader, methodSourceFormula);
       if (evaluated.isPresent()) {
         return evaluated;
       }
@@ -812,21 +856,51 @@ final class GeneratedP4ValueAstEvaluator {
     if (source.isEmpty()) {
       return Optional.empty();
     }
+    SpecifiedExpressionTypes argumentTypes = new SpecifiedExpressionTypes(
+        parameterType, resolveNumberTypeForEvaluation(parameterType, specifiedExpressionTypes.numberType()));
     if (source.startsWith("$")) {
-      Optional<Object> resolved = resolveVariableAny(extractVariableName(source), context);
-      if (resolved.isPresent()) {
+      String variableName = extractVariableName(source);
+      Optional<Object> resolved = resolveVariableAny(variableName, context);
+      if (resolved.isPresent() && variableName != null && ("$" + variableName).equals(source)) {
         return coerceToParameterType(resolved.get(), parameterType, specifiedExpressionTypes.numberType());
       }
     }
-    SpecifiedExpressionTypes argumentTypes = new SpecifiedExpressionTypes(
-        parameterType, resolveNumberTypeForEvaluation(parameterType, specifiedExpressionTypes.numberType()));
+    Optional<P4TernarySourceSupport.TernaryParts> ternaryParts =
+        P4TernarySourceSupport.parseTopLevelTernary(source);
+    if (ternaryParts.isPresent()) {
+      Optional<Boolean> conditionValue = evaluateArgumentCondition(
+          ternaryParts.get().conditionSource(),
+          specifiedExpressionTypes,
+          context,
+          classLoader,
+          sourceFormula);
+      if (conditionValue.isPresent()) {
+        boolean selected = Boolean.TRUE.equals(conditionValue.get());
+        return evaluateArgumentExpression(
+            selected ? ternaryParts.get().thenSource() : ternaryParts.get().elseSource(),
+            parameterType,
+            specifiedExpressionTypes,
+            context,
+            classLoader,
+            sourceFormula);
+      }
+    }
+    if (P4PreferredAstMapper.preferredAstSimpleNames(source, parameterType).contains("IfExpr")) {
+      Optional<Object> direct = AstEmbeddedExpressionRuntime.tryEvaluateFormulaDirect(
+          source, parameterType, argumentTypes, context, classLoader);
+      if (direct.isPresent()) {
+        return coerceToParameterType(direct.get(), parameterType, specifiedExpressionTypes.numberType());
+      }
+    }
+    String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(source);
+    String evaluationSource = selectSnippetSource(parseSource, sourceFormula);
     for (String preferredAstSimpleName : preferredAstSimpleNames(parameterType, source)) {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(source, classLoader, preferredAstSimpleName);
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(parseSource, classLoader, preferredAstSimpleName);
       if (mapped.isEmpty()) {
         continue;
       }
       Optional<Object> evaluated = tryEvaluate(
-          mapped.get(), argumentTypes, context, classLoader, sourceFormula);
+          mapped.get(), argumentTypes, context, classLoader, evaluationSource);
       if (evaluated.isPresent()) {
         return coerceToParameterType(evaluated.get(), parameterType, specifiedExpressionTypes.numberType());
       }
@@ -846,12 +920,37 @@ final class GeneratedP4ValueAstEvaluator {
     return Optional.empty();
   }
 
+  private static Optional<Boolean> evaluateArgumentCondition(String conditionSource,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader,
+      String sourceFormula) {
+    SpecifiedExpressionTypes booleanTypes =
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, specifiedExpressionTypes.numberType());
+    String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(conditionSource);
+    String evaluationSource = selectSnippetSource(parseSource, sourceFormula);
+    for (String preferredAstSimpleName : preferredAstSimpleNames(ExpressionTypes._boolean, conditionSource)) {
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(parseSource, classLoader, preferredAstSimpleName);
+      if (mapped.isEmpty()) {
+        continue;
+      }
+      Optional<Object> evaluated = tryEvaluate(
+          mapped.get(), booleanTypes, context, classLoader, evaluationSource);
+      if (evaluated.isPresent()) {
+        return Optional.of(Boolean.TRUE.equals(toBoolean(evaluated.get())));
+      }
+    }
+    return AstEmbeddedExpressionRuntime.tryEvaluateFormulaDirect(
+        conditionSource, ExpressionTypes._boolean, booleanTypes, context, classLoader)
+        .map(value -> Boolean.TRUE.equals(toBoolean(value)));
+  }
+
   static Optional<Object> parseLiteralArgument(String source, ExpressionType parameterType,
       ExpressionType defaultNumberType) {
     if (source.isEmpty()) {
       return Optional.empty();
     }
-    if (source.length() >= 2 && source.charAt(0) == '\'' && source.charAt(source.length() - 1) == '\'') {
+    if (source.length() >= 2
+        && ((source.charAt(0) == '\'' && source.charAt(source.length() - 1) == '\'')
+            || (source.charAt(0) == '"' && source.charAt(source.length() - 1) == '"'))) {
       return Optional.of(source.substring(1, source.length() - 1));
     }
     Optional<Boolean> bool = toBoolean(source);
@@ -895,6 +994,20 @@ final class GeneratedP4ValueAstEvaluator {
       return Optional.empty();
     }
     return Optional.of(value);
+  }
+
+  private static String selectSnippetSource(String snippetSource, String fallbackFormulaSource) {
+    String normalized = snippetSource == null ? "" : snippetSource.strip();
+    if (normalized.isEmpty()) {
+      return normalized;
+    }
+    if (AstEmbeddedExpressionRuntime.hasMethodInvocationHead(normalized)) {
+      String fallback = fallbackFormulaSource == null ? "" : fallbackFormulaSource.strip();
+      if (!fallback.isEmpty()) {
+        return fallback;
+      }
+    }
+    return normalized;
   }
 
   static Number castNumber(Number number, ExpressionType targetType) {
@@ -947,6 +1060,20 @@ final class GeneratedP4ValueAstEvaluator {
     return findInvocationArguments(sourceFormula, methodName);
   }
 
+  static String resolveInvocationMethodName(Object methodInvocationNode, String sourceFormula, String explicitName) {
+    if (explicitName != null && !explicitName.isBlank()) {
+      return explicitName.strip();
+    }
+    Optional<String> invocationSnippet = sourceSnippetOfNode(methodInvocationNode, sourceFormula);
+    if (invocationSnippet.isPresent()) {
+      String fromSnippet = parseMethodInvocationName(invocationSnippet.get());
+      if (!fromSnippet.isBlank()) {
+        return fromSnippet;
+      }
+    }
+    return parseMethodInvocationName(sourceFormula);
+  }
+
   static Optional<String> sourceSnippetOfNode(Object node, String sourceFormula) {
     if (node == null || sourceFormula == null || sourceFormula.isEmpty()) {
       return Optional.empty();
@@ -990,12 +1117,38 @@ final class GeneratedP4ValueAstEvaluator {
     return splitTopLevelCommaSeparated(arguments);
   }
 
+  static String parseMethodInvocationName(String invocationSource) {
+    String source = invocationSource == null ? "" : invocationSource.strip();
+    if (source.isEmpty()) {
+      return "";
+    }
+    int index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(source, 0);
+    if (TinyExpressionParserCapabilities.matchesWordAt(source, index, CALL_KEYWORD)) {
+      index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(
+          source, index + CALL_KEYWORD.length());
+      if (TinyExpressionParserCapabilities.matchesWordAt(source, index, INTERNAL_KEYWORD)) {
+        index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(
+            source, index + INTERNAL_KEYWORD.length());
+      }
+    } else if (TinyExpressionParserCapabilities.matchesWordAt(source, index, INTERNAL_KEYWORD)) {
+      index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(
+          source, index + INTERNAL_KEYWORD.length());
+    } else {
+      return "";
+    }
+    int end = index;
+    while (end < source.length() && Character.isJavaIdentifierPart(source.charAt(end))) {
+      end++;
+    }
+    return end > index ? source.substring(index, end) : "";
+  }
+
   static List<String> findInvocationArguments(String sourceFormula, String methodName) {
     if (sourceFormula == null || methodName == null || methodName.isBlank()) {
       return List.of();
     }
     String source = sourceFormula;
-    String callKeyword = TinyExpressionKeywords.CALL;
+    String callKeyword = CALL_KEYWORD;
     int from = 0;
     while (from < source.length()) {
       int callIndex = source.indexOf(callKeyword, from);
@@ -1030,7 +1183,7 @@ final class GeneratedP4ValueAstEvaluator {
     if (expression == null || methodName == null || methodName.isBlank()) {
       return false;
     }
-    String callKeyword = TinyExpressionKeywords.CALL;
+    String callKeyword = CALL_KEYWORD;
     int index = TinyExpressionParserCapabilities.skipJavaStyleDelimiters(expression, 0);
     if (!TinyExpressionParserCapabilities.matchesWordAt(expression, index, callKeyword)) {
       return false;
@@ -1364,54 +1517,7 @@ final class GeneratedP4ValueAstEvaluator {
   }
 
   private static List<String> preferredAstSimpleNames(ExpressionType type, String sourceText) {
-    List<String> preferred = new ArrayList<>();
-    String source = sourceText == null ? "" : sourceText.strip();
-    boolean methodInvocationHead = AstEmbeddedExpressionRuntime.hasMethodInvocationHead(source);
-    boolean ifHead = AstEmbeddedExpressionRuntime.hasIfHead(source);
-    boolean matchHead = AstEmbeddedExpressionRuntime.hasMatchHead(source);
-    if (methodInvocationHead) {
-      preferred.add("MethodInvocationExpr");
-    }
-    if (ifHead) {
-      preferred.add("IfExpr");
-    }
-    if (type == null) {
-      preferred.add(null);
-      return preferred;
-    }
-    if (type.isNumber()) {
-      if (matchHead) {
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("BinaryExpr");
-    } else if (type.isString()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-      }
-      preferred.add("StringConcatExpr");
-    } else if (type.isBoolean()) {
-      if (matchHead) {
-        preferred.add("BooleanMatchExpr");
-      }
-      preferred.add("BooleanOrExpr");
-    } else if (type.isObject()) {
-      if (matchHead) {
-        preferred.add("StringMatchExpr");
-        preferred.add("BooleanMatchExpr");
-        preferred.add("NumberMatchExpr");
-      }
-      preferred.add("ObjectExpr");
-      preferred.add("StringConcatExpr");
-      preferred.add("BooleanOrExpr");
-      preferred.add("BinaryExpr");
-    } else {
-      preferred.add(null);
-    }
-    preferred.add("MethodInvocationExpr");
-    preferred.add("VariableRefExpr");
-    preferred.add("IfExpr");
-    preferred.add("BinaryExpr");
-    return preferred.stream().distinct().collect(Collectors.toList());
+    return P4PreferredAstMapper.generatedValueCandidateAstSimpleNames(sourceText, type);
   }
 
   static boolean isNumericLiteral(String source) {

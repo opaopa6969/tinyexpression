@@ -322,6 +322,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.BooleanAndExpr ba -> {}
       case TinyExpressionP4AST.BooleanXorExpr bx -> {}
       case TinyExpressionP4AST.BooleanFactorExpr bf -> {}
+      case TinyExpressionP4AST.BooleanEqualityExpr beq -> {}
       case TinyExpressionP4AST.SinExpr s -> {}
       case TinyExpressionP4AST.CosExpr s -> {}
       case TinyExpressionP4AST.TanExpr s -> {}
@@ -353,6 +354,7 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.EndsWithDotExpr s -> {}
       case TinyExpressionP4AST.ContainsExpr s -> {}
       case TinyExpressionP4AST.ContainsDotExpr s -> {}
+      case TinyExpressionP4AST.InExpr s -> {}
       case TinyExpressionP4AST.IsPresentExpr s -> {}
       case TinyExpressionP4AST.InTimeRangeExpr s -> {}
       case TinyExpressionP4AST.InDayTimeRangeExpr s -> {}

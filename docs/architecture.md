@@ -6,6 +6,12 @@
 
 TinyExpression is a **hybrid architecture** — a hand-written legacy parser stack coexists with an auto-generated P4 DSL parser stack. Both stacks feed into one of 6 execution backends.
 
+Verified baseline as of 2026-04-24:
+
+- `tinyexpression` `1.4.11`
+- `unlaxer-common` `3.0.2`
+- `unlaxer-dsl` `3.0.2`
+
 ```
 Formula text
     │
@@ -37,7 +43,8 @@ Parse results are `ParseTree` nodes (token trees). The legacy stack covers **all
 
 ### P4 Parser (UBNF-generated)
 
-The P4 parser is generated from `docs/ubnf/tinyexpression-p4-draft.ubnf` by unlaxer-dsl.
+The P4 parser is generated from `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`,
+with `docs/ubnf/tinyexpression-p4-complete.ubnf` kept as a snapshot, using `unlaxer-dsl 3.0.2`.
 
 Generated artifacts:
 
@@ -46,9 +53,12 @@ Generated artifacts:
 | `TinyExpressionP4Parsers` | Entry-point generated parser |
 | P4 AST (sealed interface hierarchy) | Type-safe AST nodes |
 | `TinyExpressionP4Mapper` | ParseTree → P4 AST mapper |
+| `P4PreferredAstMapper` | hand-written facade for preferred-root selection and compat parse |
 | `P4TypedAstEvaluator` | Type-safe AST evaluator (PRIMARY) |
 
 The P4 stack provides type-safe `instanceof`-based dispatch — no regex fallback in LSP/DAP.
+The current grammar covers CodeBlock, boolean equality, string dot methods, slice variants,
+`isPresent(...)`, `inTimeRange(...)`, `inDayTimeRange(...)`, typed `if/ternary`, and strict `match` typing.
 
 ---
 
@@ -84,10 +94,10 @@ This enables exhaustive `switch` expressions and eliminates runtime cast errors.
 P4TypedAstEvaluator (PRIMARY)
     │ fails (P4 grammar gap)
     ▼
-GeneratedP4NumberAstEvaluator
+GeneratedP4ValueAstEvaluator
     │ fails
     ▼
-AstTokenTreeEvaluator (legacy AST walk)
+AstDeclarationRuntime / AstTokenTreeEvaluator (legacy AST walk)
     │ fails
     ▼
 JavaCode fallback (JAVA_CODE path)
@@ -152,6 +162,9 @@ Key classes:
 - `org.unlaxer.compiler.MemoryJavaFileManager`
 - `org.unlaxer.compiler.CompileContext`
 
+`CompileContext` also hardens dynamic `javac` classpath resolution so surefire and module-separated runs
+can still resolve `CalculationContext` and `TokenBaseCalculator`.
+
 ---
 
 ## Multi-Formula Execution Pipeline
@@ -186,16 +199,17 @@ The P4 LSP server (`tools/tinyexpression-p4-lsp-vscode`) connects to the P4 stac
     │
     ▼
 TinyExpressionP4LanguageServerExt (LSP)
-    ├── diagnostics via ParseFailureDiagnostics
+    ├── diagnostics via ParseFailureDiagnostics + strict match typing (TE025)
     ├── semantic tokens via P4 AST instanceof
-    └── completion / hover via P4 AST node type
+    └── completion / hover via P4 AST node type and preferred root
 
 .tinyexp debug (F5)
     │
     ▼
 TinyExpressionP4DebugAdapterExt (DAP)
     ├── runs all 6 backends
-    └── exposes parity.* variables in debugger
+    └── exposes `_tinyP4ParserUsed`, `_tinyP4ParserExact`, `_tinyP4ParserProbeMode`,
+        `_tinyP4AstNodeType`, `_tinyP4AstNodePath`, and `parity.*`
 ```
 
 External IDE repository: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
@@ -206,6 +220,8 @@ External IDE repository: [tinyexpression-group/tinyexpression-ide](https://githu
 
 - [backends.md](backends.md) — backend comparison table and fallback chain
 - [language-guide.md](language-guide.md) — language specification
+- [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) — remaining work after the latest UBNF upgrade
+- [TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md) — operational guide for regeneration and verification
 - [decisions/ADR-001-p4-primary.md](decisions/ADR-001-p4-primary.md) — P4 promotion rationale
 - [decisions/ADR-002-type-promotion.md](decisions/ADR-002-type-promotion.md) — type promotion rules
 - [decisions/ADR-003-java-codeblock-safety.md](decisions/ADR-003-java-codeblock-safety.md) — Java code block security model

@@ -4,7 +4,6 @@ import static org.junit.Assert.*;
 
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Optional;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -13,6 +12,9 @@ import org.unlaxer.tinyexpression.NormalCalculationContext;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.p4.P4SliceSourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class P4TypedAstEvaluatorTest {
@@ -78,6 +80,125 @@ public class P4TypedAstEvaluatorTest {
     assertEquals(14.0f, ((Number) result).floatValue(), 0.001f);
   }
 
+  @Test
+  public void testBinaryArithmeticWithStructuredNumberLeaf() {
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
+    BinaryExpr addSin = binary(leaf("1"), "+", leaf("sin(30)"));
+    BinaryExpr addMax = binary(leaf("1"), "+", leaf("max(3,7)"));
+    assertEquals(1.5f, ((Number) evaluator.eval(addSin)).floatValue(), 0.001f);
+    assertEquals(8.0f, ((Number) evaluator.eval(addMax)).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testMixedArithmeticWithNestedMathFunctionFromParsedAst() {
+    String formula = "(1+1)/3+sin(30)";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.1666667f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testMixedArithmeticWithLeadingMathFunctionFromParsedAst() {
+    String formula = "sin(30)*2";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithLenFunctionFromParsedAst() {
+    String formula = "if(len(\"AlmondChocolate\")==15){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithInMethodFromParsedAst() {
+    String formula = "if('cnjpuszn'[4:6].in('en','ca','us')){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithVariableInMethodFromParsedAst() {
+    CalculationContext context = newContext();
+    context.set("country", "jp");
+    String formula = "if($country.in('ca','jp','us')){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        context,
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithInDayTimeRangeFromParsedAst() {
+    CalculationContext context = newContext();
+    context.set("nowDayOfWeek", 3f);
+    context.set("nowHour", 12f);
+    String formula = "if(inDayTimeRange(MONDAY,10,FRIDAY,23)==true){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        context,
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithNestedSliceFromParsedAst() {
+    String formula = "if('gateman'[::-1][0:4]=='name'){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testBlockCommentedIfExprFromParsedAst() {
+    String formula = "if(10==20 /*test*/) /*test*/{ /*test*/ 10/*test*/ }/*test*/ else/*test*/ {/*test*/ 0/*test*/}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(0.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
   // ── Variable in BinaryExpr: $a * $b = 12 ──
 
   @Test
@@ -113,6 +234,21 @@ public class P4TypedAstEvaluatorTest {
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), newContext());
     Object result = evaluator.eval(new VariableRefExpr("$flag"));
     assertEquals(true, result);
+  }
+
+  @Test
+  public void testVariableRefExprWithEmptyMappedNameUsesSourceSnippet() {
+    CalculationContext context = newContext();
+    context.setObject("payload", "ctx-object");
+    String formula = "$payload";
+    VariableRefExpr mapped = (VariableRefExpr) TinyExpressionP4Mapper.parse(formula, "VariableRefExpr");
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
+        context,
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(mapped);
+    assertEquals("ctx-object", result);
   }
 
   // ── ComparisonExpr ──
@@ -184,6 +320,73 @@ public class P4TypedAstEvaluatorTest {
     assertEquals(200.0f, ((Number) result).floatValue(), 0.001f);
   }
 
+  @Test
+  public void testParsedIfExprWithMathFunctionComparisonUsesSourceAwareChildren() {
+    String formula = "if(max(-1,-2)==-1){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testParsedIfExprWithMixedBooleanConditionUsesSourceAwareChildren() {
+    String formula = "if(false|false|false|(true&true)){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testParsedIfExprWithBooleanEqualityUsesSourceAwareChildren() {
+    String formula = "if(true!=false){1}else{0}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testStandaloneIsPresentUsesSourceAwareVariableName() {
+    CalculationContext context = newContext();
+    context.set("presentName", "hello");
+    String formula = "isPresent($presentName)";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._boolean).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
+        context,
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(true, result);
+  }
+
+  @Test
+  public void testParsedIfExprWithNestedIfElseBranchUsesSourceAwareChildren() {
+    String formula = "if(not(not(0.7*5>5))){6*8}else{0.3*if(1>0){0.3}else{0.2}}";
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        formula,
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(0.09f, ((Number) result).floatValue(), 0.001f);
+  }
+
   // ── StringConcatExpr ──
 
   @Test
@@ -192,6 +395,93 @@ public class P4TypedAstEvaluatorTest {
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
     Object result = evaluator.eval(new StringConcatExpr("hello world", List.of(), List.of()));
     assertEquals("hello world", result);
+  }
+
+  @Test
+  public void testStringConcatExprStructuredLeaf() {
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
+    Object trimResult = evaluator.eval(new StringConcatExpr("trim(' opa 133 ')", List.of(), List.of()));
+    assertEquals("opa 133", trimResult);
+
+    Object groupedConcatResult = evaluator.eval(
+        new StringConcatExpr("(\"opa\"+\"opa\"+\"6969\")", List.of(), List.of()));
+    assertEquals("opaopa6969", groupedConcatResult);
+
+    Object reverseSliceResult = evaluator.eval(
+        new StringConcatExpr("'gateman'[::-1]", List.of(), List.of()));
+    assertEquals("nametag", reverseSliceResult);
+
+    Object steppedSliceResult = evaluator.eval(
+        new StringConcatExpr("'1a2b3'[::2]", List.of(), List.of()));
+    assertEquals("123", steppedSliceResult);
+  }
+
+  @Test
+  public void testIfExprWithGroupedStringComparison() {
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
+        "if((\"opa\"+\"opa\"+\"6969\")==\"opaopa6969\"){1}else{0}",
+        ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        "if((\"opa\"+\"opa\"+\"6969\")==\"opaopa6969\"){1}else{0}",
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithReverseSliceStringComparison() {
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
+        "if('gateman'[::-1]=='nametag'){1}else{0}",
+        ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        "if('gateman'[::-1]=='nametag'){1}else{0}",
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testIfExprWithStepOnlySliceStringComparison() {
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
+        "if('1a2b3'[::2]=='123'){1}else{0}",
+        ExpressionTypes._float).ast();
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        newContext(),
+        "if('1a2b3'[::2]=='123'){1}else{0}",
+        Thread.currentThread().getContextClassLoader());
+    Object result = evaluator.eval(ast);
+    assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
+  }
+
+  @Test
+  public void testSliceSourcePartsOfNode() {
+    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
+        "'gateman'[::-1]",
+        ExpressionTypes.string).ast();
+    assertTrue(ast instanceof SliceExpr);
+    P4SliceSourceSupport.SliceParts parts =
+        P4SliceSourceSupport.slicePartsOfNode(ast, "'gateman'[::-1]").orElseThrow();
+    assertEquals("'gateman'", parts.valueSource());
+    assertNull(parts.startSource());
+    assertNull(parts.endSource());
+    assertEquals("-1", parts.stepSource());
+
+    TinyExpressionP4AST steppedAst = P4PreferredAstMapper.parseDetailed(
+        "'1a2b3'[::2]",
+        ExpressionTypes.string).ast();
+    assertTrue(steppedAst instanceof SliceExpr);
+    P4SliceSourceSupport.SliceParts steppedParts =
+        P4SliceSourceSupport.slicePartsOfNode(steppedAst, "'1a2b3'[::2]").orElseThrow();
+    assertEquals("'1a2b3'", steppedParts.valueSource());
+    assertNull(steppedParts.startSource());
+    assertNull(steppedParts.endSource());
+    assertEquals("2", steppedParts.stepSource());
   }
 
   // ── NumberMatchExpr ──
@@ -288,7 +578,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.of(leaf("0")), Optional.of(leaf("3")), Optional.empty()));
+        "$s", leaf("0"), leaf("3"), null));
     assertEquals("hel", result);
   }
 
@@ -300,7 +590,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.of(leaf("1")), Optional.empty(), Optional.empty()));
+        "$s", leaf("1"), null, null));
     assertEquals("ello", result);
   }
 
@@ -312,7 +602,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.empty(), Optional.of(leaf("3")), Optional.empty()));
+        "$s", null, leaf("3"), null));
     assertEquals("hel", result);
   }
 
@@ -324,7 +614,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.empty(), Optional.empty(), Optional.of(leaf("2"))));
+        "$s", null, null, leaf("2")));
     assertEquals("hlo", result);
   }
 
@@ -336,7 +626,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.empty(), Optional.empty(), Optional.of(leaf("-1"))));
+        "$s", null, null, leaf("-1")));
     assertEquals("olleh", result);
   }
 
@@ -348,7 +638,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.of(leaf("-3")), Optional.empty(), Optional.empty()));
+        "$s", leaf("-3"), null, null));
     assertEquals("llo", result);
   }
 
@@ -360,7 +650,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        new VariableRefExpr("$s"), Optional.of(leaf("3")), Optional.of(leaf("3")), Optional.empty()));
+        "$s", leaf("3"), leaf("3"), null));
     assertEquals("", result);
   }
 }

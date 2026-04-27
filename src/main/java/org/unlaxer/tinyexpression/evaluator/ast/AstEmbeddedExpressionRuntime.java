@@ -39,6 +39,15 @@ final class AstEmbeddedExpressionRuntime {
     return evaluateFormula(fallback, resultType, specifiedExpressionTypes, context, classLoader);
   }
 
+  static Optional<Object> tryEvaluateFormulaDirect(String expressionSource, ExpressionType resultType,
+      SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext context, ClassLoader classLoader) {
+    String expression = expressionSource == null ? "" : expressionSource.strip();
+    if (expression.isEmpty()) {
+      return Optional.empty();
+    }
+    return evaluateFormula(expression, resultType, specifiedExpressionTypes, context, classLoader);
+  }
+
   static boolean isLikelyExpression(String text) {
     String normalized = text == null ? "" : text.strip();
     if (normalized.isEmpty()) {
@@ -59,6 +68,7 @@ final class AstEmbeddedExpressionRuntime {
     return hasIfHead(normalized)
         || hasMatchHead(normalized)
         || hasMethodInvocationHead(normalized)
+        || looksLikeStringStructuredExpression(normalized)
         || normalized.contains("->");
   }
 
@@ -121,6 +131,114 @@ final class AstEmbeddedExpressionRuntime {
     for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
       if (TinyExpressionParserCapabilities.hasHead(normalized, keyword, null)) {
         return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean looksLikeStringStructuredExpression(String normalized) {
+    String unwrapped = unwrapWholeParentheses(normalized);
+    if (!unwrapped.equals(normalized)) {
+      return looksLikeStringStructuredExpression(unwrapped)
+          || hasTopLevelStringConcat(unwrapped);
+    }
+    return normalized.startsWith("trim(")
+        || normalized.startsWith("toUpperCase(")
+        || normalized.startsWith("toLowerCase(")
+        || normalized.startsWith("startsWith(")
+        || normalized.startsWith("endsWith(")
+        || normalized.startsWith("contains(")
+        || normalized.startsWith("slice(")
+        || normalized.contains(".trim(")
+        || normalized.contains(".toUpperCase(")
+        || normalized.contains(".toLowerCase(")
+        || normalized.contains(".startsWith(")
+        || normalized.contains(".endsWith(")
+        || normalized.contains(".contains(")
+        || (normalized.indexOf('[') >= 0 && normalized.endsWith("]"));
+  }
+
+  private static String unwrapWholeParentheses(String text) {
+    String current = text == null ? "" : text.strip();
+    while (isWrappedByWholeParentheses(current)) {
+      current = current.substring(1, current.length() - 1).strip();
+    }
+    return current;
+  }
+
+  private static boolean isWrappedByWholeParentheses(String text) {
+    if (text.length() < 2 || text.charAt(0) != '(' || text.charAt(text.length() - 1) != ')') {
+      return false;
+    }
+    int parenDepth = 0;
+    int bracketDepth = 0;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      char prev = i > 0 ? text.charAt(i - 1) : '\0';
+      if (c == '\'' && !inDoubleQuote && prev != '\\') {
+        inSingleQuote = !inSingleQuote;
+        continue;
+      }
+      if (c == '"' && !inSingleQuote && prev != '\\') {
+        inDoubleQuote = !inDoubleQuote;
+        continue;
+      }
+      if (inSingleQuote || inDoubleQuote) {
+        continue;
+      }
+      switch (c) {
+        case '(' -> parenDepth++;
+        case ')' -> {
+          parenDepth--;
+          if (parenDepth == 0 && i < text.length() - 1) {
+            return false;
+          }
+        }
+        case '[' -> bracketDepth++;
+        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
+        default -> {
+        }
+      }
+      if (parenDepth < 0 || bracketDepth < 0) {
+        return false;
+      }
+    }
+    return parenDepth == 0 && bracketDepth == 0;
+  }
+
+  private static boolean hasTopLevelStringConcat(String text) {
+    int parenDepth = 0;
+    int bracketDepth = 0;
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
+    for (int i = 0; i < text.length(); i++) {
+      char c = text.charAt(i);
+      char prev = i > 0 ? text.charAt(i - 1) : '\0';
+      if (c == '\'' && !inDoubleQuote && prev != '\\') {
+        inSingleQuote = !inSingleQuote;
+        continue;
+      }
+      if (c == '"' && !inSingleQuote && prev != '\\') {
+        inDoubleQuote = !inDoubleQuote;
+        continue;
+      }
+      if (inSingleQuote || inDoubleQuote) {
+        continue;
+      }
+      switch (c) {
+        case '(' -> parenDepth++;
+        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
+        case '[' -> bracketDepth++;
+        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
+        case '+' -> {
+          if (parenDepth == 0 && bracketDepth == 0) {
+            return true;
+          }
+        }
+        default -> {
+        }
       }
     }
     return false;

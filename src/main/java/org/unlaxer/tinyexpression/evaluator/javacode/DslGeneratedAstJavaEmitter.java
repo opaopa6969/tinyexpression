@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -29,19 +30,17 @@ final class DslGeneratedAstJavaEmitter {
       return Optional.empty();
     }
 
-    Optional<Object> parsed = tryParseAst(formula, preferredAstSimpleName(resultType, formula), classLoader);
+    Optional<TinyExpressionP4AST> parsed = tryParseAst(formula, resultType);
     if (parsed.isEmpty()) {
       return Optional.empty();
     }
 
     // ── P4-typed emitter (sealed-interface switch, no reflection) ──
-    if (parsed.get() instanceof TinyExpressionP4AST typedAst) {
-      P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes);
-      String typedExpression = emitter.eval(typedAst);
-      if (typedExpression != null && !typedExpression.isBlank()) {
-        return Optional.of(new EmittedJava(
-            emitter.buildJavaClass(className, typedExpression), "p4-typed-emitter"));
-      }
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes, formula);
+    String typedExpression = emitter.eval(parsed.get());
+    if (typedExpression != null && !typedExpression.isBlank()) {
+      return Optional.of(new EmittedJava(
+          emitter.buildJavaClass(className, typedExpression), "p4-typed-emitter"));
     }
     return Optional.empty();
   }
@@ -55,12 +54,6 @@ final class DslGeneratedAstJavaEmitter {
       return false;
     }
     if (text.contains("\n") || text.contains(";") || text.contains("{") || text.contains("}")) {
-      return false;
-    }
-    // Math functions (sin, cos, etc.) are not yet properly handled by the P4 mapper's
-    // BinaryExpr path — the mapper loses the function wrapper when mapping NumberFactor.
-    // Fall back to legacy code generation for these.
-    if (containsMathFunction(text)) {
       return false;
     }
     if (resultType.isNumber()) {
@@ -170,25 +163,10 @@ final class DslGeneratedAstJavaEmitter {
     return preferredAstSimpleName(resultType);
   }
 
-  private static Optional<Object> tryParseAst(String formula, String preferredAstSimpleName, ClassLoader classLoader) {
-    ClassLoader effectiveClassLoader =
-        classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
-    if (effectiveClassLoader == null) {
-      effectiveClassLoader = DslGeneratedAstJavaEmitter.class.getClassLoader();
-    }
+  private static Optional<TinyExpressionP4AST> tryParseAst(String formula, ExpressionType resultType) {
     try {
-      Class<?> mapperClass = Class.forName(
-          "org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, effectiveClassLoader);
-      try {
-        Method parsePreferred = mapperClass.getMethod("parse", String.class, String.class);
-        Object ast = parsePreferred.invoke(null, formula, preferredAstSimpleName);
-        return Optional.ofNullable(ast);
-      } catch (NoSuchMethodException ignored) {
-        Method parse = mapperClass.getMethod("parse", String.class);
-        Object ast = parse.invoke(null, formula);
-        return Optional.ofNullable(ast);
-      }
-    } catch (Throwable ignored) {
+      return Optional.ofNullable(P4PreferredAstMapper.parseDetailed(formula, resultType).ast());
+    } catch (RuntimeException ignored) {
       return Optional.empty();
     }
   }

@@ -4,13 +4,13 @@ grammar TinyExpressionP4 {
   @whitespace: javaStyle
   @comment: { line: '//' }
 
-  token NUMBER     = NumberParser
-  token IDENTIFIER = IdentifierParser
-  token STRING     = SingleQuotedParser
+  token NUMBER     = org.unlaxer.parser.elementary.NumberParser
+  token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser
+  token STRING     = org.unlaxer.tinyexpression.parser.StringLiteralParser
   token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
   token CODE_BODY  = UNTIL('```')
   token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
-  token EOF        = EndOfSourceParser
+  token EOF        = org.unlaxer.parser.elementary.EndOfSourceParser
 
   @root
   @scopeTree(mode=lexical)
@@ -21,10 +21,7 @@ grammar TinyExpressionP4 {
   // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
 
   @mapping(CodeBlockExpr)
-  CodeBlock ::= CodeStart CodeBody CodeEnd ;
-  CodeStart ::= CODE_START ;
-  CodeBody ::= CODE_BODY ;
-  CodeEnd ::= CODE_END ;
+  CodeBlock ::= CODE_START CODE_BODY CODE_END ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName [#methodName] as alias;
@@ -288,6 +285,7 @@ grammar TinyExpressionP4 {
     | MathFunction
     | ToNumFunction
     | LengthDotMethod
+    | LenFunction
     | LengthFunction
     | ExternalNumberInvocation
     | NUMBER
@@ -308,6 +306,9 @@ grammar TinyExpressionP4 {
 
   @mapping(LengthExpr, params=[value])
   LengthFunction ::= 'length' '(' StringExpression @value ')' ;
+
+  @mapping(LengthExpr, params=[value])
+  LenFunction ::= 'len' '(' StringExpression @value ')' ;
 
   // ── String dot methods (backward compatible addition) ──────────────────
   // Dot form uses own AST types; evaluator delegates to same logic as function form.
@@ -337,6 +338,9 @@ grammar TinyExpressionP4 {
   @mapping(ContainsExpr, params=[value, pattern])
   ContainsFunction ::= 'contains' '(' StringExpression @value ',' StringExpression @pattern ')' ;
 
+  @mapping(InExpr, params=[value, candidates])
+  InMethod ::= StringExpression @value '.in' '(' StringExpression @candidates { ',' StringExpression @candidates } ')' ;
+
   // ── String predicates (boolean-returning, dot form) ─────────────────────
 
   @mapping(StartsWithDotExpr, params=[value, pattern])
@@ -365,8 +369,38 @@ grammar TinyExpressionP4 {
 
   // ── String slice (Python-style) ─────────────────────────────────────────
   // Syntax: $s[0:3], $s[1:], $s[:3], $s[::2], $s[::-1]
+  SliceBaseReceiver ::=
+      ExternalStringInvocation
+    | ParenthesizedStringExpression
+    | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
+    | ToUpperCaseDotMethod | ToLowerCaseDotMethod | TrimDotMethod
+    | STRING
+    | VariableRef
+    | MethodInvocation ;
+
   @mapping(SliceExpr, params=[value, start, end, step])
-  SliceExpression ::= VariableRef @value '[' [ NumberExpression @start ] ':' [ NumberExpression @end ] [ ':' NumberExpression @step ] ']' ;
+  SliceBaseExpression ::=
+      SliceBaseReceiver @value '[' NumberExpression @start ':' NumberExpression @end ':' NumberExpression @step ']'
+    | SliceBaseReceiver @value '[' NumberExpression @start ':' NumberExpression @end ']'
+    | SliceBaseReceiver @value '[' NumberExpression @start ':' ':' NumberExpression @step ']'
+    | SliceBaseReceiver @value '[' NumberExpression @start ':' ']'
+    | SliceBaseReceiver @value '[' ':' NumberExpression @end ':' NumberExpression @step ']'
+    | SliceBaseReceiver @value '[' ':' NumberExpression @end ']'
+    | SliceBaseReceiver @value '[' ':' ':' NumberExpression @step ']'
+    | SliceBaseReceiver @value '[' ':' ']' ;
+
+  @mapping(SliceExpr, params=[value, start, end, step])
+  SliceNestedExpression ::=
+      SliceBaseExpression @value '[' NumberExpression @start ':' NumberExpression @end ':' NumberExpression @step ']'
+    | SliceBaseExpression @value '[' NumberExpression @start ':' NumberExpression @end ']'
+    | SliceBaseExpression @value '[' NumberExpression @start ':' ':' NumberExpression @step ']'
+    | SliceBaseExpression @value '[' NumberExpression @start ':' ']'
+    | SliceBaseExpression @value '[' ':' NumberExpression @end ':' NumberExpression @step ']'
+    | SliceBaseExpression @value '[' ':' NumberExpression @end ']'
+    | SliceBaseExpression @value '[' ':' ':' NumberExpression @step ']'
+    | SliceBaseExpression @value '[' ':' ']' ;
+
+  SliceExpression ::= SliceNestedExpression | SliceBaseExpression ;
 
   // ── String expressions ─────────────────────────────────────────────────────
 
@@ -375,8 +409,11 @@ grammar TinyExpressionP4 {
   @precedence(level=10)
   StringExpression ::= StringTerm @left { '+' @op StringTerm @right } ;
 
+  ParenthesizedStringExpression ::= '(' StringExpression ')' ;
+
   StringTerm ::=
       StringMatchExpression
+    | ParenthesizedStringExpression
     | SliceExpression
     | ExternalStringInvocation
     | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
@@ -410,27 +447,36 @@ grammar TinyExpressionP4 {
   @mapping(NotExpr, params=[value])
   NotExpression ::= 'not' '(' BooleanExpression @value ')' ;
 
+  BooleanComparable ::=
+      NotExpression
+    | BooleanMatchExpression
+    | ExternalBooleanInvocation
+    | InMethod
+    | StartsWithDotMethod
+    | EndsWithDotMethod
+    | ContainsDotMethod
+    | StartsWithFunction
+    | EndsWithFunction
+    | ContainsFunction
+    | IsPresentFunction
+    | InTimeRangeFunction
+    | InDayTimeRangeFunction
+    | 'true'
+    | 'false'
+    | VariableRef
+    | MethodInvocation
+    | '(' BooleanExpression ')' ;
+
+  @mapping(BooleanEqualityExpr, params=[left, op, right])
+  BooleanEqualityExpression ::= BooleanComparable @left EqualityOp @op BooleanComparable @right ;
+
   @mapping(BooleanFactorExpr, params=[value])
   BooleanFactor ::=
-      NotExpression @value
-    | BooleanMatchExpression @value
-    | ExternalBooleanInvocation @value
-    | StartsWithDotMethod @value
-    | EndsWithDotMethod @value
-    | ContainsDotMethod @value
-    | StartsWithFunction @value
-    | EndsWithFunction @value
-    | ContainsFunction @value
-    | IsPresentFunction @value
-    | InTimeRangeFunction @value
-    | InDayTimeRangeFunction @value
+      BooleanEqualityExpression @value
+    | BooleanComparable @value
     | StringComparisonExpression @value
     | ComparisonExpression @value
-    | 'true' @value
-    | 'false' @value
-    | VariableRef @value
-    | MethodInvocation @value
-    | '(' BooleanExpression @value ')' ;
+    ;
 
   // String equality: $var == 'text', 'a' != 'b', etc.
   // Must appear before number ComparisonExpression (actual BooleanExpressionOfStringParser ordering)

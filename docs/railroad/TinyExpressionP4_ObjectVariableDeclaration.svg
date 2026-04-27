@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ObjectVariableDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1725159665">
-<g id="740298444">
-<g id="313674692">
+<g id="157051325">
+<g id="2015175199">
+<g id="131798826">
 <rect x="73" y="62" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="100" y="80" text-anchor="middle" class="terminal-text">'var'</text>
 </g>
@@ -24,7 +24,7 @@
 <line x1="128" y1="76" x2="146" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="146" y1="76" x2="162" y2="76" class="rail"/>
-<g id="215049758">
+<g id="808264238">
 <rect x="56" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="101" y="118" text-anchor="middle" class="terminal-text">'variable'</text>
 </g>
@@ -37,20 +37,20 @@
 </g>
 <line x1="162" y1="76" x2="182" y2="76" class="rail"/>
 <polygon points="169,73 175,76 169,79" class="arrow"/>
-<g id="1743242344">
+<g id="1022288766">
 <rect x="182" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="202" y="80" text-anchor="middle" class="terminal-text">'$'</text>
 </g>
 <line x1="223" y1="76" x2="243" y2="76" class="rail"/>
 <polygon points="230,73 236,76 230,79" class="arrow"/>
-<g id="1610723100">
+<g id="1695259295">
 <rect x="243" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="288" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="333" y1="76" x2="353" y2="76" class="rail"/>
 <polygon points="340,73 346,76 340,79" class="arrow"/>
-<g id="1907662840">
-<g id="1283165118">
+<g id="166350082">
+<g id="1947681275">
 <rect x="369" y="62" width="118" height="28" class="nonterminal-box"/>
 <text x="428" y="80" text-anchor="middle" class="nonterminal-text">ObjectTypeHint</text>
 </g>
@@ -64,8 +64,8 @@
 </g>
 <line x1="503" y1="76" x2="523" y2="76" class="rail"/>
 <polygon points="510,73 516,76 510,79" class="arrow"/>
-<g id="1161687652">
-<g id="682213666">
+<g id="2066878453">
+<g id="1121237586">
 <rect x="539" y="62" width="104" height="28" class="nonterminal-box"/>
 <text x="591" y="80" text-anchor="middle" class="nonterminal-text">ObjectSetter</text>
 </g>
@@ -79,13 +79,13 @@
 </g>
 <line x1="659" y1="76" x2="679" y2="76" class="rail"/>
 <polygon points="666,73 672,76 666,79" class="arrow"/>
-<g id="1426831110">
+<g id="904167921">
 <rect x="679" y="62" width="97" height="28" class="nonterminal-box"/>
 <text x="727" y="80" text-anchor="middle" class="nonterminal-text">Description</text>
 </g>
 <line x1="776" y1="76" x2="796" y2="76" class="rail"/>
 <polygon points="783,73 789,76 783,79" class="arrow"/>
-<g id="1423616">
+<g id="1857898514">
 <rect x="796" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="816" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>

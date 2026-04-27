@@ -4,9 +4,9 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class StringSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements StringExpression, SetterParser{
+public class StringSetterParser extends JavaStyleDelimitedLazyChain implements StringExpression, SetterParser{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {

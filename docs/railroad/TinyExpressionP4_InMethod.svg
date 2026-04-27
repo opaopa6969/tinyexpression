@@ -1,44 +1,79 @@
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="696" height="90">
+<svg xmlns="http://www.w3.org/2000/svg" width="806" height="120">
 <style>
-  svg { background: white; font-family: sans-serif; }
   .rail { stroke: #333; stroke-width: 2; fill: none; }
-  .arrow { fill: #333; }
-  .terminal-box { fill: #E8F4FD; stroke: #2196F3; stroke-width: 2; rx: 10; ry: 10; }
-  .nonterminal-box { fill: #E8F5E9; stroke: #4CAF50; stroke-width: 2; }
-  .nonterminal-box:hover { fill: #C8E6C9; stroke: #2E7D32; cursor: pointer; }
-  .terminal-text { font-family: monospace; font-size: 14px; fill: #0D47A1; }
-  .nonterminal-text { font-family: sans-serif; font-size: 14px; fill: #1B5E20; }
-  a:hover .nonterminal-text { fill: #1B5E20; text-decoration: underline; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
   .start-circle { fill: #333; stroke: none; }
-  .end-circle-outer { fill: #333; stroke: none; }
-  .end-circle-inner { fill: white; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
 </style>
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">InMethod</text>
-<circle cx="26" cy="57" r="6" class="start-circle"/>
-<line x1="32" y1="57" x2="50" y2="57" class="rail"/>
-<a xlink:href="#StringExpression" target="_top">
-<rect x="50" y="44" width="164" height="26" class="nonterminal-box"/>
-<text x="132" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
-</a>
-<line x1="214" y1="57" x2="230" y2="57" class="rail"/>
-<polygon points="219,54 225,57 219,60" class="arrow"/>
-<rect x="230" y="44" width="65" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="262" y="62" text-anchor="middle" class="terminal-text">'.in'</text>
-<line x1="295" y1="57" x2="311" y2="57" class="rail"/>
-<polygon points="300,54 306,57 300,60" class="arrow"/>
-<rect x="311" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="334" y="62" text-anchor="middle" class="terminal-text">'('</text>
-<line x1="358" y1="57" x2="374" y2="57" class="rail"/>
-<polygon points="363,54 369,57 363,60" class="arrow"/>
-<a xlink:href="#CommaSeparatedStrings" target="_top">
-<rect x="374" y="44" width="209" height="26" class="nonterminal-box"/>
-<text x="478" y="62" text-anchor="middle" class="nonterminal-text">CommaSeparatedStrings</text>
-</a>
-<line x1="583" y1="57" x2="599" y2="57" class="rail"/>
-<polygon points="588,54 594,57 588,60" class="arrow"/>
-<rect x="599" y="44" width="47" height="26" rx="10" ry="10" class="terminal-box"/>
-<text x="622" y="62" text-anchor="middle" class="terminal-text">')'</text>
-<line x1="646" y1="57" x2="660" y2="57" class="rail"/>
-<circle cx="668" cy="57" r="8" class="end-circle-outer"/>
-<circle cx="668" cy="57" r="5" class="end-circle-inner"/>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="1436324046">
+<g id="1781969154">
+<rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="106" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="172" y1="58" x2="192" y2="58" class="rail"/>
+<polygon points="179,55 185,58 179,61" class="arrow"/>
+<g id="112584851">
+<rect x="192" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="219" y="62" text-anchor="middle" class="terminal-text">'.in'</text>
+</g>
+<line x1="247" y1="58" x2="267" y2="58" class="rail"/>
+<polygon points="254,55 260,58 254,61" class="arrow"/>
+<g id="1105198150">
+<rect x="267" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="287" y="62" text-anchor="middle" class="terminal-text">'('</text>
+</g>
+<line x1="308" y1="58" x2="328" y2="58" class="rail"/>
+<polygon points="315,55 321,58 315,61" class="arrow"/>
+<g id="278795895">
+<rect x="328" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="394" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+<line x1="460" y1="58" x2="480" y2="58" class="rail"/>
+<polygon points="467,55 473,58 467,61" class="arrow"/>
+<g id="946468440">
+<g id="1487175317">
+<g id="1342114759">
+<rect x="496" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="516" y="86" text-anchor="middle" class="terminal-text">','</text>
+</g>
+<line x1="537" y1="82" x2="557" y2="82" class="rail"/>
+<polygon points="544,79 550,82 544,85" class="arrow"/>
+<g id="1713869787">
+<rect x="557" y="68" width="132" height="28" class="nonterminal-box"/>
+<text x="623" y="86" text-anchor="middle" class="nonterminal-text">StringExpression</text>
+</g>
+</g>
+<line x1="480" y1="58" x2="705" y2="58" class="rail"/>
+<path d="M496,58 Q488,58 488,66" class="rail" fill="none"/>
+<path d="M488,74 Q488,82 480,82" class="rail" fill="none"/>
+<line x1="480" y1="82" x2="496" y2="82" class="rail"/>
+<line x1="689" y1="82" x2="705" y2="82" class="rail"/>
+<path d="M705,82 Q697,82 697,74" class="rail" fill="none"/>
+<path d="M697,66 Q697,58 689,58" class="rail" fill="none"/>
+<path d="M697,82 Q705,82 705,90" class="rail" fill="none"/>
+<path d="M705,98 Q705,106 697,106" class="rail" fill="none"/>
+<line x1="488" y1="106" x2="697" y2="106" class="rail"/>
+<polygon points="598,103 592,106 598,109" class="arrow"/>
+<path d="M488,106 Q480,106 480,98" class="rail" fill="none"/>
+<path d="M480,90 Q480,82 488,82" class="rail" fill="none"/>
+</g>
+<line x1="705" y1="58" x2="725" y2="58" class="rail"/>
+<polygon points="712,55 718,58 712,61" class="arrow"/>
+<g id="268399521">
+<rect x="725" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="745" y="62" text-anchor="middle" class="terminal-text">')'</text>
+</g>
+</g>
+<line x1="766" y1="58" x2="774" y2="58" class="rail"/>
+<circle cx="780" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="780" cy="58" r="3" class="end-circle-inner"/>
 </svg>

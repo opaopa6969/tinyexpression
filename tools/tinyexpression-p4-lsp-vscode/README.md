@@ -7,11 +7,13 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
 
 - **Syntax highlighting** — keywords, variables (`$name`), numbers, strings, operators, comments
 - **Semantic tokens** — type-safe classification via Parser `instanceof` (no regex)
-- **Diagnostics** — TE001 parse errors with offset and source snippet
+- **Diagnostics** — TE001 parse errors plus TE025 strict `match` typing diagnostics
 - **Completion** — P4 keywords + `$variable` scan
-- **Hover** — AST node type display on parse success
+- **Hover** — AST node type / preferred root display on parse success
 - **Debug (DAP)** — step execution with P4 runtime markers in Variables panel:
   - `_tinyP4ParserUsed` — whether the P4 grammar parsed the formula
+  - `_tinyP4ParserExact` — whether parsing succeeded without heuristic fallback
+  - `_tinyP4ParserProbeMode` — `exact`, `heuristic`, or `semantic`
   - `_tinyP4AstNodeType` — sealed-interface record type of the AST root
   - `_tinyP4AstNodePath` — breadth-first path through the AST
   - `parity.*` — 6-backend evaluation comparison (JAVA_CODE / AST_EVALUATOR / DSL_JAVA_CODE / P4_AST / P4_DSL)
@@ -65,8 +67,9 @@ npm run package
 
 ```
 UBNF grammar (tinyexpression-p4.ubnf)
-  → unlaxer-dsl code generation
+  → unlaxer-dsl 3.0.2 code generation
   → TinyExpressionP4Parsers / AST (sealed interface) / Mapper / Evaluator
+  → P4PreferredAstMapper        (preferred-root selection + compat parse)
   → TinyExpressionP4LanguageServerExt  (type-safe LSP, instanceof-based tokens)
   → TinyExpressionP4DebugAdapterExt    (DAP with AST node path)
   → tinyexpression-p4-lsp-server.jar   (fat jar, LSP + DAP)
