@@ -193,6 +193,30 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         "inDayTimeRange($1, $2, $3, $4)$0");
   }
 
+  /**
+   * Block / declaration keyword snippets. Accepting one of these inserts the
+   * canonical structure of the construct (semicolons, braces, $variable
+   * placeholder etc) so the user only fills in the holes. Surfaced alongside
+   * the plain keyword from COMPLETION_KEYWORDS so users can still pick the
+   * bare form. issue #11 §3 「セミコロン補完 / 括弧補完」を declaration 経由で
+   * 復元する。
+   */
+  private static final Map<String, String> BLOCK_SNIPPETS = new LinkedHashMap<>();
+
+  static {
+    BLOCK_SNIPPETS.put("var",
+        "var \\$${1:name} as ${2:number} set ${3:0} description='${4:variable}';$0");
+    BLOCK_SNIPPETS.put("import",
+        "import ${1:Class}#${2:method} as ${3:alias};$0");
+    BLOCK_SNIPPETS.put("if",
+        "if (${1:cond}) {\n  ${2:0}\n} else {\n  ${3:0}\n}$0");
+    BLOCK_SNIPPETS.put("match",
+        "match {\n  ${1:cond} -> ${2:value},\n  default -> ${3:0}\n}$0");
+    BLOCK_SNIPPETS.put("call", "call ${1:method}($2)$0");
+    BLOCK_SNIPPETS.put("external",
+        "external returning as ${1:number} ${2:name}($3)$0");
+  }
+
   /** Pattern for extracting $variable references from document text. */
   private static final Pattern VARIABLE_PATTERN =
       Pattern.compile("\\$([a-zA-Z_][a-zA-Z0-9_]*)");
@@ -1325,6 +1349,18 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         if (fn.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(fn);
           item.setKind(CompletionItemKind.Function);
+          item.setInsertText(e.getValue());
+          item.setInsertTextFormat(InsertTextFormat.Snippet);
+          items.add(item);
+        }
+      }
+
+      // 1c. Block / declaration keyword snippets (issue #11 §3)
+      for (Map.Entry<String, String> e : BLOCK_SNIPPETS.entrySet()) {
+        String kw = e.getKey();
+        if (kw.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(kw);
+          item.setKind(CompletionItemKind.Snippet);
           item.setInsertText(e.getValue());
           item.setInsertTextFormat(InsertTextFormat.Snippet);
           items.add(item);

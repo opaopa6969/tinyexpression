@@ -171,6 +171,35 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     /**
+     * Block-keyword snippet completion — semicolon completion 由来。issue #11
+     * §3 セミコロン補完を declaration テンプレート経由で復元する。"var" を
+     * 受け入れると `;` までが入った宣言テンプレートが展開される。
+     */
+    @Test
+    public void testCompletionBlockKeywordSnippet() throws Exception {
+        String content = "va";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(0, 2));
+
+        CompletableFuture<Either<List<CompletionItem>, CompletionList>> result = service.completion(params);
+        List<CompletionItem> items = result.get().getLeft();
+
+        CompletionItem snippet = items.stream()
+            .filter(i -> "var".equals(i.getLabel()) && i.getKind() == CompletionItemKind.Snippet)
+            .findFirst()
+            .orElse(null);
+        assertNotNull("var snippet should be suggested", snippet);
+        assertEquals(InsertTextFormat.Snippet, snippet.getInsertTextFormat());
+        assertTrue("var snippet should terminate with ;",
+            snippet.getInsertText().contains(";"));
+        assertTrue("var snippet should reference $name placeholder",
+            snippet.getInsertText().contains("\\$${1:name}"));
+    }
+
+    /**
      * Trigger characters are exposed via ServerCapabilities. The P4 LSP must
      * register at least "$" so VS Code auto-invokes completion on "$".
      */
