@@ -1102,6 +1102,47 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     super.setCatalogResolver(r);
   }
 
+  /**
+   * Catalog completion with rich fields (issue #11 §3 「変数カタログ補完」 port).
+   * The generated parent's {@code catalogCompletion} only forwards label /
+   * kind / detail. This variant reads the {@link CatalogResolver} directly so
+   * the catalog entry's {@code context} and {@code sourcePath} surface as
+   * detail / documentation, and ordering is stabilized via sortText (mirrors
+   * the old calculator-lsp catalog-completion shape).
+   */
+  public List<CompletionItem> richCatalogCompletion(String prefix) {
+    if (catalogResolver == null || catalogResolver.isEmpty()) return List.of();
+    List<CompletionItem> items = new ArrayList<>();
+    for (CatalogEntry entry : catalogResolver.listAll()) {
+      if (!prefix.isEmpty() && !entry.name().startsWith(prefix)) continue;
+      CompletionItem item = new CompletionItem(entry.name());
+      item.setKind(CompletionItemKind.Variable);
+      String ctx = entry.context();
+      String desc = entry.description();
+      String detail = "catalog"
+          + (ctx != null && !ctx.isBlank() ? " [" + ctx + "]" : "")
+          + (desc != null && !desc.isBlank() ? " — " + desc : "");
+      item.setDetail(detail);
+      StringBuilder doc = new StringBuilder();
+      if (desc != null && !desc.isBlank()) doc.append(desc).append("\n\n");
+      if (ctx != null && !ctx.isBlank()) doc.append("**context**: ").append(ctx).append("\n");
+      if (entry.sourcePath() != null && !entry.sourcePath().isBlank()) {
+        doc.append("**source**: `").append(entry.sourcePath()).append("`");
+      }
+      if (doc.length() > 0) {
+        MarkupContent mc = new MarkupContent();
+        mc.setKind("markdown");
+        mc.setValue(doc.toString());
+        item.setDocumentation(mc);
+      }
+      // Sort catalog entries after declared symbols (which have no sortText)
+      // but before the regex-fallback entries.
+      item.setSortText("050_catalog_" + entry.name());
+      items.add(item);
+    }
+    return items;
+  }
+
   /** Reflection-compatible StringSource factory (same as generated code). */
   static StringSource createRootSource(String source) {
     try {
@@ -1392,17 +1433,23 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           }
         }
 
-        // 3. Catalog variable completion (from .tecatalog files via CatalogResolver)
+        // 3. Catalog variable completion via richCatalogCompletion (preserves
+        // context / sourcePath / sortText / documentation per issue #11 §3).
         String dollarPrefix = prefix.startsWith("$") ? prefix.substring(1) : "";
         if (prefix.isEmpty() || prefix.startsWith("$")) {
-          for (CompletionItem ci : server.catalogCompletion(dollarPrefix)) {
+          for (CompletionItem ci : server.richCatalogCompletion(dollarPrefix)) {
             String label = "$" + ci.getLabel();
             if (seen.add(label)) {
               CompletionItem item = new CompletionItem(label);
-              item.setKind(CompletionItemKind.Variable);
-              if (ci.getDetail() != null) {
-                item.setDetail(ci.getDetail());
+              item.setKind(ci.getKind() != null ? ci.getKind() : CompletionItemKind.Variable);
+              if (ci.getDetail() != null) item.setDetail(ci.getDetail());
+              if (ci.getDocumentation() != null) item.setDocumentation(ci.getDocumentation());
+              if (ci.getSortText() != null) item.setSortText(ci.getSortText());
+              if (ci.getInsertText() != null) {
+                String insert = ci.getInsertText();
+                item.setInsertText(insert.startsWith("$") ? insert : "$" + insert);
               }
+              if (ci.getInsertTextFormat() != null) item.setInsertTextFormat(ci.getInsertTextFormat());
               items.add(item);
             }
           }

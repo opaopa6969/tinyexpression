@@ -314,6 +314,59 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     /**
+     * issue #11 §3 「変数カタログ補完」 port. Inject a CatalogResolver carrying
+     * context / sourcePath, trigger completion at "$" position, and verify
+     * the catalog entry surfaces detail / documentation / sortText (which
+     * the generated parent's catalogCompletion drops).
+     */
+    @Test
+    public void testRichCatalogCompletionPreservesEntryFields() throws Exception {
+        // Stub CatalogResolver returning one entry with all fields populated.
+        var entry = new org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry(
+            "amount", "金額のドメイン変数", "FA", "/tmp/sample.tecatalog");
+        org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogResolver resolver =
+            new org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogResolver() {
+                @Override public List<org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry> listAll() {
+                    return List.of(entry);
+                }
+                @Override public org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer.CatalogEntry lookup(String name) {
+                    return entry.name().equals(name) ? entry : null;
+                }
+            };
+        server.setCatalogResolver(resolver);
+
+        String content = "$";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(0, 1));
+
+        var result = service.completion(params).get();
+        List<CompletionItem> items = result.getLeft();
+
+        CompletionItem amount = items.stream()
+            .filter(i -> "$amount".equals(i.getLabel()))
+            .findFirst()
+            .orElse(null);
+        assertNotNull("$amount should appear from catalog", amount);
+        assertNotNull("detail should be populated", amount.getDetail());
+        assertTrue("detail should reflect FA context, got: " + amount.getDetail(),
+            amount.getDetail().contains("FA"));
+        assertNotNull("documentation should be populated", amount.getDocumentation());
+        // documentation is Either<String, MarkupContent>
+        String docValue = amount.getDocumentation().isRight()
+            ? amount.getDocumentation().getRight().getValue()
+            : amount.getDocumentation().getLeft();
+        assertTrue("documentation should mention source path, got: " + docValue,
+            docValue.contains("sample.tecatalog"));
+        assertNotNull("sortText should be set so catalog entries sort stably",
+            amount.getSortText());
+        assertTrue("sortText should start with 050_catalog_, got: " + amount.getSortText(),
+            amount.getSortText().startsWith("050_catalog_"));
+    }
+
+    /**
      * issue #11 §3 「ホバー上の計算値表示」の最小実装。
      * `var $x as number set 100 description='..';` 型の宣言があるとき、
      * 変数参照位置の hover に Set: `100` が含まれる。リテラル set の場合は
