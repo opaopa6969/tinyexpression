@@ -119,6 +119,47 @@ public class TinyExpressionP4LanguageServerExtTest {
         assertTrue("Should suggest myMethod", found);
     }
 
+    /**
+     * issue #11 §3 kickoff: "$" trigger completion. With "$" registered as a
+     * completion trigger character (CompletionOptions.setTriggerCharacters), the
+     * client invokes textDocument/completion when the user types "$". The
+     * existing prefix path already returns variables starting with "$" — this
+     * test guards against accidentally regressing that path or the trigger
+     * registration.
+     */
+    @Test
+    public void testCompletionDollarTrigger() throws Exception {
+        String content = "var $amount as number = 100;\n$";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(1, 1)); // right after the "$" on line 1
+
+        CompletableFuture<Either<List<CompletionItem>, CompletionList>> result = service.completion(params);
+        List<CompletionItem> items = result.get().getLeft();
+
+        boolean foundAmount = items.stream().anyMatch(item -> "$amount".equals(item.getLabel()));
+        assertTrue("$amount should be suggested after $ trigger", foundAmount);
+    }
+
+    /**
+     * Trigger characters are exposed via ServerCapabilities. The P4 LSP must
+     * register at least "$" so VS Code auto-invokes completion on "$".
+     */
+    @Test
+    public void testCompletionTriggerCharactersIncludeDollar() throws Exception {
+        InitializeParams init = new InitializeParams();
+        init.setProcessId(0);
+        init.setCapabilities(new ClientCapabilities());
+        InitializeResult res = server.initialize(init).get();
+        CompletionOptions co = res.getCapabilities().getCompletionProvider();
+        assertNotNull("CompletionProvider must be advertised", co);
+        assertNotNull("Trigger characters must be set", co.getTriggerCharacters());
+        assertTrue("\"$\" must be a completion trigger character",
+            co.getTriggerCharacters().contains("$"));
+    }
+
     @Test
     public void testFormatting() throws Exception {
         String unformatted = "if($x){\ncall func();\n}else{\ncall other();\n}";

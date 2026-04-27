@@ -291,6 +291,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     CompletionOptions co = new CompletionOptions();
     co.setResolveProvider(false);
+    co.setTriggerCharacters(List.of("$", "(", ".", ";"));
     cap.setCompletionProvider(co);
     cap.setHoverProvider(true);
 
