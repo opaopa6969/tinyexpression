@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
@@ -158,6 +159,39 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "set", "not", "exists", "call",
       "import", "external", "returning",
       "true", "false");
+
+  /**
+   * Snippet completions for callable functions. Accepting one of these inserts
+   * the function name with balanced parens and a tab-stop on the first argument
+   * (LSP InsertTextFormat.Snippet). Restores the paren-completion ergonomics
+   * that the old calculator-lsp had.
+   */
+  private static final Map<String, String> FUNCTION_SNIPPETS = new LinkedHashMap<>();
+
+  static {
+    // Math / cast — single argument
+    for (String f : List.of("sin", "cos", "tan", "sqrt", "log", "exp", "abs",
+                             "floor", "ceil", "round", "isPresent")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
+    }
+    // String — single argument (function form)
+    for (String f : List.of("len", "length", "toUpperCase", "toLowerCase", "trim")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
+    }
+    // Math / string — two arguments
+    for (String f : List.of("pow", "indexOf", "startsWith", "endsWith", "contains")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
+    }
+    // Variadic — surface a 2-arg starter
+    for (String f : List.of("min", "max")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
+    }
+    FUNCTION_SNIPPETS.put("toNum", "toNum($1, $2)$0");
+    FUNCTION_SNIPPETS.put("random", "random()$0");
+    FUNCTION_SNIPPETS.put("inTimeRange", "inTimeRange($1, $2)$0");
+    FUNCTION_SNIPPETS.put("inDayTimeRange",
+        "inDayTimeRange($1, $2, $3, $4)$0");
+  }
 
   /** Pattern for extracting $variable references from document text. */
   private static final Pattern VARIABLE_PATTERN =
@@ -1281,6 +1315,18 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         if (kw.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(kw);
           item.setKind(CompletionItemKind.Keyword);
+          items.add(item);
+        }
+      }
+
+      // 1b. Function snippets — paren-balanced completions (issue #11 §3)
+      for (Map.Entry<String, String> e : FUNCTION_SNIPPETS.entrySet()) {
+        String fn = e.getKey();
+        if (fn.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(fn);
+          item.setKind(CompletionItemKind.Function);
+          item.setInsertText(e.getValue());
+          item.setInsertTextFormat(InsertTextFormat.Snippet);
           items.add(item);
         }
       }

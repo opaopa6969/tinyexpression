@@ -144,6 +144,33 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     /**
+     * Function snippet completion — paren auto-completion. issue #11 §3
+     * "括弧補完" の最小実装。typing "si" should suggest "sin" with snippet
+     * insert text "sin($1)$0".
+     */
+    @Test
+    public void testCompletionFunctionSnippet() throws Exception {
+        String content = "si";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(0, 2)); // right after "si"
+
+        CompletableFuture<Either<List<CompletionItem>, CompletionList>> result = service.completion(params);
+        List<CompletionItem> items = result.get().getLeft();
+
+        CompletionItem sin = items.stream()
+            .filter(i -> "sin".equals(i.getLabel()))
+            .findFirst()
+            .orElse(null);
+        assertNotNull("sin function snippet should be suggested", sin);
+        assertEquals(CompletionItemKind.Function, sin.getKind());
+        assertEquals(InsertTextFormat.Snippet, sin.getInsertTextFormat());
+        assertEquals("sin($1)$0", sin.getInsertText());
+    }
+
+    /**
      * Trigger characters are exposed via ServerCapabilities. The P4 LSP must
      * register at least "$" so VS Code auto-invokes completion on "$".
      */
