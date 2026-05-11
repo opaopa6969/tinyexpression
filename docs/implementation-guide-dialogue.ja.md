@@ -16,19 +16,24 @@
 
 **S:** `"$a + $b * 2"` という式を評価する、という目標は同じ。ただ「どうやって評価するか」が違う。それがバックエンド。今は5系統ある。
 
-```
-  式文字列
-     │
-  ┌──┴────────────────────────────────────────────────┐
-  │                                                    │
-  ▼                                                    ▼
-[compile系]                                      [AST系]
-  │                                                    │
-  ├─[1] compile-hand                      ┌────────────┼──────────────────┐
-  │     手書きコード生成 → javac           │            │                  │
-  │                                       ▼            ▼                  ▼
-  └─[2] compile-dsl               [3] ast-hand  [4] P4-reflection  [5] P4-typed
-        P4 AST → コード生成 → javac  アノテーション    reflection        sealed switch
+```mermaid
+flowchart TD
+    Expr[式文字列]
+    Compile["[compile系]"]
+    AST["[AST系]"]
+    C1["[1] compile-hand<br/>手書きコード生成 → javac"]
+    C2["[2] compile-dsl<br/>P4 AST → コード生成 → javac"]
+    A3["[3] ast-hand<br/>アノテーション"]
+    A4["[4] P4-reflection<br/>reflection"]
+    A5["[5] P4-typed<br/>sealed switch"]
+
+    Expr --> Compile
+    Expr --> AST
+    Compile --> C1
+    Compile --> C2
+    AST --> A3
+    AST --> A4
+    AST --> A5
 ```
 
 **N:** compile系が2つあるんですね。
@@ -265,18 +270,21 @@ TinyExpressionP4Evaluator<Object>   // 型混在（Boolean / Float / String）
 
 **S:** こう考える。
 
-```
-新しい式のサポートを追加したい
-          │
-          ├─[既存文法で表現できる & 評価結果が欲しい]
-          │   └─ P4-typed（TinyExpressionP4Evaluator<T> 継承）← おすすめ
-          │
-          ├─[既存文法で表現できる & 高速なJavaコードに落としたい]
-          │   └─ compile-dsl（DslGeneratedAstJavaEmitter を拡張）
-          │
-          └─[文法自体を追加・変更する]
-              ├─ パーサーに @TinyAstNode → ast-hand で評価できるように
-              └─ UBNF定義を変更 → P4再生成 → P4-typed で対応
+```mermaid
+flowchart TD
+    Goal[新しい式のサポートを追加したい]
+    Q1["既存文法で表現できる & 評価結果が欲しい"]
+    P4typed["P4-typed (TinyExpressionP4Evaluator&lt;T&gt; 継承) ← おすすめ"]
+    Q2["既存文法で表現できる & 高速なJavaコードに落としたい"]
+    CompileDsl["compile-dsl (DslGeneratedAstJavaEmitter を拡張)"]
+    Q3[文法自体を追加・変更する]
+    AstHand["パーサーに @TinyAstNode → ast-hand で評価できるように"]
+    UbnfMod["UBNF定義を変更 → P4再生成 → P4-typed で対応"]
+
+    Goal --> Q1 --> P4typed
+    Goal --> Q2 --> CompileDsl
+    Goal --> Q3 --> AstHand
+    Q3 --> UbnfMod
 ```
 
 ### P4-typed での実装手順
@@ -392,24 +400,13 @@ P4-reflection       ████████████ 〜数µs           ←
 
 ## 第9話 — どのバックエンドを使うべきか
 
-```
-┌──────────────────────────────────────────────────────────────────┐
-│ 同じ式を何百万回も繰り返す（式は固定）                           │
-│   → compile-hand (JavaCodeCalculatorV3)                          │
-├──────────────────────────────────────────────────────────────────┤
-│ 式は動的だが高速なJavaコードにしたい（将来）                     │
-│   → compile-dsl (DslJavaCodeCalculator) ← 現状リテラルのみ対応  │
-├──────────────────────────────────────────────────────────────────┤
-│ 式が動的、型安全に評価ロジックを書きたい                         │
-│   → P4-typed (TinyExpressionP4Evaluator<T> 継承) ← おすすめ     │
-├──────────────────────────────────────────────────────────────────┤
-│ パーサー自体を追加・変更している最中                             │
-│   → ast-hand (+ @TinyAstNode アノテーション)                     │
-├──────────────────────────────────────────────────────────────────┤
-│ とにかく動かしたい、細かいことは後で                             │
-│   → AstEvaluatorCalculator (全経路試してcompileにfallback)       │
-└──────────────────────────────────────────────────────────────────┘
-```
+| シナリオ | 選ぶべきバックエンド |
+|---|---|
+| 同じ式を何百万回も繰り返す（式は固定） | compile-hand (JavaCodeCalculatorV3) |
+| 式は動的だが高速なJavaコードにしたい（将来） | compile-dsl (DslJavaCodeCalculator) ← 現状リテラルのみ対応 |
+| 式が動的、型安全に評価ロジックを書きたい | P4-typed (TinyExpressionP4Evaluator<T> 継承) ← おすすめ |
+| パーサー自体を追加・変更している最中 | ast-hand (+ @TinyAstNode アノテーション) |
+| とにかく動かしたい、細かいことは後で | AstEvaluatorCalculator (全経路試してcompileにfallback) |
 
 **N:** P4-reflection は？
 

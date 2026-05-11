@@ -94,10 +94,16 @@ MultiplyExpression   @leftAssoc @precedence(level=6)
 
 ### 共存モデル
 
-```
-P4 パーサー（UBNF 生成）
-  ├── 成功 → P4 AST → 評価
-  └── 失敗/未カバー → レガシーパーサー → 従来パイプライン
+```mermaid
+flowchart TD
+    P4["P4 パーサー（UBNF 生成）"]
+    Q{結果}
+    Eval["P4 AST → 評価"]
+    Legacy["レガシーパーサー → 従来パイプライン"]
+
+    P4 --> Q
+    Q -- 成功 --> Eval
+    Q -- 失敗/未カバー --> Legacy
 ```
 
 - P4 パーサーが対応できない構文は自動的にレガシーパーサーにフォールバック
@@ -146,14 +152,22 @@ Formula ::= { VariableDeclaration } { Annotation } Expression { MethodDeclaratio
 
 ### 式の階層
 
-```
-Expression
-  ├── NumberExpression (算術・比較・等価式のチェーン)
-  ├── StringExpression (文字列リテラル・変数・関数)
-  ├── BooleanExpression (論理式)
-  ├── ObjectExpression (オブジェクト式)
-  ├── IfExpression (if/else)
-  └── MatchExpression (match)
+```mermaid
+flowchart TD
+    Expr[Expression]
+    Num["NumberExpression<br/>(算術・比較・等価式のチェーン)"]
+    Str["StringExpression<br/>(文字列リテラル・変数・関数)"]
+    Bool["BooleanExpression (論理式)"]
+    Obj["ObjectExpression (オブジェクト式)"]
+    IfE["IfExpression (if/else)"]
+    Match["MatchExpression (match)"]
+
+    Expr --> Num
+    Expr --> Str
+    Expr --> Bool
+    Expr --> Obj
+    Expr --> IfE
+    Expr --> Match
 ```
 
 ---

@@ -26,42 +26,16 @@ TinyExpression P4 の例を通じて、unlaxer-dsl を使った DSL の設計か
 
 ### 1.1 レイヤ図
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  UBNF Grammar  (tinyexpression-p4.ubnf)                  │
-│  → grammar rules + @mapping / @whitespace annotations    │
-└──────────────────────┬──────────────────────────────────┘
-                       │ unlaxer-dsl mvn generate-sources
-┌──────────────────────▼──────────────────────────────────┐
-│  Generated Code  (target/generated-sources/...)          │
-│  ┌────────────────┐ ┌──────────┐ ┌────────────────────┐ │
-│  │ Parsers.java   │ │ AST.java │ │ Mapper.java        │ │
-│  │ (Tokenize)     │ │ (sealed  │ │ (Token→AST)        │ │
-│  │                │ │  records)│ │                    │ │
-│  └────────────────┘ └──────────┘ └────────────────────┘ │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ Evaluator.java  (abstract class, switch pattern)   │  │
-│  └────────────────────────────────────────────────────┘  │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ LanguageServer.java / DebugAdapter.java (tooling)  │  │
-│  └────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                       │ 手書き実装
-┌──────────────────────▼──────────────────────────────────┐
-│  Runtime Integration                                      │
-│  P4AstEvaluatorCalculator  (implements Calculator)        │
-│   → P4Mapper.parse() でパース試行                        │
-│   → 成功なら _tinyP4ParserUsed=true でマーカー記録       │
-│   → 失敗なら AstEvaluatorCalculator へ fallback          │
-└─────────────────────────────────────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────────────┐
-│  LSP/DAP Tooling (tools/tinyexpression-p4-lsp-vscode/)   │
-│  TinyExpressionP4LanguageServerExt                       │
-│   → type-safe semantic tokens (instanceof, no regex)     │
-│  TinyExpressionP4DebugAdapterExt                         │
-│   → AST node path in DAP variables panel                 │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Ubnf["<b>UBNF Grammar (tinyexpression-p4.ubnf)</b><br/>grammar rules + @mapping / @whitespace annotations"]
+    Gen["<b>Generated Code (target/generated-sources/...)</b><br/>- Parsers.java (Tokenize)<br/>- AST.java (sealed records)<br/>- Mapper.java (Token→AST)<br/>- Evaluator.java (abstract class, switch pattern)<br/>- LanguageServer.java / DebugAdapter.java (tooling)"]
+    Run["<b>Runtime Integration</b><br/>P4AstEvaluatorCalculator (implements Calculator)<br/>- P4Mapper.parse() でパース試行<br/>- 成功なら _tinyP4ParserUsed=true でマーカー記録<br/>- 失敗なら AstEvaluatorCalculator へ fallback"]
+    Tool["<b>LSP/DAP Tooling</b><br/>(tools/tinyexpression-p4-lsp-vscode/)<br/>TinyExpressionP4LanguageServerExt → type-safe semantic tokens<br/>TinyExpressionP4DebugAdapterExt → AST node path in DAP"]
+
+    Ubnf -- "unlaxer-dsl mvn generate-sources" --> Gen
+    Gen -- "手書き実装" --> Run
+    Run --> Tool
 ```
 
 ### 1.2 ファイル配置

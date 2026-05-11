@@ -123,21 +123,32 @@ IfExpression ::= 'if' '(' BooleanExpression @condition ')' '{' Expression @thenE
 
 ### 生成されるクラス構造
 
-```
-TinyExpressionP4Evaluator<T>           ← 生成 (abstract, GGP base)
-  ├─ P4DefaultAstEvaluator<Object>     ← 生成 (@eval default implementations)
-  │     evalBinaryExpr()               ← @eval(kind=binary_arithmetic) から生成
-  │     evalVariableRefExpr()          ← @eval(kind=variable_ref) から生成
-  │     evalIfExpr()                   ← @eval(kind=conditional) から生成
-  │     evalMethodInvocationExpr()     ← abstract (strategy=manual)
-  │
-  ├─ P4DefaultJavaCodeEmitter<String>  ← 生成 (Java code generation version)
-  │     evalBinaryExpr()               ← @eval から Java code string 版を生成
-  │     ...
-  │
-  └─ MyCustomEvaluator<Object>         ← 手書き (extends P4DefaultAstEvaluator)
-        evalMethodInvocationExpr()     ← manual strategy の実装
-        evalBinaryExpr()               ← 必要ならオーバーライド
+```mermaid
+classDiagram
+    class TinyExpressionP4Evaluator~T~ {
+        <<abstract>>
+        生成 (GGP base)
+    }
+    class P4DefaultAstEvaluator~Object~ {
+        生成 (@eval default implementations)
+        +evalBinaryExpr() : @eval(kind=binary_arithmetic) から生成
+        +evalVariableRefExpr() : @eval(kind=variable_ref) から生成
+        +evalIfExpr() : @eval(kind=conditional) から生成
+        +evalMethodInvocationExpr()* : abstract (strategy=manual)
+    }
+    class P4DefaultJavaCodeEmitter~String~ {
+        生成 (Java code generation version)
+        +evalBinaryExpr() : @eval から Java code string 版を生成
+    }
+    class MyCustomEvaluator~Object~ {
+        手書き
+        +evalMethodInvocationExpr() : manual strategy の実装
+        +evalBinaryExpr() : 必要ならオーバーライド
+    }
+
+    TinyExpressionP4Evaluator <|-- P4DefaultAstEvaluator
+    TinyExpressionP4Evaluator <|-- P4DefaultJavaCodeEmitter
+    P4DefaultAstEvaluator <|-- MyCustomEvaluator
 ```
 
 ---

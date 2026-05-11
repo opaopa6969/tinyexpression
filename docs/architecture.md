@@ -12,14 +12,20 @@ Verified baseline as of 2026-04-24:
 - `unlaxer-common` `3.0.2`
 - `unlaxer-dsl` `3.0.2`
 
-```
-Formula text
-    │
-    ├─► Legacy Parser (unlaxer-common combinators)
-    │       └─► ParseTree ──► AST ──► JAVA_CODE / JAVA_CODE_LEGACY / AST_EVALUATOR / DSL_JAVA_CODE
-    │
-    └─► P4 Parser (UBNF-generated, type-safe)
-            └─► P4 ParseTree ──► P4 AST (sealed interface) ──► P4_AST_EVALUATOR / P4_DSL_JAVA_CODE
+```mermaid
+flowchart TD
+    F[Formula text]
+    Legacy["Legacy Parser (unlaxer-common combinators)"]
+    LPT[ParseTree]
+    AST[AST]
+    Back1["JAVA_CODE / JAVA_CODE_LEGACY / AST_EVALUATOR / DSL_JAVA_CODE"]
+    P4["P4 Parser (UBNF-generated, type-safe)"]
+    P4PT[P4 ParseTree]
+    P4AST["P4 AST (sealed interface)"]
+    Back2[P4_AST_EVALUATOR / P4_DSL_JAVA_CODE]
+
+    F --> Legacy --> LPT --> AST --> Back1
+    F --> P4 --> P4PT --> P4AST --> Back2
 ```
 
 ---
@@ -169,23 +175,15 @@ can still resolve `CalculationContext` and `TokenBaseCalculator`.
 
 ## Multi-Formula Execution Pipeline
 
-```
-FormulaInfo files (per tenant)
-    │
-    ▼
-FormulaInfoParser → List<FormulaInfo>
-    │
-    ▼
-CalculatorCreatorRegistry → List<Calculator>
-    │
-    ▼
-FileBaseTinyExpressionInstancesCache (cached per TenantID)
-    │
-    ▼
-TinyExpressionsExecutor
-    ├── sort by Calculator.dependsOnByNestLevel()
-    ├── filter by Predicate<Calculator>
-    └── execute in order → ResultConsumer.accept(...)
+```mermaid
+flowchart TD
+    Files["FormulaInfo files (per tenant)"]
+    Parser["FormulaInfoParser → List&lt;FormulaInfo&gt;"]
+    Reg["CalculatorCreatorRegistry → List&lt;Calculator&gt;"]
+    Cache["FileBaseTinyExpressionInstancesCache (cached per TenantID)"]
+    Exec["<b>TinyExpressionsExecutor</b><br/>- sort by Calculator.dependsOnByNestLevel()<br/>- filter by Predicate&lt;Calculator&gt;<br/>- execute in order → ResultConsumer.accept(...)"]
+
+    Files --> Parser --> Reg --> Cache --> Exec
 ```
 
 ---
@@ -194,22 +192,15 @@ TinyExpressionsExecutor
 
 The P4 LSP server (`tools/tinyexpression-p4-lsp-vscode`) connects to the P4 stack:
 
-```
-.tinyexp file edit
-    │
-    ▼
-TinyExpressionP4LanguageServerExt (LSP)
-    ├── diagnostics via ParseFailureDiagnostics + strict match typing (TE025)
-    ├── semantic tokens via P4 AST instanceof
-    └── completion / hover via P4 AST node type and preferred root
+```mermaid
+flowchart TD
+    Edit[.tinyexp file edit]
+    LSP["<b>TinyExpressionP4LanguageServerExt (LSP)</b><br/>- diagnostics via ParseFailureDiagnostics + strict match typing (TE025)<br/>- semantic tokens via P4 AST instanceof<br/>- completion / hover via P4 AST node type and preferred root"]
+    Debug[.tinyexp debug F5]
+    DAP["<b>TinyExpressionP4DebugAdapterExt (DAP)</b><br/>- runs all 6 backends<br/>- exposes _tinyP4ParserUsed / _tinyP4ParserExact / _tinyP4ParserProbeMode<br/>&nbsp;&nbsp;_tinyP4AstNodeType / _tinyP4AstNodePath / parity.*"]
 
-.tinyexp debug (F5)
-    │
-    ▼
-TinyExpressionP4DebugAdapterExt (DAP)
-    ├── runs all 6 backends
-    └── exposes `_tinyP4ParserUsed`, `_tinyP4ParserExact`, `_tinyP4ParserProbeMode`,
-        `_tinyP4AstNodeType`, `_tinyP4AstNodePath`, and `parity.*`
+    Edit --> LSP
+    Debug --> DAP
 ```
 
 External IDE repository: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
