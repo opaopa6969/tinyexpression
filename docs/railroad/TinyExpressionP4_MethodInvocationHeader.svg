@@ -14,16 +14,16 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">MethodInvocationHeader</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="711880557">
-<g id="1613040991">
-<g id="929170148">
+<g id="1748574597">
+<g id="931859049">
+<g id="1361207017">
 <rect x="56" y="62" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="87" y="80" text-anchor="middle" class="terminal-text">'call'</text>
 </g>
 <line x1="118" y1="76" x2="138" y2="76" class="rail"/>
 <polygon points="125,73 131,76 125,79" class="arrow"/>
-<g id="853227667">
-<g id="1025121755">
+<g id="154848982">
+<g id="1958547641">
 <rect x="154" y="62" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="199" y="80" text-anchor="middle" class="terminal-text">'internal'</text>
 </g>
@@ -40,7 +40,7 @@
 <line x1="260" y1="76" x2="260" y2="76" class="rail"/>
 <line x1="40" y1="76" x2="56" y2="76" class="rail"/>
 <line x1="260" y1="76" x2="276" y2="76" class="rail"/>
-<g id="1199003293">
+<g id="1948110695">
 <rect x="113" y="100" width="90" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="158" y="118" text-anchor="middle" class="terminal-text">'internal'</text>
 </g>

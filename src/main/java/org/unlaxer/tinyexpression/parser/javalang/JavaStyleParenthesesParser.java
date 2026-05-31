@@ -6,7 +6,6 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.ascii.LeftParenthesisParser;
 import org.unlaxer.parser.ascii.RightParenthesisParser;
-import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.util.annotation.TokenExtractor;
 
 public class JavaStyleParenthesesParser extends JavaStyleDelimitedLazyChain {
@@ -37,14 +36,14 @@ public class JavaStyleParenthesesParser extends JavaStyleDelimitedLazyChain {
   
   @TokenExtractor
   public static Token getParenthesesed(Token parenthesesed ){
-    if(false == parenthesesed.parser instanceof ParenthesesParser){
-      throw new IllegalArgumentException("this token did not generate from " + 
-        ParenthesesParser.class.getName());
+    if(false == parenthesesed.parser instanceof JavaStyleParenthesesParser){
+      throw new IllegalArgumentException("this token did not generate from " +
+        JavaStyleParenthesesParser.class.getName());
     }
-    Parser contentsParser = JavaStyleParenthesesParser.class.cast(parenthesesed.parser).inner;
+    Parser contentsParser = JavaStyleParenthesesParser.class.cast(parenthesesed.parser).getParenthesesedParser();
     return parenthesesed.getChildWithParser(parser -> parser.equals(contentsParser));
   }
-  
+
   public Parser getParenthesesedParser(){
     return inner == null ? Parser.get(clazz) : inner;
   }
@@ -62,7 +61,6 @@ public class JavaStyleParenthesesParser extends JavaStyleDelimitedLazyChain {
 
   @TokenExtractor
   public Token getInnerParserParsed(Token thisParserParsed) {
-//    return thisParserParsed.filteredChildren.get(1);
-    return thisParserParsed.getChildWithParser(parser->parser.equals(inner));
+    return thisParserParsed.getChildWithParser(parser->parser.equals(getParenthesesedParser()));
   }
 }

@@ -1,10 +1,10 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
-import java.lang.reflect.Method;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class GeneratedAstRuntimeProbe {
@@ -99,21 +99,14 @@ final class GeneratedAstRuntimeProbe {
 
   private static Optional<Object> tryMapAstOnce(String source, ClassLoader classLoader, String preferredAstSimpleName) {
     try {
-      Class<?> mapperClass = Class.forName(
-          "org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
-      Object ast;
-      if (preferredAstSimpleName == null || preferredAstSimpleName.isBlank()) {
-        Method parse = mapperClass.getMethod("parse", String.class);
-        ast = parse.invoke(null, source);
-      } else {
-        try {
-          Method parsePreferred = mapperClass.getMethod("parse", String.class, String.class);
-          ast = parsePreferred.invoke(null, source, preferredAstSimpleName);
-        } catch (NoSuchMethodException ignored) {
-          Method parse = mapperClass.getMethod("parse", String.class);
-          ast = parse.invoke(null, source);
-        }
-      }
+      // Verify that the generated mapper classes are available in the given classLoader
+      // before attempting to parse, preserving the optional-detection contract.
+      Class.forName("org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
+      // Delegate to P4PreferredAstMapper.parseByAstSimpleName so that
+      // ScopeStore.registerDispatcher is called on the ParseContext before parsing,
+      // preventing "transaction nest is illegal" errors that occur when the dispatcher
+      // is absent from the generated TinyExpressionP4Mapper.parse method.
+      Object ast = P4PreferredAstMapper.parseByAstSimpleName(source, preferredAstSimpleName);
       if (ast != null
           && preferredAstSimpleName != null
           && !preferredAstSimpleName.isBlank()
