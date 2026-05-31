@@ -16,6 +16,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.ChoiceInterface;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.parser.elementary.QuotedParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleJavaCodeBuilder.Kind;
 import org.unlaxer.tinyexpression.parser.ExpressionInterface;
 import org.unlaxer.tinyexpression.parser.IfExpressionParser;
@@ -60,6 +61,7 @@ public class StringClauseBuilder {
     registerHandler(NakedVariableParser.class, StringClauseBuilder::buildStringVariable);
     registerHandler(StringVariableParser.class, StringClauseBuilder::buildStringVariable);
     registerHandler(ParenthesesParser.class, StringClauseBuilder::buildParentheses);
+    registerHandler(JavaStyleParenthesesParser.class, StringClauseBuilder::buildParentheses);
     registerHandler(TrimParser.class, (self, token, tinyExpressionTokens) ->
         self.buildUnaryStringMethod(token, tinyExpressionTokens, ".trim()"));
     registerHandler(ToUpperCaseParser.class, (self, token, tinyExpressionTokens) ->

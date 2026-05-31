@@ -111,6 +111,7 @@ import org.unlaxer.tinyexpression.parser.javalang.AnnotationParameterParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationParser;
 import org.unlaxer.tinyexpression.parser.javalang.AnnotationsParser;
 import org.unlaxer.tinyexpression.parser.javalang.BooleanVariableDeclarationParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 import org.unlaxer.tinyexpression.parser.javalang.NakedVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.NumberVariableDeclarationParser;
 import org.unlaxer.tinyexpression.parser.javalang.StringVariableDeclarationParser;
@@ -417,13 +418,17 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       
       return operator;
       
-    }else if(parser instanceof StringVariableParser|| 
+    }else if(parser instanceof StringVariableParser||
         parser instanceof NakedVariableParser || parser instanceof ExclusiveNakedVariableParser){
-      
+
       return operator;
-      
+
+    }else if(parser instanceof JavaStyleParenthesesParser){
+
+      return apply(((JavaStyleParenthesesParser)parser).getInnerParserParsed(operator));
+
     }else if(parser instanceof ParenthesesParser){
-      
+
       return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
 
     }else if(parser instanceof TrimParser){
@@ -509,16 +514,20 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       );
       
     }else if(parser instanceof NumberMatchExpressionParser){
-      
+
       return operator.newCreatesOf(
         apply(NumberMatchExpressionParser.getCaseExpression(operator)),
         apply(NumberMatchExpressionParser.getDefaultExpression(operator))
       );
-      
+
+    }else if(parser instanceof JavaStyleParenthesesParser){
+
+      return apply(((JavaStyleParenthesesParser)parser).getInnerParserParsed(operator));
+
     }else if(parser instanceof ParenthesesParser){
-      
+
       return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
-      
+
     }else if(parser instanceof SinParser){
       
       return operator.newCreatesOf(apply(SinParser.getExpression(operator)));
@@ -702,10 +711,14 @@ public class OperatorOperandTreeCreator implements TokenReConstructorInterface{
       return operator;
       
       
+    }else if(parser instanceof JavaStyleParenthesesParser) {
+
+      return apply(((JavaStyleParenthesesParser)parser).getInnerParserParsed(operator));
+
     }else if(parser instanceof ParenthesesParser) {
 
       return apply(((ParenthesesParser)parser).getInnerParserParsed(operator));
-      
+
     }else if(parser instanceof IsPresentParser) {
 
       return operator.newCreatesOf(IsPresentParser.getVariable(operator));

@@ -8,7 +8,7 @@ import org.unlaxer.tinyexpression.parser.javatype.*;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 
 public abstract class AbstractBooleanFactorParser extends LazyChoice implements BooleanExpression , VariableTypeSelectable{
 
@@ -45,7 +45,7 @@ public abstract class AbstractBooleanFactorParser extends LazyChoice implements 
     parsers.add(BooleanIfExpressionParser.class);
     parsers.add(StrictTypedBooleanMatchExpressionParser.class);
     parsers.add(NotBooleanExpressionParser.class);
-    parsers.add(new ParenthesesParser(Parser.get(BooleanExpressionParser.class)));
+    parsers.add(new JavaStyleParenthesesParser(Parser.get(BooleanExpressionParser.class)));
     parsers.add(IsPresentParser.class);
     parsers.add(BooleanExpressionOfStringParser.class); // <- number == number系より早く評価しないとダメ
     parsers.add(NumberEqualEqualExpressionParser.class);
