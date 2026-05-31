@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">RandomFunction</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1497339865">
-<g id="1749166382">
+<g id="944993594">
+<g id="711695177">
 <rect x="40" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="62" text-anchor="middle" class="terminal-text">'random'</text>
 </g>
 <line x1="116" y1="58" x2="136" y2="58" class="rail"/>
 <polygon points="123,55 129,58 123,61" class="arrow"/>
-<g id="977689218">
+<g id="1861001571">
 <rect x="136" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="177" y1="58" x2="197" y2="58" class="rail"/>
 <polygon points="184,55 190,58 184,61" class="arrow"/>
-<g id="1195344948">
+<g id="517182272">
 <rect x="197" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="217" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

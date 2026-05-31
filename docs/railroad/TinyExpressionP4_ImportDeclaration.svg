@@ -14,28 +14,28 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ImportDeclaration</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="39343965">
-<g id="392162873">
+<g id="1604952262">
+<g id="2013352497">
 <rect x="40" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="78" y="80" text-anchor="middle" class="terminal-text">'import'</text>
 </g>
 <line x1="116" y1="76" x2="136" y2="76" class="rail"/>
 <polygon points="123,73 129,76 123,79" class="arrow"/>
-<g id="883839214">
+<g id="1556666512">
 <rect x="136" y="62" width="83" height="28" class="nonterminal-box"/>
 <text x="177" y="80" text-anchor="middle" class="nonterminal-text">ClassName</text>
 </g>
 <line x1="219" y1="76" x2="239" y2="76" class="rail"/>
 <polygon points="226,73 232,76 226,79" class="arrow"/>
-<g id="839381269">
-<g id="244988123">
-<g id="1850311742">
+<g id="1597809012">
+<g id="1029107464">
+<g id="35867580">
 <rect x="255" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="275" y="80" text-anchor="middle" class="terminal-text">'#'</text>
 </g>
 <line x1="296" y1="76" x2="316" y2="76" class="rail"/>
 <polygon points="303,73 309,76 303,79" class="arrow"/>
-<g id="1717316623">
+<g id="1337244693">
 <rect x="316" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="361" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
@@ -50,19 +50,19 @@
 </g>
 <line x1="422" y1="76" x2="442" y2="76" class="rail"/>
 <polygon points="429,73 435,76 429,79" class="arrow"/>
-<g id="1402311827">
+<g id="2109564165">
 <rect x="442" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="466" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
 <line x1="490" y1="76" x2="510" y2="76" class="rail"/>
 <polygon points="497,73 503,76 497,79" class="arrow"/>
-<g id="1083553990">
+<g id="1903945186">
 <rect x="510" y="62" width="90" height="28" class="nonterminal-box"/>
 <text x="555" y="80" text-anchor="middle" class="nonterminal-text">IDENTIFIER</text>
 </g>
 <line x1="600" y1="76" x2="620" y2="76" class="rail"/>
 <polygon points="607,73 613,76 607,79" class="arrow"/>
-<g id="257593594">
+<g id="1705282055">
 <rect x="620" y="62" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="640" y="80" text-anchor="middle" class="terminal-text">';'</text>
 </g>

@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanCase</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1632177451">
-<g id="514770737">
+<g id="1765054694">
+<g id="480577395">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="179" y1="58" x2="199" y2="58" class="rail"/>
 <polygon points="186,55 192,58 186,61" class="arrow"/>
-<g id="1025981785">
+<g id="1278268960">
 <rect x="199" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="223" y="62" text-anchor="middle" class="terminal-text">'-&gt;'</text>
 </g>
 <line x1="247" y1="58" x2="267" y2="58" class="rail"/>
 <polygon points="254,55 260,58 254,61" class="arrow"/>
-<g id="337936520">
+<g id="1328872207">
 <rect x="267" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="333" y="62" text-anchor="middle" class="nonterminal-text">BooleanCaseValue</text>
 </g>

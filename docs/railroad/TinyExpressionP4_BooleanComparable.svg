@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanComparable</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1009091259">
-<g id="310239569">
+<g id="433034875">
+<g id="2037396618">
 <rect x="131" y="44" width="111" height="28" class="nonterminal-box"/>
 <text x="186" y="62" text-anchor="middle" class="nonterminal-text">NotExpression</text>
 </g>
@@ -23,7 +23,7 @@
 <line x1="242" y1="58" x2="317" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="317" y1="58" x2="333" y2="58" class="rail"/>
-<g id="1298828197">
+<g id="1467151875">
 <rect x="99" y="82" width="174" height="28" class="nonterminal-box"/>
 <text x="186" y="100" text-anchor="middle" class="nonterminal-text">BooleanMatchExpression</text>
 </g>
@@ -33,7 +33,7 @@
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M317,96 Q325,96 325,88" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="232530967">
+<g id="1829513200">
 <rect x="89" y="120" width="195" height="28" class="nonterminal-box"/>
 <text x="186" y="138" text-anchor="middle" class="nonterminal-text">ExternalBooleanInvocation</text>
 </g>
@@ -43,7 +43,7 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M317,134 Q325,134 325,126" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="452848978">
+<g id="1380494223">
 <rect x="148" y="158" width="76" height="28" class="nonterminal-box"/>
 <text x="186" y="176" text-anchor="middle" class="nonterminal-text">InMethod</text>
 </g>
@@ -53,7 +53,7 @@
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M317,172 Q325,172 325,164" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1744302133">
+<g id="711201064">
 <rect x="110" y="196" width="153" height="28" class="nonterminal-box"/>
 <text x="186" y="214" text-anchor="middle" class="nonterminal-text">StartsWithDotMethod</text>
 </g>
@@ -63,7 +63,7 @@
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M317,210 Q325,210 325,202" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="2119788749">
+<g id="1793468553">
 <rect x="117" y="234" width="139" height="28" class="nonterminal-box"/>
 <text x="186" y="252" text-anchor="middle" class="nonterminal-text">EndsWithDotMethod</text>
 </g>
@@ -73,7 +73,7 @@
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M317,248 Q325,248 325,240" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="315168653">
+<g id="1717150082">
 <rect x="117" y="272" width="139" height="28" class="nonterminal-box"/>
 <text x="186" y="290" text-anchor="middle" class="nonterminal-text">ContainsDotMethod</text>
 </g>
@@ -83,7 +83,7 @@
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
 <path d="M317,286 Q325,286 325,278" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1739321339">
+<g id="1901750805">
 <rect x="113" y="310" width="146" height="28" class="nonterminal-box"/>
 <text x="186" y="328" text-anchor="middle" class="nonterminal-text">StartsWithFunction</text>
 </g>
@@ -93,7 +93,7 @@
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
 <path d="M317,324 Q325,324 325,316" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1057344867">
+<g id="2067650631">
 <rect x="120" y="348" width="132" height="28" class="nonterminal-box"/>
 <text x="186" y="366" text-anchor="middle" class="nonterminal-text">EndsWithFunction</text>
 </g>
@@ -103,7 +103,7 @@
 <path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
 <path d="M317,362 Q325,362 325,354" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="170902862">
+<g id="541328841">
 <rect x="120" y="386" width="132" height="28" class="nonterminal-box"/>
 <text x="186" y="404" text-anchor="middle" class="nonterminal-text">ContainsFunction</text>
 </g>
@@ -113,7 +113,7 @@
 <path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
 <path d="M317,400 Q325,400 325,392" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1350622969">
+<g id="196797938">
 <rect x="117" y="424" width="139" height="28" class="nonterminal-box"/>
 <text x="186" y="442" text-anchor="middle" class="nonterminal-text">IsPresentFunction</text>
 </g>
@@ -123,7 +123,7 @@
 <path d="M48,430 Q48,438 56,438" class="rail" fill="none"/>
 <path d="M317,438 Q325,438 325,430" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1751922469">
+<g id="689060946">
 <rect x="110" y="462" width="153" height="28" class="nonterminal-box"/>
 <text x="186" y="480" text-anchor="middle" class="nonterminal-text">InTimeRangeFunction</text>
 </g>
@@ -133,7 +133,7 @@
 <path d="M48,468 Q48,476 56,476" class="rail" fill="none"/>
 <path d="M317,476 Q325,476 325,468" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="2039710110">
+<g id="1022895831">
 <rect x="99" y="500" width="174" height="28" class="nonterminal-box"/>
 <text x="186" y="518" text-anchor="middle" class="nonterminal-text">InDayTimeRangeFunction</text>
 </g>
@@ -143,7 +143,7 @@
 <path d="M48,506 Q48,514 56,514" class="rail" fill="none"/>
 <path d="M317,514 Q325,514 325,506" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="224538199">
+<g id="1016202956">
 <rect x="155" y="538" width="62" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="556" text-anchor="middle" class="terminal-text">'true'</text>
 </g>
@@ -153,7 +153,7 @@
 <path d="M48,544 Q48,552 56,552" class="rail" fill="none"/>
 <path d="M317,552 Q325,552 325,544" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1531137556">
+<g id="1616634329">
 <rect x="152" y="576" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="594" text-anchor="middle" class="terminal-text">'false'</text>
 </g>
@@ -163,7 +163,7 @@
 <path d="M48,582 Q48,590 56,590" class="rail" fill="none"/>
 <path d="M317,590 Q325,590 325,582" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1386188614">
+<g id="1477685548">
 <rect x="138" y="614" width="97" height="28" class="nonterminal-box"/>
 <text x="186" y="632" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
@@ -173,7 +173,7 @@
 <path d="M48,620 Q48,628 56,628" class="rail" fill="none"/>
 <path d="M317,628 Q325,628 325,620" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="929393658">
+<g id="622918247">
 <rect x="120" y="652" width="132" height="28" class="nonterminal-box"/>
 <text x="186" y="670" text-anchor="middle" class="nonterminal-text">MethodInvocation</text>
 </g>
@@ -183,20 +183,20 @@
 <path d="M48,658 Q48,666 56,666" class="rail" fill="none"/>
 <path d="M317,666 Q325,666 325,658" class="rail" fill="none"/>
 <path d="M325,66 Q325,58 333,58" class="rail" fill="none"/>
-<g id="1484193073">
-<g id="728361943">
+<g id="1372332895">
+<g id="153631849">
 <rect x="56" y="690" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="76" y="708" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="97" y1="704" x2="117" y2="704" class="rail"/>
 <polygon points="104,701 110,704 104,707" class="arrow"/>
-<g id="1780167488">
+<g id="918704572">
 <rect x="117" y="690" width="139" height="28" class="nonterminal-box"/>
 <text x="186" y="708" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="256" y1="704" x2="276" y2="704" class="rail"/>
 <polygon points="263,701 269,704 263,707" class="arrow"/>
-<g id="1146119418">
+<g id="1931287705">
 <rect x="276" y="690" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="296" y="708" text-anchor="middle" class="terminal-text">')'</text>
 </g>
