@@ -10,6 +10,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.elementary.ParenthesesParser;
 import org.unlaxer.tinyexpression.evaluator.javacode.validator.ParserValuesValidator;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 import org.unlaxer.tinyexpression.parser.BooleanExpression;
 import org.unlaxer.tinyexpression.parser.BooleanIfExpressionParser;
 import org.unlaxer.tinyexpression.parser.BooleanMatchExpressionParser;
@@ -50,6 +51,7 @@ public class BooleanBuilder implements TokenCodeBuilder {
   static {
     registerHandler(NotBooleanExpressionParser.class, BooleanBuilder::buildNotExpression);
     registerHandler(ParenthesesParser.class, BooleanBuilder::buildParenthesized);
+    registerHandler(JavaStyleParenthesesParser.class, BooleanBuilder::buildJavaStyleParenthesized);
     registerHandler(IsPresentParser.class, BooleanBuilder::buildIsPresent);
     registerHandler(InTimeRangeParser.class, BooleanBuilder::buildInTimeRange);
     registerHandler(InDayTimeRangeParser.class, BooleanBuilder::buildInDayTimeRange);
@@ -134,6 +136,14 @@ public class BooleanBuilder implements TokenCodeBuilder {
   private void buildParenthesized(SimpleJavaCodeBuilder builder, Token token,
       TinyExpressionTokens tinyExpressionTokens) {
     Token parenthesesed = ParenthesesParser.getParenthesesed(token);
+    builder.append("(");
+    BooleanExpressionBuilder.SINGLETON.build(builder, parenthesesed, tinyExpressionTokens);
+    builder.append(")");
+  }
+
+  private void buildJavaStyleParenthesized(SimpleJavaCodeBuilder builder, Token token,
+      TinyExpressionTokens tinyExpressionTokens) {
+    Token parenthesesed = ((JavaStyleParenthesesParser) token.parser).getInnerParserParsed(token);
     builder.append("(");
     BooleanExpressionBuilder.SINGLETON.build(builder, parenthesesed, tinyExpressionTokens);
     builder.append(")");

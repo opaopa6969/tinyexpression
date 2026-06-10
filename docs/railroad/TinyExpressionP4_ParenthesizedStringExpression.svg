@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ParenthesizedStringExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1438846034">
-<g id="185500100">
+<g id="404888284">
+<g id="767381765">
 <rect x="40" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="81" y1="58" x2="101" y2="58" class="rail"/>
 <polygon points="88,55 94,58 88,61" class="arrow"/>
-<g id="1211998570">
+<g id="2091336274">
 <rect x="101" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="167" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="233" y1="58" x2="253" y2="58" class="rail"/>
 <polygon points="240,55 246,58 240,61" class="arrow"/>
-<g id="31595484">
+<g id="730679780">
 <rect x="253" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="273" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

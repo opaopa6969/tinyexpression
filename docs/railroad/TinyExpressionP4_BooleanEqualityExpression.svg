@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanEqualityExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="930572475">
-<g id="253175628">
+<g id="1941534747">
+<g id="1034189647">
 <rect x="40" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="109" y="62" text-anchor="middle" class="nonterminal-text">BooleanComparable</text>
 </g>
 <line x1="179" y1="58" x2="199" y2="58" class="rail"/>
 <polygon points="186,55 192,58 186,61" class="arrow"/>
-<g id="1210574304">
+<g id="650527158">
 <rect x="199" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="244" y="62" text-anchor="middle" class="nonterminal-text">EqualityOp</text>
 </g>
 <line x1="289" y1="58" x2="309" y2="58" class="rail"/>
 <polygon points="296,55 302,58 296,61" class="arrow"/>
-<g id="668403360">
+<g id="371214570">
 <rect x="309" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="378" y="62" text-anchor="middle" class="nonterminal-text">BooleanComparable</text>
 </g>

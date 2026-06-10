@@ -14,8 +14,8 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">BooleanFactor</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="83835428">
-<g id="32248926">
+<g id="1888557446">
+<g id="1834556192">
 <rect x="59" y="44" width="195" height="28" class="nonterminal-box"/>
 <text x="156" y="62" text-anchor="middle" class="nonterminal-text">BooleanEqualityExpression</text>
 </g>
@@ -23,17 +23,17 @@
 <line x1="254" y1="58" x2="258" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
 <line x1="258" y1="58" x2="274" y2="58" class="rail"/>
-<g id="1989409126">
-<rect x="87" y="82" width="139" height="28" class="nonterminal-box"/>
-<text x="156" y="100" text-anchor="middle" class="nonterminal-text">BooleanComparable</text>
+<g id="2038836428">
+<rect x="77" y="82" width="160" height="28" class="nonterminal-box"/>
+<text x="157" y="100" text-anchor="middle" class="nonterminal-text">ComparisonExpression</text>
 </g>
-<line x1="56" y1="96" x2="87" y2="96" class="rail"/>
-<line x1="226" y1="96" x2="258" y2="96" class="rail"/>
+<line x1="56" y1="96" x2="77" y2="96" class="rail"/>
+<line x1="237" y1="96" x2="258" y2="96" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
 <path d="M258,96 Q266,96 266,88" class="rail" fill="none"/>
 <path d="M266,66 Q266,58 274,58" class="rail" fill="none"/>
-<g id="1777210130">
+<g id="1844796430">
 <rect x="56" y="120" width="202" height="28" class="nonterminal-box"/>
 <text x="157" y="138" text-anchor="middle" class="nonterminal-text">StringComparisonExpression</text>
 </g>
@@ -43,12 +43,12 @@
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
 <path d="M258,134 Q266,134 266,126" class="rail" fill="none"/>
 <path d="M266,66 Q266,58 274,58" class="rail" fill="none"/>
-<g id="1708166180">
-<rect x="77" y="158" width="160" height="28" class="nonterminal-box"/>
-<text x="157" y="176" text-anchor="middle" class="nonterminal-text">ComparisonExpression</text>
+<g id="1437894667">
+<rect x="87" y="158" width="139" height="28" class="nonterminal-box"/>
+<text x="156" y="176" text-anchor="middle" class="nonterminal-text">BooleanComparable</text>
 </g>
-<line x1="56" y1="172" x2="77" y2="172" class="rail"/>
-<line x1="237" y1="172" x2="258" y2="172" class="rail"/>
+<line x1="56" y1="172" x2="87" y2="172" class="rail"/>
+<line x1="226" y1="172" x2="258" y2="172" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
 <path d="M258,172 Q266,172 266,164" class="rail" fill="none"/>

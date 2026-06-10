@@ -14,22 +14,22 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1264837328">
-<g id="447786424">
+<g id="1426899475">
+<g id="224423917">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">StringTerm</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="1035900164">
-<g id="586953102">
-<g id="1182145464">
+<g id="1861693771">
+<g id="1617307053">
+<g id="280325800">
 <rect x="166" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="186" y="86" text-anchor="middle" class="terminal-text">'+'</text>
 </g>
 <line x1="207" y1="82" x2="227" y2="82" class="rail"/>
 <polygon points="214,79 220,82 214,85" class="arrow"/>
-<g id="1095778239">
+<g id="252639479">
 <rect x="227" y="68" width="90" height="28" class="nonterminal-box"/>
 <text x="272" y="86" text-anchor="middle" class="nonterminal-text">StringTerm</text>
 </g>

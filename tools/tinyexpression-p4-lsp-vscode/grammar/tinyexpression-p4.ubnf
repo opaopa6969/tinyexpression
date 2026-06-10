@@ -473,9 +473,9 @@ grammar TinyExpressionP4 {
   @mapping(BooleanFactorExpr, params=[value])
   BooleanFactor ::=
       BooleanEqualityExpression @value
-    | BooleanComparable @value
-    | StringComparisonExpression @value
     | ComparisonExpression @value
+    | StringComparisonExpression @value
+    | BooleanComparable @value
     ;
 
   // String equality: $var == 'text', 'a' != 'b', etc.

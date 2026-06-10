@@ -12,6 +12,7 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.dsl.runtime.ScopeStore;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
@@ -81,6 +82,23 @@ public final class P4PreferredAstMapper {
 
   public static TinyExpressionP4AST parse(String formula, ExpressionType preferredResultType) {
     return parseDetailed(formula, preferredResultType).ast();
+  }
+
+  /**
+   * Parses {@code formula} requesting a specific AST node type by its simple class name.
+   * Unlike {@link #parse(String, ExpressionType)}, this method forwards the simple name
+   * directly to the underlying mapper so that it is honoured even when the result type is
+   * not known.  {@link ScopeStore#registerDispatcher(org.unlaxer.context.ParseContext)} is
+   * called on the {@link org.unlaxer.context.ParseContext} before parsing, preventing
+   * "transaction nest is illegal" errors that occur when the dispatcher is absent.
+   *
+   * @param formula               the expression source
+   * @param preferredAstSimpleName the simple class name of the desired AST node, or {@code null}
+   * @return the parsed AST
+   * @throws IllegalArgumentException if the formula cannot be parsed
+   */
+  public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
+    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName);
   }
 
   public static ParsedAst parseDetailed(String formula) {
@@ -893,6 +911,7 @@ public final class P4PreferredAstMapper {
 
   private static TinyExpressionP4AST parseViaMapperCompat(String source, String preferredAstSimpleName) {
     ParseContext context = new ParseContext(createRootSourceCompat(source));
+    ScopeStore.registerDispatcher(context);
     Parsed parsed;
     try {
       Parser rootParser = TinyExpressionP4Parsers.getRootParser();

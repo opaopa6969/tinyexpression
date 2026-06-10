@@ -14,32 +14,32 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StartsWithDotMethod</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="215960248">
-<g id="783752254">
+<g id="486211780">
+<g id="1122692078">
 <rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
 <line x1="137" y1="58" x2="157" y2="58" class="rail"/>
 <polygon points="144,55 150,58 144,61" class="arrow"/>
-<g id="1503392902">
+<g id="904931919">
 <rect x="157" y="44" width="111" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="212" y="62" text-anchor="middle" class="terminal-text">'.startsWith'</text>
 </g>
 <line x1="268" y1="58" x2="288" y2="58" class="rail"/>
 <polygon points="275,55 281,58 275,61" class="arrow"/>
-<g id="764278383">
+<g id="303595196">
 <rect x="288" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="308" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="329" y1="58" x2="349" y2="58" class="rail"/>
 <polygon points="336,55 342,58 336,61" class="arrow"/>
-<g id="472259056">
+<g id="1028512792">
 <rect x="349" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="415" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="481" y1="58" x2="501" y2="58" class="rail"/>
 <polygon points="488,55 494,58 488,61" class="arrow"/>
-<g id="182886566">
+<g id="686679492">
 <rect x="501" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="521" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

@@ -8,7 +8,7 @@ import org.unlaxer.tinyexpression.parser.javatype.*;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 
 public abstract class AbstractStringFactorParser extends LazyChoice implements StringExpression , VariableTypeSelectable{
 	
@@ -33,7 +33,7 @@ public abstract class AbstractStringFactorParser extends LazyChoice implements S
     if(withNakedVariable) {
       parsers.add(ExclusiveNakedVariableParser.class);
     }
-    parsers.add(new ParenthesesParser(Parser.get(NESTED)));
+    parsers.add(new JavaStyleParenthesesParser(Parser.get(NESTED)));
     parsers.add(TrimParser.class);
     parsers.add(ToUpperCaseParser.class);
     parsers.add(ToLowerCaseParser.class);
