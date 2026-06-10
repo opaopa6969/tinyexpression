@@ -113,12 +113,10 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
 
     this.source = source;
 
-    CompileContext compileContext = new CompileContext(classLoader,javaFileManagerContext);
-
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
 
-    try {
+    try (CompileContext compileContext = new CompileContext(classLoader, javaFileManagerContext)) {
 
       this.className = className;
       formulaHash = MD5.toHex(formula);
@@ -295,13 +293,24 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
 
   static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
 
-    // Opt-out check: if JavaCodeBlockPolicy disables code block execution,
-    // return an empty list without compiling or executing any embedded Java code.
+    List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
+
+    // Opt-in check: if JavaCodeBlockPolicy disables code block execution and the formula
+    // contains at least one Java code block, reject with a diagnostic error so callers
+    // are aware that part of their formula is not being evaluated.
     if (!JavaCodeBlockPolicy.isEnabled()) {
+      List<String> javaBlockNames = codeBlocks.stream()
+          .filter(cb -> "java".equalsIgnoreCase(cb.schemeAndIdentifier.scheme))
+          .map(cb -> cb.schemeAndIdentifier.idenitifier)
+          .toList();
+      if (!javaBlockNames.isEmpty()) {
+        throw new org.unlaxer.compiler.CompileError(
+            "Java code block execution is disabled (JavaCodeBlockPolicy). "
+                + "Formula contains Java code block(s): " + javaBlockNames
+                + ". Call JavaCodeBlockPolicy.setEnabled(true) to opt in.");
+      }
       return new ArrayList<>();
     }
-
-    List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
 
     List<InstanceAndByteCode> instanceAndByteCodeList = new ArrayList<>();
     for (CodeBlock codeBlock : codeBlocks) {
