@@ -73,3 +73,12 @@ jobs:
           MAVEN_OPTS: >-
             --add-opens=java.base/java.util=ALL-UNNAMED
             --add-opens=java.base/java.lang=ALL-UNNAMED
+
+      # verify で生成された VSIX を成果物として添付 (タグ push 時の
+      # Release 添付は release-vsix.yml を参照)
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tinyexpression-p4-lsp-vsix
+          path: tools/tinyexpression-p4-lsp-vscode/target/*.vsix
+          if-no-files-found: error
