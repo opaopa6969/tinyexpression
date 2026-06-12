@@ -177,6 +177,10 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
+				<configuration>
+					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
+					<forkedProcessTimeoutInSeconds>2700</forkedProcessTimeoutInSeconds>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>

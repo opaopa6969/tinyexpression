@@ -98,7 +98,33 @@ public final class P4PreferredAstMapper {
    * @throws IllegalArgumentException if the formula cannot be parsed
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName);
+    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, 0L);
+  }
+
+  /**
+   * {@link #parseByAstSimpleName(String, String)} の期限付き版。
+   *
+   * <p>深くネストした式では生成 P4 文法のバックトラックが指数的になり、パースが
+   * 実質終了しないことがある (issue #19)。{@code deadlineNanos}
+   * ({@link System#nanoTime()} 基準の絶対時刻) を過ぎるとパースを
+   * {@link ParseDeadlineExceededException} で中断する。0 以下なら無期限。
+   *
+   * <p>実装はスレッドを使わない: 全パーサーのトランザクション begin で呼ばれる
+   * {@link org.unlaxer.listener.TransactionListener} を {@link ParseContext} に
+   * 登録し、期限超過時に throw してパースループを同一スレッドで巻き戻す。
+   */
+  public static TinyExpressionP4AST parseByAstSimpleName(
+      String formula, String preferredAstSimpleName, long deadlineNanos) {
+    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, deadlineNanos);
+  }
+
+  /** パース期限超過。呼び出し側はフォールバック経路 (legacy parser) に切り替えること。 */
+  public static final class ParseDeadlineExceededException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    ParseDeadlineExceededException(String message) {
+      super(message);
+    }
   }
 
   public static ParsedAst parseDetailed(String formula) {
@@ -910,8 +936,16 @@ public final class P4PreferredAstMapper {
   }
 
   private static TinyExpressionP4AST parseViaMapperCompat(String source, String preferredAstSimpleName) {
+    return parseViaMapperCompat(source, preferredAstSimpleName, 0L);
+  }
+
+  private static TinyExpressionP4AST parseViaMapperCompat(
+      String source, String preferredAstSimpleName, long deadlineNanos) {
     ParseContext context = new ParseContext(createRootSourceCompat(source));
     ScopeStore.registerDispatcher(context);
+    if (deadlineNanos > 0L) {
+      registerDeadlineListener(context, deadlineNanos);
+    }
     Parsed parsed;
     try {
       Parser rootParser = TinyExpressionP4Parsers.getRootParser();
@@ -934,6 +968,30 @@ public final class P4PreferredAstMapper {
       throw new IllegalArgumentException("No mapped node found in parse tree");
     }
     return mapped;
+  }
+
+  /**
+   * 期限超過でパースを中断する listener を登録する。unlaxer 3.0.4 以降、
+   * TransactionListenerContainer は登録 listener の onBegin を全パーサーの
+   * トランザクション begin で呼ぶため、ここで throw すればパースループが
+   * 同一スレッドで巻き戻る (スレッド・割り込み不要)。
+   */
+  private static void registerDeadlineListener(ParseContext context, long deadlineNanos) {
+    context.addTransactionListener(
+        org.unlaxer.Name.of(P4PreferredAstMapper.class, "parseDeadline"),
+        new org.unlaxer.listener.TransactionListener() {
+          @Override public void setLevel(org.unlaxer.listener.OutputLevel level) {}
+          @Override public void onOpen(ParseContext parseContext) {}
+          @Override public void onBegin(ParseContext parseContext, Parser parser) {
+            if (System.nanoTime() > deadlineNanos) {
+              throw new ParseDeadlineExceededException(
+                  "P4 parse exceeded deadline; falling back to legacy parser");
+            }
+          }
+          @Override public void onCommit(ParseContext parseContext, Parser parser, org.unlaxer.TokenList committedTokens) {}
+          @Override public void onRollback(ParseContext parseContext, Parser parser, org.unlaxer.TokenList rollbackedTokens) {}
+          @Override public void onClose(ParseContext parseContext) {}
+        });
   }
 
   private static void closeParseContextQuietly(ParseContext context) {
