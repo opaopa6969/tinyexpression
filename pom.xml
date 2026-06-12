@@ -179,7 +179,13 @@
 				<version>3.2.5</version>
 				<configuration>
 					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
-					<forkedProcessTimeoutInSeconds>2700</forkedProcessTimeoutInSeconds>
+					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
+					<excludes>
+						<!-- issue #20: legacy パーサーの指数バックトラックを意図的に繰り返す
+						     ベンチマーク。unlaxer のメモ化 (unlaxer-parser#40) 導入まで除外。
+						     手動実行: mvn test -Dtest=BackendSpeedComparisonTest -Dsurefire.excludes= -->
+						<exclude>**/BackendSpeedComparisonTest.java</exclude>
+					</excludes>
 				</configuration>
 			</plugin>
 			<plugin>

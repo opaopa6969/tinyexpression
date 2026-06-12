@@ -252,11 +252,18 @@ final class AstEmbeddedExpressionRuntime {
       ExpressionType effectiveResultType = resultType == null ? ExpressionTypes.object : resultType;
       SpecifiedExpressionTypes evalTypes = new SpecifiedExpressionTypes(
           effectiveResultType, resolveNumberType(specifiedExpressionTypes, effectiveResultType));
-      JavaCodeCalculatorV3 calculator = new JavaCodeCalculatorV3(
-          Name.of("AstEmbeddedExpression"),
-          new Source(formula),
-          evalTypes,
-          effectiveClassLoader);
+      // 深い式では legacy parser のバックトラックが指数化するため (issue #20)、
+      // 期限付きで構築する。超過時は ParseDeadline.Exceeded が throw され
+      // 下の catch で empty → 呼び出し側の通常評価経路へフォールバックする。
+      long timeoutMillis = Long.getLong("tinyexpression.embedded.parse.timeout.millis", 5000L);
+      long deadlineNanos = org.unlaxer.tinyexpression.ParseDeadline.deadlineFromTimeoutMillis(timeoutMillis);
+      JavaCodeCalculatorV3 calculator = org.unlaxer.tinyexpression.ParseDeadline.callWithDeadline(
+          deadlineNanos,
+          () -> new JavaCodeCalculatorV3(
+              Name.of("AstEmbeddedExpression"),
+              new Source(formula),
+              evalTypes,
+              effectiveClassLoader));
       return Optional.ofNullable(calculator.apply(context));
     } catch (Throwable ignored) {
       return Optional.empty();

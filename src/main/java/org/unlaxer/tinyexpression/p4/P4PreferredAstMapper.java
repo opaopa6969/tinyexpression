@@ -98,7 +98,21 @@ public final class P4PreferredAstMapper {
    * @throws IllegalArgumentException if the formula cannot be parsed
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, 0L);
+    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, defaultParseDeadlineNanos());
+  }
+
+  /**
+   * P4 パースのデフォルト期限。生成 P4 文法は深いネストで指数バックトラックに
+   * なり得るため (issue #19, #20)、全エントリポイントに既定で適用する。正常な式は
+   * ms オーダーで終わるため 10 秒は実質無害。
+   * {@code -Dtinyexpression.p4.parse.timeout.millis} で調整 (0 以下で無効)。
+   */
+  private static long defaultParseDeadlineNanos() {
+    long timeoutMillis = Long.getLong("tinyexpression.p4.parse.timeout.millis", 10_000L);
+    if (timeoutMillis <= 0L) {
+      return 0L;
+    }
+    return System.nanoTime() + timeoutMillis * 1_000_000L;
   }
 
   /**
@@ -134,10 +148,11 @@ public final class P4PreferredAstMapper {
   public static ParsedAst parseDetailed(String formula, ExpressionType preferredResultType) {
     RuntimeException preferredFailure = null;
     RuntimeException defaultFailure = null;
+    long deadlineNanos = defaultParseDeadlineNanos();
     for (String candidateSource : candidateFormulaSources(formula)) {
       for (String preferredAstSimpleName : preferredAstSimpleNames(candidateSource, preferredResultType)) {
         try {
-          TinyExpressionP4AST ast = parseViaMapperCompat(candidateSource, preferredAstSimpleName);
+          TinyExpressionP4AST ast = parseViaMapperCompat(candidateSource, preferredAstSimpleName, deadlineNanos);
           if (ast != null && preferredAstSimpleName.equals(ast.getClass().getSimpleName())) {
             return new ParsedAst(ast, "preferred:" + preferredAstSimpleName);
           }
@@ -147,7 +162,7 @@ public final class P4PreferredAstMapper {
       }
 
       try {
-        return new ParsedAst(parseViaMapperCompat(candidateSource, null), "default");
+        return new ParsedAst(parseViaMapperCompat(candidateSource, null, deadlineNanos), "default");
       } catch (RuntimeException e) {
         defaultFailure = e;
       }
@@ -936,7 +951,7 @@ public final class P4PreferredAstMapper {
   }
 
   private static TinyExpressionP4AST parseViaMapperCompat(String source, String preferredAstSimpleName) {
-    return parseViaMapperCompat(source, preferredAstSimpleName, 0L);
+    return parseViaMapperCompat(source, preferredAstSimpleName, defaultParseDeadlineNanos());
   }
 
   private static TinyExpressionP4AST parseViaMapperCompat(
