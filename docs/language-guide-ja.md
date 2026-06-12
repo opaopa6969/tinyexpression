@@ -2,7 +2,7 @@
 
 [English version](language-guide.md)
 
-TinyExpression v1.4.10 の完全言語仕様です。
+TinyExpression v1.4.11 の完全言語仕様です。
 
 ---
 
