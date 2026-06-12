@@ -19,7 +19,7 @@ import org.unlaxer.parser.Parser;
  * P4 AST Evaluator backend.
  * <p>
  * Strategy:
- * 1) Attempt to parse formula via type-safe {@link TinyExpressionP4Mapper} (no reflection, no regex).
+ * 1) Attempt to parse formula via type-safe {@code TinyExpressionP4Mapper} (no reflection, no regex).
  * 2) If successful, set {@code _tinyP4ParserUsed=true} and evaluate via {@link AstEvaluatorCalculator}.
  * 3) If P4 parse fails (formula uses syntax not yet covered by P4 grammar), fall back
  *    to {@link AstEvaluatorCalculator} directly and set {@code _tinyP4ParserUsed=false}.

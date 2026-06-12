@@ -12,7 +12,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
  * <p>
  * Extends {@link DslJavaCodeCalculator} with a P4-grammar parse check:
  * before delegating to the DSL Java code generation pipeline, the formula is
- * parsed via the type-safe {@link TinyExpressionP4Mapper}.
+ * parsed via the type-safe {@code TinyExpressionP4Mapper}.
  * <p>
  * Runtime markers set (in addition to DslJavaCodeCalculator markers):
  * <ul>
