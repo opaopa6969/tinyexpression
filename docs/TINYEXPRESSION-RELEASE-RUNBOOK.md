@@ -124,3 +124,36 @@ CI (`.github/workflows/ci.yml`) の `smoke` ジョブもこの順序を踏む
 - [.github/workflows/ci.yml](../.github/workflows/ci.yml) — CI install 順序
 - [docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](./TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md) §9 — smoke / 確認コマンド
 - [docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md](./TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md) — `unlaxer-dsl` 連携時の install
+
+---
+
+## VSIX (P4 LSP/DAP 拡張) のリリース
+
+### ビルド毎の artifact
+
+`master` への push ごとに CI の Full verify が VSIX をビルドし、Actions artifact
+として添付する:
+
+**Actions タブ → 最新 run → Artifacts → `tinyexpression-p4-lsp-vsix`**
+
+artifact は保持期限 (既定90日) で消える。配布には下のタグ付き Release を使う。
+
+### タグ push で GitHub Release (恒久添付)
+
+`v*` タグを push すると `.github/workflows/release-vsix.yml` が発動し、VSIX を
+ビルドして Release を自動作成 (リリースノート自動生成) し、恒久添付する:
+
+```bash
+git tag -a vX.Y.Z -m "tinyexpression X.Y.Z"
+git push origin vX.Y.Z
+# → https://github.com/opaopa6969/tinyexpression/releases/tag/vX.Y.Z
+```
+
+既存タグでの再実行は asset を上書き (`--clobber`) するので、失敗時はワークフローを
+re-run すればよい。
+
+利用者のインストール: Release ページから `.vsix` をダウンロード →
+VS Code の **Extensions: Install from VSIX...**。
+
+ローカルビルド: ルートで `mvn install -DskipTests` 後、
+`tools/tinyexpression-p4-lsp-vscode` で `mvn verify` → `target/*.vsix`。
