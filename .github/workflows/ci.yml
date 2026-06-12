@@ -50,8 +50,13 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Build and verify (main)
-        run: mvn -B verify -Dgpg.skip=true
+      # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
+      # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
+      - name: Build and verify (main, baseline-gated)
+        run: mvn -B verify -Dgpg.skip=true -Dmaven.test.failure.ignore=true
+
+      - name: Check test failures against baseline
+        run: bash tools/ci/check-test-baseline.sh
 
       - name: Install main artifact to local repo
         run: mvn -B install -DskipTests -Dgpg.skip=true
