@@ -208,9 +208,17 @@ P4 復活後も以下は legacy にフォールバック（= P4 文法に機能�
 
 ## 10. 推奨 issue 化リスト
 
-1. (unlaxer-dsl) ルール名 vs トークンパーサ名の衝突を generate 時にエラー化（BUG-0 再発防止）。
-2. (unlaxer-dsl MapperGenerator) `'literal' @value` の WordParser キャッチオール衝突（P4-BUG-1）。
-3. (unlaxer-dsl MapperGenerator) `@mapping` 無しラッパールール/ネスト ternary/variadic `{,X@rest}` の捕捉（P4-BUG-1/2）。
-4. (tinyexpression) cross-check の撤去 or P4 優先化＋legacy variadic min/max 修正（P4-BUG-3/4）。
-5. (tinyexpression/P4) ブロックコメント・`len`・ダブルクォート・`.in`・宣言 setter の P4 対応（手書き廃止の前提）。
-6. (P4 文法) top-level `Expression` の型ディスパッチ（裸の boolean 比較）。
+起票済み（2026-06-15）:
+
+1. (unlaxer-dsl) ルール名 vs トークンパーサ名の衝突を generate 時にエラー化（BUG-0 再発防止）
+   → opaopa6969/unlaxer-parser#41
+2. (unlaxer-dsl MapperGenerator) `'literal' @value` の WordParser キャッチオール衝突（P4-BUG-1）
+   → opaopa6969/unlaxer-parser#42
+3. (unlaxer-dsl MapperGenerator) `@mapping` 無しラッパールール/ネスト ternary/variadic `{,X@rest}` の捕捉（P4-BUG-1/2）
+   → opaopa6969/unlaxer-parser#43
+4. (tinyexpression) cross-check の撤去 or P4 優先化＋legacy variadic min/max 修正（P4-BUG-3/4/5）
+   → opaopa6969/tinyexpression#21
+5. (tinyexpression/P4) ブロックコメント・`len`・ダブルクォート・`.in`・宣言 setter・javacode math の P4 対応（手書き廃止の前提）
+   → opaopa6969/tinyexpression#22
+6. (P4 文法) top-level `Expression` の型ディスパッチ（裸の boolean 比較）
+   → opaopa6969/tinyexpression#23
