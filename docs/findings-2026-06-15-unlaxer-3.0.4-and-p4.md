@@ -76,7 +76,7 @@ surefire の `forkCount` 並列化を試したが、複数の既存テストが�
 クラス分散が変わると落ちる**。これが §5 の forkCount 不採用の根本理由でもある。
 
 **修正案**: コードブロックを使うテストは各自の @Before で `JavaCodeBlockPolicy.setEnabled(true)`、@After で
-`reset()` を呼び、自己完結させる（順序・並列非依存になり、forkCount 高速化も解禁できる）。→ tinyexpression#26
+`reset()` を呼び、自己完結させる（順序・並列非依存になり、forkCount 高速化も解禁できる）。→ tinyexpression#27
 
 ### 6.2 `Parser.get` 等のプロセス横断シングルトン
 パーサ/評価器がプロセス全体のシングルトンキャッシュを共有するため、reuseForks 並列でクラス間が干渉しうる。
