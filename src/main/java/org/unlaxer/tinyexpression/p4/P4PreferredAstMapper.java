@@ -956,26 +956,7 @@ public final class P4PreferredAstMapper {
 
   private static TinyExpressionP4AST parseViaMapperCompat(
       String source, String preferredAstSimpleName, long deadlineNanos) {
-    ParseContext context = new ParseContext(createRootSourceCompat(source));
-    ScopeStore.registerDispatcher(context);
-    if (deadlineNanos > 0L) {
-      registerDeadlineListener(context, deadlineNanos);
-    }
-    Parsed parsed;
-    try {
-      Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-      parsed = rootParser.parse(context);
-    } finally {
-      closeParseContextQuietly(context);
-    }
-    if (!parsed.isSucceeded()) {
-      throw new IllegalArgumentException("Parse failed: " + source);
-    }
-    int consumed = consumedLengthCompat(parsed.getConsumed());
-    if (consumed != source.length()) {
-      throw new IllegalArgumentException("Parse failed at offset " + consumed + ": " + source);
-    }
-    Token rootToken = parsed.getRootToken(true);
+    Token rootToken = parseRootToken(source, deadlineNanos);
     clearMapperSourceSpans();
     Token bestMappedToken = invokeFindBestMappedToken(rootToken, preferredAstSimpleName);
     TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
@@ -983,6 +964,69 @@ public final class P4PreferredAstMapper {
       throw new IllegalArgumentException("No mapped node found in parse tree");
     }
     return mapped;
+  }
+
+  /**
+   * Parses {@code source} fully and returns the root token.
+   *
+   * <p>The grammar's top-level {@code Expression} rule tries {@code NumberExpression}
+   * before {@code BooleanExpression} so that arithmetic such as {@code $a+$b} is fully
+   * consumed (a BooleanExpression-first ordering would consume only {@code $a}). The
+   * generated combinator {@code Choice} is PEG first-match and never backtracks into a
+   * later alternative once an earlier one commits, so for a bare top-level boolean
+   * comparison such as {@code 1 > 0 & 2 > 1} the {@code NumberExpression} alternative
+   * matches only the leading {@code 1} and the root {@code Formula} rule then fails at
+   * EOF (issue #23).
+   *
+   * <p>Reordering the grammar alternatives cannot fix both cases under PEG, and adding a
+   * comparison-anchored top-level alternative roughly doubles parse time for
+   * {@code if(...comparison...)} formulas (the comparison's number operand re-parses the
+   * whole {@code if} block before failing). So the fix is applied here instead: when the
+   * standard {@code Formula} parse fails or under-consumes, retry once treating
+   * {@code BooleanExpression} as the root. This adds cost only for inputs the standard
+   * parse already rejected, leaving the hot path untouched.
+   */
+  private static Token parseRootToken(String source, long deadlineNanos) {
+    ParseResult primary = parseWithRoot(TinyExpressionP4Parsers.getRootParser(), source, deadlineNanos);
+    if (primary.fullyConsumed(source)) {
+      return primary.rootToken();
+    }
+    // issue #23 fallback: a bare top-level boolean comparison is shadowed by the
+    // NumberExpression-first top-level dispatch. Retry with BooleanExpression as root.
+    ParseResult booleanRoot = parseWithRoot(
+        Parser.get(TinyExpressionP4Parsers.BooleanExpressionParser.class), source, deadlineNanos);
+    if (booleanRoot.fullyConsumed(source)) {
+      return booleanRoot.rootToken();
+    }
+    if (!primary.succeeded()) {
+      throw new IllegalArgumentException("Parse failed: " + source);
+    }
+    throw new IllegalArgumentException("Parse failed at offset " + primary.consumed() + ": " + source);
+  }
+
+  private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
+    ParseContext context = new ParseContext(createRootSourceCompat(source));
+    ScopeStore.registerDispatcher(context);
+    if (deadlineNanos > 0L) {
+      registerDeadlineListener(context, deadlineNanos);
+    }
+    Parsed parsed;
+    try {
+      parsed = rootParser.parse(context);
+    } finally {
+      closeParseContextQuietly(context);
+    }
+    if (!parsed.isSucceeded()) {
+      return new ParseResult(false, -1, null);
+    }
+    int consumed = consumedLengthCompat(parsed.getConsumed());
+    return new ParseResult(true, consumed, parsed.getRootToken(true));
+  }
+
+  private record ParseResult(boolean succeeded, int consumed, Token rootToken) {
+    boolean fullyConsumed(String source) {
+      return succeeded && consumed == source.length();
+    }
   }
 
   /**

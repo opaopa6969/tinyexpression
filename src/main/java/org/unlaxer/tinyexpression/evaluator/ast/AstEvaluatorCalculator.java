@@ -422,7 +422,12 @@ public class AstEvaluatorCalculator implements Calculator {
         AstDeclarationRuntime.applyDeclarations(source.source(), specifiedExpressionTypes, calculationContext, classLoader);
       }
       String declarationRuntime = declarationEvaluated.get().runtime();
-      if (isKnownDeclarationLiteralFormula(formulaText)
+      // Only relabel to "generated-ast" when the generated runtime is actually available.
+      // Previously this relabelled unconditionally, mislabelling the runtime tag when the
+      // generated runtime was absent (e.g. blocked classloader) — the result was correct
+      // but the reported runtime lied. (tinyexpression#30)
+      if (generatedAstRuntimeAvailable
+          && isKnownDeclarationLiteralFormula(formulaText)
           && ("token-ast".equals(declarationRuntime) || "embedded-bridge".equals(declarationRuntime))) {
         declarationRuntime = "generated-ast";
       }
