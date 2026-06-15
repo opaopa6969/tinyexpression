@@ -29,7 +29,10 @@ public class KnownP4BugsTest {
    * parenthesised-expression alternative is tried). Result: the inner OR/AND/XOR is
    * dropped. Fix belongs in unlaxer-dsl MapperGenerator.
    */
-  @Ignore("P4-BUG-1 paren-boolean operand mis-mapped (unlaxer-dsl mapper)")
+  // FIXED in unlaxer-parser#42 (literal @value captured by text, not generic WordParser).
+  // Passes once tinyexpression depends on an unlaxer-dsl release containing that fix;
+  // @Ignore'd here because the published 3.0.4 dependency does not yet include it.
+  @Ignore("fixed in unlaxer-parser#42 — un-ignore after the unlaxer-dsl release bump")
   @Test public void parenthesisedBooleanOperand() {
     assertBool("(true | false) & (false | true)", true);
     assertBool("true & (false | true)", true);
@@ -40,7 +43,7 @@ public class KnownP4BugsTest {
    * P4-BUG-2 (mapper / generator): a ternary whose then-branch is itself a ternary is
    * mis-mapped; `(true ? (false ? 1 : 2) : 3)` evaluates to 1 instead of 2.
    */
-  @Ignore("P4-BUG-2 nested ternary mis-mapped (unlaxer-dsl mapper)")
+  @Ignore("P4-BUG-2 nested ternary: needs AST operand-type widening, unlaxer-parser#43")
   @Test public void nestedTernary() {
     assertNum("(true ? (false ? 1 : 2) : 3)", 2);
   }
@@ -53,7 +56,10 @@ public class KnownP4BugsTest {
    * trusts the (wrong) legacy value. Two defects: legacy variadic min/max is broken,
    * and the cross-check prefers legacy over the correct P4 result.
    */
-  @Ignore("P4-BUG-3 variadic min/max overridden by buggy cross-check")
+  // P4-typed is CORRECT here (min(3,5,1,9)=1) but the cross-check falls back to the
+  // buggy legacy value (3). Fixing requires removing the cross-check (#21), which is
+  // itself blocked on #43 (otherwise math-function arithmetic regresses). See findings.
+  @Ignore("blocked: cross-check fallback to legacy; removal depends on unlaxer-parser#43")
   @Test public void variadicMinMax() {
     assertNum("min(3,5,1,9)", 1);
     assertNum("max(3,5,1,9)", 9);
@@ -65,19 +71,24 @@ public class KnownP4BugsTest {
    * = true (AND binds tighter than OR), but the number-result cross-check overrides it
    * with the legacy flat-left-associative value (false). Same root cause as P4-BUG-3.
    */
-  @Ignore("P4-BUG-4 boolean precedence in if overridden by cross-check")
+  // P4-typed is CORRECT (1) but the cross-check falls back to the legacy flat-precedence
+  // value (0). Same resolution as variadicMinMax: remove cross-check (#21), blocked on #43.
+  @Ignore("blocked: cross-check fallback to legacy; removal depends on unlaxer-parser#43")
   @Test public void crossCheckOverridesCorrectP4Precedence() {
     assertNum("if(1>0 | 0>1 & 1>2){1}else{0}", 1);
   }
 
   /**
-   * P4-BUG-5 (cross-check / legacy): arithmetic that combines function-call terms,
-   * e.g. {@code abs(-3)+pow(2,3)} = 11, returns 3 — the legacy token-AST evaluator drops
-   * the trailing {@code +pow(2,3)} term and the cross-check trusts it over the correct
-   * P4 result. Same root cause as P4-BUG-3/4.
+   * P4-BUG-5 (mapper / AST types): arithmetic that combines math-function terms,
+   * e.g. {@code abs(-3)+pow(2,3)} = 11, returns 3. Root cause is the same as P4-BUG-2:
+   * the generated {@code BinaryExpr} record types its operands as {@code BinaryExpr}
+   * (not the common AST interface), so a {@code NumberFactor} that is a MathFunction
+   * (AbsExpr/PowExpr) cannot be stored as an operand and the mapper falls back to
+   * firstTokenText, dropping the function. Needs AST operand-type widening
+   * (unlaxer-parser#43). NOTE: this is NOT a cross-check bug — P4-typed itself returns 3.
    */
-  @Ignore("P4-BUG-5 function-term arithmetic dropped by cross-check")
-  @Test public void crossCheckDropsFunctionArithmetic() {
+  @Ignore("P4-BUG-5 math-function arithmetic: needs AST operand-type widening, unlaxer-parser#43")
+  @Test public void functionTermArithmetic() {
     assertNum("abs(-3)+pow(2,3)", 11);
   }
 

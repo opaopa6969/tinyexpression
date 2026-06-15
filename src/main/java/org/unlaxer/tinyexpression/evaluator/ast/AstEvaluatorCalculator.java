@@ -277,6 +277,14 @@ public class AstEvaluatorCalculator implements Calculator {
                     && p4TypedResult instanceof Number p4Number
                     && tokenAstEvaluated.get() instanceof Number tokenNumber
                     && !numbersEquivalent(p4Number, tokenNumber)) {
+                  // NOTE (#21): ideally the P4-typed interpreter would be canonical and
+                  // we would keep its result here. But the P4 mapper currently mis-maps
+                  // math-function and nested-ternary operands inside the precedence
+                  // BinaryExpr chain (unlaxer-parser#43 — AST operand type too narrow),
+                  // so P4-typed is wrong for those while legacy is right. Until #43 is
+                  // fixed, the cross-check still falls back to legacy to avoid exposing
+                  // those P4 errors. Removing this fallback before #43 regresses ~76
+                  // tests (math-function arithmetic, etc.).
                   p4TypedEvaluated = Optional.empty();
                   setObject("_p4FallbackFormula", formulaText);
                   setObject("_p4FallbackReason", "cross-check mismatch: p4=" + p4Number + " vs token=" + tokenNumber);

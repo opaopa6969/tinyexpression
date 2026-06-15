@@ -15,6 +15,26 @@
 - 残るバグ（paren-boolean / nested-ternary / variadic-min / cross-check）は **unlaxer-dsl の
   ジェネレータ起因**が中心で、`KnownP4BugsTest` に @Ignore で再現コード付きで記録。
 
+## 対応状況 (2026-06-15 追記)
+
+起票した 6 issue のうち、生成器/検証の 2 件 + 検出 1 件を修正、残りは依存関係を解明:
+
+| issue | 状態 | 備考 |
+|---|---|---|
+| unlaxer-parser#41 (ルール名衝突検出) | ✅ 修正 | `GrammarValidator` に `E-RULE-TOKEN-NAME-COLLISION` 追加。generate時にエラー化。dsl 744テストpass |
+| unlaxer-parser#42 (リテラル@valueのWordParser衝突) | ✅ 修正 | `findDescendantByIndexWithText` でテキスト一致捕捉。**paren-boolean (P4-BUG-1) 解消**。ゴールデン更新済み |
+| tinyexpression#21 (cross-check撤去) | ⛔ 保留 | **#43 に依存**。cross-check は #43 の P4-typed バグ（関数項算術等）を隠蔽して保護しており、先に外すと約76テスト回帰する。#43 修正後に撤去可 |
+| unlaxer-parser#43 (ネストternary/関数項/variadic) | 📋 要再設計 | 真因は**共有 `BinaryExpr` レコードのオペランド型が `BinaryExpr` 固定**で MathFunction/IfExpr を保持できないこと。AST+マッパー+評価器(`evalBinaryAsNumber` のリーフ=リテラル文字列方式)の協調再設計が必要。別PR推奨 |
+| tinyexpression#22 (P4機能ギャップ) | 📋 未対応 | ブロックコメント/len/ダブルクォート/.in/宣言setter/javacode math。手書き廃止の前提機能群 |
+| tinyexpression#23 (top-level型ディスパッチ) | 📋 未対応 | 裸の boolean 比較。括弧/if 文脈では正常なので実害限定 |
+
+**依存チェーン**: variadic-min(P4-BUG-3) / boolean優先順位 in if(P4-BUG-4) は P4-typed が正しいのに
+cross-check が legacy で上書きする。撤去(#21)すれば直るが、#21 は #43 修正が前提（さもないと関数項算術等の
+P4-typed バグが露出）。よって **#43 → #21 → (variadic/precedence解消)** の順序。
+
+リリース手順: unlaxer-parser#41/#42 をマージ → unlaxer-dsl リリース → tinyexpression の依存を bump →
+`KnownP4BugsTest.parenthesisedBooleanOperand` の @Ignore を外す。
+
 ---
 
 ## 1. 依存更新 (3.0.2 → 3.0.4)
