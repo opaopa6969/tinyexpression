@@ -4,14 +4,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 import org.unlaxer.tinyexpression.instances.FileBaseTinyExpressionInstancesCache;
 import org.unlaxer.tinyexpression.instances.TenantID;
 import org.unlaxer.tinyexpression.instances.TinyExpressionsExecutorTest.NameAndDependsOnComparator;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
 public class FormulaInfoParserTest {
+
+  // The test fixtures contain Java code-block formulas (CheckDigits). The policy is a
+  // process-wide static flag (default off, secure-by-default), so each test that needs
+  // code blocks must opt in itself — relying on another test having enabled it makes the
+  // suite order-/parallelism-dependent (tinyexpression#27).
+  @Before public void enableJavaCodeBlocks() { JavaCodeBlockPolicy.setEnabled(true); }
+  @After public void resetJavaCodeBlocks() { JavaCodeBlockPolicy.reset(); }
 
   @Test
   public void test() {

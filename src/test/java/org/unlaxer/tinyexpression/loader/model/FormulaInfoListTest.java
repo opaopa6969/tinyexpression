@@ -9,12 +9,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.Try;
 
 public class FormulaInfoListTest {
+
+  // Fixtures contain Java code-block formulas; opt in to the process-wide policy so the
+  // test is order-/parallelism-independent (tinyexpression#27).
+  @Before public void enableJavaCodeBlocks() { JavaCodeBlockPolicy.setEnabled(true); }
+  @After public void resetJavaCodeBlocks() { JavaCodeBlockPolicy.reset(); }
 
   @Test
   public void test() throws IOException {
