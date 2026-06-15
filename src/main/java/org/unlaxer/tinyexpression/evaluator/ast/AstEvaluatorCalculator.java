@@ -70,6 +70,14 @@ public class AstEvaluatorCalculator implements Calculator {
 
   private final boolean generatedAstRuntimeAvailable;
 
+  // Performance: the P4 primary path re-parses and re-maps the formula on every apply().
+  // For large formulas (tens of KB) re-parsing dominates (seconds per eval). Once the
+  // typed P4 path has successfully evaluated a declaration-free formula, its parsed AST
+  // is structurally stable and reusable across apply() calls (only the CalculationContext
+  // varies), so we cache it and evaluate it directly. The primary P4TypedAstEvaluator does
+  // not depend on the mapper's per-parse NODE_SOURCE_SPANS, so reusing a cached AST is safe.
+  private volatile TinyExpressionP4AST cachedTypedAst;
+
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     this.source = source;
@@ -237,6 +245,22 @@ public class AstEvaluatorCalculator implements Calculator {
     // The fallback chain below is retained as a safety net.
     // If you see _p4FallbackReason in production, it indicates a regression.
     // =========================================================================
+    // FAST PATH: reuse the cached typed AST (no re-parse / re-map). Only populated for
+    // declaration-free formulas the typed evaluator has already handled, so the guards
+    // that gated the primary path below were already satisfied for this (constant) source.
+    TinyExpressionP4AST cached = cachedTypedAst;
+    if (cached != null) {
+      Object cachedResult = new P4TypedAstEvaluator(
+          specifiedExpressionTypes, calculationContext, source.source(), classLoader).eval(cached);
+      if (cachedResult != null) {
+        setObject("_astEvaluatorRuntime", "p4-typed");
+        setObject("_astEvaluatorMapperAvailable", true);
+        setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
+        return cachedResult;
+      }
+      cachedTypedAst = null; // unexpected null — drop cache and fall through
+    }
+
     Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable
         && !syntheticInvocationFormula
@@ -280,6 +304,11 @@ public class AstEvaluatorCalculator implements Calculator {
                 setObject("_astEvaluatorRuntime", "p4-typed");
                 setObject("_astEvaluatorMapperAvailable", true);
                 setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
+                // Cache the parsed AST for declaration-free formulas so subsequent
+                // apply() calls skip the (potentially very expensive) re-parse.
+                if (!hasDeclarations) {
+                  cachedTypedAst = typedAst;
+                }
                 return p4TypedEvaluated.get();
               }
             } else {

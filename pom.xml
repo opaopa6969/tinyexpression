@@ -43,6 +43,8 @@
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
+		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true to speed up dev/test iteration -->
+		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
 	</properties>
 
 	<dependencies>
@@ -141,7 +143,8 @@
 							<goal>java</goal>
 						</goals>
 						<configuration>
-							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
+							<skip>${tinyexpression.skipRailroad}</skip>
+						<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
 							<arguments>
 								<argument>${tinyexpression.p4.grammar}</argument>
 								<argument>${tinyexpression.p4.railroad.output}</argument>
@@ -178,6 +181,11 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
+					<!-- NOTE: surefire forkCount parallelism was tried for speed but several
+					     existing tests share process-wide static state (JavaCodeBlockPolicy,
+					     Parser.get cache) and fail when classes run in parallel forks, so it is
+					     intentionally NOT enabled. Test speed comes from the AST cache and from
+					     -Dtinyexpression.skipRailroad=true instead. -->
 					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
 					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
 					<excludes>
