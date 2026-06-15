@@ -43,6 +43,10 @@
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
+		<!-- Railroad SVG generation is documentation-only; skip it to speed up dev/test iteration with -Dtinyexpression.skipRailroad=true -->
+		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
+		<!-- Number of forked JVMs surefire uses to run test classes in parallel. "0.5C" = half the CPU cores. -->
+		<te.forkCount>0.5C</te.forkCount>
 	</properties>
 
 	<dependencies>
@@ -55,12 +59,12 @@
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-common</artifactId>
-			<version>3.0.2</version>
+			<version>3.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-dsl</artifactId>
-			<version>3.0.2</version>
+			<version>3.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>
@@ -141,6 +145,7 @@
 							<goal>java</goal>
 						</goals>
 						<configuration>
+							<skip>${tinyexpression.skipRailroad}</skip>
 							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
 							<arguments>
 								<argument>${tinyexpression.p4.grammar}</argument>
@@ -177,6 +182,18 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
+				<configuration>
+					<!--
+					  Test speed: run test *classes* across multiple forked JVMs.
+					  Process-level isolation (not in-JVM threads) is required because the
+					  parsers/evaluators rely on process-wide singletons (Parser.get cache,
+					  CalculationContext registries) that are not thread-safe across classes.
+					  Override with -Dte.forkCount=1 to disable parallelism, or -Dte.forkCount=1C
+					  to use one fork per CPU core.
+					-->
+					<forkCount>${te.forkCount}</forkCount>
+					<reuseForks>true</reuseForks>
+				</configuration>
 			</plugin>
 			<plugin>
 				<artifactId>maven-jar-plugin</artifactId>

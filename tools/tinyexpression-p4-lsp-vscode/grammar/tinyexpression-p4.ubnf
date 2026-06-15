@@ -4,13 +4,13 @@ grammar TinyExpressionP4 {
   @whitespace: javaStyle
   @comment: { line: '//' }
 
-  token NUMBER     = NumberParser
-  token IDENTIFIER = IdentifierParser
-  token STRING     = SingleQuotedParser
+  token NUMBER     = org.unlaxer.parser.elementary.NumberParser
+  token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser
+  token STRING     = org.unlaxer.parser.elementary.SingleQuotedParser
   token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
   token CODE_BODY  = UNTIL('```')
   token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
-  token EOF        = EndOfSourceParser
+  token EOF        = org.unlaxer.parser.elementary.EndOfSourceParser
 
   @root
   @scopeTree(mode=lexical)
@@ -20,11 +20,18 @@ grammar TinyExpressionP4 {
   // Syntax: ```scheme:JavaClassName\n...\n```
   // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
 
+  // NOTE: rule names must NOT collide with the simple name of a token's parser
+  // class. The token CODE_START maps to the external parser class CodeStartParser;
+  // a rule named "CodeStart" would generate an inner class "CodeStartParser" that
+  // shadows the external class, making `Parser.get(CodeStartParser.class)` resolve
+  // to itself (infinite self-recursion -> "transaction nest is illegal" at parse
+  // time, which silently killed the entire P4 primary path). Hence CodeBlockStart
+  // / CodeBlockEnd below.
   @mapping(CodeBlockExpr)
-  CodeBlock ::= CodeStart CodeBody CodeEnd ;
-  CodeStart ::= CODE_START ;
-  CodeBody ::= CODE_BODY ;
-  CodeEnd ::= CODE_END ;
+  CodeBlock ::= CodeBlockStart CodeBlockBody CodeBlockEnd ;
+  CodeBlockStart ::= CODE_START ;
+  CodeBlockBody ::= CODE_BODY ;
+  CodeBlockEnd ::= CODE_END ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName [#methodName] as alias;
