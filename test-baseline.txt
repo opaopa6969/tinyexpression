@@ -1,3 +1,1 @@
-org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculatorTest#testTypeInference
 org.unlaxer.tinyexpression.evaluator.ast.TernaryExpressionTest#testTernaryInSinWithDoubleParensStillWorks
-org.unlaxer.tinyexpression.evaluator.p4.P4AstEvaluatorCalculatorTest#testTypeInference
