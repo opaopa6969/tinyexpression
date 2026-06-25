@@ -60,26 +60,30 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalBinaryExpr(BinaryExpr node) {
-    String sourceAware = renderStructuredBinaryNode(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
-    BinaryExpr left = node.left();
+    // #35: arithmetic is emitted from the AST walk alone (post-#44 mapper maps every
+    // operand to a real node). Source-snippet shadow (renderStructuredBinaryNode) removed.
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
 
     if (left == null && right.isEmpty() && op.size() == 1)
       return renderLeaf(op.get(0));
     if (left != null && op.isEmpty() && right.isEmpty())
-      return evalBinaryExpr(left);
+      return renderOperand(left);
     if (left == null) {
       return op.size() == 1 ? renderLeaf(op.get(0)) : "0";
     }
-    String expr = evalBinaryExpr(left);
+    String expr = renderOperand(left);
     for (int i = 0; i < Math.min(op.size(), right.size()); i++) {
-      expr = "(" + expr + op.get(i).strip() + evalBinaryExpr(right.get(i)) + ")";
+      expr = "(" + expr + op.get(i).strip() + renderOperand(right.get(i)) + ")";
     }
     return expr;
+  }
+
+  /** Render one arithmetic operand: stay on the BinaryExpr spine, else dispatch the
+   *  factor node (AbsExpr, PowExpr, …) so function factors are not dropped. (#43) */
+  private String renderOperand(TinyExpressionP4AST operand) {
+    return operand instanceof BinaryExpr binary ? evalBinaryExpr(binary) : eval(operand);
   }
 
   private String renderLeaf(String raw) {
@@ -94,25 +98,6 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     return numberType.numberWithSuffix(lit);
   }
 
-  private String renderStructuredBinaryNode(BinaryExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    return P4SliceSourceSupport.sourceSnippetOfNode(node, sourceFormula)
-        .flatMap(this::renderStructuredBinarySourceSnippet)
-        .orElse(null);
-  }
-
-  private java.util.Optional<String> renderStructuredBinarySourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
-      return java.util.Optional.empty();
-    }
-    return java.util.Optional.ofNullable(renderNumericSourceSnippet(sourceSnippet));
-  }
-
-  private boolean hasStructuredNumericAlternative(String text) {
-    return !P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(text, numberType).isEmpty();
-  }
 
   private String renderStructuredNumberLeaf(String text) {
     if (!looksLikeStructuredNumberLeaf(text)) {

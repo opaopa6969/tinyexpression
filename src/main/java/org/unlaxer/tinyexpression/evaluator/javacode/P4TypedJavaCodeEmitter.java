@@ -69,13 +69,11 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalBinaryExpr(BinaryExpr node) {
-    String sourceAware = renderStructuredBinaryNode(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
-    BinaryExpr left = node.left();
+    // #35: arithmetic is emitted from the AST walk alone (post-#44 mapper maps every
+    // operand to a real node). Source-snippet shadow (renderStructuredBinaryNode) removed.
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
 
     // Leaf: left==null, op=[literal], right=[]
     if (left == null && right.isEmpty() && op.size() == 1) {
@@ -83,7 +81,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     }
     // Wrap: left!=null, op=[], right=[] — unwrap
     if (left != null && op.isEmpty() && right.isEmpty()) {
-      return evalBinaryExpr(left);
+      return renderOperand(left);
     }
     if (left == null) {
       if (op.size() == 1) {
@@ -92,14 +90,20 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
       return "/* unsupported BinaryExpr */0";
     }
 
-    String expr = evalBinaryExpr(left);
+    String expr = renderOperand(left);
     int count = Math.min(op.size(), right.size());
     for (int i = 0; i < count; i++) {
       String operator = op.get(i).strip();
-      String rightExpr = evalBinaryExpr(right.get(i));
+      String rightExpr = renderOperand(right.get(i));
       expr = "(" + expr + operator + rightExpr + ")";
     }
     return expr;
+  }
+
+  /** Render one arithmetic operand: stay on the BinaryExpr spine, else dispatch the
+   *  factor node (AbsExpr, PowExpr, …) so function factors are not dropped. (#43) */
+  private String renderOperand(TinyExpressionP4AST operand) {
+    return operand instanceof BinaryExpr binary ? evalBinaryExpr(binary) : eval(operand);
   }
 
   private String renderLeafLiteral(String rawLiteral) {
@@ -120,25 +124,6 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     return numberType.numberWithSuffix(literal);
   }
 
-  private String renderStructuredBinaryNode(BinaryExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    return P4SliceSourceSupport.sourceSnippetOfNode(node, sourceFormula)
-        .flatMap(this::renderStructuredBinarySourceSnippet)
-        .orElse(null);
-  }
-
-  private java.util.Optional<String> renderStructuredBinarySourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
-      return java.util.Optional.empty();
-    }
-    return java.util.Optional.ofNullable(renderNumericSourceSnippet(sourceSnippet));
-  }
-
-  private boolean hasStructuredNumericAlternative(String text) {
-    return !P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(text, numberType).isEmpty();
-  }
 
   private String renderStructuredNumberLeaf(String text) {
     if (!looksLikeStructuredNumberLeaf(text)) {

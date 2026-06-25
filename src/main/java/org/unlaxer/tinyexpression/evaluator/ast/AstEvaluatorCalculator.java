@@ -271,9 +271,12 @@ public class AstEvaluatorCalculator implements Calculator {
                     && p4TypedResult instanceof Number p4Number
                     && tokenAstEvaluated.get() instanceof Number tokenNumber
                     && !numbersEquivalent(p4Number, tokenNumber)) {
-                  p4TypedEvaluated = Optional.empty();
-                  setObject("_p4FallbackFormula", formulaText);
-                  setObject("_p4FallbackReason", "cross-check mismatch: p4=" + p4Number + " vs token=" + tokenNumber);
+                  // P4-typed is the trusted primary. The legacy token-AST has known bugs
+                  // (variadic min/max ignoring args beyond the third, flat boolean precedence,
+                  // dropped function terms) that previously overrode correct P4 results (#21).
+                  // Now that the P4-typed math-function arithmetic is correct (#43), keep the
+                  // P4 result on mismatch and only record the divergence for observability.
+                  setObject("_p4CrossCheckMismatch", "p4=" + p4Number + " vs token=" + tokenNumber);
                 }
               }
               if (p4TypedEvaluated.isPresent()) {

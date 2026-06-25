@@ -83,13 +83,14 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   private Number evalBinaryAsNumber(BinaryExpr node) {
-    Number sourceAware = tryEvaluateStructuredBinaryNode(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
-    BinaryExpr left = node.left();
+    // #35: the post-#44 mapper maps every arithmetic operand to a real AST node
+    // (mapAssocOperandToBinaryExpr), so the AST walk below is the single source of
+    // truth. The former source-snippet shadow (tryEvaluateStructuredBinaryNode) is gone.
+    // left/right are the base AST interface (#43): an operand may be another BinaryExpr
+    // (the arithmetic spine) OR a directly-mapped factor such as AbsExpr/PowExpr/IfExpr.
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
 
     // Leaf: left==null, op=[literal], right=[]
     if (left == null && right.isEmpty() && op.size() == 1) {
@@ -97,7 +98,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     // Wrap: left!=null, op=[], right=[] — unwrap
     if (left != null && op.isEmpty() && right.isEmpty()) {
-      return evalBinaryAsNumber(left);
+      return evalOperandAsNumber(left);
     }
     if (left == null) {
       if (op.size() == 1) {
@@ -106,13 +107,29 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       throw new IllegalArgumentException("left is null for non-leaf BinaryExpr");
     }
 
-    Number current = evalBinaryAsNumber(left);
+    Number current = evalOperandAsNumber(left);
     int count = Math.min(op.size(), right.size());
     for (int i = 0; i < count; i++) {
-      Number r = evalBinaryAsNumber(right.get(i));
+      Number r = evalOperandAsNumber(right.get(i));
       current = applyBinary(op.get(i), current, r);
     }
     return current;
+  }
+
+  /**
+   * Evaluate a single arithmetic operand. A BinaryExpr operand stays on the numeric spine;
+   * any other node (AbsExpr, PowExpr, MinExpr, IfExpr, …) is dispatched through {@link #eval}
+   * so function/conditional factors are honoured instead of dropped. (#43)
+   */
+  private Number evalOperandAsNumber(TinyExpressionP4AST operand) {
+    if (operand instanceof BinaryExpr binary) {
+      return evalBinaryAsNumber(binary);
+    }
+    Object value = eval(operand);
+    if (value instanceof Number number) {
+      return number;
+    }
+    return numberType.parseNumber(String.valueOf(value));
   }
 
   private Number resolveLeafLiteral(String rawLiteral) {
@@ -136,68 +153,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return evaluateCollapsedTerm(literal);
     }
     return numberType.parseNumber(literal);
-  }
-
-  private Number tryEvaluateStructuredBinaryNode(BinaryExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    Optional<String> snippet = sourceSnippetOfNode(node);
-    if (snippet.isEmpty()) {
-      return null;
-    }
-    return tryEvaluateStructuredBinarySourceSnippet(snippet.get());
-  }
-
-  private Number tryEvaluateStructuredBinarySourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
-      return null;
-    }
-    String normalized = sourceSnippet.strip();
-    if (normalized.isEmpty()) {
-      return null;
-    }
-    if (isExactVariableReference(normalized) || isPlainNumericLiteral(normalized)) {
-      return null;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      Number inner = tryEvaluateStructuredBinarySourceSnippet(unwrapped);
-      if (inner != null) {
-        return inner;
-      }
-    }
-    if (!hasStructuredNumericAlternative(normalized)) {
-      return null;
-    }
-    Optional<Object> direct = AstEmbeddedExpressionRuntime.tryEvaluateFormulaDirect(
-        normalized,
-        numberType,
-        new SpecifiedExpressionTypes(numberType, numberType),
-        context,
-        classLoader);
-    if (direct.isPresent() && direct.get() instanceof Number directNumber) {
-      return directNumber;
-    }
-    try {
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, numberType).ast();
-      if (ast instanceof BinaryExpr) {
-        return null;
-      }
-      Object value = new P4TypedAstEvaluator(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          context,
-          parseSource,
-          classLoader).eval(ast);
-      return value instanceof Number number ? number : null;
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  private boolean hasStructuredNumericAlternative(String text) {
-    return !P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(text, numberType).isEmpty();
   }
 
   private Number tryEvaluateStructuredNumberLeaf(String text) {
@@ -666,151 +621,15 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalStringComparisonExpr(StringComparisonExpr node) {
     String op = node.op() == null ? "" : node.op().strip();
-    Optional<StringComparisonSource> sourceComparison = tryExtractStringComparisonFromSourceFormula(op);
-    String left = sourceComparison
-        .map(StringComparisonSource::left)
-        .map(this::tryEvaluateStringSourceSnippet)
-        .orElseGet(() -> resolveStringComparisonSide(node.left()));
-    String right = sourceComparison
-        .map(StringComparisonSource::right)
-        .map(this::tryEvaluateStringSourceSnippet)
-        .orElseGet(() -> resolveStringComparisonSide(node.right()));
+    // node.left()/node.right() are the correctly-mapped operand nodes, so evaluate them
+    // directly instead of re-splitting the source text by hand.
+    String left = String.valueOf(eval(node.left()));
+    String right = String.valueOf(eval(node.right()));
     return switch (op) {
       case "==" -> left.equals(right);
       case "!=" -> !left.equals(right);
       default -> false;
     };
-  }
-
-  private String resolveStringComparisonSide(StringConcatExpr node) {
-    Optional<String> snippet = GeneratedP4ValueAstEvaluator.sourceSnippetOfNode(node, sourceFormula);
-    if (snippet.isPresent()) {
-      String exact = tryEvaluateStringSourceSnippet(snippet.get());
-      if (exact != null) {
-        return exact;
-      }
-    }
-    return String.valueOf(evalStringConcatExpr(node));
-  }
-
-  private String tryEvaluateStringSourceSnippet(String source) {
-    if (source == null) {
-      return null;
-    }
-    String normalized = source.strip();
-    if (normalized.isEmpty()) {
-      return "";
-    }
-    String unquoted = unquoteStringLiteral(normalized);
-    if (unquoted != null) {
-      return unquoted;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      String inner = tryEvaluateStringSourceSnippet(unwrapped);
-      if (inner != null) {
-        return inner;
-      }
-    }
-    Object structured = tryEvaluateStructuredStringLeaf(normalized);
-    if (structured != null) {
-      return String.valueOf(structured);
-    }
-    return null;
-  }
-
-  private Optional<StringComparisonSource> tryExtractStringComparisonFromSourceFormula(String expectedOp) {
-    if (sourceFormula == null || sourceFormula.isBlank()) {
-      return Optional.empty();
-    }
-    Optional<StringComparisonSource> direct = splitTopLevelStringComparison(sourceFormula.strip());
-    if (direct.isPresent() && matchesComparisonOperator(direct.get(), expectedOp)) {
-      return direct;
-    }
-    String normalized = sourceFormula.strip();
-    if (!normalized.startsWith("if")) {
-      return Optional.empty();
-    }
-    int openParen = normalized.indexOf('(');
-    if (openParen < 0) {
-      return Optional.empty();
-    }
-    int closeParen = GeneratedP4ValueAstEvaluator.findMatching(normalized, openParen, '(', ')');
-    if (closeParen <= openParen) {
-      return Optional.empty();
-    }
-    return splitTopLevelStringComparison(normalized.substring(openParen + 1, closeParen).strip())
-        .filter(candidate -> matchesComparisonOperator(candidate, expectedOp));
-  }
-
-  private static boolean matchesComparisonOperator(StringComparisonSource candidate, String expectedOp) {
-    return expectedOp == null || expectedOp.isBlank() || expectedOp.equals(candidate.op());
-  }
-
-  private static Optional<StringComparisonSource> splitTopLevelStringComparison(String text) {
-    if (text == null || text.isBlank()) {
-      return Optional.empty();
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length() - 1; i++) {
-      char c = text.charAt(i);
-      char next = text.charAt(i + 1);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> {
-          parenDepth++;
-          continue;
-        }
-        case ')' -> {
-          parenDepth = Math.max(0, parenDepth - 1);
-          continue;
-        }
-        case '{' -> {
-          braceDepth++;
-          continue;
-        }
-        case '}' -> {
-          braceDepth = Math.max(0, braceDepth - 1);
-          continue;
-        }
-        case '[' -> {
-          bracketDepth++;
-          continue;
-        }
-        case ']' -> {
-          bracketDepth = Math.max(0, bracketDepth - 1);
-          continue;
-        }
-        default -> {
-        }
-      }
-      if (parenDepth != 0 || braceDepth != 0 || bracketDepth != 0) {
-        continue;
-      }
-      if ((c == '=' && next == '=') || (c == '!' && next == '=')) {
-        String left = text.substring(0, i).strip();
-        String right = text.substring(i + 2).strip();
-        if (!left.isEmpty() && !right.isEmpty()) {
-          return Optional.of(new StringComparisonSource(left, text.substring(i, i + 2), right));
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   // =========================================================================
@@ -2186,7 +2005,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return false;
   }
 
-  private record StringComparisonSource(String left, String op, String right) {}
 
   private boolean resolveBooleanSourceOperand(String rawSource) {
     String normalized = rawSource == null ? "" : rawSource.strip();
@@ -2252,15 +2070,15 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (node == null) {
       return null;
     }
-    BinaryExpr left = node.left();
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
     if (left == null && right.isEmpty() && op.size() == 1) {
       String literal = op.get(0) == null ? "" : op.get(0).strip();
       return isExactVariableReference(literal) ? extractVariableName(literal) : null;
     }
-    if (left != null && op.isEmpty() && right.isEmpty()) {
-      return extractExactVariableReference(left);
+    if (left instanceof BinaryExpr binaryLeft && op.isEmpty() && right.isEmpty()) {
+      return extractExactVariableReference(binaryLeft);
     }
     return null;
   }
