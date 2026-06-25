@@ -73,9 +73,9 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     if (sourceAware != null) {
       return sourceAware;
     }
-    BinaryExpr left = node.left();
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
 
     // Leaf: left==null, op=[literal], right=[]
     if (left == null && right.isEmpty() && op.size() == 1) {
@@ -83,7 +83,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     }
     // Wrap: left!=null, op=[], right=[] — unwrap
     if (left != null && op.isEmpty() && right.isEmpty()) {
-      return evalBinaryExpr(left);
+      return renderOperand(left);
     }
     if (left == null) {
       if (op.size() == 1) {
@@ -92,14 +92,20 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
       return "/* unsupported BinaryExpr */0";
     }
 
-    String expr = evalBinaryExpr(left);
+    String expr = renderOperand(left);
     int count = Math.min(op.size(), right.size());
     for (int i = 0; i < count; i++) {
       String operator = op.get(i).strip();
-      String rightExpr = evalBinaryExpr(right.get(i));
+      String rightExpr = renderOperand(right.get(i));
       expr = "(" + expr + operator + rightExpr + ")";
     }
     return expr;
+  }
+
+  /** Render one arithmetic operand: stay on the BinaryExpr spine, else dispatch the
+   *  factor node (AbsExpr, PowExpr, …) so function factors are not dropped. (#43) */
+  private String renderOperand(TinyExpressionP4AST operand) {
+    return operand instanceof BinaryExpr binary ? evalBinaryExpr(binary) : eval(operand);
   }
 
   private String renderLeafLiteral(String rawLiteral) {

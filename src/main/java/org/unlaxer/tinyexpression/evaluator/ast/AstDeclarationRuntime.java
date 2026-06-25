@@ -189,10 +189,14 @@ final class AstDeclarationRuntime {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
             expressionSource, classLoader, preferredAstSimpleName);
         if (mapped.isPresent()) {
-          // Try P4TypedAstEvaluator first (sealed-interface dispatch, context-aware)
+          // Try P4TypedAstEvaluator first (sealed-interface dispatch, context-aware).
+          // Pass the expression source so source-aware operand handling works (so a main
+          // expression like "$price+2" stays on the typed path instead of falling to the
+          // reflection evaluator). (#43)
           if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
             try {
-              Object p4Result = new P4TypedAstEvaluator(evalTypes, calculationContext).eval(typedAst);
+              Object p4Result = new P4TypedAstEvaluator(
+                  evalTypes, calculationContext, expressionSource, classLoader).eval(typedAst);
               if (p4Result != null) {
                 return Optional.of(new EvalResult(p4Result, "p4-typed"));
               }

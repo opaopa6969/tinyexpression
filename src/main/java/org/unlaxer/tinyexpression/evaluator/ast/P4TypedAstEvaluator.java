@@ -87,9 +87,11 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (sourceAware != null) {
       return sourceAware;
     }
-    BinaryExpr left = node.left();
+    // left/right are the base AST interface (#43): an operand may be another BinaryExpr
+    // (the arithmetic spine) OR a directly-mapped factor such as AbsExpr/PowExpr/IfExpr.
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
 
     // Leaf: left==null, op=[literal], right=[]
     if (left == null && right.isEmpty() && op.size() == 1) {
@@ -97,7 +99,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     // Wrap: left!=null, op=[], right=[] — unwrap
     if (left != null && op.isEmpty() && right.isEmpty()) {
-      return evalBinaryAsNumber(left);
+      return evalOperandAsNumber(left);
     }
     if (left == null) {
       if (op.size() == 1) {
@@ -106,13 +108,29 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       throw new IllegalArgumentException("left is null for non-leaf BinaryExpr");
     }
 
-    Number current = evalBinaryAsNumber(left);
+    Number current = evalOperandAsNumber(left);
     int count = Math.min(op.size(), right.size());
     for (int i = 0; i < count; i++) {
-      Number r = evalBinaryAsNumber(right.get(i));
+      Number r = evalOperandAsNumber(right.get(i));
       current = applyBinary(op.get(i), current, r);
     }
     return current;
+  }
+
+  /**
+   * Evaluate a single arithmetic operand. A BinaryExpr operand stays on the numeric spine;
+   * any other node (AbsExpr, PowExpr, MinExpr, IfExpr, …) is dispatched through {@link #eval}
+   * so function/conditional factors are honoured instead of dropped. (#43)
+   */
+  private Number evalOperandAsNumber(TinyExpressionP4AST operand) {
+    if (operand instanceof BinaryExpr binary) {
+      return evalBinaryAsNumber(binary);
+    }
+    Object value = eval(operand);
+    if (value instanceof Number number) {
+      return number;
+    }
+    return numberType.parseNumber(String.valueOf(value));
   }
 
   private Number resolveLeafLiteral(String rawLiteral) {
@@ -182,6 +200,14 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     try {
       String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
       TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, numberType).ast();
+      // Re-parsing an arithmetic snippet yields ExpressionExpr → BinaryExpr (the shape we
+      // are already inside). Unwrap ExpressionExpr before the BinaryExpr guard; otherwise
+      // the wrapper slips past it and we re-enter evalBinaryExpr on the identical snippet,
+      // recursing forever (StackOverflowError on e.g. "abs(-3)+pow(2,3)"). When the node is
+      // a BinaryExpr, return null and let evalBinaryAsNumber's AST walk handle it. (#43)
+      if (ast instanceof ExpressionExpr expression && expression.value() instanceof TinyExpressionP4AST innerAst) {
+        ast = innerAst;
+      }
       if (ast instanceof BinaryExpr) {
         return null;
       }
@@ -2252,15 +2278,15 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (node == null) {
       return null;
     }
-    BinaryExpr left = node.left();
+    TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
-    List<BinaryExpr> right = node.right();
+    List<TinyExpressionP4AST> right = node.right();
     if (left == null && right.isEmpty() && op.size() == 1) {
       String literal = op.get(0) == null ? "" : op.get(0).strip();
       return isExactVariableReference(literal) ? extractVariableName(literal) : null;
     }
-    if (left != null && op.isEmpty() && right.isEmpty()) {
-      return extractExactVariableReference(left);
+    if (left instanceof BinaryExpr binaryLeft && op.isEmpty() && right.isEmpty()) {
+      return extractExactVariableReference(binaryLeft);
     }
     return null;
   }
