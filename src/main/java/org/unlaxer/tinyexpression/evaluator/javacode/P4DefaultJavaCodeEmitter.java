@@ -60,10 +60,8 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalBinaryExpr(BinaryExpr node) {
-    String sourceAware = renderStructuredBinaryNode(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
+    // #35: arithmetic is emitted from the AST walk alone (post-#44 mapper maps every
+    // operand to a real node). Source-snippet shadow (renderStructuredBinaryNode) removed.
     TinyExpressionP4AST left = node.left();
     List<String> op = node.op();
     List<TinyExpressionP4AST> right = node.right();
@@ -100,25 +98,6 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     return numberType.numberWithSuffix(lit);
   }
 
-  private String renderStructuredBinaryNode(BinaryExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    return P4SliceSourceSupport.sourceSnippetOfNode(node, sourceFormula)
-        .flatMap(this::renderStructuredBinarySourceSnippet)
-        .orElse(null);
-  }
-
-  private java.util.Optional<String> renderStructuredBinarySourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
-      return java.util.Optional.empty();
-    }
-    return java.util.Optional.ofNullable(renderNumericSourceSnippet(sourceSnippet));
-  }
-
-  private boolean hasStructuredNumericAlternative(String text) {
-    return !P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(text, numberType).isEmpty();
-  }
 
   private String renderStructuredNumberLeaf(String text) {
     if (!looksLikeStructuredNumberLeaf(text)) {

@@ -83,10 +83,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   private Number evalBinaryAsNumber(BinaryExpr node) {
-    Number sourceAware = tryEvaluateStructuredBinaryNode(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
+    // #35: the post-#44 mapper maps every arithmetic operand to a real AST node
+    // (mapAssocOperandToBinaryExpr), so the AST walk below is the single source of
+    // truth. The former source-snippet shadow (tryEvaluateStructuredBinaryNode) is gone.
     // left/right are the base AST interface (#43): an operand may be another BinaryExpr
     // (the arithmetic spine) OR a directly-mapped factor such as AbsExpr/PowExpr/IfExpr.
     TinyExpressionP4AST left = node.left();
@@ -154,76 +153,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return evaluateCollapsedTerm(literal);
     }
     return numberType.parseNumber(literal);
-  }
-
-  private Number tryEvaluateStructuredBinaryNode(BinaryExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    Optional<String> snippet = sourceSnippetOfNode(node);
-    if (snippet.isEmpty()) {
-      return null;
-    }
-    return tryEvaluateStructuredBinarySourceSnippet(snippet.get());
-  }
-
-  private Number tryEvaluateStructuredBinarySourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
-      return null;
-    }
-    String normalized = sourceSnippet.strip();
-    if (normalized.isEmpty()) {
-      return null;
-    }
-    if (isExactVariableReference(normalized) || isPlainNumericLiteral(normalized)) {
-      return null;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      Number inner = tryEvaluateStructuredBinarySourceSnippet(unwrapped);
-      if (inner != null) {
-        return inner;
-      }
-    }
-    if (!hasStructuredNumericAlternative(normalized)) {
-      return null;
-    }
-    Optional<Object> direct = AstEmbeddedExpressionRuntime.tryEvaluateFormulaDirect(
-        normalized,
-        numberType,
-        new SpecifiedExpressionTypes(numberType, numberType),
-        context,
-        classLoader);
-    if (direct.isPresent() && direct.get() instanceof Number directNumber) {
-      return directNumber;
-    }
-    try {
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, numberType).ast();
-      // Re-parsing an arithmetic snippet yields ExpressionExpr → BinaryExpr (the shape we
-      // are already inside). Unwrap ExpressionExpr before the BinaryExpr guard; otherwise
-      // the wrapper slips past it and we re-enter evalBinaryExpr on the identical snippet,
-      // recursing forever (StackOverflowError on e.g. "abs(-3)+pow(2,3)"). When the node is
-      // a BinaryExpr, return null and let evalBinaryAsNumber's AST walk handle it. (#43)
-      if (ast instanceof ExpressionExpr expression && expression.value() instanceof TinyExpressionP4AST innerAst) {
-        ast = innerAst;
-      }
-      if (ast instanceof BinaryExpr) {
-        return null;
-      }
-      Object value = new P4TypedAstEvaluator(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          context,
-          parseSource,
-          classLoader).eval(ast);
-      return value instanceof Number number ? number : null;
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  private boolean hasStructuredNumericAlternative(String text) {
-    return !P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(text, numberType).isEmpty();
   }
 
   private Number tryEvaluateStructuredNumberLeaf(String text) {
