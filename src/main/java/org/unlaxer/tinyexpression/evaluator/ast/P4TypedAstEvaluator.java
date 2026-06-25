@@ -692,151 +692,15 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalStringComparisonExpr(StringComparisonExpr node) {
     String op = node.op() == null ? "" : node.op().strip();
-    Optional<StringComparisonSource> sourceComparison = tryExtractStringComparisonFromSourceFormula(op);
-    String left = sourceComparison
-        .map(StringComparisonSource::left)
-        .map(this::tryEvaluateStringSourceSnippet)
-        .orElseGet(() -> resolveStringComparisonSide(node.left()));
-    String right = sourceComparison
-        .map(StringComparisonSource::right)
-        .map(this::tryEvaluateStringSourceSnippet)
-        .orElseGet(() -> resolveStringComparisonSide(node.right()));
+    // node.left()/node.right() are the correctly-mapped operand nodes, so evaluate them
+    // directly instead of re-splitting the source text by hand.
+    String left = String.valueOf(eval(node.left()));
+    String right = String.valueOf(eval(node.right()));
     return switch (op) {
       case "==" -> left.equals(right);
       case "!=" -> !left.equals(right);
       default -> false;
     };
-  }
-
-  private String resolveStringComparisonSide(StringConcatExpr node) {
-    Optional<String> snippet = GeneratedP4ValueAstEvaluator.sourceSnippetOfNode(node, sourceFormula);
-    if (snippet.isPresent()) {
-      String exact = tryEvaluateStringSourceSnippet(snippet.get());
-      if (exact != null) {
-        return exact;
-      }
-    }
-    return String.valueOf(evalStringConcatExpr(node));
-  }
-
-  private String tryEvaluateStringSourceSnippet(String source) {
-    if (source == null) {
-      return null;
-    }
-    String normalized = source.strip();
-    if (normalized.isEmpty()) {
-      return "";
-    }
-    String unquoted = unquoteStringLiteral(normalized);
-    if (unquoted != null) {
-      return unquoted;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      String inner = tryEvaluateStringSourceSnippet(unwrapped);
-      if (inner != null) {
-        return inner;
-      }
-    }
-    Object structured = tryEvaluateStructuredStringLeaf(normalized);
-    if (structured != null) {
-      return String.valueOf(structured);
-    }
-    return null;
-  }
-
-  private Optional<StringComparisonSource> tryExtractStringComparisonFromSourceFormula(String expectedOp) {
-    if (sourceFormula == null || sourceFormula.isBlank()) {
-      return Optional.empty();
-    }
-    Optional<StringComparisonSource> direct = splitTopLevelStringComparison(sourceFormula.strip());
-    if (direct.isPresent() && matchesComparisonOperator(direct.get(), expectedOp)) {
-      return direct;
-    }
-    String normalized = sourceFormula.strip();
-    if (!normalized.startsWith("if")) {
-      return Optional.empty();
-    }
-    int openParen = normalized.indexOf('(');
-    if (openParen < 0) {
-      return Optional.empty();
-    }
-    int closeParen = GeneratedP4ValueAstEvaluator.findMatching(normalized, openParen, '(', ')');
-    if (closeParen <= openParen) {
-      return Optional.empty();
-    }
-    return splitTopLevelStringComparison(normalized.substring(openParen + 1, closeParen).strip())
-        .filter(candidate -> matchesComparisonOperator(candidate, expectedOp));
-  }
-
-  private static boolean matchesComparisonOperator(StringComparisonSource candidate, String expectedOp) {
-    return expectedOp == null || expectedOp.isBlank() || expectedOp.equals(candidate.op());
-  }
-
-  private static Optional<StringComparisonSource> splitTopLevelStringComparison(String text) {
-    if (text == null || text.isBlank()) {
-      return Optional.empty();
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length() - 1; i++) {
-      char c = text.charAt(i);
-      char next = text.charAt(i + 1);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> {
-          parenDepth++;
-          continue;
-        }
-        case ')' -> {
-          parenDepth = Math.max(0, parenDepth - 1);
-          continue;
-        }
-        case '{' -> {
-          braceDepth++;
-          continue;
-        }
-        case '}' -> {
-          braceDepth = Math.max(0, braceDepth - 1);
-          continue;
-        }
-        case '[' -> {
-          bracketDepth++;
-          continue;
-        }
-        case ']' -> {
-          bracketDepth = Math.max(0, bracketDepth - 1);
-          continue;
-        }
-        default -> {
-        }
-      }
-      if (parenDepth != 0 || braceDepth != 0 || bracketDepth != 0) {
-        continue;
-      }
-      if ((c == '=' && next == '=') || (c == '!' && next == '=')) {
-        String left = text.substring(0, i).strip();
-        String right = text.substring(i + 2).strip();
-        if (!left.isEmpty() && !right.isEmpty()) {
-          return Optional.of(new StringComparisonSource(left, text.substring(i, i + 2), right));
-        }
-      }
-    }
-    return Optional.empty();
   }
 
   // =========================================================================
@@ -2212,7 +2076,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return false;
   }
 
-  private record StringComparisonSource(String left, String op, String right) {}
 
   private boolean resolveBooleanSourceOperand(String rawSource) {
     String normalized = rawSource == null ? "" : rawSource.strip();
