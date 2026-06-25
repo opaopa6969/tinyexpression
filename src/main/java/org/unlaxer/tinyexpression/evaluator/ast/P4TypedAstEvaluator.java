@@ -545,6 +545,16 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalBooleanFactorExpr(BooleanFactorExpr node) {
+    // The generated mapper has no @mapping recursion into NotExpression, so a
+    // top-level "not(...)" boolean factor is mis-mapped: the outer "not" is
+    // dropped and node.value() holds only the inner operand (as raw text for
+    // "not(false)", or as a ComparisonExpr node for "not(1>2)"). Detect this via
+    // the node's source snippet and re-parse the whole factor as a NotExpr so the
+    // negation is honoured. (issue #25)
+    Optional<Boolean> negated = tryEvaluateNotFactor(node);
+    if (negated.isPresent()) {
+      return negated.get();
+    }
     Object value = node.value();
     if (value instanceof ComparisonExpr comp) {
       return eval(comp);
@@ -575,6 +585,61 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return bool;
     }
     return toBoolean(value);
+  }
+
+  /**
+   * If this boolean factor's source snippet is a top-level {@code not(...)}
+   * expression, re-parse it as a {@link NotExpr} and evaluate. The generated
+   * mapper drops the outer negation (see {@link #evalBooleanFactorExpr}), so this
+   * source-snippet-driven re-parse restores correct semantics. Returns empty when
+   * the factor is not a negation or cannot be re-parsed. (issue #25)
+   */
+  private Optional<Boolean> tryEvaluateNotFactor(BooleanFactorExpr node) {
+    Optional<String> snippet = sourceSnippetOfNode(node).map(String::strip);
+    if (snippet.isEmpty()) {
+      return Optional.empty();
+    }
+    String candidate = snippet.get();
+    if (!isTopLevelNotExpression(candidate)) {
+      return Optional.empty();
+    }
+    SpecifiedExpressionTypes booleanTypes =
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, numberType);
+    try {
+      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(candidate);
+      // Request the NotExpr node directly. The default mapper would otherwise wrap
+      // the formula back into BooleanOrExpr → BooleanFactorExpr, re-entering this
+      // same branch (infinite recursion).
+      TinyExpressionP4AST ast = P4PreferredAstMapper.parseByAstSimpleName(parseSource, "NotExpr");
+      if (!(ast instanceof NotExpr)) {
+        return Optional.empty();
+      }
+      Object result = new P4TypedAstEvaluator(
+          booleanTypes, context, parseSource, effectiveLookupFormulaSource(), classLoader).eval(ast);
+      return result == null ? Optional.empty() : Optional.of(Boolean.TRUE.equals(toBoolean(result)));
+    } catch (RuntimeException ignored) {
+      return Optional.empty();
+    }
+  }
+
+  /** True if {@code text} is exactly a top-level {@code not( ... )} expression. */
+  private static boolean isTopLevelNotExpression(String text) {
+    if (text == null) {
+      return false;
+    }
+    String normalized = text.strip();
+    if (!normalized.startsWith("not")) {
+      return false;
+    }
+    int i = 3;
+    while (i < normalized.length() && Character.isWhitespace(normalized.charAt(i))) {
+      i++;
+    }
+    if (i >= normalized.length() || normalized.charAt(i) != '(') {
+      return false;
+    }
+    int close = GeneratedP4ValueAstEvaluator.findMatching(normalized, i, '(', ')');
+    return close == normalized.length() - 1;
   }
 
   // =========================================================================
