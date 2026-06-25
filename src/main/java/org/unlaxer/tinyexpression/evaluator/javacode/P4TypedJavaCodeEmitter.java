@@ -924,7 +924,12 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     if (!unwrapped.equals(normalized)) {
       String inner = renderNumericSourceSnippet(unwrapped);
       if (inner != null) {
-        return "(" + inner + ")";
+        // The addSub/mulDiv branches below already parenthesize every composite
+        // result and atoms need no grouping, so an explicit grouping pair like
+        // "(1+1)" is redundant once the inner is rendered. Re-wrapping here emitted
+        // doubled parens ("((1.0f+1.0f))") that diverged from the legacy emitter's
+        // single pair, breaking backend parity. Return the inner as-is. (issue #29)
+        return inner;
       }
     }
     ArithmeticSplit addSub = splitTopLevelArithmetic(normalized, false);
