@@ -43,6 +43,12 @@
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
+		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true -->
+		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
+		<!-- Forked JVMs surefire uses to run test classes. Default 1 (serial, stable).
+		     Opt into parallel speed with -Dte.forkCount=0.5C, but note some tests still
+		     share process-wide state and may fail under parallel forks (see findings §6). -->
+		<te.forkCount>1</te.forkCount>
 	</properties>
 
 	<dependencies>
@@ -141,6 +147,7 @@
 							<goal>java</goal>
 						</goals>
 						<configuration>
+							<skip>${tinyexpression.skipRailroad}</skip>
 							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
 							<arguments>
 								<argument>${tinyexpression.p4.grammar}</argument>
@@ -179,7 +186,9 @@
 				<version>3.2.5</version>
 				<configuration>
 					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
-					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
+					<forkCount>${te.forkCount}</forkCount>
+						<reuseForks>true</reuseForks>
+						<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
 					<excludes>
 						<!-- issue #20: legacy パーサーの指数バックトラックを意図的に繰り返す
 						     ベンチマーク。unlaxer のメモ化 (unlaxer-parser#40) 導入まで除外。
