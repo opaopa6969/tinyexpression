@@ -1794,11 +1794,12 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalSliceExpr(SliceExpr node) {
     String value = resolveStringLeaf(node.value());
     int len = value.length();
-    SliceParts sliceParts = slicePartsOfNode(node).orElse(null);
-    boolean sourceAware = sliceParts != null;
-    Integer stepValue = resolveSliceIndex(node.step(), sourceAware, sliceParts == null ? null : sliceParts.stepSource());
-    Integer startValue = resolveSliceIndex(node.start(), sourceAware, sliceParts == null ? null : sliceParts.startSource());
-    Integer endValue = resolveSliceIndex(node.end(), sourceAware, sliceParts == null ? null : sliceParts.endSource());
+    // #35: start/end/step are grammar-disambiguated index literals (SliceStartIndex /
+    // SliceEndIndex / SliceStepIndex wrapper rules), so read them straight off the AST.
+    // The former source-text colon splitting (P4SliceSourceSupport) is gone.
+    Integer startValue = parseSliceIndex(node.start());
+    Integer endValue = parseSliceIndex(node.end());
+    Integer stepValue = parseSliceIndex(node.step());
     int step = stepValue != null ? stepValue : 1;
     if (step == 0) {
       throw new IllegalArgumentException("slice step cannot be zero");
@@ -1825,31 +1826,16 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return sb.toString();
   }
 
-  private Integer resolveSliceIndex(BinaryExpr astNode, boolean sourceAware, String sourceSnippet) {
-    if (sourceAware) {
-      if (sourceSnippet == null) {
-        return null;
-      }
-      Integer fromSource = evaluateSliceIndexSource(sourceSnippet);
-      if (fromSource != null) {
-        return fromSource;
-      }
-    }
-    return astNode != null ? evalBinaryAsNumber(astNode).intValue() : null;
-  }
-
-  private Integer evaluateSliceIndexSource(String sourceSnippet) {
-    try {
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(sourceSnippet, numberType).ast();
-      Object value = new P4TypedAstEvaluator(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          context,
-          sourceSnippet,
-          classLoader).eval(ast);
-      return value instanceof Number number ? number.intValue() : null;
-    } catch (RuntimeException ignored) {
+  /** Slice indices are integer literals (optionally signed), per the SliceXxxIndex rules. */
+  private static Integer parseSliceIndex(String index) {
+    if (index == null) {
       return null;
     }
+    String stripped = index.strip();
+    if (stripped.isEmpty()) {
+      return null;
+    }
+    return Integer.valueOf(stripped);
   }
 
   private static int normalizeIndex(int index, int len) {
@@ -2102,161 +2088,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     return Optional.of(sourceFormula.substring(start, end));
   }
-
-  private Optional<SliceParts> slicePartsOfNode(Object node) {
-    return sourceSnippetOfNode(node).flatMap(P4TypedAstEvaluator::parseSliceSnippet);
-  }
-
-  private static Optional<SliceParts> parseSliceSnippet(String sliceSource) {
-    if (sliceSource == null) {
-      return Optional.empty();
-    }
-    String source = sliceSource.strip();
-    if (source.isEmpty()) {
-      return Optional.empty();
-    }
-    int openBracket = findTopLevelSliceOpenBracket(source);
-    if (openBracket < 0) {
-      return Optional.empty();
-    }
-    int closeBracket = findMatchingBracket(source, openBracket);
-    if (closeBracket < 0 || closeBracket != source.length() - 1) {
-      return Optional.empty();
-    }
-    String valueSource = source.substring(0, openBracket).strip();
-    if (valueSource.isEmpty()) {
-      return Optional.empty();
-    }
-    List<String> parts = splitTopLevel(source.substring(openBracket + 1, closeBracket), ':');
-    if (parts.size() < 2 || parts.size() > 3) {
-      return Optional.empty();
-    }
-    String startSource = normalizeSliceComponent(parts.get(0));
-    String endSource = normalizeSliceComponent(parts.get(1));
-    String stepSource = parts.size() == 3 ? normalizeSliceComponent(parts.get(2)) : null;
-    return Optional.of(new SliceParts(valueSource, startSource, endSource, stepSource));
-  }
-
-  private static String normalizeSliceComponent(String component) {
-    if (component == null) {
-      return null;
-    }
-    String normalized = component.strip();
-    return normalized.isEmpty() ? null : normalized;
-  }
-
-  private static int findTopLevelSliceOpenBracket(String source) {
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < source.length(); i++) {
-      char c = source.charAt(i);
-      char prev = i > 0 ? source.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> {
-          if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-            return i;
-          }
-          bracketDepth++;
-        }
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-    }
-    return -1;
-  }
-
-  private static int findMatchingBracket(String source, int openIndex) {
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = openIndex; i < source.length(); i++) {
-      char c = source.charAt(i);
-      char prev = i > 0 ? source.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      if (c == '[') {
-        bracketDepth++;
-      } else if (c == ']') {
-        bracketDepth--;
-        if (bracketDepth == 0) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  }
-
-  private static List<String> splitTopLevel(String text, char separator) {
-    java.util.ArrayList<String> parts = new java.util.ArrayList<>();
-    int start = 0;
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0 && c == separator) {
-        parts.add(text.substring(start, i));
-        start = i + 1;
-      }
-    }
-    parts.add(text.substring(start));
-    return parts;
-  }
-
-  private record SliceParts(
-      String valueSource,
-      String startSource,
-      String endSource,
-      String stepSource) {}
 
   private static Boolean toBoolean(Object value) {
     if (value instanceof Boolean bool) return bool;

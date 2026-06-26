@@ -839,12 +839,10 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   @Override
   protected String evalSliceExpr(SliceExpr node) {
     String valueExpr = "String.valueOf(" + renderStringLeaf(node.value()) + ")";
-    P4SliceSourceSupport.SliceParts sliceParts =
-        P4SliceSourceSupport.slicePartsOfNode(node, sourceFormula).orElse(null);
-    boolean sourceAware = sliceParts != null;
-    String startExpr = renderSliceIndexExpr(node.start(), sourceAware, sliceParts == null ? null : sliceParts.startSource());
-    String endExpr = renderSliceIndexExpr(node.end(), sourceAware, sliceParts == null ? null : sliceParts.endSource());
-    String stepExpr = renderSliceIndexExpr(node.step(), sourceAware, sliceParts == null ? null : sliceParts.stepSource());
+    // #35: indices come grammar-disambiguated as integer literals (SliceXxxIndex rules).
+    String startExpr = renderSliceIndexExpr(node.start());
+    String endExpr = renderSliceIndexExpr(node.end());
+    String stepExpr = renderSliceIndexExpr(node.step());
     // Generate inline Java for the slice operation using Slicer
     StringBuilder sb = new StringBuilder();
     sb.append("new org.unlaxer.util.Slicer(org.unlaxer.StringSource.createRootSource(")
@@ -876,168 +874,12 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     }
   }
 
-  private String renderSliceIndexExpr(BinaryExpr astNode, boolean sourceAware, String sourceSnippet) {
-    if (sourceAware) {
-      if (sourceSnippet == null) {
-        return null;
-      }
-      String rendered = renderNumericSourceSnippet(sourceSnippet);
-      if (rendered != null) {
-        return rendered;
-      }
-    }
-    return astNode != null ? evalBinaryExpr(astNode) : null;
-  }
-
-  private String renderNumericSourceSnippet(String sourceSnippet) {
-    if (sourceSnippet == null) {
+  private String renderSliceIndexExpr(String index) {
+    if (index == null) {
       return null;
     }
-    String normalized = TinyExpressionParserCapabilities
-        .stripJavaStyleCommentsPreservingLayout(sourceSnippet)
-        .strip();
-    if (normalized.isEmpty()) {
-      return null;
-    }
-    if (isExactVariableReference(normalized)) {
-      return renderVariableAccess(extractVariableName(normalized), numberType);
-    }
-    if (isPlainNumericLiteral(normalized)) {
-      return numberType.numberWithSuffix(normalized);
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      String inner = renderNumericSourceSnippet(unwrapped);
-      if (inner != null) {
-        // The addSub/mulDiv branches below already parenthesize every composite
-        // result and atoms need no grouping, so an explicit grouping pair like
-        // "(1+1)" is redundant once the inner is rendered. Re-wrapping here emitted
-        // doubled parens ("((1.0f+1.0f))") that diverged from the legacy emitter's
-        // single pair, breaking backend parity. Return the inner as-is. (issue #29)
-        return inner;
-      }
-    }
-    ArithmeticSplit addSub = splitTopLevelArithmetic(normalized, false);
-    if (addSub != null) {
-      String left = renderNumericSourceSnippet(addSub.left());
-      String right = renderNumericSourceSnippet(addSub.right());
-      if (left != null && right != null) {
-        return "(" + left + addSub.operator() + right + ")";
-      }
-    }
-    ArithmeticSplit mulDiv = splitTopLevelArithmetic(normalized, true);
-    if (mulDiv != null) {
-      String left = renderNumericSourceSnippet(mulDiv.left());
-      String right = renderNumericSourceSnippet(mulDiv.right());
-      if (left != null && right != null) {
-        return "(" + left + mulDiv.operator() + right + ")";
-      }
-    }
-    try {
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(normalized, numberType).ast();
-      if (ast instanceof ExpressionExpr expression && expression.value() instanceof TinyExpressionP4AST innerAst) {
-        ast = innerAst;
-      }
-      if (ast instanceof BinaryExpr) {
-        return null;
-      }
-      return new P4TypedJavaCodeEmitter(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          normalized).eval(ast);
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  private record ArithmeticSplit(String left, String operator, String right) {}
-
-  private static ArithmeticSplit splitTopLevelArithmetic(String text, boolean mulDivOnly) {
-    if (text == null || text.isBlank()) {
-      return null;
-    }
-    int parenDepth = 0;
-    int bracketDepth = 0;
-    int braceDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    int splitIndex = -1;
-    char splitOperator = '\0';
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth != 0 || bracketDepth != 0 || braceDepth != 0) {
-        continue;
-      }
-      if (mulDivOnly) {
-        if (c == '*' || c == '/') {
-          splitIndex = i;
-          splitOperator = c;
-        }
-        continue;
-      }
-      if ((c == '+' || c == '-') && !isUnaryNumericOperator(text, i)) {
-        splitIndex = i;
-        splitOperator = c;
-      }
-    }
-    if (splitIndex <= 0 || splitIndex >= text.length() - 1) {
-      return null;
-    }
-    String left = text.substring(0, splitIndex).strip();
-    String right = text.substring(splitIndex + 1).strip();
-    if (left.isEmpty() || right.isEmpty()) {
-      return null;
-    }
-    return new ArithmeticSplit(left, String.valueOf(splitOperator), right);
-  }
-
-  private static boolean isUnaryNumericOperator(String text, int index) {
-    if (index < 0 || index >= text.length()) {
-      return false;
-    }
-    char operator = text.charAt(index);
-    if (operator != '+' && operator != '-') {
-      return false;
-    }
-    int prev = index - 1;
-    while (prev >= 0 && Character.isWhitespace(text.charAt(prev))) {
-      prev--;
-    }
-    if (prev < 0) {
-      return true;
-    }
-    char previous = text.charAt(prev);
-    return previous == '('
-        || previous == '['
-        || previous == '{'
-        || previous == ','
-        || previous == ':'
-        || previous == '?'
-        || previous == '+'
-        || previous == '-'
-        || previous == '*'
-        || previous == '/';
+    String stripped = index.strip();
+    return stripped.isEmpty() ? null : stripped;
   }
 
   private static boolean looksLikeStructuredStringLeaf(String text) {
