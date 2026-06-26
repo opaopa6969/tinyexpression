@@ -212,6 +212,17 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     };
   }
 
+  /**
+   * BooleanComparable は透過 mapped choice のため operand は実 AST ノード（Object）または
+   * source テキスト（String）として届く。ノードなら直接コード生成、それ以外は従来の
+   * source-snippet 経路にフォールバックする。(tinyexpression #32)
+   */
+  private String renderBooleanOperandSource(Object operand) {
+    if (operand instanceof TinyExpressionP4AST ast) return eval(ast);
+    if (operand instanceof String text) return renderBooleanOperandSource(text);
+    return "false";
+  }
+
   private String renderBooleanOperandSource(String rawSource) {
     String normalized = rawSource == null ? "" : rawSource.strip();
     if (normalized.isEmpty()) {
@@ -254,7 +265,7 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   protected String evalStringConcatExpr(StringConcatExpr node) {
     String leftExpr = renderStringLeaf(node.left());
     List<String> ops = node.op();
-    List<String> rights = node.right();
+    List<Object> rights = node.right();
     if (ops == null || ops.isEmpty()) return leftExpr;
     StringBuilder sb = new StringBuilder("(String.valueOf(").append(leftExpr).append(")");
     int count = Math.min(ops.size(), rights.size());
