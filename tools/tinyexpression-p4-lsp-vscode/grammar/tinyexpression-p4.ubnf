@@ -378,26 +378,36 @@ grammar TinyExpressionP4 {
     | VariableRef
     | MethodInvocation ;
 
+  // Distinct wrapper rules per slice component so the generated mapper can tell
+  // start/end/step apart. Without these, all three are NumberExpression and the
+  // mapper assigns them by a cross-variant global descendant index (start:0-3,
+  // end:4-7, step:8-11), which is nonsense for partial slices — e.g. `[::-1]`
+  // captured -1 as `start` and `[4:6]` left `end` null. Each wrapper type occurs
+  // at most once per slice, so findDescendantByIndex(...,0) is unambiguous. (#35/#32)
+  SliceStartIndex ::= NumberExpression ;
+  SliceEndIndex   ::= NumberExpression ;
+  SliceStepIndex  ::= NumberExpression ;
+
   @mapping(SliceExpr, params=[value, start, end, step])
   SliceBaseExpression ::=
-      SliceBaseReceiver @value '[' NumberExpression @start ':' NumberExpression @end ':' NumberExpression @step ']'
-    | SliceBaseReceiver @value '[' NumberExpression @start ':' NumberExpression @end ']'
-    | SliceBaseReceiver @value '[' NumberExpression @start ':' ':' NumberExpression @step ']'
-    | SliceBaseReceiver @value '[' NumberExpression @start ':' ']'
-    | SliceBaseReceiver @value '[' ':' NumberExpression @end ':' NumberExpression @step ']'
-    | SliceBaseReceiver @value '[' ':' NumberExpression @end ']'
-    | SliceBaseReceiver @value '[' ':' ':' NumberExpression @step ']'
+      SliceBaseReceiver @value '[' SliceStartIndex @start ':' SliceEndIndex @end ':' SliceStepIndex @step ']'
+    | SliceBaseReceiver @value '[' SliceStartIndex @start ':' SliceEndIndex @end ']'
+    | SliceBaseReceiver @value '[' SliceStartIndex @start ':' ':' SliceStepIndex @step ']'
+    | SliceBaseReceiver @value '[' SliceStartIndex @start ':' ']'
+    | SliceBaseReceiver @value '[' ':' SliceEndIndex @end ':' SliceStepIndex @step ']'
+    | SliceBaseReceiver @value '[' ':' SliceEndIndex @end ']'
+    | SliceBaseReceiver @value '[' ':' ':' SliceStepIndex @step ']'
     | SliceBaseReceiver @value '[' ':' ']' ;
 
   @mapping(SliceExpr, params=[value, start, end, step])
   SliceNestedExpression ::=
-      SliceBaseExpression @value '[' NumberExpression @start ':' NumberExpression @end ':' NumberExpression @step ']'
-    | SliceBaseExpression @value '[' NumberExpression @start ':' NumberExpression @end ']'
-    | SliceBaseExpression @value '[' NumberExpression @start ':' ':' NumberExpression @step ']'
-    | SliceBaseExpression @value '[' NumberExpression @start ':' ']'
-    | SliceBaseExpression @value '[' ':' NumberExpression @end ':' NumberExpression @step ']'
-    | SliceBaseExpression @value '[' ':' NumberExpression @end ']'
-    | SliceBaseExpression @value '[' ':' ':' NumberExpression @step ']'
+      SliceBaseExpression @value '[' SliceStartIndex @start ':' SliceEndIndex @end ':' SliceStepIndex @step ']'
+    | SliceBaseExpression @value '[' SliceStartIndex @start ':' SliceEndIndex @end ']'
+    | SliceBaseExpression @value '[' SliceStartIndex @start ':' ':' SliceStepIndex @step ']'
+    | SliceBaseExpression @value '[' SliceStartIndex @start ':' ']'
+    | SliceBaseExpression @value '[' ':' SliceEndIndex @end ':' SliceStepIndex @step ']'
+    | SliceBaseExpression @value '[' ':' SliceEndIndex @end ']'
+    | SliceBaseExpression @value '[' ':' ':' SliceStepIndex @step ']'
     | SliceBaseExpression @value '[' ':' ']' ;
 
   SliceExpression ::= SliceNestedExpression | SliceBaseExpression ;
