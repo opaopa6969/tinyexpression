@@ -381,7 +381,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalStringConcatExpr(StringConcatExpr node) {
     String leftStr = resolveStringLeaf(node.left());
     List<String> ops = node.op();
-    List<String> rights = node.right();
+    List<Object> rights = node.right();
     if (ops == null || ops.isEmpty()) {
       return leftStr;
     }
@@ -1991,6 +1991,21 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return false;
   }
 
+
+  /**
+   * BooleanComparable は透過 mapped choice のため、operand は実 AST ノード（Object）または
+   * source テキスト（String）として届く。ノードなら直接 eval（AST 経路に忠実）、
+   * それ以外は従来の source-snippet 経路にフォールバックする。(tinyexpression #32)
+   */
+  private boolean resolveBooleanSourceOperand(Object operand) {
+    if (operand instanceof TinyExpressionP4AST ast) {
+      return Boolean.TRUE.equals(toBoolean(eval(ast)));
+    }
+    if (operand instanceof String text) {
+      return resolveBooleanSourceOperand(text);
+    }
+    return operand != null && Boolean.TRUE.equals(toBoolean(operand));
+  }
 
   private boolean resolveBooleanSourceOperand(String rawSource) {
     String normalized = rawSource == null ? "" : rawSource.strip();
