@@ -1,5 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,9 +73,11 @@ final class AstDeclarationRuntime {
       // Use a scoped context to avoid leaking variable declarations to the caller's context.
       CalculationContext scopedContext = createScopedContext(calculationContext);
 
+      Map<String, ExpressionType> declaredVariableTypes = new LinkedHashMap<>();
       for (Token declarationToken : tinyExpressionTokens.getVariableDeclarationTokens()) {
         applyDeclaration(
             declarationToken, specifiedExpressionTypes, scopedContext, classLoader, methodDeclarationsSource, source);
+        recordDeclaredType(declarationToken, declaredVariableTypes);
       }
       String expressionSource = tokenTextCompat(tinyExpressionTokens.getExpressionToken());
       String rawExpressionSource = methodDeclarationsSource.isBlank()
@@ -93,7 +97,7 @@ final class AstDeclarationRuntime {
           : specifiedExpressionTypes.resultType();
       return evaluateExpressionWithMode(
           expressionSource, resultType, specifiedExpressionTypes, scopedContext, classLoader,
-          methodDeclarationsSource)
+          methodDeclarationsSource, declaredVariableTypes)
           .map(result -> new MainExpressionEvaluation(result.value(), result.runtime()));
     } catch (Throwable ignored) {
       return Optional.empty();
@@ -169,8 +173,26 @@ final class AstDeclarationRuntime {
       SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader,
       String methodDeclarationsSource) {
     return evaluateExpressionWithMode(
-        expressionSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource)
+        expressionSource, resultType, specifiedExpressionTypes, calculationContext, classLoader, methodDeclarationsSource,
+        Map.of())
         .map(EvalResult::value);
+  }
+
+  /**
+   * Collect the declared type of a {@code var}/{@code variable} declaration token so the pure-AST
+   * evaluator can type-check comparisons against declared variables (declaration tokens carry no
+   * {@code @mapping}, so they never reach the generated AST). (#32 / handoff #44 "C")
+   */
+  private static void recordDeclaredType(Token declarationToken, Map<String, ExpressionType> target) {
+    try {
+      VariableInfo variableInfo = VariableDeclarationParser.extractVariableInfo(declarationToken);
+      if (variableInfo != null && variableInfo.name != null && !variableInfo.name.isEmpty()
+          && variableInfo.expressionType != null) {
+        target.put(variableInfo.name, variableInfo.expressionType);
+      }
+    } catch (Throwable ignored) {
+      // A declaration we cannot type-resolve simply gets no declared-type hint.
+    }
   }
 
   private record EvalResult(Object value, String runtime) {}
@@ -178,7 +200,7 @@ final class AstDeclarationRuntime {
   private static Optional<EvalResult> evaluateExpressionWithMode(
       String expressionSource, ExpressionType resultType,
       SpecifiedExpressionTypes specifiedExpressionTypes, CalculationContext calculationContext, ClassLoader classLoader,
-      String methodDeclarationsSource) {
+      String methodDeclarationsSource, Map<String, ExpressionType> declaredVariableTypes) {
     String embeddedFormulaSource = joinExpressionWithMethods(expressionSource, methodDeclarationsSource);
     SpecifiedExpressionTypes evalTypes =
         new SpecifiedExpressionTypes(resultType, resolveNumberType(specifiedExpressionTypes, resultType));
@@ -196,7 +218,7 @@ final class AstDeclarationRuntime {
           if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
             try {
               Object p4Result = new P4TypedAstEvaluator(
-                  evalTypes, calculationContext, expressionSource, classLoader).eval(typedAst);
+                  evalTypes, calculationContext, expressionSource, classLoader, declaredVariableTypes).eval(typedAst);
               if (p4Result != null) {
                 return Optional.of(new EvalResult(p4Result, "p4-typed"));
               }
