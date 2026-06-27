@@ -38,6 +38,14 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   private final String sourceFormula;
   private final String lookupFormulaSource;
   private final ClassLoader classLoader;
+  /**
+   * Declared variable types collected from {@code var}/{@code variable} declarations in the
+   * preamble (e.g. {@code var $name as string ...}). The generated P4 AST drops declaration
+   * tokens (they carry {@code @declares}, not {@code @mapping}), so this map is the only way the
+   * pure-AST path learns that a bare {@code $name} should compare as a string rather than a number.
+   * Empty when the formula has no declarations. (#32 / handoff #44 "C")
+   */
+  private final Map<String, ExpressionType> declaredVariableTypes;
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context) {
     this(types, context, null, null);
@@ -49,7 +57,18 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
+      String sourceFormula, ClassLoader classLoader, Map<String, ExpressionType> declaredVariableTypes) {
+    this(types, context, sourceFormula, sourceFormula, classLoader, declaredVariableTypes);
+  }
+
+  public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
       String sourceFormula, String lookupFormulaSource, ClassLoader classLoader) {
+    this(types, context, sourceFormula, lookupFormulaSource, classLoader, Map.of());
+  }
+
+  public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
+      String sourceFormula, String lookupFormulaSource, ClassLoader classLoader,
+      Map<String, ExpressionType> declaredVariableTypes) {
     this.resultType = types.resultType() != null ? types.resultType() : ExpressionTypes.object;
     this.numberType = resolveNumberType(types);
     this.context = context;
@@ -57,6 +76,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     this.sourceFormula = sourceFormula;
     this.lookupFormulaSource = lookupFormulaSource;
     this.classLoader = classLoader;
+    this.declaredVariableTypes = declaredVariableTypes == null ? Map.of() : declaredVariableTypes;
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
@@ -1647,14 +1667,71 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalBooleanEqualityExpr(BooleanEqualityExpr node) {
+    String op = node.op() == null ? "==" : node.op().strip();
+    // A declared-string operand (e.g. `var $name as string ...`) forces string equality on the
+    // pure-AST path. The grammar maps `$a == $b` to BooleanEqualityExpr regardless of declared
+    // type (declarations are dropped from the AST), so without this the operands would be coerced
+    // to boolean — the legacy/source path consults the same declared type. (#32 / handoff #44 "C")
+    if (isDeclaredStringEquality(node.left(), node.right())) {
+      String left = stringValueOfEqualityOperand(node.left());
+      String right = stringValueOfEqualityOperand(node.right());
+      return switch (op) {
+        case "==" -> left.equals(right);
+        case "!=" -> !left.equals(right);
+        default -> false;
+      };
+    }
     boolean left = resolveBooleanSourceOperand(node.left());
     boolean right = resolveBooleanSourceOperand(node.right());
-    String op = node.op() == null ? "==" : node.op().strip();
     return switch (op) {
       case "==" -> left == right;
       case "!=" -> left != right;
       default -> false;
     };
+  }
+
+  /**
+   * True when either operand is a bare variable reference declared as {@code string} in the
+   * preamble. Mirrors the legacy {@code VariableTypeResolver}, which makes a comparison string-typed
+   * when a declared-string variable participates.
+   */
+  private boolean isDeclaredStringEquality(Object left, Object right) {
+    return isDeclaredStringOperand(left) || isDeclaredStringOperand(right);
+  }
+
+  private boolean isDeclaredStringOperand(Object operand) {
+    if (declaredVariableTypes.isEmpty()) {
+      return false;
+    }
+    String varName = equalityOperandVariableName(operand);
+    if (varName == null) {
+      return false;
+    }
+    ExpressionType declared = declaredVariableTypes.get(varName);
+    return declared != null && declared.isString();
+  }
+
+  private String equalityOperandVariableName(Object operand) {
+    if (operand instanceof VariableRefExpr varRef) {
+      return resolveVariableRefName(varRef);
+    }
+    if (operand instanceof BinaryExpr binaryExpr) {
+      return extractExactVariableReference(binaryExpr);
+    }
+    return null;
+  }
+
+  private String stringValueOfEqualityOperand(Object operand) {
+    if (operand instanceof VariableRefExpr varRef) {
+      String varName = resolveVariableRefName(varRef);
+      Object resolved = varName == null ? null : resolveVariableAny(varName);
+      return resolved == null ? "" : String.valueOf(resolved);
+    }
+    if (operand instanceof TinyExpressionP4AST ast) {
+      Object resolved = eval(ast);
+      return resolved == null ? "" : String.valueOf(resolved);
+    }
+    return operand == null ? "" : String.valueOf(operand);
   }
 
   // =========================================================================
