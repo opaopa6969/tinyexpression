@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- Adopt unlaxer-dsl/common **3.0.10** (opt-in packrat memoization, unlaxer-parser #40). Pure dependency bump — generated sources unchanged (memoization is off by default in the parser).
+
+### Added
+- **Opt-in packrat memoization for P4 parsing** (`-Dtinyexpression.p4.memoize=true`, wired in `P4PreferredAstMapper`). Off by default. Collapses the exponential backtracking of deeply nested fraud-detection formulas (#19/#38): the boolean/parenthesis-ambiguity formulas (#19 examples 1–4) parse in <0.5s instead of hitting the 10s parse deadline and falling back to legacy. The deeply nested-`if` formula (#19 example 5) is helped but remains ~10–20s — its bottleneck is `StringSource.peek` allocation, not `(rule,position)` re-derivation (tracked as a follow-up); it still falls back via the deadline in production. Verified by `P4PackratFraudFormulaTest`.
+
 ### Fixed
 - `P4TypedAstEvaluator`: declared variable types (`var $name as string …`) now make `$name == $other` a **string** comparison on the pure-AST path, instead of coercing both operands to boolean. Variable declarations carry `@declares` (not `@mapping`) so they are dropped from the generated AST; declared types are now threaded from `AstDeclarationRuntime` into the evaluator (mirrors the legacy `VariableTypeResolver`). Resolves the last pure-AST (if-source-shadow OFF) failure in `testTypeInference`. Consumer-only change — no unlaxer-dsl/codegen release. (#32 / handoff #44 "C")
 

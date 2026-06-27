@@ -1007,6 +1007,13 @@ public final class P4PreferredAstMapper {
   private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
     ParseContext context = new ParseContext(createRootSourceCompat(source));
     ScopeStore.registerDispatcher(context);
+    // Opt-in packrat memoization (unlaxer-parser #40): collapses the exponential backtracking that
+    // deeply nested fraud-detection formulas trigger (#19/#38). Off by default — enable with
+    // -Dtinyexpression.p4.memoize=true. Safe with the @scopeTree/@declares/@backref grammar because
+    // memoization excludes TransactionListener-bearing sub-trees (scope effects are never skipped).
+    if (Boolean.getBoolean("tinyexpression.p4.memoize")) {
+      context.enableMemoize();
+    }
     if (deadlineNanos > 0L) {
       registerDeadlineListener(context, deadlineNanos);
     }
