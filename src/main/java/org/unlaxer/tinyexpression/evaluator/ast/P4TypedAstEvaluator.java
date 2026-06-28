@@ -14,7 +14,6 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.function.EmbeddedFunction;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
-import org.unlaxer.tinyexpression.p4.P4IfSourceSupport;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
@@ -658,31 +657,14 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalIfExpr(IfExpr node) {
-    Object sourceAware = tryEvaluateIfFromSource(node);
-    if (sourceAware != null) {
-      return sourceAware;
-    }
+    // Pure-AST evaluation. The former source-snippet shadow (tryEvaluateIfFromSource / P4IfSourceSupport,
+    // a char-scanning re-parse of the original formula) was a correctness crutch from when the mapped
+    // IfExpr sub-trees were unfaithful; with the mapper fixes (#43/#32/#35/#49) and memoization the
+    // condition/branch nodes evaluate correctly on their own, so the shadow is removed (#49 follow-up).
     Object conditionValue = eval(node.condition());
     boolean cond = Boolean.TRUE.equals(toBoolean(conditionValue));
     ExpressionExpr branch = cond ? node.thenExpr() : node.elseExpr();
     return eval(branch);
-  }
-
-  private Object tryEvaluateIfFromSource(IfExpr node) {
-    if (node == null || sourceFormula == null || sourceFormula.isBlank()) {
-      return null;
-    }
-    Optional<P4IfSourceSupport.IfParts> parts = P4IfSourceSupport.ifPartsOfNode(node, sourceFormula);
-    if (parts.isEmpty()) {
-      return null;
-    }
-    Optional<Object> conditionValue = tryEvaluateIfSourceSnippet(parts.get().conditionSource(), ExpressionTypes._boolean);
-    if (conditionValue.isEmpty()) {
-      return null;
-    }
-    String selectedBranch =
-        Boolean.TRUE.equals(toBoolean(conditionValue.get())) ? parts.get().thenSource() : parts.get().elseSource();
-    return tryEvaluateIfSourceSnippet(selectedBranch, resultType).orElse(null);
   }
 
   private Optional<Object> tryEvaluateIfSourceSnippet(String snippetSource, ExpressionType expectedType) {
