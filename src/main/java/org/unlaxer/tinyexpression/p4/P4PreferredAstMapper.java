@@ -1004,14 +1004,26 @@ public final class P4PreferredAstMapper {
     throw new IllegalArgumentException("Parse failed at offset " + primary.consumed() + ": " + source);
   }
 
+  /**
+   * Packrat memoization is ON by default (see {@link #parseWithRoot}); opt out with
+   * {@code -Dtinyexpression.p4.memoize=false}.
+   */
+  private static boolean memoizeEnabled() {
+    return false == "false".equalsIgnoreCase(System.getProperty("tinyexpression.p4.memoize", "true"));
+  }
+
   private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
     ParseContext context = new ParseContext(createRootSourceCompat(source));
     ScopeStore.registerDispatcher(context);
-    // Opt-in packrat memoization (unlaxer-parser #40): collapses the exponential backtracking that
-    // deeply nested fraud-detection formulas trigger (#19/#38). Off by default — enable with
-    // -Dtinyexpression.p4.memoize=true. Safe with the @scopeTree/@declares/@backref grammar because
-    // memoization excludes TransactionListener-bearing sub-trees (scope effects are never skipped).
-    if (Boolean.getBoolean("tinyexpression.p4.memoize")) {
+    // Packrat memoization (unlaxer-parser #40): collapses the exponential backtracking that deeply
+    // nested fraud-detection formulas trigger (#19/#38). ON by default now that it is proven fast and
+    // parse-equivalent (parity verified in #40) and that the mapping phase no longer re-maps subtrees
+    // (tinyexpression #49) — together these let formulas that previously blew the parse deadline (e.g.
+    // toUpperCase('..')[4:6].in(..), the giant nested-if fraud formulas) reach the P4 path instead of
+    // falling back to the legacy parser. Opt OUT with -Dtinyexpression.p4.memoize=false. Safe with the
+    // @scopeTree/@declares/@backref grammar because memoization excludes TransactionListener-bearing
+    // sub-trees (scope effects are never skipped).
+    if (memoizeEnabled()) {
       context.enableMemoize();
     }
     if (deadlineNanos > 0L) {
