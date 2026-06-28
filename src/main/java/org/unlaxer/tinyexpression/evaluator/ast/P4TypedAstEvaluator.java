@@ -17,7 +17,6 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
-import org.unlaxer.tinyexpression.p4.P4TernarySourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -1026,17 +1025,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
         }
       }
     }
-    Optional<P4TernarySourceSupport.TernaryParts> ternaryParts =
-        P4TernarySourceSupport.parseTopLevelTernary(argExpr);
-    if (ternaryParts.isPresent()) {
-      Optional<Boolean> conditionValue = evaluateArgumentCondition(ternaryParts.get().conditionSource());
-      if (conditionValue.isPresent()) {
-        boolean selected = Boolean.TRUE.equals(conditionValue.get());
-        return evaluateArgumentExpression(
-            selected ? ternaryParts.get().thenSource() : ternaryParts.get().elseSource(),
-            parameterType);
-      }
-    }
+    // [EXPERIMENT] ternary-arg source shadow removed; general P4 parse below handles it
     if (P4PreferredAstMapper.preferredAstSimpleNames(argExpr, parameterType).contains("IfExpr")) {
       Optional<Object> direct = AstEmbeddedExpressionRuntime.tryEvaluateFormulaDirect(
           argExpr, parameterType, argumentTypes, context, classLoader);

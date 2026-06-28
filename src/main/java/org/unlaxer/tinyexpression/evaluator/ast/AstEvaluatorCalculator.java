@@ -437,6 +437,14 @@ public class AstEvaluatorCalculator implements Calculator {
         declarationRuntime = "generated-ast";
       }
       setObject("_astEvaluatorRuntime", declarationRuntime);
+      // Declarations are gated out of the PRIMARY path (the generated P4 AST has no declaration root),
+      // so a speculative "declaration-aware fallback" reason was set above. But AstDeclarationRuntime
+      // actually evaluated this on a P4 path — so when the runtime is p4-typed/generated-ast, clear the
+      // misleading fallback markers. The result is not a fallback; the markers should say so. (cosmetic)
+      if ("p4-typed".equals(declarationRuntime) || "generated-ast".equals(declarationRuntime)) {
+        removeObject("_p4FallbackReason");
+        removeObject("_p4FallbackFormula");
+      }
       return declarationEvaluated.get().value();
     }
 
@@ -732,6 +740,14 @@ public class AstEvaluatorCalculator implements Calculator {
 
   @Override
   public void after(CalculationContext calculationContext) {
+  }
+
+  private void removeObject(String key) {
+    objectByKey.remove(key);
+    JavaCodeCalculatorV3 local = delegate;
+    if (local != null) {
+      local.setObject(key, null);
+    }
   }
 
   @Override
