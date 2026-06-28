@@ -13,6 +13,8 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.compiler.InstanceAndByteCode;
+import org.unlaxer.context.DiagnosticFormatter;
+import org.unlaxer.context.ParseFailureDiagnostics;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
@@ -815,11 +817,12 @@ public class AstEvaluatorCalculator implements Calculator {
       }
     }
     Parser parser = getParser();
-    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
+    StringSource rootSource = StringSource.createRootSource(formula);
+    ParseContext parseContext = new ParseContext(rootSource);
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       if (!parsed.isSucceeded()) {
-        throw new ParseException("failed to parse:" + formula);
+        throw new ParseException(parseFailureMessage(rootSource, parseContext, formula));
       }
       parsed.getRootToken(true);
     } catch (ParseException e) {
@@ -827,6 +830,78 @@ public class AstEvaluatorCalculator implements Calculator {
     } catch (Exception e) {
       throw new ParseException("failed to parse:" + formula, e);
     }
+  }
+
+  /**
+   * Build a human-readable parse-failure message (line/column + caret + expected tokens) from the
+   * parser's farthest-failure diagnostics. Falls back to the terse {@code "failed to parse:"} form
+   * if diagnostics are unavailable or throw — a diagnostics problem must never mask the parse error.
+   */
+  private static String parseFailureMessage(StringSource rootSource, ParseContext parseContext, String formula) {
+    try {
+      ParseFailureDiagnostics diagnostics = parseContext.getParseFailureDiagnostics();
+      if (diagnostics != null) {
+        // Build a user-facing "expected" list from literal tokens / display hints only — never the
+        // internal parser class names (DigitParser, WordParser, Chain…) that the default formatter
+        // appends as "(in …)". Showing class names is the "RPAREN problem": correct, but unkind.
+        java.util.LinkedHashSet<String> expected = new java.util.LinkedHashSet<>();
+        for (String token : diagnostics.getExpectedTokens()) {
+          addExpectedHint(expected, token);
+        }
+        if (expected.isEmpty()) {
+          for (ParseFailureDiagnostics.ExpectedHintCandidate hint : diagnostics.getExpectedHintCandidates()) {
+            addExpectedHint(expected, hint.getDisplayHint());
+          }
+        }
+        String message;
+        if (expected.isEmpty()) {
+          message = "ここで、式が読めなくなりました";
+        } else {
+          // The grammar legitimately allows many next tokens at an operand position, so cap the
+          // enumeration — a wall of 40 tokens is its own kind of unkindness. Curating these into
+          // grammar-level human hints is a separate effort (the kind of work this engine deserves).
+          List<String> shown = new ArrayList<>(expected);
+          boolean truncated = shown.size() > 8;
+          String list = String.join("  ", shown.subList(0, Math.min(8, shown.size())));
+          message = "ここで、式が読めなくなりました。来られるのは例えば: " + list + (truncated ? "  …" : "");
+        }
+        String formatted = DiagnosticFormatter.format(rootSource, diagnostics.getFarthestOffset(), message);
+        if (formatted != null && !formatted.isBlank()) {
+          return formatted;
+        }
+      }
+    } catch (Throwable ignored) {
+      // diagnostics best-effort only
+    }
+    return "failed to parse:" + formula;
+  }
+
+  /** Keep only short, user-facing literals/keywords; drop blanks, comment/whitespace tokens, and
+   *  internal parser/combinator class names (DigitParser, Chain, OneOrMore…). */
+  private static final java.util.Set<String> EXPECTED_HINT_DENYLIST = java.util.Set.of(
+      "//", "/*", "*/",                                                         // comment markers
+      "Chain", "Choice", "OneOrMore", "ZeroOrMore", "Optional", "NonOrdered",   // combinators
+      "LazyChain", "LazyChoice",
+      "number", "string", "boolean", "object", "float",                         // type keywords (noise
+      "Number", "String", "Boolean", "Object", "Float");                        // at most error sites)
+
+  private static void addExpectedHint(java.util.Set<String> sink, String hint) {
+    if (hint == null) {
+      return;
+    }
+    String trimmed = hint.strip();
+    if (trimmed.isEmpty() || trimmed.length() > 16) {
+      return;
+    }
+    // getExpectedTokens() quotes literals ('+', ' ', '//'); classify on the unquoted inner text.
+    String inner = trimmed;
+    if (inner.length() >= 2 && inner.startsWith("'") && inner.endsWith("'")) {
+      inner = inner.substring(1, inner.length() - 1);
+    }
+    if (inner.isBlank() || inner.endsWith("Parser") || EXPECTED_HINT_DENYLIST.contains(inner)) {
+      return; // whitespace token, internal parser name, combinator, or type-keyword noise
+    }
+    sink.add(trimmed);
   }
 
   private Optional<TinyExpressionP4AST.MethodInvocationExpr> syntheticMethodInvocationAst(String formula) {
