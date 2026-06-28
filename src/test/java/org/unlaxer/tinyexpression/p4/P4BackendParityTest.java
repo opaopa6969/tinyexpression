@@ -322,32 +322,51 @@ public class P4BackendParityTest {
   }
 
   @Test
-  public void testP4ExactParseRejectsAmbiguousDirectMatchVariableWithoutHint() {
+  public void testP4HandlesDirectMatchVariableWithoutHint() {
+    // A bare variable case value (no inline type hint) used to be rejected by the strict-match
+    // typing validator and forced onto the legacy parser. The generated P4 grammar parses it into
+    // the result-type's match family and P4TypedAstEvaluator resolves it correctly, so it now runs
+    // on the p4-typed path (universal fallback=0). An explicit MISMATCHED hint is still rejected
+    // (see testP4RejectsDirectMatchVariableWithMismatchedHint).
     String formula = "match{1==1->$val,default->0}";
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
     Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
-        .create(new Source(formula), "MatchStrictRef_jc", types, cl);
+        .create(new Source(formula), "MatchVarRef_jc", types, cl);
     Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-        .create(new Source(formula), "MatchStrictRef_p4ast", types, cl);
+        .create(new Source(formula), "MatchVarRef_p4ast", types, cl);
 
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
-    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
 
     CalculationContext ctx = CalculationContext.newConcurrentContext();
     ctx.set("val", 10f);
     float ref = floatValue(javaCode.apply(ctx));
     float actual = floatValue(p4Ast.apply(ctx));
-    assertEquals("semantic rejection should still preserve legacy result", ref, actual, 0.001f);
-    assertFalse("strict-typing rejection should avoid p4-typed runtime",
-        "p4-typed".equals(p4Ast.getObject("_astEvaluatorRuntime", String.class)));
-    String fallbackReason = p4Ast.getObject("_p4FallbackReason", String.class);
-    assertNotNull("semantic rejection should preserve fallback reason", fallbackReason);
-    assertTrue("semantic rejection should skip cross-check mismatch fallback",
-        fallbackReason.contains("P4 strict match typing rejected"));
+    assertEquals("bare-variable match must agree with the legacy result", ref, actual, 0.001f);
+    assertEquals("bare-variable match should now run on the p4-typed path",
+        "p4-typed", p4Ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
+  @Test
+  public void testP4RejectsDirectMatchVariableWithMismatchedHint() {
+    // An EXPLICIT type hint that disagrees with the match's result type is a genuine type error:
+    // `$val as string` cannot be a number case value, so the formula does not parse at all (the
+    // mismatch is caught at parse time, not silently accepted). Relaxing the bare-variable guard
+    // does not open this door.
+    String formula = "match{1==1->$val as string,default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    boolean rejected = false;
+    try {
+      CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+          .create(new Source(formula), "MatchVarMismatch_p4ast", types, cl);
+    } catch (RuntimeException expected) {
+      rejected = true;
+    }
+    assertTrue("a mismatched explicit type hint must not be silently accepted", rejected);
   }
 
   @Test
@@ -368,19 +387,29 @@ public class P4BackendParityTest {
   }
 
   @Test
-  public void testP4ExactParseRejectsParenthesizedDirectMatchVariableWithoutHint() {
+  public void testP4HandlesParenthesizedDirectMatchVariableWithoutHint() {
+    // Parenthesized bare variable case value — same as the unparenthesized case, now handled on the
+    // p4-typed path instead of being rejected onto the legacy parser. (universal fallback=0)
     String formula = "match{1==1->($val),default->0}";
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
+    Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(formula), "MatchParen_jc", types, cl);
     Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-        .create(new Source(formula), "MatchStrictParen_p4ast", types, cl);
+        .create(new Source(formula), "MatchParen_p4ast", types, cl);
 
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
-    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
     assertEquals("NumberMatchExpr", p4Ast.getObject("_tinyP4AstNodeType", String.class));
+
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+    ctx.set("val", 10f);
+    float ref = floatValue(javaCode.apply(ctx));
+    assertEquals("parenthesized bare-variable match must agree with the legacy result",
+        ref, floatValue(p4Ast.apply(ctx)), 0.001f);
+    assertEquals("should run on the p4-typed path",
+        "p4-typed", p4Ast.getObject("_astEvaluatorRuntime", String.class));
   }
 
   @Test
