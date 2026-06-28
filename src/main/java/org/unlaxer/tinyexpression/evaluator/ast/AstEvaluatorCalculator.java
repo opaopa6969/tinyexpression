@@ -13,6 +13,7 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.compiler.InstanceAndByteCode;
+import org.unlaxer.context.DiagnosticFormatter;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.parser.ParseException;
 import org.unlaxer.parser.Parser;
@@ -815,11 +816,12 @@ public class AstEvaluatorCalculator implements Calculator {
       }
     }
     Parser parser = getParser();
-    ParseContext parseContext = new ParseContext(StringSource.createRootSource(formula));
+    StringSource rootSource = StringSource.createRootSource(formula);
+    ParseContext parseContext = new ParseContext(rootSource);
     try (parseContext) {
       Parsed parsed = parser.parse(parseContext);
       if (!parsed.isSucceeded()) {
-        throw new ParseException("failed to parse:" + formula);
+        throw new ParseException(parseFailureMessage(rootSource, parseContext, formula));
       }
       parsed.getRootToken(true);
     } catch (ParseException e) {
@@ -827,6 +829,23 @@ public class AstEvaluatorCalculator implements Calculator {
     } catch (Exception e) {
       throw new ParseException("failed to parse:" + formula, e);
     }
+  }
+
+  /**
+   * Build a human-readable parse-failure message (line/column + caret + expected tokens) from the
+   * parser's farthest-failure diagnostics. Falls back to the terse {@code "failed to parse:"} form
+   * if diagnostics are unavailable or throw — a diagnostics problem must never mask the parse error.
+   */
+  private static String parseFailureMessage(StringSource rootSource, ParseContext parseContext, String formula) {
+    try {
+      String formatted = DiagnosticFormatter.format(rootSource, parseContext.getParseFailureDiagnostics());
+      if (formatted != null && !formatted.isBlank()) {
+        return formatted;
+      }
+    } catch (Throwable ignored) {
+      // diagnostics best-effort only
+    }
+    return "failed to parse:" + formula;
   }
 
   private Optional<TinyExpressionP4AST.MethodInvocationExpr> syntheticMethodInvocationAst(String formula) {
