@@ -14,7 +14,6 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
-import org.unlaxer.tinyexpression.p4.P4SliceSourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class P4TypedAstEvaluatorTest {
@@ -460,28 +459,21 @@ public class P4TypedAstEvaluatorTest {
   }
 
   @Test
-  public void testSliceSourcePartsOfNode() {
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
-        "'gateman'[::-1]",
-        ExpressionTypes.string).ast();
-    assertTrue(ast instanceof SliceExpr);
-    P4SliceSourceSupport.SliceParts parts =
-        P4SliceSourceSupport.slicePartsOfNode(ast, "'gateman'[::-1]").orElseThrow();
-    assertEquals("'gateman'", parts.valueSource());
-    assertNull(parts.startSource());
-    assertNull(parts.endSource());
-    assertEquals("-1", parts.stepSource());
+  public void testSliceReverseAndStepOnAstPath() {
+    // The slice indices come from the SliceExpr AST (start/end/step), not from re-parsing the source
+    // text — so assert the actual evaluated result on the pure AST path. (former source-shadow test)
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
 
-    TinyExpressionP4AST steppedAst = P4PreferredAstMapper.parseDetailed(
-        "'1a2b3'[::2]",
-        ExpressionTypes.string).ast();
-    assertTrue(steppedAst instanceof SliceExpr);
-    P4SliceSourceSupport.SliceParts steppedParts =
-        P4SliceSourceSupport.slicePartsOfNode(steppedAst, "'1a2b3'[::2]").orElseThrow();
-    assertEquals("'1a2b3'", steppedParts.valueSource());
-    assertNull(steppedParts.startSource());
-    assertNull(steppedParts.endSource());
-    assertEquals("2", steppedParts.stepSource());
+    TinyExpressionP4AST reverse = P4PreferredAstMapper.parseDetailed(
+        "'gateman'[::-1]", ExpressionTypes.string).ast();
+    assertTrue(reverse instanceof SliceExpr);
+    assertEquals("nametag", evaluator.eval(reverse));
+
+    TinyExpressionP4AST stepped = P4PreferredAstMapper.parseDetailed(
+        "'1a2b3'[::2]", ExpressionTypes.string).ast();
+    assertTrue(stepped instanceof SliceExpr);
+    assertEquals("123", evaluator.eval(stepped));
   }
 
   // ── NumberMatchExpr ──
