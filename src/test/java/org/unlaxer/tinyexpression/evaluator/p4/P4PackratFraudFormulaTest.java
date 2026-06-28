@@ -38,12 +38,12 @@ public class P4PackratFraudFormulaTest {
   /**
    * Formulas #1–4 are the boolean / parenthesis-ambiguity shape whose exponential backtracking
    * packrat memoization collapses — they parse in well under a second (measured ~0.02–0.5s vs the
-   * 53-min hang in #19). Formula #5 is the deeply nested-{@code if} shape: memoization helps but
-   * does NOT bring it under a second (residual ~24s; even allowing success memoization everywhere
-   * it stays ~12s), because its bottleneck is not {@code (rule, position)} re-derivation — it is the
-   * per-character {@code StringSource.peek} allocation that #19's profile flagged as independent of
-   * memoization. #5 is therefore logged and only guarded against the exponential hang here, and is
-   * tracked as a separate follow-up; in production it still falls back via the parse deadline.
+   * 53-min hang in #19). Formula #5 is the deeply nested-{@code if} shape. Packrat (parse-phase)
+   * memoization alone left it at 12–30s; #49 found the real bottleneck was the mapping phase, not
+   * parsing: {@code findBestMappedToken} re-constructed the same subtrees ~10M times (each via
+   * per-token reflection + an unbounded {@code IdentityHashMap} of source spans). Memoizing
+   * {@code mapToken} by token identity and dropping the reflection (unlaxer-dsl MapperGenerator,
+   * 3.0.11) brings #5 to ~30ms — so it is now held to the same strict sub-second bound as the rest.
    */
   @Test(timeout = 90_000)
   public void fraudFormulasParseFastWithMemoization() {
@@ -51,16 +51,9 @@ public class P4PackratFraudFormulaTest {
     try {
       for (int index = 0; index < FRAUD_FORMULAS.length; index++) {
         long elapsed = parseMillis(FRAUD_FORMULAS[index]);
-        boolean nestedIfResidual = index == 4; // #5
-        System.out.println("fraud formula #" + (index + 1) + " parsed in " + elapsed + "ms (memoize on)"
-            + (nestedIfResidual ? " [nested-if residual — tracked separately]" : ""));
-        if (nestedIfResidual) {
-          // Guard only against the return of the exponential hang (was 53+ min).
-          assertTrue("formula #5 must not exponentially hang (was " + elapsed + "ms)", elapsed < 60_000);
-        } else {
-          assertTrue("formula #" + (index + 1) + " should parse in well under a second with "
-              + "memoization (was " + elapsed + "ms)", elapsed < 2_000);
-        }
+        System.out.println("fraud formula #" + (index + 1) + " parsed in " + elapsed + "ms (memoize on)");
+        assertTrue("formula #" + (index + 1) + " should parse in well under a second with "
+            + "memoization (was " + elapsed + "ms)", elapsed < 2_000);
       }
     } finally {
       System.clearProperty("tinyexpression.p4.memoize");
