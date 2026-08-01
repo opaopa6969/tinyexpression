@@ -1,10 +1,11 @@
 # Backend Coverage Matrix
 
-## 5 Execution Backends
+## 6 Execution Backends
 
 | Backend | 実装クラス | 主要用途 |
 |---------|-----------|---------|
 | compile-hand | JavaCodeCalculatorV3 | 本番 (10^9 tx/month) |
+| compile-legacy-astcreator | LegacyAstCreatorJavaCodeCalculator | 凍結（リグレッション比較用）。JavaCodeCalculatorV3 を継承し tokenReduer() のみ override |
 | P4-typed | P4TypedAstEvaluator | DAP, LSP (sealed switch) |
 | P4-reflection | GeneratedP4ValueAstEvaluator | レガシー (reflection) |
 | ast-hand | AstNumberExpressionEvaluator | リテラル演算のみ |
@@ -12,30 +13,32 @@
 
 ## Feature Coverage
 
-| 機能 | compile-hand | P4-typed | P4-reflection | ast-hand | compile-dsl |
-|------|:-----------:|:--------:|:-------------:|:--------:|:-----------:|
-| 四則演算 (+,-,*,/) | ✅ | ✅ | ✅ | ✅ | ✅ |
-| 変数参照 ($var) | ✅ | ✅ | ✅ | ❌ | ✅ |
-| 比較演算 (==,<,>) | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Boolean演算 (&,\|,^) | ✅ | ✅ | ✅ | ❌ | ✅ |
-| if/else | ✅ | ✅ | ✅ | ❌ | ✅ |
-| ternary (cond?a:b) | ✅ | ✅ | ✅ | ❌ | ✅ |
-| match/case | ✅ | ✅ | ✅ | ❌ | ✅ |
-| Math 14関数 | ✅ | ✅ | ❌ | ❌ | ❌ |
-| min/max 可変引数 | ✅ | ✅ | ❌ | ❌ | ❌ |
-| Not演算子 | ✅ | ✅ | ❌ | ❌ | ❌ |
-| toNum() | ✅ | ✅ | ❌ | ❌ | ❌ |
-| String methods (関数形式) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| String methods (ドット形式) | ✅ | ✅ | ❌ | ❌ | ❌ |
-| String predicates | ✅ | ✅ | ❌ | ❌ | ❌ |
-| isPresent() | ✅ | ✅ | ❌ | ❌ | ❌ |
-| **MethodInvocation (call)** | ✅ | ✅ | ✅ | ❌ | ✅ |
-| **External呼び出し** | ✅ | ✅ | ✅ | ❌ | ✅ |
-| **Side effect** | ✅ | ✅ | **❌** | ❌ | ✅ |
-| 変数宣言 (var) | ✅ | 部分的 | ✅ | ❌ | ✅ |
-| String連結 (+) | ✅ | ✅ | ❌ | ❌ | ✅ |
-| String slice ($s[0:3]) | ✅ | ❌ | ❌ | ❌ | ❌ |
-| inTimeRange/inDayTimeRange | ✅ | ✅ | ❌ | ❌ | ✅ |
+| 機能 | compile-hand | compile-legacy-astcreator | P4-typed | P4-reflection | ast-hand | compile-dsl |
+|------|:-----------:|:------------------------:|:--------:|:-------------:|:--------:|:-----------:|
+| 四則演算 (+,-,*,/) | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| 変数参照 ($var) | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| 比較演算 (==,<,>) | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Boolean演算 (&,\|,^) | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| if/else | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| ternary (cond?a:b) | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| match/case | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| Math 14関数 | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| min/max 可変引数 | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| Not演算子 | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| toNum() | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| String methods (関数形式) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| String methods (ドット形式) | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| String predicates | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| isPresent() | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **MethodInvocation (call)** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| **External呼び出し** | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ |
+| **Side effect** | ✅ | ✅ | ✅ | **❌** | ❌ | ✅ |
+| 変数宣言 (var) | ✅ | ✅ | 部分的 | ✅ | ❌ | ✅ |
+| String連結 (+) | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| String slice ($s[0:3]) | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| inTimeRange/inDayTimeRange | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+
+> **注**: `compile-legacy-astcreator` は `JavaCodeCalculatorV3` を継承し `tokenReduer()` のみを override する（`LegacyAstCreatorJavaCodeCalculator:15-33`）。Java コード生成能力は `compile-hand` と等価のため、Feature Coverage は `compile-hand` と同一。SPEC.md 1.3 に準拠（ステータス: 凍結・リグレッション比較用）。
 
 ## Fallback Chain
 
