@@ -1644,7 +1644,7 @@ target/generated-sources/tinyexpression-p4/runtime/
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyExpression</artifactId>
+  <artifactId>tinyexpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```
@@ -1899,7 +1899,7 @@ TinyExpression は **Maven Central (OSSRH)** で公開される。
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyExpression</artifactId>
+  <artifactId>tinyexpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```

@@ -2,7 +2,7 @@
 
 日本語 | [English](README.en.md)
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyexpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyexpression)
 
 Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）。
 
@@ -46,8 +46,8 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyExpression</artifactId>
-  <version>1.4.10</version>
+  <artifactId>tinyexpression</artifactId>
+  <version>1.4.11</version>
 </dependency>
 ```
 
