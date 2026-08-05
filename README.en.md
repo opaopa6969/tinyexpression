@@ -276,4 +276,6 @@ External repository: [tinyexpression-group/tinyexpression-ide](https://github.co
 mvn -q test
 ```
 
+CI manages known failures via `test-baseline.txt` and fails on new ones. See [docs/test-baseline.md](docs/test-baseline.md) for the workflow and update procedure.
+
 Document index: [docs/INDEX.md](docs/INDEX.md)

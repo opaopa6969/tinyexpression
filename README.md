@@ -276,4 +276,6 @@ VS Code 拡張 [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode
 mvn -q test
 ```
 
+CI は `test-baseline.txt` で既知の失敗を管理し、新規失敗で落とす。運用と更新手順は [docs/test-baseline.md](docs/test-baseline.md) 参照。
+
 ドキュメント一覧: [docs/INDEX.ja.md](docs/INDEX.ja.md)
