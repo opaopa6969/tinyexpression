@@ -121,7 +121,7 @@ graph TB
 
 #### P4 パーサー（UBNF 自動生成）
 
-`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（321 行）から `unlaxer-dsl` により生成される。
+`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（589 行）から `unlaxer-dsl` により生成される。
 
 | 生成物 | 役割 |
 |--------|------|
@@ -1582,8 +1582,8 @@ export MAVEN_OPTS="--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.
 
 | グループ ID | アーティファクト ID | バージョン | 用途 |
 |------------|-------------------|----------|------|
-| `org.unlaxer` | `unlaxer-common` | **3.0.2** | パーサーコンビネータランタイム（レガシーパーサーのベース） |
-| `org.unlaxer` | `unlaxer-dsl` | **3.0.2** | UBNF 文法からのパーサー自動生成（P4 スタック） |
+| `org.unlaxer` | `unlaxer-common` | **3.0.11** | パーサーコンビネータランタイム（レガシーパーサーのベース） |
+| `org.unlaxer` | `unlaxer-dsl` | **3.0.11** | UBNF 文法からのパーサー自動生成（P4 スタック） |
 | `org.jetbrains` | `annotations` | `24.0.1` | `@NotNull` 等のアノテーション |
 | `net.arnx` | `jsonic` | `1.3.10` | JSON シリアライゼーション |
 
@@ -1608,6 +1608,7 @@ unlaxer-common はレガシーパーサースタックのランタイムライ�
 
 - v1.4.10: unlaxer-common 2.8.0 対応（`NoneChildCollectingParser` 移行）
 - v1.4.11 / 9b166fc: unlaxer-common/dsl **3.0.2** に移行（`StringSource` API 対応 + `validateWithWarnings`）
+- v1.4.x（#49/#50/#51）: unlaxer-common/dsl **3.0.11** に更新（`mapToken` メモ化・反射除去・packrat メモ化 default 有効化）
 
 ### 9.4 unlaxer-dsl との関係
 
@@ -1625,8 +1626,12 @@ unlaxer-dsl は P4 パーサースタックの生成ツールである。
 
 | ファイル | 行数 | 説明 |
 |---------|------|------|
-| `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` | 321 行 | 拡張版（アクティブ） |
-| `docs/ubnf/tinyexpression-p4-draft.ubnf` | 239 行 | 初期ドラフト |
+| `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` | 589 行 | **権威**（ビルドが使用・生成元） |
+| `docs/ubnf/tinyexpression-p4-draft.ubnf` | 239 行 | 初期ドラフト（参照用・生成には使用しない） |
+| `docs/ubnf/tinyexpression-p4-complete.ubnf` | 548 行 | 中間スナップショット（参照用・生成には使用しない） |
+| `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf` | 24 行 | 結合性再現用の最小再現セット（参照用・生成には使用しない） |
+
+> **注意**: ビルド（`mvn compile` の generate-sources フェーズ）が実際に読み込むのは `tools/.../grammar/tinyexpression-p4.ubnf` のみ。`docs/ubnf/` 配下の 3 ファイルは歴史的参照用で、生成パイプラインには関与しない。整理（削除含む）は別 issue で人間判断予定。
 
 **P4 生成物の配置**:
 
@@ -1938,7 +1943,7 @@ TinyExpression は **Maven Central (OSSRH)** で公開される。
 
 | バージョン | リリース日 | 主な変更内容 |
 |----------|----------|------------|
-| **1.4.11** | 2026-04-21 | DSL バックエンド nested paren 乗算バグ修正（`(10-2)*(7-3)` 全 6 バックエンドパリティ達成）、`JavaCodeBlockPolicy` opt-out 追加（v1.4.11）、unlaxer-common/dsl 3.0.2 移行 |
+| **1.4.11** | 2026-04-21 | DSL バックエンド nested paren 乗算バグ修正（`(10-2)*(7-3)` 全 6 バックエンドパリティ達成）、`JavaCodeBlockPolicy` opt-out 追加（v1.4.11）、unlaxer-common/dsl 3.0.2 移行。その後 #49/#50/#51 で 3.0.11 に更新（packrat メモ化 default 有効化・corpus fallback 3→0） |
 | 1.4.10 | 2026-02-26 | P4TypedAstEvaluator を PRIMARY 昇格（ADR-001）、DAP デフォルト実行モードを `ast-evaluator` に変更、unlaxer-common 2.8.0 移行 |
 | 1.4.9 | 2026-02-25 | 文字列スライス（最後の機能ギャップ）、全 6 バックエンドフルパリティ達成、FormulaInfo LSP Phase 2、インクリメンタルパースキャッシュ LSP 統合 |
 | 1.4.8 | 2026-02-24 | `MethodInvocation` + `External` 呼び出しを `P4TypedAstEvaluator` でネイティブサポート（フォールバック排除）、バックエンドカバレッジマトリクス追加 |
