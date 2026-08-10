@@ -1024,7 +1024,13 @@ public final class P4PreferredAstMapper {
     // @scopeTree/@declares/@backref grammar because memoization excludes TransactionListener-bearing
     // sub-trees (scope effects are never skipped).
     if (memoizeEnabled()) {
-      context.enableMemoize();
+      try {
+        context.enableMemoize();
+      } catch (NoSuchMethodError _e) {
+        // unlaxer-common の版が enableMemoize() を持たない（Central の 3.0.11 が
+        // 旧版のまま publish されている等）。memoize は性能最適化で必須ではない —
+        // 深くネストした式で遅くなるが、機能はする。issue #67 参照。
+      }
     }
     if (deadlineNanos > 0L) {
       registerDeadlineListener(context, deadlineNanos);
