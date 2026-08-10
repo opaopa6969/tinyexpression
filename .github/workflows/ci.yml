@@ -20,6 +20,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+          server-id: github-unlaxer
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
       - name: Smoke — root (P4 typed AST + parity matrix)
         run: mvn -B -P p4-smoke test -Dgpg.skip=true
@@ -49,6 +52,9 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+          server-id: github-unlaxer
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
       # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
       # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
