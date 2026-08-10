@@ -275,6 +275,19 @@
 		</profile>
 	</profiles>
 
+	<repositories>
+		<!-- GitHub Packages: unlaxer-common 3.0.x は opaopa6969/unlaxer-parser
+		     registry に publish されており、Maven Central の 3.0.11 は
+		     enableMemoize() 追加前の旧版。GitHub Packages を先に見て最新版を
+		     解決する（issue #67）。 -->
+		<repository>
+			<id>github-unlaxer</id>
+			<url>https://maven.pkg.github.com/opaopa6969/unlaxer-parser</url>
+			<releases><enabled>true</enabled></releases>
+			<snapshots><enabled>false</enabled></snapshots>
+		</repository>
+	</repositories>
+
 	<distributionManagement>
 		<snapshotRepository>
 			<id>ossrh</id>
