@@ -17,6 +17,8 @@ if [ -z "${JAVA_HOME:-}" ]; then
 fi
 
 exec "$JAVA_HOME/bin/java" \
+  -Xmx512m \
+  -XX:+ExitOnOutOfMemoryError \
   --add-opens=java.base/java.util=ALL-UNNAMED \
   --add-opens=java.base/java.lang=ALL-UNNAMED \
   -cp "target/classes:$(find /home/opa/.m2/repository/org/unlaxer -name '*.jar' ! -name '*sources*' ! -name '*javadoc*' 2>/dev/null | tr '\n' ':')$(find /home/opa/.m2/repository/com/fasterxml/jackson -name '*.jar' ! -name '*sources*' ! -name '*javadoc*' 2>/dev/null | tr '\n' ':')$(find /home/opa/.m2/repository/org/jetbrains -name 'annotations*.jar' ! -name '*sources*' 2>/dev/null | tr '\n' ':')$(find /home/opa/.m2/repository/net/arnx -name '*.jar' ! -name '*sources*' 2>/dev/null | tr '\n' ':')" \
