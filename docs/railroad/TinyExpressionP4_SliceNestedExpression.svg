@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="965" height="358">
+<svg xmlns="http://www.w3.org/2000/svg" width="923" height="358">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,343 +14,343 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">SliceNestedExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="781534635">
-<g id="1880115448">
-<g id="443816028">
+<g id="1341334805">
+<g id="758543269">
+<g id="1916063519">
 <rect x="56" y="44" width="153" height="28" class="nonterminal-box"/>
 <text x="132" y="62" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
 <line x1="209" y1="58" x2="229" y2="58" class="rail"/>
 <polygon points="216,55 222,58 216,61" class="arrow"/>
-<g id="1592979913">
+<g id="831393860">
 <rect x="229" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="249" y="62" text-anchor="middle" class="terminal-text">'['</text>
 </g>
 <line x1="270" y1="58" x2="290" y2="58" class="rail"/>
 <polygon points="277,55 283,58 277,61" class="arrow"/>
-<g id="555726412">
-<rect x="290" y="44" width="132" height="28" class="nonterminal-box"/>
-<text x="356" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<g id="385619649">
+<rect x="290" y="44" width="125" height="28" class="nonterminal-box"/>
+<text x="352" y="62" text-anchor="middle" class="nonterminal-text">SliceStartIndex</text>
 </g>
-<line x1="422" y1="58" x2="442" y2="58" class="rail"/>
-<polygon points="429,55 435,58 429,61" class="arrow"/>
-<g id="125716372">
-<rect x="442" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="462" y="62" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="415" y1="58" x2="435" y2="58" class="rail"/>
+<polygon points="422,55 428,58 422,61" class="arrow"/>
+<g id="1506836582">
+<rect x="435" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="455" y="62" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="483" y1="58" x2="503" y2="58" class="rail"/>
-<polygon points="490,55 496,58 490,61" class="arrow"/>
-<g id="1039272415">
-<rect x="503" y="44" width="132" height="28" class="nonterminal-box"/>
-<text x="569" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="476" y1="58" x2="496" y2="58" class="rail"/>
+<polygon points="483,55 489,58 483,61" class="arrow"/>
+<g id="222883956">
+<rect x="496" y="44" width="111" height="28" class="nonterminal-box"/>
+<text x="551" y="62" text-anchor="middle" class="nonterminal-text">SliceEndIndex</text>
 </g>
-<line x1="635" y1="58" x2="655" y2="58" class="rail"/>
-<polygon points="642,55 648,58 642,61" class="arrow"/>
-<g id="1959250705">
-<rect x="655" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="675" y="62" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="607" y1="58" x2="627" y2="58" class="rail"/>
+<polygon points="614,55 620,58 614,61" class="arrow"/>
+<g id="1275452841">
+<rect x="627" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="647" y="62" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="696" y1="58" x2="716" y2="58" class="rail"/>
-<polygon points="703,55 709,58 703,61" class="arrow"/>
-<g id="683064851">
-<rect x="716" y="44" width="132" height="28" class="nonterminal-box"/>
-<text x="782" y="62" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="668" y1="58" x2="688" y2="58" class="rail"/>
+<polygon points="675,55 681,58 675,61" class="arrow"/>
+<g id="976851190">
+<rect x="688" y="44" width="118" height="28" class="nonterminal-box"/>
+<text x="747" y="62" text-anchor="middle" class="nonterminal-text">SliceStepIndex</text>
 </g>
-<line x1="848" y1="58" x2="868" y2="58" class="rail"/>
-<polygon points="855,55 861,58 855,61" class="arrow"/>
-<g id="1560350326">
-<rect x="868" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="888" y="62" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="806" y1="58" x2="826" y2="58" class="rail"/>
+<polygon points="813,55 819,58 813,61" class="arrow"/>
+<g id="1731716199">
+<rect x="826" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="846" y="62" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
 <line x1="56" y1="58" x2="56" y2="58" class="rail"/>
-<line x1="909" y1="58" x2="909" y2="58" class="rail"/>
+<line x1="867" y1="58" x2="867" y2="58" class="rail"/>
 <line x1="40" y1="58" x2="56" y2="58" class="rail"/>
-<line x1="909" y1="58" x2="925" y2="58" class="rail"/>
-<g id="2098676375">
-<g id="986024616">
-<rect x="162" y="82" width="153" height="28" class="nonterminal-box"/>
-<text x="238" y="100" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<line x1="867" y1="58" x2="883" y2="58" class="rail"/>
+<g id="1858728636">
+<g id="1329339199">
+<rect x="155" y="82" width="153" height="28" class="nonterminal-box"/>
+<text x="231" y="100" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="315" y1="96" x2="335" y2="96" class="rail"/>
-<polygon points="322,93 328,96 322,99" class="arrow"/>
-<g id="664731077">
-<rect x="335" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="355" y="100" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="308" y1="96" x2="328" y2="96" class="rail"/>
+<polygon points="315,93 321,96 315,99" class="arrow"/>
+<g id="972327950">
+<rect x="328" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="348" y="100" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="376" y1="96" x2="396" y2="96" class="rail"/>
-<polygon points="383,93 389,96 383,99" class="arrow"/>
-<g id="1924736510">
-<rect x="396" y="82" width="132" height="28" class="nonterminal-box"/>
-<text x="462" y="100" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="369" y1="96" x2="389" y2="96" class="rail"/>
+<polygon points="376,93 382,96 376,99" class="arrow"/>
+<g id="1631077259">
+<rect x="389" y="82" width="125" height="28" class="nonterminal-box"/>
+<text x="451" y="100" text-anchor="middle" class="nonterminal-text">SliceStartIndex</text>
 </g>
-<line x1="528" y1="96" x2="548" y2="96" class="rail"/>
-<polygon points="535,93 541,96 535,99" class="arrow"/>
-<g id="10282201">
-<rect x="548" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="568" y="100" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="514" y1="96" x2="534" y2="96" class="rail"/>
+<polygon points="521,93 527,96 521,99" class="arrow"/>
+<g id="2139991890">
+<rect x="534" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="554" y="100" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="589" y1="96" x2="609" y2="96" class="rail"/>
-<polygon points="596,93 602,96 596,99" class="arrow"/>
-<g id="379236008">
-<rect x="609" y="82" width="132" height="28" class="nonterminal-box"/>
-<text x="675" y="100" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="575" y1="96" x2="595" y2="96" class="rail"/>
+<polygon points="582,93 588,96 582,99" class="arrow"/>
+<g id="1355265663">
+<rect x="595" y="82" width="111" height="28" class="nonterminal-box"/>
+<text x="650" y="100" text-anchor="middle" class="nonterminal-text">SliceEndIndex</text>
 </g>
-<line x1="741" y1="96" x2="761" y2="96" class="rail"/>
-<polygon points="748,93 754,96 748,99" class="arrow"/>
-<g id="1186597227">
-<rect x="761" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="781" y="100" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="706" y1="96" x2="726" y2="96" class="rail"/>
+<polygon points="713,93 719,96 713,99" class="arrow"/>
+<g id="1305400469">
+<rect x="726" y="82" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="746" y="100" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="96" x2="162" y2="96" class="rail"/>
-<line x1="802" y1="96" x2="909" y2="96" class="rail"/>
+<line x1="56" y1="96" x2="155" y2="96" class="rail"/>
+<line x1="767" y1="96" x2="867" y2="96" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
-<path d="M909,96 Q917,96 917,88" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="1266289973">
-<g id="449502144">
-<rect x="132" y="120" width="153" height="28" class="nonterminal-box"/>
-<text x="208" y="138" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,96 Q875,96 875,88" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="1692436323">
+<g id="2091656968">
+<rect x="121" y="120" width="153" height="28" class="nonterminal-box"/>
+<text x="197" y="138" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="285" y1="134" x2="305" y2="134" class="rail"/>
-<polygon points="292,131 298,134 292,137" class="arrow"/>
-<g id="1508301279">
-<rect x="305" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="325" y="138" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="274" y1="134" x2="294" y2="134" class="rail"/>
+<polygon points="281,131 287,134 281,137" class="arrow"/>
+<g id="297079468">
+<rect x="294" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="314" y="138" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="346" y1="134" x2="366" y2="134" class="rail"/>
-<polygon points="353,131 359,134 353,137" class="arrow"/>
-<g id="1333879513">
-<rect x="366" y="120" width="132" height="28" class="nonterminal-box"/>
-<text x="432" y="138" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="335" y1="134" x2="355" y2="134" class="rail"/>
+<polygon points="342,131 348,134 342,137" class="arrow"/>
+<g id="711198323">
+<rect x="355" y="120" width="125" height="28" class="nonterminal-box"/>
+<text x="417" y="138" text-anchor="middle" class="nonterminal-text">SliceStartIndex</text>
 </g>
-<line x1="498" y1="134" x2="518" y2="134" class="rail"/>
-<polygon points="505,131 511,134 505,137" class="arrow"/>
-<g id="138777156">
-<rect x="518" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="538" y="138" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="480" y1="134" x2="500" y2="134" class="rail"/>
+<polygon points="487,131 493,134 487,137" class="arrow"/>
+<g id="194600337">
+<rect x="500" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="520" y="138" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="559" y1="134" x2="579" y2="134" class="rail"/>
-<polygon points="566,131 572,134 566,137" class="arrow"/>
-<g id="1142770775">
-<rect x="579" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="599" y="138" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="541" y1="134" x2="561" y2="134" class="rail"/>
+<polygon points="548,131 554,134 548,137" class="arrow"/>
+<g id="370192269">
+<rect x="561" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="581" y="138" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="620" y1="134" x2="640" y2="134" class="rail"/>
-<polygon points="627,131 633,134 627,137" class="arrow"/>
-<g id="735730986">
-<rect x="640" y="120" width="132" height="28" class="nonterminal-box"/>
-<text x="706" y="138" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="602" y1="134" x2="622" y2="134" class="rail"/>
+<polygon points="609,131 615,134 609,137" class="arrow"/>
+<g id="797573009">
+<rect x="622" y="120" width="118" height="28" class="nonterminal-box"/>
+<text x="681" y="138" text-anchor="middle" class="nonterminal-text">SliceStepIndex</text>
 </g>
-<line x1="772" y1="134" x2="792" y2="134" class="rail"/>
-<polygon points="779,131 785,134 779,137" class="arrow"/>
-<g id="1862886690">
-<rect x="792" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="812" y="138" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="740" y1="134" x2="760" y2="134" class="rail"/>
+<polygon points="747,131 753,134 747,137" class="arrow"/>
+<g id="626271117">
+<rect x="760" y="120" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="780" y="138" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="134" x2="132" y2="134" class="rail"/>
-<line x1="833" y1="134" x2="909" y2="134" class="rail"/>
+<line x1="56" y1="134" x2="121" y2="134" class="rail"/>
+<line x1="801" y1="134" x2="867" y2="134" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
-<path d="M909,134 Q917,134 917,126" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="194748833">
-<g id="1697357817">
-<rect x="238" y="158" width="153" height="28" class="nonterminal-box"/>
-<text x="314" y="176" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,134 Q875,134 875,126" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="1002482672">
+<g id="1998532789">
+<rect x="221" y="158" width="153" height="28" class="nonterminal-box"/>
+<text x="297" y="176" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="391" y1="172" x2="411" y2="172" class="rail"/>
-<polygon points="398,169 404,172 398,175" class="arrow"/>
-<g id="484556155">
-<rect x="411" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="431" y="176" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="374" y1="172" x2="394" y2="172" class="rail"/>
+<polygon points="381,169 387,172 381,175" class="arrow"/>
+<g id="394935472">
+<rect x="394" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="414" y="176" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="452" y1="172" x2="472" y2="172" class="rail"/>
-<polygon points="459,169 465,172 459,175" class="arrow"/>
-<g id="954592176">
-<rect x="472" y="158" width="132" height="28" class="nonterminal-box"/>
-<text x="538" y="176" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="435" y1="172" x2="455" y2="172" class="rail"/>
+<polygon points="442,169 448,172 442,175" class="arrow"/>
+<g id="323366279">
+<rect x="455" y="158" width="125" height="28" class="nonterminal-box"/>
+<text x="517" y="176" text-anchor="middle" class="nonterminal-text">SliceStartIndex</text>
 </g>
-<line x1="604" y1="172" x2="624" y2="172" class="rail"/>
-<polygon points="611,169 617,172 611,175" class="arrow"/>
-<g id="602757692">
-<rect x="624" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="644" y="176" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="580" y1="172" x2="600" y2="172" class="rail"/>
+<polygon points="587,169 593,172 587,175" class="arrow"/>
+<g id="1937599251">
+<rect x="600" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="620" y="176" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="665" y1="172" x2="685" y2="172" class="rail"/>
-<polygon points="672,169 678,172 672,175" class="arrow"/>
-<g id="444653039">
-<rect x="685" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="705" y="176" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="641" y1="172" x2="661" y2="172" class="rail"/>
+<polygon points="648,169 654,172 648,175" class="arrow"/>
+<g id="2104063825">
+<rect x="661" y="158" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="681" y="176" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="172" x2="238" y2="172" class="rail"/>
-<line x1="726" y1="172" x2="909" y2="172" class="rail"/>
+<line x1="56" y1="172" x2="221" y2="172" class="rail"/>
+<line x1="702" y1="172" x2="867" y2="172" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
-<path d="M909,172 Q917,172 917,164" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="762114897">
-<g id="473195273">
-<rect x="132" y="196" width="153" height="28" class="nonterminal-box"/>
-<text x="208" y="214" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,172 Q875,172 875,164" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="1280803282">
+<g id="432571162">
+<rect x="128" y="196" width="153" height="28" class="nonterminal-box"/>
+<text x="204" y="214" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="285" y1="210" x2="305" y2="210" class="rail"/>
-<polygon points="292,207 298,210 292,213" class="arrow"/>
-<g id="1430386185">
-<rect x="305" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="325" y="214" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="281" y1="210" x2="301" y2="210" class="rail"/>
+<polygon points="288,207 294,210 288,213" class="arrow"/>
+<g id="32851651">
+<rect x="301" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="321" y="214" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="346" y1="210" x2="366" y2="210" class="rail"/>
-<polygon points="353,207 359,210 353,213" class="arrow"/>
-<g id="1236412139">
-<rect x="366" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="386" y="214" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="342" y1="210" x2="362" y2="210" class="rail"/>
+<polygon points="349,207 355,210 349,213" class="arrow"/>
+<g id="923826771">
+<rect x="362" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="382" y="214" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="407" y1="210" x2="427" y2="210" class="rail"/>
-<polygon points="414,207 420,210 414,213" class="arrow"/>
-<g id="527569109">
-<rect x="427" y="196" width="132" height="28" class="nonterminal-box"/>
-<text x="493" y="214" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="403" y1="210" x2="423" y2="210" class="rail"/>
+<polygon points="410,207 416,210 410,213" class="arrow"/>
+<g id="154261610">
+<rect x="423" y="196" width="111" height="28" class="nonterminal-box"/>
+<text x="478" y="214" text-anchor="middle" class="nonterminal-text">SliceEndIndex</text>
 </g>
-<line x1="559" y1="210" x2="579" y2="210" class="rail"/>
-<polygon points="566,207 572,210 566,213" class="arrow"/>
-<g id="543233049">
-<rect x="579" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="599" y="214" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="534" y1="210" x2="554" y2="210" class="rail"/>
+<polygon points="541,207 547,210 541,213" class="arrow"/>
+<g id="1413241349">
+<rect x="554" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="574" y="214" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="620" y1="210" x2="640" y2="210" class="rail"/>
-<polygon points="627,207 633,210 627,213" class="arrow"/>
-<g id="2051694498">
-<rect x="640" y="196" width="132" height="28" class="nonterminal-box"/>
-<text x="706" y="214" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="595" y1="210" x2="615" y2="210" class="rail"/>
+<polygon points="602,207 608,210 602,213" class="arrow"/>
+<g id="2144656671">
+<rect x="615" y="196" width="118" height="28" class="nonterminal-box"/>
+<text x="674" y="214" text-anchor="middle" class="nonterminal-text">SliceStepIndex</text>
 </g>
-<line x1="772" y1="210" x2="792" y2="210" class="rail"/>
-<polygon points="779,207 785,210 779,213" class="arrow"/>
-<g id="571980670">
-<rect x="792" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="812" y="214" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="733" y1="210" x2="753" y2="210" class="rail"/>
+<polygon points="740,207 746,210 740,213" class="arrow"/>
+<g id="1260577364">
+<rect x="753" y="196" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="773" y="214" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="210" x2="132" y2="210" class="rail"/>
-<line x1="833" y1="210" x2="909" y2="210" class="rail"/>
+<line x1="56" y1="210" x2="128" y2="210" class="rail"/>
+<line x1="794" y1="210" x2="867" y2="210" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
-<path d="M909,210 Q917,210 917,202" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="805257874">
-<g id="92666681">
-<rect x="238" y="234" width="153" height="28" class="nonterminal-box"/>
-<text x="314" y="252" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,210 Q875,210 875,202" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="2114632556">
+<g id="2056066607">
+<rect x="228" y="234" width="153" height="28" class="nonterminal-box"/>
+<text x="304" y="252" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="391" y1="248" x2="411" y2="248" class="rail"/>
-<polygon points="398,245 404,248 398,251" class="arrow"/>
-<g id="765072228">
-<rect x="411" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="431" y="252" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="381" y1="248" x2="401" y2="248" class="rail"/>
+<polygon points="388,245 394,248 388,251" class="arrow"/>
+<g id="602406980">
+<rect x="401" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="421" y="252" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="452" y1="248" x2="472" y2="248" class="rail"/>
-<polygon points="459,245 465,248 459,251" class="arrow"/>
-<g id="852070882">
-<rect x="472" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="492" y="252" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="442" y1="248" x2="462" y2="248" class="rail"/>
+<polygon points="449,245 455,248 449,251" class="arrow"/>
+<g id="2130998831">
+<rect x="462" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="482" y="252" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="513" y1="248" x2="533" y2="248" class="rail"/>
-<polygon points="520,245 526,248 520,251" class="arrow"/>
-<g id="2029324945">
-<rect x="533" y="234" width="132" height="28" class="nonterminal-box"/>
-<text x="599" y="252" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="503" y1="248" x2="523" y2="248" class="rail"/>
+<polygon points="510,245 516,248 510,251" class="arrow"/>
+<g id="263004428">
+<rect x="523" y="234" width="111" height="28" class="nonterminal-box"/>
+<text x="578" y="252" text-anchor="middle" class="nonterminal-text">SliceEndIndex</text>
 </g>
-<line x1="665" y1="248" x2="685" y2="248" class="rail"/>
-<polygon points="672,245 678,248 672,251" class="arrow"/>
-<g id="1375955589">
-<rect x="685" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="705" y="252" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="634" y1="248" x2="654" y2="248" class="rail"/>
+<polygon points="641,245 647,248 641,251" class="arrow"/>
+<g id="495153848">
+<rect x="654" y="234" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="674" y="252" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="248" x2="238" y2="248" class="rail"/>
-<line x1="726" y1="248" x2="909" y2="248" class="rail"/>
+<line x1="56" y1="248" x2="228" y2="248" class="rail"/>
+<line x1="695" y1="248" x2="867" y2="248" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
-<path d="M909,248 Q917,248 917,240" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="1228145336">
-<g id="1363640334">
-<rect x="208" y="272" width="153" height="28" class="nonterminal-box"/>
-<text x="284" y="290" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,248 Q875,248 875,240" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="1352178841">
+<g id="576917388">
+<rect x="194" y="272" width="153" height="28" class="nonterminal-box"/>
+<text x="270" y="290" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="361" y1="286" x2="381" y2="286" class="rail"/>
-<polygon points="368,283 374,286 368,289" class="arrow"/>
-<g id="20363573">
-<rect x="381" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="401" y="290" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="347" y1="286" x2="367" y2="286" class="rail"/>
+<polygon points="354,283 360,286 354,289" class="arrow"/>
+<g id="1151401869">
+<rect x="367" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="387" y="290" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="422" y1="286" x2="442" y2="286" class="rail"/>
-<polygon points="429,283 435,286 429,289" class="arrow"/>
-<g id="1219013844">
-<rect x="442" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="462" y="290" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="408" y1="286" x2="428" y2="286" class="rail"/>
+<polygon points="415,283 421,286 415,289" class="arrow"/>
+<g id="1118847763">
+<rect x="428" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="448" y="290" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="483" y1="286" x2="503" y2="286" class="rail"/>
-<polygon points="490,283 496,286 490,289" class="arrow"/>
-<g id="496405633">
-<rect x="503" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="523" y="290" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="469" y1="286" x2="489" y2="286" class="rail"/>
+<polygon points="476,283 482,286 476,289" class="arrow"/>
+<g id="1766478322">
+<rect x="489" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="509" y="290" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="544" y1="286" x2="564" y2="286" class="rail"/>
-<polygon points="551,283 557,286 551,289" class="arrow"/>
-<g id="1882994893">
-<rect x="564" y="272" width="132" height="28" class="nonterminal-box"/>
-<text x="630" y="290" text-anchor="middle" class="nonterminal-text">NumberExpression</text>
+<line x1="530" y1="286" x2="550" y2="286" class="rail"/>
+<polygon points="537,283 543,286 537,289" class="arrow"/>
+<g id="1408187448">
+<rect x="550" y="272" width="118" height="28" class="nonterminal-box"/>
+<text x="609" y="290" text-anchor="middle" class="nonterminal-text">SliceStepIndex</text>
 </g>
-<line x1="696" y1="286" x2="716" y2="286" class="rail"/>
-<polygon points="703,283 709,286 703,289" class="arrow"/>
-<g id="1148700910">
-<rect x="716" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="736" y="290" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="668" y1="286" x2="688" y2="286" class="rail"/>
+<polygon points="675,283 681,286 675,289" class="arrow"/>
+<g id="275840351">
+<rect x="688" y="272" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="708" y="290" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="286" x2="208" y2="286" class="rail"/>
-<line x1="757" y1="286" x2="909" y2="286" class="rail"/>
+<line x1="56" y1="286" x2="194" y2="286" class="rail"/>
+<line x1="729" y1="286" x2="867" y2="286" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
-<path d="M909,286 Q917,286 917,278" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
-<g id="2032014608">
-<g id="1617915291">
-<rect x="314" y="310" width="153" height="28" class="nonterminal-box"/>
-<text x="390" y="328" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
+<path d="M867,286 Q875,286 875,278" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
+<g id="495679952">
+<g id="1810268857">
+<rect x="293" y="310" width="153" height="28" class="nonterminal-box"/>
+<text x="369" y="328" text-anchor="middle" class="nonterminal-text">SliceBaseExpression</text>
 </g>
-<line x1="467" y1="324" x2="487" y2="324" class="rail"/>
-<polygon points="474,321 480,324 474,327" class="arrow"/>
-<g id="1904528139">
-<rect x="487" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="507" y="328" text-anchor="middle" class="terminal-text">'['</text>
+<line x1="446" y1="324" x2="466" y2="324" class="rail"/>
+<polygon points="453,321 459,324 453,327" class="arrow"/>
+<g id="1103265025">
+<rect x="466" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="486" y="328" text-anchor="middle" class="terminal-text">'['</text>
 </g>
-<line x1="528" y1="324" x2="548" y2="324" class="rail"/>
-<polygon points="535,321 541,324 535,327" class="arrow"/>
-<g id="189681005">
-<rect x="548" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="568" y="328" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="507" y1="324" x2="527" y2="324" class="rail"/>
+<polygon points="514,321 520,324 514,327" class="arrow"/>
+<g id="1448077923">
+<rect x="527" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="547" y="328" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="589" y1="324" x2="609" y2="324" class="rail"/>
-<polygon points="596,321 602,324 596,327" class="arrow"/>
-<g id="1644609406">
-<rect x="609" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="629" y="328" text-anchor="middle" class="terminal-text">']'</text>
+<line x1="568" y1="324" x2="588" y2="324" class="rail"/>
+<polygon points="575,321 581,324 575,327" class="arrow"/>
+<g id="1109903463">
+<rect x="588" y="310" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="608" y="328" text-anchor="middle" class="terminal-text">']'</text>
 </g>
 </g>
-<line x1="56" y1="324" x2="314" y2="324" class="rail"/>
-<line x1="650" y1="324" x2="909" y2="324" class="rail"/>
+<line x1="56" y1="324" x2="293" y2="324" class="rail"/>
+<line x1="629" y1="324" x2="867" y2="324" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
-<path d="M909,324 Q917,324 917,316" class="rail" fill="none"/>
-<path d="M917,66 Q917,58 925,58" class="rail" fill="none"/>
+<path d="M867,324 Q875,324 875,316" class="rail" fill="none"/>
+<path d="M875,66 Q875,58 883,58" class="rail" fill="none"/>
 </g>
-<line x1="925" y1="58" x2="933" y2="58" class="rail"/>
-<circle cx="939" cy="58" r="6" class="end-circle-outer"/>
-<circle cx="939" cy="58" r="3" class="end-circle-inner"/>
+<line x1="883" y1="58" x2="891" y2="58" class="rail"/>
+<circle cx="897" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="897" cy="58" r="3" class="end-circle-inner"/>
 </svg>
