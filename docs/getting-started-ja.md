@@ -20,7 +20,7 @@ TinyExpression v1.4.11 を Java プロジェクトに組み込む手順を説明
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyexpression</artifactId>
+  <artifactId>tinyExpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```
