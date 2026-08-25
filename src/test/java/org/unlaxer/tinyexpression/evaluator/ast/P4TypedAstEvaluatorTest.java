@@ -240,7 +240,8 @@ public class P4TypedAstEvaluatorTest {
     CalculationContext context = newContext();
     context.setObject("payload", "ctx-object");
     String formula = "$payload";
-    VariableRefExpr mapped = (VariableRefExpr) TinyExpressionP4Mapper.parse(formula, "VariableRefExpr");
+    VariableRefExpr mapped = (VariableRefExpr) P4PreferredAstMapper.parseByAstSimpleName(
+        formula, "VariableRefExpr");
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
         context,

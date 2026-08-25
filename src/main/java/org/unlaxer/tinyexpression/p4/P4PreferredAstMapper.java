@@ -292,14 +292,23 @@ public final class P4PreferredAstMapper {
     String normalized = normalizeForPreferredParsing(formula);
     List<String> structuredPreferred = preferredAstSimpleNames(normalized, preferredResultType);
     if (!structuredPreferred.isEmpty()) {
-      return structuredPreferred;
+      ArrayList<String> rooted = new ArrayList<>();
+      addIfAbsent(rooted, "FormulaExpr");
+      for (String candidate : structuredPreferred) {
+        addIfAbsent(rooted, candidate);
+      }
+      return List.copyOf(rooted);
     }
 
     ArrayList<String> names = new ArrayList<>();
+    addIfAbsent(names, "FormulaExpr");
     boolean methodInvocationHead = hasMethodInvocationHead(normalized);
+    boolean externalInvocationHead = hasExternalInvocationHead(normalized);
     boolean ifHead = hasIfHead(normalized);
     boolean matchHead = hasMatchHead(normalized);
-    if (methodInvocationHead) {
+    if (externalInvocationHead) {
+      addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
+    } else if (methodInvocationHead) {
       addIfAbsent(names, "MethodInvocationExpr");
     }
     if (ifHead) {
@@ -353,6 +362,7 @@ public final class P4PreferredAstMapper {
     }
 
     addIfAbsent(names, "MethodInvocationExpr");
+    addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
     addIfAbsent(names, "VariableRefExpr");
     if (profile == CandidateProfile.GENERATED_VALUE) {
       addIfAbsent(names, "IfExpr");
@@ -379,6 +389,29 @@ public final class P4PreferredAstMapper {
       }
     }
     return false;
+  }
+
+  private static boolean hasExternalInvocationHead(String normalized) {
+    return TinyExpressionParserCapabilities.hasHead(normalized, "external", null);
+  }
+
+  private static String externalInvocationAstSimpleName(ExpressionType resultType) {
+    if (resultType == null) {
+      return null;
+    }
+    if (resultType.isBoolean()) {
+      return "ExternalBooleanInvocationExpr";
+    }
+    if (resultType.isNumber()) {
+      return "ExternalNumberInvocationExpr";
+    }
+    if (resultType.isString()) {
+      return "ExternalStringInvocationExpr";
+    }
+    if (resultType.isObject()) {
+      return "ExternalObjectInvocationExpr";
+    }
+    return null;
   }
 
   private static String functionAstSimpleName(String normalized) {

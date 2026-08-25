@@ -43,7 +43,8 @@ public class P4AstEvaluatorCalculator implements Calculator {
 
   public P4AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
-    this.delegate = new AstEvaluatorCalculator(source, className, specifiedExpressionTypes, classLoader);
+    this.delegate = new AstEvaluatorCalculator(
+        source, className, specifiedExpressionTypes, classLoader, true);
     initP4Markers(source.source(), specifiedExpressionTypes);
   }
 
@@ -51,7 +52,7 @@ public class P4AstEvaluatorCalculator implements Calculator {
       SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     this.delegate = new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
-        byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
+        byteCode, byteCodeHash, classNameAndByteCodeList, classLoader, true);
     initP4Markers(source.source(), specifiedExpressionTypes);
   }
 

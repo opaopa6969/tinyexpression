@@ -260,6 +260,25 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
     path.add(node.getClass().getSimpleName());
     // Recurse into meaningful child nodes (type-safe, no reflection)
     switch (node) {
+      case TinyExpressionP4AST.FormulaExpr f -> {
+        collectAstTypeNames(f.expression(), path, depth + 1, maxDepth);
+      }
+      case TinyExpressionP4AST.NumberVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.StringVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.BooleanVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.ObjectVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.ArgumentsExpr a -> {
+        a.values().stream().limit(1)
+            .forEach(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
       case TinyExpressionP4AST.BinaryExpr b -> {
         collectAstTypeNames(b.left(), path, depth + 1, maxDepth);
         b.right().stream().limit(1)

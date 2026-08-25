@@ -71,9 +71,16 @@ public class AstEvaluatorCalculator implements Calculator {
   private volatile Optional<Calculator> dependsOnBy = Optional.empty();
 
   private final boolean generatedAstRuntimeAvailable;
+  private final boolean generatedOnly;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
+    this(source, className, specifiedExpressionTypes, classLoader, false);
+  }
+
+  public AstEvaluatorCalculator(Source source, String className,
+      SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader,
+      boolean generatedOnly) {
     this.source = source;
     this.className = className;
     this.specifiedExpressionTypes = specifiedExpressionTypes;
@@ -84,12 +91,21 @@ public class AstEvaluatorCalculator implements Calculator {
     this.classNameAndByteCodeListFromStore = List.of();
     this.createdFromByteCode = false;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
+    this.generatedOnly = generatedOnly;
     validateFormulaParseable(source);
   }
 
   public AstEvaluatorCalculator(Source source, String javaCode, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
+    this(source, javaCode, className, specifiedExpressionTypes, byteCode, byteCodeHash,
+        classNameAndByteCodeList, classLoader, false);
+  }
+
+  public AstEvaluatorCalculator(Source source, String javaCode, String className,
+      SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
+      List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader,
+      boolean generatedOnly) {
     this.source = source;
     this.className = className;
     this.specifiedExpressionTypes = specifiedExpressionTypes;
@@ -101,6 +117,7 @@ public class AstEvaluatorCalculator implements Calculator {
         ? List.of() : List.copyOf(classNameAndByteCodeList);
     this.createdFromByteCode = true;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
+    this.generatedOnly = generatedOnly;
   }
 
   public boolean generatedAstRuntimeAvailable() {
@@ -227,9 +244,6 @@ public class AstEvaluatorCalculator implements Calculator {
     if (rootSemanticViolation.isPresent()) {
       setObject("_p4FallbackFormula", formulaText);
       setObject("_p4FallbackReason", rootSemanticViolation.get().message());
-    } else if (hasDeclarations && !hasMixedDeclarationsAndInvocations) {
-      setObject("_p4FallbackFormula", formulaText);
-      setObject("_p4FallbackReason", "declaration-aware fallback: generated P4 AST has no declaration root");
     }
 
     // =========================================================================
@@ -242,8 +256,7 @@ public class AstEvaluatorCalculator implements Calculator {
     Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable
         && !syntheticInvocationFormula
-        && rootSemanticViolation.isEmpty()
-        && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
+        && rootSemanticViolation.isEmpty()) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
@@ -297,6 +310,10 @@ public class AstEvaluatorCalculator implements Calculator {
           }
         }
 
+        if (generatedOnly) {
+          continue;
+        }
+
         // =======================================================================
         // SAFETY NET: Reflection-based fallback (GeneratedP4ValueAstEvaluator)
         // This path should no longer be needed. Log a warning if reached.
@@ -304,6 +321,9 @@ public class AstEvaluatorCalculator implements Calculator {
         LOGGER.warning("[AstEvaluatorCalculator] P4-typed path did not handle formula, "
             + "falling back to reflection-based evaluator. formula=" + formulaText
             + " reason=" + objectByKey.getOrDefault("_p4FallbackReason", "unknown"));
+        if (generatedOnly) {
+          throw generatedOnlyFailure(formulaText);
+        }
         GeneratedP4ValueAstEvaluator.resetEmbeddedBridgeUsageFlag();
         Optional<Object> generatedAstEvaluated = GeneratedP4ValueAstEvaluator.tryEvaluate(
             mapped.get(), specifiedExpressionTypes, calculationContext, classLoader, source.source());
@@ -391,6 +411,10 @@ public class AstEvaluatorCalculator implements Calculator {
       }
     }
 
+    if (generatedOnly) {
+      throw generatedOnlyFailure(formulaText);
+    }
+
     // =========================================================================
     // SAFETY NET: Legacy fallback chain
     // None of the paths below should be reached in normal operation.
@@ -474,6 +498,13 @@ public class AstEvaluatorCalculator implements Calculator {
 
     throw new UnsupportedOperationException(
         "AST evaluator cannot evaluate formula (no JavaCode fallback): " + formulaText);
+  }
+
+  private UnsupportedOperationException generatedOnlyFailure(String formulaText) {
+    String reason = String.valueOf(
+        objectByKey.getOrDefault("_p4FallbackReason", "no P4 AST mapping accepted the formula"));
+    return new UnsupportedOperationException(
+        "Generated-only AST backend cannot evaluate formula: " + formulaText + " (" + reason + ")");
   }
 
   private Optional<Object> tryEvaluateSimpleLiteralOrVariable(CalculationContext calculationContext) {

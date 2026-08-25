@@ -43,6 +43,13 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     return ExpressionTypes._float;
   }
 
+  @Override protected String evalFormulaExpr(FormulaExpr n) { return eval(n.expression()); }
+  @Override protected String evalNumberVariableDeclarationExpr(NumberVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalStringVariableDeclarationExpr(StringVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalArgumentsExpr(ArgumentsExpr n) { return n.values().stream().map(this::eval).collect(java.util.stream.Collectors.joining(", ")); }
+
   public String buildJavaClass(String className, String expression) {
     String ctx = "org.unlaxer.tinyexpression.CalculationContext";
     String ret = resultType.javaTypeAsString();
