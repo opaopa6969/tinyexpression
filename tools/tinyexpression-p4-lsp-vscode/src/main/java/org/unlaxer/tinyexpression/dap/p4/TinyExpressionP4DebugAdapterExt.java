@@ -296,9 +296,32 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
         collectAstTypeNames(i.condition(), path, depth + 1, maxDepth);
         collectAstTypeNames(i.thenExpr(), path, depth + 1, maxDepth);
       }
-      case TinyExpressionP4AST.ExpressionExpr e -> {}
-      case TinyExpressionP4AST.MethodInvocationExpr m -> {}
+      case TinyExpressionP4AST.ExpressionExpr e ->
+          collectAstTypeNameIfPresent(e.value(), path, depth, maxDepth);
+      case TinyExpressionP4AST.BranchExpressionExpr b ->
+          collectAstTypeNameIfPresent(b.value(), path, depth, maxDepth);
+      case TinyExpressionP4AST.TernaryExpr t -> {
+        collectAstTypeNames(t.condition(), path, depth + 1, maxDepth);
+        collectAstTypeNames(t.thenExpr(), path, depth + 1, maxDepth);
+      }
+      case TinyExpressionP4AST.MethodInvocationExpr m ->
+          m.args().ifPresent(a -> collectAstTypeNames(a, path, depth + 1, maxDepth));
+      case TinyExpressionP4AST.NumberMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.StringMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.BooleanMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.ObjectMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.MethodParametersExpr p -> p.values().stream().limit(1)
+          .forEach(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      case TinyExpressionP4AST.MethodParameterExpr p -> {}
       case TinyExpressionP4AST.VariableRefExpr v -> {}
+      case TinyExpressionP4AST.StringCastVariableRefExpr v -> {}
+      case TinyExpressionP4AST.StringTypedVariableRefExpr v -> {}
+      case TinyExpressionP4AST.QualifiedNameExpr q -> {}
+      case TinyExpressionP4AST.OnlyIfAbsentExpr o -> {}
       case TinyExpressionP4AST.NumberMatchExpr nm -> {
         collectAstTypeNames(nm.firstCase(), path, depth + 1, maxDepth);
       }
@@ -378,6 +401,13 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.InTimeRangeExpr s -> {}
       case TinyExpressionP4AST.InDayTimeRangeExpr s -> {}
       case TinyExpressionP4AST.SliceExpr s -> {}
+    }
+  }
+
+  private static void collectAstTypeNameIfPresent(Object value, List<String> path,
+      int depth, int maxDepth) {
+    if (value instanceof TinyExpressionP4AST ast) {
+      collectAstTypeNames(ast, path, depth + 1, maxDepth);
     }
   }
 
