@@ -20,7 +20,7 @@ Add the dependency to your `pom.xml`:
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyexpression</artifactId>
+  <artifactId>tinyExpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```

@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.unlaxer</groupId>
-	<artifactId>tinyexpression</artifactId>
+	<artifactId>tinyExpression</artifactId>
 	<version>1.4.11</version>
-	<name>tinyexpression</name>
+	<name>tinyExpression</name>
 	<packaging>jar</packaging>
 
 	<description>TinyExpression implemented with Unlaxer</description>
-	<url>https://bitbucket.org/opaopa6969/unlaxer/src/master/</url>
+	<url>https://github.com/opaopa6969/tinyexpression</url>
 
 	<licenses>
 		<license>
@@ -21,9 +21,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</connection>
-		<developerConnection>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</developerConnection>
-		<url>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</url>
+		<connection>scm:git:https://github.com/opaopa6969/tinyexpression.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/opaopa6969/tinyexpression.git</developerConnection>
+		<url>https://github.com/opaopa6969/tinyexpression</url>
 	</scm>
 
 	<developers>
@@ -96,18 +96,17 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
-			<!--
 			<plugin>
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>0.9.0</version>
+				<version>0.11.0</version>
 				<extensions>true</extensions>
 				<configuration>
 					<publishingServerId>central</publishingServerId>
 					<autoPublish>true</autoPublish>
+					<waitUntil>published</waitUntil>
 				</configuration>
 			</plugin>
-			-->
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>3.1.0</version>
@@ -280,27 +279,4 @@
 		</profile>
 	</profiles>
 
-	<repositories>
-		<!-- GitHub Packages: unlaxer-common 3.0.x は opaopa6969/unlaxer-parser
-		     registry に publish されており、Maven Central の 3.0.11 は
-		     enableMemoize() 追加前の旧版。GitHub Packages を先に見て最新版を
-		     解決する（issue #67）。 -->
-		<repository>
-			<id>github-unlaxer</id>
-			<url>https://maven.pkg.github.com/opaopa6969/unlaxer-parser</url>
-			<releases><enabled>true</enabled></releases>
-			<snapshots><enabled>false</enabled></snapshots>
-		</repository>
-	</repositories>
-
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
 </project>

@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>org.unlaxer</groupId>
-            <artifactId>tinyexpression</artifactId>
+            <artifactId>tinyExpression</artifactId>
             <version>1.4.11</version>
         </dependency>
         <dependency>

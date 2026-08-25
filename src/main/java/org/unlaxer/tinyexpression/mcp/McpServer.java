@@ -622,7 +622,7 @@ public class McpServer {
                     # tinyexpression MCP ガイド
 
                     ## 概要
-                    Java 組み込み式評価エンジン（org.unlaxer:tinyexpression:1.4.11）の MCP サーバ。
+                    Java 組み込み式評価エンジン（org.unlaxer:tinyExpression:1.4.11）の MCP サーバ。
                     ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。
 
                     ## tools

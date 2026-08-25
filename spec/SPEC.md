@@ -139,7 +139,7 @@ P4 スタックは `instanceof` ベースのディスパッチを使用し、コ
 | Java | 21+ |
 | Maven | 3.8+ |
 | `add-opens` | `java.base/java.lang`, `java.base/java.util` （テスト・リフレクション使用時） |
-| OSSRH | GPG 署名必須（Maven Central 公開時） |
+| Central Publisher Portal | GPG 署名必須（Maven Central 公開時） |
 
 ---
 
@@ -1644,7 +1644,7 @@ target/generated-sources/tinyexpression-p4/runtime/
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyexpression</artifactId>
+  <artifactId>tinyExpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```
@@ -1892,14 +1892,14 @@ $message[0:3]
 
 ### 12.1 Maven Central への公開
 
-TinyExpression は **Maven Central (OSSRH)** で公開される。
+TinyExpression は **Maven Central Publisher Portal** で公開される。
 
 **Maven 座標**:
 
 ```xml
 <dependency>
   <groupId>org.unlaxer</groupId>
-  <artifactId>tinyexpression</artifactId>
+  <artifactId>tinyExpression</artifactId>
   <version>1.4.11</version>
 </dependency>
 ```
@@ -1928,11 +1928,11 @@ TinyExpression は **Maven Central (OSSRH)** で公開される。
 
 ### 12.2 リリース手順
 
-- リリース詳細は `ReleaseToOSSRH.md` を参照
-- CI/CD は `bitbucket-pipelines.yml` で定義
+- リリース詳細は `ReleaseToCentral.md` を参照
+- CI/CD は `.github/workflows/` で定義
 - `mvnw` / `mvnw.cmd` のラッパースクリプトを使用
 - バージョンは `pom.xml` の `<version>` で管理
-- OSSRH 公開時は GPG 署名必須
+- Maven Central 公開時は GPG 署名必須
 
 ### 12.3 バージョン履歴
 

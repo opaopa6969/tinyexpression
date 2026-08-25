@@ -6,6 +6,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Changed
+- Restore the published Maven coordinate `org.unlaxer:tinyExpression` and migrate release publishing from the retired OSSRH service to Central Publisher Portal.
 - Adopt unlaxer-dsl/common **3.0.10** (opt-in packrat memoization, unlaxer-parser #40). Pure dependency bump — generated sources unchanged (memoization is off by default in the parser).
 
 ### Added
