@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
@@ -106,12 +106,13 @@
         "configurationAttributes": {
           "launch": {
             "required": [
-              "formulaSource"
+              "program"
             ],
             "properties": {
-              "formulaSource": {
+              "program": {
                 "type": "string",
-                "description": "The TinyExpression formula source to debug."
+                "description": "Path to the TinyExpression source file to debug.",
+                "default": "${file}"
               },
               "runtimeMode": {
                 "type": "string",
@@ -124,10 +125,28 @@
               },
               "variables": {
                 "type": "object",
-                "description": "Variable values to inject into the debug session. Keys are variable names (without $), values are strings. These appear in the Variables view and are available for evaluation in the Debug Console.",
+                "description": "Typed variable values injected into CalculationContext and used by the selected backend, parity probe, Variables view, and Debug Console.",
                 "additionalProperties": {
-                  "type": "string"
+                  "type": [
+                    "number",
+                    "boolean",
+                    "string"
+                  ]
                 }
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Pause on the first AST node before continuing.",
+                "default": true
+              },
+              "steppingMode": {
+                "type": "string",
+                "enum": [
+                  "ast",
+                  "token"
+                ],
+                "default": "ast",
+                "description": "Structural stepping model. AST mode does not silently fall back to token stepping."
               }
             }
           }
@@ -137,17 +156,21 @@
             "type": "tinyexpressionP4",
             "request": "launch",
             "name": "Debug TinyExpression P4",
-            "formulaSource": "${file}",
-            "runtimeMode": "p4-ast"
+            "program": "${file}",
+            "runtimeMode": "p4-ast",
+            "steppingMode": "ast",
+            "stopOnEntry": true
           },
           {
             "type": "tinyexpressionP4",
             "request": "launch",
             "name": "Debug TinyExpression P4 (with variables)",
-            "formulaSource": "${file}",
+            "program": "${file}",
             "runtimeMode": "p4-ast",
+            "steppingMode": "ast",
+            "stopOnEntry": true,
             "variables": {
-              "score": "42",
+              "score": 42,
               "inputName": "alice"
             }
           }

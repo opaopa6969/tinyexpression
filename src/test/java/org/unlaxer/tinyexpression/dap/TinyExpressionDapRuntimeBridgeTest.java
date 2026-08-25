@@ -50,5 +50,36 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertNotNull(token.get("parity.JAVA_CODE_LEGACY_ASTCREATOR.normalized"));
     assertNotNull(token.get("parity.AST_EVALUATOR.normalized"));
     assertNotNull(token.get("parity.DSL_JAVA_CODE.normalized"));
+    assertNotNull(token.get("parity.P4_AST_EVALUATOR.normalized"));
+    assertNotNull(token.get("parity.P4_DSL_JAVA_CODE.normalized"));
+    assertEquals(token.get("parity.equalAll"), token.get("parity.equalAllWithP4"));
+  }
+
+  @Test
+  public void testInjectedVariablesReachSelectedBackendAndAllParityBackends() {
+    Map<String, Object> variables = Map.of("score", 42);
+    String formula = "var $score as number set if not exists 0 description='score';\n$score + 8";
+
+    assertEquals("50", TinyExpressionDapRuntimeBridge.evaluateForDisplay(
+        formula, "p4-ast", variables));
+
+    Map<String, String> debug = TinyExpressionDapRuntimeBridge.debugVariables(
+        formula, "p4-ast", variables);
+    assertEquals("P4_AST_EVALUATOR", debug.get("selectedExecutionBackend"));
+    assertEquals("50", debug.get("evaluationResultNormalized"));
+    assertEquals(debug.toString(), "true", debug.get("parity.allBackendsEvaluated"));
+    assertEquals(debug.toString(), "true", debug.get("parity.equalAll"));
+    assertEquals("50", debug.get("parity.P4_AST_EVALUATOR.normalized"));
+    assertEquals("50", debug.get("parity.P4_DSL_JAVA_CODE.normalized"));
+  }
+
+  @Test
+  public void testMissingModeDefaultsToGeneratedBackendAndInvalidModeDoesNotFallback() {
+    Map<String, String> defaulted = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "");
+    assertEquals("P4_AST_EVALUATOR", defaulted.get("selectedExecutionBackend"));
+
+    Map<String, String> invalid = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "unknown");
+    assertEquals("UNSUPPORTED", invalid.get("selectedExecutionBackend"));
+    assertTrue(invalid.get("bridgeError").contains("Unsupported runtimeMode"));
   }
 }

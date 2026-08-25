@@ -4,7 +4,7 @@ Last updated: 2026-04-24
 
 ## 概要
 
-旧拡張（`calculator-lsp-vscode` VSIX 0.2.31）と新P4拡張（`tinyexpression-p4-lsp-vscode` VSIX 0.2.3）の機能差分。
+旧拡張（`calculator-lsp-vscode` VSIX 0.2.31）と P4 拡張 0.2.3 時点の機能差分を記録した履歴スナップショット。現行の DAP/packaging は 0.2.4 の README と `TINYEXPRESSION-P4-PIPELINE-GUIDE.md` を参照。
 P4拡張へ機能を移植する際の作業基準として使用する。
 
 2026-04-24 時点では、P4 側に strict `match` typing (`TE025`)、preferred-root hover、parser exact/probe 観測が追加済み。

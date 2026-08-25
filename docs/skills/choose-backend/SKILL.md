@@ -42,5 +42,6 @@ TinyExpression は 6 つの評価バックエンドを持つ。デフォルト�
 
 ## P4 文法のカバレッジ
 
-P4 バックエンドは全言語機能をカバーしていない（128 機能中 68 が PARITY）。
-未カバー構文はフォールバックパスを使用するため、`AST_EVALUATOR` よりも遅くなる可能性がある。
+P4 generated backend の未カバー構文・mapping・型・評価は明示的に失敗する。
+手書き backend が必要な場合は `JAVA_CODE` / `JAVA_CODE_LEGACY_ASTCREATOR` を明示選択し、
+generated backend からの暗黙 fallback としては使わない。

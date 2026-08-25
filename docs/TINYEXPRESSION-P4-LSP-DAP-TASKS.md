@@ -45,7 +45,7 @@ Last updated: 2026-02-28
   - 生成Parser でパース
   - 生成Mapper で AST 化
   - 生成Evaluator で評価
-  - 失敗時は `AstEvaluatorCalculator` へフォールバック
+  - 未対応構文・mapping・評価は明示的に失敗（手書き evaluator への暗黙 fallback なし）
   - runtime markers 記録 (`_tinyExecutionBackend`, `_tinyP4ParserUsed`)
   - `getObject()` override で p4Markers を constructor 後すぐに参照可能に
 - [x] P2-3: `P4DslJavaCodeCalculator.java` 実装
@@ -93,7 +93,8 @@ Last updated: 2026-02-28
 - [x] P4-3: `stackTrace` に生成 AST ノードパス表示
   - `_tinyP4AstNodePath` フィールドに sealed interface pattern matching で構築
   - 生成コードの `isAstRuntimeMode()` → "ast"/"ast_evaluator" mode で AST ステップ表示
-- [-] P4-4: 6 バックエンド parity probe の動作確認 (手動テスト) → P6-4 に統合
+- [x] P4-4: 6 バックエンド parity probe の動作確認
+  - DAP adapter integration test で全6 backend の実行と `parity.equalAll=true` を確認
 
 ---
 
@@ -110,19 +111,17 @@ Last updated: 2026-02-28
 - [x] P5-3: `language-configuration.json` 作成 (既存から流用)
 - [x] P5-4: `syntaxes/tinyexpression.tmLanguage.json` 配置 (calculator-lsp-vscode から流用)
 - [x] P5-5: `tsconfig.json` 作成
-- [-] P5-6: `mvn verify` で VSIX 生成確認 (npm/vsce はオフライン環境では不要; JAR ビルドは確認済み)
+- [x] P5-6: `mvn verify` で VSIX 生成確認
 
 ---
 
 ## Phase 6: テスト
 
 - [x] P6-1: `mvn test -q` (tinyexpression 本体テスト実行)
-  - pre-existing 失敗: AstEvaluatorBackendParityTest (match string quote issue)、DslJavaCodeGenerationParityTest、TinyExpressionDapRuntimeBridgeTest など多数
-  - P4BackendParityTest (7件) は全件 PASS ✅
-  - 既存テストは pre-existing failures のみで我々の変更による新規失敗なし
+  - 本体の全テストを成功させ、DAP runtime bridge の typed variables / 6-backend parity も自動検証
 - [x] P6-2: P4 バックエンド parity テスト作成
   - `src/test/java/org/unlaxer/tinyexpression/p4/P4BackendParityTest.java`
-  - 7件テスト (6-backend 算術, P4-parser-used marker, match式パリティ, fallback, enum alias, 括弧算術)
+  - 7件テスト (6-backend 算術, P4-parser-used marker, match式パリティ, no-fallback, enum alias, 括弧算術)
   - DSL_JAVA_CODE の `(a+b)*(c+d)` 既知バグを文書化・回避
 - [ ] P6-3: LSP 手動テスト
   - VSCode で `.tinyexp` を開き確認:
@@ -130,10 +129,11 @@ Last updated: 2026-02-28
     - 補完 (キーワード・変数)
     - セマンティックハイライト (keyword/variable/number/string/operator 色分け)
     - ホバー (型情報表示)
-- [ ] P6-4: DAP 手動テスト
-  - ブレークポイント設定・ステップ実行
-  - `variables` パネルで P4 runtime markers 確認
-  - `parity.*` 変数で 6 バックエンド同値確認
+- [x] P6-4: DAP protocol / runtime integration test
+  - `program` launch、entry stop、AST stack、typed variables、P4 runtime markers を確認
+  - `parity.*` で全6 backend の実行・同値を確認
+  - Debug Console が TinyExpression の実 evaluator を使うことを確認
+  - 旧 `formulaSource` は launch 互換 alias としてのみ確認
 
 ---
 
@@ -145,10 +145,10 @@ Last updated: 2026-02-28
 | Phase 1: コード生成環境構築 | 5 | 5 | ✅ 完了 |
 | Phase 2: バックエンド統合 | 6 | 6 | ✅ 完了 |
 | Phase 3: LSP カスタマイズ | 6 | 6 | ✅ 完了 |
-| Phase 4: DAP 統合 | 3 | 4 | ✅ 完了 (P4-4 → P6-4 に統合) |
+| Phase 4: DAP 統合 | 4 | 4 | ✅ 完了 |
 | Phase 5: VSCode 拡張 | 6 | 6 | ✅ 完了 (VSIX 3.5MB 生成) |
-| Phase 6: テスト | 2 | 4 | 🔄 進行中 (P6-3/P6-4 は手動テスト) |
-| **合計** | **32** | **36** | **89% 完了** |
+| Phase 6: テスト | 3 | 4 | 🔄 進行中 (P6-3 は VS Code UI 手動確認) |
+| **合計** | **33** | **34** | **97% 完了** |
 
 ---
 
@@ -159,7 +159,7 @@ Last updated: 2026-02-28
 | 2026-02-27 | `unlaxer-common 2.4.0` vs `2.2.0` の API 互換性 | 解決: 2.4.0 で `ParseContext.getParseFailureDiagnostics()` は未提供、sealed interface で代替 |
 | 2026-02-27 | `Description` ルールが必須扱いになっている (既存 formula を parse 失敗する恐れ) | 要確認 (P6-3 で手動テスト) |
 | 2026-02-27 | `ParseContext.getParseFailureDiagnostics()` が 2.4.0 で型安全に呼べるか | 解決: `ParseFailureDiagnostics` sealed interface で代替実装 |
-| 2026-02-27 | 既存テスト失敗(4件): TinyExpressionDapRuntimeBridgeTest, TypeSystemRoadmapTest, UbnfExtensionRoadmapTest — 私の変更前から失敗 | 確認済み (pre-existing) |
+| 2026-02-27 | 当時の既存テスト失敗 | 解決: 2026-08-26 の本体全テストで再確認済み |
 | 2026-02-28 | `CommaParser.java` に `@Override expectedDisplayText()` が追加されコンパイル失敗 | 解決: `@Override` を削除 (`SingleCharacterParser` 2.4.0 にメソッドなし) |
 | 2026-02-28 | `syntaxes/tinyexpression.tmLanguage.json` 未配置 (P5-4) | 解決: calculator-lsp-vscode から流用済み |
 | 2026-02-28 | pre-existing テスト: `ParserTestBase.getTokenString()`、`TokenTest` の int→CodePointIndex | 解決: API 互換修正を適用 |

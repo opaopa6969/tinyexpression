@@ -2,7 +2,7 @@
 
 [日本語版](getting-started-ja.md)
 
-This guide walks you through integrating TinyExpression v1.4.11 into a Java project.
+This guide walks you through integrating TinyExpression v1.4.12 into a Java project.
 
 ---
 
@@ -21,7 +21,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.11</version>
+  <version>1.4.12</version>
 </dependency>
 ```
 
