@@ -1023,6 +1023,10 @@ public class AstEvaluatorCalculator implements Calculator {
     if (invocationHead == null) {
       return false;
     }
+    String normalizedHead = invocationHead.stripLeading();
+    if (normalizedHead.startsWith("external ")) {
+      return false;
+    }
     return formula != null
         && formula.indexOf('\n') >= 0
         && formula.indexOf('{') >= 0
