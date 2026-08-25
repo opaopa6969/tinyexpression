@@ -12,13 +12,10 @@ final class GeneratedAstRuntimeProbe {
   private GeneratedAstRuntimeProbe() {}
 
   static boolean isAvailable(ClassLoader classLoader) {
-    try {
-      Class.forName("org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers", false, classLoader);
-      Class.forName("org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
-      return true;
-    } catch (Throwable e) {
-      return false;
-    }
+    // These classes are generated and compiled as part of this artifact. The supplied
+    // classLoader belongs to the user formula and may intentionally be isolated from
+    // application classes, so it must not be used to probe the built-in P4 runtime.
+    return TinyExpressionP4AST.class != null;
   }
 
   static Optional<Object> tryMapAst(String source, ClassLoader classLoader) {
@@ -28,7 +25,7 @@ final class GeneratedAstRuntimeProbe {
   /**
    * 生成 P4 文法のバックトラックは深いネストで指数的になり得るため (issue #19)、
    * プローブ全体 (ソース変種の再試行を含む) に時間予算を設ける。予算超過時は
-   * empty を返し、呼び出し側は legacy parser へフォールバックする。
+   * empty を返し、呼び出し側は未対応として明示的に失敗する。
    * システムプロパティ {@code tinyexpression.p4.probe.timeout.millis} で調整可能
    * (デフォルト 5000ms、0 以下で無効)。
    */
@@ -49,6 +46,15 @@ final class GeneratedAstRuntimeProbe {
     Optional<Object> mapped = tryMapAstOnce(source, classLoader, preferredAstSimpleName, deadlineNanos);
     if (mapped.isPresent()) {
       return mapped;
+    }
+    String normalizedSliceReceivers =
+        P4PreferredAstMapper.normalizeParenthesizedSliceReceivers(source);
+    if (!normalizedSliceReceivers.equals(source)) {
+      mapped = tryMapAstOnce(
+          normalizedSliceReceivers, classLoader, preferredAstSimpleName, deadlineNanos);
+      if (mapped.isPresent()) {
+        return mapped;
+      }
     }
     String withoutComments = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
     if (!withoutComments.equals(source)) {
@@ -123,9 +129,6 @@ final class GeneratedAstRuntimeProbe {
       return Optional.empty();
     }
     try {
-      // Verify that the generated mapper classes are available in the given classLoader
-      // before attempting to parse, preserving the optional-detection contract.
-      Class.forName("org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper", false, classLoader);
       // Delegate to P4PreferredAstMapper.parseByAstSimpleName so that
       // ScopeStore.registerDispatcher is called on the ParseContext before parsing,
       // preventing "transaction nest is illegal" errors that occur when the dispatcher

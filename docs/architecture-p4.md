@@ -3,9 +3,10 @@
 P4 バックエンドの全体像を 2 つのパイプラインに分けて図解する。
 
 - **A. ビルド時（コード生成）**: DSL 文法 `.ubnf` → 生成された Parser / AST / Mapper / Evaluator（unlaxer-dsl の codegen）
-- **B. 実行時（評価）**: 式ソース → パース → マッピング → 型付き AST → 評価 → 結果（fallback チェーン込み）
+- **B. 実行時（評価）**: 式ソース → パース → マッピング → 型付き AST → 評価 → 結果
 
-> 用語: 「P4」は generated-parser ベースの第4世代バックエンド。`P4TypedAstEvaluator` が一次評価器、それ以外（legacy token-AST / reflection / source 再パース）は安全網。
+> 現行契約では P4 系 backend は generated-only であり、legacy token-AST / reflection /
+> JavaCode への実行時 fallback はない。未対応構文・型は明示的に失敗する。
 
 ---
 
@@ -89,25 +90,22 @@ flowchart LR
 
 ## B. 実行時 — ソース → AST → 実行
 
-### B-1. 評価のオーケストレーション（fallback チェーン）
+### B-1. 評価のオーケストレーション
 
-`AstEvaluatorCalculator.apply(context)` が司令塔。**P4TypedAstEvaluator が一次経路**、それ以外は安全網。
+`AstEvaluatorCalculator.apply(context)` が司令塔。生成 P4 AST と
+`P4TypedAstEvaluator` が唯一の実行経路となる。
 
 ```mermaid
 flowchart TD
-  S["式ソース"] --> CHK{"宣言あり? / semantic violation? / synthetic invocation?"}
-  CHK -->|"通常式"| PRIMARY["一次: GeneratedAstRuntimeProbe.tryMapAst<br/>→ P4TypedAstEvaluator.eval"]
-  PRIMARY -->|"非null"| OK["結果（runtime=p4-typed）"]
-  PRIMARY -->|"null/例外"| SAFETY["安全網: GeneratedP4ValueAstEvaluator (reflection)"]
-  CHK -->|"宣言あり (var/import, 非mixed)"| DECL["AstDeclarationRuntime.tryEvaluateMainExpression"]
-  DECL --> OK
-  SAFETY --> LEGACY["legacy token-AST (AstTokenTreeEvaluator / AstNumberExpressionEvaluator)"]
-  LEGACY --> OKL["結果（runtime=token-ast 等）"]
-  PRIMARY -. "cross-check (number時)" .-> XC["legacy と不一致なら _p4CrossCheckMismatch 記録（P4を信頼）"]
+  S["式ソース"] --> PARSE["GeneratedAstRuntimeProbe.tryMapAst"]
+  PARSE -->|"型付き AST"| EVAL["P4TypedAstEvaluator.eval"]
+  EVAL -->|"非null"| OK["結果（runtime=p4-typed）"]
+  PARSE -->|"parse / mapping gap"| FAIL["明示的な ParseException / UnsupportedOperationException"]
+  EVAL -->|"typing / evaluation gap"| FAIL
 ```
 
-- `_p4FallbackReason` が立つのは安全網に落ちた時（理想は出ない）。
-- **宣言（`var $x as ...; 主式`）** は一次 P4 経路をスキップし `AstDeclarationRuntime` 経由（後述 B-4）。
+- 失敗理由は `_p4FailureReason` で観測できる。
+- 宣言・method・external 呼び出しも UBNF から生成された構造 AST として評価する。
 
 ### B-2. パース → マッピング → 型付き AST
 
@@ -137,13 +135,11 @@ flowchart TD
   SW --> EQ["evalBooleanEqualityExpr"]
   SW --> VAR["evalVariableRefExpr → context 参照"]
   SW --> STR["evalStringConcatExpr / 文字列関数 / slice / match …"]
-  IF --> SHADOW{"if-source shadow (既定 ON)"}
-  SHADOW -->|"ソース片を再評価して命中"| RSH["分岐結果"]
-  SHADOW -->|"OFF / 非命中"| ASTW["純AST: eval(condition)→eval(branch)"]
+  IF --> ASTW["eval(condition) → eval(selected branch)"]
 ```
 
-- **if-source shadow**: `evalIfExpr` は既定で `tryEvaluateIfFromSource`（条件/分岐のソース片を再評価）を先に試す安全網。純AST経路の忠実度が上がるまでの保険。`-Dp4.disableIfSourceShadow` で計測時のみ無効化（#32 の if-off 計測）。
-- 純AST忠実度は #32 codegen 修正 + 宣言型スレッディング（B-4）で達成済み（if-off 失敗 0）。実除去はパース性能（#40）待ち。
+- `if` / ternary / `match` の分岐は UBNF の構造キャプチャを直接評価する。
+- node 内部に残るソース断片解析の削減は #35 で継続するが、別 evaluator への実行時切り替えには使わない。
 
 ### B-4. 宣言（var / 型推論）の扱い — C
 
@@ -151,19 +147,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  F["宣言付き式"] --> SPLIT["AstDeclarationRuntime"]
-  SPLIT --> DECLS["宣言トークン群 (VariableDeclarationParser.extractVariableInfo)"]
-  SPLIT --> MAINEXPR["主式 (宣言は AST から脱落)"]
+  F["宣言付き式"] --> MAP["生成 P4 Parser / Mapper"]
+  MAP --> DECLS["VariableDeclarationExpr 群"]
+  MAP --> MAINEXPR["FormulaExpr.expression"]
   DECLS --> CTX["context へ set-if-not-exists 適用"]
   DECLS --> TYPES["declaredVariableTypes: Map&lt;name, ExpressionType&gt;"]
-  MAINEXPR --> MAP2["tryMapAst → TinyExpressionP4AST"]
   TYPES --> EVAL2["P4TypedAstEvaluator(…, declaredVariableTypes)"]
   CTX --> EVAL2
-  MAP2 --> EVAL2
+  MAINEXPR --> EVAL2
   EVAL2 --> EQ2["evalBooleanEqualityExpr:<br/>宣言 string の変数参照 → 文字列比較に分岐"]
 ```
 
-- 宣言は `@declares` のみ（`@mapping` 無し）→ 生成 AST から脱落。よって**値**（set-if-not-exists）と**型**（`as string`）は別経路（`AstDeclarationRuntime`）で抽出し、`declaredVariableTypes` を評価器へスレッドする。
+- 宣言は `@mapping` された構造 AST として保持され、**値**（set-if-not-exists）と**型**（`as string`）を同じ P4 経路で解決する。
 - 既定の `$a == $b` は `BooleanEqualityExpr` にマップされ boolean 比較になるが、宣言 string 変数が絡むと**文字列比較**へ分岐（legacy `VariableTypeResolver` と同等）。
 
 ---
@@ -172,12 +167,12 @@ flowchart TD
 
 | バックエンド | 経路 | 位置づけ |
 |---|---|---|
-| `P4_AST_EVALUATOR` | 生成 AST + `P4TypedAstEvaluator` | **一次** |
-| `P4_DSL_JAVA_CODE` | 生成 AST → Java コード emit → コンパイル実行 | コード生成系 |
-| legacy token-AST | `AstTokenTreeEvaluator` 等 | 安全網 / cross-check |
-| reflection | `GeneratedP4ValueAstEvaluator` | 安全網 |
+| `AST_EVALUATOR` / `P4_AST_EVALUATOR` | 生成 AST + `P4TypedAstEvaluator` | generated-only |
+| `DSL_JAVA_CODE` / `P4_DSL_JAVA_CODE` | 生成 AST → typed Java emit → コンパイル実行 | generated-only |
+| `JAVA_CODE` | 手書き Java コード生成 | 明示選択する legacy backend |
+| `JAVA_CODE_LEGACY_ASTCREATOR` | 旧 AST creator → Java コード生成 | frozen reference |
 
-> 目標は **P4 fallback=0**（#32）。純AST経路を root から忠実化（#43/#32 codegen + 宣言型 C）し、最終的に if-source shadow を外す。残ゲートはパース性能（#38/#40 packrat）。
+P4 系4 backend に実行時 fallback はない。legacy 実装が必要な利用者は backend を明示選択する。
 
 ---
 
@@ -190,8 +185,8 @@ flowchart TD
 | 生成物 | `TinyExpressionP4Parsers` / `TinyExpressionP4AST` / `TinyExpressionP4Mapper` / `TinyExpressionP4Evaluator` |
 | 実行 司令塔 | `evaluator.ast.AstEvaluatorCalculator` |
 | パース→AST | `p4.P4PreferredAstMapper` / `evaluator.ast.GeneratedAstRuntimeProbe` |
-| 一次評価器 | `evaluator.ast.P4TypedAstEvaluator` |
-| 宣言経路 | `evaluator.ast.AstDeclarationRuntime`（+ `parser.javalang.VariableDeclarationParser`, `evaluator.javacode.VariableTypeResolver`） |
-| if/ternary/slice ソース安全網 | `p4.P4IfSourceSupport` / `P4TernarySourceSupport` / `P4SliceSourceSupport` |
+| 型付き評価器 | `evaluator.ast.P4TypedAstEvaluator` |
+| 型付き Java emitter | `evaluator.javacode.P4TypedJavaCodeEmitter` |
+| 宣言・method・external 構造 | `TinyExpressionP4AST.FormulaExpr` 以下の生成 record |
 
-関連 issue: #32（fallback=0）, #35（workaround 真っ当化）, #22（機能ギャップ）, #38（パース性能）, unlaxer-parser #40（packrat）。
+関連 issue: #32（fallback=0）, #35（workaround 真っ当化）, #22（機能ギャップ）。

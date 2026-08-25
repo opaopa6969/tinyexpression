@@ -38,7 +38,7 @@ public class ExecutionBackendSpecTest {
 
     @Test
     public void runtimeImplementationMarker_dslJavaCode() {
-        assertEquals("legacy-javacode-bridge", ExecutionBackend.DSL_JAVA_CODE.runtimeImplementationMarker());
+        assertEquals("p4-typed-emitter", ExecutionBackend.DSL_JAVA_CODE.runtimeImplementationMarker());
     }
 
     @Test
@@ -56,13 +56,13 @@ public class ExecutionBackendSpecTest {
     // -------------------------------------------------------------------------
 
     @Test
-    public void bridgeImplementation_dslJavaCodeIsTrue() {
-        assertTrue(ExecutionBackend.DSL_JAVA_CODE.bridgeImplementation());
+    public void bridgeImplementation_dslJavaCodeIsFalse() {
+        assertFalse(ExecutionBackend.DSL_JAVA_CODE.bridgeImplementation());
     }
 
     @Test
-    public void bridgeImplementation_p4DslJavaCodeIsTrue() {
-        assertTrue(ExecutionBackend.P4_DSL_JAVA_CODE.bridgeImplementation());
+    public void bridgeImplementation_p4DslJavaCodeIsFalse() {
+        assertFalse(ExecutionBackend.P4_DSL_JAVA_CODE.bridgeImplementation());
     }
 
     @Test

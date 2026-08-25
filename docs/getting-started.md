@@ -239,5 +239,5 @@ if(external returning as boolean isHighRisk($region)){100}else{0}
 ## Next Steps
 
 - [Language Guide](language-guide.md) — complete language specification
-- [Backends](backends.md) — 6 backend comparison and fallback chain
+- [Backends](backends.md) — 6 backend comparison and generated-only boundary
 - [Architecture](architecture.md) — parser, AST, evaluator internals

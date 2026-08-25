@@ -14,22 +14,22 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
-public class AstEvaluatorTokenLiteralFallbackTest {
+public class AstEvaluatorGeneratedRuntimeIsolationTest {
 
   @Test
-  public void testSimpleLiteralAndVariableUseTokenAstWhenGeneratedRuntimeIsUnavailable() {
+  public void testGeneratedRuntimeIsArtifactLocalAndIgnoresFormulaClassLoaderIsolation() {
     ClassLoader blockedGeneratedRuntime = new GeneratedRuntimeBlockingClassLoader(
         Thread.currentThread().getContextClassLoader());
     List<Case> cases = List.of(
         new Case("'hello'", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
         new Case("\"hello\"", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), "hello", null),
         new Case("true", new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), true, null),
-        new Case("var $payload set if not exists 'fallback' description='payload';\n$payload",
-            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "fallback", null),
-        new Case("/*pre*/var $payload set if not exists 'fallback' description='payload';\n$payload",
-            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "fallback", null),
-        new Case("var $payload set if not exists \"fallback\" description='payload';\n$payload",
-            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "fallback", null),
+        new Case("var $payload set if not exists 'default-value' description='payload';\n$payload",
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "default-value", null),
+        new Case("/*pre*/var $payload set if not exists 'default-value' description='payload';\n$payload",
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "default-value", null),
+        new Case("var $payload set if not exists \"default-value\" description='payload';\n$payload",
+            new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "default-value", null),
         new Case("$payload", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), "ctx-object",
             context -> context.setObject("payload", "ctx-object")));
 
@@ -44,9 +44,9 @@ public class AstEvaluatorTokenLiteralFallbackTest {
       Object value = calculator.apply(context);
       assertEquals("formula=" + testCase.formula, testCase.expected, value);
       assertEquals("formula=" + testCase.formula,
-          "token-ast", calculator.getObject("_astEvaluatorRuntime", String.class));
+          "p4-typed", calculator.getObject("_astEvaluatorRuntime", String.class));
       assertEquals("formula=" + testCase.formula,
-          false, calculator.getObject("_astEvaluatorMapperAvailable", Boolean.class));
+          true, calculator.getObject("_astEvaluatorMapperAvailable", Boolean.class));
     }
   }
 

@@ -481,7 +481,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       result = new ParseResult(false, 0, formulaContent.length());
     } else {
       Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-      ParseContext ctx = new ParseContext(source);
+      ParseContext ctx = createParseContext(source);
       ScopeStore.registerDispatcher(ctx);
       Parsed parsed;
       try {
@@ -513,7 +513,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           StringSource chunkSource = createRootSource(chunk);
           if (chunkSource != null) {
             Parser chunkParser = TinyExpressionP4Parsers.getRootParser();
-            ParseContext chunkCtx = new ParseContext(chunkSource);
+            ParseContext chunkCtx = createParseContext(chunkSource);
             try {
               Parsed chunkParsed = chunkParser.parse(chunkCtx);
               if (chunkParsed.isSucceeded() && chunkParsed.getConsumed() != null) {
@@ -819,7 +819,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     if (source == null) return Collections.emptyList();
 
     Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-    ParseContext context = new ParseContext(source);
+    ParseContext context = createParseContext(source);
     Parsed parsed;
     try {
       parsed = rootParser.parse(context);
@@ -1209,6 +1209,17 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
     } catch (Throwable ignored) {}
     return null;
+  }
+
+  /** Enable packrat parsing for interactive requests to avoid exponential PEG retries. */
+  static ParseContext createParseContext(StringSource source) {
+    ParseContext context = new ParseContext(source);
+    try {
+      context.enableMemoize();
+    } catch (NoSuchMethodError ignored) {
+      // Memoization is a performance optimization when running against an older runtime.
+    }
+    return context;
   }
 
   // =========================================================================

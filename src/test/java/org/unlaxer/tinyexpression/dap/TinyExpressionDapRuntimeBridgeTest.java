@@ -16,13 +16,10 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("true", dslJava.get("bridgeAttached"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("selectedExecutionBackend"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("_tinyExecutionBackend"));
-    // P4-typed emitter now handles 1+1 natively (no bridge needed)
-    String impl = dslJava.get("_tinyExecutionImplementation");
-    assertTrue("impl=" + impl,
-        "dsl-javacode-native".equals(impl) || "legacy-javacode-bridge".equals(impl));
+    assertEquals("p4-typed-emitter", dslJava.get("_tinyExecutionImplementation"));
 
     Map<String, String> dslJavaLiteral = TinyExpressionDapRuntimeBridge.debugVariables("1", "dsl-javacode");
-    assertEquals("dsl-javacode-native", dslJavaLiteral.get("_tinyExecutionImplementation"));
+    assertEquals("p4-typed-emitter", dslJavaLiteral.get("_tinyExecutionImplementation"));
     String emitterMode = dslJavaLiteral.get("_tinyDslJavaEmitterMode");
     assertTrue("emitterMode=" + emitterMode,
         "native-generated-ast".equals(emitterMode) || "p4-typed-emitter".equals(emitterMode));

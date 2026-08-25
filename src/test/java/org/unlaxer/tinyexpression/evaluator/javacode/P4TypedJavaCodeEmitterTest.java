@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.evaluator.javacode;
 import static org.junit.Assert.*;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
@@ -105,7 +106,7 @@ public class P4TypedJavaCodeEmitterTest {
   public void testVariableRefExprNumber() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
-    String code = emitter.eval(new VariableRefExpr("$x"));
+    String code = emitter.eval(new VariableRefExpr("$x", Optional.empty()));
     assertTrue("Should generate getNumber", code.contains("getNumber(\"x\")"));
     assertTrue("Should have float fallback", code.contains("0.0f") || code.contains("0f"));
   }
@@ -114,7 +115,7 @@ public class P4TypedJavaCodeEmitterTest {
   public void testVariableRefExprString() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float));
-    String code = emitter.eval(new VariableRefExpr("$name"));
+    String code = emitter.eval(new VariableRefExpr("$name", Optional.empty()));
     assertTrue("Should generate getString", code.contains("getString(\"name\")"));
   }
 
@@ -122,7 +123,7 @@ public class P4TypedJavaCodeEmitterTest {
   public void testVariableRefExprBoolean() {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float));
-    String code = emitter.eval(new VariableRefExpr("$flag"));
+    String code = emitter.eval(new VariableRefExpr("$flag", Optional.empty()));
     assertTrue("Should generate getBoolean", code.contains("getBoolean(\"flag\")"));
   }
 
@@ -168,8 +169,8 @@ public class P4TypedJavaCodeEmitterTest {
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
     BooleanOrExpr condition = boolWrap("true");
-    ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
-    ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
+    BranchExpressionExpr thenExpr = new BranchExpressionExpr(leaf("100"));
+    BranchExpressionExpr elseExpr = new BranchExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
     String code = emitter.eval(ifExpr);
     assertTrue("Should be ternary", code.contains("?"));

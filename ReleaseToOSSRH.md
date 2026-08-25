@@ -1,32 +1,33 @@
-# prepare maven setteings.xml for sonatype uploading
+# Maven Central release preparation
 
-https://support.sonatype.com/hc/en-us/articles/360049469534-401-Content-access-is-protected-by-token-when-accessing-repositories
+Never commit Sonatype credentials, user tokens, signing keys, or generated
+`settings.xml` files. A credential that has ever been committed must be revoked
+and replaced; deleting it from the current file does not remove it from Git
+history.
 
-
-get user token from https://oss.sonatype.org/#profile;User%20Token and paste to settings.xml
+Configure Maven credentials outside the repository, for example in the user's
+`~/.m2/settings.xml`:
 
 ```xml
-<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0" 
-          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">   <servers> 
-          :
-          :
-   <server>
-    <id>ossrh</id>
-      <username>+5sgetXb</username>
-      <password>fadgf+YdsokwlasffarRPz1OlO8B5uk92adjsdf741sgf2sdgfY</password>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+  <servers>
+    <server>
+      <id>ossrh</id>
+      <username>${env.OSSRH_USERNAME}</username>
+      <password>${env.OSSRH_TOKEN}</password>
     </server>
-  </servers> 
+  </servers>
+</settings>
 ```
 
-# deploy commands
+Keep the signing key in the local GPG keyring or CI secret store. Run a local
+release verification without publishing:
 
 ```console
-# set maven opts for nexus-staging-maven-plugin
-source setMavenOpts.sh
-
-# import pgp key for signing
-gpg2 --import /cygdrive/c/Dropbox/key/pgp4sonatype-unlaxer/secring.gpg
-sdk use java  17-open
-mvn clean deploy
+mvn -B verify -P release -Dgpg.skip=true
 ```
+
+Only run the repository's Central deployment procedure after checking the
+release version, coordinates, signing identity, credentials, and target account.

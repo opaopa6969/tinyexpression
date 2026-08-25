@@ -85,7 +85,8 @@ public class AstEvaluatorGeneratedValuePathTest {
 
     assertEquals("fallback", value);
     assertGeneratedAstRuntime("", ast);
-    assertEquals("fallback", context.getObject("payload", Object.class).orElse(null));
+    assertEquals("declaration defaults are calculation-local", null,
+        context.getObject("payload", Object.class).orElse(null));
   }
 
   @Test

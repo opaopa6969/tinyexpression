@@ -1759,7 +1759,7 @@ src/test/java/
                 ThreeExecutionBackendParityTest.java
                 ThreeExecutionBackendExtractedCorpusParityTest.java
                 AstEvaluatorBackendParityTest.java
-                AstEvaluatorTokenLiteralFallbackTest.java
+                AstEvaluatorGeneratedRuntimeIsolationTest.java
                 AstEvaluatorStringGeneratedPathTest.java
                 GeneratedP4NumberAstEvaluatorVariableTest.java
                 BackendSpeedComparisonTest.java
