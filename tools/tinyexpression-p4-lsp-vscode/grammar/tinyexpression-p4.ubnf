@@ -14,7 +14,9 @@ grammar TinyExpressionP4 {
 
   @root
   @scopeTree(mode=lexical)
-  Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
+  @mapping(FormulaExpr, params=[imports, declarations, expression])
+  Formula ::= { CodeBlock } { ImportDeclaration @imports } { VariableDeclaration @declarations }
+    { Annotation } Expression @expression { MethodDeclaration } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
   // Syntax: ```scheme:JavaClassName\n...\n```
@@ -30,8 +32,8 @@ grammar TinyExpressionP4 {
   //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
   @interleave(profile=javaStyle)
-  @mapping(ImportDeclarationExpr, params=[method, alias])
-  ImportDeclaration ::= 'import' ClassName [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
+  @mapping(ImportDeclarationExpr, params=[className, method, alias])
+  ImportDeclaration ::= 'import' ClassName @className [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
   ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
 
@@ -45,38 +47,42 @@ grammar TinyExpressionP4 {
     | ObjectVariableDeclaration ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(NumberVariableDeclarationExpr, params=[varName, value, desc])
   NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ NumberTypeHint ]
-    [ NumberSetter ]
+    [ 'set' [ 'if' 'not' 'exists' ] NumberExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(StringVariableDeclarationExpr, params=[varName, value, desc])
   StringVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ StringTypeHint ]
-    [ StringSetter ]
+    [ 'set' [ 'if' 'not' 'exists' ] StringExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(BooleanVariableDeclarationExpr, params=[varName, value, desc])
   BooleanVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
-    [ BooleanSetter ]
+    [ 'set' [ 'if' 'not' 'exists' ] BooleanExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(ObjectVariableDeclarationExpr, params=[varName, value, desc])
   ObjectVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
-    [ ObjectSetter ]
+    [ 'set' [ 'if' 'not' 'exists' ] ObjectExpression @value ]
     Description @desc
     ';' ;
 
@@ -86,11 +92,6 @@ grammar TinyExpressionP4 {
   StringTypeHint ::= [ 'as' ] 'string' ;
   BooleanTypeHint ::= [ 'as' ] 'boolean' ;
   ObjectTypeHint ::= [ 'as' ] 'object' ;
-
-  NumberSetter ::= 'set' [ 'if' 'not' 'exists' ] NumberExpression ;
-  StringSetter ::= 'set' [ 'if' 'not' 'exists' ] StringExpression ;
-  BooleanSetter ::= 'set' [ 'if' 'not' 'exists' ] BooleanExpression ;
-  ObjectSetter ::= 'set' [ 'if' 'not' 'exists' ] ObjectExpression ;
 
   Description ::= 'description' '=' STRING ;
 
@@ -163,21 +164,33 @@ grammar TinyExpressionP4 {
   // Syntax: external returning as <type> methodName(args)
   // Example: external returning as boolean checkAlphabets($inputName)
 
-  @mapping(ExternalBooleanInvocationExpr, params=[name])
+  @mapping(ExternalBooleanInvocationExpr, params=[name, args])
   ExternalBooleanInvocation ::=
-    'external' 'returning' 'as' BooleanReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] BooleanReturnType
+    [ ':' ]
+    ( ClassName '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalNumberInvocationExpr, params=[name])
+  @mapping(ExternalNumberInvocationExpr, params=[name, args])
   ExternalNumberInvocation ::=
-    'external' 'returning' 'as' NumberReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external'
+    ( [ 'returning' [ 'as' ] ] NumberReturnType [ ':' ] | [ ':' ] )
+    ( ClassName '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalStringInvocationExpr, params=[name])
+  @mapping(ExternalStringInvocationExpr, params=[name, args])
   ExternalStringInvocation ::=
-    'external' 'returning' 'as' StringReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] StringReturnType
+    [ ':' ]
+    ( ClassName '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalObjectInvocationExpr, params=[name])
+  @mapping(ExternalObjectInvocationExpr, params=[name, args])
   ExternalObjectInvocation ::=
-    'external' 'returning' 'as' ObjectReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] ObjectReturnType
+    [ ':' ]
+    ( ClassName '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
   // ── Built-in method invocation (call / call internal / internal) ──────────
 
@@ -196,7 +209,8 @@ grammar TinyExpressionP4 {
   @mapping(ArgumentExpressionExpr, params=[value])
   ArgumentExpression ::= ArgumentTernary @value | Expression @value ;
 
-  Arguments ::= ArgumentExpression { ',' ArgumentExpression } ;
+  @mapping(ArgumentsExpr, params=[values])
+  Arguments ::= ArgumentExpression @values { ',' ArgumentExpression @values } ;
 
   // ── Numeric expressions ────────────────────────────────────────────────────
 

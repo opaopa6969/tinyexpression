@@ -152,7 +152,8 @@ public class P4TypedJavaCodeEmitterTest {
   @Test
   public void testStandaloneIsPresentUsesSourceAwareVariableName() {
     String formula = "isPresent($presentName)";
-    IsPresentExpr ast = (IsPresentExpr) TinyExpressionP4Mapper.parse(formula, "IsPresentExpr");
+    IsPresentExpr ast = (IsPresentExpr) P4PreferredAstMapper.parseByAstSimpleName(
+        formula, "IsPresentExpr");
     P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
         formula);

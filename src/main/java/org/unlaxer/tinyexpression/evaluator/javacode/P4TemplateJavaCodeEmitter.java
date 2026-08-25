@@ -51,6 +51,13 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
     this(types, Map.of());
   }
 
+  @Override protected String evalFormulaExpr(FormulaExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalNumberVariableDeclarationExpr(NumberVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalStringVariableDeclarationExpr(StringVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr n) { return "null"; }
+  @Override protected String evalArgumentsExpr(ArgumentsExpr n) { return defaultEmitter.eval(n); }
+
   public String buildJavaClass(String className, String expression) {
     return defaultEmitter.buildJavaClass(className, expression);
   }

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.unlaxer.tinyexpression.CalculationContext;
+import org.unlaxer.tinyexpression.CalculationException;
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.function.EmbeddedFunction;
@@ -44,6 +45,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
    * Empty when the formula has no declarations. (#32 / handoff #44 "C")
    */
   private final Map<String, ExpressionType> declaredVariableTypes;
+  private final Map<String, ImportTarget> imports = new LinkedHashMap<>();
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context) {
     this(types, context, null, null);
@@ -74,7 +76,59 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     this.sourceFormula = sourceFormula;
     this.lookupFormulaSource = lookupFormulaSource;
     this.classLoader = classLoader;
-    this.declaredVariableTypes = declaredVariableTypes == null ? Map.of() : declaredVariableTypes;
+    this.declaredVariableTypes = declaredVariableTypes == null
+        ? new LinkedHashMap<>() : new LinkedHashMap<>(declaredVariableTypes);
+  }
+
+  private record ImportTarget(String className, String methodName) {}
+
+  @Override
+  protected Object evalFormulaExpr(FormulaExpr node) {
+    for (ImportDeclarationExpr declaration : node.imports()) {
+      eval(declaration);
+    }
+    for (Object declaration : node.declarations()) {
+      if (declaration instanceof TinyExpressionP4AST ast) {
+        eval(ast);
+      }
+    }
+    return eval(node.expression());
+  }
+
+  @Override
+  protected Object evalNumberVariableDeclarationExpr(NumberVariableDeclarationExpr node) {
+    declaredVariableTypes.put(node.varName(), numberType);
+    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+      context.set(node.varName(), (Number) eval(node.value().get()));
+    }
+    return null;
+  }
+
+  @Override
+  protected Object evalStringVariableDeclarationExpr(StringVariableDeclarationExpr node) {
+    declaredVariableTypes.put(node.varName(), ExpressionTypes.string);
+    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+      context.set(node.varName(), String.valueOf(eval(node.value().get())));
+    }
+    return null;
+  }
+
+  @Override
+  protected Object evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr node) {
+    declaredVariableTypes.put(node.varName(), ExpressionTypes._boolean);
+    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+      context.set(node.varName(), Boolean.TRUE.equals(eval(node.value().get())));
+    }
+    return null;
+  }
+
+  @Override
+  protected Object evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr node) {
+    declaredVariableTypes.put(node.varName(), ExpressionTypes.object);
+    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+      context.setObject(node.varName(), eval(node.value().get()));
+    }
+    return null;
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
@@ -147,6 +201,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (value instanceof Number number) {
       return number;
     }
+    if (value == null) {
+      return zeroNumber();
+    }
     return numberType.parseNumber(String.valueOf(value));
   }
 
@@ -159,6 +216,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
         if (number.isPresent()) {
           return number.get();
         }
+        return zeroNumber();
       }
     }
     Number structured = tryEvaluateStructuredNumberLeaf(literal);
@@ -171,6 +229,10 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return evaluateCollapsedTerm(literal);
     }
     return numberType.parseNumber(literal);
+  }
+
+  private Number zeroNumber() {
+    return numberType.parseNumber("0");
   }
 
   private Number tryEvaluateStructuredNumberLeaf(String text) {
@@ -1341,6 +1403,122 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   }
 
   private Object evaluateExternalInvocation(Object node, ExpressionType expectedReturnType) {
+    if (node instanceof ExternalBooleanInvocationExpr invocation) {
+      return evaluateExternalInvocation(
+          invocation.name(), invocation.args().map(ArgumentsExpr::values).orElseGet(List::of), expectedReturnType);
+    }
+    if (node instanceof ExternalNumberInvocationExpr invocation) {
+      return evaluateExternalInvocation(
+          invocation.name(), invocation.args().map(ArgumentsExpr::values).orElseGet(List::of), expectedReturnType);
+    }
+    if (node instanceof ExternalStringInvocationExpr invocation) {
+      return evaluateExternalInvocation(
+          invocation.name(), invocation.args().map(ArgumentsExpr::values).orElseGet(List::of), expectedReturnType);
+    }
+    if (node instanceof ExternalObjectInvocationExpr invocation) {
+      return evaluateExternalInvocation(
+          invocation.name(), invocation.args().map(ArgumentsExpr::values).orElseGet(List::of), expectedReturnType);
+    }
+    throw new UnsupportedOperationException("Unknown external invocation AST: " + node);
+  }
+
+  private Object evaluateExternalInvocation(String target,
+      List<ArgumentExpressionExpr> args, ExpressionType expectedReturnType) {
+    String name = target == null ? "" : target.strip();
+    String qualifier = "";
+    ImportTarget imported = imports.get(name);
+    String className = normalizeQualifier(qualifier);
+    String methodName = name;
+    if (className.isEmpty() && imported != null && imported.methodName() != null) {
+      className = imported.className();
+      methodName = imported.methodName();
+    } else if (!className.isEmpty()) {
+      ImportTarget classImport = imports.get(className);
+      if (classImport != null) {
+        className = classImport.className();
+      }
+    }
+    if (className.isEmpty()) {
+      Optional<ImportTarget> qualified = qualifiedExternalTarget();
+      if (qualified.isPresent()) {
+        className = qualified.get().className();
+        methodName = qualified.get().methodName();
+      }
+    }
+    if (className.isEmpty()) {
+      throw new UnsupportedOperationException("External target is not imported: " + name);
+    }
+    final String resolvedClassName = className;
+    final String resolvedMethodName = methodName;
+
+    ClassLoader effectiveClassLoader = classLoader != null
+        ? classLoader : Thread.currentThread().getContextClassLoader();
+    try {
+      Class<?> clazz = Class.forName(resolvedClassName, true, effectiveClassLoader);
+      List<Object> argValues = new java.util.ArrayList<>();
+      List<ExpressionType> argTypes = new java.util.ArrayList<>();
+      for (ArgumentExpressionExpr arg : args) {
+        Object value = eval(arg);
+        argValues.add(value);
+        argTypes.add(expressionTypeOf(value));
+      }
+      java.lang.reflect.Method method = findExternalMethod(clazz, resolvedMethodName, argTypes, argValues);
+      if (method == null) {
+        throw new UnsupportedOperationException("Method not found: " + resolvedClassName + "#" + resolvedMethodName);
+      }
+      Object instance = context.getObject(clazz.getName(), Object.class)
+          .orElseThrow(() -> new CalculationException(
+              "class not found in CalculationContext. please set :" + clazz.getName()));
+      Object result = method.invoke(instance, buildMethodParams(method, argValues));
+      return result == null ? null : coerceToType(result, expectedReturnType);
+    } catch (CalculationException | UnsupportedOperationException e) {
+      throw e;
+    } catch (ReflectiveOperationException e) {
+      throw new UnsupportedOperationException(
+          "External invocation failed: " + resolvedClassName + "#" + resolvedMethodName, e);
+    }
+  }
+
+  private static String normalizeQualifier(String qualifier) {
+    return qualifier == null ? "" : qualifier.strip();
+  }
+
+  private Optional<ImportTarget> qualifiedExternalTarget() {
+    String source = effectiveLookupFormulaSource();
+    if (source == null) return Optional.empty();
+    int external = source.indexOf("external");
+    int hash = source.indexOf('#', Math.max(0, external));
+    if (hash < 0) return Optional.empty();
+    int start = hash - 1;
+    while (start >= 0) {
+      char c = source.charAt(start);
+      if (Character.isJavaIdentifierPart(c) || c == '.') start--;
+      else break;
+    }
+    String className = source.substring(start + 1, hash);
+    int methodEnd = hash + 1;
+    while (methodEnd < source.length() && Character.isJavaIdentifierPart(source.charAt(methodEnd))) {
+      methodEnd++;
+    }
+    String methodName = source.substring(hash + 1, methodEnd);
+    return className.isBlank() || methodName.isBlank()
+        ? Optional.empty() : Optional.of(new ImportTarget(className, methodName));
+  }
+
+
+  private ExpressionType expressionTypeOf(Object value) {
+    if (value instanceof Boolean) return ExpressionTypes._boolean;
+    if (value instanceof String) return ExpressionTypes.string;
+    if (value instanceof Number) return numberType;
+    return ExpressionTypes.object;
+  }
+
+  @Override
+  protected Object evalArgumentsExpr(ArgumentsExpr node) {
+    return node.values().stream().map(this::eval).toList();
+  }
+
+  private Object evaluateExternalInvocationFromSource(Object node, ExpressionType expectedReturnType) {
     if (sourceFormula == null || sourceFormula.isEmpty()) {
       throw new UnsupportedOperationException(
           "External invocation requires sourceFormula");
@@ -1402,7 +1580,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       }
 
       // Build actual parameters: CalculationContext + evaluated arguments
-      Object instance = clazz.getDeclaredConstructor().newInstance();
+      Object instance = context.getObject(clazz.getName(), Object.class)
+          .orElseThrow(() -> new CalculationException(
+              "class not found in CalculationContext. please set :" + clazz.getName()));
       Object[] params = buildMethodParams(method, argValues);
       Object result = method.invoke(instance, params);
 
@@ -1417,7 +1597,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       }
 
       return result;
-    } catch (UnsupportedOperationException e) {
+    } catch (CalculationException | UnsupportedOperationException e) {
       throw e;
     } catch (Exception e) {
       // Fallback: delegate to embedded expression runtime
@@ -1952,6 +2132,14 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalImportDeclarationExpr(ImportDeclarationExpr node) {
+    String alias = node.alias();
+    if (alias == null || alias.isBlank()) {
+      alias = node.method().orElseGet(() -> {
+        int dot = node.className().lastIndexOf('.');
+        return dot < 0 ? node.className() : node.className().substring(dot + 1);
+      });
+    }
+    imports.put(alias, new ImportTarget(node.className(), node.method().orElse(null)));
     return null;
   }
 
@@ -2153,7 +2341,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return null;
   }
 
-  private static String extractExactVariableReference(BinaryExpr node) {
+  private String extractExactVariableReference(BinaryExpr node) {
     if (node == null) {
       return null;
     }
@@ -2166,6 +2354,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     if (left instanceof BinaryExpr binaryLeft && op.isEmpty() && right.isEmpty()) {
       return extractExactVariableReference(binaryLeft);
+    }
+    if (left instanceof VariableRefExpr variableRef && op.isEmpty() && right.isEmpty()) {
+      return resolveVariableRefName(variableRef);
     }
     return null;
   }

@@ -227,9 +227,6 @@ public class AstEvaluatorCalculator implements Calculator {
     if (rootSemanticViolation.isPresent()) {
       setObject("_p4FallbackFormula", formulaText);
       setObject("_p4FallbackReason", rootSemanticViolation.get().message());
-    } else if (hasDeclarations && !hasMixedDeclarationsAndInvocations) {
-      setObject("_p4FallbackFormula", formulaText);
-      setObject("_p4FallbackReason", "declaration-aware fallback: generated P4 AST has no declaration root");
     }
 
     // =========================================================================
@@ -242,8 +239,7 @@ public class AstEvaluatorCalculator implements Calculator {
     Optional<Object> tokenAstEvaluated = Optional.empty();
     if (generatedAstRuntimeAvailable
         && !syntheticInvocationFormula
-        && rootSemanticViolation.isEmpty()
-        && (!hasDeclarations || hasMixedDeclarationsAndInvocations)) {
+        && rootSemanticViolation.isEmpty()) {
       boolean declarationsApplied = false;
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
