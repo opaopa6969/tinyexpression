@@ -624,7 +624,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     Number left = evalBinaryAsNumber(node.left());
     Number right = evalBinaryAsNumber(node.right());
     String op = node.op() == null ? "" : node.op().strip();
-    int compare = toBigDecimal(left).compareTo(toBigDecimal(right));
+    int compare = compareNumbers(left, right);
     return switch (op) {
       case "==" -> compare == 0;
       case "!=" -> compare != 0;
@@ -634,6 +634,44 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       case ">=" -> compare >= 0;
       default -> false;
     };
+  }
+
+  /**
+   * Compare two Numbers. Uses a fast path for same-typed primitives (float, double, int, long,
+   * short, byte) to avoid the per-call {@code new BigDecimal(String.valueOf(...))} allocation in
+   * {@link #toBigDecimal}. Mixed primitive types widen to double. BigDecimal/BigInteger and any
+   * heterogeneous pairing fall back to the BigDecimal comparison, which preserves scale-aware
+   * semantics.
+   */
+  private static int compareNumbers(Number left, Number right) {
+    if (left instanceof Float lf && right instanceof Float rf) {
+      return Float.compare(lf, rf);
+    }
+    if (left instanceof Double ld && right instanceof Double rd) {
+      return Double.compare(ld, rd);
+    }
+    if (left instanceof Integer li && right instanceof Integer ri) {
+      return Integer.compare(li, ri);
+    }
+    if (left instanceof Long ll && right instanceof Long rl) {
+      return Long.compare(ll, rl);
+    }
+    if (left instanceof Short ls && right instanceof Short rs) {
+      return Short.compare(ls, rs);
+    }
+    if (left instanceof Byte lb && right instanceof Byte rb) {
+      return Byte.compare(lb, rb);
+    }
+    // Mixed primitive widening: both are primitive-boxed (no BigDecimal/BigInteger)
+    if (isPrimitiveBoxed(left) && isPrimitiveBoxed(right)) {
+      return Double.compare(left.doubleValue(), right.doubleValue());
+    }
+    return toBigDecimal(left).compareTo(toBigDecimal(right));
+  }
+
+  private static boolean isPrimitiveBoxed(Number n) {
+    return n instanceof Float || n instanceof Double || n instanceof Integer || n instanceof Long
+        || n instanceof Short || n instanceof Byte;
   }
 
   @Override
