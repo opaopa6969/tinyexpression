@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="299" height="92">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">OnlyIfAbsent</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="251595816">
+<g id="655430716">
+<rect x="40" y="44" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="64" y="62" text-anchor="middle" class="terminal-text">'if'</text>
+</g>
+<line x1="88" y1="58" x2="108" y2="58" class="rail"/>
+<polygon points="95,55 101,58 95,61" class="arrow"/>
+<g id="892447587">
+<rect x="108" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="135" y="62" text-anchor="middle" class="terminal-text">'not'</text>
+</g>
+<line x1="163" y1="58" x2="183" y2="58" class="rail"/>
+<polygon points="170,55 176,58 170,61" class="arrow"/>
+<g id="873680159">
+<rect x="183" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="221" y="62" text-anchor="middle" class="terminal-text">'exists'</text>
+</g>
+</g>
+<line x1="259" y1="58" x2="267" y2="58" class="rail"/>
+<circle cx="273" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="273" cy="58" r="3" class="end-circle-inner"/>
+</svg>

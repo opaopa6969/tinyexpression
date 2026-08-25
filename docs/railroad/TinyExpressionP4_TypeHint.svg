@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="295" height="206">
+<svg xmlns="http://www.w3.org/2000/svg" width="295" height="358">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="1023636297">
-<g id="2096421785">
-<g id="527250395">
+<g id="701557948">
+<g id="2004256926">
+<g id="1372241287">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -30,8 +30,8 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="1662470043">
-<g id="1398953389">
+<g id="1575359493">
+<g id="634200331">
 <rect x="159" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="197" y="80" text-anchor="middle" class="terminal-text">'number'</text>
 </g>
@@ -39,9 +39,9 @@
 <line x1="235" y1="76" x2="239" y2="76" class="rail"/>
 <line x1="140" y1="76" x2="156" y2="76" class="rail"/>
 <line x1="239" y1="76" x2="255" y2="76" class="rail"/>
-<g id="250518562">
+<g id="1178274543">
 <rect x="159" y="100" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="197" y="118" text-anchor="middle" class="terminal-text">'string'</text>
+<text x="197" y="118" text-anchor="middle" class="terminal-text">'Number'</text>
 </g>
 <line x1="156" y1="114" x2="159" y2="114" class="rail"/>
 <line x1="235" y1="114" x2="239" y2="114" class="rail"/>
@@ -49,25 +49,65 @@
 <path d="M148,106 Q148,114 156,114" class="rail" fill="none"/>
 <path d="M239,114 Q247,114 247,106" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="2020312527">
-<rect x="156" y="138" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="197" y="156" text-anchor="middle" class="terminal-text">'boolean'</text>
+<g id="1117364522">
+<rect x="159" y="138" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="197" y="156" text-anchor="middle" class="terminal-text">'string'</text>
 </g>
-<line x1="156" y1="152" x2="156" y2="152" class="rail"/>
-<line x1="239" y1="152" x2="239" y2="152" class="rail"/>
+<line x1="156" y1="152" x2="159" y2="152" class="rail"/>
+<line x1="235" y1="152" x2="239" y2="152" class="rail"/>
 <path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
 <path d="M148,144 Q148,152 156,152" class="rail" fill="none"/>
 <path d="M239,152 Q247,152 247,144" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
-<g id="572109128">
+<g id="32043935">
 <rect x="159" y="176" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="197" y="194" text-anchor="middle" class="terminal-text">'object'</text>
+<text x="197" y="194" text-anchor="middle" class="terminal-text">'String'</text>
 </g>
 <line x1="156" y1="190" x2="159" y2="190" class="rail"/>
 <line x1="235" y1="190" x2="239" y2="190" class="rail"/>
 <path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
 <path d="M148,182 Q148,190 156,190" class="rail" fill="none"/>
 <path d="M239,190 Q247,190 247,182" class="rail" fill="none"/>
+<path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
+<g id="1298227152">
+<rect x="156" y="214" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="197" y="232" text-anchor="middle" class="terminal-text">'boolean'</text>
+</g>
+<line x1="156" y1="228" x2="156" y2="228" class="rail"/>
+<line x1="239" y1="228" x2="239" y2="228" class="rail"/>
+<path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
+<path d="M148,220 Q148,228 156,228" class="rail" fill="none"/>
+<path d="M239,228 Q247,228 247,220" class="rail" fill="none"/>
+<path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
+<g id="1402165473">
+<rect x="156" y="252" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="197" y="270" text-anchor="middle" class="terminal-text">'Boolean'</text>
+</g>
+<line x1="156" y1="266" x2="156" y2="266" class="rail"/>
+<line x1="239" y1="266" x2="239" y2="266" class="rail"/>
+<path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
+<path d="M148,258 Q148,266 156,266" class="rail" fill="none"/>
+<path d="M239,266 Q247,266 247,258" class="rail" fill="none"/>
+<path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
+<g id="1544303432">
+<rect x="159" y="290" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="197" y="308" text-anchor="middle" class="terminal-text">'object'</text>
+</g>
+<line x1="156" y1="304" x2="159" y2="304" class="rail"/>
+<line x1="235" y1="304" x2="239" y2="304" class="rail"/>
+<path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
+<path d="M148,296 Q148,304 156,304" class="rail" fill="none"/>
+<path d="M239,304 Q247,304 247,296" class="rail" fill="none"/>
+<path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
+<g id="448677725">
+<rect x="159" y="328" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="197" y="346" text-anchor="middle" class="terminal-text">'Object'</text>
+</g>
+<line x1="156" y1="342" x2="159" y2="342" class="rail"/>
+<line x1="235" y1="342" x2="239" y2="342" class="rail"/>
+<path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
+<path d="M148,334 Q148,342 156,342" class="rail" fill="none"/>
+<path d="M239,342 Q247,342 247,334" class="rail" fill="none"/>
 <path d="M247,84 Q247,76 255,76" class="rail" fill="none"/>
 </g>
 </g>

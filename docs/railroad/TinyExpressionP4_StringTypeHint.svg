@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="256" height="110">
+<svg xmlns="http://www.w3.org/2000/svg" width="288" height="130">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,9 +14,9 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringTypeHint</text>
 <circle cx="24" cy="76" r="4" class="start-circle"/>
 <line x1="28" y1="76" x2="40" y2="76" class="rail"/>
-<g id="85113347">
-<g id="1830926783">
-<g id="899809361">
+<g id="150442808">
+<g id="625390151">
+<g id="836318508">
 <rect x="56" y="62" width="48" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="80" y="80" text-anchor="middle" class="terminal-text">'as'</text>
 </g>
@@ -30,12 +30,28 @@
 </g>
 <line x1="120" y1="76" x2="140" y2="76" class="rail"/>
 <polygon points="127,73 133,76 127,79" class="arrow"/>
-<g id="248635321">
-<rect x="140" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="178" y="80" text-anchor="middle" class="terminal-text">'string'</text>
+<g id="53367824">
+<g id="2012061024">
+<rect x="156" y="62" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="194" y="80" text-anchor="middle" class="terminal-text">'string'</text>
+</g>
+<line x1="156" y1="76" x2="156" y2="76" class="rail"/>
+<line x1="232" y1="76" x2="232" y2="76" class="rail"/>
+<line x1="140" y1="76" x2="156" y2="76" class="rail"/>
+<line x1="232" y1="76" x2="248" y2="76" class="rail"/>
+<g id="2074508829">
+<rect x="156" y="100" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="194" y="118" text-anchor="middle" class="terminal-text">'String'</text>
+</g>
+<line x1="156" y1="114" x2="156" y2="114" class="rail"/>
+<line x1="232" y1="114" x2="232" y2="114" class="rail"/>
+<path d="M140,76 Q148,76 148,84" class="rail" fill="none"/>
+<path d="M148,106 Q148,114 156,114" class="rail" fill="none"/>
+<path d="M232,114 Q240,114 240,106" class="rail" fill="none"/>
+<path d="M240,84 Q240,76 248,76" class="rail" fill="none"/>
 </g>
 </g>
-<line x1="216" y1="76" x2="224" y2="76" class="rail"/>
-<circle cx="230" cy="76" r="6" class="end-circle-outer"/>
-<circle cx="230" cy="76" r="3" class="end-circle-inner"/>
+<line x1="248" y1="76" x2="256" y2="76" class="rail"/>
+<circle cx="262" cy="76" r="6" class="end-circle-outer"/>
+<circle cx="262" cy="76" r="3" class="end-circle-inner"/>
 </svg>

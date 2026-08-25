@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="265" height="206">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">StringPredicateReceiver</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="227383465">
+<g id="1299343833">
+<rect x="56" y="44" width="153" height="28" class="nonterminal-box"/>
+<text x="132" y="62" text-anchor="middle" class="nonterminal-text">ToLowerCaseFunction</text>
+</g>
+<line x1="56" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="209" y1="58" x2="209" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="209" y1="58" x2="225" y2="58" class="rail"/>
+<g id="1687615410">
+<rect x="56" y="82" width="153" height="28" class="nonterminal-box"/>
+<text x="132" y="100" text-anchor="middle" class="nonterminal-text">ToUpperCaseFunction</text>
+</g>
+<line x1="56" y1="96" x2="56" y2="96" class="rail"/>
+<line x1="209" y1="96" x2="209" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M209,96 Q217,96 217,88" class="rail" fill="none"/>
+<path d="M217,66 Q217,58 225,58" class="rail" fill="none"/>
+<g id="632719441">
+<rect x="80" y="120" width="104" height="28" class="nonterminal-box"/>
+<text x="132" y="138" text-anchor="middle" class="nonterminal-text">TrimFunction</text>
+</g>
+<line x1="56" y1="134" x2="80" y2="134" class="rail"/>
+<line x1="184" y1="134" x2="209" y2="134" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
+<path d="M209,134 Q217,134 217,126" class="rail" fill="none"/>
+<path d="M217,66 Q217,58 225,58" class="rail" fill="none"/>
+<g id="1408176044">
+<rect x="84" y="158" width="97" height="28" class="nonterminal-box"/>
+<text x="132" y="176" text-anchor="middle" class="nonterminal-text">VariableRef</text>
+</g>
+<line x1="56" y1="172" x2="84" y2="172" class="rail"/>
+<line x1="181" y1="172" x2="209" y2="172" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
+<path d="M209,172 Q217,172 217,164" class="rail" fill="none"/>
+<path d="M217,66 Q217,58 225,58" class="rail" fill="none"/>
+</g>
+<line x1="225" y1="58" x2="233" y2="58" class="rail"/>
+<circle cx="239" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="239" cy="58" r="3" class="end-circle-inner"/>
+</svg>
