@@ -1,6 +1,6 @@
 # TinyExpression Backend Contract
 
-Last updated: 2026-02-26
+Last updated: 2026-08-26
 
 ## 1. Backend Roles
 
@@ -18,14 +18,14 @@ Last updated: 2026-02-26
 
 3. `AST_EVALUATOR`
    - class family: `org.unlaxer.tinyexpression.evaluator.ast.AstEvaluatorCalculator`
-   - runtime chain: `generated-ast -> token-ast -> javacode-fallback`
+   - runtime: generated P4 AST + `P4TypedAstEvaluator` only
    - role: DSL replacement execution line
    - change policy: primary target for generated AST coverage expansion
 
 4. `DSL_JAVA_CODE`
    - class family: `org.unlaxer.tinyexpression.evaluator.javacode.DslJavaCodeCalculator`
-   - role: DSL JavaCode seam (hybrid: partial native emitter + legacy bridge fallback)
-   - change policy: migration target for expanding native DSL Java emitter coverage
+   - role: generated P4 AST to typed Java source
+   - change policy: expand the P4 grammar/emitter; unsupported syntax fails explicitly
 
 5. `P4_AST_EVALUATOR`
    - class family: `org.unlaxer.tinyexpression.evaluator.p4.P4AstEvaluatorCalculator`
@@ -58,9 +58,9 @@ Last updated: 2026-02-26
 
 1. supported corpus:
    - all six backends must return equivalent values
-   - `AST_EVALUATOR` must avoid `javacode-fallback`
+   - generated AST/DSL backends must never invoke handwritten fallback implementations
    - `P4_AST_EVALUATOR` and `P4_DSL_JAVA_CODE` must return equivalent values to the existing four
-   - Known exception: formulas using syntax not yet covered by the P4 grammar will use fallback paths
+   - formulas outside the P4 grammar must fail explicitly
 2. extracted corpus:
    - all four backends must return equivalent values
    - executed/non-fallback thresholds must pass
@@ -80,8 +80,9 @@ Last updated: 2026-02-26
    - `_tinyDslJavaEmitterMode`
    - `_tinyDslJavaNativeEmitterUsed`
 3. current DSL implementation values:
-   - native-slice hit: `_tinyExecutionImplementation=dsl-javacode-native`
-   - fallback: `_tinyExecutionImplementation=legacy-javacode-bridge`
+   - generated source: `_tinyExecutionImplementation=p4-typed-emitter`
+   - stored artifact: `_tinyExecutionImplementation=precompiled-bytecode`
+   - `_tinyExecutionBridgeImplementation=false`
 
 ## 5. Change Guidelines
 

@@ -18,11 +18,9 @@ import org.unlaxer.parser.Parser;
 /**
  * P4 AST Evaluator backend.
  * <p>
- * Strategy:
- * 1) Attempt to parse formula via type-safe {@code TinyExpressionP4Mapper} (no reflection, no regex).
- * 2) If successful, set {@code _tinyP4ParserUsed=true} and evaluate via {@link AstEvaluatorCalculator}.
- * 3) If P4 parse fails (formula uses syntax not yet covered by P4 grammar), fall back
- *    to {@link AstEvaluatorCalculator} directly and set {@code _tinyP4ParserUsed=false}.
+ * Parses with the type-safe generated P4 mapper and evaluates only the generated
+ * AST via {@link AstEvaluatorCalculator}. Unsupported syntax fails explicitly;
+ * this backend never switches to a handwritten evaluator or Java-code compiler.
  * <p>
  * Runtime markers set:
  * <ul>
@@ -44,7 +42,7 @@ public class P4AstEvaluatorCalculator implements Calculator {
   public P4AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
     this.delegate = new AstEvaluatorCalculator(
-        source, className, specifiedExpressionTypes, classLoader, true);
+        source, className, specifiedExpressionTypes, classLoader);
     initP4Markers(source.source(), specifiedExpressionTypes);
   }
 
@@ -52,7 +50,7 @@ public class P4AstEvaluatorCalculator implements Calculator {
       SpecifiedExpressionTypes specifiedExpressionTypes, byte[] byteCode, String byteCodeHash,
       List<ClassNameAndByteCode> classNameAndByteCodeList, ClassLoader classLoader) {
     this.delegate = new AstEvaluatorCalculator(source, javaCode, className, specifiedExpressionTypes,
-        byteCode, byteCodeHash, classNameAndByteCodeList, classLoader, true);
+        byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
     initP4Markers(source.source(), specifiedExpressionTypes);
   }
 

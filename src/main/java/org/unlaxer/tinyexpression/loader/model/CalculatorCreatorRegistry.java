@@ -23,8 +23,10 @@ public final class CalculatorCreatorRegistry {
     boolean bridgeImplementation = backend.bridgeImplementation();
     if (backend == ExecutionBackend.DSL_JAVA_CODE && calculator instanceof DslJavaCodeCalculator dslJavaCodeCalculator) {
       if (dslJavaCodeCalculator.nativeEmitterUsed()) {
-        implementation = "dsl-javacode-native";
+        implementation = "p4-typed-emitter";
         bridgeImplementation = false;
+      } else if ("precompiled-bytecode".equals(dslJavaCodeCalculator.dslEmitterMode())) {
+        implementation = "precompiled-bytecode";
       }
       calculator.setObject("_tinyDslJavaEmitterMode", dslJavaCodeCalculator.dslEmitterMode());
       calculator.setObject("_tinyDslJavaNativeEmitterUsed", dslJavaCodeCalculator.nativeEmitterUsed());
@@ -157,7 +159,7 @@ public final class CalculatorCreatorRegistry {
         Calculator calc = new P4DslJavaCodeCalculator(source, className, specifiedExpressionTypes, classLoader);
         markExecutionBackend(calc, ExecutionBackend.P4_DSL_JAVA_CODE);
         if (calc instanceof P4DslJavaCodeCalculator p4 && p4.nativeEmitterUsed()) {
-          calc.setObject("_tinyExecutionImplementation", "p4-dsl-javacode-native");
+          calc.setObject("_tinyExecutionImplementation", "p4-typed-emitter");
           calc.setObject("_tinyExecutionBridgeImplementation", false);
         }
         return calc;

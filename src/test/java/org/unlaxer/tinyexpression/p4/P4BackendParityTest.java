@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.p4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
@@ -25,7 +27,7 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
  *   <li>{@code P4_AST_EVALUATOR} and {@code P4_DSL_JAVA_CODE} produce the same evaluation
  *       results as the reference {@code JAVA_CODE} backend.</li>
  *   <li>{@code _tinyP4ParserUsed=true} is set for formulas the P4 grammar can parse.</li>
- *   <li>{@code _tinyP4ParserUsed=false} is set (with graceful fallback) for formulas that
+ *   <li>formulas outside the P4 grammar fail explicitly rather than invoking a fallback.
  *       use tinyexpression syntax not yet covered by the P4 grammar.</li>
  * </ol>
  */
@@ -419,41 +421,25 @@ public class P4BackendParityTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-        .create(new Source(formula), "MatchStrictMethod_p4ast", types, cl);
-
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
-    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+    assertThrows(ParseException.class, () -> CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchStrictMethod_p4ast", types, cl));
   }
 
   // =========================================================================
-  // P6-2-c: P4 backends fall back gracefully for non-P4 syntax
+  // P6-2-c: non-P4 syntax is rejected explicitly
   // =========================================================================
 
   @Test
-  public void testP4FallbackGracefulForOldSyntax() {
+  public void testP4RejectsOldSyntax() {
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
     for (int i = 0; i < P4_UNPARSEABLE_BUT_VALID_FORMULAS.size(); i++) {
       String formula = P4_UNPARSEABLE_BUT_VALID_FORMULAS.get(i);
-      Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-          .create(new Source(formula), "P4Fallback_" + i, types, cl);
-
-      // P4 parser should not have parsed it
-      Boolean used = p4Ast.getObject("_tinyP4ParserUsed", Boolean.class);
-      assertNotNull("_tinyP4ParserUsed should be set even for unparseable formula=" + formula, used);
-      assertFalse("_tinyP4ParserUsed should be false for old-syntax formula=" + formula, used);
-
-      // But evaluation should still work via AST evaluator fallback
-      Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
-          .create(new Source(formula), "P4FallbackRef_" + i, types, cl);
-      CalculationContext ctx = CalculationContext.newConcurrentContext();
-      float ref = floatValue(javaCode.apply(ctx));
-      float p4Val = floatValue(p4Ast.apply(ctx));
-      assertEquals("fallback parity, formula=" + formula, ref, p4Val, 0.001f);
+      int caseIndex = i;
+      assertThrows(ParseException.class, () -> CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+          .create(new Source(formula), "P4Rejected_" + caseIndex, types, cl));
     }
   }
 

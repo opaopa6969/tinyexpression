@@ -49,7 +49,18 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalArgumentsExpr(ArgumentsExpr n) { return n.values().stream().map(this::eval).collect(java.util.stream.Collectors.joining(", ")); }
+  @Override protected String evalQualifiedNameExpr(QualifiedNameExpr n) { return n.tail().isEmpty() ? n.head() : n.head() + "." + String.join(".", n.tail()); }
+  @Override protected String evalNumberMethodDeclarationExpr(NumberMethodDeclarationExpr n) { return ""; }
+  @Override protected String evalStringMethodDeclarationExpr(StringMethodDeclarationExpr n) { return ""; }
+  @Override protected String evalBooleanMethodDeclarationExpr(BooleanMethodDeclarationExpr n) { return ""; }
+  @Override protected String evalObjectMethodDeclarationExpr(ObjectMethodDeclarationExpr n) { return ""; }
+  @Override protected String evalMethodParametersExpr(MethodParametersExpr n) { return ""; }
+  @Override protected String evalMethodParameterExpr(MethodParameterExpr n) { return n.paramName(); }
   @Override protected String evalOnlyIfAbsentExpr(OnlyIfAbsentExpr n) { return "true"; }
+  @Override protected String evalStringCastVariableRefExpr(StringCastVariableRefExpr n) { return "calculateContext.getString(\"" + esc(n.name()) + "\").orElse(\"\")"; }
+  @Override protected String evalStringTypedVariableRefExpr(StringTypedVariableRefExpr n) { return "calculateContext.getString(\"" + esc(n.name()) + "\").orElse(\"\")"; }
+  @Override protected String evalBranchExpressionExpr(BranchExpressionExpr n) { return n.value() instanceof TinyExpressionP4AST ast ? eval(ast) : String.valueOf(n.value()); }
+  @Override protected String evalTernaryExpr(TernaryExpr n) { return "(" + eval(n.condition()) + " ? " + eval(n.thenExpr()) + " : " + eval(n.elseExpr()) + ")"; }
 
   public String buildJavaClass(String className, String expression) {
     String ctx = "org.unlaxer.tinyexpression.CalculationContext";
@@ -561,17 +572,17 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalStartsWithExpr(StartsWithExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").startsWith(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "startsWith");
   }
 
   @Override
   protected String evalEndsWithExpr(EndsWithExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").endsWith(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "endsWith");
   }
 
   @Override
   protected String evalContainsExpr(ContainsExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").contains(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "contains");
   }
 
   @Override
@@ -588,17 +599,29 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
 
   @Override
   protected String evalStartsWithDotExpr(StartsWithDotExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").startsWith(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "startsWith");
   }
 
   @Override
   protected String evalEndsWithDotExpr(EndsWithDotExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").endsWith(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "endsWith");
   }
 
   @Override
   protected String evalContainsDotExpr(ContainsDotExpr node) {
-    return "String.valueOf(" + eval(node.value()) + ").contains(String.valueOf(" + eval(node.pattern()) + "))";
+    return renderAnyStringPredicate(node.value(), node.patterns(), "contains");
+  }
+
+  private String renderAnyStringPredicate(Object value,
+      List<StringConcatExpr> patterns, String method) {
+    String receiver = "String.valueOf(" + renderCaptured(value) + ")";
+    return patterns.stream()
+        .map(pattern -> receiver + "." + method + "(String.valueOf(" + eval(pattern) + "))")
+        .collect(java.util.stream.Collectors.joining(" || ", "(", ")"));
+  }
+
+  private String renderCaptured(Object value) {
+    return value instanceof TinyExpressionP4AST ast ? eval(ast) : String.valueOf(value);
   }
 
   // =========================================================================

@@ -31,8 +31,8 @@
    - `DSL_JAVA_CODE`
    - `P4_AST_EVALUATOR`
    - `P4_DSL_JAVA_CODE`
-2. `AST_EVALUATOR` は `p4-typed -> generated-ast -> token-ast -> javacode-fallback` の順で実行
-3. legacy backend は比較・回帰確認用途として扱い、新機能は原則 `AST_EVALUATOR` / `P4_AST_EVALUATOR` / `P4_DSL_JAVA_CODE` 側へ実装する
+2. `AST_EVALUATOR` / `P4_AST_EVALUATOR` は生成 P4 AST を `P4TypedAstEvaluator` でのみ実行し、未対応時は明示的に失敗する
+3. legacy backend は明示的な比較・回帰確認用途として扱い、generated backend の暗黙 fallback には使わない
 4. 生成物は `runtime` と `tooling` に分離し、通常 compile には `runtime` のみを入れる
 5. mapper root 選択は `P4PreferredAstMapper` に寄せ、runtime / LSP / DAP で同じ preferred-root ルールを使う
 

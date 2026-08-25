@@ -25,7 +25,7 @@ final class GeneratedAstRuntimeProbe {
   /**
    * 生成 P4 文法のバックトラックは深いネストで指数的になり得るため (issue #19)、
    * プローブ全体 (ソース変種の再試行を含む) に時間予算を設ける。予算超過時は
-   * empty を返し、呼び出し側は legacy parser へフォールバックする。
+   * empty を返し、呼び出し側は未対応として明示的に失敗する。
    * システムプロパティ {@code tinyexpression.p4.probe.timeout.millis} で調整可能
    * (デフォルト 5000ms、0 以下で無効)。
    */
@@ -46,6 +46,15 @@ final class GeneratedAstRuntimeProbe {
     Optional<Object> mapped = tryMapAstOnce(source, classLoader, preferredAstSimpleName, deadlineNanos);
     if (mapped.isPresent()) {
       return mapped;
+    }
+    String normalizedSliceReceivers =
+        P4PreferredAstMapper.normalizeParenthesizedSliceReceivers(source);
+    if (!normalizedSliceReceivers.equals(source)) {
+      mapped = tryMapAstOnce(
+          normalizedSliceReceivers, classLoader, preferredAstSimpleName, deadlineNanos);
+      if (mapped.isPresent()) {
+        return mapped;
+      }
     }
     String withoutComments = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
     if (!withoutComments.equals(source)) {
