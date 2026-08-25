@@ -98,7 +98,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalNumberVariableDeclarationExpr(NumberVariableDeclarationExpr node) {
     declaredVariableTypes.put(node.varName(), numberType);
-    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+    if (shouldApplyDeclaration(node.varName(), node.onlyIfAbsent()) && node.value().isPresent()) {
       context.set(node.varName(), (Number) eval(node.value().get()));
     }
     return null;
@@ -107,7 +107,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalStringVariableDeclarationExpr(StringVariableDeclarationExpr node) {
     declaredVariableTypes.put(node.varName(), ExpressionTypes.string);
-    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+    if (shouldApplyDeclaration(node.varName(), node.onlyIfAbsent()) && node.value().isPresent()) {
       context.set(node.varName(), String.valueOf(eval(node.value().get())));
     }
     return null;
@@ -116,7 +116,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr node) {
     declaredVariableTypes.put(node.varName(), ExpressionTypes._boolean);
-    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+    if (shouldApplyDeclaration(node.varName(), node.onlyIfAbsent()) && node.value().isPresent()) {
       context.set(node.varName(), Boolean.TRUE.equals(eval(node.value().get())));
     }
     return null;
@@ -125,11 +125,17 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   @Override
   protected Object evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr node) {
     declaredVariableTypes.put(node.varName(), ExpressionTypes.object);
-    if (!context.isExists(node.varName()) && node.value().isPresent()) {
+    if (shouldApplyDeclaration(node.varName(), node.onlyIfAbsent()) && node.value().isPresent()) {
       context.setObject(node.varName(), eval(node.value().get()));
     }
     return null;
   }
+
+  private boolean shouldApplyDeclaration(String name, Optional<OnlyIfAbsentExpr> onlyIfAbsent) {
+    return onlyIfAbsent.isEmpty() || !context.isExists(name);
+  }
+
+  @Override protected Object evalOnlyIfAbsentExpr(OnlyIfAbsentExpr node) { return Boolean.TRUE; }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
     if (types.numberType() != null) {

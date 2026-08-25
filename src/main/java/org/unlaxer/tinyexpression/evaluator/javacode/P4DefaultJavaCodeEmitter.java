@@ -49,6 +49,7 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalArgumentsExpr(ArgumentsExpr n) { return n.values().stream().map(this::eval).collect(java.util.stream.Collectors.joining(", ")); }
+  @Override protected String evalOnlyIfAbsentExpr(OnlyIfAbsentExpr n) { return "true"; }
 
   public String buildJavaClass(String className, String expression) {
     String ctx = "org.unlaxer.tinyexpression.CalculationContext";

@@ -57,6 +57,7 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
   @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalObjectVariableDeclarationExpr(ObjectVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalArgumentsExpr(ArgumentsExpr n) { return defaultEmitter.eval(n); }
+  @Override protected String evalOnlyIfAbsentExpr(OnlyIfAbsentExpr n) { return "true"; }
 
   public String buildJavaClass(String className, String expression) {
     return defaultEmitter.buildJavaClass(className, expression);

@@ -47,51 +47,55 @@ grammar TinyExpressionP4 {
     | ObjectVariableDeclaration ;
 
   @declares(symbol=varName, description=desc)
-  @mapping(NumberVariableDeclarationExpr, params=[varName, value, desc])
+  @mapping(NumberVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   NumberVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ NumberTypeHint ]
-    [ 'set' [ 'if' 'not' 'exists' ] NumberExpression @value ]
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] NumberExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
-  @mapping(StringVariableDeclarationExpr, params=[varName, value, desc])
+  @mapping(StringVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   StringVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ StringTypeHint ]
-    [ 'set' [ 'if' 'not' 'exists' ] StringExpression @value ]
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] StringExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
-  @mapping(BooleanVariableDeclarationExpr, params=[varName, value, desc])
+  @mapping(BooleanVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   BooleanVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
-    [ 'set' [ 'if' 'not' 'exists' ] BooleanExpression @value ]
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] BooleanExpression @value ]
     Description @desc
     ';' ;
 
   @declares(symbol=varName, description=desc)
-  @mapping(ObjectVariableDeclarationExpr, params=[varName, value, desc])
+  @mapping(ObjectVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   ObjectVariableDeclaration ::=
     ( 'var' | 'variable' )
     '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
-    [ 'set' [ 'if' 'not' 'exists' ] ObjectExpression @value ]
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] ObjectExpression @value ]
     Description @desc
     ';' ;
 
-  TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
+  TypeHint ::= [ 'as' ] ( 'number' | 'Number' | 'string' | 'String'
+    | 'boolean' | 'Boolean' | 'object' | 'Object' ) ;
 
-  NumberTypeHint ::= [ 'as' ] ( 'number' | 'float' ) ;
-  StringTypeHint ::= [ 'as' ] 'string' ;
-  BooleanTypeHint ::= [ 'as' ] 'boolean' ;
-  ObjectTypeHint ::= [ 'as' ] 'object' ;
+  NumberTypeHint ::= [ 'as' ] ( 'number' | 'Number' | 'float' | 'Float' ) ;
+  StringTypeHint ::= [ 'as' ] ( 'string' | 'String' ) ;
+  BooleanTypeHint ::= [ 'as' ] ( 'boolean' | 'Boolean' ) ;
+  ObjectTypeHint ::= [ 'as' ] ( 'object' | 'Object' ) ;
+
+  @mapping(OnlyIfAbsentExpr)
+  OnlyIfAbsent ::= 'if' 'not' 'exists' ;
 
   Description ::= 'description' '=' STRING ;
 
