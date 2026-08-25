@@ -2,7 +2,7 @@
   "repo": "tinyexpression",
   "surveyed_at": "2026-08-22T00:00:00Z",
   "kind": "library",
-  "summary": "Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。6 つの実行バックエンド（JavaCode / AST / P4 系列）を持ち、LSP/DAP で VS Code 拡張も提供。Maven Central 座標は org.unlaxer:tinyExpression:1.4.11。",
+  "summary": "Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。6 つの実行バックエンド（JavaCode / AST / P4 系列）を持ち、LSP/DAP で VS Code 拡張も提供。Maven Central 座標は org.unlaxer:tinyExpression:1.4.12。",
   "decision": "library-serve",
   "decision_reason": "純粋な Java ライブラリであり常駐サーバを持たないが、式評価エンジンを MCP サーバ化すればエージェントが直接「式を評価する」能力を呼べるようになる。外部 Java メソッド呼び出しや Java コードブロック等の高度な機能はサーバ側で制御が必要だが、基本的な式評価（if/match/算術・文字列・比較演算・組み込み関数）は入出力が明確で tool に適している。municipality-stats / building-starts / establishment-census 等のデータ系ライブラリの値を CalculationContext に流し込んで式評価する組み合わせが描ける。JVM 常駐のメリット（javac コンパイルキャッシュ・AST 評価器のウォームアップ）もあり、起動コストが軽くない JAVA_CODE バックエンドでは常駐の価値がある。",
   "existing": {
@@ -99,14 +99,14 @@
       "direction": "depends_on",
       "capability": "Parser combinator ランタイム（レガシーパーサーのベース）",
       "exists_now": true,
-      "note": "Maven 依存 org.unlaxer:unlaxer-common:3.0.11。MCP 化には影響なし（JAR に同梱）"
+      "note": "Maven 依存 org.unlaxer:unlaxer-common:3.0.12。MCP 化には影響なし（JAR に同梱）"
     },
     {
       "repo": "unlaxer-dsl",
       "direction": "depends_on",
       "capability": "UBNF 文法からのパーサー自動生成（P4 パーサー生成）",
       "exists_now": true,
-      "note": "Maven 依存 org.unlaxer:unlaxer-dsl:3.0.11。MCP 化には影響なし（JAR に同梱）"
+      "note": "Maven 依存 org.unlaxer:unlaxer-dsl:3.0.12。MCP 化には影響なし（JAR に同梱）"
     },
     {
       "repo": "tinyexpression-ide",

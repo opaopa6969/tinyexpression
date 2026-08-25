@@ -4,9 +4,9 @@
 
 確認済みベースライン（2026-04-24）:
 
-1. `tinyexpression` `1.4.11`
-2. `unlaxer-common` `3.0.2`
-3. `unlaxer-dsl` `3.0.2`
+1. `tinyexpression` `1.4.12`
+2. `unlaxer-common` `3.0.12`
+3. `unlaxer-dsl` `3.0.12`
 4. build grammar: `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`
 5. snapshot grammar: `docs/ubnf/tinyexpression-p4-complete.ubnf`
 
@@ -97,28 +97,20 @@
 
 注意:
 
-1. 末端ノードが非mappedの時は mapper 側 leaf fallback が必要
+1. 末端ノードも必要な値を AST に保持するよう mapping を定義する。非mapped leaf を別 evaluator で補う実行時 fallback は設けない
 2. Token API 差分を吸収するため、生成 mapper は compatibility helper を使う
 
 ## 6. AST から実行可能状態へ変換する方法
 
-TinyExpression では次の3段階で実行:
+TinyExpression の generated backend は次の固定経路で実行する:
 
-1. `GeneratedAstRuntimeProbe.tryMapAst(...)` で generated mapper 実行
-2. `GeneratedP4ValueAstEvaluator` で generated AST を直接評価（対応範囲）
-3. 数値 leaf が `$name` の場合は `CalculationContext` から数値を解決して評価
-4. P4 draft では `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` の mapping を追加済み
-5. choice capture は生成mapper側で複数候補探索 + 型互換ガードにより constructor型不整合を抑制
-6. `GeneratedP4ValueAstEvaluator` で `string`/`boolean`/`object` の単純式評価を generated AST 経路に追加
-7. `AstDeclarationRuntime` で declaration setter の基本実行（object path）を generated-path 前段に導入
-8. `AstEvaluatorGeneratedValuePathTest` で `boolean`/`object`（literal/variable/declaration setter）の generated-path 実行を検証
-9. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
-10. generated mapper は `parse(source, preferredAstSimpleName)` を持ち、result type に応じて root candidate を優先選択できる
+1. `P4PreferredAstMapper` / `GeneratedAstRuntimeProbe` が generated mapper で preferred root を選ぶ
+2. `AST_EVALUATOR` / `P4_AST_EVALUATOR` は `P4TypedAstEvaluator` で generated AST を評価する
+3. `DSL_JAVA_CODE` / `P4_DSL_JAVA_CODE` は `P4TypedJavaCodeEmitter` で generated AST から Java を生成する
+4. 変数は `CalculationContext` から型付きで解決する
+5. parse・mapping・typing・評価・emission の未対応箇所は明示的に失敗する
 
-要点:
-
-1. fallback がある限り段階移行できる
-2. 対応式を増やすと `javacode-fallback` 使用率が下がる
+`JAVA_CODE` と `JAVA_CODE_LEGACY_ASTCREATOR` は比較用に明示選択できるが、generated backend から暗黙に切り替わることはない。
 
 ## 7. LSP / DAP と接続する方法
 
@@ -133,10 +125,10 @@ TinyExpression では次の3段階で実行:
 ### DAP
 
 1. `DAPGenerator` が `...DebugAdapter` を生成
-2. launch引数 `runtimeMode` (`token` / `legacy-astcreator` / `ast` / `dsl-javacode`) を受ける
+2. launch引数 `runtimeMode`（`p4-ast` / `p4-dsl-javacode`）と構造表示用 `steppingMode`（`ast` / `token`）を別々に受ける
 3. `ast` モードでは mapper AST の可視化情報（`astNodeCount`, `astCurrentNode`）を variables に出す
 4. `ast` モードでは stackTrace / breakpoint line 判定に mapper の AST node source span を利用
-5. step順序自体は引き続き互換優先（AST node列挙 + token fallback 併用）
+5. `steppingMode=ast` の mapping 失敗は明示終了し、token step へ暗黙 fallback しない
 6. 現行 P4 DAP / runtime bridge は `_tinyP4ParserUsed`, `_tinyP4ParserExact`, `_tinyP4ParserProbeMode`,
    `_tinyP4AstNodeType`, `_tinyP4AstNodePath`, `parity.*` を公開する
 

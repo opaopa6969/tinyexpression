@@ -2,7 +2,7 @@
 
 [English version](getting-started.md)
 
-TinyExpression v1.4.11 を Java プロジェクトに組み込む手順を説明します。
+TinyExpression v1.4.12 を Java プロジェクトに組み込む手順を説明します。
 
 ---
 
@@ -21,7 +21,7 @@ TinyExpression v1.4.11 を Java プロジェクトに組み込む手順を説明
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.11</version>
+  <version>1.4.12</version>
 </dependency>
 ```
 

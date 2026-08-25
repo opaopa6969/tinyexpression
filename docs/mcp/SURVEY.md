@@ -4,7 +4,7 @@
 
 ## 概要
 
-TinyExpression は **Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）** である。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。Maven Central 座標は `org.unlaxer:tinyExpression:1.4.11`。
+TinyExpression は **Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）** である。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。Maven Central 座標は `org.unlaxer:tinyExpression:1.4.12`。
 
 6 つの実行バックエンド（JavaCode / AST / P4 系列）を持ち、VS Code 拡張（LSP/DAP）も提供する。純粋な Java ライブラリであり、常駐サーバ・HTTP API・CLI は持たない。
 
@@ -74,7 +74,7 @@ volta カタログには `tinyexpression`（type: library）として登録済�
 - **Java コードブロック**: JVM 上で任意コードを実行する（セキュリティリスク）。MCP tool ではデフォルト無効化し、明示的な opt-in フラグでのみ有効にする設計が必要。
 - **JAVA_CODE バックエンドの起動オーバーヘッド**: 初回コンパイル時に `javac` を呼ぶ。常駐サーバ化でキャッシュが効くメリットがある一方、メモリ使用量に注意。
 - **external Java メソッド呼び出し**: ホストアプリケーションのクラスパスに依存するため、MCP サーバ化時には制約が大きい。サーバ側で事前登録可能なメソッドセットを限定する必要がある。
-- **P4 文法のカバレッジ**: 128 機能中 68 が PARITY。未カバー構文はフォールバックパスを使用するため、パリティチェック tool の結果解釈に注意。
+- **P4 文法のカバレッジ**: 未カバー構文は generated backend で明示失敗する。`parity_check` の legacy backend 結果は比較値であり fallback 実行ではない。
 - **Java 21+ が必要**: volta の既存 Java サービス（building-hierarchy, nanori-engine 等）と同等のランタイム要件。
 
 ## 持ち主への質問

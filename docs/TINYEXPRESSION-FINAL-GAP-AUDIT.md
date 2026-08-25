@@ -2,6 +2,9 @@
 
 Last updated: 2026-02-26
 
+> Historical audit snapshot. Current generated-only/no-fallback behavior is defined by
+> `decisions/ADR-004-generated-backends-no-fallback.md` and `TINYEXPRESSION-BACKEND-CONTRACT.md`.
+
 ## Target
 
 1. TinyExpression parser/AST/runtime/tooling path is fully replaceable by `unlaxer-dsl` generated artifacts.

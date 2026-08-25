@@ -5,14 +5,22 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.12] - 2026-08-26
+
 ### Changed
 - Restore the published Maven coordinate `org.unlaxer:tinyExpression` and migrate release publishing from the retired OSSRH service to Central Publisher Portal.
-- Adopt unlaxer-dsl/common **3.0.10** (opt-in packrat memoization, unlaxer-parser #40). Pure dependency bump — generated sources unchanged (memoization is off by default in the parser).
+- Adopt unlaxer-dsl/common **3.0.12**, including the runnable generated DAP launcher and application runtime hook.
+- `tinyexpression-p4-lsp` **0.2.4** uses standard `program` launch configuration, separates `runtimeMode` from `steppingMode`, and accepts typed JSON launch variables.
 
 ### Added
-- **Opt-in packrat memoization for P4 parsing** (`-Dtinyexpression.p4.memoize=true`, wired in `P4PreferredAstMapper`). Off by default. Collapses the exponential backtracking of deeply nested fraud-detection formulas (#19/#38): the boolean/parenthesis-ambiguity formulas (#19 examples 1–4) parse in <0.5s instead of hitting the 10s parse deadline and falling back to legacy. The deeply nested-`if` formula (#19 example 5) is helped but remains ~10–20s — its bottleneck is `StringSource.peek` allocation, not `(rule,position)` re-derivation (tracked as a follow-up); it still falls back via the deadline in production. Verified by `P4PackratFraudFormulaTest`.
+- **Usable VS Code DAP integration**: AST entry stop/step/stack/variables, selected P4 backend result, real `CalculationContext` inputs, all-six-backend parity, and Debug Console evaluation through TinyExpression itself.
+- **Automated DAP integration coverage** for launch, AST stack, typed variables, P4 markers, parity, Debug Console, and the legacy `formulaSource` launch alias.
+- **Opt-in packrat memoization for P4 parsing** (`-Dtinyexpression.p4.memoize=true`, wired in `P4PreferredAstMapper`). Off by default. Collapses the exponential backtracking of deeply nested fraud-detection formulas (#19/#38): the boolean/parenthesis-ambiguity formulas (#19 examples 1–4) parse in <0.5s instead of hitting the 10s parse deadline. Generated backends now report deadline/coverage failures explicitly rather than switching to a handwritten evaluator. Verified by `P4PackratFraudFormulaTest`.
 
 ### Fixed
+- DAP parity flags now mean all six backends actually evaluated; `parity.equalAllWithP4` remains a compatibility alias of `parity.equalAll`.
+- Unknown DAP `runtimeMode` values no longer silently select `JAVA_CODE`; blank mode defaults to generated `P4_AST_EVALUATOR`, while invalid mode returns an explicit diagnostic.
+- Removed the Debug Console's handwritten regex substitution and recursive-descent arithmetic evaluator; evaluation now uses the selected TinyExpression backend.
 - `P4TypedAstEvaluator`: declared variable types (`var $name as string …`) now make `$name == $other` a **string** comparison on the pure-AST path, instead of coercing both operands to boolean. Variable declarations carry `@declares` (not `@mapping`) so they are dropped from the generated AST; declared types are now threaded from `AstDeclarationRuntime` into the evaluator (mirrors the legacy `VariableTypeResolver`). Resolves the last pure-AST (if-source-shadow OFF) failure in `testTypeInference`. Consumer-only change — no unlaxer-dsl/codegen release. (#32 / handoff #44 "C")
 
 ## [1.4.11] - 2026-04-21
