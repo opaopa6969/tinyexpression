@@ -83,6 +83,17 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
+    public void variableDescriptionIsOptionalInGeneratedGrammar() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, "var $base as float set if not exists 40;\n$base + 2");
+
+        assertTrue("valid declaration without description must not produce diagnostics: "
+            + client.lastDiagnostics, client.lastDiagnostics.isEmpty());
+    }
+
+    @Test
     public void testDiagnosticsTE011() {
         final boolean[] called = {false};
         server.connect(new DummyLanguageClient() {

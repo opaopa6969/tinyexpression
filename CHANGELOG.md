@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.15] - 2026-08-27
+
+### Fixed
+- UBNF-generated P4 parsers now treat variable `description='...'` metadata as optional for number, string, boolean, and object declarations, matching the published DSL specification.
+- TinyExpression P4 LSP/DAP 0.2.35 accepts declarations such as `var $base as float set if not exists 40;` without reporting the terminating semicolon as an error.
+
 ## [1.4.14] - 2026-08-26
 
 ### Added

@@ -8,7 +8,7 @@ TinyExpression is a **hybrid architecture** — a hand-written legacy parser sta
 
 Verified baseline as of 2026-04-24:
 
-- `tinyexpression` `1.4.14`
+- `tinyexpression` `1.4.15`
 - `unlaxer-common` `3.0.2`
 - `unlaxer-dsl` `3.0.2`
 

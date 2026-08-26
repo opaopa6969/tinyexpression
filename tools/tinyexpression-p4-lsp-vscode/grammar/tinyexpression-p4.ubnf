@@ -54,7 +54,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER @varName
     [ NumberTypeHint ]
     [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] NumberExpression @value ]
-    Description @desc
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
@@ -64,7 +64,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER @varName
     [ StringTypeHint ]
     [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] StringExpression @value ]
-    Description @desc
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
@@ -74,7 +74,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
     [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] BooleanExpression @value ]
-    Description @desc
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
@@ -84,7 +84,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
     [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] ObjectExpression @value ]
-    Description @desc
+    [ Description @desc ]
     ';' ;
 
   TypeHint ::= [ 'as' ] ( 'number' | 'Number' | 'string' | 'String'

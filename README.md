@@ -47,7 +47,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.14</version>
+  <version>1.4.15</version>
 </dependency>
 ```
 

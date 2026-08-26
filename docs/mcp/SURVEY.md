@@ -4,7 +4,7 @@
 
 ## 概要
 
-TinyExpression は **Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）** である。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。Maven Central 座標は `org.unlaxer:tinyExpression:1.4.14`。
+TinyExpression は **Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）** である。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。Maven Central 座標は `org.unlaxer:tinyExpression:1.4.15`。
 
 6 つの実行バックエンド（JavaCode / AST / P4 系列）を持ち、VS Code 拡張（LSP/DAP）も提供する。純粋な Java ライブラリであり、常駐サーバ・HTTP API・CLI は持たない。
 
