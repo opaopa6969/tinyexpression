@@ -47,7 +47,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.13</version>
+  <version>1.4.14</version>
 </dependency>
 ```
 
@@ -145,7 +145,7 @@ List<CalculationResult> results = executor.execute(
     ctx,
     resultConsumer,
     cache,
-    Comparator.comparingInt(Calculator::dependsOnByNestLevel),
+    Comparator.comparingInt(Calculator::dependsOnByNestLevel).reversed(),
     calculator -> true,
     Thread.currentThread().getContextClassLoader());
 ```
@@ -266,12 +266,17 @@ VS Code 拡張 [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode
 - 宣言・import・method・`.tecatalog` を使う補完とホバー
 - DAP デバッグ（6 バックエンドのパリティ比較）
 
-DAP 0.2.32 は生成AST上の停止・ブレークポイント・実ランタイム評価に加え、
+DAP 0.2.33 は生成AST上の停止・ブレークポイント・実ランタイム評価に加え、
 人向けの期待値付き構文診断と、LLM/editor向けの構造化診断dataに対応します。
 `launch.json` の `variables` は `CalculationContext` に型付きで注入され、選択バックエンド、
 6バックエンド比較、Debug Consoleで共通利用されます。停止中はVariablesビューから値を変更し、
 同じコンテキストで再評価できます。詳細は
 [VS Code拡張README](tools/tinyexpression-p4-lsp-vscode/README.md) を参照してください。
+
+`formulaInfo.txt`も自動認識し、`calculatorName`で対象式を選択できます。既定の
+`runtimeMode: metadata`は各ブロックの`executionBackend`に従い、依存式を先に実行して
+Variablesビューへ式ごとの結果を表示します。埋め込みJavaは編集・色付けできますが、実行は
+安全のため既定で無効です。
 
 外部リポジトリ: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
 

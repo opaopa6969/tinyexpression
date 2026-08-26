@@ -2,7 +2,7 @@
 
 [日本語版](getting-started-ja.md)
 
-This guide walks you through integrating TinyExpression v1.4.13 into a Java project.
+This guide walks you through integrating TinyExpression v1.4.14 into a Java project.
 
 ---
 
@@ -21,7 +21,7 @@ Add the dependency to your `pom.xml`:
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.13</version>
+  <version>1.4.14</version>
 </dependency>
 ```
 
@@ -182,7 +182,7 @@ List<CalculationResult> results = executor.execute(
     ctx,
     resultConsumer,
     cache,
-    Comparator.comparingInt(Calculator::dependsOnByNestLevel), // dependency order
+    Comparator.comparingInt(Calculator::dependsOnByNestLevel).reversed(), // dependencies first
     calculator -> true,                                         // include all formulas
     Thread.currentThread().getContextClassLoader());
 

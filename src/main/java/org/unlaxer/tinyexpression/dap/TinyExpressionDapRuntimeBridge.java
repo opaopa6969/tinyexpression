@@ -1,7 +1,10 @@
 package org.unlaxer.tinyexpression.dap;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -9,7 +12,10 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfoList;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
@@ -118,6 +124,90 @@ public final class TinyExpressionDapRuntimeBridge {
           createError.getClass().getSimpleName() + ":" + safeMessage(createError)));
     }
     return vars;
+  }
+
+  /**
+   * Execute a complete FormulaInfo document in dependency order and expose per-formula results.
+   * Calculator creation follows each block's {@code executionBackend} metadata.
+   */
+  public static Map<String, String> debugFormulaInfoVariables(
+      String documentSource, String selectedCalculatorName, Map<String, ?> variables) {
+    LinkedHashMap<String, String> resultVariables = new LinkedHashMap<>();
+    resultVariables.put("formulaInfoDocument", "true");
+    try {
+      FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
+          null, info -> info.calculatorName == null ? "" : info.calculatorName);
+      FormulaInfoList formulaInfoList = FormulaInfoList.parse(
+          documentSource == null ? "" : documentSource,
+          fields,
+          Thread.currentThread().getContextClassLoader()).get();
+
+      List<FormulaInfo> formulas = new ArrayList<>(formulaInfoList.get());
+      formulas.sort(Comparator
+          .comparingInt((FormulaInfo info) -> info.calculator().dependsOnByNestLevel())
+          .reversed());
+      CalculationContext context = newContext(variables);
+      String selected = selectedCalculatorName == null ? "" : selectedCalculatorName;
+      if (selected.isBlank() && !formulas.isEmpty()) {
+        selected = formulas.get(0).calculatorName;
+      }
+      resultVariables.put("formulaInfo.selectedCalculator", selected);
+      resultVariables.put("formulaInfo.formulaCount", String.valueOf(formulas.size()));
+
+      for (FormulaInfo info : formulas) {
+        Calculator calculator = info.calculator();
+        String name = info.calculatorName == null || info.calculatorName.isBlank()
+            ? calculator.getClass().getSimpleName() : info.calculatorName;
+        String prefix = "formulaInfo." + name + ".";
+        try {
+          calculator.before(context);
+          Object value = calculator.apply(context);
+          calculator.after(context);
+          writeResultToContext(info, context, value);
+          resultVariables.put(prefix + "backend", info.executionBackend);
+          resultVariables.put(prefix + "result", truncate(String.valueOf(value)));
+          resultVariables.put(prefix + "normalized", truncate(normalizeResult(value)));
+          resultVariables.put(prefix + "type",
+              truncate(value == null ? "null" : value.getClass().getName()));
+          if (name.equals(selected)) {
+            resultVariables.put("formulaInfo.selectedResult", truncate(String.valueOf(value)));
+            resultVariables.put("formulaInfo.selectedResultNormalized",
+                truncate(normalizeResult(value)));
+            resultVariables.put("formulaInfo.selectedBackend", info.executionBackend);
+            resultVariables.put("selectedExecutionBackend", info.executionBackend);
+            resultVariables.put("evaluationResult", truncate(String.valueOf(value)));
+            resultVariables.put("evaluationResultNormalized", truncate(normalizeResult(value)));
+            resultVariables.put("evaluationResultType",
+                truncate(value == null ? "null" : value.getClass().getName()));
+          }
+        } catch (Throwable formulaError) {
+          resultVariables.put(prefix + "error", truncate(
+              formulaError.getClass().getSimpleName() + ":" + safeMessage(formulaError)));
+          if (name.equals(selected)) {
+            resultVariables.put("formulaInfo.selectedError", resultVariables.get(prefix + "error"));
+          }
+        }
+      }
+    } catch (Throwable error) {
+      resultVariables.put("formulaInfo.error", truncate(
+          error.getClass().getSimpleName() + ":" + safeMessage(error)));
+    }
+    return resultVariables;
+  }
+
+  private static void writeResultToContext(
+      FormulaInfo formulaInfo, CalculationContext context, Object value) {
+    formulaInfo.getValue("var").filter(name -> !name.isBlank()).ifPresent(name -> {
+      if (value instanceof Number number) {
+        context.set(name, number);
+      } else if (value instanceof String string) {
+        context.set(name, string);
+      } else if (value instanceof Boolean bool) {
+        context.set(name, bool);
+      } else if (value != null) {
+        context.setObject(name, value);
+      }
+    });
   }
 
   private static void copyMarker(Calculator calculator, String key, Map<String, String> target) {

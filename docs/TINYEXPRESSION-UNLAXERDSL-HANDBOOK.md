@@ -4,9 +4,9 @@
 
 確認済みベースライン（2026-04-24）:
 
-1. `tinyexpression` `1.4.13`
-2. `unlaxer-common` `3.0.13`
-3. `unlaxer-dsl` `3.0.13`
+1. `tinyexpression` `1.4.14`
+2. `unlaxer-common` `3.0.14`
+3. `unlaxer-dsl` `3.0.14`
 4. build grammar: `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`
 5. snapshot grammar: `docs/ubnf/tinyexpression-p4-complete.ubnf`
 

@@ -2,7 +2,7 @@
 
 [日本語版](backends-ja.md)
 
-TinyExpression v1.4.13 provides 6 execution backends. This document describes their differences, selection contract, and recommended usage.
+TinyExpression v1.4.14 provides 6 execution backends. This document describes their differences, selection contract, and recommended usage.
 
 ---
 

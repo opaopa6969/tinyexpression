@@ -103,6 +103,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 import org.unlaxer.dsl.runtime.ScopeStore;
 
 /**
@@ -682,6 +683,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setCode(Either.forLeft("TE022"));
       d.setMessage(ERROR_CATALOG.get("TE022").fullMessage()
           + " (catalog 未登録の変数: " + dollarName + ")");
+      d.setData(diagnosticData(
+          "TE022", "catalog", start,
+          Map.of("symbol", dollarName, "fix", ERROR_CATALOG.get("TE022").fix())));
       out.add(d);
     }
     return out;
@@ -719,6 +723,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSource("tinyexpression-p4-semantic");
       d.setCode(Either.forLeft(semanticIssue.code()));
       d.setMessage(semanticIssue.message());
+      ErrorCatalogEntry entry = ERROR_CATALOG.get(semanticIssue.code());
+      d.setData(diagnosticData(
+          semanticIssue.code(), "semantic", d.getRange().getStart(),
+          entry == null ? Map.of() : Map.of("fix", entry.fix())));
       diagnostics.add(d);
     }
     if (failures.hasFailure()) {
@@ -745,6 +753,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       String message = resolveCatalogMessage(hint, snippet, leading);
       d.setMessage(message);
+      ErrorCatalogEntry entry = ERROR_CATALOG.get(code);
+      Map<String, Object> details = new LinkedHashMap<>();
+      details.put("offset", offset);
+      details.put("consumedLength", offset);
+      details.put("totalLength", content.length());
+      details.put("expectedHints", failures.expectedHints());
+      if (entry != null) details.put("fix", entry.fix());
+      d.setData(diagnosticData(code, "syntax", start, details));
       diagnostics.add(d);
     }
     extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
@@ -1229,7 +1245,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   /** Metadata field names that may appear before the formula: line. */
   private static final List<String> METADATA_FIELD_NAMES = List.of(
       "calculatorName", "resultType", "numberType", "tags", "description",
-      "dependsOn", "executionBackend",
+      "dependsOn", "var", "executionBackend", "backend",
       "periodStartInclusive", "periodEndExclusive");
 
   /** Suggested values for resultType: field. */
@@ -1238,22 +1254,41 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   /** Suggested values for executionBackend: field. */
   private static final List<String> EXECUTION_BACKEND_VALUES = List.of(
-      "JAVA_CODE", "AST_EVALUATOR", "DSL_JAVA_CODE");
+      "JAVA_CODE", "JAVA_CODE_LEGACY_ASTCREATOR", "AST_EVALUATOR", "DSL_JAVA_CODE",
+      "P4_AST_EVALUATOR", "P4_DSL_JAVA_CODE");
 
   /**
-   * Returns true if the given line (0-based, in the full document) is in the
-   * metadata section — i.e. before the first {@code formula:} line.
+   * Returns true if the given line (0-based, in the full document) is in a
+   * FormulaInfo metadata section. Multi-part documents return to metadata mode
+   * after each {@code ---END_OF_PART---} marker.
    */
   static boolean isMetadataLine(String fullContent, int line) {
     String[] lines = fullContent.split("\n", -1);
-    // Find the first formula: line
+    boolean hasFormula = false;
+    for (String candidate : lines) {
+      if (FORMULA_LINE_MARKER.equals(candidate.stripTrailing().replace("\r", ""))) {
+        hasFormula = true;
+        break;
+      }
+    }
+    if (!hasFormula || line < 0 || line >= lines.length) {
+      return false;
+    }
+
+    boolean inFormula = false;
     for (int i = 0; i < lines.length; i++) {
       String stripped = lines[i].stripTrailing().replace("\r", "");
       if (FORMULA_LINE_MARKER.equals(stripped)) {
-        return line < i;
+        if (i == line) return false;
+        inFormula = true;
+      } else if (PART_END_MARKER.equals(stripped)) {
+        if (i == line) return false;
+        inFormula = false;
+      } else if (i == line) {
+        return !inFormula;
       }
     }
-    return false; // no formula: marker — not a FormulaInfo document
+    return false;
   }
 
   /**
@@ -1337,10 +1372,51 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         d.setSource("formulainfo");
         d.setCode(Either.forLeft("FI001"));
         d.setMessage("dependsOn: '" + depName + "' does not match any calculatorName in this document.");
+        d.setData(diagnosticData(
+            "FI001", "metadata", start,
+            Map.of("field", "dependsOn", "value", depName,
+                "availableCalculatorNames", List.copyOf(calcNames.keySet()))));
         diags.add(d);
       }
     }
+
+    String[] lines = fullContent.split("\n", -1);
+    for (int i = 0; i < lines.length; i++) {
+      String line = lines[i].replace("\r", "");
+      String stripped = line.stripLeading();
+      String field = stripped.startsWith("executionBackend:")
+          ? "executionBackend" : stripped.startsWith("backend:") ? "backend" : null;
+      if (field == null) continue;
+      String value = stripped.substring(stripped.indexOf(':') + 1).strip();
+      if (value.isEmpty() || ExecutionBackend.parse(value).isPresent()) continue;
+
+      int column = Math.max(0, line.indexOf(value));
+      Position start = new Position(i, column);
+      Diagnostic diagnostic = new Diagnostic();
+      diagnostic.setRange(new Range(start, new Position(i, column + value.length())));
+      diagnostic.setSeverity(DiagnosticSeverity.Error);
+      diagnostic.setSource("formulainfo");
+      diagnostic.setCode(Either.forLeft("FI002"));
+      diagnostic.setMessage("[FI002] Unknown execution backend '" + value
+          + "'. Choose one of: " + String.join(", ", EXECUTION_BACKEND_VALUES));
+      diagnostic.setData(diagnosticData(
+          "FI002", "metadata", start,
+          Map.of("field", field, "value", value, "allowedValues", EXECUTION_BACKEND_VALUES)));
+      diags.add(diagnostic);
+    }
     return diags;
+  }
+
+  private static Map<String, Object> diagnosticData(
+      String code, String kind, Position position, Map<String, ?> details) {
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("schemaVersion", 1);
+    data.put("code", code);
+    data.put("kind", kind);
+    data.put("line", position.getLine());
+    data.put("character", position.getCharacter());
+    if (details != null) data.putAll(details);
+    return data;
   }
 
   // =========================================================================
@@ -1558,7 +1634,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
         List<String> values = switch (fieldName) {
           case "resultType", "numberType" -> RESULT_TYPE_VALUES;
-          case "executionBackend" -> EXECUTION_BACKEND_VALUES;
+          case "executionBackend", "backend" -> EXECUTION_BACKEND_VALUES;
           case "dependsOn" -> {
             // Suggest existing calculatorName values
             Map<String, Integer> calcNames = collectCalculatorNames(fullContent);

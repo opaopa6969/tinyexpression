@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.dap.p4;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -21,6 +22,7 @@ import org.eclipse.lsp4j.debug.Variable;
 import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolClient;
 import org.junit.Test;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 
 public class TinyExpressionP4DebugAdapterExtTest {
 
@@ -102,6 +104,89 @@ public class TinyExpressionP4DebugAdapterExtTest {
       adapter.configurationDone(new ConfigurationDoneArguments()).join();
       assertTrue(clientEvents.contains("stopped"));
     } finally {
+      Files.deleteIfExists(program);
+    }
+  }
+
+  @Test
+  public void formulaInfoSelectsCalculatorMapsLinesAndExecutesDependencies() throws Exception {
+    Path program = Files.createTempFile("tinyexpression-dap-formula-info-", ".formulainfo");
+    Files.writeString(program, """
+        calculatorName:base
+        resultType:float
+        var:baseResult
+        formula:
+        5
+        ---END_OF_PART---
+        calculatorName:derived
+        resultType:float
+        executionBackend:P4_AST_EVALUATOR
+        dependsOn:base
+        formula:
+        # this FormulaInfo comment is masked without shifting source lines
+        var $baseResult as number set if not exists 0 description='dependency result';
+        var $input as number set if not exists 0 description='launch input';
+        $baseResult + $input
+        ---END_OF_PART---
+        """);
+    try {
+      List<String> clientEvents = new ArrayList<>();
+      TinyExpressionP4DebugAdapterExt adapter = new TinyExpressionP4DebugAdapterExt();
+      adapter.connect(recordingClient(clientEvents));
+      adapter.launch(Map.of(
+          "program", program.toString(),
+          "runtimeMode", "metadata",
+          "calculatorName", "derived",
+          "steppingMode", "ast",
+          "stopOnEntry", true,
+          "variables", Map.of("input", 10))).join();
+      assertFalse(JavaCodeBlockPolicy.isEnabled());
+      adapter.configurationDone(new ConfigurationDoneArguments()).join();
+
+      assertTrue(clientEvents.contains("stopped"));
+      StackTraceArguments stackArgs = new StackTraceArguments();
+      stackArgs.setThreadId(1);
+      var stack = adapter.stackTrace(stackArgs).join();
+      assertEquals(program.toString(), stack.getStackFrames()[0].getSource().getPath());
+      assertTrue("line=" + stack.getStackFrames()[0].getLine(),
+          stack.getStackFrames()[0].getLine() >= 12);
+
+      VariablesArguments variableArgs = new VariablesArguments();
+      variableArgs.setVariablesReference(1);
+      Variable[] variables = adapter.variables(variableArgs).join().getVariables();
+      assertVariable(variables, "runtimeMode", "p4-ast");
+      assertVariable(variables, "formulaInfo.selectedCalculator", "derived");
+      assertVariable(variables, "formulaInfo.base.normalized", "5");
+      assertVariable(variables, "formulaInfo.derived.normalized", "15");
+      assertVariable(variables, "formulaInfo.selectedResultNormalized", "15");
+      assertVariable(variables, "formulaInfo.selectedBackend", "P4_AST_EVALUATOR");
+      assertVariable(variables, "selectedExecutionBackend", "P4_AST_EVALUATOR");
+      assertVariable(variables, "evaluationResultNormalized", "15");
+    } finally {
+      JavaCodeBlockPolicy.reset();
+      Files.deleteIfExists(program);
+    }
+  }
+
+  @Test
+  public void embeddedJavaExecutionRequiresExplicitLaunchOptIn() throws Exception {
+    Path program = Files.createTempFile("tinyexpression-dap-java-policy-", ".tinyexp");
+    Files.writeString(program, "1 + 1");
+    try {
+      TinyExpressionP4DebugAdapterExt adapter = new TinyExpressionP4DebugAdapterExt();
+      adapter.connect(recordingClient(new ArrayList<>()));
+      adapter.launch(Map.of("program", program.toString())).join();
+      assertFalse(JavaCodeBlockPolicy.isEnabled());
+
+      adapter.launch(Map.of(
+          "program", program.toString(),
+          "allowJavaCodeBlocks", true)).join();
+      assertTrue(JavaCodeBlockPolicy.isEnabled());
+
+      adapter.launch(Map.of("program", program.toString())).join();
+      assertFalse("Each launch must reset the opt-in", JavaCodeBlockPolicy.isEnabled());
+    } finally {
+      JavaCodeBlockPolicy.reset();
       Files.deleteIfExists(program);
     }
   }
