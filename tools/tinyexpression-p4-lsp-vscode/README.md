@@ -7,13 +7,13 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
 
 - **Syntax highlighting** — keywords, variables (`$name`), numbers, strings, operators, comments
 - **Semantic tokens** — type-safe classification via Parser `instanceof` (no regex)
-- **Diagnostics** — TE001 parse errors plus TE025 strict `match` typing diagnostics
-- **Completion** — P4 keywords + `$variable` scan
-- **Hover** — AST node type / preferred root display on parse success
+- **Diagnostics** — rich `TE001`–`TE025` messages, catalog-aware `TE022`/`TE024`, stable `ULX-PARSE-001` machine data, and targeted Quick Fixes
+- **Completion** — P4 keywords, declarations, imports, methods, and bundled/external `.tecatalog` variables with context labels
+- **Hover** — AST node type, preferred root, declarations, and catalog descriptions
 - **Debug (DAP)** — step execution with P4 runtime markers in Variables panel:
   - `_tinyP4ParserUsed` — whether the P4 grammar parsed the formula
-  - `_tinyP4ParserExact` — whether parsing succeeded without heuristic fallback
-  - `_tinyP4ParserProbeMode` — `exact`, `heuristic`, or `semantic`
+  - `_tinyP4ParserExact` — whether generated P4 parsing succeeded exactly
+  - `_tinyP4ParserProbeMode` — `exact`, `semantic`, or `failed` (no heuristic parse fallback)
   - `_tinyP4AstNodeType` — sealed-interface record type of the AST root
   - `_tinyP4AstNodePath` — breadth-first path through the AST
   - `parity.*` — 6-backend evaluation comparison (JAVA_CODE / AST_EVALUATOR / DSL_JAVA_CODE / P4_AST / P4_DSL)
@@ -52,6 +52,9 @@ backend result plus the six-backend parity comparison.
 `variables` values are typed JSON values and are injected into the real `CalculationContext`.
 The same context values are used by the selected backend, the parity probe, and Debug Console
 evaluation. Numeric values must be JSON numbers rather than quoted strings.
+While stopped, injected values can be edited from VS Code's Variables view. The adapter preserves
+the original number/boolean/string type, refreshes the runtime result, and uses the new value for
+subsequent Debug Console evaluations.
 
 ## Extension settings
 
@@ -95,7 +98,7 @@ npm run package
 
 ```
 UBNF grammar (tinyexpression-p4.ubnf)
-  → unlaxer-dsl 3.0.12 code generation
+  → unlaxer-dsl 3.0.13 code generation
   → TinyExpressionP4Parsers / AST (sealed interface) / Mapper / Evaluator
   → P4PreferredAstMapper        (preferred-root selection + compat parse)
   → TinyExpressionP4LanguageServerExt  (type-safe LSP, instanceof-based tokens)

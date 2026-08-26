@@ -16,6 +16,7 @@ import org.eclipse.lsp4j.debug.ConfigurationDoneArguments;
 import org.eclipse.lsp4j.debug.EvaluateArguments;
 import org.eclipse.lsp4j.debug.InitializeRequestArguments;
 import org.eclipse.lsp4j.debug.StackTraceArguments;
+import org.eclipse.lsp4j.debug.SetVariableArguments;
 import org.eclipse.lsp4j.debug.Variable;
 import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.services.IDebugProtocolClient;
@@ -34,7 +35,8 @@ public class TinyExpressionP4DebugAdapterExtTest {
       TinyExpressionP4DebugAdapterExt adapter = new TinyExpressionP4DebugAdapterExt();
       adapter.connect(client);
 
-      adapter.initialize(new InitializeRequestArguments()).join();
+      var capabilities = adapter.initialize(new InitializeRequestArguments()).join();
+      assertTrue(capabilities.getSupportsSetVariable());
       Map<String, Object> launch = new LinkedHashMap<>();
       launch.put("program", program.toString());
       launch.put("runtimeMode", "p4-ast");
@@ -68,6 +70,17 @@ public class TinyExpressionP4DebugAdapterExtTest {
       EvaluateArguments evaluateArgs = new EvaluateArguments();
       evaluateArgs.setExpression("$score + 10");
       assertEquals("52", adapter.evaluate(evaluateArgs).join().getResult());
+
+      SetVariableArguments setArgs = new SetVariableArguments();
+      setArgs.setVariablesReference(1);
+      setArgs.setName("$score");
+      setArgs.setValue("100");
+      assertEquals("100", adapter.setVariable(setArgs).join().getValue());
+      assertEquals("110", adapter.evaluate(evaluateArgs).join().getResult());
+
+      variables = adapter.variables(variableArgs).join().getVariables();
+      assertVariable(variables, "$score", "100");
+      assertVariable(variables, "evaluationResultNormalized", "108");
     } finally {
       Files.deleteIfExists(program);
     }

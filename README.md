@@ -47,7 +47,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.12</version>
+  <version>1.4.13</version>
 </dependency>
 ```
 
@@ -262,13 +262,15 @@ if(external returning as boolean check($input)){1}else{0}
 VS Code 拡張 [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode/README.md) が提供:
 
 - シンタックスハイライト・セマンティックトークン
-- 診断（TE001 パースエラー）
-- 補完・ホバー
+- リッチ診断（TE001〜TE025、カタログ連携、Quick Fix、構造化 `ULX-PARSE-001`）
+- 宣言・import・method・`.tecatalog` を使う補完とホバー
 - DAP デバッグ（6 バックエンドのパリティ比較）
 
-DAP 0.2.4 は生成AST上の停止・ブレークポイント・実ランタイム評価に対応します。
+DAP 0.2.32 は生成AST上の停止・ブレークポイント・実ランタイム評価に加え、
+人向けの期待値付き構文診断と、LLM/editor向けの構造化診断dataに対応します。
 `launch.json` の `variables` は `CalculationContext` に型付きで注入され、選択バックエンド、
-6バックエンド比較、Debug Consoleで共通利用されます。詳細は
+6バックエンド比較、Debug Consoleで共通利用されます。停止中はVariablesビューから値を変更し、
+同じコンテキストで再評価できます。詳細は
 [VS Code拡張README](tools/tinyexpression-p4-lsp-vscode/README.md) を参照してください。
 
 外部リポジトリ: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)

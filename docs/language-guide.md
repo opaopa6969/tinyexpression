@@ -2,7 +2,7 @@
 
 [日本語版](language-guide-ja.md)
 
-Complete language specification for TinyExpression v1.4.12.
+Complete language specification for TinyExpression v1.4.13.
 
 ---
 

@@ -14,40 +14,40 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">InMethod</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="693528025">
-<g id="587778553">
+<g id="rr-9">
+<g id="rr-0">
 <rect x="40" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="106" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="172" y1="58" x2="192" y2="58" class="rail"/>
 <polygon points="179,55 185,58 179,61" class="arrow"/>
-<g id="1195114634">
+<g id="rr-1">
 <rect x="192" y="44" width="55" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="219" y="62" text-anchor="middle" class="terminal-text">'.in'</text>
 </g>
 <line x1="247" y1="58" x2="267" y2="58" class="rail"/>
 <polygon points="254,55 260,58 254,61" class="arrow"/>
-<g id="1124268401">
+<g id="rr-2">
 <rect x="267" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="287" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="308" y1="58" x2="328" y2="58" class="rail"/>
 <polygon points="315,55 321,58 315,61" class="arrow"/>
-<g id="920415907">
+<g id="rr-3">
 <rect x="328" y="44" width="132" height="28" class="nonterminal-box"/>
 <text x="394" y="62" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
 <line x1="460" y1="58" x2="480" y2="58" class="rail"/>
 <polygon points="467,55 473,58 467,61" class="arrow"/>
-<g id="1971335539">
-<g id="553450169">
-<g id="1409166976">
+<g id="rr-7">
+<g id="rr-6">
+<g id="rr-4">
 <rect x="496" y="68" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="516" y="86" text-anchor="middle" class="terminal-text">','</text>
 </g>
 <line x1="537" y1="82" x2="557" y2="82" class="rail"/>
 <polygon points="544,79 550,82 544,85" class="arrow"/>
-<g id="1960922149">
+<g id="rr-5">
 <rect x="557" y="68" width="132" height="28" class="nonterminal-box"/>
 <text x="623" y="86" text-anchor="middle" class="nonterminal-text">StringExpression</text>
 </g>
@@ -68,7 +68,7 @@
 </g>
 <line x1="705" y1="58" x2="725" y2="58" class="rail"/>
 <polygon points="712,55 718,58 712,61" class="arrow"/>
-<g id="1470667629">
+<g id="rr-8">
 <rect x="725" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="745" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

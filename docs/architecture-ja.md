@@ -8,7 +8,7 @@ TinyExpression は **ハイブリッドアーキテクチャ** を採用して�
 
 2026-04-24 時点の確認済みベースライン:
 
-- `tinyexpression` `1.4.12`
+- `tinyexpression` `1.4.13`
 - `unlaxer-common` `3.0.2`
 - `unlaxer-dsl` `3.0.2`
 

@@ -14,20 +14,20 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">CodeBlock</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="2041016452">
-<g id="1384881241">
+<g id="rr-3">
+<g id="rr-0">
 <rect x="40" y="44" width="90" height="28" class="nonterminal-box"/>
 <text x="85" y="62" text-anchor="middle" class="nonterminal-text">CODE_START</text>
 </g>
 <line x1="130" y1="58" x2="150" y2="58" class="rail"/>
 <polygon points="137,55 143,58 137,61" class="arrow"/>
-<g id="676031696">
+<g id="rr-1">
 <rect x="150" y="44" width="83" height="28" class="nonterminal-box"/>
 <text x="191" y="62" text-anchor="middle" class="nonterminal-text">CODE_BODY</text>
 </g>
 <line x1="233" y1="58" x2="253" y2="58" class="rail"/>
 <polygon points="240,55 246,58 240,61" class="arrow"/>
-<g id="537603616">
+<g id="rr-2">
 <rect x="253" y="44" width="76" height="28" class="nonterminal-box"/>
 <text x="291" y="62" text-anchor="middle" class="nonterminal-text">CODE_END</text>
 </g>
