@@ -18,7 +18,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
  * <ul>
  *   <li>{@code _tinyP4ParserUsed} — whether the formula is considered P4-compatible</li>
  *   <li>{@code _tinyP4ParserExact} — whether the decision came from an exact mapper parse</li>
- *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code heuristic}, or {@code failed}</li>
+ *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code semantic}, or {@code failed}</li>
  *   <li>{@code _tinyP4AstNodeType} — simple class name of the mapped P4 AST root node</li>
  * </ul>
  */

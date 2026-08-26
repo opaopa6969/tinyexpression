@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.dap.p4;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,6 +11,10 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.debug.Variable;
+import org.eclipse.lsp4j.debug.Capabilities;
+import org.eclipse.lsp4j.debug.InitializeRequestArguments;
+import org.eclipse.lsp4j.debug.SetVariableArguments;
+import org.eclipse.lsp4j.debug.SetVariableResponse;
 import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.VariablesResponse;
 import org.unlaxer.tinyexpression.dap.TinyExpressionDapRuntimeBridge;
@@ -45,6 +50,19 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   // ── Injected variables from launch.json "variables" map ──
 
   private final java.util.Map<String, Object> injectedVariables = new java.util.LinkedHashMap<>();
+
+  // =========================================================================
+  // initialize — advertise editable CalculationContext variables
+  // =========================================================================
+
+  @Override
+  public CompletableFuture<Capabilities> initialize(InitializeRequestArguments args) {
+    return super.initialize(args).thenApply(capabilities -> {
+      capabilities.setSupportsSetVariable(true);
+      capabilities.setSupportsEvaluateForHovers(true);
+      return capabilities;
+    });
+  }
 
   // =========================================================================
   // launch — capture program path and runtime mode for our own use
@@ -118,6 +136,33 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
     });
   }
 
+  @Override
+  public CompletableFuture<SetVariableResponse> setVariable(SetVariableArguments args) {
+    String requestedName = args.getName();
+    String name = requestedName != null && requestedName.startsWith("$")
+        ? requestedName.substring(1) : requestedName;
+    if (args.getVariablesReference() != 1 || name == null || !injectedVariables.containsKey(name)) {
+      return CompletableFuture.failedFuture(
+          new IllegalArgumentException("Only injected CalculationContext variables are editable"));
+    }
+
+    Object previous = injectedVariables.get(name);
+    Object value;
+    try {
+      value = parseEditedValue(args.getValue(), previous);
+    } catch (IllegalArgumentException error) {
+      return CompletableFuture.failedFuture(error);
+    }
+    injectedVariables.put(name, value);
+    collectRuntimeProbeVariables();
+
+    SetVariableResponse response = new SetVariableResponse();
+    response.setValue(String.valueOf(value));
+    response.setType(value.getClass().getSimpleName());
+    response.setVariablesReference(0);
+    return CompletableFuture.completedFuture(response);
+  }
+
   // =========================================================================
   // evaluate — Debug Console expression evaluation with variable substitution
   // =========================================================================
@@ -150,6 +195,29 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
     if (variables.stream().noneMatch(variable -> name.equals(variable.getName()))) {
       variables.add(makeVar(name, value));
     }
+  }
+
+  private static Object parseEditedValue(String text, Object previous) {
+    String value = text == null ? "" : text.strip();
+    if (previous instanceof Number) {
+      try {
+        return new BigDecimal(value);
+      } catch (NumberFormatException error) {
+        throw new IllegalArgumentException("Expected a JSON number for this variable: " + value, error);
+      }
+    }
+    if (previous instanceof Boolean) {
+      if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+        throw new IllegalArgumentException("Expected true or false for this variable: " + value);
+      }
+      return Boolean.valueOf(value);
+    }
+    if (value.length() >= 2
+        && ((value.startsWith("\"") && value.endsWith("\""))
+            || (value.startsWith("'") && value.endsWith("'")))) {
+      return value.substring(1, value.length() - 1);
+    }
+    return value;
   }
 
   private void runP4Probe() {

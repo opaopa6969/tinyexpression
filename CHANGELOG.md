@@ -5,6 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.13] - 2026-08-26
+
+### Changed
+- Adopt unlaxer-dsl/common **3.0.13**. Generated LSP diagnostics now use the farthest failure position, stable code `ULX-PARSE-001`, actionable expected-value messages, and structured `Diagnostic.data` for LLM/editor repair clients.
+- `tinyexpression-p4-lsp` is versioned as **0.2.32** and regenerates its LSP/DAP server from the 3.0.13 generator while preserving TinyExpression-specific `TE*` semantic diagnostics. The version follows the already deployed 0.2.31 extension so code-server upgrades instead of downgrading it.
+- DAP launch variables are injected into the real `CalculationContext` as typed JSON values and can now be edited while stopped through the Variables view; runtime results and Debug Console evaluation refresh against the edited context.
+
+### Fixed
+- Invalid UBNF rule/token combinations that would resolve to the same generated parser class now fail generation with `E-RULE-TOKEN-NAME-COLLISION` instead of producing a recursively broken parser.
+- Removed the remaining heuristic `P4ParseProbe` success marker. A failed generated P4 parse is now reported as `failed` and never presented as parser success based on a regular-expression guess.
+
 ## [1.4.12] - 2026-08-26
 
 ### Changed

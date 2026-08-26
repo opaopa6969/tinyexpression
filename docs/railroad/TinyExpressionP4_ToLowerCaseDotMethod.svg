@@ -14,26 +14,26 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">ToLowerCaseDotMethod</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="1119151452">
-<g id="538985848">
+<g id="rr-4">
+<g id="rr-0">
 <rect x="40" y="44" width="97" height="28" class="nonterminal-box"/>
 <text x="88" y="62" text-anchor="middle" class="nonterminal-text">VariableRef</text>
 </g>
 <line x1="137" y1="58" x2="157" y2="58" class="rail"/>
 <polygon points="144,55 150,58 144,61" class="arrow"/>
-<g id="282170952">
+<g id="rr-1">
 <rect x="157" y="44" width="118" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="216" y="62" text-anchor="middle" class="terminal-text">'.toLowerCase'</text>
 </g>
 <line x1="275" y1="58" x2="295" y2="58" class="rail"/>
 <polygon points="282,55 288,58 282,61" class="arrow"/>
-<g id="1248379770">
+<g id="rr-2">
 <rect x="295" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="315" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="336" y1="58" x2="356" y2="58" class="rail"/>
 <polygon points="343,55 349,58 343,61" class="arrow"/>
-<g id="1612543906">
+<g id="rr-3">
 <rect x="356" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="376" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>

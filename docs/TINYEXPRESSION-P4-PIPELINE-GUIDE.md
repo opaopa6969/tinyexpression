@@ -1,7 +1,7 @@
 # UBNF → ParseTree → AST → Evaluator → LSP/DAP 実装ガイド
 
 対象: unlaxer-dsl を使って DSL を設計・実装したい人（言語処理初心者）
-Last updated: 2026-08-26 (`tinyExpression 1.4.12` / `unlaxer-dsl 3.0.12`)
+Last updated: 2026-08-26 (`tinyExpression 1.4.13` / `unlaxer-dsl 3.0.13`)
 
 ---
 
@@ -730,7 +730,7 @@ const dapFactory = {
 ```bash
 cd tools/tinyexpression-p4-lsp-vscode
 mvn verify
-# → target/tinyexpression-p4-lsp-0.2.4.vsix
+# → target/tinyexpression-p4-lsp-0.2.32.vsix
 # → server-dist/tinyexpression-p4-lsp-server.jar（VSIXへ同梱）
 ```
 
