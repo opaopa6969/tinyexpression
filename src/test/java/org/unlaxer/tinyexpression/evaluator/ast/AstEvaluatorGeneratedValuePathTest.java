@@ -92,6 +92,10 @@ public class AstEvaluatorGeneratedValuePathTest {
   @Test
   public void testTypedDeclarationSettersUseGeneratedAstPath() {
     assertGeneratedDeclarationFormula(
+        "var $base as float set if not exists 40;\n$base+2",
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+        42f);
+    assertGeneratedDeclarationFormula(
         "var $price as number set if not exists 3 description='price';\n$price+2",
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
         5f);

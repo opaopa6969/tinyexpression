@@ -73,7 +73,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER
     [ NumberTypeHint ]
     [ NumberSetter ]
-    Description
+    [ Description ]
     ';' ;
 
   StringVariableDeclaration ::=
@@ -81,7 +81,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER
     [ StringTypeHint ]
     [ StringSetter ]
-    Description
+    [ Description ]
     ';' ;
 
   BooleanVariableDeclaration ::=
@@ -89,7 +89,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER
     [ BooleanTypeHint ]
     [ BooleanSetter ]
-    Description
+    [ Description ]
     ';' ;
 
   ObjectVariableDeclaration ::=
@@ -97,7 +97,7 @@ grammar TinyExpressionP4 {
     '$' IDENTIFIER
     [ ObjectTypeHint ]
     [ ObjectSetter ]
-    Description
+    [ Description ]
     ';' ;
 
   TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;

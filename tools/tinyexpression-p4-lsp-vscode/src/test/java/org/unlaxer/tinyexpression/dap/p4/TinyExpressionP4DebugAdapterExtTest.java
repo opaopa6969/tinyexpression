@@ -27,6 +27,29 @@ import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 public class TinyExpressionP4DebugAdapterExtTest {
 
   @Test
+  public void launchAcceptsVariableDeclarationWithoutDescription() throws Exception {
+    Path program = Files.createTempFile("tinyexpression-dap-optional-description-", ".tinyexp");
+    Files.writeString(program, "var $base as float set if not exists 40;\n$base + 2");
+    try {
+      TinyExpressionP4DebugAdapterExt adapter = new TinyExpressionP4DebugAdapterExt();
+      adapter.connect(recordingClient(new ArrayList<>()));
+      adapter.launch(Map.of(
+          "program", program.toString(),
+          "runtimeMode", "p4-ast",
+          "stopOnEntry", true)).join();
+      adapter.configurationDone(new ConfigurationDoneArguments()).join();
+
+      VariablesArguments variableArgs = new VariablesArguments();
+      variableArgs.setVariablesReference(1);
+      Variable[] variables = adapter.variables(variableArgs).join().getVariables();
+      assertVariable(variables, "evaluationResultNormalized", "42");
+      assertVariable(variables, "_tinyP4ParserUsed", "true");
+    } finally {
+      Files.deleteIfExists(program);
+    }
+  }
+
+  @Test
   public void launchStopsOnAstAndEvaluatesWithTypedVariables() throws Exception {
     Path program = Files.createTempFile("tinyexpression-dap-", ".tinyexp");
     Files.writeString(program,

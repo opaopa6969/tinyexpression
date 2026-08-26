@@ -6,7 +6,7 @@
 
 	<groupId>org.unlaxer</groupId>
 	<artifactId>tinyExpression</artifactId>
-	<version>1.4.14</version>
+	<version>1.4.15</version>
 	<name>tinyExpression</name>
 	<packaging>jar</packaging>
 

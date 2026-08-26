@@ -1,7 +1,7 @@
 # UBNF → ParseTree → AST → Evaluator → LSP/DAP 実装ガイド
 
 対象: unlaxer-dsl を使って DSL を設計・実装したい人（言語処理初心者）
-Last updated: 2026-08-26 (`tinyExpression 1.4.14` / `unlaxer-dsl 3.0.14`)
+Last updated: 2026-08-27 (`tinyExpression 1.4.15` / `unlaxer-dsl 3.0.14`)
 
 ---
 
