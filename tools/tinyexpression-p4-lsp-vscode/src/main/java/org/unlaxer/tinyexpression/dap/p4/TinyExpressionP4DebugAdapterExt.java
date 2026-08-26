@@ -18,8 +18,10 @@ import org.eclipse.lsp4j.debug.SetVariableResponse;
 import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.VariablesResponse;
 import org.unlaxer.tinyexpression.dap.TinyExpressionDapRuntimeBridge;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4DebugAdapter;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfoSourceDocument;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 
 /**
@@ -43,6 +45,9 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
 
   private String capturedProgram = "";
   private String capturedRuntimeMode = "p4-ast";
+  private String capturedOriginalSource = "";
+  private String selectedCalculatorName = "";
+  private FormulaInfoSourceDocument.Section selectedFormulaSection;
   private boolean p4ParserUsed = false;
   private String p4AstNodeType = "not-evaluated";
   private String p4AstNodePath = "";
@@ -70,16 +75,36 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
 
   @Override
   public CompletableFuture<Void> launch(Map<String, Object> args) {
-    Object program = args.get("program");
+    Map<String, Object> effectiveArgs = new java.util.LinkedHashMap<>(
+        args == null ? Map.of() : args);
+    // Reset the process-global policy on every launch, including launches that later fail
+    // validation, so a previous trusted session cannot leak its opt-in to the next one.
+    JavaCodeBlockPolicy.setEnabled(Boolean.TRUE.equals(effectiveArgs.get("allowJavaCodeBlocks")));
+    Object program = effectiveArgs.get("program");
     if (program == null || String.valueOf(program).isBlank()) {
-      program = args.get("formulaSource");
+      program = effectiveArgs.get("formulaSource");
     }
     capturedProgram = program == null ? "" : String.valueOf(program);
-    capturedRuntimeMode = String.valueOf(args.getOrDefault("runtimeMode", "p4-ast"));
+    capturedOriginalSource = readProgram(capturedProgram);
+    selectedFormulaSection = null;
+    selectedCalculatorName = String.valueOf(
+        effectiveArgs.getOrDefault("calculatorName", "")).strip();
+
+    if (looksLikeFormulaInfo(capturedOriginalSource)) {
+      FormulaInfoSourceDocument document = FormulaInfoSourceDocument.parse(capturedOriginalSource);
+      selectedFormulaSection = document.section(selectedCalculatorName).orElseThrow(() ->
+          new IllegalArgumentException("Unknown FormulaInfo calculatorName: " + selectedCalculatorName));
+      selectedCalculatorName = selectedFormulaSection.calculatorName();
+    }
+
+    String requestedRuntimeMode = String.valueOf(
+        effectiveArgs.getOrDefault("runtimeMode", "metadata"));
+    capturedRuntimeMode = resolveRuntimeMode(requestedRuntimeMode, selectedFormulaSection);
+    effectiveArgs.put("runtimeMode", capturedRuntimeMode);
 
     // Read "variables" map from launch.json and store for evaluate() / variables()
     injectedVariables.clear();
-    Object rawVariables = args.get("variables");
+    Object rawVariables = effectiveArgs.get("variables");
     if (rawVariables instanceof Map<?, ?> varMap) {
       for (Map.Entry<?, ?> entry : varMap.entrySet()) {
         if (entry.getKey() instanceof String key && entry.getValue() != null) {
@@ -88,12 +113,28 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       }
     }
 
-    return super.launch(args);
+    return super.launch(effectiveArgs);
+  }
+
+  @Override
+  protected DebugSource resolveDebugSource(
+      String program, String originalSource, Map<String, Object> launchArguments) {
+    if (selectedFormulaSection == null) {
+      return super.resolveDebugSource(program, originalSource, launchArguments);
+    }
+    return debugSource(
+        selectedFormulaSection.debugSource(), selectedFormulaSection.lineOffset());
   }
 
   @Override
   protected Map<String, String> runtimeVariables(
       String source, String runtimeMode, Map<String, Object> launchArguments) {
+    if (selectedFormulaSection != null) {
+      // Evaluate the dependency graph exactly once. Calling debugVariables first would execute
+      // the selected formula a second time, which is observable for Java/side-effect formulas.
+      return TinyExpressionDapRuntimeBridge.debugFormulaInfoVariables(
+          capturedOriginalSource, selectedCalculatorName, injectedVariables);
+    }
     return TinyExpressionDapRuntimeBridge.debugVariables(source, runtimeMode, injectedVariables);
   }
 
@@ -221,14 +262,8 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   }
 
   private void runP4Probe() {
-    if (capturedProgram == null || capturedProgram.isEmpty()) return;
-    String content;
-    try {
-      content = Files.readString(Path.of(capturedProgram));
-    } catch (IOException e) {
-      p4AstNodeType = "file-read-error";
-      return;
-    }
+    String content = sourceContent;
+    if (content == null || content.isBlank()) return;
     try {
       TinyExpressionP4AST ast = P4PreferredAstMapper.parse(content.strip());
       p4ParserUsed = true;
@@ -239,6 +274,37 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       p4AstNodeType = "parse-failed";
       p4AstNodePath = "";
     }
+  }
+
+  private static String readProgram(String program) {
+    if (program == null || program.isBlank()) {
+      return "";
+    }
+    try {
+      return Files.readString(Path.of(program));
+    } catch (IOException error) {
+      throw new IllegalArgumentException("Cannot read program: " + program, error);
+    }
+  }
+
+  private static boolean looksLikeFormulaInfo(String source) {
+    return source != null
+        && source.contains("formula:")
+        && source.contains("---END_OF_PART---");
+  }
+
+  private static String resolveRuntimeMode(
+      String requested, FormulaInfoSourceDocument.Section section) {
+    if (requested == null || requested.isBlank() || "metadata".equalsIgnoreCase(requested)) {
+      return section == null ? "p4-ast" : section.runtimeMode();
+    }
+    if (section != null && !section.runtimeMode().equalsIgnoreCase(requested)) {
+      throw new IllegalArgumentException(
+          "FormulaInfo runtimeMode conflicts with executionBackend: requested=" + requested
+              + ", metadata=" + section.runtimeMode()
+              + ". Change executionBackend or use runtimeMode=metadata.");
+    }
+    return requested;
   }
 
   /**

@@ -21,6 +21,68 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
+    public void formulaInfoMetadataDetectionCoversEveryPart() {
+        String content = """
+            calculatorName:base
+            formula:
+            1 + 1
+            ---END_OF_PART---
+            calculatorName:derived
+            executionBackend:P4_AST_EVALUATOR
+            formula:
+            $base + 1
+            ---END_OF_PART---
+            """;
+
+        assertTrue(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 0));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 1));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 2));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 3));
+        assertTrue(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 4));
+        assertTrue(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 5));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 6));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine(content, 7));
+        assertFalse(TinyExpressionP4LanguageServerExt.isMetadataLine("1 + 1", 0));
+    }
+
+    @Test
+    public void formulaInfoReportsUnknownBackendWithStructuredData() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+        server.parseDocument(TEST_URI, """
+            calculatorName:base
+            executionBackend:P4_MAGIC
+            formula:
+            1 + 1
+            ---END_OF_PART---
+            """);
+
+        Diagnostic diagnostic = client.firstDiagnosticWithCode("FI002");
+        assertNotNull(diagnostic);
+        assertTrue(diagnostic.getMessage().contains("P4_AST_EVALUATOR"));
+        assertTrue(diagnostic.getData() instanceof java.util.Map<?, ?>);
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) diagnostic.getData();
+        assertEquals(1, data.get("schemaVersion"));
+        assertEquals("metadata", data.get("kind"));
+        assertEquals("P4_MAGIC", data.get("value"));
+    }
+
+    @Test
+    public void tinyExpressionSyntaxDiagnosticsExposeStructuredRepairData() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+        server.parseDocument(TEST_URI, "if $x else $y");
+
+        Diagnostic diagnostic = client.firstDiagnosticWithCode("TE011");
+        assertNotNull(diagnostic);
+        assertTrue(diagnostic.getData() instanceof java.util.Map<?, ?>);
+        java.util.Map<?, ?> data = (java.util.Map<?, ?>) diagnostic.getData();
+        assertEquals("syntax", data.get("kind"));
+        assertTrue(data.containsKey("expectedHints"));
+        assertTrue(data.containsKey("fix"));
+    }
+
+    @Test
     public void testDiagnosticsTE011() {
         final boolean[] called = {false};
         server.connect(new DummyLanguageClient() {

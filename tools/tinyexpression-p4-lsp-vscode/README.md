@@ -26,7 +26,7 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
 ## Quick start
 
 1. Install this extension (`.vsix` install or from Marketplace)
-2. Open a `.tinyexp` file — the LSP server starts automatically
+2. Open a `.tinyexp`, `*.formulainfo`, or `formulaInfo.txt` file — the LSP server starts automatically
 3. To debug a formula: open `Run and Debug`, select **Debug TinyExpression P4**, press `F5`
 
 The default debug configuration stops on the first generated AST node. `F10` moves through
@@ -39,7 +39,7 @@ backend result plus the six-backend parity comparison.
   "request": "launch",
   "name": "Debug TinyExpression P4",
   "program": "${file}",
-  "runtimeMode": "p4-ast",
+  "runtimeMode": "metadata",
   "steppingMode": "ast",
   "stopOnEntry": true,
   "variables": {
@@ -48,6 +48,16 @@ backend result plus the six-backend parity comparison.
   }
 }
 ```
+
+For FormulaInfo documents, add `"calculatorName": "derivedScore"` to select a block.
+`runtimeMode: metadata` follows that block's `executionBackend`; plain formulas use `p4-ast`.
+Dependencies execute before their consumers and appear as `formulaInfo.<name>.*` values.
+To change a FormulaInfo backend, edit its `executionBackend` metadata; a conflicting explicit
+`runtimeMode` is rejected so the Variables view cannot report mixed execution semantics.
+
+Fenced Java code receives embedded Java syntax highlighting. Compiling or executing it is a
+separate, privileged action and is disabled by default. Trusted, isolated sessions may set
+`"allowJavaCodeBlocks": true`; never enable it for untrusted formula authors.
 
 `variables` values are typed JSON values and are injected into the real `CalculationContext`.
 The same context values are used by the selected backend, the parity probe, and Debug Console
@@ -63,7 +73,7 @@ subsequent Debug Console evaluations.
 | `tinyExpressionP4Lsp.server.javaPath` | `java` | Path to Java 21+ executable |
 | `tinyExpressionP4Lsp.server.jarPath` | *(bundled)* | Path to `tinyexpression-p4-lsp-server.jar` |
 | `tinyExpressionP4Lsp.server.jvmArgs` | `[]` | Extra JVM arguments (e.g. `-Xmx512m`) |
-| `tinyExpressionP4Lsp.runtimeMode` | `p4-ast` | Execution backend: `p4-ast` or `p4-dsl-javacode` |
+| `tinyExpressionP4Lsp.runtimeMode` | `metadata` | Follow FormulaInfo metadata; plain formulas default to `p4-ast` |
 
 `runtimeMode` selects execution semantics. `steppingMode` selects the structural view and is
 normally `ast` for both P4 backends. AST mapping errors terminate the debug session explicitly;
@@ -74,6 +84,8 @@ there is no hidden token-stepping fallback.
 | Pattern | Example |
 |---------|---------|
 | `.tinyexp` extension | `formula.tinyexp` |
+| `.formulainfo` extension | `rules.formulainfo` |
+| FormulaInfo filename | `formulaInfo.txt`, `formula-info.txt` |
 | `default` filename | `default` |
 | `emergency` filename | `emergency` |
 | `*.default` pattern | `formula.default` |
@@ -98,7 +110,7 @@ npm run package
 
 ```
 UBNF grammar (tinyexpression-p4.ubnf)
-  → unlaxer-dsl 3.0.13 code generation
+  → unlaxer-dsl 3.0.14 code generation
   → TinyExpressionP4Parsers / AST (sealed interface) / Mapper / Evaluator
   → P4PreferredAstMapper        (preferred-root selection + compat parse)
   → TinyExpressionP4LanguageServerExt  (type-safe LSP, instanceof-based tokens)

@@ -2,7 +2,7 @@
 
 [English version](getting-started.md)
 
-TinyExpression v1.4.13 を Java プロジェクトに組み込む手順を説明します。
+TinyExpression v1.4.14 を Java プロジェクトに組み込む手順を説明します。
 
 ---
 
@@ -21,7 +21,7 @@ TinyExpression v1.4.13 を Java プロジェクトに組み込む手順を説明
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.13</version>
+  <version>1.4.14</version>
 </dependency>
 ```
 
@@ -182,7 +182,7 @@ List<CalculationResult> results = executor.execute(
     ctx,
     resultConsumer,
     cache,
-    Comparator.comparingInt(Calculator::dependsOnByNestLevel), // 依存順
+    Comparator.comparingInt(Calculator::dependsOnByNestLevel).reversed(), // 依存先から実行
     calculator -> true,                                         // 全式を対象に
     Thread.currentThread().getContextClassLoader());
 

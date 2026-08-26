@@ -5,6 +5,18 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.4.14] - 2026-08-26
+
+### Added
+- FormulaInfo documents can be debugged directly from VS Code. DAP selects a block by `calculatorName`, follows its `executionBackend` metadata, maps AST stack frames and breakpoints back to the original file, executes the document in dependency order, and shows per-formula results alongside editable `CalculationContext` inputs.
+- The VSIX now recognizes `formulaInfo.txt`, `formula-info.txt`, and `*.formulainfo` automatically. Fenced Java blocks use embedded Java syntax highlighting; execution remains disabled unless `allowJavaCodeBlocks: true` is explicitly set for the isolated DAP process.
+- Parser-backed `FormulaInfoSourceDocument` exposes source sections without constructing calculators or compiling Java, so editor source selection does not rely on an ad-hoc metadata scanner.
+- TinyExpression `TE*` and FormulaInfo `FI*` diagnostics now carry schema-versioned `Diagnostic.data` for editor/LLM repair clients. `FI002` reports unknown execution backends and returns all six supported values.
+
+### Changed
+- Adopt unlaxer-dsl/common **3.0.14** and tinyexpression-p4-lsp **0.2.33** for the generated container-document DAP hook.
+- FormulaInfo DAP evaluates the dependency graph exactly once, preventing duplicate Java or side-effect execution while still projecting the selected result into the standard Variables fields.
+
 ## [1.4.13] - 2026-08-26
 
 ### Changed
@@ -41,7 +53,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - `P4BackendParityTest`: stale comment and missing coverage for `(10-2)*(7-3)` corrected; formula added to six-backend parity corpus
 
 ### Added
-- `JavaCodeBlockPolicy`: opt-in disable of Java code block (triple-backtick `` ```java:ClassName `` fence) execution. Default is `true` (backward compatible). Call `JavaCodeBlockPolicy.setEnabled(false)` before creating calculators to prevent arbitrary code execution when formula sources come from untrusted input.
+- `JavaCodeBlockPolicy`: Java code block (triple-backtick `` ```java:ClassName `` fence) execution is disabled by default and requires explicit `setEnabled(true)` opt-in for trusted formula authors.
 
 ## [1.4.10] - 2026-02-26
 

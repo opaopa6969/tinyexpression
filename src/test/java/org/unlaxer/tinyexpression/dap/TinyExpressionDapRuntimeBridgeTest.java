@@ -82,4 +82,33 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("UNSUPPORTED", invalid.get("selectedExecutionBackend"));
     assertTrue(invalid.get("bridgeError").contains("Unsupported runtimeMode"));
   }
+
+  @Test
+  public void testFormulaInfoDocumentExecutesDependenciesWithInjectedContext() {
+    String document = """
+        calculatorName:base
+        resultType:float
+        var:baseResult
+        formula:
+        5
+        ---END_OF_PART---
+        calculatorName:derived
+        resultType:float
+        executionBackend:P4_AST_EVALUATOR
+        dependsOn:base
+        formula:
+        $baseResult + $input
+        ---END_OF_PART---
+        """;
+
+    Map<String, String> debug = TinyExpressionDapRuntimeBridge.debugFormulaInfoVariables(
+        document, "derived", Map.of("input", 10));
+
+    assertEquals(debug.toString(), "true", debug.get("formulaInfoDocument"));
+    assertEquals(debug.toString(), "2", debug.get("formulaInfo.formulaCount"));
+    assertEquals(debug.toString(), "5", debug.get("formulaInfo.base.normalized"));
+    assertEquals(debug.toString(), "15", debug.get("formulaInfo.derived.normalized"));
+    assertEquals(debug.toString(), "15", debug.get("formulaInfo.selectedResultNormalized"));
+    assertEquals(debug.toString(), "P4_AST_EVALUATOR", debug.get("formulaInfo.selectedBackend"));
+  }
 }

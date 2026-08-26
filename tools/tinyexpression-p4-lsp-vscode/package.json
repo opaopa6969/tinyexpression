@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.2.32",
+  "version": "0.2.33",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
@@ -44,11 +44,14 @@
           "tinyexpressionp4"
         ],
         "extensions": [
-          ".tinyexp"
+          ".tinyexp",
+          ".formulainfo"
         ],
         "filenames": [
           "default",
-          "emergency"
+          "emergency",
+          "formulaInfo.txt",
+          "formula-info.txt"
         ],
         "filenamePatterns": [
           "*.default",
@@ -61,7 +64,10 @@
       {
         "language": "tinyexpressionP4",
         "scopeName": "source.tinyexpression",
-        "path": "./syntaxes/tinyexpression.tmLanguage.json"
+        "path": "./syntaxes/tinyexpression.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.java": "java"
+        }
       }
     ],
     "semanticTokenScopes": [
@@ -117,11 +123,25 @@
               "runtimeMode": {
                 "type": "string",
                 "enum": [
+                  "metadata",
+                  "javacode",
+                  "legacy-astcreator",
+                  "ast-evaluator",
+                  "dsl-javacode",
                   "p4-ast",
                   "p4-dsl-javacode"
                 ],
-                "default": "p4-ast",
-                "description": "P4 execution backend."
+                "default": "metadata",
+                "description": "Execution backend. metadata follows FormulaInfo executionBackend and defaults plain files to p4-ast."
+              },
+              "calculatorName": {
+                "type": "string",
+                "description": "FormulaInfo calculatorName to debug. The first formula is selected when omitted."
+              },
+              "allowJavaCodeBlocks": {
+                "type": "boolean",
+                "default": false,
+                "description": "Explicitly allow embedded Java compilation/execution in this isolated debug-adapter process. Disabled by default because Java blocks execute arbitrary code."
               },
               "variables": {
                 "type": "object",
@@ -157,7 +177,7 @@
             "request": "launch",
             "name": "Debug TinyExpression P4",
             "program": "${file}",
-            "runtimeMode": "p4-ast",
+            "runtimeMode": "metadata",
             "steppingMode": "ast",
             "stopOnEntry": true
           },
@@ -166,7 +186,7 @@
             "request": "launch",
             "name": "Debug TinyExpression P4 (with variables)",
             "program": "${file}",
-            "runtimeMode": "p4-ast",
+            "runtimeMode": "metadata",
             "steppingMode": "ast",
             "stopOnEntry": true,
             "variables": {
@@ -202,11 +222,16 @@
         "tinyExpressionP4Lsp.runtimeMode": {
           "type": "string",
           "enum": [
+            "metadata",
+            "javacode",
+            "legacy-astcreator",
+            "ast-evaluator",
+            "dsl-javacode",
             "p4-ast",
             "p4-dsl-javacode"
           ],
-          "default": "p4-ast",
-          "description": "P4 execution backend for formula evaluation and DAP debug."
+          "default": "metadata",
+          "description": "Execution backend for formula evaluation and DAP debug. metadata follows FormulaInfo executionBackend."
         },
         "tinyExpressionP4Lsp.fileExtensions": {
           "type": "array",
@@ -214,7 +239,8 @@
             "type": "string"
           },
           "default": [
-            ".tinyexp"
+            ".tinyexp",
+            ".formulainfo"
           ],
           "description": "File extensions to watch for the TinyExpression P4 language (must match contributes.languages.extensions)."
         },
