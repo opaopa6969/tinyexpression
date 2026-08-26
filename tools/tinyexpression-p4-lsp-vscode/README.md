@@ -26,8 +26,12 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
 ## Quick start
 
 1. Install this extension (`.vsix` install or from Marketplace)
-2. Open a `.tinyexp`, `*.formulainfo`, or `formulaInfo.txt` file — the LSP server starts automatically
-3. To debug a formula: open `Run and Debug`, select **Debug TinyExpression P4**, press `F5`
+2. Run **TinyExpression P4: Open Getting Started** for the in-editor walkthrough
+3. Open a `.tinyexp`, `*.formulainfo`, or `formulaInfo.txt` file — the LSP server starts automatically
+4. To debug a formula: open `Run and Debug`, select **Debug TinyExpression P4**, press `F5`
+
+The Command Palette also provides **Open Language Guide** and **Create FormulaInfo Sample**.
+The guide is bundled in the VSIX, so it remains available in an offline code-server session.
 
 The default debug configuration stops on the first generated AST node. `F10` moves through
 AST nodes, `F5` continues to the next breakpoint, and the Variables view contains the selected
