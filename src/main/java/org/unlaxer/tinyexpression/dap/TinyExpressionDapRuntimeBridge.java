@@ -1,7 +1,10 @@
 package org.unlaxer.tinyexpression.dap;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -9,7 +12,10 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
+import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfoList;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
@@ -33,9 +39,13 @@ public final class TinyExpressionDapRuntimeBridge {
    * @return evaluation result string, or error message on failure
    */
   public static String evaluateForDisplay(String formulaSource, String runtimeMode) {
+    return evaluateForDisplay(formulaSource, runtimeMode, Map.of());
+  }
+
+  public static String evaluateForDisplay(
+      String formulaSource, String runtimeMode, Map<String, ?> variables) {
     try {
-      ExecutionBackend backend =
-          ExecutionBackend.fromRuntimeMode(runtimeMode).orElse(ExecutionBackend.JAVA_CODE);
+      ExecutionBackend backend = resolveBackend(runtimeMode);
       SpecifiedExpressionTypes types =
           new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float);
       Calculator calculator = CalculatorCreatorRegistry.forBackend(backend).create(
@@ -43,7 +53,7 @@ public final class TinyExpressionDapRuntimeBridge {
           "TinyExpressionLspCodeLens",
           types,
           Thread.currentThread().getContextClassLoader());
-      Object value = calculator.apply(CalculationContext.newConcurrentContext());
+      Object value = calculator.apply(newContext(variables));
       return truncate(normalizeResult(value));
     } catch (Throwable error) {
       return "⚠ " + truncate(error.getClass().getSimpleName());
@@ -51,12 +61,23 @@ public final class TinyExpressionDapRuntimeBridge {
   }
 
   public static Map<String, String> debugVariables(String formulaSource, String runtimeMode) {
+    return debugVariables(formulaSource, runtimeMode, Map.of());
+  }
+
+  public static Map<String, String> debugVariables(
+      String formulaSource, String runtimeMode, Map<String, ?> variables) {
     LinkedHashMap<String, String> vars = new LinkedHashMap<>();
     vars.put("bridgeAttached", "true");
     vars.put("requestedRuntimeMode", normalize(runtimeMode));
 
-    ExecutionBackend backend =
-        ExecutionBackend.fromRuntimeMode(runtimeMode).orElse(ExecutionBackend.JAVA_CODE);
+    ExecutionBackend backend;
+    try {
+      backend = resolveBackend(runtimeMode);
+    } catch (IllegalArgumentException invalidMode) {
+      vars.put("selectedExecutionBackend", "UNSUPPORTED");
+      vars.put("bridgeError", truncate(invalidMode.getMessage()));
+      return vars;
+    }
     vars.put("selectedExecutionBackend", backend.name());
 
     try {
@@ -79,7 +100,7 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_tinyDslJavaNativeEmitterUsed", vars);
 
       try {
-        Object value = calculator.apply(CalculationContext.newConcurrentContext());
+        Object value = calculator.apply(newContext(variables));
         vars.put("evaluationResult", truncate(String.valueOf(value)));
         vars.put("evaluationResultType", truncate(value == null ? "null" : value.getClass().getName()));
         vars.put("evaluationResultNormalized", truncate(normalizeResult(value)));
@@ -97,12 +118,96 @@ public final class TinyExpressionDapRuntimeBridge {
       copyMarker(calculator, "_tinyP4ParserExact", vars);
       copyMarker(calculator, "_tinyP4ParserProbeMode", vars);
       copyMarker(calculator, "_tinyP4AstNodeType", vars);
-      collectParityProbe(formulaSource, classLoader, vars);
+      collectParityProbe(formulaSource, classLoader, variables, vars);
     } catch (Throwable createError) {
       vars.put("bridgeError", truncate(
           createError.getClass().getSimpleName() + ":" + safeMessage(createError)));
     }
     return vars;
+  }
+
+  /**
+   * Execute a complete FormulaInfo document in dependency order and expose per-formula results.
+   * Calculator creation follows each block's {@code executionBackend} metadata.
+   */
+  public static Map<String, String> debugFormulaInfoVariables(
+      String documentSource, String selectedCalculatorName, Map<String, ?> variables) {
+    LinkedHashMap<String, String> resultVariables = new LinkedHashMap<>();
+    resultVariables.put("formulaInfoDocument", "true");
+    try {
+      FormulaInfoAdditionalFields fields = new FormulaInfoAdditionalFields(
+          null, info -> info.calculatorName == null ? "" : info.calculatorName);
+      FormulaInfoList formulaInfoList = FormulaInfoList.parse(
+          documentSource == null ? "" : documentSource,
+          fields,
+          Thread.currentThread().getContextClassLoader()).get();
+
+      List<FormulaInfo> formulas = new ArrayList<>(formulaInfoList.get());
+      formulas.sort(Comparator
+          .comparingInt((FormulaInfo info) -> info.calculator().dependsOnByNestLevel())
+          .reversed());
+      CalculationContext context = newContext(variables);
+      String selected = selectedCalculatorName == null ? "" : selectedCalculatorName;
+      if (selected.isBlank() && !formulas.isEmpty()) {
+        selected = formulas.get(0).calculatorName;
+      }
+      resultVariables.put("formulaInfo.selectedCalculator", selected);
+      resultVariables.put("formulaInfo.formulaCount", String.valueOf(formulas.size()));
+
+      for (FormulaInfo info : formulas) {
+        Calculator calculator = info.calculator();
+        String name = info.calculatorName == null || info.calculatorName.isBlank()
+            ? calculator.getClass().getSimpleName() : info.calculatorName;
+        String prefix = "formulaInfo." + name + ".";
+        try {
+          calculator.before(context);
+          Object value = calculator.apply(context);
+          calculator.after(context);
+          writeResultToContext(info, context, value);
+          resultVariables.put(prefix + "backend", info.executionBackend);
+          resultVariables.put(prefix + "result", truncate(String.valueOf(value)));
+          resultVariables.put(prefix + "normalized", truncate(normalizeResult(value)));
+          resultVariables.put(prefix + "type",
+              truncate(value == null ? "null" : value.getClass().getName()));
+          if (name.equals(selected)) {
+            resultVariables.put("formulaInfo.selectedResult", truncate(String.valueOf(value)));
+            resultVariables.put("formulaInfo.selectedResultNormalized",
+                truncate(normalizeResult(value)));
+            resultVariables.put("formulaInfo.selectedBackend", info.executionBackend);
+            resultVariables.put("selectedExecutionBackend", info.executionBackend);
+            resultVariables.put("evaluationResult", truncate(String.valueOf(value)));
+            resultVariables.put("evaluationResultNormalized", truncate(normalizeResult(value)));
+            resultVariables.put("evaluationResultType",
+                truncate(value == null ? "null" : value.getClass().getName()));
+          }
+        } catch (Throwable formulaError) {
+          resultVariables.put(prefix + "error", truncate(
+              formulaError.getClass().getSimpleName() + ":" + safeMessage(formulaError)));
+          if (name.equals(selected)) {
+            resultVariables.put("formulaInfo.selectedError", resultVariables.get(prefix + "error"));
+          }
+        }
+      }
+    } catch (Throwable error) {
+      resultVariables.put("formulaInfo.error", truncate(
+          error.getClass().getSimpleName() + ":" + safeMessage(error)));
+    }
+    return resultVariables;
+  }
+
+  private static void writeResultToContext(
+      FormulaInfo formulaInfo, CalculationContext context, Object value) {
+    formulaInfo.getValue("var").filter(name -> !name.isBlank()).ifPresent(name -> {
+      if (value instanceof Number number) {
+        context.set(name, number);
+      } else if (value instanceof String string) {
+        context.set(name, string);
+      } else if (value instanceof Boolean bool) {
+        context.set(name, bool);
+      } else if (value != null) {
+        context.setObject(name, value);
+      }
+    });
   }
 
   private static void copyMarker(Calculator calculator, String key, Map<String, String> target) {
@@ -148,7 +253,11 @@ public final class TinyExpressionDapRuntimeBridge {
     return normalized.substring(0, VALUE_LIMIT) + "...";
   }
 
-  private static void collectParityProbe(String formulaSource, ClassLoader classLoader, Map<String, String> vars) {
+  private static void collectParityProbe(
+      String formulaSource,
+      ClassLoader classLoader,
+      Map<String, ?> variables,
+      Map<String, String> vars) {
     String formula = formulaSource == null ? "" : formulaSource;
     String legacyNormalized = null;
     String legacyAstCreatorNormalized = null;
@@ -173,7 +282,7 @@ public final class TinyExpressionDapRuntimeBridge {
             "TinyExpressionDapRuntimeBridgeParityProbe",
             types,
             classLoader);
-        Object value = calculator.apply(CalculationContext.newConcurrentContext());
+        Object value = calculator.apply(newContext(variables));
         String normalized = normalizeResult(value);
         vars.put(prefix + "value", truncate(String.valueOf(value)));
         vars.put(prefix + "type", truncate(value == null ? "null" : value.getClass().getName()));
@@ -196,27 +305,55 @@ public final class TinyExpressionDapRuntimeBridge {
             error.getClass().getSimpleName() + ":" + safeMessage(error)));
       }
     }
-    boolean parityComplete = legacyNormalized != null
+    boolean legacyParityComplete = legacyNormalized != null
         && legacyAstCreatorNormalized != null
         && astNormalized != null
         && dslNormalized != null;
-    vars.put("parity.allBackendsEvaluated", String.valueOf(parityComplete));
-    vars.put("parity.p4BackendsEvaluated", String.valueOf(
-        p4AstNormalized != null && p4DslNormalized != null));
-    if (parityComplete) {
+    boolean p4ParityComplete = p4AstNormalized != null && p4DslNormalized != null;
+    boolean allBackendsEvaluated = legacyParityComplete && p4ParityComplete;
+    vars.put("parity.allBackendsEvaluated", String.valueOf(allBackendsEvaluated));
+    vars.put("parity.p4BackendsEvaluated", String.valueOf(p4ParityComplete));
+    if (allBackendsEvaluated) {
       vars.put("parity.equalAll", String.valueOf(
-          Objects.equals(legacyNormalized, legacyAstCreatorNormalized)
-              && Objects.equals(legacyNormalized, astNormalized)
-              && Objects.equals(legacyNormalized, dslNormalized)));
-    }
-    if (parityComplete && p4AstNormalized != null && p4DslNormalized != null) {
-      vars.put("parity.equalAllWithP4", String.valueOf(
           Objects.equals(legacyNormalized, legacyAstCreatorNormalized)
               && Objects.equals(legacyNormalized, astNormalized)
               && Objects.equals(legacyNormalized, dslNormalized)
               && Objects.equals(legacyNormalized, p4AstNormalized)
               && Objects.equals(legacyNormalized, p4DslNormalized)));
+      vars.put("parity.equalAllWithP4", vars.get("parity.equalAll"));
     }
+  }
+
+  private static CalculationContext newContext(Map<String, ?> variables) {
+    CalculationContext context = CalculationContext.newConcurrentContext();
+    if (variables == null) {
+      return context;
+    }
+    for (Map.Entry<String, ?> entry : variables.entrySet()) {
+      String name = entry.getKey();
+      Object value = entry.getValue();
+      if (name == null || name.isBlank() || value == null) {
+        continue;
+      }
+      if (value instanceof Number number) {
+        context.set(name, number.floatValue());
+      } else if (value instanceof Boolean bool) {
+        context.set(name, bool);
+      } else if (value instanceof String string) {
+        context.set(name, string);
+      } else {
+        context.setObject(name, value);
+      }
+    }
+    return context;
+  }
+
+  private static ExecutionBackend resolveBackend(String runtimeMode) {
+    if (runtimeMode == null || runtimeMode.isBlank()) {
+      return ExecutionBackend.P4_AST_EVALUATOR;
+    }
+    return ExecutionBackend.fromRuntimeMode(runtimeMode).orElseThrow(() ->
+        new IllegalArgumentException("Unsupported runtimeMode: " + runtimeMode));
   }
 
   private static String normalizeResult(Object value) {

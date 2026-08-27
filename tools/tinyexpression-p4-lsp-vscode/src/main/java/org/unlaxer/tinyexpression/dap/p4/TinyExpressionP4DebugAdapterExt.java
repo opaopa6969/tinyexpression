@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.dap.p4;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -10,10 +11,17 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.eclipse.lsp4j.debug.Variable;
+import org.eclipse.lsp4j.debug.Capabilities;
+import org.eclipse.lsp4j.debug.InitializeRequestArguments;
+import org.eclipse.lsp4j.debug.SetVariableArguments;
+import org.eclipse.lsp4j.debug.SetVariableResponse;
 import org.eclipse.lsp4j.debug.VariablesArguments;
 import org.eclipse.lsp4j.debug.VariablesResponse;
+import org.unlaxer.tinyexpression.dap.TinyExpressionDapRuntimeBridge;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4DebugAdapter;
+import org.unlaxer.tinyexpression.loader.model.FormulaInfoSourceDocument;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 
 /**
@@ -36,14 +44,30 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
   // ── P4 probe state (populated in launch/configurationDone flow) ──
 
   private String capturedProgram = "";
-  private String capturedRuntimeMode = "ast-evaluator";
+  private String capturedRuntimeMode = "p4-ast";
+  private String capturedOriginalSource = "";
+  private String selectedCalculatorName = "";
+  private FormulaInfoSourceDocument.Section selectedFormulaSection;
   private boolean p4ParserUsed = false;
   private String p4AstNodeType = "not-evaluated";
   private String p4AstNodePath = "";
 
   // ── Injected variables from launch.json "variables" map ──
 
-  private final java.util.Map<String, String> injectedVariables = new java.util.LinkedHashMap<>();
+  private final java.util.Map<String, Object> injectedVariables = new java.util.LinkedHashMap<>();
+
+  // =========================================================================
+  // initialize — advertise editable CalculationContext variables
+  // =========================================================================
+
+  @Override
+  public CompletableFuture<Capabilities> initialize(InitializeRequestArguments args) {
+    return super.initialize(args).thenApply(capabilities -> {
+      capabilities.setSupportsSetVariable(true);
+      capabilities.setSupportsEvaluateForHovers(true);
+      return capabilities;
+    });
+  }
 
   // =========================================================================
   // launch — capture program path and runtime mode for our own use
@@ -51,21 +75,67 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
 
   @Override
   public CompletableFuture<Void> launch(Map<String, Object> args) {
-    capturedProgram = String.valueOf(args.getOrDefault("program", ""));
-    capturedRuntimeMode = String.valueOf(args.getOrDefault("runtimeMode", "ast-evaluator"));
+    Map<String, Object> effectiveArgs = new java.util.LinkedHashMap<>(
+        args == null ? Map.of() : args);
+    // Reset the process-global policy on every launch, including launches that later fail
+    // validation, so a previous trusted session cannot leak its opt-in to the next one.
+    JavaCodeBlockPolicy.setEnabled(Boolean.TRUE.equals(effectiveArgs.get("allowJavaCodeBlocks")));
+    Object program = effectiveArgs.get("program");
+    if (program == null || String.valueOf(program).isBlank()) {
+      program = effectiveArgs.get("formulaSource");
+    }
+    capturedProgram = program == null ? "" : String.valueOf(program);
+    capturedOriginalSource = readProgram(capturedProgram);
+    selectedFormulaSection = null;
+    selectedCalculatorName = String.valueOf(
+        effectiveArgs.getOrDefault("calculatorName", "")).strip();
+
+    if (looksLikeFormulaInfo(capturedOriginalSource)) {
+      FormulaInfoSourceDocument document = FormulaInfoSourceDocument.parse(capturedOriginalSource);
+      selectedFormulaSection = document.section(selectedCalculatorName).orElseThrow(() ->
+          new IllegalArgumentException("Unknown FormulaInfo calculatorName: " + selectedCalculatorName));
+      selectedCalculatorName = selectedFormulaSection.calculatorName();
+    }
+
+    String requestedRuntimeMode = String.valueOf(
+        effectiveArgs.getOrDefault("runtimeMode", "metadata"));
+    capturedRuntimeMode = resolveRuntimeMode(requestedRuntimeMode, selectedFormulaSection);
+    effectiveArgs.put("runtimeMode", capturedRuntimeMode);
 
     // Read "variables" map from launch.json and store for evaluate() / variables()
     injectedVariables.clear();
-    Object rawVariables = args.get("variables");
+    Object rawVariables = effectiveArgs.get("variables");
     if (rawVariables instanceof Map<?, ?> varMap) {
       for (Map.Entry<?, ?> entry : varMap.entrySet()) {
         if (entry.getKey() instanceof String key && entry.getValue() != null) {
-          injectedVariables.put(key, String.valueOf(entry.getValue()));
+          injectedVariables.put(key, entry.getValue());
         }
       }
     }
 
-    return super.launch(args);
+    return super.launch(effectiveArgs);
+  }
+
+  @Override
+  protected DebugSource resolveDebugSource(
+      String program, String originalSource, Map<String, Object> launchArguments) {
+    if (selectedFormulaSection == null) {
+      return super.resolveDebugSource(program, originalSource, launchArguments);
+    }
+    return debugSource(
+        selectedFormulaSection.debugSource(), selectedFormulaSection.lineOffset());
+  }
+
+  @Override
+  protected Map<String, String> runtimeVariables(
+      String source, String runtimeMode, Map<String, Object> launchArguments) {
+    if (selectedFormulaSection != null) {
+      // Evaluate the dependency graph exactly once. Calling debugVariables first would execute
+      // the selected formula a second time, which is observable for Java/side-effect formulas.
+      return TinyExpressionDapRuntimeBridge.debugFormulaInfoVariables(
+          capturedOriginalSource, selectedCalculatorName, injectedVariables);
+    }
+    return TinyExpressionDapRuntimeBridge.debugVariables(source, runtimeMode, injectedVariables);
   }
 
   // =========================================================================
@@ -89,22 +159,49 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       List<Variable> vars = new ArrayList<>(Arrays.asList(response.getVariables()));
 
       // Show injected variables (from launch.json "variables" map) in the Variables view
-      for (Map.Entry<String, String> entry : injectedVariables.entrySet()) {
-        vars.add(makeVar("$" + entry.getKey(), entry.getValue()));
+      for (Map.Entry<String, Object> entry : injectedVariables.entrySet()) {
+        vars.add(makeVar("$" + entry.getKey(), String.valueOf(entry.getValue())));
       }
 
       // Show P4 probe metadata
       if (!"not-evaluated".equals(p4AstNodeType)) {
-        vars.add(makeVar("_tinyP4ParserUsed", String.valueOf(p4ParserUsed)));
-        vars.add(makeVar("_tinyP4AstNodeType", p4AstNodeType));
+        addIfAbsent(vars, "_tinyP4ParserUsed", String.valueOf(p4ParserUsed));
+        addIfAbsent(vars, "_tinyP4AstNodeType", p4AstNodeType);
         if (!p4AstNodePath.isEmpty()) {
-          vars.add(makeVar("_tinyP4AstNodePath", p4AstNodePath));
+          addIfAbsent(vars, "_tinyP4AstNodePath", p4AstNodePath);
         }
       }
 
       response.setVariables(vars.toArray(new Variable[0]));
       return response;
     });
+  }
+
+  @Override
+  public CompletableFuture<SetVariableResponse> setVariable(SetVariableArguments args) {
+    String requestedName = args.getName();
+    String name = requestedName != null && requestedName.startsWith("$")
+        ? requestedName.substring(1) : requestedName;
+    if (args.getVariablesReference() != 1 || name == null || !injectedVariables.containsKey(name)) {
+      return CompletableFuture.failedFuture(
+          new IllegalArgumentException("Only injected CalculationContext variables are editable"));
+    }
+
+    Object previous = injectedVariables.get(name);
+    Object value;
+    try {
+      value = parseEditedValue(args.getValue(), previous);
+    } catch (IllegalArgumentException error) {
+      return CompletableFuture.failedFuture(error);
+    }
+    injectedVariables.put(name, value);
+    collectRuntimeProbeVariables();
+
+    SetVariableResponse response = new SetVariableResponse();
+    response.setValue(String.valueOf(value));
+    response.setType(value.getClass().getSimpleName());
+    response.setVariablesReference(0);
+    return CompletableFuture.completedFuture(response);
   }
 
   // =========================================================================
@@ -122,17 +219,8 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       return CompletableFuture.completedFuture(response);
     }
 
-    // Substitute $variableName → injected value
-    String substituted = substituteVariables(expression.strip());
-
-    // Try to evaluate as arithmetic expression
-    String result;
-    try {
-      result = evaluateArithmetic(substituted);
-    } catch (Exception e) {
-      // Not a numeric expression — return the substituted text as-is
-      result = substituted;
-    }
+    String result = TinyExpressionDapRuntimeBridge.evaluateForDisplay(
+        expression.strip(), capturedRuntimeMode, injectedVariables);
 
     org.eclipse.lsp4j.debug.EvaluateResponse response = new org.eclipse.lsp4j.debug.EvaluateResponse();
     response.setResult(result);
@@ -140,97 +228,42 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
     return CompletableFuture.completedFuture(response);
   }
 
-  /**
-   * Substitutes {@code $varName} references with values from {@link #injectedVariables}.
-   */
-  private String substituteVariables(String expr) {
-    java.util.regex.Matcher m = java.util.regex.Pattern
-        .compile("\\$([a-zA-Z_][a-zA-Z0-9_]*)").matcher(expr);
-    StringBuilder sb = new StringBuilder();
-    while (m.find()) {
-      String varName = m.group(1);
-      String value = injectedVariables.getOrDefault(varName, m.group(0));
-      m.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(value));
-    }
-    m.appendTail(sb);
-    return sb.toString();
-  }
-
-  /**
-   * Evaluates a simple arithmetic expression (supports +, -, *, / with integer and decimal
-   * operands). Delegates to a minimal recursive-descent evaluator to avoid external deps.
-   */
-  private static String evaluateArithmetic(String expr) {
-    double result = parseAddSub(new int[]{0}, expr.replaceAll("\\s+", ""));
-    if (result == Math.floor(result) && !Double.isInfinite(result)) {
-      return String.valueOf((long) result);
-    }
-    return String.valueOf(result);
-  }
-
-  private static double parseAddSub(int[] pos, String expr) {
-    double left = parseMulDiv(pos, expr);
-    while (pos[0] < expr.length()) {
-      char op = expr.charAt(pos[0]);
-      if (op == '+' || op == '-') {
-        pos[0]++;
-        double right = parseMulDiv(pos, expr);
-        left = (op == '+') ? left + right : left - right;
-      } else {
-        break;
-      }
-    }
-    return left;
-  }
-
-  private static double parseMulDiv(int[] pos, String expr) {
-    double left = parseAtom(pos, expr);
-    while (pos[0] < expr.length()) {
-      char op = expr.charAt(pos[0]);
-      if (op == '*' || op == '/') {
-        pos[0]++;
-        double right = parseAtom(pos, expr);
-        left = (op == '*') ? left * right : left / right;
-      } else {
-        break;
-      }
-    }
-    return left;
-  }
-
-  private static double parseAtom(int[] pos, String expr) {
-    if (pos[0] >= expr.length()) throw new IllegalArgumentException("Unexpected end");
-    if (expr.charAt(pos[0]) == '(') {
-      pos[0]++; // skip '('
-      double val = parseAddSub(pos, expr);
-      if (pos[0] < expr.length() && expr.charAt(pos[0]) == ')') pos[0]++;
-      return val;
-    }
-    if (expr.charAt(pos[0]) == '-') {
-      pos[0]++;
-      return -parseAtom(pos, expr);
-    }
-    int start = pos[0];
-    while (pos[0] < expr.length() && (Character.isDigit(expr.charAt(pos[0])) || expr.charAt(pos[0]) == '.')) {
-      pos[0]++;
-    }
-    if (pos[0] == start) throw new IllegalArgumentException("Expected number at " + pos[0]);
-    return Double.parseDouble(expr.substring(start, pos[0]));
-  }
-
   // =========================================================================
   // Private helpers
   // =========================================================================
 
-  private void runP4Probe() {
-    if (capturedProgram == null || capturedProgram.isEmpty()) return;
-    String content;
-    try {
-      content = Files.readString(Path.of(capturedProgram));
-    } catch (IOException e) {
-      p4AstNodeType = "file-read-error";
-      return;
+  private static void addIfAbsent(List<Variable> variables, String name, String value) {
+    if (variables.stream().noneMatch(variable -> name.equals(variable.getName()))) {
+      variables.add(makeVar(name, value));
     }
+  }
+
+  private static Object parseEditedValue(String text, Object previous) {
+    String value = text == null ? "" : text.strip();
+    if (previous instanceof Number) {
+      try {
+        return new BigDecimal(value);
+      } catch (NumberFormatException error) {
+        throw new IllegalArgumentException("Expected a JSON number for this variable: " + value, error);
+      }
+    }
+    if (previous instanceof Boolean) {
+      if (!"true".equalsIgnoreCase(value) && !"false".equalsIgnoreCase(value)) {
+        throw new IllegalArgumentException("Expected true or false for this variable: " + value);
+      }
+      return Boolean.valueOf(value);
+    }
+    if (value.length() >= 2
+        && ((value.startsWith("\"") && value.endsWith("\""))
+            || (value.startsWith("'") && value.endsWith("'")))) {
+      return value.substring(1, value.length() - 1);
+    }
+    return value;
+  }
+
+  private void runP4Probe() {
+    String content = sourceContent;
+    if (content == null || content.isBlank()) return;
     try {
       TinyExpressionP4AST ast = P4PreferredAstMapper.parse(content.strip());
       p4ParserUsed = true;
@@ -241,6 +274,37 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       p4AstNodeType = "parse-failed";
       p4AstNodePath = "";
     }
+  }
+
+  private static String readProgram(String program) {
+    if (program == null || program.isBlank()) {
+      return "";
+    }
+    try {
+      return Files.readString(Path.of(program));
+    } catch (IOException error) {
+      throw new IllegalArgumentException("Cannot read program: " + program, error);
+    }
+  }
+
+  private static boolean looksLikeFormulaInfo(String source) {
+    return source != null
+        && source.contains("formula:")
+        && source.contains("---END_OF_PART---");
+  }
+
+  private static String resolveRuntimeMode(
+      String requested, FormulaInfoSourceDocument.Section section) {
+    if (requested == null || requested.isBlank() || "metadata".equalsIgnoreCase(requested)) {
+      return section == null ? "p4-ast" : section.runtimeMode();
+    }
+    if (section != null && !section.runtimeMode().equalsIgnoreCase(requested)) {
+      throw new IllegalArgumentException(
+          "FormulaInfo runtimeMode conflicts with executionBackend: requested=" + requested
+              + ", metadata=" + section.runtimeMode()
+              + ". Change executionBackend or use runtimeMode=metadata.");
+    }
+    return requested;
   }
 
   /**
@@ -260,6 +324,25 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
     path.add(node.getClass().getSimpleName());
     // Recurse into meaningful child nodes (type-safe, no reflection)
     switch (node) {
+      case TinyExpressionP4AST.FormulaExpr f -> {
+        collectAstTypeNames(f.expression(), path, depth + 1, maxDepth);
+      }
+      case TinyExpressionP4AST.NumberVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.StringVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.BooleanVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.ObjectVariableDeclarationExpr d -> {
+        d.value().ifPresent(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
+      case TinyExpressionP4AST.ArgumentsExpr a -> {
+        a.values().stream().limit(1)
+            .forEach(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      }
       case TinyExpressionP4AST.BinaryExpr b -> {
         collectAstTypeNames(b.left(), path, depth + 1, maxDepth);
         b.right().stream().limit(1)
@@ -277,9 +360,32 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
         collectAstTypeNames(i.condition(), path, depth + 1, maxDepth);
         collectAstTypeNames(i.thenExpr(), path, depth + 1, maxDepth);
       }
-      case TinyExpressionP4AST.ExpressionExpr e -> {}
-      case TinyExpressionP4AST.MethodInvocationExpr m -> {}
+      case TinyExpressionP4AST.ExpressionExpr e ->
+          collectAstTypeNameIfPresent(e.value(), path, depth, maxDepth);
+      case TinyExpressionP4AST.BranchExpressionExpr b ->
+          collectAstTypeNameIfPresent(b.value(), path, depth, maxDepth);
+      case TinyExpressionP4AST.TernaryExpr t -> {
+        collectAstTypeNames(t.condition(), path, depth + 1, maxDepth);
+        collectAstTypeNames(t.thenExpr(), path, depth + 1, maxDepth);
+      }
+      case TinyExpressionP4AST.MethodInvocationExpr m ->
+          m.args().ifPresent(a -> collectAstTypeNames(a, path, depth + 1, maxDepth));
+      case TinyExpressionP4AST.NumberMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.StringMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.BooleanMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.ObjectMethodDeclarationExpr m ->
+          collectAstTypeNames(m.expression(), path, depth + 1, maxDepth);
+      case TinyExpressionP4AST.MethodParametersExpr p -> p.values().stream().limit(1)
+          .forEach(v -> collectAstTypeNames(v, path, depth + 1, maxDepth));
+      case TinyExpressionP4AST.MethodParameterExpr p -> {}
       case TinyExpressionP4AST.VariableRefExpr v -> {}
+      case TinyExpressionP4AST.StringCastVariableRefExpr v -> {}
+      case TinyExpressionP4AST.StringTypedVariableRefExpr v -> {}
+      case TinyExpressionP4AST.QualifiedNameExpr q -> {}
+      case TinyExpressionP4AST.OnlyIfAbsentExpr o -> {}
       case TinyExpressionP4AST.NumberMatchExpr nm -> {
         collectAstTypeNames(nm.firstCase(), path, depth + 1, maxDepth);
       }
@@ -359,6 +465,13 @@ public class TinyExpressionP4DebugAdapterExt extends TinyExpressionP4DebugAdapte
       case TinyExpressionP4AST.InTimeRangeExpr s -> {}
       case TinyExpressionP4AST.InDayTimeRangeExpr s -> {}
       case TinyExpressionP4AST.SliceExpr s -> {}
+    }
+  }
+
+  private static void collectAstTypeNameIfPresent(Object value, List<String> path,
+      int depth, int maxDepth) {
+    if (value instanceof TinyExpressionP4AST ast) {
+      collectAstTypeNames(ast, path, depth + 1, maxDepth);
     }
   }
 

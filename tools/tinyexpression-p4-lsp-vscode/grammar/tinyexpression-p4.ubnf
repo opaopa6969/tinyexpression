@@ -14,7 +14,9 @@ grammar TinyExpressionP4 {
 
   @root
   @scopeTree(mode=lexical)
-  Formula ::= { CodeBlock } { ImportDeclaration } { VariableDeclaration } { Annotation } Expression { MethodDeclaration } EOF ;
+  @mapping(FormulaExpr, params=[imports, declarations, expression, methods])
+  Formula ::= { CodeBlock } { ImportDeclaration @imports } { VariableDeclaration @declarations }
+    { Annotation } Expression @expression { MethodDeclaration @methods } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
   // Syntax: ```scheme:JavaClassName\n...\n```
@@ -30,10 +32,11 @@ grammar TinyExpressionP4 {
   //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
   @interleave(profile=javaStyle)
-  @mapping(ImportDeclarationExpr, params=[method, alias])
-  ImportDeclaration ::= 'import' ClassName [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
+  @mapping(ImportDeclarationExpr, params=[className, method, alias])
+  ImportDeclaration ::= 'import' ClassName @className [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
-  ClassName ::= IDENTIFIER { '.' IDENTIFIER } ;
+  @mapping(QualifiedNameExpr, params=[head, tail])
+  ClassName ::= IDENTIFIER @head { '.' IDENTIFIER @tail } ;
 
   // ── Variable declarations ──────────────────────────────────────────────────
 
@@ -45,52 +48,55 @@ grammar TinyExpressionP4 {
     | ObjectVariableDeclaration ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(NumberVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   NumberVariableDeclaration ::=
-    ( 'var' | 'variable' )
+    ( 'variable' | 'var' )
     '$' IDENTIFIER @varName
     [ NumberTypeHint ]
-    [ NumberSetter ]
-    Description @desc
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] NumberExpression @value ]
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(StringVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   StringVariableDeclaration ::=
-    ( 'var' | 'variable' )
+    ( 'variable' | 'var' )
     '$' IDENTIFIER @varName
     [ StringTypeHint ]
-    [ StringSetter ]
-    Description @desc
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] StringExpression @value ]
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(BooleanVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   BooleanVariableDeclaration ::=
-    ( 'var' | 'variable' )
+    ( 'variable' | 'var' )
     '$' IDENTIFIER @varName
     [ BooleanTypeHint ]
-    [ BooleanSetter ]
-    Description @desc
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] BooleanExpression @value ]
+    [ Description @desc ]
     ';' ;
 
   @declares(symbol=varName, description=desc)
+  @mapping(ObjectVariableDeclarationExpr, params=[varName, onlyIfAbsent, value, desc])
   ObjectVariableDeclaration ::=
-    ( 'var' | 'variable' )
+    ( 'variable' | 'var' )
     '$' IDENTIFIER @varName
     [ ObjectTypeHint ]
-    [ ObjectSetter ]
-    Description @desc
+    [ 'set' [ OnlyIfAbsent @onlyIfAbsent ] ObjectExpression @value ]
+    [ Description @desc ]
     ';' ;
 
-  TypeHint ::= [ 'as' ] ( 'number' | 'string' | 'boolean' | 'object' ) ;
+  TypeHint ::= [ 'as' ] ( 'number' | 'Number' | 'string' | 'String'
+    | 'boolean' | 'Boolean' | 'object' | 'Object' ) ;
 
-  NumberTypeHint ::= [ 'as' ] ( 'number' | 'float' ) ;
-  StringTypeHint ::= [ 'as' ] 'string' ;
-  BooleanTypeHint ::= [ 'as' ] 'boolean' ;
-  ObjectTypeHint ::= [ 'as' ] 'object' ;
+  NumberTypeHint ::= [ 'as' ] ( 'number' | 'Number' | 'float' | 'Float' ) ;
+  StringTypeHint ::= [ 'as' ] ( 'string' | 'String' ) ;
+  BooleanTypeHint ::= [ 'as' ] ( 'boolean' | 'Boolean' ) ;
+  ObjectTypeHint ::= [ 'as' ] ( 'object' | 'Object' ) ;
 
-  NumberSetter ::= 'set' [ 'if' 'not' 'exists' ] NumberExpression ;
-  StringSetter ::= 'set' [ 'if' 'not' 'exists' ] StringExpression ;
-  BooleanSetter ::= 'set' [ 'if' 'not' 'exists' ] BooleanExpression ;
-  ObjectSetter ::= 'set' [ 'if' 'not' 'exists' ] ObjectExpression ;
+  @mapping(OnlyIfAbsentExpr)
+  OnlyIfAbsent ::= 'if' 'not' 'exists' ;
 
   Description ::= 'description' '=' STRING ;
 
@@ -106,52 +112,58 @@ grammar TinyExpressionP4 {
 
   @scopeTree(mode=lexical)
   @declares(symbol=methodName)
+  @mapping(NumberMethodDeclarationExpr, params=[methodName, parameters, expression])
   NumberMethodDeclaration ::=
     NumberReturnType IDENTIFIER @methodName
     '('
-      [ MethodParameters ]
+      [ MethodParameters @parameters ]
     ')'
     '{'
-      NumberExpression
+      NumberExpression @expression
     '}' ;
 
   @scopeTree(mode=lexical)
   @declares(symbol=methodName)
+  @mapping(StringMethodDeclarationExpr, params=[methodName, parameters, expression])
   StringMethodDeclaration ::=
     StringReturnType IDENTIFIER @methodName
     '('
-      [ MethodParameters ]
+      [ MethodParameters @parameters ]
     ')'
     '{'
-      StringExpression
+      StringExpression @expression
     '}' ;
 
   @scopeTree(mode=lexical)
   @declares(symbol=methodName)
+  @mapping(BooleanMethodDeclarationExpr, params=[methodName, parameters, expression])
   BooleanMethodDeclaration ::=
     BooleanReturnType IDENTIFIER @methodName
     '('
-      [ MethodParameters ]
+      [ MethodParameters @parameters ]
     ')'
     '{'
-      BooleanExpression
+      BooleanExpression @expression
     '}' ;
 
   @scopeTree(mode=lexical)
   @declares(symbol=methodName)
+  @mapping(ObjectMethodDeclarationExpr, params=[methodName, parameters, expression])
   ObjectMethodDeclaration ::=
     ObjectReturnType IDENTIFIER @methodName
     '('
-      [ MethodParameters ]
+      [ MethodParameters @parameters ]
     ')'
     '{'
-      ObjectExpression
+      ObjectExpression @expression
     '}' ;
 
-  MethodParameters ::= MethodParameter { ',' MethodParameter } ;
+  @mapping(MethodParametersExpr, params=[values])
+  MethodParameters ::= MethodParameter @values { ',' MethodParameter @values } ;
 
   @declares(symbol=paramName)
-  MethodParameter ::= '$' IDENTIFIER @paramName [ 'as' ReturnType ] ;
+  @mapping(MethodParameterExpr, params=[paramName, type])
+  MethodParameter ::= '$' IDENTIFIER @paramName [ 'as' ReturnType @type ] ;
 
   NumberReturnType ::= 'number' | 'float' ;
   StringReturnType ::= 'string' ;
@@ -163,21 +175,33 @@ grammar TinyExpressionP4 {
   // Syntax: external returning as <type> methodName(args)
   // Example: external returning as boolean checkAlphabets($inputName)
 
-  @mapping(ExternalBooleanInvocationExpr, params=[name])
+  @mapping(ExternalBooleanInvocationExpr, params=[className, name, args])
   ExternalBooleanInvocation ::=
-    'external' 'returning' 'as' BooleanReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] BooleanReturnType
+    [ ':' ]
+    ( ClassName @className '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalNumberInvocationExpr, params=[name])
+  @mapping(ExternalNumberInvocationExpr, params=[className, name, args])
   ExternalNumberInvocation ::=
-    'external' 'returning' 'as' NumberReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external'
+    ( [ 'returning' [ 'as' ] ] NumberReturnType [ ':' ] | [ ':' ] )
+    ( ClassName @className '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalStringInvocationExpr, params=[name])
+  @mapping(ExternalStringInvocationExpr, params=[className, name, args])
   ExternalStringInvocation ::=
-    'external' 'returning' 'as' StringReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] StringReturnType
+    [ ':' ]
+    ( ClassName @className '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
-  @mapping(ExternalObjectInvocationExpr, params=[name])
+  @mapping(ExternalObjectInvocationExpr, params=[className, name, args])
   ExternalObjectInvocation ::=
-    'external' 'returning' 'as' ObjectReturnType IDENTIFIER @name '(' [ Arguments ] ')' ;
+    'external' [ 'returning' [ 'as' ] ] ObjectReturnType
+    [ ':' ]
+    ( ClassName @className '#' IDENTIFIER @name | IDENTIFIER @name )
+    '(' [ Arguments @args ] ')' ;
 
   // ── Built-in method invocation (call / call internal / internal) ──────────
 
@@ -185,18 +209,22 @@ grammar TinyExpressionP4 {
   MethodInvocationHeader ::= 'call' [ 'internal' ] | 'internal' ;
 
   @backref(name=name)
-  @mapping(MethodInvocationExpr, params=[name])
-  MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments ] ')' ;
+  @mapping(MethodInvocationExpr, params=[name, args])
+  MethodInvocation ::= MethodInvocationHeader IDENTIFIER @name '(' [ Arguments @args ] ')' ;
 
   // ── Argument expression (allows bare ternary inside function parens) ───
-  // ArgumentTernary maps to same IfExpr AST — no new evaluator methods needed
-  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
-  ArgumentTernary ::= BooleanExpression @condition '?' Expression @thenExpr ':' Expression @elseExpr ;
+  @mapping(TernaryExpr, params=[condition, thenExpr, elseExpr])
+  ArgumentTernary ::= BooleanExpression @condition '?' BranchExpression @thenExpr ':' BranchExpression @elseExpr ;
 
   @mapping(ArgumentExpressionExpr, params=[value])
-  ArgumentExpression ::= ArgumentTernary @value | Expression @value ;
+  ArgumentExpression ::=
+      ArgumentTernary @value
+    | ComparisonExpression @value
+    | StringComparisonExpression @value
+    | Expression @value ;
 
-  Arguments ::= ArgumentExpression { ',' ArgumentExpression } ;
+  @mapping(ArgumentsExpr, params=[values])
+  Arguments ::= ArgumentExpression @values { ',' ArgumentExpression @values } ;
 
   // ── Numeric expressions ────────────────────────────────────────────────────
 
@@ -329,28 +357,36 @@ grammar TinyExpressionP4 {
   // ── String predicates (boolean-returning, function form) ─────────────────
   // These return boolean: startsWith, endsWith, contains
 
-  @mapping(StartsWithExpr, params=[value, pattern])
-  StartsWithFunction ::= 'startsWith' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+  @mapping(StartsWithExpr, params=[value, patterns])
+  StartsWithFunction ::= 'startsWith' '(' StringExpression @value ',' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
 
-  @mapping(EndsWithExpr, params=[value, pattern])
-  EndsWithFunction ::= 'endsWith' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+  @mapping(EndsWithExpr, params=[value, patterns])
+  EndsWithFunction ::= 'endsWith' '(' StringExpression @value ',' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
 
-  @mapping(ContainsExpr, params=[value, pattern])
-  ContainsFunction ::= 'contains' '(' StringExpression @value ',' StringExpression @pattern ')' ;
+  @mapping(ContainsExpr, params=[value, patterns])
+  ContainsFunction ::= 'contains' '(' StringExpression @value ',' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
 
   @mapping(InExpr, params=[value, candidates])
   InMethod ::= StringExpression @value '.in' '(' StringExpression @candidates { ',' StringExpression @candidates } ')' ;
 
   // ── String predicates (boolean-returning, dot form) ─────────────────────
 
-  @mapping(StartsWithDotExpr, params=[value, pattern])
-  StartsWithDotMethod ::= VariableRef @value '.startsWith' '(' StringExpression @pattern ')' ;
+  @mapping(StartsWithDotExpr, params=[value, patterns])
+  StartsWithDotMethod ::= StringPredicateReceiver @value '.startsWith' '(' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
 
-  @mapping(EndsWithDotExpr, params=[value, pattern])
-  EndsWithDotMethod ::= VariableRef @value '.endsWith' '(' StringExpression @pattern ')' ;
+  @mapping(EndsWithDotExpr, params=[value, patterns])
+  EndsWithDotMethod ::= StringPredicateReceiver @value '.endsWith' '(' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
 
-  @mapping(ContainsDotExpr, params=[value, pattern])
-  ContainsDotMethod ::= VariableRef @value '.contains' '(' StringExpression @pattern ')' ;
+  @mapping(ContainsDotExpr, params=[value, patterns])
+  ContainsDotMethod ::= StringPredicateReceiver @value '.contains' '(' StringExpression @patterns
+    { ',' StringExpression @patterns } ')' ;
+
+  StringPredicateReceiver ::= ToLowerCaseFunction | ToUpperCaseFunction | TrimFunction | VariableRef ;
 
   // ── isPresent (boolean-returning) ───────────────────────────────────────
 
@@ -371,6 +407,7 @@ grammar TinyExpressionP4 {
   // Syntax: $s[0:3], $s[1:], $s[:3], $s[::2], $s[::-1]
   SliceBaseReceiver ::=
       ExternalStringInvocation
+    | '(' VariableRef ')'
     | ParenthesizedStringExpression
     | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
     | ToUpperCaseDotMethod | ToLowerCaseDotMethod | TrimDotMethod
@@ -423,6 +460,9 @@ grammar TinyExpressionP4 {
 
   StringTerm ::=
       StringMatchExpression
+    | IfExpression
+    | StringCastVariable
+    | StringTypedVariable
     | ParenthesizedStringExpression
     | SliceExpression
     | ExternalStringInvocation
@@ -431,6 +471,12 @@ grammar TinyExpressionP4 {
     | STRING
     | VariableRef
     | MethodInvocation ;
+
+  @mapping(StringCastVariableRefExpr, params=[name])
+  StringCastVariable ::= '(' ( 'string' | 'String' ) ')' '$' IDENTIFIER @name ;
+
+  @mapping(StringTypedVariableRefExpr, params=[name])
+  StringTypedVariable ::= '$' IDENTIFIER @name 'as' ( 'string' | 'String' ) ;
 
   // ── Boolean expressions (3-level precedence: OR < AND < XOR) ──────────
 
@@ -459,6 +505,7 @@ grammar TinyExpressionP4 {
 
   BooleanComparable ::=
       NotExpression
+    | IfExpression
     | BooleanMatchExpression
     | ExternalBooleanInvocation
     | InMethod
@@ -514,14 +561,24 @@ grammar TinyExpressionP4 {
   @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
   IfExpression ::=
     'if' '(' BooleanExpression @condition ')'
-    '{' Expression @thenExpr '}'
+    '{' BranchExpression @thenExpr '}'
     'else'
-    '{' Expression @elseExpr '}' ;
+    '{' BranchExpression @elseExpr '}' ;
+
+  @mapping(BranchExpressionExpr, params=[value])
+  BranchExpression ::=
+      ComparisonExpression @value
+    | StringComparisonExpression @value
+    | BooleanEqualityExpression @value
+    | NumberExpression @value
+    | BooleanExpression @value
+    | StringExpression @value
+    | ObjectExpression @value
+    | MethodInvocation @value ;
 
   // ── Ternary expression (mandatory outer parentheses) ──────────────────
-  // Maps to same IfExpr AST — Evaluator changes: zero
-  @mapping(IfExpr, params=[condition, thenExpr, elseExpr])
-  TernaryExpression ::= '(' BooleanExpression @condition '?' Expression @thenExpr ':' Expression @elseExpr ')' ;
+  @mapping(TernaryExpr, params=[condition, thenExpr, elseExpr])
+  TernaryExpression ::= '(' BooleanExpression @condition '?' BranchExpression @thenExpr ':' BranchExpression @elseExpr ')' ;
 
   // ── Match expressions ──────────────────────────────────────────────────────
 
@@ -571,8 +628,11 @@ grammar TinyExpressionP4 {
 
   @catalog(context='variable')
   @backref(name=name)
-  @mapping(VariableRefExpr, params=[name])
-  VariableRef ::= '$' IDENTIFIER @name [ TypeHint ] ;
+  @mapping(VariableRefExpr, params=[name, type])
+  VariableRef ::= '$' IDENTIFIER @name [ [ 'as' ] TypeKeyword @type ] ;
+
+  TypeKeyword ::= 'number' | 'Number' | 'float' | 'Float'
+    | 'string' | 'String' | 'boolean' | 'Boolean' | 'object' | 'Object' ;
 
   // ── Top-level expression ───────────────────────────────────────────────────
 

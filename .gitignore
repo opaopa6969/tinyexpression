@@ -16,3 +16,17 @@ buildNumber.properties
 .mvn/wrapper/maven-wrapper.jar
 /.apt_generated/
 /.apt_generated_tests/
+
+# デバッグ用の使い捨てログ（P4 パーサ調査時の生ログ、1 本 1MB 超のものもある）
+/scratch-*.log
+
+# DVE のビルド生成物（`dve build` でいつでも再生成できる）
+/dve/dist/
+
+# エージェントツールチェーン用のローカル npm リンク。
+# package.json が DxE-suite を file:../AskOS-workspace/DxE-suite で参照しており
+# このマシンでしか解決できないため、リポジトリには含めない。
+# 正規の入手手段は `npm install @unlaxer/dxe-suite`（.claude/skills/dxe-command.md 参照）。
+/node_modules/
+/package.json
+/package-lock.json

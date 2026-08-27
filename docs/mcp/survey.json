@@ -1,0 +1,160 @@
+{
+  "repo": "tinyexpression",
+  "surveyed_at": "2026-08-22T00:00:00Z",
+  "kind": "library",
+  "summary": "Java アプリケーションに組み込み可能な式評価エンジン（UDF スタイル）。ランタイムで式文字列を評価し、複数式を依存関係付きで実行する。6 つの実行バックエンド（JavaCode / AST / P4 系列）を持ち、LSP/DAP で VS Code 拡張も提供。Maven Central 座標は org.unlaxer:tinyExpression:1.4.15。",
+  "decision": "library-serve",
+  "decision_reason": "純粋な Java ライブラリであり常駐サーバを持たないが、式評価エンジンを MCP サーバ化すればエージェントが直接「式を評価する」能力を呼べるようになる。外部 Java メソッド呼び出しや Java コードブロック等の高度な機能はサーバ側で制御が必要だが、基本的な式評価（if/match/算術・文字列・比較演算・組み込み関数）は入出力が明確で tool に適している。municipality-stats / building-starts / establishment-census 等のデータ系ライブラリの値を CalculationContext に流し込んで式評価する組み合わせが描ける。JVM 常駐のメリット（javac コンパイルキャッシュ・AST 評価器のウォームアップ）もあり、起動コストが軽くない JAVA_CODE バックエンドでは常駐の価値がある。",
+  "existing": {
+    "http_api": false,
+    "cli": false,
+    "mcp": false,
+    "healthz": false,
+    "volta_manifest": false,
+    "hosted_url": null
+  },
+  "proposed_namespace": "tinyexpr",
+  "capabilities": [
+    {
+      "verb": "式を評価する",
+      "kind": "tool",
+      "name": "evaluate",
+      "io": "{formula: string, variables: {name: value}[], backend?: string} → {result: number|string|boolean|object, backend_used: string, markers: {}}",
+      "side_effect": "none",
+      "long_running": false,
+      "maps_to": "JavaCodeCalculatorV3 / P4AstEvaluatorCalculator 等 — Calculator.apply(CalculationContext)"
+    },
+    {
+      "verb": "式をパースして診断する",
+      "kind": "tool",
+      "name": "validate",
+      "io": "{formula: string} → {parse_ok: boolean, errors: [{position, message, expected}]?, ast_node_type?: string, p4_parser_used?: boolean}",
+      "side_effect": "none",
+      "long_running": false,
+      "maps_to": "TinyExpressionP4Parsers + ParseFailureDiagnostics — LSP 診断ロジックと同一"
+    },
+    {
+      "verb": "複数式を依存関係付きで実行する",
+      "kind": "tool",
+      "name": "execute_batch",
+      "io": "{formulas: [{name, formula, dependsOn?: string[], resultType?: string, backend?: string}], variables: {name: value}[]} → {results: [{name, result, backend_used}], variables: {}}",
+      "side_effect": "none",
+      "long_running": false,
+      "maps_to": "TinyExpressionsExecutor.execute() — 複数式の依存解決実行"
+    },
+    {
+      "verb": "バックエンド間のパリティを比較する",
+      "kind": "tool",
+      "name": "parity_check",
+      "io": "{formula: string, variables: {}} → {backends: [{name, result, equal: boolean}], equal_all: boolean}",
+      "side_effect": "none",
+      "long_running": false,
+      "maps_to": "DAP parity.* 変数のロジック — 6 バックエンド結果比較"
+    },
+    {
+      "verb": "能力の仕様",
+      "kind": "resource",
+      "name": "spec",
+      "uri": "tinyexpr://spec"
+    },
+    {
+      "verb": "使い方",
+      "kind": "resource",
+      "name": "guide",
+      "uri": "tinyexpr://guide"
+    },
+    {
+      "verb": "言語仕様",
+      "kind": "resource",
+      "name": "language",
+      "uri": "tinyexpr://language"
+    },
+    {
+      "verb": "バックエンド仕様",
+      "kind": "resource",
+      "name": "backends",
+      "uri": "tinyexpr://backends"
+    },
+    {
+      "verb": "FormulaInfo 記法の書き方",
+      "kind": "skill",
+      "name": "write-formula-info",
+      "locality": "repo"
+    },
+    {
+      "verb": "バックエンド選択の判断基準",
+      "kind": "skill",
+      "name": "choose-backend",
+      "locality": "repo"
+    }
+  ],
+  "composition_examples": [
+    "municipality-stats__lookup → tinyexpr__evaluate: 統計データ（人口・世帯数）を変数に流し込み、スコアリング式で評価する",
+    "building-starts__query + establishment-census__query → tinyexpr__execute_batch: 建設着工数と事業所数を変数に投入し、依存関係付きの複数式で地域指標を算出する",
+    "tinyexpr__validate → tinyexpr__evaluate: ユーザーが入力した式の構文エラーを先に検出し、問題なければ評価する（安全なワンストップ体験）"
+  ],
+  "dependencies": [
+    {
+      "repo": "unlaxer-common",
+      "direction": "depends_on",
+      "capability": "Parser combinator ランタイム（レガシーパーサーのベース）",
+      "exists_now": true,
+      "note": "Maven 依存 org.unlaxer:unlaxer-common:3.0.14。MCP 化には影響なし（JAR に同梱）"
+    },
+    {
+      "repo": "unlaxer-dsl",
+      "direction": "depends_on",
+      "capability": "UBNF 文法からのパーサー自動生成（P4 パーサー生成）",
+      "exists_now": true,
+      "note": "Maven 依存 org.unlaxer:unlaxer-dsl:3.0.14。MCP 化には影響なし（JAR に同梱）"
+    },
+    {
+      "repo": "tinyexpression-ide",
+      "direction": "depends_on",
+      "capability": "Web ベース IDE（LSP over WebSocket）",
+      "exists_now": true,
+      "note": "カタログ上 operational_status=retired。MCP サーバ化で評価能力を独立提供できるため、IDE 退役後もエージェントから利用可能"
+    },
+    {
+      "repo": "municipality-stats",
+      "direction": "provides_to",
+      "capability": "tinyexpr__evaluate の変数入力として統計データを供給する組み合わせ",
+      "exists_now": true,
+      "note": "相手は library（MCP なし）。将来サーバ化すれば MCP 経由で直接連携可能"
+    },
+    {
+      "repo": "building-starts",
+      "direction": "provides_to",
+      "capability": "tinyexpr__execute_batch の変数入力として建設着工数を供給する組み合わせ",
+      "exists_now": true,
+      "note": "相手は library（MCP なし）。将来サーバ化すれば MCP 経由で直接連携可能"
+    }
+  ],
+  "library_serve": {
+    "needed": true,
+    "new_work": [
+      "healthz — /healthz エンドポイント（200 を返す）",
+      "PORT — 環境変数でポート指定、0.0.0.0 に bind",
+      "volta.service.json — manifest を root に配置",
+      "MCP サーバ — Streamable HTTP の /mcp エンドポイント、tool 定義（evaluate/validate/execute_batch/parity_check）",
+      "systemd unit — 常駐起動設定",
+      "Java ランタイム — Java 21+ が必要、fat JAR で配布（LSP サーバの shade プラグイン手法を流用可能）"
+    ],
+    "runtime": "java",
+    "estimated_effort": "M"
+  },
+  "risks": [
+    "Java コードブロック機能は JVM 上で任意コードを実行する（セキュリティリスク）。MCP tool ではデフォルト無効化し、明示的な opt-in フラグでのみ有効にする設計が必要",
+    "JAVA_CODE バックエンドは初回コンパイル時に javac を呼ぶため起動オーバーヘッドがある。常駐サーバ化でキャッシュが効くメリットがある一方、メモリ使用量に注意",
+    "external Java メソッド呼び出しはホストアプリケーションのクラスパスに依存するため、MCP サーバ化時には制約が大きい。サーバ側で事前登録可能なメソッドセットを限定する必要がある",
+    "P4 文法は全言語機能をカバーしていない（128 機能中 68 が PARITY）。未カバー構文はフォールバックパスを使用するため、パリティチェック tool の結果解釈に注意が必要",
+    "Java 21+ が必要。volta の既存 Java サービス（building-hierarchy, nanori-engine 等）と同等のランタイム要件"
+  ],
+  "open_questions": [
+    "MCP tool の evaluate で external Java メソッド呼び出しを許可するか？ 許可する場合、どのような安全策を講じるか（ホワイトリスト・サンドボックス）",
+    "Java コードブロックを MCP 経由で有効にするか？ デフォルトは無効が妥当だが、持ち主の意向を確認したい",
+    "namespace は tinyexpr でよいか、それとも tinyexpression のままがよいか（カタログ上の既存 ID は tinyexpression）",
+    "execute_batch tool で FormulaInfo.txt ファイルを直接受け取る形式と、JSON 配列で受け取る形式のどちらを優先するか",
+    "既存の LSP サーバ（tinyexpression-p4-lsp-server.jar）の fat JAR に MCP エンドポイントを追加する形で実装するか、独立した MCP サーバ JAR を新設するか"
+  ]
+}
