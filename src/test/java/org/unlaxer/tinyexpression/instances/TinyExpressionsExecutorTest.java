@@ -10,10 +10,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
+import org.unlaxer.tinyexpression.evaluator.javacode.JavaCodeBlockPolicy;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfo;
 
@@ -29,6 +32,11 @@ public class TinyExpressionsExecutorTest {
   public static void setup() {
     System.setProperty("--add-opens", "java.base/java.lang=ALL-UNNAMED");
   }
+
+  // Formulas here include Java code blocks (CheckDigits); opt in to the process-wide
+  // policy so the test is order-/parallelism-independent (tinyexpression#27).
+  @Before public void enableJavaCodeBlocks() { JavaCodeBlockPolicy.setEnabled(true); }
+  @After public void resetJavaCodeBlocks() { JavaCodeBlockPolicy.reset(); }
 
   /*
    * Test用の簡易的なCheckResult class

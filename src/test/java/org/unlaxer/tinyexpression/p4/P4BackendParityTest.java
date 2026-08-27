@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.p4;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 import java.math.BigDecimal;
@@ -14,6 +15,7 @@ import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
+import org.unlaxer.parser.ParseException;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
@@ -25,7 +27,7 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
  *   <li>{@code P4_AST_EVALUATOR} and {@code P4_DSL_JAVA_CODE} produce the same evaluation
  *       results as the reference {@code JAVA_CODE} backend.</li>
  *   <li>{@code _tinyP4ParserUsed=true} is set for formulas the P4 grammar can parse.</li>
- *   <li>{@code _tinyP4ParserUsed=false} is set (with graceful fallback) for formulas that
+ *   <li>formulas outside the P4 grammar fail explicitly rather than invoking a fallback.
  *       use tinyexpression syntax not yet covered by the P4 grammar.</li>
  * </ol>
  */
@@ -46,13 +48,17 @@ public class P4BackendParityTest {
       "1+2*3",
       "100/4",
       "7-3+1",
-      "(10-2)*(7-3)"
+      "(10-2)*(7-3)",
+      "sin(30)",
+      "max(3,7)",
+      "(1+1)/3+sin(30)"
   );
 
   /** Boolean literals — P4 grammar handles 'true' / 'false'. */
   private static final List<String> P4_PARSEABLE_BOOLEAN_FORMULAS = List.of(
       "true",
-      "false"
+      "false",
+      "true!=false"
   );
 
   /** Match expression formulas — P4 has NumberMatchExpression / StringMatchExpression. */
@@ -155,28 +161,214 @@ public class P4BackendParityTest {
   }
 
   @Test
-  public void testP4ExactParseRejectsAmbiguousDirectMatchVariableWithoutHint() {
+  public void testP4ParserUsedTrueForCommentPrefixedStructuredFormulas() {
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator ifFormula = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("/*head*/if(true){1}else{2}"), "P4CommentIf", types, cl);
+    assertEquals(Boolean.TRUE, ifFormula.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, ifFormula.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", ifFormula.getObject("_tinyP4AstNodeType", String.class));
+
+    Calculator matchFormula = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("/*head*/match/*c*/{1==1->3,default->5}"), "P4CommentMatch", types, cl);
+    assertEquals(Boolean.TRUE, matchFormula.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, matchFormula.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("NumberMatchExpr", matchFormula.getObject("_tinyP4AstNodeType", String.class));
+  }
+
+  @Test
+  public void testP4ParserUsedTrueForQuotedAndSlicedStringIfFormulas() {
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator quotedIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if(\"opa\"==\"opa\"){1}else{0}"), "P4QuotedIf", types, cl);
+    assertEquals(Boolean.TRUE, quotedIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, quotedIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", quotedIf.getObject("_tinyP4AstNodeType", String.class));
+
+    Calculator slicedIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if('deadbeaf'[1:3]=='ea'){1}else{0}"), "P4SlicedIf", types, cl);
+    assertEquals(Boolean.TRUE, slicedIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, slicedIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", slicedIf.getObject("_tinyP4AstNodeType", String.class));
+  }
+
+  @Test
+  public void testP4ParserUsedTrueForBooleanEqualityAndInMethodIfFormulas() {
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator booleanEqualityIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if(true!=false){1}else{0}"), "P4BooleanEqualityIf", types, cl);
+    assertEquals(Boolean.TRUE, booleanEqualityIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, booleanEqualityIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", booleanEqualityIf.getObject("_tinyP4AstNodeType", String.class));
+
+    Calculator inMethodIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if('cnjpuszn'[4:6].in('en','ca','us')){1}else{0}"), "P4InMethodIf", types, cl);
+    assertEquals(Boolean.TRUE, inMethodIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, inMethodIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", inMethodIf.getObject("_tinyP4AstNodeType", String.class));
+  }
+
+  @Test
+  public void testP4ParserUsedTrueForContextfulIfFormulas() {
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator variableInIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if($country.in('ca','jp','us')){1}else{0}"), "P4VariableInIf", types, cl);
+    assertEquals(Boolean.TRUE, variableInIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, variableInIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", variableInIf.getObject("_tinyP4AstNodeType", String.class));
+
+    Calculator inDayTimeRangeIf = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source("if(inDayTimeRange(MONDAY,10,FRIDAY,23)==true){1}else{0}"), "P4InDayTimeRangeIf", types, cl);
+    assertEquals(Boolean.TRUE, inDayTimeRangeIf.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, inDayTimeRangeIf.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("IfExpr", inDayTimeRangeIf.getObject("_tinyP4AstNodeType", String.class));
+  }
+
+  @Test
+  public void testP4BackendsParityForBooleanEqualityAndInMethodIfFormulas() {
+    List<String> formulas = List.of(
+        "if(true!=false){1}else{0}",
+        "if('cnjpuszn'[4:6].in('en','ca','us')){1}else{0}");
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    for (int i = 0; i < formulas.size(); i++) {
+      String formula = formulas.get(i);
+      Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
+          .create(new Source(formula), "P4ExtraParity_jc_" + i, types, cl);
+      Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+          .create(new Source(formula), "P4ExtraParity_p4ast_" + i, types, cl);
+      Calculator p4Dsl = CalculatorCreatorRegistry.p4DslJavaCodeCreator()
+          .create(new Source(formula), "P4ExtraParity_p4dsl_" + i, types, cl);
+
+      CalculationContext ctx = CalculationContext.newConcurrentContext();
+      float ref = floatValue(javaCode.apply(ctx));
+      assertEquals("p4-ast parity, formula=" + formula, ref, floatValue(p4Ast.apply(ctx)), 0.001f);
+      assertEquals("p4-dsl parity, formula=" + formula, ref, floatValue(p4Dsl.apply(ctx)), 0.001f);
+      assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    }
+  }
+
+  @Test
+  public void testP4BackendsParityForStandaloneIsPresentFormula() {
+    String formula = "isPresent($name)";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(formula), "P4IsPresent_jc", types, cl);
+    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "P4IsPresent_p4ast", types, cl);
+    Calculator p4Dsl = CalculatorCreatorRegistry.p4DslJavaCodeCreator()
+        .create(new Source(formula), "P4IsPresent_p4dsl", types, cl);
+
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+    ctx.set("name", "hello");
+    assertEquals(Boolean.TRUE, javaCode.apply(ctx));
+    assertEquals("p4-ast isPresent parity", javaCode.apply(ctx), p4Ast.apply(ctx));
+    assertEquals("p4-dsl isPresent parity", javaCode.apply(ctx), p4Dsl.apply(ctx));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
+  }
+
+  @Test
+  public void testP4BackendsParityForContextfulIfFormulas() {
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    String variableInFormula = "if($country.in('ca','jp','us')){1}else{0}";
+    Calculator variableInJavaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(variableInFormula), "P4VariableIn_jc", types, cl);
+    Calculator variableInP4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(variableInFormula), "P4VariableIn_p4ast", types, cl);
+    Calculator variableInP4Dsl = CalculatorCreatorRegistry.p4DslJavaCodeCreator()
+        .create(new Source(variableInFormula), "P4VariableIn_p4dsl", types, cl);
+
+    CalculationContext variableInContext = CalculationContext.newConcurrentContext();
+    variableInContext.set("country", "jp");
+    float variableInRef = floatValue(variableInJavaCode.apply(variableInContext));
+    assertEquals(variableInRef, floatValue(variableInP4Ast.apply(variableInContext)), 0.001f);
+    assertEquals(variableInRef, floatValue(variableInP4Dsl.apply(variableInContext)), 0.001f);
+    assertEquals(Boolean.TRUE, variableInP4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+
+    String inDayTimeRangeFormula = "if(inDayTimeRange(MONDAY,10,FRIDAY,23)==true){1}else{0}";
+    Calculator inDayTimeRangeJavaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(inDayTimeRangeFormula), "P4InDayTimeRange_jc", types, cl);
+    Calculator inDayTimeRangeP4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(inDayTimeRangeFormula), "P4InDayTimeRange_p4ast", types, cl);
+    Calculator inDayTimeRangeP4Dsl = CalculatorCreatorRegistry.p4DslJavaCodeCreator()
+        .create(new Source(inDayTimeRangeFormula), "P4InDayTimeRange_p4dsl", types, cl);
+
+    CalculationContext inDayTimeRangeContext = CalculationContext.newConcurrentContext();
+    inDayTimeRangeContext.set("nowDayOfWeek", 3f);
+    inDayTimeRangeContext.set("nowHour", 12f);
+    float inDayTimeRangeRef = floatValue(inDayTimeRangeJavaCode.apply(inDayTimeRangeContext));
+    assertEquals(inDayTimeRangeRef, floatValue(inDayTimeRangeP4Ast.apply(inDayTimeRangeContext)), 0.001f);
+    assertEquals(inDayTimeRangeRef, floatValue(inDayTimeRangeP4Dsl.apply(inDayTimeRangeContext)), 0.001f);
+    assertEquals(Boolean.TRUE, inDayTimeRangeP4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+  }
+
+  @Test
+  public void testP4HandlesDirectMatchVariableWithoutHint() {
+    // A bare variable case value (no inline type hint) used to be rejected by the strict-match
+    // typing validator and forced onto the legacy parser. The generated P4 grammar parses it into
+    // the result-type's match family and P4TypedAstEvaluator resolves it correctly, so it now runs
+    // on the p4-typed path (universal fallback=0). An explicit MISMATCHED hint is still rejected
+    // (see testP4RejectsDirectMatchVariableWithMismatchedHint).
     String formula = "match{1==1->$val,default->0}";
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
     Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
-        .create(new Source(formula), "MatchStrictRef_jc", types, cl);
+        .create(new Source(formula), "MatchVarRef_jc", types, cl);
     Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-        .create(new Source(formula), "MatchStrictRef_p4ast", types, cl);
+        .create(new Source(formula), "MatchVarRef_p4ast", types, cl);
 
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
-    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
 
     CalculationContext ctx = CalculationContext.newConcurrentContext();
     ctx.set("val", 10f);
     float ref = floatValue(javaCode.apply(ctx));
     float actual = floatValue(p4Ast.apply(ctx));
-    assertEquals("semantic rejection should still preserve legacy result", ref, actual, 0.001f);
-    assertFalse("strict-typing rejection should avoid p4-typed runtime",
-        "p4-typed".equals(p4Ast.getObject("_astEvaluatorRuntime", String.class)));
+    assertEquals("bare-variable match must agree with the legacy result", ref, actual, 0.001f);
+    assertEquals("bare-variable match should now run on the p4-typed path",
+        "p4-typed", p4Ast.getObject("_astEvaluatorRuntime", String.class));
+  }
+
+  @Test
+  public void testP4RejectsDirectMatchVariableWithMismatchedHint() {
+    // An EXPLICIT type hint that disagrees with the match's result type is a genuine type error:
+    // `$val as string` cannot be a number case value, so the formula does not parse at all (the
+    // mismatch is caught at parse time, not silently accepted). Relaxing the bare-variable guard
+    // does not open this door.
+    String formula = "match{1==1->$val as string,default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    boolean rejected = false;
+    try {
+      CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+          .create(new Source(formula), "MatchVarMismatch_p4ast", types, cl);
+    } catch (RuntimeException expected) {
+      rejected = true;
+    }
+    assertTrue("a mismatched explicit type hint must not be silently accepted", rejected);
   }
 
   @Test
@@ -190,8 +382,36 @@ public class P4BackendParityTest {
         .create(new Source(formula), "MatchStrictHint_p4ast", types, cl);
 
     assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
+    assertEquals("NumberMatchExpr", p4Ast.getObject("_tinyP4AstNodeType", String.class));
     assertFalse("hinted direct variable should not be semantically rejected",
         "semantic".equals(p4Ast.getObject("_tinyP4ParserProbeMode", String.class)));
+  }
+
+  @Test
+  public void testP4HandlesParenthesizedDirectMatchVariableWithoutHint() {
+    // Parenthesized bare variable case value — same as the unparenthesized case, now handled on the
+    // p4-typed path instead of being rejected onto the legacy parser. (universal fallback=0)
+    String formula = "match{1==1->($val),default->0}";
+    SpecifiedExpressionTypes types =
+        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+    Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
+        .create(new Source(formula), "MatchParen_jc", types, cl);
+    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchParen_p4ast", types, cl);
+
+    assertEquals(Boolean.TRUE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
+    assertEquals("NumberMatchExpr", p4Ast.getObject("_tinyP4AstNodeType", String.class));
+
+    CalculationContext ctx = CalculationContext.newConcurrentContext();
+    ctx.set("val", 10f);
+    float ref = floatValue(javaCode.apply(ctx));
+    assertEquals("parenthesized bare-variable match must agree with the legacy result",
+        ref, floatValue(p4Ast.apply(ctx)), 0.001f);
+    assertEquals("should run on the p4-typed path",
+        "p4-typed", p4Ast.getObject("_astEvaluatorRuntime", String.class));
   }
 
   @Test
@@ -201,41 +421,25 @@ public class P4BackendParityTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
-    Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-        .create(new Source(formula), "MatchStrictMethod_p4ast", types, cl);
-
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserUsed", Boolean.class));
-    assertEquals(Boolean.FALSE, p4Ast.getObject("_tinyP4ParserExact", Boolean.class));
-    assertEquals("semantic", p4Ast.getObject("_tinyP4ParserProbeMode", String.class));
+    assertThrows(ParseException.class, () -> CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+        .create(new Source(formula), "MatchStrictMethod_p4ast", types, cl));
   }
 
   // =========================================================================
-  // P6-2-c: P4 backends fall back gracefully for non-P4 syntax
+  // P6-2-c: non-P4 syntax is rejected explicitly
   // =========================================================================
 
   @Test
-  public void testP4FallbackGracefulForOldSyntax() {
+  public void testP4RejectsOldSyntax() {
     SpecifiedExpressionTypes types =
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
     for (int i = 0; i < P4_UNPARSEABLE_BUT_VALID_FORMULAS.size(); i++) {
       String formula = P4_UNPARSEABLE_BUT_VALID_FORMULAS.get(i);
-      Calculator p4Ast = CalculatorCreatorRegistry.p4AstEvaluatorCreator()
-          .create(new Source(formula), "P4Fallback_" + i, types, cl);
-
-      // P4 parser should not have parsed it
-      Boolean used = p4Ast.getObject("_tinyP4ParserUsed", Boolean.class);
-      assertNotNull("_tinyP4ParserUsed should be set even for unparseable formula=" + formula, used);
-      assertFalse("_tinyP4ParserUsed should be false for old-syntax formula=" + formula, used);
-
-      // But evaluation should still work via AST evaluator fallback
-      Calculator javaCode = CalculatorCreatorRegistry.javaCodeCreator()
-          .create(new Source(formula), "P4FallbackRef_" + i, types, cl);
-      CalculationContext ctx = CalculationContext.newConcurrentContext();
-      float ref = floatValue(javaCode.apply(ctx));
-      float p4Val = floatValue(p4Ast.apply(ctx));
-      assertEquals("fallback parity, formula=" + formula, ref, p4Val, 0.001f);
+      int caseIndex = i;
+      assertThrows(ParseException.class, () -> CalculatorCreatorRegistry.p4AstEvaluatorCreator()
+          .create(new Source(formula), "P4Rejected_" + caseIndex, types, cl));
     }
   }
 

@@ -10,7 +10,7 @@
 |-------------|------|
 | [getting-started-ja.md](./getting-started-ja.md) | Maven 設定、単発式、複数式エグゼキュータ |
 | [language-guide-ja.md](./language-guide-ja.md) | 完全な言語仕様 |
-| [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、フォールバックチェーン、パリティ契約 |
+| [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、generated-only 境界、パリティ契約 |
 | [architecture-ja.md](./architecture-ja.md) | パーサーコンビネータ、AST、6 エバリュエータ、型システム |
 
 ## アーキテクチャ決定記録
@@ -20,6 +20,7 @@
 | [decisions/ADR-001-p4-primary.md](./decisions/ADR-001-p4-primary.md) | P4TypedAstEvaluator を PRIMARY に昇格した理由 |
 | [decisions/ADR-002-type-promotion.md](./decisions/ADR-002-type-promotion.md) | 数値型昇格ルール |
 | [decisions/ADR-003-java-codeblock-safety.md](./decisions/ADR-003-java-codeblock-safety.md) | Java コードブロックのセキュリティモデル |
+| [decisions/ADR-004-generated-backends-no-fallback.md](./decisions/ADR-004-generated-backends-no-fallback.md) | generated backend が手書き fallback を呼ばず明示的に失敗する理由 |
 
 ## 会話形式ガイド
 
@@ -32,10 +33,13 @@
 
 | ドキュメント | 説明 |
 |-------------|------|
-| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 5つの実行バックエンドのカバレッジマトリクス |
+| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 6つの実行バックエンドのカバレッジ境界 |
 | [feature-parity-diff.md](./feature-parity-diff.md) | 手書きパスと UBNF (P4) パスの機能パリティ差分 |
 
 ## その他のドキュメント
+
+ここには過去の計画・移行記録も含まれます。主要ガイドやバックエンド契約と
+矛盾する場合は、主要ドキュメントを正とします。
 
 | ドキュメント | 説明 |
 |-------------|------|
@@ -46,6 +50,8 @@
 | [TINYEXPRESSION-DSL-ROADMAP.md](./TINYEXPRESSION-DSL-ROADMAP.md) | DSL ロードマップ |
 | [TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md](./TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md) | デュアル評価器 DAP 計画 |
 | [TINYEXPRESSION-FINAL-GAP-AUDIT.md](./TINYEXPRESSION-FINAL-GAP-AUDIT.md) | 最終ギャップ監査 |
+| [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](./TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) | 最新 UBNF / P4 更新後の残課題 issue draft |
+| [TINYEXPRESSION-RELEASE-RUNBOOK.md](./TINYEXPRESSION-RELEASE-RUNBOOK.md) | package / install / deploy の再現手順 (制約環境向けの /tmp 逃がし先含む) |
 | [TINYEXPRESSION-LSP-ADDITIONAL-FEATURES.md](./TINYEXPRESSION-LSP-ADDITIONAL-FEATURES.md) | LSP 追加機能 |
 | [TINYEXPRESSION-LSP-IMPLEMENTATION-BACKLOG.md](./TINYEXPRESSION-LSP-IMPLEMENTATION-BACKLOG.md) | LSP 実装バックログ |
 | [TINYEXPRESSION-LSP-TEST-SPEC.md](./TINYEXPRESSION-LSP-TEST-SPEC.md) | LSP テスト仕様 |

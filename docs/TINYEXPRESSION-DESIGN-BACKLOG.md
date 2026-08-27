@@ -11,7 +11,7 @@ Last updated: 2026-03-20
 ```markdown
 ## N. 機能名
 
-Status: planned (queued)
+Status: completed (`tinyexpression-p4-lsp` 0.2.4)
 
 Context: ...
 
@@ -133,13 +133,13 @@ Validation snapshot (2026-02-27, plugin runtime):
 Status: planned (queued)
 
 Context:
-- current VSIX provides LSP integration and runtimeMode switching, but no `contributes.debuggers` entry.
-- DAP behavior is currently available as runtime probe (`TinyExpressionDapRuntimeBridge`) rather than VS Code debug session wiring.
+- VSIX has a `contributes.debuggers` entry and starts the generated stdio DAP launcher.
+- `TinyExpressionDapRuntimeBridge` is connected through the generated `runtimeVariables(...)` hook.
 
-Target:
-1. add VS Code debugger contribution (`contributes.debuggers`) and launch schema for TinyExpression.
-2. wire extension-side debug adapter launch in `src/extension.ts` (token/ast/dsl-javacode runtimeMode selectable).
-3. package debug adapter runtime artifacts in VSIX and verify `stop/next/continue/variables/stackTrace`.
+Delivered:
+1. launch schema supports `program`, `p4-ast` / `p4-dsl-javacode`, AST/token structural stepping, entry stop, and typed variables.
+2. extension-side factory starts `TinyExpressionP4DapLauncherExt` from the bundled server JAR.
+3. automated adapter integration verifies entry stop, AST stack, variables, 6-backend parity, and Debug Console evaluation.
 
 ## 19. DAP Variable Input + Dynamic Configuration
 

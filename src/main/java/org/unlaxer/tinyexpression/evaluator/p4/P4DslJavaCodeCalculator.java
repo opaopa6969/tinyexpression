@@ -12,13 +12,13 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
  * <p>
  * Extends {@link DslJavaCodeCalculator} with a P4-grammar parse check:
  * before delegating to the DSL Java code generation pipeline, the formula is
- * parsed via the type-safe {@link TinyExpressionP4Mapper}.
+ * parsed via the type-safe {@code TinyExpressionP4Mapper}.
  * <p>
  * Runtime markers set (in addition to DslJavaCodeCalculator markers):
  * <ul>
  *   <li>{@code _tinyP4ParserUsed} — whether the formula is considered P4-compatible</li>
  *   <li>{@code _tinyP4ParserExact} — whether the decision came from an exact mapper parse</li>
- *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code heuristic}, or {@code failed}</li>
+ *   <li>{@code _tinyP4ParserProbeMode} — {@code exact}, {@code semantic}, or {@code failed}</li>
  *   <li>{@code _tinyP4AstNodeType} — simple class name of the mapped P4 AST root node</li>
  * </ul>
  */

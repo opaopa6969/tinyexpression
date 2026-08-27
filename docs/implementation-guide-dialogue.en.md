@@ -16,19 +16,24 @@
 
 **S:** The goal is the same: evaluate an expression like `"$a + $b * 2"`. But *how* the evaluation happens differs. That's the backend. There are currently 5 families.
 
-```
-  Expression string
-     |
-  +--+--------------------------------------------+
-  |                                                |
-  v                                                v
-[compile family]                             [AST family]
-  |                                                |
-  +--[1] compile-hand                 +------------+------------------+
-  |      Hand-written codegen -> javac|            |                  |
-  |                                   v            v                  v
-  +--[2] compile-dsl          [3] ast-hand  [4] P4-reflection  [5] P4-typed
-        P4 AST -> codegen -> javac  Annotation    reflection        sealed switch
+```mermaid
+flowchart TD
+    Expr[Expression string]
+    Compile["[compile family]"]
+    AST["[AST family]"]
+    C1["[1] compile-hand<br/>Hand-written codegen → javac"]
+    C2["[2] compile-dsl<br/>P4 AST → codegen → javac"]
+    A3["[3] ast-hand<br/>Annotation"]
+    A4["[4] P4-reflection<br/>reflection"]
+    A5["[5] P4-typed<br/>sealed switch"]
+
+    Expr --> Compile
+    Expr --> AST
+    Compile --> C1
+    Compile --> C2
+    AST --> A3
+    AST --> A4
+    AST --> A5
 ```
 
 **N:** So there are two compile-family backends.
@@ -265,18 +270,21 @@ TinyExpressionP4Evaluator<Object>   // mixed types (Boolean / Float / String)
 
 **S:** Think of it this way.
 
-```
-Want to add support for a new expression
-          |
-          +--[Can be expressed with existing grammar & want evaluation results]
-          |   +-- P4-typed (extend TinyExpressionP4Evaluator<T>) <- recommended
-          |
-          +--[Can be expressed with existing grammar & want fast Java code]
-          |   +-- compile-dsl (extend DslGeneratedAstJavaEmitter)
-          |
-          +--[Modifying/adding the grammar itself]
-              +-- Add @TinyAstNode to parser -> enable ast-hand evaluation
-              +-- Modify UBNF definition -> regenerate P4 -> support via P4-typed
+```mermaid
+flowchart TD
+    Goal[Want to add support for a new expression]
+    Q1["Can be expressed with existing grammar & want evaluation results"]
+    P4typed["P4-typed (extend TinyExpressionP4Evaluator&lt;T&gt;) ← recommended"]
+    Q2["Can be expressed with existing grammar & want fast Java code"]
+    CompileDsl["compile-dsl (extend DslGeneratedAstJavaEmitter)"]
+    Q3[Modifying/adding the grammar itself]
+    AstHand["Add @TinyAstNode to parser → enable ast-hand evaluation"]
+    UbnfMod["Modify UBNF definition → regenerate P4 → support via P4-typed"]
+
+    Goal --> Q1 --> P4typed
+    Goal --> Q2 --> CompileDsl
+    Goal --> Q3 --> AstHand
+    Q3 --> UbnfMod
 ```
 
 ### Implementation Steps with P4-typed
@@ -392,25 +400,13 @@ P4-reflection       ████████████ ~several us    <- getMe
 
 ## Episode 9 — Which Backend Should You Use?
 
-```
-+------------------------------------------------------------------+
-| Repeating the same expression millions of times (expression fixed)|
-|   -> compile-hand (JavaCodeCalculatorV3)                          |
-+------------------------------------------------------------------+
-| Dynamic expressions but want fast Java code (future)              |
-|   -> compile-dsl (DslJavaCodeCalculator) <- currently literals    |
-+------------------------------------------------------------------+
-| Dynamic expressions, want type-safe evaluation logic              |
-|   -> P4-typed (extend TinyExpressionP4Evaluator<T>) <- recommended|
-+------------------------------------------------------------------+
-| Currently adding/modifying the parser itself                      |
-|   -> ast-hand (+ @TinyAstNode annotations)                       |
-+------------------------------------------------------------------+
-| Just want it to work, details later                               |
-|   -> AstEvaluatorCalculator (tries all paths, falls back to      |
-|      compile)                                                     |
-+------------------------------------------------------------------+
-```
+| Scenario | Recommended backend |
+|---|---|
+| Repeating the same expression millions of times (expression fixed) | compile-hand (JavaCodeCalculatorV3) |
+| Dynamic expressions but want fast Java code (future) | compile-dsl (DslJavaCodeCalculator) ← currently literals only |
+| Dynamic expressions, want type-safe evaluation logic | P4-typed (extend TinyExpressionP4Evaluator&lt;T&gt;) ← recommended |
+| Currently adding/modifying the parser itself | ast-hand (+ @TinyAstNode annotations) |
+| Just want it to work, details later | AstEvaluatorCalculator (tries all paths, falls back to compile) |
 
 **N:** What about P4-reflection?
 

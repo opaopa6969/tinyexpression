@@ -1,0 +1,47 @@
+# タグ push (v*) で tinyexpression P4 LSP/DAP VSIX をビルドし
+# GitHub Release に添付する。
+name: Release VSIX
+
+on:
+  push:
+    tags: [ "v*" ]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Set up Node.js (for vsce)
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install tinyexpression to local repo
+      run: mvn -B install -DskipTests -Dgpg.skip=true
+
+    - name: Build LSP/DAP VSIX
+      run: mvn -B verify -Dgpg.skip=true
+      working-directory: tools/tinyexpression-p4-lsp-vscode
+      env:
+        MAVEN_OPTS: >-
+          --add-opens=java.base/java.util=ALL-UNNAMED
+          --add-opens=java.base/java.lang=ALL-UNNAMED
+
+    - name: Create release and attach VSIX
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh release create "$GITHUB_REF_NAME" --generate-notes --title "$GITHUB_REF_NAME" || true
+        gh release upload "$GITHUB_REF_NAME" tools/tinyexpression-p4-lsp-vscode/target/*.vsix --clobber

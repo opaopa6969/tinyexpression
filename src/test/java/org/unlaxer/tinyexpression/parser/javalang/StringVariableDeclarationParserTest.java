@@ -56,6 +56,7 @@ public class StringVariableDeclarationParserTest extends ParserTestBase{
       
       testAllMatch(variableDeclarationParser, "variable $age as number set if not exists 18 description='年齢をセットします。';");
       testAllMatch(variableDeclarationParser, "variable $age as number set 18 description='年齢をセットします。';");
+      testAllMatch(variableDeclarationParser, "variable $age as number set if /*c1*/ not /*c2*/ exists /*c3*/ match/*c4*/{1==1->3,default->5} description='年齢をセットします。';");
       testAllMatch(variableDeclarationParser, "variable $age as number description='年齢をセットします。';");
       testAllMatch(variableDeclarationParser, "variable $age number description='年齢をセットします。';");
 

@@ -34,8 +34,7 @@ TinyExpression の 5番目・6番目の実行バックエンドとして組み�
 docs/ubnf/tinyexpression-p4-draft.ubnf
     │
     ▼  mvn generate-sources (CodegenMain)
-target/generated-sources/tinyexpression-p4/
-    org/unlaxer/tinyexpression/generated/p4/
+target/generated-sources/tinyexpression-p4/org/unlaxer/tinyexpression/generated/p4/
     ├── TinyExpressionP4Parsers.java        型安全パーサー群
     ├── TinyExpressionP4AST.java            sealed interface AST 定義
     ├── TinyExpressionP4Mapper.java         Token → AST 変換
@@ -56,21 +55,13 @@ tinyexpression-p4-lsp-<version>.vsix
 
 ### バックエンド統合後の全体図
 
-```
-ExecutionBackend enum:
-  JAVA_CODE              (既存)
-  JAVA_CODE_LEGACY_ASTCREATOR (既存)
-  AST_EVALUATOR          (既存)
-  DSL_JAVA_CODE          (既存)
-  P4_AST_EVALUATOR       ← 新規
-  P4_DSL_JAVA_CODE       ← 新規
-        │
-        ▼
-CalculatorCreatorRegistry → P4AstEvaluatorCalculator
-                          → P4DslJavaCodeCalculator
-        │
-        ▼
-TinyExpressionDapRuntimeBridge (parity.P4_AST_EVALUATOR / parity.P4_DSL_JAVA_CODE 追加)
+```mermaid
+flowchart TD
+    Enum["<b>ExecutionBackend enum</b><br/>JAVA_CODE (既存)<br/>JAVA_CODE_LEGACY_ASTCREATOR (既存)<br/>AST_EVALUATOR (既存)<br/>DSL_JAVA_CODE (既存)<br/>P4_AST_EVALUATOR ← 新規<br/>P4_DSL_JAVA_CODE ← 新規"]
+    Reg["<b>CalculatorCreatorRegistry</b><br/>→ P4AstEvaluatorCalculator<br/>→ P4DslJavaCodeCalculator"]
+    Bridge["<b>TinyExpressionDapRuntimeBridge</b><br/>(parity.P4_AST_EVALUATOR / parity.P4_DSL_JAVA_CODE 追加)"]
+
+    Enum --> Reg --> Bridge
 ```
 
 ---
@@ -158,7 +149,7 @@ class P4AstEvaluatorCalculator extends AbstractCalculator {
     // 1. TinyExpressionP4Parsers.getRootParser() でパース (型安全)
     // 2. TinyExpressionP4Mapper.map(token) で AST 化 (Reflection 不使用)
     // 3. TinyExpressionP4Evaluator.evaluate(ast) で評価
-    // 4. 失敗時は AstEvaluatorCalculator へフォールバック
+    // 4. 未対応時は明示的に失敗（手書き evaluator への fallback なし）
     // 5. runtime markers を setObject() で記録
     //    _tinyExecutionBackend = "P4_AST_EVALUATOR"
     //    _tinyP4ParserUsed = "true" / "false"

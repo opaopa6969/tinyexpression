@@ -8,7 +8,7 @@ import org.unlaxer.tinyexpression.parser.javatype.*;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.LazyChoice;
-import org.unlaxer.parser.elementary.ParenthesesParser;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleParenthesesParser;
 import org.unlaxer.tinyexpression.parser.function.CosParser;
 import org.unlaxer.tinyexpression.parser.function.MaxParser;
 import org.unlaxer.tinyexpression.parser.function.MinParser;
@@ -57,7 +57,7 @@ public abstract class AbstractNumberFactorParser extends LazyChoice implements N
         NumberExpressionParser.class:
           StrictTypedNumberExpressionParser.class;
     
-    parsers.add(new ParenthesesParser(
+    parsers.add(new JavaStyleParenthesesParser(
         Parser.newInstance(
             expresionParserClazz)
         )

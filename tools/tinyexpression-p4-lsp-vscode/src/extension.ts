@@ -10,6 +10,19 @@ import {
 let client: LanguageClient | undefined;
 let outputChannel: vscode.OutputChannel | undefined;
 
+const FORMULA_INFO_SAMPLE = `tags:NORMAL
+description:CalculationContext の値に 2 を足す最初の FormulaInfo
+calculatorName:welcomeScore
+var:score
+dependsOn:
+resultType:float
+executionBackend:P4_AST_EVALUATOR
+formula:
+var $base as float set if not exists 40;
+$base + 2
+---END_OF_PART---
+`;
+
 function getBundledJarPath(context: vscode.ExtensionContext): string {
   return context.asAbsolutePath(
     path.join("server-dist", "tinyexpression-p4-lsp-server.jar")
@@ -119,6 +132,46 @@ export async function activate(
       "tinyExpressionP4Lsp.showServerOutput",
       () => {
         outputChannel?.show(true);
+      }
+    )
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "tinyExpressionP4Lsp.openLanguageGuide",
+      async () => {
+        const guide = vscode.Uri.joinPath(
+          context.extensionUri,
+          "docs",
+          "language-guide.ja.md"
+        );
+        const document = await vscode.workspace.openTextDocument(guide);
+        await vscode.window.showTextDocument(document, { preview: true });
+        try {
+          await vscode.commands.executeCommand("markdown.showPreview", guide);
+        } catch (err: unknown) {
+          outputChannel?.appendLine(
+            `[TinyExpression P4 LSP] Markdown preview unavailable; opened guide as text. (${String(err)})`
+          );
+        }
+      }
+    ),
+    vscode.commands.registerCommand(
+      "tinyExpressionP4Lsp.openWalkthrough",
+      () => vscode.commands.executeCommand(
+        "workbench.action.openWalkthrough",
+        `${context.extension.id}#gettingStarted`,
+        false
+      )
+    ),
+    vscode.commands.registerCommand(
+      "tinyExpressionP4Lsp.createFormulaInfoSample",
+      async () => {
+        const document = await vscode.workspace.openTextDocument({
+          language: "tinyexpressionP4",
+          content: FORMULA_INFO_SAMPLE
+        });
+        await vscode.window.showTextDocument(document, { preview: false });
       }
     )
   );

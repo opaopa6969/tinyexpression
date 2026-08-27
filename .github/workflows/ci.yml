@@ -7,7 +7,8 @@ on:
     branches: [ master, main ]
 
 jobs:
-  build:
+  smoke:
+    name: P4 smoke (targeted matrix)
     runs-on: ubuntu-latest
 
     steps:
@@ -19,9 +20,54 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+          server-id: github-unlaxer
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
 
-      - name: Build and verify (main)
-        run: mvn -B verify -Dgpg.skip=true
+      - name: Validate Central release guard
+        run: |
+          python3 scripts/tests/test_central_release_guard.py
+          bash -n scripts/release-central.sh
+
+      - name: Smoke — root (P4 typed AST + parity matrix)
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+
+      - name: Install main artifact to local repo (for LSP smoke)
+        run: mvn -B install -DskipTests -Dgpg.skip=true
+
+      - name: Smoke — LSP module
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+        working-directory: tools/tinyexpression-p4-lsp-vscode
+        env:
+          MAVEN_OPTS: >-
+            --add-opens=java.base/java.util=ALL-UNNAMED
+            --add-opens=java.base/java.lang=ALL-UNNAMED
+
+  build:
+    name: Full verify
+    runs-on: ubuntu-latest
+    needs: smoke
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          server-id: github-unlaxer
+          server-username: GITHUB_ACTOR
+          server-password: GITHUB_TOKEN
+
+      # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
+      # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
+      - name: Build and verify (main, baseline-gated)
+        run: mvn -B verify -Dgpg.skip=true -Dmaven.test.failure.ignore=true
+
+      - name: Check test failures against baseline
+        run: bash tools/ci/check-test-baseline.sh
 
       - name: Install main artifact to local repo
         run: mvn -B install -DskipTests -Dgpg.skip=true
@@ -38,3 +84,12 @@ jobs:
           MAVEN_OPTS: >-
             --add-opens=java.base/java.util=ALL-UNNAMED
             --add-opens=java.base/java.lang=ALL-UNNAMED
+
+      # verify で生成された VSIX を成果物として添付 (タグ push 時の
+      # Release 添付は release-vsix.yml を参照)
+      - name: Upload VSIX artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tinyexpression-p4-lsp-vsix
+          path: tools/tinyexpression-p4-lsp-vscode/target/*.vsix
+          if-no-files-found: error

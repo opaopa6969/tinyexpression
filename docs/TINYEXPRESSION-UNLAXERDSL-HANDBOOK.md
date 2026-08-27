@@ -2,11 +2,19 @@
 
 このドキュメントは、TinyExpression を `unlaxer-dsl` ベースへ移行・拡張する時の最短導線をまとめる。
 
+確認済みベースライン（2026-04-24）:
+
+1. `tinyexpression` `1.4.15`
+2. `unlaxer-common` `3.0.14`
+3. `unlaxer-dsl` `3.0.14`
+4. build grammar: `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`
+5. snapshot grammar: `docs/ubnf/tinyexpression-p4-complete.ubnf`
+
 ## 1. 全体構造
 
 主要レイヤ:
 
-1. Grammar (`docs/ubnf/*.ubnf`)
+1. Grammar (`docs/ubnf/*.ubnf`, `tools/tinyexpression-p4-lsp-vscode/grammar/*.ubnf`)
 2. Codegen (`unlaxer-dsl` の `AST/Parser/Mapper/Evaluator/LSP/DAP` generator)
 3. Runtime (`tinyexpression` の
    `AstEvaluatorCalculator` /
@@ -16,14 +24,17 @@
 
 実装上の基本方針:
 
-1. backend を4系統で維持する:
+1. backend を6系統で維持する:
    - `JAVA_CODE`
    - `JAVA_CODE_LEGACY_ASTCREATOR`
    - `AST_EVALUATOR`
    - `DSL_JAVA_CODE`
-2. `AST_EVALUATOR` は `generated-ast -> token-ast -> javacode-fallback` の順で実行
-3. legacy backend は比較・回帰確認用途として扱い、新機能は原則 `JAVA_CODE` / `AST_EVALUATOR` 側へ実装する
+   - `P4_AST_EVALUATOR`
+   - `P4_DSL_JAVA_CODE`
+2. `AST_EVALUATOR` / `P4_AST_EVALUATOR` は生成 P4 AST を `P4TypedAstEvaluator` でのみ実行し、未対応時は明示的に失敗する
+3. legacy backend は明示的な比較・回帰確認用途として扱い、generated backend の暗黙 fallback には使わない
 4. 生成物は `runtime` と `tooling` に分離し、通常 compile には `runtime` のみを入れる
+5. mapper root 選択は `P4PreferredAstMapper` に寄せ、runtime / LSP / DAP で同じ preferred-root ルールを使う
 
 ## 2. TinyExpression から UnlaxerDSL へ変換する方法
 
@@ -35,6 +46,17 @@
 3. 演算子優先順位が必要なら `@leftAssoc/@rightAssoc + @precedence` を付与
 4. スコープ/参照制約が必要なら `@scopeTree`, `@backref` を付与
 5. `scripts/generate_tinyexpression_p4_from_ubnf.sh` で再生成
+
+現行 P4 baseline で反映済みの代表機能:
+
+1. CodeBlock
+2. boolean equality
+3. string dot method (`.length`, `.startsWith`, `.endsWith`, `.contains`, `.trim`, `.toUpperCase`, `.toLowerCase`, `.in`)
+4. slice (`[::-1]`, `[::2]`, `[1::2]` を含む)
+5. `isPresent(...)`
+6. `inTimeRange(...)` / `inDayTimeRange(...)`
+7. typed `if` / ternary
+8. strict `match` typing
 
 ## 3. 新しい型を定義する方法
 
@@ -75,28 +97,20 @@
 
 注意:
 
-1. 末端ノードが非mappedの時は mapper 側 leaf fallback が必要
+1. 末端ノードも必要な値を AST に保持するよう mapping を定義する。非mapped leaf を別 evaluator で補う実行時 fallback は設けない
 2. Token API 差分を吸収するため、生成 mapper は compatibility helper を使う
 
 ## 6. AST から実行可能状態へ変換する方法
 
-TinyExpression では次の3段階で実行:
+TinyExpression の generated backend は次の固定経路で実行する:
 
-1. `GeneratedAstRuntimeProbe.tryMapAst(...)` で generated mapper 実行
-2. `GeneratedP4NumberAstEvaluator` で generated AST を直接評価（対応範囲）
-3. 数値 leaf が `$name` の場合は `CalculationContext` から数値を解決して評価
-4. P4 draft では `StringExpr` / `BooleanExpr` / `ObjectExpr` / `VariableRefExpr` の mapping を追加済み
-5. choice capture は生成mapper側で複数候補探索 + 型互換ガードにより constructor型不整合を抑制
-6. `GeneratedP4ValueAstEvaluator` で `string`/`boolean`/`object` の単純式評価を generated AST 経路に追加
-7. `AstDeclarationRuntime` で declaration setter の基本実行（object path）を generated-path 前段に導入
-8. `AstEvaluatorGeneratedValuePathTest` で `boolean`/`object`（literal/variable/declaration setter）の generated-path 実行を検証
-9. 非対応時に `AstNumberExpressionEvaluator`（token-ast）または `JavaCodeCalculatorV3` へfallback
-10. generated mapper は `parse(source, preferredAstSimpleName)` を持ち、result type に応じて root candidate を優先選択できる
+1. `P4PreferredAstMapper` / `GeneratedAstRuntimeProbe` が generated mapper で preferred root を選ぶ
+2. `AST_EVALUATOR` / `P4_AST_EVALUATOR` は `P4TypedAstEvaluator` で generated AST を評価する
+3. `DSL_JAVA_CODE` / `P4_DSL_JAVA_CODE` は `P4TypedJavaCodeEmitter` で generated AST から Java を生成する
+4. 変数は `CalculationContext` から型付きで解決する
+5. parse・mapping・typing・評価・emission の未対応箇所は明示的に失敗する
 
-要点:
-
-1. fallback がある限り段階移行できる
-2. 対応式を増やすと `javacode-fallback` 使用率が下がる
+`JAVA_CODE` と `JAVA_CODE_LEGACY_ASTCREATOR` は比較用に明示選択できるが、generated backend から暗黙に切り替わることはない。
 
 ## 7. LSP / DAP と接続する方法
 
@@ -105,14 +119,18 @@ TinyExpression では次の3段階で実行:
 1. `LSPGenerator` が `...LanguageServer` を生成
 2. parse結果・診断公開は generated server 側
 3. runtime接続を深める場合は AST情報を hover/semantic token に反映
+4. 現行 P4 LSP では `TE001` に加えて strict match typing の `TE025` を手書き拡張で追加済み
+5. hover / diagnostics は preferred root を使って `match` / `if` / ternary の shallow root 誤判定を避ける
 
 ### DAP
 
 1. `DAPGenerator` が `...DebugAdapter` を生成
-2. launch引数 `runtimeMode` (`token` / `legacy-astcreator` / `ast` / `dsl-javacode`) を受ける
+2. launch引数 `runtimeMode`（`p4-ast` / `p4-dsl-javacode`）と構造表示用 `steppingMode`（`ast` / `token`）を別々に受ける
 3. `ast` モードでは mapper AST の可視化情報（`astNodeCount`, `astCurrentNode`）を variables に出す
 4. `ast` モードでは stackTrace / breakpoint line 判定に mapper の AST node source span を利用
-5. step順序自体は引き続き互換優先（AST node列挙 + token fallback 併用）
+5. `steppingMode=ast` の mapping 失敗は明示終了し、token step へ暗黙 fallback しない
+6. 現行 P4 DAP / runtime bridge は `_tinyP4ParserUsed`, `_tinyP4ParserExact`, `_tinyP4ParserProbeMode`,
+   `_tinyP4AstNodeType`, `_tinyP4AstNodePath`, `parity.*` を公開する
 
 ## 8. 依存拡張が必要になった時
 
@@ -125,3 +143,34 @@ TinyExpression では次の3段階で実行:
 1. 必要になったら先にノートへ記録
 2. `unlaxer-dsl` / `unlaxer-common` を編集
 3. tinyexpression 側再生成・compileで整合確認
+
+## 9. 最低限の再生成・確認コマンド
+
+```bash
+scripts/generate_tinyexpression_p4_from_ubnf.sh
+mvn -q -DskipTests compile
+mvn -q -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true package
+mvn -P p4-smoke test
+(cd tools/tinyexpression-p4-lsp-vscode && mvn -P p4-smoke test)
+```
+
+`p4-smoke` profile が gate する acceptance matrix:
+
+| layer | 対象テスト |
+|---|---|
+| P4 typed AST | `P4TypedAstEvaluatorTest` |
+| AST parity | `AstEvaluatorParityCorpusTest` / `AstEvaluatorBackendParityTest` |
+| 3-backend parity | `ThreeExecutionBackendParityTest` |
+| P4 backend parity | `P4BackendParityTest` |
+| P4 facade precedence | `P4PreferredAstMapperPrecedenceTest` |
+| LSP slice | `TinyExpressionP4LanguageServerExtTest` (LSP module) |
+
+CI (`.github/workflows/ci.yml`) も同じ profile を `smoke` ジョブで回し、
+green のときだけ `build` ジョブが `mvn verify` でフル検証する。
+docs と CI が同じ smoke set を gate する状態を維持すること。
+
+補足:
+
+1. `install` / `deploy` は writable な `maven.repo.local`、`GNUPGHOME`、ネットワークが必要
+2. 制約付き環境では `-Dmaven.repo.local=/tmp/m2repo` のような逃がし先が必要
+3. `package` / `install` / `deploy` の再現手順は [TINYEXPRESSION-RELEASE-RUNBOOK.md](./TINYEXPRESSION-RELEASE-RUNBOOK.md) に集約してある

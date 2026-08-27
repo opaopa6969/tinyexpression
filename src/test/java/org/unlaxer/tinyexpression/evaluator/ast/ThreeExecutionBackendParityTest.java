@@ -35,6 +35,18 @@ public class ThreeExecutionBackendParityTest {
         new Case("match{1==1->'A',default->'B'}", new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("match{1==0->false,default->true}",
             new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), null),
+        new Case("isPresent($name)",
+            new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
+            context -> context.set("name", "hello")),
+        new Case("if($country.in('ca','jp','us')){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+            context -> context.set("country", "jp")),
+        new Case("if(inDayTimeRange(MONDAY,10,FRIDAY,23)==true){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
+            context -> {
+              context.set("nowDayOfWeek", 3f);
+              context.set("nowHour", 12f);
+            }),
         new Case("'payload'", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float), null),
         new Case("$payload", new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
             context -> context.setObject("payload", "ctx-object")),
@@ -67,7 +79,9 @@ public class ThreeExecutionBackendParityTest {
   public void testLegacyAstAndDslJavaCodeBackendsMatchOnRegressionCorpus() {
     List<Case> cases = List.of(
         new Case("1+1", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
-        // Note: "(1+1)/3+sin(30)" removed — DSL_JAVA_CODE treats sin(30) as bare number 30
+        new Case("sin(30)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("max(3,7)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("(1+1)/3+sin(30)", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(true){10}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(false){10}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(not(false)){10}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
@@ -82,11 +96,14 @@ public class ThreeExecutionBackendParityTest {
         new Case("if(false&true){1}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(true^true){1}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(not(true|1==1)){10}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("if(true!=false){1}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(\"opa\"==\"opa\"){1}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if(\"opa\"!=\"opa\"){1}else{0}", new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if((\"opa\"+\"opa\"+\"6969\")==\"opaopa6969\"){1}else{0}",
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if('deadbeaf'[1:3]=='ea'){1}else{0}",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
+        new Case("if('cnjpuszn'[4:6].in('en','ca','us')){1}else{0}",
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("if('gateman'[::-1]=='nametag'){1}else{0}",
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
@@ -110,7 +127,8 @@ public class ThreeExecutionBackendParityTest {
             new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("var $price as number set if not exists 3 description='price';\n$price+2",
             new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
-        // Note: "var $price ... /*pre*/match/*m*/{...}" removed — comments inside match confuse some backends
+        new Case("var $price as number set if not exists /*pre*/match/*m*/{1==1->3,default->5} description='price';\n$price+2",
+            new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), null),
         new Case("var $name as string set if not exists 'neo' description='name';\n$name",
             new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), null),
         new Case("call identity(1)\nfloat identity($amount as number){\n$amount\n}",

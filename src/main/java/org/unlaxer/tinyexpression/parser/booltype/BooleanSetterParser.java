@@ -6,9 +6,9 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.Parsers;
 import org.unlaxer.parser.combinator.Choice;
 import org.unlaxer.parser.combinator.Optional;
-import org.unlaxer.parser.combinator.WhiteSpaceDelimitedLazyChain;
+import org.unlaxer.tinyexpression.parser.javalang.JavaStyleDelimitedLazyChain;
 
-public class BooleanSetterParser extends WhiteSpaceDelimitedLazyChain/*JavaStyleDelimitedLazyChain*/implements BooleanExpression, SetterParser{
+public class BooleanSetterParser extends JavaStyleDelimitedLazyChain implements BooleanExpression, SetterParser{
 
   @Override
   public org.unlaxer.parser.Parsers getLazyParsers() {

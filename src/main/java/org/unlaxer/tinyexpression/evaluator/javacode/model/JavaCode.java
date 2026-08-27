@@ -13,7 +13,7 @@ import org.unlaxer.util.annotation.TokenExtractor.Timing;
 public record JavaCode(TypedToken<CodeParser> token , SchemeAndIdentifier schemeAndIdentifier , String code){
 
   /**
-   * @param thisParserParsed
+   * @param codeParserToken
    * @return CodeBlock List
    */
   @TokenExtractor(timings = Timing.CreateOperatorOperandTree)

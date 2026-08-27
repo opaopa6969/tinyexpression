@@ -2,7 +2,7 @@
 
 [English version](backends.md)
 
-TinyExpression v1.4.10 は 6 つの実行バックエンドを提供します。本ドキュメントでは各バックエンドの違い、選択契約、フォールバックチェーン、推奨使用法を説明します。
+TinyExpression v1.4.15 は 6 つの実行バックエンドを提供します。本ドキュメントでは各バックエンドの違い、選択契約、推奨使用法を説明します。
 
 ---
 
@@ -13,7 +13,7 @@ TinyExpression v1.4.10 は 6 つの実行バックエンドを提供します。
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | プロダクション | パース → Java 生成 → `javac` → ロード → 呼び出し |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | 凍結（リファレンス） | 上記と同様だがリファクタ前 AST クリエイター使用 |
 | `AST_EVALUATOR` | `AstEvaluatorCalculator` | プロダクション | パース → AST → ツリーウォーキングインタープリタ |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | 移行ターゲット | ハイブリッド: DSL ネイティブエミッタ + レガシーブリッジ |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | generated-only | P4 AST → 型付き Java エミッタ → `javac` |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | PRIMARY（P4） | UBNF パーサー → P4 AST → 型安全エバリュエータ |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | 移行ターゲット（P4） | UBNF パーサー → P4 AST → DSL Java エミッタ |
 
@@ -41,36 +41,25 @@ TinyExpression v1.4.10 は 6 つの実行バックエンドを提供します。
 
 ### AST_EVALUATOR
 
-3 段階フォールバックチェーン付きの AST 走査実行。
+生成 P4 AST の走査実行。
 
 - **クラス**: `AstEvaluatorCalculator`
-- **フォールバックチェーン**:
-  ```
-  P4TypedAstEvaluator（PRIMARY）
-      │ P4 文法のギャップ
-      ▼
-  GeneratedP4NumberAstEvaluator
-      │ 失敗
-      ▼
-  AstTokenTreeEvaluator（レガシー AST ウォーク）
-      │ 失敗
-      ▼
-  JavaCode フォールバック（JAVA_CODE パス）
-  ```
+- **失敗契約**: P4 のパースまたは評価に未対応箇所があれば明示的に失敗し、手書き評価器や Java コード生成器へ切り替えない
 - **変更ポリシー**: 生成 AST カバレッジの拡張が主要ターゲット
 - **利点**: コンパイルオーバーヘッドなし。軽量デプロイに適する
-- **欠点**: ホットパスでは `JAVA_CODE` より若干遅い。`JAVA_CODE` へのフォールバックはレイテンシ増加
+- **欠点**: ホットパスでは `JAVA_CODE` より若干遅い。未対応構文は明示エラーになる
 
 ### DSL_JAVA_CODE
 
-ハイブリッド DSL Java エミッタ。
+generated-only DSL Java エミッタ。
 
 - **クラス**: `DslJavaCodeCalculator`
 - **変更ポリシー**: ネイティブ DSL Java エミッタのカバレッジ拡張の移行ターゲット
-- **動作**: まずネイティブ DSL Java エミッタを試み、式がカバーされていない場合はレガシーブリッジにフォールバック
+- **動作**: 生成 P4 AST へマップし、`P4TypedJavaCodeEmitter` だけで Java を生成する。未対応構文は明示的に失敗する
 - **ランタイムマーカー**:
-  - `_tinyDslJavaNativeEmitterUsed = true` → ネイティブパスがヒット
-  - `_tinyExecutionImplementation = legacy-javacode-bridge` → フォールバック
+  - `_tinyDslJavaNativeEmitterUsed = true`
+  - `_tinyExecutionImplementation = p4-typed-emitter`
+  - `_tinyExecutionBridgeImplementation = false`
 
 ### P4_AST_EVALUATOR（P4 の PRIMARY）
 
@@ -80,7 +69,7 @@ TinyExpression v1.4.10 は 6 つの実行バックエンドを提供します。
 - **変更ポリシー**: P4 文法カバレッジの拡張。LSP/DAP のリファレンス実装
 - **動作**: UBNF 生成の `TinyExpressionP4Parsers` で sealed interface P4 AST を生成 → `P4TypedAstEvaluator` で評価
 - **AST_EVALUATOR との違い**: LSP/DAP での正規表現なし。完全に `instanceof` ベースのディスパッチ。コンパイル時の網羅性
-- **制限**: すべての言語機能をカバーしていない（P4 文法のギャップはレガシーにフォールバック）
+- **制限**: P4 文法外の構文は明示的に失敗する
 
 ### P4_DSL_JAVA_CODE
 
@@ -118,9 +107,9 @@ TinyExpression v1.4.10 は 6 つの実行バックエンドを提供します。
 6 つすべてのバックエンドは同一の入力に対して等価な値を返す必要があります。
 
 1. サポートコーパスに対して全 6 バックエンドが等価な値を返す（MUST）
-2. `AST_EVALUATOR` はサポート済み式で `javacode-fallback` を回避する（MUST）
+2. `AST_EVALUATOR` と `DSL_JAVA_CODE` は手書き fallback 実装を呼ばない（MUST）
 3. `P4_AST_EVALUATOR` と `P4_DSL_JAVA_CODE` は他の 4 バックエンドと一致する（MUST）
-4. **既知の例外**: P4 文法でカバーされていない構文を使用する式はフォールバックパスを使用
+4. P4 文法でカバーされていない式は明示的に失敗する（MUST）
 
 ### DAP パリティ変数
 
@@ -144,7 +133,7 @@ DAP デバッグモードで実行すると、以下の変数が公開されま�
 | `_tinyExecutionBackend` | 使用されたバックエンド名 |
 | `_tinyExecutionMode` | 実行モード |
 | `_tinyExecutionImplementation` | 実装バリアント |
-| `_tinyExecutionBridgeImplementation` | ブリッジ実装バリアント（DSL バックエンド） |
+| `_tinyExecutionBridgeImplementation` | generated-only バックエンドでは常に `false` |
 
 ---
 

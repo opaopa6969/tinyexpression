@@ -51,22 +51,6 @@ TinyExpression は **Java アプリケーションに組み込み可能な式評
 
 TinyExpression は **ハイブリッドアーキテクチャ** を採用する。手書きのレガシーパーサースタックと、UBNF 文法から自動生成された P4 パースタックが共存し、両スタックが 6 つの実行バックエンドのいずれかに接続される。
 
-```
-式テキスト
-    │
-    ├─► レガシーパーサー (unlaxer-common パーサーコンビネータ、手書き)
-    │       └─► ParseTree ──► AST
-    │                           ├─► JAVA_CODE (javac コンパイル)
-    │                           ├─► JAVA_CODE_LEGACY_ASTCREATOR (旧 OOTC)
-    │                           ├─► AST_EVALUATOR (ツリー走査)
-    │                           └─► DSL_JAVA_CODE (ハイブリッド)
-    │
-    └─► P4 パーサー (UBNF 自動生成、型安全)
-            └─► P4 ParseTree ──► P4 AST (sealed interface)
-                                    ├─► P4_AST_EVALUATOR (型安全評価)
-                                    └─► P4_DSL_JAVA_CODE (DSL Java エミッタ)
-```
-
 ```mermaid
 graph TB
     subgraph INPUT["入力"]
@@ -88,12 +72,12 @@ graph TB
     end
 
     subgraph BACKENDS["6 実行バックエンド"]
-        B1["JAVA_CODE\n(javac コンパイル)"]
-        B2["JAVA_CODE_LEGACY\n(旧 OOTC)"]
-        B3["AST_EVALUATOR\n(ツリー走査)"]
-        B4["DSL_JAVA_CODE\n(ハイブリッド)"]
-        B5["P4_AST_EVALUATOR\n(型安全評価) ★PRIMARY"]
-        B6["P4_DSL_JAVA_CODE\n(DSL Java エミッタ)"]
+        B1["JAVA_CODE<br/>(javac コンパイル)"]
+        B2["JAVA_CODE_LEGACY<br/>(旧 OOTC)"]
+        B3["AST_EVALUATOR<br/>(ツリー走査)"]
+        B4["DSL_JAVA_CODE<br/>(ハイブリッド)"]
+        B5["P4_AST_EVALUATOR<br/>(型安全評価) ★PRIMARY"]
+        B6["P4_DSL_JAVA_CODE<br/>(DSL Java エミッタ)"]
     end
 
     SRC --> LP
@@ -155,7 +139,7 @@ P4 スタックは `instanceof` ベースのディスパッチを使用し、コ
 | Java | 21+ |
 | Maven | 3.8+ |
 | `add-opens` | `java.base/java.lang`, `java.base/java.util` （テスト・リフレクション使用時） |
-| OSSRH | GPG 署名必須（Maven Central 公開時） |
+| Central Publisher Portal | GPG 署名必須（Maven Central 公開時） |
 
 ---
 
@@ -692,35 +676,19 @@ TinyExpression はデータベースや永続ストレージを直接管理し�
 
 `AstEvaluatorCalculator.apply()` は以下の 4 段フォールバックチェーンで動作する（ADR-001 により P4TypedAstEvaluator が PRIMARY に昇格、v1.4.10 以降）:
 
-```
-【段階 1】P4TypedAstEvaluator  ← PRIMARY（型安全 sealed switch）
-              │
-              │ 失敗: UnsupportedOperationException（P4 文法ギャップ）
-              ▼
-【段階 2】GeneratedP4NumberAstEvaluator  ← リフレクション経由の生成 AST 評価
-              │
-              │ 失敗: Optional.empty()
-              ▼
-【段階 3】AstTokenTreeEvaluator  ← レガシー AST ツリー走査（手書き）
-              │
-              │ 失敗: Optional.empty()
-              ▼
-【段階 4】JavaCode fallback (JAVA_CODE パス)  ← 最終安全網
-```
-
 ```mermaid
 flowchart TD
     START(["AstEvaluatorCalculator.apply()"])
 
-    S1["段階 1: P4TypedAstEvaluator\n(型安全 sealed switch)\n★ PRIMARY"]
-    S2["段階 2: GeneratedP4NumberAstEvaluator\n(リフレクション経由の生成 AST 評価)"]
-    S3["段階 3: AstTokenTreeEvaluator\n(レガシー AST ツリー走査・手書き)"]
-    S4["段階 4: JavaCode fallback\n(JAVA_CODE パス・最終安全網)"]
+    S1["段階 1: P4TypedAstEvaluator<br/>(型安全 sealed switch)<br/>★ PRIMARY"]
+    S2["段階 2: GeneratedP4NumberAstEvaluator<br/>(リフレクション経由の生成 AST 評価)"]
+    S3["段階 3: AstTokenTreeEvaluator<br/>(レガシー AST ツリー走査・手書き)"]
+    S4["段階 4: JavaCode fallback<br/>(JAVA_CODE パス・最終安全網)"]
     OK(["結果を返す"])
 
     START --> S1
     S1 -->|"成功"| OK
-    S1 -->|"UnsupportedOperationException\n(P4 文法ギャップ)"| S2
+    S1 -->|"UnsupportedOperationException<br/>(P4 文法ギャップ)"| S2
     S2 -->|"成功 (Optional.present)"| OK
     S2 -->|"Optional.empty()"| S3
     S3 -->|"成功 (Optional.present)"| OK
@@ -762,14 +730,21 @@ InDayTimeRangeExpr            // inDayTimeRange(MONDAY, 9, FRIDAY, 17)
 2. **成功**: `_tinyP4ParserUsed=true` を設定し、型安全 P4 AST で処理
 3. **失敗**（P4 文法ギャップ）: `_tinyP4ParserUsed=false` を設定し、対応する非 P4 バックエンドへグレースフルフォールバック
 
-```
-P4_AST_EVALUATOR のフォールバック:
-  P4 パース成功 → P4TypedAstEvaluator ベースの評価
-  P4 パース失敗 → AST_EVALUATOR チェーン（段階 1-4）
+```mermaid
+flowchart TD
+    P4TRY1["P4_AST_EVALUATOR: P4 UBNF パースを試行"]
+    P4OK1["P4TypedAstEvaluator ベースの評価"]
+    P4NG1["AST_EVALUATOR チェーン（段階 1-4）"]
 
-P4_DSL_JAVA_CODE のフォールバック:
-  P4 パース成功 → DSL Java エミッタ → javac → 実行
-  P4 パース失敗 → DSL_JAVA_CODE チェーン
+    P4TRY2["P4_DSL_JAVA_CODE: P4 UBNF パースを試行"]
+    P4OK2["DSL Java エミッタ → javac → 実行"]
+    P4NG2["DSL_JAVA_CODE チェーン"]
+
+    P4TRY1 -->|"P4 パース成功"| P4OK1
+    P4TRY1 -->|"P4 パース失敗"| P4NG1
+
+    P4TRY2 -->|"P4 パース成功"| P4OK2
+    P4TRY2 -->|"P4 パース失敗"| P4NG2
 ```
 
 ### 4.3 DSL_JAVA_CODE 実行パイプライン（sequenceDiagram）
@@ -809,69 +784,46 @@ sequenceDiagram
 
 ### 4.3b DSL_JAVA_CODE のハイブリッド状態遷移
 
-```
-式テキスト入力
-    │
-    ├── ネイティブ DSL Java エミッタ対応構文 ──►
-    │     _tinyDslJavaNativeEmitterUsed = true
-    │     _tinyExecutionImplementation = dsl-javacode-native
-    │     → Java ソース生成 → javac → 実行
-    │
-    └── 非対応構文 ────────────────────────────►
-          _tinyExecutionImplementation = legacy-javacode-bridge
-          → レガシー JavaCode ブリッジ → javac → 実行
+```mermaid
+flowchart TD
+    IN["式テキスト入力"]
+    NATIVE["ネイティブ DSL Java エミッタ対応構文<br/>_tinyDslJavaNativeEmitterUsed = true<br/>_tinyExecutionImplementation = dsl-javacode-native<br/>→ Java ソース生成 → javac → 実行"]
+    LEGACY["非対応構文<br/>_tinyExecutionImplementation = legacy-javacode-bridge<br/>→ レガシー JavaCode ブリッジ → javac → 実行"]
+
+    IN -->|"ネイティブエミッタ対応"| NATIVE
+    IN -->|"非対応（フォールバック）"| LEGACY
 ```
 
 ### 4.4 マルチフォーミュラ実行パイプライン
 
-```
-formulaInfo.txt ファイル群（テナントごと）
-    │
-    ▼
-FormulaInfoParser → List<FormulaInfo>
-    │ キー検証、バックエンド名検証
-    ▼
-CalculatorCreatorRegistry → List<Calculator>
-    │ バックエンドごとに Calculator インスタンスを生成（コンパイルも実行）
-    ▼
-FileBaseTinyExpressionInstancesCache（TenantID をキーにキャッシュ）
-    │
-    ▼
-TinyExpressionsExecutor.execute()
-    │
-    ├── dependsOnByNestLevel() 昇順でソート（依存関係グラフのネストレベル）
-    ├── Predicate<Calculator> でフィルタリング
-    └── 順次実行
-          Calculator.apply(context)
-              │
-              ▼
-          ResultConsumer.accept(context, calculator, formulaInfo, result)
-              │ 結果を CalculationContext に書き戻す（典型的な実装）
-              ▼
-          次の Calculator は前の結果を変数として参照可能
+```mermaid
+flowchart TD
+    FILES["formulaInfo.txt ファイル群（テナントごと）"]
+    PARSER["FormulaInfoParser<br/>→ List&lt;FormulaInfo&gt;<br/>キー検証・バックエンド名検証"]
+    REGISTRY["CalculatorCreatorRegistry<br/>→ List&lt;Calculator&gt;<br/>バックエンドごとに Calculator インスタンスを生成（コンパイルも実行）"]
+    CACHE["FileBaseTinyExpressionInstancesCache<br/>（TenantID をキーにキャッシュ）"]
+    EXECUTOR["TinyExpressionsExecutor.execute()<br/>dependsOnByNestLevel() 昇順でソート<br/>Predicate&lt;Calculator&gt; でフィルタリング"]
+    CALC["Calculator.apply(context)"]
+    CONSUMER["ResultConsumer.accept(context, calculator, formulaInfo, result)<br/>結果を CalculationContext に書き戻す（典型的な実装）"]
+    NEXT["次の Calculator は前の結果を変数として参照可能"]
+
+    FILES --> PARSER --> REGISTRY --> CACHE --> EXECUTOR --> CALC --> CONSUMER --> NEXT
 ```
 
 ### 4.5 インメモリ Java コンパイルパイプライン
 
 `JAVA_CODE` 系バックエンドのコンパイルフロー:
 
-```
-式テキスト
-    │ 解析・AST 構築
-    ▼
-Java ソース文字列
-    │ javax.tools.JavaCompiler（インプロセス）
-    ▼
-MemoryJavaFileManager
-    │
-    ▼
-ByteArrayJavaFileObject（バイトコード in-memory）
-    │
-    ▼
-MemoryClassLoader → Class<? extends PreConstructedCalculator>
-    │
-    ▼
-インスタンス生成 → Calculator.apply(CalculationContext) で実行
+```mermaid
+flowchart TD
+    SRC["式テキスト"]
+    JAVASRC["Java ソース文字列<br/>（解析・AST 構築）"]
+    FILEMGR["MemoryJavaFileManager<br/>（javax.tools.JavaCompiler インプロセス）"]
+    BYTECODE["ByteArrayJavaFileObject<br/>（バイトコード in-memory）"]
+    CLASSLOADER["MemoryClassLoader<br/>→ Class&lt;? extends PreConstructedCalculator&gt;"]
+    EXEC["インスタンス生成<br/>→ Calculator.apply(CalculationContext) で実行"]
+
+    SRC --> JAVASRC --> FILEMGR --> BYTECODE --> CLASSLOADER --> EXEC
 ```
 
 **関連クラス**:
@@ -987,7 +939,7 @@ classDiagram
     SpecifiedExpressionTypes --> ExpressionTypes : uses
     FormulaInfo --> ExpressionTypes : resolves to
     ExpressionTypes : number = _float alias
-    note for ExpressionTypes "デフォルト数値型: _float\nnumber は _float のエイリアス\nJava 拡大変換: double > float > long > int > short > byte"
+    note for ExpressionTypes "デフォルト数値型: _float<br/>number は _float のエイリアス<br/>Java 拡大変換: double > float > long > int > short > byte"
 ```
 
 **`number` 型**: `float` のエイリアスとして扱われる（`Float.class` にマッピング）。`FormulaInfo` の `resultType:number` や変数宣言の `as number` で使用可能。
@@ -1510,21 +1462,16 @@ IDE / エディタサポートは以下の別リポジトリで提供される:
 
 **LSP/DAP 接続フロー**（参考）:
 
-```
-.tinyexp ファイル編集
-    │
-    ▼
-TinyExpressionP4LanguageServerExt（LSP サーバー）
-    ├── diagnostics（ParseFailureDiagnostics）
-    ├── セマンティックトークン（P4 AST instanceof ディスパッチ）
-    └── 補完 / ホバー（P4 AST ノード型）
+```mermaid
+flowchart TD
+    EDIT["`.tinyexp` ファイル編集"]
+    LSP["TinyExpressionP4LanguageServerExt（LSP サーバー）<br/>diagnostics（ParseFailureDiagnostics）<br/>セマンティックトークン（P4 AST instanceof ディスパッチ）<br/>補完 / ホバー（P4 AST ノード型）"]
 
-.tinyexp デバッグ（F5）
-    │
-    ▼
-TinyExpressionP4DebugAdapterExt（DAP アダプタ）
-    ├── 6 バックエンド全実行
-    └── debugger に parity.* 変数を公開
+    DEBUG["`.tinyexp` デバッグ（F5）"]
+    DAP["TinyExpressionP4DebugAdapterExt（DAP アダプタ）<br/>6 バックエンド全実行<br/>debugger に parity.* 変数を公開"]
+
+    EDIT --> LSP
+    DEBUG --> DAP
 ```
 
 **なぜ P4 スタックが LSP/DAP の参照実装か**:
@@ -1718,15 +1665,15 @@ target/generated-sources/tinyexpression-p4/runtime/
 stateDiagram-v2
     [*] --> Unloaded : キャッシュ未初期化
 
-    Unloaded --> Loading : TenantID で初回アクセス\n(遅延ロード)
+    Unloaded --> Loading : TenantID で初回アクセス（遅延ロード）
 
-    Loading --> Compiling : formulaInfo.txt 読み込み完了\n(FormulaInfoParser)
+    Loading --> Compiling : formulaInfo.txt 読み込み完了（FormulaInfoParser）
 
-    Compiling --> Cached : Calculator インスタンス生成完了\n(JAVA_CODE: javac 実行済み)
+    Compiling --> Cached : Calculator インスタンス生成完了（JAVA_CODE: javac 実行済み）
 
-    Cached --> Cached : TenantID で再アクセス\n(キャッシュヒット)
+    Cached --> Cached : TenantID で再アクセス（キャッシュヒット）
 
-    Cached --> Evicted : アプリ再起動 /\n手動キャッシュクリア
+    Cached --> Evicted : アプリ再起動 / 手動キャッシュクリア
 
     Evicted --> Unloaded : 次アクセスで再ロード
 
@@ -1812,7 +1759,7 @@ src/test/java/
                 ThreeExecutionBackendParityTest.java
                 ThreeExecutionBackendExtractedCorpusParityTest.java
                 AstEvaluatorBackendParityTest.java
-                AstEvaluatorTokenLiteralFallbackTest.java
+                AstEvaluatorGeneratedRuntimeIsolationTest.java
                 AstEvaluatorStringGeneratedPathTest.java
                 GeneratedP4NumberAstEvaluatorVariableTest.java
                 BackendSpeedComparisonTest.java
@@ -1945,7 +1892,7 @@ $message[0:3]
 
 ### 12.1 Maven Central への公開
 
-TinyExpression は **Maven Central (OSSRH)** で公開される。
+TinyExpression は **Maven Central Publisher Portal** で公開される。
 
 **Maven 座標**:
 
@@ -1981,11 +1928,11 @@ TinyExpression は **Maven Central (OSSRH)** で公開される。
 
 ### 12.2 リリース手順
 
-- リリース詳細は `ReleaseToOSSRH.md` を参照
-- CI/CD は `bitbucket-pipelines.yml` で定義
+- リリース詳細は `ReleaseToCentral.md` を参照
+- CI/CD は `.github/workflows/` で定義
 - `mvnw` / `mvnw.cmd` のラッパースクリプトを使用
 - バージョンは `pom.xml` の `<version>` で管理
-- OSSRH 公開時は GPG 署名必須
+- Maven Central 公開時は GPG 署名必須
 
 ### 12.3 バージョン履歴
 

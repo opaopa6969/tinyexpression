@@ -10,7 +10,7 @@
 |----------|-------------|
 | [getting-started.md](./getting-started.md) | Maven setup, single formula, multi-formula executor |
 | [language-guide.md](./language-guide.md) | Complete language specification |
-| [backends.md](./backends.md) | 6 backend comparison, fallback chain, parity contract |
+| [backends.md](./backends.md) | 6 backend comparison, generated-only boundary, parity contract |
 | [architecture.md](./architecture.md) | Parser combinators, AST, 6 evaluators, type system |
 
 ## Architecture Decisions
@@ -20,6 +20,7 @@
 | [decisions/ADR-001-p4-primary.md](./decisions/ADR-001-p4-primary.md) | Why P4TypedAstEvaluator was promoted to PRIMARY |
 | [decisions/ADR-002-type-promotion.md](./decisions/ADR-002-type-promotion.md) | Numeric type promotion rules |
 | [decisions/ADR-003-java-codeblock-safety.md](./decisions/ADR-003-java-codeblock-safety.md) | Java code block security model |
+| [decisions/ADR-004-generated-backends-no-fallback.md](./decisions/ADR-004-generated-backends-no-fallback.md) | Why generated backends fail explicitly instead of invoking handwritten fallbacks |
 
 ## Dialogue-Style Guides
 
@@ -32,10 +33,13 @@
 
 | Document | Description |
 |----------|-------------|
-| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | Backend coverage matrix for the 5 execution backends |
+| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | Coverage boundary for the 6 execution backends |
 | [feature-parity-diff.md](./feature-parity-diff.md) | Feature parity diff between hand-written path and UBNF (P4) path |
 
 ## Other Documentation
+
+These documents include historical plans and migration notes. When they conflict with
+the primary guides or backend contract, the primary documents are authoritative.
 
 | Document | Description |
 |----------|-------------|
@@ -46,6 +50,8 @@
 | [TINYEXPRESSION-DSL-ROADMAP.md](./TINYEXPRESSION-DSL-ROADMAP.md) | DSL roadmap |
 | [TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md](./TINYEXPRESSION-DUAL-EVALUATOR-DAP-PLAN.md) | Dual evaluator DAP plan |
 | [TINYEXPRESSION-FINAL-GAP-AUDIT.md](./TINYEXPRESSION-FINAL-GAP-AUDIT.md) | Final gap audit |
+| [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](./TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) | Issue draft for the remaining work after the latest UBNF / P4 upgrade |
+| [TINYEXPRESSION-RELEASE-RUNBOOK.md](./TINYEXPRESSION-RELEASE-RUNBOOK.md) | Reproducible package / install / deploy runbook (incl. /tmp escape hatch) |
 | [TINYEXPRESSION-LSP-ADDITIONAL-FEATURES.md](./TINYEXPRESSION-LSP-ADDITIONAL-FEATURES.md) | LSP additional features |
 | [TINYEXPRESSION-LSP-IMPLEMENTATION-BACKLOG.md](./TINYEXPRESSION-LSP-IMPLEMENTATION-BACKLOG.md) | LSP implementation backlog |
 | [TINYEXPRESSION-LSP-TEST-SPEC.md](./TINYEXPRESSION-LSP-TEST-SPEC.md) | LSP test specification |

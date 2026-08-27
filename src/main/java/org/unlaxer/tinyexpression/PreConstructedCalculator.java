@@ -46,6 +46,9 @@ public abstract class PreConstructedCalculator implements Calculator {
     if(createToken) {
       
       parseContext = new ParseContext(StringSource.createRootSource(formula));
+      // 呼び出しスレッドに ParseDeadline が設定されていれば期限 listener を仕込む
+      // (issue #20: 深い式での指数バックトラックを呼び出し側の予算で打ち切る)
+      ParseDeadline.installIfSet(parseContext);
       transactionListeners().forEach(listenser->{
           parseContext.addTransactionListener(Name.of(listenser.getClass()), listenser);
         }

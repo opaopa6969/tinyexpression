@@ -6,7 +6,7 @@
 
     <groupId>org.unlaxer</groupId>
     <artifactId>tinyexpression-p4-lsp-vscode</artifactId>
-    <version>0.2.3</version>
+    <version>0.2.35</version>
     <packaging>jar</packaging>
     <description>TinyExpression P4 LSP/DAP — UBNF生成による型安全LSP/DAPサーバー</description>
 
@@ -23,12 +23,12 @@
         <dependency>
             <groupId>org.unlaxer</groupId>
             <artifactId>unlaxer-dsl</artifactId>
-            <version>3.0.2</version>
+            <version>3.0.14</version>
         </dependency>
         <dependency>
             <groupId>org.unlaxer</groupId>
-            <artifactId>tinyexpression</artifactId>
-            <version>1.4.10</version>
+            <artifactId>tinyExpression</artifactId>
+            <version>1.4.15</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.lsp4j</groupId>
@@ -200,4 +200,22 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>p4-smoke</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <test>org.unlaxer.tinyexpression.lsp.p4.TinyExpressionP4LanguageServerExtTest</test>
+                            <failIfNoTests>true</failIfNoTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

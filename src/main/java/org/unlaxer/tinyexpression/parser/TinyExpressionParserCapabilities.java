@@ -2,6 +2,10 @@ package org.unlaxer.tinyexpression.parser;
 
 public final class TinyExpressionParserCapabilities {
 
+  private static final String IF_KEYWORD = "if";
+  private static final String MATCH_KEYWORD = "match";
+  private static final String[] METHOD_INVOCATION_HEADS = {"call", "external", "internal"};
+
   private TinyExpressionParserCapabilities() {}
 
   public static int skipJavaStyleDelimiters(String source, int from) {
@@ -105,11 +109,15 @@ public final class TinyExpressionParserCapabilities {
     if (text.isEmpty()) {
       return text;
     }
-    if (hasHead(text, TinyExpressionKeywords.IF, '(')) {
-      int next = skipJavaStyleDelimiters(text, TinyExpressionKeywords.IF.length());
-      return TinyExpressionKeywords.IF + text.substring(next);
+    if (hasHead(text, IF_KEYWORD, '(')) {
+      int next = skipJavaStyleDelimiters(text, IF_KEYWORD.length());
+      return IF_KEYWORD + text.substring(next);
     }
-    for (String keyword : TinyExpressionKeywords.METHOD_INVOCATION_HEADS) {
+    if (hasHead(text, MATCH_KEYWORD, '{')) {
+      int next = skipJavaStyleDelimiters(text, MATCH_KEYWORD.length());
+      return MATCH_KEYWORD + text.substring(next);
+    }
+    for (String keyword : METHOD_INVOCATION_HEADS) {
       if (!startsWithWord(text, keyword)) {
         continue;
       }
@@ -120,5 +128,59 @@ public final class TinyExpressionParserCapabilities {
       return keyword + " " + text.substring(next).stripLeading();
     }
     return text;
+  }
+
+  public static String stripJavaStyleCommentsPreservingLayout(String source) {
+    if (source == null || source.isEmpty()) {
+      return "";
+    }
+    StringBuilder builder = new StringBuilder(source.length());
+    boolean inSingleQuote = false;
+    boolean inDoubleQuote = false;
+    for (int i = 0; i < source.length(); i++) {
+      char current = source.charAt(i);
+      char next = i + 1 < source.length() ? source.charAt(i + 1) : '\0';
+      char prev = i > 0 ? source.charAt(i - 1) : '\0';
+      if (current == '\'' && !inDoubleQuote && prev != '\\') {
+        inSingleQuote = !inSingleQuote;
+        builder.append(current);
+        continue;
+      }
+      if (current == '"' && !inSingleQuote && prev != '\\') {
+        inDoubleQuote = !inDoubleQuote;
+        builder.append(current);
+        continue;
+      }
+      if (!inSingleQuote && !inDoubleQuote && current == '/' && next == '/') {
+        builder.append(' ').append(' ');
+        i += 2;
+        while (i < source.length() && source.charAt(i) != '\n') {
+          builder.append(source.charAt(i) == '\r' ? '\r' : ' ');
+          i++;
+        }
+        if (i < source.length()) {
+          builder.append(source.charAt(i));
+        }
+        continue;
+      }
+      if (!inSingleQuote && !inDoubleQuote && current == '/' && next == '*') {
+        builder.append(' ').append(' ');
+        i += 2;
+        while (i < source.length()) {
+          char inner = source.charAt(i);
+          char innerNext = i + 1 < source.length() ? source.charAt(i + 1) : '\0';
+          if (inner == '*' && innerNext == '/') {
+            builder.append(' ').append(' ');
+            i++;
+            break;
+          }
+          builder.append(inner == '\n' || inner == '\r' ? inner : ' ');
+          i++;
+        }
+        continue;
+      }
+      builder.append(current);
+    }
+    return builder.toString();
   }
 }

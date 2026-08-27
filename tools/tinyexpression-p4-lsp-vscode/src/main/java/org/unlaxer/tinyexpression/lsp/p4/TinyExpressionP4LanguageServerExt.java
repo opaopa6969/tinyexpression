@@ -34,6 +34,7 @@ import org.eclipse.lsp4j.DidSaveTextDocumentParams;
 import org.eclipse.lsp4j.Hover;
 import org.eclipse.lsp4j.HoverParams;
 import org.eclipse.lsp4j.InitializeParams;
+import org.eclipse.lsp4j.InsertTextFormat;
 import org.eclipse.lsp4j.InitializeResult;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.Position;
@@ -102,6 +103,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4LanguageServer;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 import org.unlaxer.dsl.runtime.ScopeStore;
 
 /**
@@ -158,6 +160,63 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "set", "not", "exists", "call",
       "import", "external", "returning",
       "true", "false");
+
+  /**
+   * Snippet completions for callable functions. Accepting one of these inserts
+   * the function name with balanced parens and a tab-stop on the first argument
+   * (LSP InsertTextFormat.Snippet). Restores the paren-completion ergonomics
+   * that the old calculator-lsp had.
+   */
+  private static final Map<String, String> FUNCTION_SNIPPETS = new LinkedHashMap<>();
+
+  static {
+    // Math / cast — single argument
+    for (String f : List.of("sin", "cos", "tan", "sqrt", "log", "exp", "abs",
+                             "floor", "ceil", "round", "isPresent")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
+    }
+    // String — single argument (function form)
+    for (String f : List.of("len", "length", "toUpperCase", "toLowerCase", "trim")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
+    }
+    // Math / string — two arguments
+    for (String f : List.of("pow", "indexOf", "startsWith", "endsWith", "contains")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
+    }
+    // Variadic — surface a 2-arg starter
+    for (String f : List.of("min", "max")) {
+      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
+    }
+    FUNCTION_SNIPPETS.put("toNum", "toNum($1, $2)$0");
+    FUNCTION_SNIPPETS.put("random", "random()$0");
+    FUNCTION_SNIPPETS.put("inTimeRange", "inTimeRange($1, $2)$0");
+    FUNCTION_SNIPPETS.put("inDayTimeRange",
+        "inDayTimeRange($1, $2, $3, $4)$0");
+  }
+
+  /**
+   * Block / declaration keyword snippets. Accepting one of these inserts the
+   * canonical structure of the construct (semicolons, braces, $variable
+   * placeholder etc) so the user only fills in the holes. Surfaced alongside
+   * the plain keyword from COMPLETION_KEYWORDS so users can still pick the
+   * bare form. issue #11 §3 「セミコロン補完 / 括弧補完」を declaration 経由で
+   * 復元する。
+   */
+  private static final Map<String, String> BLOCK_SNIPPETS = new LinkedHashMap<>();
+
+  static {
+    BLOCK_SNIPPETS.put("var",
+        "var \\$${1:name} as ${2:number} set ${3:0} description='${4:variable}';$0");
+    BLOCK_SNIPPETS.put("import",
+        "import ${1:Class}#${2:method} as ${3:alias};$0");
+    BLOCK_SNIPPETS.put("if",
+        "if (${1:cond}) {\n  ${2:0}\n} else {\n  ${3:0}\n}$0");
+    BLOCK_SNIPPETS.put("match",
+        "match {\n  ${1:cond} -> ${2:value},\n  default -> ${3:0}\n}$0");
+    BLOCK_SNIPPETS.put("call", "call ${1:method}($2)$0");
+    BLOCK_SNIPPETS.put("external",
+        "external returning as ${1:number} ${2:name}($3)$0");
+  }
 
   /** Pattern for extracting $variable references from document text. */
   private static final Pattern VARIABLE_PATTERN =
@@ -291,6 +350,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     CompletionOptions co = new CompletionOptions();
     co.setResolveProvider(false);
+    co.setTriggerCharacters(List.of("$", "(", ".", ";"));
     cap.setCompletionProvider(co);
     cap.setHoverProvider(true);
 
@@ -422,7 +482,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       result = new ParseResult(false, 0, formulaContent.length());
     } else {
       Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-      ParseContext ctx = new ParseContext(source);
+      ParseContext ctx = createParseContext(source);
       ScopeStore.registerDispatcher(ctx);
       Parsed parsed;
       try {
@@ -454,7 +514,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           StringSource chunkSource = createRootSource(chunk);
           if (chunkSource != null) {
             Parser chunkParser = TinyExpressionP4Parsers.getRootParser();
-            ParseContext chunkCtx = new ParseContext(chunkSource);
+            ParseContext chunkCtx = createParseContext(chunkSource);
             try {
               Parsed chunkParsed = chunkParser.parse(chunkCtx);
               if (chunkParsed.isSucceeded() && chunkParsed.getConsumed() != null) {
@@ -499,7 +559,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     if (extClient != null) {
       List<Diagnostic> formulaInfoDiags = computeFormulaInfoDiagnostics(uri, fullContent);
-      publishEnrichedDiagnostics(uri, formulaContent, failures, semanticIssues, scopeDiagnostics, lineOffset, formulaInfoDiags);
+      List<Diagnostic> catalogDiags = computeCatalogDiagnostics(formulaContent, declarations, lineOffset);
+      publishEnrichedDiagnostics(uri, formulaContent, failures, semanticIssues, scopeDiagnostics, lineOffset, formulaInfoDiags, catalogDiags);
     }
     return result;
   }
@@ -584,13 +645,61 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return List.of();
   }
 
+  /**
+   * Compute TE022 ("利用可能な変数名ではありません") diagnostics for $variable
+   * references that are neither declared in-document nor present in the
+   * catalog. issue #11 §3 「変数カタログ補完が未移植」 の診断 port。
+   *
+   * <p>Skipped entirely when no catalog is configured — without an authoritative
+   * allow-list, flagging arbitrary variables would be noisy and wrong.
+   */
+  private List<Diagnostic> computeCatalogDiagnostics(
+      String content, List<ScopeStore.SymbolInfo> declarations, int lineOffset) {
+    if (content == null || catalogResolver == null || catalogResolver.isEmpty()) {
+      return List.of();
+    }
+    Set<String> declaredVarNames = new java.util.HashSet<>();
+    for (ScopeStore.SymbolInfo d : declarations) {
+      String n = d.name();
+      if (n != null && n.startsWith("$")) declaredVarNames.add(n);
+    }
+    List<Diagnostic> out = new ArrayList<>();
+    Set<Integer> reportedOffsets = new java.util.HashSet<>();
+    Matcher m = VARIABLE_PATTERN.matcher(content);
+    while (m.find()) {
+      String dollarName = "$" + m.group(1);
+      String bareName = m.group(1);
+      if (declaredVarNames.contains(dollarName)) continue;
+      if (catalogResolver.lookup(bareName) != null) continue;
+      int offset = m.start();
+      if (!reportedOffsets.add(offset)) continue;
+      int length = dollarName.length();
+      Position start = offsetToPositionWithOffset(content, offset, lineOffset);
+      Position end = offsetToPositionWithOffset(content, offset + length, lineOffset);
+      Diagnostic d = new Diagnostic();
+      d.setRange(new Range(start, end));
+      d.setSeverity(DiagnosticSeverity.Warning);
+      d.setSource("tinyexpression-p4-catalog");
+      d.setCode(Either.forLeft("TE022"));
+      d.setMessage(ERROR_CATALOG.get("TE022").fullMessage()
+          + " (catalog 未登録の変数: " + dollarName + ")");
+      d.setData(diagnosticData(
+          "TE022", "catalog", start,
+          Map.of("symbol", dollarName, "fix", ERROR_CATALOG.get("TE022").fix())));
+      out.add(d);
+    }
+    return out;
+  }
+
   private void publishEnrichedDiagnostics(String uri, String content,
       ParseFailureDiagnostics failures,
       List<SemanticIssue> semanticIssues,
       List<ScopeStore.SymbolDiagnostic> scopeDiagnostics,
       int lineOffset,
-      List<Diagnostic> formulaInfoDiags) {
+      List<Diagnostic> formulaInfoDiags,
+      List<Diagnostic> catalogDiagnostics) {
     List<Diagnostic> diagnostics = new ArrayList<>(formulaInfoDiags);
+    diagnostics.addAll(catalogDiagnostics);
     // Semantic diagnostics from ScopeStore (@declares / @backref)
     for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
       Position start = offsetToPositionWithOffset(content, sd.offset(), lineOffset);
@@ -614,6 +723,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSource("tinyexpression-p4-semantic");
       d.setCode(Either.forLeft(semanticIssue.code()));
       d.setMessage(semanticIssue.message());
+      ErrorCatalogEntry entry = ERROR_CATALOG.get(semanticIssue.code());
+      d.setData(diagnosticData(
+          semanticIssue.code(), "semantic", d.getRange().getStart(),
+          entry == null ? Map.of() : Map.of("fix", entry.fix())));
       diagnostics.add(d);
     }
     if (failures.hasFailure()) {
@@ -640,6 +753,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       String message = resolveCatalogMessage(hint, snippet, leading);
       d.setMessage(message);
+      ErrorCatalogEntry entry = ERROR_CATALOG.get(code);
+      Map<String, Object> details = new LinkedHashMap<>();
+      details.put("offset", offset);
+      details.put("consumedLength", offset);
+      details.put("totalLength", content.length());
+      details.put("expectedHints", failures.expectedHints());
+      if (entry != null) details.put("fix", entry.fix());
+      d.setData(diagnosticData(code, "syntax", start, details));
       diagnostics.add(d);
     }
     extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
@@ -714,7 +835,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     if (source == null) return Collections.emptyList();
 
     Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-    ParseContext context = new ParseContext(source);
+    ParseContext context = createParseContext(source);
     Parsed parsed;
     try {
       parsed = rootParser.parse(context);
@@ -1043,6 +1164,47 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     super.setCatalogResolver(r);
   }
 
+  /**
+   * Catalog completion with rich fields (issue #11 §3 「変数カタログ補完」 port).
+   * The generated parent's {@code catalogCompletion} only forwards label /
+   * kind / detail. This variant reads the {@link CatalogResolver} directly so
+   * the catalog entry's {@code context} and {@code sourcePath} surface as
+   * detail / documentation, and ordering is stabilized via sortText (mirrors
+   * the old calculator-lsp catalog-completion shape).
+   */
+  public List<CompletionItem> richCatalogCompletion(String prefix) {
+    if (catalogResolver == null || catalogResolver.isEmpty()) return List.of();
+    List<CompletionItem> items = new ArrayList<>();
+    for (CatalogEntry entry : catalogResolver.listAll()) {
+      if (!prefix.isEmpty() && !entry.name().startsWith(prefix)) continue;
+      CompletionItem item = new CompletionItem(entry.name());
+      item.setKind(CompletionItemKind.Variable);
+      String ctx = entry.context();
+      String desc = entry.description();
+      String detail = "catalog"
+          + (ctx != null && !ctx.isBlank() ? " [" + ctx + "]" : "")
+          + (desc != null && !desc.isBlank() ? " — " + desc : "");
+      item.setDetail(detail);
+      StringBuilder doc = new StringBuilder();
+      if (desc != null && !desc.isBlank()) doc.append(desc).append("\n\n");
+      if (ctx != null && !ctx.isBlank()) doc.append("**context**: ").append(ctx).append("\n");
+      if (entry.sourcePath() != null && !entry.sourcePath().isBlank()) {
+        doc.append("**source**: `").append(entry.sourcePath()).append("`");
+      }
+      if (doc.length() > 0) {
+        MarkupContent mc = new MarkupContent();
+        mc.setKind("markdown");
+        mc.setValue(doc.toString());
+        item.setDocumentation(mc);
+      }
+      // Sort catalog entries after declared symbols (which have no sortText)
+      // but before the regex-fallback entries.
+      item.setSortText("050_catalog_" + entry.name());
+      items.add(item);
+    }
+    return items;
+  }
+
   /** Reflection-compatible StringSource factory (same as generated code). */
   static StringSource createRootSource(String source) {
     try {
@@ -1065,6 +1227,17 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return null;
   }
 
+  /** Enable packrat parsing for interactive requests to avoid exponential PEG retries. */
+  static ParseContext createParseContext(StringSource source) {
+    ParseContext context = new ParseContext(source);
+    try {
+      context.enableMemoize();
+    } catch (NoSuchMethodError ignored) {
+      // Memoization is a performance optimization when running against an older runtime.
+    }
+    return context;
+  }
+
   // =========================================================================
   // FormulaInfo metadata — field names, value suggestions, dependsOn diagnostics
   // =========================================================================
@@ -1072,7 +1245,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   /** Metadata field names that may appear before the formula: line. */
   private static final List<String> METADATA_FIELD_NAMES = List.of(
       "calculatorName", "resultType", "numberType", "tags", "description",
-      "dependsOn", "executionBackend",
+      "dependsOn", "var", "executionBackend", "backend",
       "periodStartInclusive", "periodEndExclusive");
 
   /** Suggested values for resultType: field. */
@@ -1081,22 +1254,41 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   /** Suggested values for executionBackend: field. */
   private static final List<String> EXECUTION_BACKEND_VALUES = List.of(
-      "JAVA_CODE", "AST_EVALUATOR", "DSL_JAVA_CODE");
+      "JAVA_CODE", "JAVA_CODE_LEGACY_ASTCREATOR", "AST_EVALUATOR", "DSL_JAVA_CODE",
+      "P4_AST_EVALUATOR", "P4_DSL_JAVA_CODE");
 
   /**
-   * Returns true if the given line (0-based, in the full document) is in the
-   * metadata section — i.e. before the first {@code formula:} line.
+   * Returns true if the given line (0-based, in the full document) is in a
+   * FormulaInfo metadata section. Multi-part documents return to metadata mode
+   * after each {@code ---END_OF_PART---} marker.
    */
   static boolean isMetadataLine(String fullContent, int line) {
     String[] lines = fullContent.split("\n", -1);
-    // Find the first formula: line
+    boolean hasFormula = false;
+    for (String candidate : lines) {
+      if (FORMULA_LINE_MARKER.equals(candidate.stripTrailing().replace("\r", ""))) {
+        hasFormula = true;
+        break;
+      }
+    }
+    if (!hasFormula || line < 0 || line >= lines.length) {
+      return false;
+    }
+
+    boolean inFormula = false;
     for (int i = 0; i < lines.length; i++) {
       String stripped = lines[i].stripTrailing().replace("\r", "");
       if (FORMULA_LINE_MARKER.equals(stripped)) {
-        return line < i;
+        if (i == line) return false;
+        inFormula = true;
+      } else if (PART_END_MARKER.equals(stripped)) {
+        if (i == line) return false;
+        inFormula = false;
+      } else if (i == line) {
+        return !inFormula;
       }
     }
-    return false; // no formula: marker — not a FormulaInfo document
+    return false;
   }
 
   /**
@@ -1180,10 +1372,51 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         d.setSource("formulainfo");
         d.setCode(Either.forLeft("FI001"));
         d.setMessage("dependsOn: '" + depName + "' does not match any calculatorName in this document.");
+        d.setData(diagnosticData(
+            "FI001", "metadata", start,
+            Map.of("field", "dependsOn", "value", depName,
+                "availableCalculatorNames", List.copyOf(calcNames.keySet()))));
         diags.add(d);
       }
     }
+
+    String[] lines = fullContent.split("\n", -1);
+    for (int i = 0; i < lines.length; i++) {
+      String line = lines[i].replace("\r", "");
+      String stripped = line.stripLeading();
+      String field = stripped.startsWith("executionBackend:")
+          ? "executionBackend" : stripped.startsWith("backend:") ? "backend" : null;
+      if (field == null) continue;
+      String value = stripped.substring(stripped.indexOf(':') + 1).strip();
+      if (value.isEmpty() || ExecutionBackend.parse(value).isPresent()) continue;
+
+      int column = Math.max(0, line.indexOf(value));
+      Position start = new Position(i, column);
+      Diagnostic diagnostic = new Diagnostic();
+      diagnostic.setRange(new Range(start, new Position(i, column + value.length())));
+      diagnostic.setSeverity(DiagnosticSeverity.Error);
+      diagnostic.setSource("formulainfo");
+      diagnostic.setCode(Either.forLeft("FI002"));
+      diagnostic.setMessage("[FI002] Unknown execution backend '" + value
+          + "'. Choose one of: " + String.join(", ", EXECUTION_BACKEND_VALUES));
+      diagnostic.setData(diagnosticData(
+          "FI002", "metadata", start,
+          Map.of("field", field, "value", value, "allowedValues", EXECUTION_BACKEND_VALUES)));
+      diags.add(diagnostic);
+    }
     return diags;
+  }
+
+  private static Map<String, Object> diagnosticData(
+      String code, String kind, Position position, Map<String, ?> details) {
+    Map<String, Object> data = new LinkedHashMap<>();
+    data.put("schemaVersion", 1);
+    data.put("code", code);
+    data.put("kind", kind);
+    data.put("line", position.getLine());
+    data.put("character", position.getCharacter());
+    if (details != null) data.putAll(details);
+    return data;
   }
 
   // =========================================================================
@@ -1284,6 +1517,30 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         }
       }
 
+      // 1b. Function snippets — paren-balanced completions (issue #11 §3)
+      for (Map.Entry<String, String> e : FUNCTION_SNIPPETS.entrySet()) {
+        String fn = e.getKey();
+        if (fn.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(fn);
+          item.setKind(CompletionItemKind.Function);
+          item.setInsertText(e.getValue());
+          item.setInsertTextFormat(InsertTextFormat.Snippet);
+          items.add(item);
+        }
+      }
+
+      // 1c. Block / declaration keyword snippets (issue #11 §3)
+      for (Map.Entry<String, String> e : BLOCK_SNIPPETS.entrySet()) {
+        String kw = e.getKey();
+        if (kw.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(kw);
+          item.setKind(CompletionItemKind.Snippet);
+          item.setInsertText(e.getValue());
+          item.setInsertTextFormat(InsertTextFormat.Snippet);
+          items.add(item);
+        }
+      }
+
       // 2. Methods and variables from ScopeStore
       if (state != null) {
         Set<String> seen = new LinkedHashSet<>();
@@ -1309,17 +1566,23 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           }
         }
 
-        // 3. Catalog variable completion (from .tecatalog files via CatalogResolver)
+        // 3. Catalog variable completion via richCatalogCompletion (preserves
+        // context / sourcePath / sortText / documentation per issue #11 §3).
         String dollarPrefix = prefix.startsWith("$") ? prefix.substring(1) : "";
         if (prefix.isEmpty() || prefix.startsWith("$")) {
-          for (CompletionItem ci : server.catalogCompletion(dollarPrefix)) {
+          for (CompletionItem ci : server.richCatalogCompletion(dollarPrefix)) {
             String label = "$" + ci.getLabel();
             if (seen.add(label)) {
               CompletionItem item = new CompletionItem(label);
-              item.setKind(CompletionItemKind.Variable);
-              if (ci.getDetail() != null) {
-                item.setDetail(ci.getDetail());
+              item.setKind(ci.getKind() != null ? ci.getKind() : CompletionItemKind.Variable);
+              if (ci.getDetail() != null) item.setDetail(ci.getDetail());
+              if (ci.getDocumentation() != null) item.setDocumentation(ci.getDocumentation());
+              if (ci.getSortText() != null) item.setSortText(ci.getSortText());
+              if (ci.getInsertText() != null) {
+                String insert = ci.getInsertText();
+                item.setInsertText(insert.startsWith("$") ? insert : "$" + insert);
               }
+              if (ci.getInsertTextFormat() != null) item.setInsertTextFormat(ci.getInsertTextFormat());
               items.add(item);
             }
           }
@@ -1371,7 +1634,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
         List<String> values = switch (fieldName) {
           case "resultType", "numberType" -> RESULT_TYPE_VALUES;
-          case "executionBackend" -> EXECUTION_BACKEND_VALUES;
+          case "executionBackend", "backend" -> EXECUTION_BACKEND_VALUES;
           case "dependsOn" -> {
             // Suggest existing calculatorName values
             Map<String, Integer> calcNames = collectCalculatorNames(fullContent);
@@ -1434,7 +1697,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
                 .filter(d -> d.name().equals(lookupName))
                 .findFirst();
             if (declOpt.isPresent()) {
-              markdownText = buildSymbolHover(word);
+              markdownText = buildSymbolHover(word, state);
             } else {
               markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
             }
@@ -1445,7 +1708,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
               .filter(d -> d.name().equals(word))
               .findFirst();
           if (declOpt.isPresent()) {
-            markdownText = buildSymbolHover(word);
+            markdownText = buildSymbolHover(word, state);
           } else {
             markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
           }
@@ -1463,20 +1726,58 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     /** Build hover content for symbol information. */
     private String buildSymbolHover(String symbolName) {
+      return buildSymbolHover(symbolName, null);
+    }
+
+    /**
+     * Build hover content for symbol information. When {@code state} is
+     * provided and the symbol is a $variable declared in this document with a
+     * {@code set <expr>} clause, the set-expression text is appended as the
+     * hover's "computed/source value" — issue #11 §3 「ホバー上の計算値表示」
+     * の最小実装。リテラル set 値はそのまま読めるので「計算値」として機能し、
+     * 複雑な式は source 表示として有用。
+     */
+    private String buildSymbolHover(String symbolName, ExtDocumentState state) {
       String typeInfo;
       String prefix = "**" + symbolName + "**";
 
       if (symbolName.startsWith("$")) {
-        // Variable: show inferred type
         String varType = inferVariableType(symbolName);
         typeInfo = prefix + ": `" + varType + "`";
       } else {
-        // Method: show signature and return type
         String returnType = inferMethodReturnType(symbolName);
         typeInfo = prefix + "() → `" + returnType + "`";
       }
 
-      return typeInfo + "\n\n*TinyExpression P4 symbol*";
+      String setValue = (state != null && symbolName.startsWith("$"))
+          ? extractSetValue(state.content(), symbolName.substring(1))
+          : null;
+
+      String setLine = setValue == null
+          ? ""
+          : "\n\nSet: `" + setValue + "`";
+
+      return typeInfo + setLine + "\n\n*TinyExpression P4 symbol*";
+    }
+
+    /**
+     * Extract the {@code set} expression text for a variable declaration of
+     * the form {@code var|variable $name [as TYPE] set [if not exists] EXPR
+     * description='...';}. Returns the trimmed EXPR text, or {@code null} if
+     * the declaration is missing or has no setter.
+     */
+    static String extractSetValue(String content, String varName) {
+      if (content == null || varName == null) return null;
+      // Locate "var|variable $varName" then look for "set <EXPR>" up to "description" or ";".
+      Pattern declPat = Pattern.compile(
+          "\\b(?:var|variable)\\s+\\$" + Pattern.quote(varName)
+              + "\\b[^;]*?\\bset\\b\\s*(?:if\\s+not\\s+exists\\s+)?(.+?)(?=\\s+description\\b|\\s*;)",
+          Pattern.DOTALL);
+      Matcher m = declPat.matcher(content);
+      if (m.find()) {
+        return m.group(1).strip();
+      }
+      return null;
     }
 
     /** Build hover content for parse status. */
@@ -1532,6 +1833,18 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           if ("TE001".equals(code)) {
             // TE001: parse error — suggest rewriting with P4 syntax
             actions.addAll(buildTE001QuickFixes(uri, state.content(), diag, state.lineOffset()));
+          } else if ("TE004".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert ')' to close paren", uri, diag, ")")));
+          } else if ("TE005".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert '}' to close brace", uri, diag, "}")));
+          } else if ("TE006".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Insert ';' at statement end", uri, diag, ";")));
+          } else if ("TE002".equals(code)) {
+            actions.add(Either.forRight(buildInsertQuickFix(
+                "Prefix '$' to make a variable reference", uri, diag, "$")));
           }
         }
       }
@@ -1540,6 +1853,20 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       actions.addAll(buildIfTernaryRefactoring(uri, state, params.getRange()));
 
       return CompletableFuture.completedFuture(actions);
+    }
+
+    /**
+     * Generic quick-fix builder: insert {@code insertText} at the diagnostic
+     * start position. issue #11 §3 "クイックフィックス群が薄い" を埋める。
+     */
+    private CodeAction buildInsertQuickFix(
+        String title, String uri, Diagnostic diag, String insertText) {
+      CodeAction ca = new CodeAction(title);
+      ca.setKind(CodeActionKind.QuickFix);
+      ca.setDiagnostics(List.of(diag));
+      Position pos = diag.getRange().getStart();
+      ca.setEdit(buildEdit(uri, new Range(pos, pos), insertText));
+      return ca;
     }
 
     private List<Either<Command, CodeAction>> buildTE001QuickFixes(

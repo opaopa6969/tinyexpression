@@ -6,14 +6,26 @@
 
 TinyExpression は **ハイブリッドアーキテクチャ** を採用しています。手書きのレガシーパーサースタックと、自動生成された P4 DSL パーサースタックが共存し、6 つの実行バックエンドのいずれかに接続します。
 
-```
-式テキスト
-    │
-    ├─► レガシーパーサー (unlaxer-common コンビネータ)
-    │       └─► ParseTree ──► AST ──► JAVA_CODE / JAVA_CODE_LEGACY / AST_EVALUATOR / DSL_JAVA_CODE
-    │
-    └─► P4 パーサー (UBNF 生成、型安全)
-            └─► P4 ParseTree ──► P4 AST (sealed interface) ──► P4_AST_EVALUATOR / P4_DSL_JAVA_CODE
+2026-04-24 時点の確認済みベースライン:
+
+- `tinyexpression` `1.4.15`
+- `unlaxer-common` `3.0.2`
+- `unlaxer-dsl` `3.0.2`
+
+```mermaid
+flowchart TD
+    F[式テキスト]
+    Legacy["レガシーパーサー (unlaxer-common コンビネータ)"]
+    LPT[ParseTree]
+    AST[AST]
+    Back1["JAVA_CODE / JAVA_CODE_LEGACY / AST_EVALUATOR / DSL_JAVA_CODE"]
+    P4["P4 パーサー (UBNF 生成、型安全)"]
+    P4PT[P4 ParseTree]
+    P4AST["P4 AST (sealed interface)"]
+    Back2[P4_AST_EVALUATOR / P4_DSL_JAVA_CODE]
+
+    F --> Legacy --> LPT --> AST --> Back1
+    F --> P4 --> P4PT --> P4AST --> Back2
 ```
 
 ---
@@ -37,7 +49,8 @@ TinyExpression は **ハイブリッドアーキテクチャ** を採用して�
 
 ### P4 パーサー（UBNF 生成）
 
-P4 パーサーは `docs/ubnf/tinyexpression-p4-draft.ubnf` の UBNF 文法から unlaxer-dsl によって生成されます。
+P4 パーサーは `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` をビルド入力、
+`docs/ubnf/tinyexpression-p4-complete.ubnf` をスナップショットとして `unlaxer-dsl 3.0.2` から生成されます。
 
 生成成果物:
 
@@ -46,9 +59,12 @@ P4 パーサーは `docs/ubnf/tinyexpression-p4-draft.ubnf` の UBNF 文法か�
 | `TinyExpressionP4Parsers` | エントリーポイントとなる生成パーサー |
 | P4 AST（sealed interface 階層） | 型安全な AST ノード |
 | `TinyExpressionP4Mapper` | ParseTree → P4 AST マッパー |
+| `P4PreferredAstMapper` | preferred root 選択と compat parse をまとめる手書き facade |
 | `P4TypedAstEvaluator` | 型安全 AST エバリュエータ（PRIMARY） |
 
 P4 スタックは `instanceof` ベースのディスパッチを提供します。LSP/DAP での正規表現フォールバックはありません。
+現行文法では CodeBlock、boolean equality、string dot method、slice、`isPresent(...)`、
+`inTimeRange(...)`、`inDayTimeRange(...)`、typed `if/ternary`、strict `match` typing を扱います。
 
 ---
 
@@ -74,25 +90,16 @@ record IfExpr(TinyExpressionNode condition, TinyExpressionNode then, TinyExpress
 |------------|-------|------|
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | パース → Java ソース生成 → `javac` → ロード → 呼び出し |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | 上記と同様だがリファクタ前 AST クリエイターを使用（凍結） |
-| `AST_EVALUATOR` | `AstEvaluatorCalculator` | パース → AST → ツリーウォーキングインタープリタ。フォールバックチェーン: `generated-ast → token-ast → javacode` |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | ハイブリッド: ネイティブ DSL Java エミッタ + レガシーブリッジフォールバック |
+| `AST_EVALUATOR` | `AstEvaluatorCalculator` | P4 パース → 生成 AST → 型付きツリーウォーキング評価 |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | P4 パース → 生成 AST → 型付き Java エミッタ |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | P4 パース → P4 AST → `P4TypedAstEvaluator`（PRIMARY） |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | P4 パース → P4 AST → DSL Java エミッタ |
 
-### フォールバックチェーン（AST_EVALUATOR）
+### generated-only の失敗境界
 
-```
-P4TypedAstEvaluator（PRIMARY）
-    │ 失敗（P4 文法のギャップ）
-    ▼
-GeneratedP4NumberAstEvaluator
-    │ 失敗
-    ▼
-AstTokenTreeEvaluator（レガシー AST ウォーク）
-    │ 失敗
-    ▼
-JavaCode フォールバック（JAVA_CODE パス）
-```
+`AST_EVALUATOR`、`P4_AST_EVALUATOR`、`DSL_JAVA_CODE`、
+`P4_DSL_JAVA_CODE` は手書き評価器・エミッタへ切り替えません。P4 文法や
+マッピングの未対応箇所は、パースエラーまたは unsupported-operation として明示します。
 
 ### バックエンド登録
 
@@ -153,27 +160,22 @@ Calculator.apply(CalculationContext)
 - `org.unlaxer.compiler.MemoryJavaFileManager`
 - `org.unlaxer.compiler.CompileContext`
 
+`CompileContext` は surefire 実行や module 分離下でも動的 `javac` が
+`CalculationContext` / `TokenBaseCalculator` を見失わないよう classpath を補強します。
+
 ---
 
 ## 複数式実行パイプライン
 
-```
-FormulaInfo ファイル（テナントごと）
-    │
-    ▼
-FormulaInfoParser → List<FormulaInfo>
-    │
-    ▼
-CalculatorCreatorRegistry → List<Calculator>
-    │
-    ▼
-FileBaseTinyExpressionInstancesCache（TenantID ごとにキャッシュ）
-    │
-    ▼
-TinyExpressionsExecutor
-    ├── Calculator.dependsOnByNestLevel() でソート
-    ├── Predicate<Calculator> でフィルタ
-    └── 順序通りに実行 → ResultConsumer.accept(...)
+```mermaid
+flowchart TD
+    Files["FormulaInfo ファイル（テナントごと）"]
+    Parser["FormulaInfoParser → List&lt;FormulaInfo&gt;"]
+    Reg["CalculatorCreatorRegistry → List&lt;Calculator&gt;"]
+    Cache["FileBaseTinyExpressionInstancesCache（TenantID ごとにキャッシュ）"]
+    Exec["<b>TinyExpressionsExecutor</b><br/>- Calculator.dependsOnByNestLevel() でソート<br/>- Predicate&lt;Calculator&gt; でフィルタ<br/>- 順序通りに実行 → ResultConsumer.accept(...)"]
+
+    Files --> Parser --> Reg --> Cache --> Exec
 ```
 
 ---
@@ -182,21 +184,15 @@ TinyExpressionsExecutor
 
 P4 LSP サーバー（`tools/tinyexpression-p4-lsp-vscode`）は P4 スタックに接続します:
 
-```
-.tinyexp ファイル編集
-    │
-    ▼
-TinyExpressionP4LanguageServerExt（LSP）
-    ├── ParseFailureDiagnostics による診断
-    ├── P4 AST instanceof によるセマンティックトークン
-    └── P4 AST ノード型による補完 / ホバー
+```mermaid
+flowchart TD
+    Edit[.tinyexp ファイル編集]
+    LSP["<b>TinyExpressionP4LanguageServerExt（LSP）</b><br/>- ParseFailureDiagnostics + strict match typing（TE025）による診断<br/>- P4 AST instanceof によるセマンティックトークン<br/>- P4 AST ノード型 / preferred root による補完 / ホバー"]
+    Debug[.tinyexp デバッグ F5]
+    DAP["<b>TinyExpressionP4DebugAdapterExt（DAP）</b><br/>- 全 6 バックエンドを実行<br/>- _tinyP4ParserUsed / _tinyP4ParserExact / _tinyP4ParserProbeMode<br/>&nbsp;&nbsp;_tinyP4AstNodeType / _tinyP4AstNodePath / parity.* を公開"]
 
-.tinyexp デバッグ（F5）
-    │
-    ▼
-TinyExpressionP4DebugAdapterExt（DAP）
-    ├── 全 6 バックエンドを実行
-    └── デバッガに parity.* 変数を公開
+    Edit --> LSP
+    Debug --> DAP
 ```
 
 外部 IDE リポジトリ: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
@@ -205,8 +201,10 @@ TinyExpressionP4DebugAdapterExt（DAP）
 
 ## 関連ドキュメント
 
-- [backends.md](backends.md) — バックエンド比較表とフォールバックチェーン
+- [backends.md](backends.md) — バックエンド比較表と generated-only 境界
 - [language-guide.md](language-guide.md) — 言語仕様
+- [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) — 最新 UBNF 適用後の残課題
+- [TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md) — 実装・再生成・検証の運用手順
 - [decisions/ADR-001-p4-primary.md](decisions/ADR-001-p4-primary.md) — P4 PRIMARY 化の経緯
 - [decisions/ADR-002-type-promotion.md](decisions/ADR-002-type-promotion.md) — 型昇格ルール
 - [decisions/ADR-003-java-codeblock-safety.md](decisions/ADR-003-java-codeblock-safety.md) — Java コードブロックのセキュリティモデル

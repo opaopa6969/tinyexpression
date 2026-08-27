@@ -1,8 +1,7 @@
 # UBNF → ParseTree → AST → Evaluator → LSP/DAP 実装ガイド
 
 対象: unlaxer-dsl を使って DSL を設計・実装したい人（言語処理初心者）
-Branch: `feat-java21-p4-lsp-dap`
-Last updated: 2026-02-28
+Last updated: 2026-08-27 (`tinyExpression 1.4.15` / `unlaxer-dsl 3.0.14`)
 
 ---
 
@@ -26,42 +25,16 @@ TinyExpression P4 の例を通じて、unlaxer-dsl を使った DSL の設計か
 
 ### 1.1 レイヤ図
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  UBNF Grammar  (tinyexpression-p4.ubnf)                  │
-│  → grammar rules + @mapping / @whitespace annotations    │
-└──────────────────────┬──────────────────────────────────┘
-                       │ unlaxer-dsl mvn generate-sources
-┌──────────────────────▼──────────────────────────────────┐
-│  Generated Code  (target/generated-sources/...)          │
-│  ┌────────────────┐ ┌──────────┐ ┌────────────────────┐ │
-│  │ Parsers.java   │ │ AST.java │ │ Mapper.java        │ │
-│  │ (Tokenize)     │ │ (sealed  │ │ (Token→AST)        │ │
-│  │                │ │  records)│ │                    │ │
-│  └────────────────┘ └──────────┘ └────────────────────┘ │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ Evaluator.java  (abstract class, switch pattern)   │  │
-│  └────────────────────────────────────────────────────┘  │
-│  ┌────────────────────────────────────────────────────┐  │
-│  │ LanguageServer.java / DebugAdapter.java (tooling)  │  │
-│  └────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────┘
-                       │ 手書き実装
-┌──────────────────────▼──────────────────────────────────┐
-│  Runtime Integration                                      │
-│  P4AstEvaluatorCalculator  (implements Calculator)        │
-│   → P4Mapper.parse() でパース試行                        │
-│   → 成功なら _tinyP4ParserUsed=true でマーカー記録       │
-│   → 失敗なら AstEvaluatorCalculator へ fallback          │
-└─────────────────────────────────────────────────────────┘
-                       │
-┌──────────────────────▼──────────────────────────────────┐
-│  LSP/DAP Tooling (tools/tinyexpression-p4-lsp-vscode/)   │
-│  TinyExpressionP4LanguageServerExt                       │
-│   → type-safe semantic tokens (instanceof, no regex)     │
-│  TinyExpressionP4DebugAdapterExt                         │
-│   → AST node path in DAP variables panel                 │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    Ubnf["<b>UBNF Grammar (tinyexpression-p4.ubnf)</b><br/>grammar rules + @mapping / @whitespace annotations"]
+    Gen["<b>Generated Code (target/generated-sources/...)</b><br/>- Parsers.java (Tokenize)<br/>- AST.java (sealed records)<br/>- Mapper.java (Token→AST)<br/>- Evaluator.java (abstract class, switch pattern)<br/>- LanguageServer.java / DebugAdapter.java (tooling)"]
+    Run["<b>Runtime Integration</b><br/>generated P4 AST only<br/>- P4TypedAstEvaluator または P4TypedJavaCodeEmitter<br/>- 未対応箇所は明示失敗<br/>- 手書き runtime への暗黙 fallback なし"]
+    Tool["<b>LSP/DAP Tooling</b><br/>(tools/tinyexpression-p4-lsp-vscode/)<br/>TinyExpressionP4LanguageServerExt → type-safe semantic tokens<br/>TinyExpressionP4DebugAdapterExt → runtimeVariables hook + AST stepping"]
+
+    Ubnf -- "unlaxer-dsl mvn generate-sources" --> Gen
+    Gen -- "手書き実装" --> Run
+    Run --> Tool
 ```
 
 ### 1.2 ファイル配置
@@ -81,8 +54,7 @@ tools/tinyexpression-p4-lsp-vscode/
   grammar/tinyexpression-p4.ubnf            ← UBNF文法（ビルド用）
   pom.xml                                   ← generators設定
   target/generated-sources/tinyexpression-p4/
-    runtime/  → Parsers, AST, Mapper, Evaluator
-    tooling/  → LanguageServer, DebugAdapter, Launcher
+    → Parsers, AST, Mapper, Evaluator, LanguageServer, DebugAdapter, Launchers
   src/main/java/.../lsp/p4/
     TinyExpressionP4LanguageServerExt.java  ← LSP拡張
     ParseFailureDiagnostics.java            ← sealed interface
@@ -452,59 +424,41 @@ public class NumberEvaluator extends TinyExpressionP4Evaluator<Double> {
 
 ## 7. ステップ6: バックエンド統合 (P4AstEvaluatorCalculator)
 
-### 7.1 戦略: try-parse → fallback
+### 7.1 戦略: generated-only、未対応は明示失敗
 
 ```java
 public class P4AstEvaluatorCalculator implements Calculator {
 
-    private final AstEvaluatorCalculator delegate;
-    private final Map<String, Object> p4Markers = new LinkedHashMap<>();
+    private final AstEvaluatorCalculator delegate; // generated P4 AST evaluator
 
     public P4AstEvaluatorCalculator(Source source, ...) {
+        // constructor で generated P4 parseability を検証する
         this.delegate = new AstEvaluatorCalculator(source, ...);
-        tryP4Parse(source.source());
-    }
-
-    private void tryP4Parse(String formula) {
-        try {
-            TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(formula);
-            p4Markers.put("_tinyP4ParserUsed", true);
-            p4Markers.put("_tinyP4AstNodeType", ast.getClass().getSimpleName());
-        } catch (Exception e) {
-            // P4 grammar が対応していない構文 → fallback
-            p4Markers.put("_tinyP4ParserUsed", false);
-            p4Markers.put("_tinyP4AstNodeType", "parse-failed");
-        }
     }
 
     @Override
     public Object apply(CalculationContext ctx) {
-        p4Markers.forEach(delegate::setObject);  // マーカーをデリゲートに渡す
-        return delegate.apply(ctx);              // 実際の計算は既存エバリュエーターが担当
+        return delegate.apply(ctx); // P4TypedAstEvaluator のみを実行
     }
 
     @Override
     public <X> X getObject(String key, Class<X> cls) {
-        Object marker = p4Markers.get(key);
-        if (marker != null && cls.isInstance(marker)) return cls.cast(marker);
-        return delegate.getObject(key, cls);     // p4Markers を apply() 前に参照可能
+        return delegate.getObject(key, cls);
     }
 }
 ```
 
 **設計のポイント:**
-1. **コンストラクタでパース試行** → `apply()` 前から `_tinyP4ParserUsed` を参照できる
-2. **fallback あり** → P4 grammar が対応していない構文でも既存評価器で動く
-3. **delegate パターン** → 既存の `Calculator` インターフェースをそのまま使える
+1. **生成 AST が唯一の実行入力** → 文法と runtime のずれを隠さない
+2. **明示失敗** → parse / mapping / typing / evaluation の不足箇所をその場で直せる
+3. **legacy は明示選択のみ** → parity probe で比較しても generated backend の fallback にはしない
 
 ### 7.2 ExecutionBackend への登録
 
 ```java
-// ExecutionBackend.java に追加
-P4_AST_EVALUATOR("p4-ast",
-    Set.of("p4-ast", "p4-ast-evaluator")),
-P4_DSL_JAVA_CODE("p4-dsl-javacode",
-    Set.of("p4-dsl-javacode", "p4-dsl-java-code"));
+// ExecutionBackend.java に追加。runtimeMode alias は fromRuntimeMode() で解決する
+P4_AST_EVALUATOR,
+P4_DSL_JAVA_CODE;
 
 // CalculatorCreatorRegistry.java に追加
 public static CalculatorCreator p4AstEvaluatorCreator() {
@@ -627,11 +581,15 @@ for (SemanticToken tok : tokens) {
 
 ## 9. ステップ8: DAP アダプターの型安全拡張
 
-### 9.1 生成 DebugAdapter の限界
+### 9.1 自動生成できる範囲と runtime hook
 
-- `runtimeMode`, `sourceContent` 等のフィールドが `private`
-- P4 固有の runtime markers が表示されない
-- AST のノードパスが変数パネルに出ない
+生成 DebugAdapter は、stdio DAP、launch、breakpoint、stop/next/continue、stack/scopes/variables、
+token/AST の構造ステップ、source span を担当する。生成 DAP launcher は `main()` を持ち、
+VSIX からそのまま起動できる。
+
+一方、変数の型、評価 context、式の実行結果などは UBNF だけからは決められない。
+ここは生成クラスの `runtimeVariables(source, runtimeMode, launchArguments)` を override して接続する。
+`steppingMode=ast` で mapping できない場合は token stepping へ切り替えず、明示的に終了する。
 
 ### 9.2 launch/configurationDone のオーバーライド
 
@@ -639,31 +597,22 @@ for (SemanticToken tok : tokens) {
 // TinyExpressionP4DebugAdapterExt.java
 private String capturedProgram;
 private String capturedRuntimeMode;
+private final Map<String, Object> injectedVariables = new LinkedHashMap<>();
 
 @Override
 public CompletableFuture<Void> launch(Map<String, Object> args) {
-    // 生成クラスのsuper.launch()が呼ぶ前に自分でもキャプチャ
-    this.capturedProgram     = (String) args.getOrDefault("program", "");
+    // program が標準。formulaSource は旧 launch.json の互換 alias のみ
+    this.capturedProgram     = String.valueOf(args.getOrDefault("program", args.get("formulaSource")));
     this.capturedRuntimeMode = (String) args.getOrDefault("runtimeMode", "p4-ast");
+    // variables は JSON の number / boolean / string 型を保持して取り込む
     return super.launch(args);
 }
 
 @Override
-public CompletableFuture<Void> configurationDone(ConfigurationDoneArguments args) {
-    return super.configurationDone(args)
-        .thenRun(this::runP4Probe);  // super完了後にP4プローブを実行
-}
-
-private void runP4Probe() {
-    try {
-        TinyExpressionP4AST ast = TinyExpressionP4Mapper.parse(capturedProgram);
-        this.p4ParserUsed  = true;
-        this.p4AstNodeType = ast.getClass().getSimpleName();
-        this.p4AstNodePath = buildAstNodePath(ast, 3);  // depth=3
-    } catch (Exception e) {
-        this.p4ParserUsed  = false;
-        this.p4AstNodeType = "parse-failed";
-    }
+protected Map<String, String> runtimeVariables(
+        String source, String runtimeMode, Map<String, Object> launchArguments) {
+    return TinyExpressionDapRuntimeBridge.debugVariables(
+        source, runtimeMode, injectedVariables);
 }
 ```
 
@@ -673,13 +622,10 @@ private void runP4Probe() {
 @Override
 public CompletableFuture<VariablesResponse> variables(VariablesArguments args) {
     return super.variables(args).thenApply(response -> {
-        List<Variable> vars = response.getVariables();
-        // P4 固有の情報を追加
-        if (p4ParserUsed != null) {
-            vars.add(makeVar("_tinyP4ParserUsed",  String.valueOf(p4ParserUsed)));
-            vars.add(makeVar("_tinyP4AstNodeType", p4AstNodeType));
-            vars.add(makeVar("_tinyP4AstNodePath", p4AstNodePath));
-        }
+        List<Variable> vars = new ArrayList<>(Arrays.asList(response.getVariables()));
+        // base adapter の runtime result/parity に P4 固有 path と launch variables を追加
+        addIfAbsent(vars, "_tinyP4AstNodePath", p4AstNodePath);
+        response.setVariables(vars.toArray(Variable[]::new));
         return response;
     });
 }
@@ -726,7 +672,19 @@ private String buildAstNodePath(TinyExpressionP4AST node, int depth) {
     }],
     "debuggers": [{
       "type": "tinyexpressionP4",
-      "label": "TinyExpression P4 Debug"
+      "label": "TinyExpression P4 Debug",
+      "configurationAttributes": {
+        "launch": {
+          "required": ["program"],
+          "properties": {
+            "program": { "type": "string", "default": "${file}" },
+            "runtimeMode": { "enum": ["p4-ast", "p4-dsl-javacode"], "default": "p4-ast" },
+            "steppingMode": { "enum": ["ast", "token"], "default": "ast" },
+            "stopOnEntry": { "type": "boolean", "default": true },
+            "variables": { "type": "object" }
+          }
+        }
+      }
     }],
     "configuration": {
       "title": "TinyExpression P4 LSP",
@@ -771,8 +729,9 @@ const dapFactory = {
 
 ```bash
 cd tools/tinyexpression-p4-lsp-vscode
-mvn package -DskipTests    # → target/tinyexpression-p4-lsp-server.jar (fat jar)
-# server-dist/tinyexpression-p4-lsp-server.jar にもコピーされる
+mvn verify
+# → target/tinyexpression-p4-lsp-0.2.33.vsix
+# → server-dist/tinyexpression-p4-lsp-server.jar（VSIXへ同梱）
 ```
 
 ---
@@ -829,12 +788,11 @@ int position = formula.indexOf("x");
 CodePointIndex position = new CodePointIndex(formula.indexOf("x"));
 ```
 
-### 11.5 DSL バックエンドが `(a+b)*(c+d)` を誤計算
+### 11.5 nested parentheses の過去不具合
 
 ```
-既知問題: DSL_JAVA_CODE / P4_DSL_JAVA_CODE は nested parenthesis の乗算に不具合あり
-          (10-2)*(7-3) → 3.0 (正しくは 32.0)
-対処: P4_AST_EVALUATOR を使う (AstEvaluatorCalculator ベースなので正確)
+解決済み: `(10-2)*(7-3) == 32` は generated AST / generated Java emitter を含む
+backend parity test で継続検証する。
 ```
 
 ---
@@ -848,20 +806,21 @@ CodePointIndex position = new CodePointIndex(formula.indexOf("x"));
 ②  mvn generate-sources
     → Parsers / AST / Mapper / Evaluator / LSP / DAP が生成される
 
-③  P4AstEvaluatorCalculator を実装
-    → TinyExpressionP4Mapper.parse() で試行
-    → 成功: _tinyP4ParserUsed=true + AstEvaluatorCalculator に委譲
-    → 失敗: _tinyP4ParserUsed=false + AstEvaluatorCalculator に fallback
+③  generated backend を実装
+    → TinyExpressionP4Mapper で preferred root AST を作る
+    → P4TypedAstEvaluator / P4TypedJavaCodeEmitter のみで実行
+    → 未対応時は明示失敗（手書き backend へ暗黙 fallback しない）
 
 ④  TinyExpressionP4LanguageServerExt を実装
     → instanceof による型安全 semantic token 分類
     → ParseFailureDiagnostics sealed interface で型安全 diagnostic
 
 ⑤  TinyExpressionP4DebugAdapterExt を実装
-    → launch() で formula と runtimeMode をキャプチャ
+    → launch() で program / runtimeMode / typed variables をキャプチャ
+    → runtimeVariables() で実 evaluator・6 backend parity を生成 DAP に接続
     → variables() で P4 markers と AST ノードパスを追加
 
-⑥  mvn package → fat jar 生成
+⑥  mvn verify → fat jar + VSIX 生成
     → extension.ts で LSP (-jar) / DAP (-cp + mainClass) 起動
 ```
 
