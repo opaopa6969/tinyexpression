@@ -5,7 +5,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Optional;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class GeneratedAstRuntimeProbeTest {
@@ -32,9 +31,6 @@ public class GeneratedAstRuntimeProbeTest {
         mapped.isEmpty() || "IfExpr".equals(mapped.get().getClass().getSimpleName()));
   }
 
-  // Pre-existing P4 feature gap: grammar has no `len()` and no double-quote strings
-  // (only `length()` / single quotes). See findings-2026-06-15 §8.
-  @Ignore("pre-existing P4 gap: len() + double-quote strings not in grammar (findings §8)")
   @Test
   public void testPreferredIfRootSupportsLenComparison() {
     Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
@@ -46,9 +42,6 @@ public class GeneratedAstRuntimeProbeTest {
         mapped.isPresent() && "IfExpr".equals(mapped.get().getClass().getSimpleName()));
   }
 
-  // Pre-existing P4 feature gap: grammar declares only line comments
-  // (@comment: { line: '//' }); block comments /* */ are not recognised. See findings §8.
-  @Ignore("pre-existing P4 gap: block comments /* */ not in grammar (findings §8)")
   @Test
   public void testPreferredIfRootSupportsBlockCommentedIf() {
     Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
