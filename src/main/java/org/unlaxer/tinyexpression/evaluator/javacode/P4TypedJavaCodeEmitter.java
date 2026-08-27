@@ -5,11 +5,8 @@ import java.util.List;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
-import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
-import org.unlaxer.tinyexpression.p4.P4SliceSourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
-import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 /**
  * GGP concrete implementation: Java code generation from P4 AST.
@@ -22,7 +19,6 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   private final ExpressionType resultType;
   private final ExpressionType numberType;
-  private final String sourceFormula;
   private final java.util.Map<String, TinyExpressionP4AST> methods = new java.util.LinkedHashMap<>();
   private final java.util.Map<String, TinyExpressionP4AST> declarations = new java.util.LinkedHashMap<>();
   private final java.util.Map<String, ExpressionType> declaredVariableTypes = new java.util.LinkedHashMap<>();
@@ -43,7 +39,6 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   public P4TypedJavaCodeEmitter(SpecifiedExpressionTypes types, String sourceFormula) {
     this.resultType = types.resultType() != null ? types.resultType() : ExpressionTypes.object;
     this.numberType = resolveNumberType(types);
-    this.sourceFormula = sourceFormula;
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
@@ -204,65 +199,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
       String varName = extractVariableName(literal);
       return renderVariableAccess(varName, numberType);
     }
-    String structured = renderStructuredNumberLeaf(literal);
-    if (structured != null) {
-      return structured;
-    }
-    // P4 mapper collapses term-level ops (e.g., "3*4") into a single leaf.
-    // Pass through as-is if it contains operators — the Java compiler handles it.
-    if (literal.contains("*") || literal.contains("/")) {
-      return literal;
-    }
     return numberType.numberWithSuffix(literal);
-  }
-
-
-  private String renderStructuredNumberLeaf(String text) {
-    if (!looksLikeStructuredNumberLeaf(text)) {
-      return null;
-    }
-    try {
-      String normalized = text.strip();
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, numberType).ast();
-      return new P4TypedJavaCodeEmitter(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          parseSource).eval(ast);
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  private boolean looksLikeStructuredNumberLeaf(String text) {
-    if (text == null || text.isEmpty()) {
-      return false;
-    }
-    String normalized = text.strip();
-    if (normalized.isEmpty() || normalized.startsWith("$") || isPlainNumericLiteral(normalized)) {
-      return false;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      return looksLikeStructuredNumberLeaf(unwrapped);
-    }
-    return normalized.startsWith("call ")
-        || normalized.startsWith("internal ")
-        || normalized.startsWith("external ")
-        || normalized.indexOf('(') >= 0
-        || normalized.indexOf('[') >= 0
-        || normalized.indexOf('*') >= 0
-        || normalized.indexOf('/') >= 0
-        || normalized.indexOf(',') >= 0
-        || normalized.indexOf('?') >= 0;
-  }
-
-  private boolean isPlainNumericLiteral(String text) {
-    try {
-      numberType.parseNumber(text);
-      return true;
-    } catch (RuntimeException ignored) {
-      return false;
-    }
   }
 
   // =========================================================================
@@ -435,17 +372,9 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     }
     if (value instanceof String text) {
       String stripped = text.strip();
-      if (stripped.startsWith("$")) {
-        String varName = extractVariableName(stripped);
-        return "calculateContext.getString(\"" + escapeJava(varName) + "\").orElse(\"\")";
-      }
       String unquoted = unquoteStringLiteral(stripped);
       if (unquoted != null) {
         return "\"" + escapeJava(unquoted) + "\"";
-      }
-      String structured = renderStructuredStringLeaf(stripped);
-      if (structured != null) {
-        return structured;
       }
       return "\"" + escapeJava(text) + "\"";
     }
@@ -564,11 +493,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     };
   }
 
-  /**
-   * BooleanComparable は透過 mapped choice のため operand は実 AST ノード（Object）または
-   * source テキスト（String）として届く。ノードなら直接コード生成、それ以外は従来の
-   * source-snippet 経路にフォールバックする。(tinyexpression #32)
-   */
+  /** BooleanComparable operands are emitted from mapped AST nodes; raw strings are literals. */
   private String renderBooleanOperandSource(Object operand) {
     if (operand instanceof VariableRefExpr variable) {
       return renderVariableAccess(resolveVariableRefName(variable), ExpressionTypes._boolean);
@@ -576,36 +501,10 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     if (operand instanceof TinyExpressionP4AST ast) {
       return eval(ast);
     }
-    if (operand instanceof String text) {
-      return renderBooleanOperandSource(text);
+    if (operand instanceof String literal) {
+      return Boolean.parseBoolean(literal.strip()) ? "true" : "false";
     }
     return "false";
-  }
-
-  private String renderBooleanOperandSource(String rawSource) {
-    String normalized = rawSource == null ? "" : rawSource.strip();
-    if (normalized.isEmpty()) {
-      return "false";
-    }
-    if (isExactVariableReference(normalized)) {
-      return renderVariableAccess(extractVariableName(normalized), ExpressionTypes._boolean);
-    }
-    if ("true".equalsIgnoreCase(normalized) || "false".equalsIgnoreCase(normalized)) {
-      return normalized.toLowerCase(java.util.Locale.ROOT);
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      return renderBooleanOperandSource(unwrapped);
-    }
-    try {
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, ExpressionTypes._boolean).ast();
-      return new P4TypedJavaCodeEmitter(
-          new SpecifiedExpressionTypes(ExpressionTypes._boolean, numberType),
-          parseSource).eval(ast);
-    } catch (RuntimeException ignored) {
-      return "false";
-    }
   }
 
   private String renderStringCandidateArguments(List<StringConcatExpr> candidates) {
@@ -1169,134 +1068,12 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     return sb.toString();
   }
 
-  private String renderStructuredStringLeaf(String text) {
-    if (!looksLikeStructuredStringLeaf(text)) {
-      return null;
-    }
-    try {
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(text, ExpressionTypes.string).ast();
-      return new P4TypedJavaCodeEmitter(
-          new SpecifiedExpressionTypes(ExpressionTypes.string, numberType),
-          text).eval(ast);
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
   private String renderSliceIndexExpr(String index) {
     if (index == null) {
       return null;
     }
     String stripped = index.strip();
     return stripped.isEmpty() ? null : stripped;
-  }
-
-  private static boolean looksLikeStructuredStringLeaf(String text) {
-    if (text == null || text.isEmpty()) {
-      return false;
-    }
-    String normalized = text.strip();
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      return looksLikeStructuredStringLeaf(unwrapped)
-          || hasTopLevelStringConcat(unwrapped);
-    }
-    return normalized.startsWith("trim(")
-        || normalized.startsWith("toUpperCase(")
-        || normalized.startsWith("toLowerCase(")
-        || normalized.startsWith("call ")
-        || normalized.startsWith("internal ")
-        || normalized.startsWith("external ")
-        || normalized.contains(".trim(")
-        || normalized.contains(".toUpperCase(")
-        || normalized.contains(".toLowerCase(")
-        || (normalized.indexOf('[') >= 0 && normalized.endsWith("]"));
-  }
-
-  private static String unwrapWholeParentheses(String text) {
-    String current = text;
-    while (isWrappedByWholeParentheses(current)) {
-      current = current.substring(1, current.length() - 1).strip();
-    }
-    return current;
-  }
-
-  private static boolean isWrappedByWholeParentheses(String text) {
-    if (text.length() < 2 || text.charAt(0) != '(' || text.charAt(text.length() - 1) != ')') {
-      return false;
-    }
-    int parenDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> {
-          parenDepth--;
-          if (parenDepth == 0 && i < text.length() - 1) {
-            return false;
-          }
-        }
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth < 0 || bracketDepth < 0) {
-        return false;
-      }
-    }
-    return parenDepth == 0 && bracketDepth == 0;
-  }
-
-  private static boolean hasTopLevelStringConcat(String text) {
-    int parenDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        case '+' -> {
-          if (parenDepth == 0 && bracketDepth == 0) {
-            return true;
-          }
-        }
-        default -> {
-        }
-      }
-    }
-    return false;
   }
 
   private static String unquoteStringLiteral(String text) {
@@ -1375,21 +1152,6 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
         && !rawName.isBlank()
         && !rawName.startsWith("$")) {
       variableName = rawName.strip();
-    }
-    if ((variableName == null || variableName.isEmpty())
-        && sourceFormula != null
-        && !sourceFormula.isBlank()) {
-      java.util.Optional<String> snippet = P4SliceSourceSupport.sourceSnippetOfNode(node, sourceFormula);
-      if (snippet.isPresent()) {
-        String stripped = snippet.get().strip();
-        String snippetVariableName = extractVariableName(stripped);
-        if (snippetVariableName != null && !snippetVariableName.isEmpty()) {
-          return snippetVariableName;
-        }
-        if (!stripped.isEmpty() && !stripped.startsWith("$")) {
-          return stripped;
-        }
-      }
     }
     return variableName;
   }

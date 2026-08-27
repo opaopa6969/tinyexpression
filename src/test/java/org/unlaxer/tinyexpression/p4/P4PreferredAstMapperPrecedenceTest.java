@@ -10,13 +10,11 @@ import org.junit.Test;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 /**
- * issue #11 §2 prep: P4PreferredAstMapper.preferredAstSimpleNames の precedence
- * list を pin する regression test。
+ * P4PreferredAstMapper の generated-AST candidate contract を pin する regression test。
  *
- * <p>facade 側の heuristic (match / if / ternary / 関数名 / dot method / slice)
- * を grammar metadata に寄せていく予定で、その slim 化作業中に precedence の
- * 並びが drift していないことを確認する。drift したら test が落ち、レビューで
- * 意図的な変更か事故かを切り分ける gate になる。
+ * <p>候補はソース文字列の手書き走査ではなく、呼び出し側が指定した
+ * 結果型だけから決定的に作る。実際のルート選択は生成 mapper が行い、
+ * 式全体を覆う AST だけが採用される。
  *
  * <p>テストは facade を直接呼び、AST 解決まで踏み込まない。precedence list
  * そのものに対する契約だけを固定する。
@@ -50,23 +48,23 @@ public class P4PreferredAstMapperPrecedenceTest {
     }
 
     @Test
-    public void matchExpressionFallbacksIncludeAllVariants() {
+    public void typedCandidatesDoNotTryOtherMatchFamilies() {
         List<String> names = P4PreferredAstMapper.preferredAstSimpleNames(
             "match{1==1->2,default->0}", ExpressionTypes._float);
-        assertTrue("Fallback list should include NumberMatchExpr",
-            names.contains("NumberMatchExpr"));
-        assertTrue("Fallback list should include StringMatchExpr",
-            names.contains("StringMatchExpr"));
-        assertTrue("Fallback list should include BooleanMatchExpr",
-            names.contains("BooleanMatchExpr"));
+        assertTrue(names.contains("NumberMatchExpr"));
+        assertFalse(names.contains("StringMatchExpr"));
+        assertFalse(names.contains("BooleanMatchExpr"));
     }
 
-    /** if (cond) { ... } else { ... } は IfExpr が先頭。 */
+    /** ソース形状で候補順を変えない。 */
     @Test
-    public void ifExpressionLeadsWithIfExpr() {
-        List<String> names = P4PreferredAstMapper.preferredAstSimpleNames(
+    public void candidateOrderDependsOnResultTypeNotSourceShape() {
+        List<String> ifNames = P4PreferredAstMapper.preferredAstSimpleNames(
             "if(true){1}else{0}", ExpressionTypes._float);
-        assertEquals("if expression must lead with IfExpr", "IfExpr", names.get(0));
+        List<String> arithmeticNames = P4PreferredAstMapper.preferredAstSimpleNames(
+            "1+2", ExpressionTypes._float);
+        assertEquals(arithmeticNames, ifNames);
+        assertTrue(ifNames.contains("IfExpr"));
     }
 
     /** top-level ternary も IfExpr に正規化される。 */

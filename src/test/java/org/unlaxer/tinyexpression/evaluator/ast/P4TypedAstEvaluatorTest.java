@@ -81,16 +81,6 @@ public class P4TypedAstEvaluatorTest {
   }
 
   @Test
-  public void testBinaryArithmeticWithStructuredNumberLeaf() {
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
-    BinaryExpr addSin = binary(leaf("1"), "+", leaf("sin(30)"));
-    BinaryExpr addMax = binary(leaf("1"), "+", leaf("max(3,7)"));
-    assertEquals(1.5f, ((Number) evaluator.eval(addSin)).floatValue(), 0.001f);
-    assertEquals(8.0f, ((Number) evaluator.eval(addMax)).floatValue(), 0.001f);
-  }
-
-  @Test
   public void testMixedArithmeticWithNestedMathFunctionFromParsedAst() {
     String formula = "(1+1)/3+sin(30)";
     TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
@@ -396,26 +386,6 @@ public class P4TypedAstEvaluatorTest {
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
     Object result = evaluator.eval(new StringConcatExpr("hello world", List.of(), List.of()));
     assertEquals("hello world", result);
-  }
-
-  @Test
-  public void testStringConcatExprStructuredLeaf() {
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-    Object trimResult = evaluator.eval(new StringConcatExpr("trim(' opa 133 ')", List.of(), List.of()));
-    assertEquals("opa 133", trimResult);
-
-    Object groupedConcatResult = evaluator.eval(
-        new StringConcatExpr("(\"opa\"+\"opa\"+\"6969\")", List.of(), List.of()));
-    assertEquals("opaopa6969", groupedConcatResult);
-
-    Object reverseSliceResult = evaluator.eval(
-        new StringConcatExpr("'gateman'[::-1]", List.of(), List.of()));
-    assertEquals("nametag", reverseSliceResult);
-
-    Object steppedSliceResult = evaluator.eval(
-        new StringConcatExpr("'1a2b3'[::2]", List.of(), List.of()));
-    assertEquals("123", steppedSliceResult);
   }
 
   @Test

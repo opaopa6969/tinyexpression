@@ -3,10 +3,7 @@ package org.unlaxer.tinyexpression.p4;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
@@ -18,7 +15,6 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 /**
@@ -26,51 +22,6 @@ import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
  * otherwise settle on a shallow wrapper such as {@code ExpressionExpr}.
  */
 public final class P4PreferredAstMapper {
-
-  private static final String IF_KEYWORD = "if";
-  private static final String MATCH_KEYWORD = "match";
-  private static final List<String> METHOD_INVOCATION_HEADS = List.of("call", "external", "internal");
-
-  private static final List<String> MATCH_AST_SIMPLE_NAMES = List.of(
-      "NumberMatchExpr",
-      "StringMatchExpr",
-      "BooleanMatchExpr");
-  private static final Map<String, String> FUNCTION_AST_NAMES = Map.ofEntries(
-      Map.entry("sin", "SinExpr"),
-      Map.entry("cos", "CosExpr"),
-      Map.entry("tan", "TanExpr"),
-      Map.entry("sqrt", "SqrtExpr"),
-      Map.entry("min", "MinExpr"),
-      Map.entry("max", "MaxExpr"),
-      Map.entry("random", "RandomExpr"),
-      Map.entry("abs", "AbsExpr"),
-      Map.entry("round", "RoundExpr"),
-      Map.entry("ceil", "CeilExpr"),
-      Map.entry("floor", "FloorExpr"),
-      Map.entry("pow", "PowExpr"),
-      Map.entry("log", "LogExpr"),
-      Map.entry("exp", "ExpExpr"),
-      Map.entry("toNum", "ToNumExpr"),
-      Map.entry("toUpperCase", "ToUpperCaseExpr"),
-      Map.entry("toLowerCase", "ToLowerCaseExpr"),
-      Map.entry("trim", "TrimExpr"),
-      Map.entry("len", "LengthExpr"),
-      Map.entry("length", "LengthExpr"),
-      Map.entry("startsWith", "StartsWithExpr"),
-      Map.entry("endsWith", "EndsWithExpr"),
-      Map.entry("contains", "ContainsExpr"),
-      Map.entry("isPresent", "IsPresentExpr"),
-      Map.entry("inTimeRange", "InTimeRangeExpr"),
-      Map.entry("inDayTimeRange", "InDayTimeRangeExpr"));
-  private static final Map<String, String> DOT_METHOD_AST_NAMES = Map.ofEntries(
-      Map.entry("toUpperCase", "ToUpperCaseDotExpr"),
-      Map.entry("toLowerCase", "ToLowerCaseDotExpr"),
-      Map.entry("trim", "TrimDotExpr"),
-      Map.entry("length", "LengthDotExpr"),
-      Map.entry("startsWith", "StartsWithDotExpr"),
-      Map.entry("endsWith", "EndsWithDotExpr"),
-      Map.entry("contains", "ContainsDotExpr"),
-      Map.entry("in", "InExpr"));
 
   private P4PreferredAstMapper() {}
 
@@ -98,7 +49,8 @@ public final class P4PreferredAstMapper {
    * @throws IllegalArgumentException if the formula cannot be parsed
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, defaultParseDeadlineNanos());
+    return parseViaMapperCompat(
+        formula == null ? "" : formula, preferredAstSimpleName, defaultParseDeadlineNanos());
   }
 
   /**
@@ -129,7 +81,20 @@ public final class P4PreferredAstMapper {
    */
   public static TinyExpressionP4AST parseByAstSimpleName(
       String formula, String preferredAstSimpleName, long deadlineNanos) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, deadlineNanos);
+    return parseViaMapperCompat(formula == null ? "" : formula, preferredAstSimpleName, deadlineNanos);
+  }
+
+  /**
+   * Parses once and selects the first exact, whole-source AST root from {@code candidates}.
+   * Candidate order remains type-driven; importantly, candidates do not cause repeated parsing.
+   */
+  public static TinyExpressionP4AST parseByAstSimpleNames(
+      String formula, List<String> candidates, long deadlineNanos) {
+    String source = formula == null ? "" : formula;
+    if (candidates == null || candidates.isEmpty()) {
+      throw new IllegalArgumentException("No generated AST candidates supplied");
+    }
+    return parseMappedCandidates(source, candidates, false, deadlineNanos).ast();
   }
 
   /** パース期限超過。生成 P4 専用バックエンドでは明示的なパース失敗として扱う。 */
@@ -146,555 +111,125 @@ public final class P4PreferredAstMapper {
   }
 
   public static ParsedAst parseDetailed(String formula, ExpressionType preferredResultType) {
-    RuntimeException preferredFailure = null;
-    RuntimeException defaultFailure = null;
-    long deadlineNanos = defaultParseDeadlineNanos();
-    for (String candidateSource : candidateFormulaSources(formula)) {
-      for (String preferredAstSimpleName : preferredAstSimpleNames(candidateSource, preferredResultType)) {
-        try {
-          TinyExpressionP4AST ast = parseViaMapperCompat(candidateSource, preferredAstSimpleName, deadlineNanos);
-          if (ast != null && preferredAstSimpleName.equals(ast.getClass().getSimpleName())) {
-            return new ParsedAst(ast, "preferred:" + preferredAstSimpleName);
-          }
-        } catch (RuntimeException e) {
-          preferredFailure = e;
-        }
-      }
-
-      try {
-        return new ParsedAst(parseViaMapperCompat(candidateSource, null, deadlineNanos), "default");
-      } catch (RuntimeException e) {
-        defaultFailure = e;
-      }
-    }
-
-    if (preferredFailure != null) {
-      throw toParseFailure(preferredFailure);
-    }
-    if (defaultFailure != null) {
-      throw toParseFailure(defaultFailure);
-    }
-    throw new IllegalArgumentException("Parse failed: " + formula);
+    String source = formula == null ? "" : formula;
+    List<String> candidates = preferredAstSimpleNames(source, preferredResultType);
+    return parseMappedCandidates(
+        source, candidates, preferredResultType == null, defaultParseDeadlineNanos());
   }
 
+  /**
+   * Compatibility entry point retained for callers compiled against older releases.
+   * Generated parsers now consume expression snippets directly; no source rewriting is applied.
+   */
   public static String normalizeExpressionSnippetForParsing(String formula) {
-    if (formula == null) {
-      return "";
-    }
-    String normalized = formula.strip();
-    if (normalized.isEmpty()) {
-      return normalized;
-    }
-    if (hasTopLevelTernary(normalized) && !isWrappedByWholeParentheses(normalized)) {
-      return "(" + normalized + ")";
-    }
-    return normalized;
+    return formula == null ? "" : formula;
   }
 
-  /** Removes semantically redundant parentheses around a variable used as a slice receiver. */
+  /**
+   * Compatibility entry point retained after removal of the parenthesized-slice rewrite.
+   */
   public static String normalizeParenthesizedSliceReceivers(String formula) {
-    if (formula == null || formula.isEmpty()) return formula;
-    return formula.replaceAll(
-        "\\(\\s*(\\$[A-Za-z_$][A-Za-z0-9_$]*(?:\\s+as\\s+(?:string|String))?)\\s*\\)(?=\\s*\\[)",
-        "$1");
+    return formula;
   }
 
   public static List<String> preferredAstSimpleNames(String formula) {
     return preferredAstSimpleNames(formula, null);
   }
 
-  public static List<String> preferredAstSimpleNames(String formula, ExpressionType preferredResultType) {
-    if (formula == null) {
+  /**
+   * Returns deterministic generated-AST candidates. Candidate selection depends only on
+   * the requested result type, never on hand-scanning the source text.
+   */
+  public static List<String> preferredAstSimpleNames(
+      String formula, ExpressionType preferredResultType) {
+    if (formula == null || formula.isBlank()) {
       return List.of();
     }
-    String normalized = normalizeForPreferredParsing(formula);
-    if (normalized.isEmpty()) {
-      return List.of();
-    }
-
-    ArrayList<String> names = new ArrayList<>();
-    String lower = normalized.toLowerCase(Locale.ROOT);
-    if (lower.startsWith("match{") || lower.startsWith("match {")) {
-      addIfAbsent(names, preferredMatchAstSimpleName(preferredResultType));
-      for (String candidate : preferredMatchAstSimpleNames(normalized)) {
-        addIfAbsent(names, candidate);
-      }
-      for (String candidate : MATCH_AST_SIMPLE_NAMES) {
-        addIfAbsent(names, candidate);
-      }
-    }
-    if (lower.startsWith("if(") || lower.startsWith("if (")) {
-      addIfAbsent(names, "IfExpr");
-    }
-    if (hasTopLevelTernary(normalized)) {
-      addIfAbsent(names, "IfExpr");
-    }
-    addIfAbsent(names, functionAstSimpleName(normalized));
-    addIfAbsent(names, dotMethodAstSimpleName(normalized));
-    if (looksLikeSliceExpression(normalized)) {
-      addIfAbsent(names, "SliceExpr");
-    }
-    return List.copyOf(names);
+    return candidateAstSimpleNames(preferredResultType, CandidateProfile.PREFERRED).stream()
+        .filter(candidate -> candidate != null)
+        .toList();
   }
 
-  public static List<String> astEvaluatorCandidateAstSimpleNames(String formula, ExpressionType preferredResultType) {
-    return candidateAstSimpleNames(formula, preferredResultType, CandidateProfile.AST_EVALUATOR);
+  public static List<String> astEvaluatorCandidateAstSimpleNames(
+      String formula, ExpressionType preferredResultType) {
+    return formula == null || formula.isBlank()
+        ? List.of()
+        : candidateAstSimpleNames(preferredResultType, CandidateProfile.AST_EVALUATOR);
   }
 
-  public static List<String> generatedValueCandidateAstSimpleNames(String formula, ExpressionType preferredResultType) {
-    return candidateAstSimpleNames(formula, preferredResultType, CandidateProfile.GENERATED_VALUE);
+  public static List<String> generatedValueCandidateAstSimpleNames(
+      String formula, ExpressionType preferredResultType) {
+    return formula == null || formula.isBlank()
+        ? List.of()
+        : candidateAstSimpleNames(preferredResultType, CandidateProfile.GENERATED_VALUE);
   }
 
-  public static List<String> declarationCandidateAstSimpleNames(String formula, ExpressionType preferredResultType) {
-    return candidateAstSimpleNames(formula, preferredResultType, CandidateProfile.DECLARATION);
-  }
-
-  private static List<String> candidateFormulaSources(String formula) {
-    if (formula == null) {
-      return List.of("");
-    }
-    LinkedHashSet<String> candidates = new LinkedHashSet<>();
-    String stripped = formula.strip();
-    candidates.add(stripped);
-
-    String trimmed = TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(formula).stripLeading();
-    if (!trimmed.equals(stripped)) {
-      candidates.add(trimmed);
-    }
-
-    String withoutComments =
-        TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(formula).strip();
-    if (!withoutComments.equals(stripped)) {
-      candidates.add(withoutComments);
-    }
-
-    String trimmedWithoutComments =
-        TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(
-            TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(formula)).stripLeading();
-    if (!trimmedWithoutComments.equals(stripped)) {
-      candidates.add(trimmedWithoutComments);
-    }
-
-    String normalized = normalizeForPreferredParsing(formula);
-    if (!normalized.equals(stripped)) {
-      candidates.add(normalized);
-    }
-
-    String normalizedWithoutComments = normalizeForPreferredParsing(
-        TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(formula));
-    if (!normalizedWithoutComments.equals(stripped)) {
-      candidates.add(normalizedWithoutComments);
-    }
-    return List.copyOf(candidates);
-  }
-
-  private static String normalizeForPreferredParsing(String formula) {
-    if (formula == null) {
-      return "";
-    }
-    String structured = TinyExpressionParserCapabilities.normalizeStructuredHead(formula).strip();
-    return normalizeParenthesizedSliceReceivers(structured);
+  public static List<String> declarationCandidateAstSimpleNames(
+      String formula, ExpressionType preferredResultType) {
+    return formula == null || formula.isBlank()
+        ? List.of()
+        : candidateAstSimpleNames(preferredResultType, CandidateProfile.DECLARATION);
   }
 
   private static List<String> candidateAstSimpleNames(
-      String formula, ExpressionType preferredResultType, CandidateProfile profile) {
-    String normalized = normalizeForPreferredParsing(formula);
-    List<String> structuredPreferred = preferredAstSimpleNames(normalized, preferredResultType);
-    if (!structuredPreferred.isEmpty()) {
-      ArrayList<String> rooted = new ArrayList<>();
-      addIfAbsent(rooted, "FormulaExpr");
-      for (String candidate : structuredPreferred) {
-        addIfAbsent(rooted, candidate);
-      }
-      return List.copyOf(rooted);
-    }
-
+      ExpressionType resultType, CandidateProfile profile) {
     ArrayList<String> names = new ArrayList<>();
-    addIfAbsent(names, "FormulaExpr");
-    boolean methodInvocationHead = hasMethodInvocationHead(normalized);
-    boolean externalInvocationHead = hasExternalInvocationHead(normalized);
-    boolean ifHead = hasIfHead(normalized);
-    boolean matchHead = hasMatchHead(normalized);
-    if (externalInvocationHead) {
-      addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
-    } else if (methodInvocationHead) {
-      addIfAbsent(names, "MethodInvocationExpr");
-    }
-    if (ifHead) {
-      addIfAbsent(names, "IfExpr");
-    }
-    String functionAstSimpleName = functionAstSimpleName(normalized);
-    if (functionAstSimpleName != null) {
-      addIfAbsent(names, functionAstSimpleName);
-    }
-    String dotMethodAstSimpleName = dotMethodAstSimpleName(normalized);
-    if (dotMethodAstSimpleName != null) {
-      addIfAbsent(names, dotMethodAstSimpleName);
-    }
-    if (looksLikeSliceExpression(normalized)) {
-      addIfAbsent(names, "SliceExpr");
-    }
-    if (preferredResultType == null) {
-      names.add(null);
-      return names.stream().distinct().toList();
+    addIfAbsent(names, preferredMatchAstSimpleName(resultType));
+    addIfAbsent(names, "IfExpr");
+    addIfAbsent(names, "TernaryExpr");
+    addIfAbsent(names, externalInvocationAstSimpleName(resultType));
+    if (resultType == null) {
+      addIfAbsent(names, "NumberMatchExpr");
+      addIfAbsent(names, "StringMatchExpr");
+      addIfAbsent(names, "BooleanMatchExpr");
     }
 
-    if (preferredResultType.isNumber()) {
-      if (matchHead) {
-        addIfAbsent(names, "NumberMatchExpr");
-      }
-      addIfAbsent(names, "BinaryExpr");
-    } else if (preferredResultType.isString()) {
-      if (matchHead) {
-        addIfAbsent(names, "StringMatchExpr");
-      }
+    for (String structured : List.of(
+        "SinExpr", "CosExpr", "TanExpr", "SqrtExpr", "MinExpr", "MaxExpr",
+        "RandomExpr", "AbsExpr", "RoundExpr", "CeilExpr", "FloorExpr", "PowExpr",
+        "LogExpr", "ExpExpr", "ToNumExpr", "ToUpperCaseExpr", "ToLowerCaseExpr",
+        "TrimExpr", "LengthExpr", "ToUpperCaseDotExpr", "ToLowerCaseDotExpr",
+        "TrimDotExpr", "LengthDotExpr", "StartsWithExpr", "EndsWithExpr",
+        "ContainsExpr", "InExpr", "StartsWithDotExpr", "EndsWithDotExpr",
+        "ContainsDotExpr", "IsPresentExpr", "InTimeRangeExpr", "InDayTimeRangeExpr",
+        "SliceExpr", "MethodInvocationExpr")) {
+      addIfAbsent(names, structured);
+    }
+
+    if (resultType != null && resultType.isString()) {
       addIfAbsent(names, "StringConcatExpr");
-    } else if (preferredResultType.isBoolean()) {
-      if (matchHead) {
-        addIfAbsent(names, "BooleanMatchExpr");
-      }
-      addIfAbsent(names, profile == CandidateProfile.DECLARATION ? "BooleanExpr" : "BooleanOrExpr");
-    } else if (preferredResultType.isObject()) {
-      if (matchHead) {
-        addIfAbsent(names, "StringMatchExpr");
-        addIfAbsent(names, "BooleanMatchExpr");
-        addIfAbsent(names, "NumberMatchExpr");
-      }
+    } else if (resultType != null && resultType.isBoolean()) {
+      addIfAbsent(names,
+          profile == CandidateProfile.DECLARATION ? "BooleanExpr" : "BooleanOrExpr");
+    } else if (resultType != null && resultType.isObject()) {
       addIfAbsent(names, "ObjectExpr");
-      if (profile == CandidateProfile.GENERATED_VALUE) {
-        addIfAbsent(names, "StringConcatExpr");
-        addIfAbsent(names, "BooleanOrExpr");
-        addIfAbsent(names, "BinaryExpr");
-      }
+      addIfAbsent(names, "StringConcatExpr");
+      addIfAbsent(names, "BooleanOrExpr");
+      addIfAbsent(names, "BinaryExpr");
     } else {
-      names.add(null);
+      addIfAbsent(names, "BinaryExpr");
     }
 
-    addIfAbsent(names, "MethodInvocationExpr");
-    addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
     addIfAbsent(names, "VariableRefExpr");
-    if (profile == CandidateProfile.GENERATED_VALUE) {
-      addIfAbsent(names, "IfExpr");
-    }
-    addIfAbsent(names, "BinaryExpr");
-    if (profile != CandidateProfile.GENERATED_VALUE) {
-      names.add(null);
-    }
-    return names.stream().distinct().toList();
-  }
-
-  private static boolean hasIfHead(String normalized) {
-    return TinyExpressionParserCapabilities.hasHead(normalized, IF_KEYWORD, '(');
-  }
-
-  private static boolean hasMatchHead(String normalized) {
-    return TinyExpressionParserCapabilities.hasHead(normalized, MATCH_KEYWORD, '{');
-  }
-
-  private static boolean hasMethodInvocationHead(String normalized) {
-    for (String keyword : METHOD_INVOCATION_HEADS) {
-      if (TinyExpressionParserCapabilities.hasHead(normalized, keyword, null)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static boolean hasExternalInvocationHead(String normalized) {
-    return TinyExpressionParserCapabilities.hasHead(normalized, "external", null);
+    addIfAbsent(names, "FormulaExpr");
+    return names;
   }
 
   private static String externalInvocationAstSimpleName(ExpressionType resultType) {
-    if (resultType == null) {
-      return null;
-    }
-    if (resultType.isBoolean()) {
-      return "ExternalBooleanInvocationExpr";
-    }
-    if (resultType.isNumber()) {
-      return "ExternalNumberInvocationExpr";
-    }
-    if (resultType.isString()) {
-      return "ExternalStringInvocationExpr";
-    }
-    if (resultType.isObject()) {
-      return "ExternalObjectInvocationExpr";
-    }
+    if (resultType == null) return null;
+    if (resultType.isBoolean()) return "ExternalBooleanInvocationExpr";
+    if (resultType.isNumber()) return "ExternalNumberInvocationExpr";
+    if (resultType.isString()) return "ExternalStringInvocationExpr";
+    if (resultType.isObject()) return "ExternalObjectInvocationExpr";
     return null;
   }
 
-  private static String functionAstSimpleName(String normalized) {
-    if (normalized == null || normalized.isEmpty()) {
-      return null;
-    }
-    int parenIdx = normalized.indexOf('(');
-    if (parenIdx <= 0) {
-      return null;
-    }
-    int closeParen = findMatchingParen(normalized, parenIdx);
-    if (closeParen != normalized.length() - 1) {
-      return null;
-    }
-    String head = normalized.substring(0, parenIdx).strip();
-    return FUNCTION_AST_NAMES.get(head);
-  }
-
-  private static String dotMethodAstSimpleName(String normalized) {
-    if (normalized == null || normalized.isEmpty()) {
-      return null;
-    }
-    int parenIdx = normalized.indexOf('(');
-    if (parenIdx <= 0) {
-      return null;
-    }
-    int closeParen = findMatchingParen(normalized, parenIdx);
-    if (closeParen != normalized.length() - 1) {
-      return null;
-    }
-    int dotIdx = findLastTopLevelDotBefore(normalized, parenIdx);
-    if (dotIdx <= 0) {
-      return null;
-    }
-    String methodName = normalized.substring(dotIdx + 1, parenIdx).strip();
-    return DOT_METHOD_AST_NAMES.get(methodName);
-  }
-
-  private static int findLastTopLevelDotBefore(String text, int beforeIndex) {
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    int dotIdx = -1;
-    int limit = Math.min(beforeIndex, text.length());
-    for (int i = 0; i < limit; i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        case '.' -> {
-          if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-            dotIdx = i;
-          }
-        }
-        default -> {
-        }
-      }
-    }
-    return dotIdx;
-  }
-
-  private static int findMatchingParen(String text, int openIndex) {
-    if (openIndex < 0 || openIndex >= text.length() || text.charAt(openIndex) != '(') {
-      return -1;
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = openIndex; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> {
-          parenDepth--;
-          if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-            return i;
-          }
-        }
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-    }
-    return -1;
-  }
-
-  private static boolean looksLikeSliceExpression(String normalized) {
-    if (normalized == null || normalized.isEmpty() || normalized.charAt(normalized.length() - 1) != ']') {
-      return false;
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    int sliceOpenIndex = -1;
-    boolean sawColonInside = false;
-    for (int i = 0; i < normalized.length(); i++) {
-      char c = normalized.charAt(i);
-      char prev = i > 0 ? normalized.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> {
-          if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-            sliceOpenIndex = i;
-            sawColonInside = false;
-          }
-          bracketDepth++;
-        }
-        case ']' -> {
-          bracketDepth = Math.max(0, bracketDepth - 1);
-          if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0
-              && sliceOpenIndex >= 0 && i == normalized.length() - 1) {
-            return sawColonInside;
-          }
-        }
-        case ':' -> {
-          if (sliceOpenIndex >= 0 && bracketDepth > 0) {
-            sawColonInside = true;
-          }
-        }
-        default -> {
-        }
-      }
-    }
-    return false;
-  }
-
-  private enum CandidateProfile {
-    AST_EVALUATOR,
-    GENERATED_VALUE,
-    DECLARATION
-  }
-
-  private static boolean hasTopLevelTernary(String formula) {
-    if (isWrappedByWholeParentheses(formula)) {
-      String inner = formula.substring(1, formula.length() - 1).trim();
-      if (!inner.isEmpty() && hasTopLevelTernary(inner)) {
-        return true;
-      }
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    boolean sawQuestion = false;
-    for (int i = 0; i < formula.length(); i++) {
-      char c = formula.charAt(i);
-      char prev = i > 0 ? formula.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-        if (c == '?') {
-          sawQuestion = true;
-        } else if (c == ':' && sawQuestion) {
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  private static boolean isWrappedByWholeParentheses(String text) {
-    if (text.length() < 2 || text.charAt(0) != '(' || text.charAt(text.length() - 1) != ')') {
-      return false;
-    }
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> {
-          parenDepth--;
-          if (parenDepth == 0 && i < text.length() - 1) {
-            return false;
-          }
-        }
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth < 0 || braceDepth < 0 || bracketDepth < 0) {
-        return false;
-      }
-    }
-    return parenDepth == 0 && braceDepth == 0 && bracketDepth == 0;
+  private static String preferredMatchAstSimpleName(ExpressionType resultType) {
+    if (resultType == null) return null;
+    if (resultType.isString()) return "StringMatchExpr";
+    if (resultType.isBoolean()) return "BooleanMatchExpr";
+    if (resultType.isNumber()) return "NumberMatchExpr";
+    return null;
   }
 
   private static void addIfAbsent(List<String> names, String candidate) {
@@ -703,286 +238,11 @@ public final class P4PreferredAstMapper {
     }
   }
 
-  private static String preferredMatchAstSimpleName(ExpressionType resultType) {
-    if (resultType == ExpressionTypes.string) {
-      return "StringMatchExpr";
-    }
-    if (resultType == ExpressionTypes._boolean) {
-      return "BooleanMatchExpr";
-    }
-    if (resultType instanceof ExpressionTypes expressionTypes && expressionTypes.isNumber()) {
-      return "NumberMatchExpr";
-    }
-    return null;
-  }
-
-  private static List<String> preferredMatchAstSimpleNames(String formula) {
-    LinkedHashSet<String> names = new LinkedHashSet<>();
-    MatchBody matchBody = rootMatchBody(formula);
-    if (matchBody != null) {
-      for (Segment clause : splitTopLevel(matchBody.body(), ',', matchBody.bodyStartOffset())) {
-        Segment value = extractCaseValue(clause);
-        if (value == null) {
-          continue;
-        }
-        String normalized = normalizeCaseValue(value.text()).toLowerCase(Locale.ROOT);
-        if (normalized.isEmpty()) {
-          continue;
-        }
-        if (looksLikeStringCaseValue(normalized)) {
-          names.add("StringMatchExpr");
-        }
-        if (looksLikeBooleanCaseValue(normalized)) {
-          names.add("BooleanMatchExpr");
-        }
-        if (looksLikeNumberCaseValue(normalized)) {
-          names.add("NumberMatchExpr");
-        }
-      }
-    }
-    return List.copyOf(names);
-  }
-
-  private static boolean looksLikeStringCaseValue(String normalized) {
-    return isQuoted(normalized)
-        || normalized.contains(" as string")
-        || normalized.startsWith("touppercase(")
-        || normalized.startsWith("tolowercase(")
-        || normalized.startsWith("trim(")
-        || normalized.startsWith("slice(")
-        || normalized.contains(".touppercase(")
-        || normalized.contains(".tolowercase(")
-        || normalized.contains(".trim(")
-        || normalized.contains(".slice(");
-  }
-
-  private static boolean looksLikeBooleanCaseValue(String normalized) {
-    return "true".equals(normalized)
-        || "false".equals(normalized)
-        || normalized.contains(" as boolean")
-        || normalized.startsWith("not ")
-        || normalized.startsWith("!")
-        || normalized.contains("==")
-        || normalized.contains("!=")
-        || normalized.contains("<=")
-        || normalized.contains(">=")
-        || normalized.contains("&&")
-        || normalized.contains("||")
-        || normalized.contains("&")
-        || normalized.contains("|");
-  }
-
-  private static boolean looksLikeNumberCaseValue(String normalized) {
-    return normalized.matches("[-+]?\\d+(?:\\.\\d+)?")
-        || normalized.contains(" as number")
-        || normalized.contains(" as float")
-        || normalized.contains("+")
-        || normalized.contains("-")
-        || normalized.contains("*")
-        || normalized.contains("/")
-        || normalized.startsWith("sin(")
-        || normalized.startsWith("cos(")
-        || normalized.startsWith("tan(")
-        || normalized.startsWith("sqrt(")
-        || normalized.startsWith("min(")
-        || normalized.startsWith("max(")
-        || normalized.startsWith("abs(")
-        || normalized.startsWith("round(")
-        || normalized.startsWith("ceil(")
-        || normalized.startsWith("floor(")
-        || normalized.startsWith("pow(")
-        || normalized.startsWith("log(")
-        || normalized.startsWith("exp(")
-        || normalized.startsWith("random(")
-        || normalized.startsWith("tonum(");
-  }
-
-  private static boolean isQuoted(String normalized) {
-    return normalized.length() >= 2
-        && ((normalized.charAt(0) == '\'' && normalized.charAt(normalized.length() - 1) == '\'')
-            || (normalized.charAt(0) == '"' && normalized.charAt(normalized.length() - 1) == '"'));
-  }
-
-  private static String normalizeCaseValue(String snippet) {
-    if (snippet == null) {
-      return "";
-    }
-    return snippet.strip();
-  }
-
-  private static MatchBody rootMatchBody(String formula) {
-    int bodyStart = firstNonWhitespace(formula);
-    if (bodyStart < 0) {
-      return null;
-    }
-    if (!(formula.startsWith("match{", bodyStart) || formula.startsWith("match {", bodyStart))) {
-      return null;
-    }
-    int openBrace = formula.indexOf('{', bodyStart);
-    int closeBrace = findMatchingBrace(formula, openBrace);
-    if (openBrace < 0 || closeBrace <= openBrace) {
-      return null;
-    }
-    return new MatchBody(formula.substring(openBrace + 1, closeBrace), openBrace + 1);
-  }
-
-  private static int firstNonWhitespace(String text) {
-    for (int i = 0; i < text.length(); i++) {
-      if (!Character.isWhitespace(text.charAt(i))) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static Segment extractCaseValue(Segment clause) {
-    if (clause == null || clause.text().isBlank()) {
-      return null;
-    }
-    int arrow = findTopLevelArrow(clause.text());
-    if (arrow < 0) {
-      return null;
-    }
-    int localStart = trimLeadingIndex(clause.text(), arrow + 2);
-    int localEnd = trimTrailingIndex(clause.text(), localStart, clause.text().length());
-    if (localStart >= localEnd) {
-      return null;
-    }
-    return new Segment(
-        clause.text().substring(localStart, localEnd),
-        clause.startOffset() + localStart,
-        clause.startOffset() + localEnd);
-  }
-
-  private static List<Segment> splitTopLevel(String text, char separator, int baseOffset) {
-    ArrayList<Segment> parts = new ArrayList<>();
-    int start = 0;
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0 && c == separator) {
-        addSegment(parts, text, start, i, baseOffset);
-        start = i + 1;
-      }
-    }
-    addSegment(parts, text, start, text.length(), baseOffset);
-    return parts;
-  }
-
-  private static void addSegment(List<Segment> parts, String text, int start, int end, int baseOffset) {
-    int localStart = trimLeadingIndex(text, start);
-    int localEnd = trimTrailingIndex(text, localStart, end);
-    if (localStart >= localEnd) {
-      return;
-    }
-    parts.add(new Segment(
-        text.substring(localStart, localEnd),
-        baseOffset + localStart,
-        baseOffset + localEnd));
-  }
-
-  private static int trimLeadingIndex(String text, int start) {
-    int index = Math.max(0, start);
-    while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
-      index++;
-    }
-    return index;
-  }
-
-  private static int trimTrailingIndex(String text, int start, int end) {
-    int index = Math.min(text.length(), Math.max(start, end));
-    while (index > start && Character.isWhitespace(text.charAt(index - 1))) {
-      index--;
-    }
-    return index;
-  }
-
-  private static int findTopLevelArrow(String text) {
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length() - 1; i++) {
-      char c = text.charAt(i);
-      char next = text.charAt(i + 1);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0 && c == '-' && next == '>') {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static int findMatchingBrace(String text, int openBrace) {
-    if (openBrace < 0 || openBrace >= text.length() || text.charAt(openBrace) != '{') {
-      return -1;
-    }
-    int depth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = openBrace; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      if (c == '{') {
-        depth++;
-      } else if (c == '}') {
-        depth--;
-        if (depth == 0) {
-          return i;
-        }
-      }
-    }
-    return -1;
+  private enum CandidateProfile {
+    PREFERRED,
+    AST_EVALUATOR,
+    GENERATED_VALUE,
+    DECLARATION
   }
 
   private static IllegalArgumentException toParseFailure(RuntimeException failure) {
@@ -998,14 +258,60 @@ public final class P4PreferredAstMapper {
 
   private static TinyExpressionP4AST parseViaMapperCompat(
       String source, String preferredAstSimpleName, long deadlineNanos) {
-    Token rootToken = parseRootToken(source, deadlineNanos);
-    clearMapperSourceSpans();
-    Token bestMappedToken = invokeFindBestMappedToken(rootToken, preferredAstSimpleName);
-    TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
-    if (mapped == null) {
-      throw new IllegalArgumentException("No mapped node found in parse tree");
+    return parseMappedCandidates(
+        source,
+        preferredAstSimpleName == null ? List.of() : List.of(preferredAstSimpleName),
+        preferredAstSimpleName == null,
+        deadlineNanos).ast();
+  }
+
+  private static ParsedAst parseMappedCandidates(
+      String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
+    // unlaxer-dsl 3.0.14 emits only the // branch of @comment even though the
+    // javaStyle contract also includes block comments. Preserve layout so mapper
+    // source spans remain valid. This is one lexical input pass, not a retry or an
+    // alternate parser path; remove it when the generator's delimiter is corrected.
+    String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+    Token rootToken = parseRootToken(parserSource, deadlineNanos);
+    RuntimeException lastFailure = null;
+    try {
+      for (String candidate : candidates) {
+        if (candidate == null || candidate.isBlank()) {
+          continue;
+        }
+        try {
+          clearMapperSourceSpans();
+          Token bestMappedToken = invokeFindBestMappedToken(rootToken, candidate);
+          if (!coversWholeSource(parserSource, bestMappedToken)) {
+            continue;
+          }
+          TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
+          if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
+            return new ParsedAst(mapped, "preferred:" + candidate);
+          }
+        } catch (RuntimeException failure) {
+          lastFailure = failure;
+        }
+      }
+      if (allowDefault) {
+        clearMapperSourceSpans();
+        TinyExpressionP4AST mapped = invokeMapToken(invokeFindBestMappedToken(rootToken, null));
+        if (mapped != null) {
+          return new ParsedAst(mapped, "default");
+        }
+      }
+    } finally {
+      clearMapperSourceSpans();
     }
-    return mapped;
+    if (lastFailure != null) {
+      throw toParseFailure(lastFailure);
+    }
+    throw new IllegalArgumentException("No whole-source generated AST mapping found: " + source);
+  }
+
+  private static boolean coversWholeSource(String source, Token token) {
+    String mappedSource = tokenTextCompat(token);
+    return mappedSource != null && source.strip().equals(mappedSource.strip());
   }
 
   /**

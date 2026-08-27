@@ -25,7 +25,10 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
 public class ThreeExecutionBackendExtractedCorpusParityTest {
 
-  private static final int MAX_CASES = 100;
+  // Each Java-code backend defines generated classes that remain reachable through
+  // compiler caches for the lifetime of the fork. Forty cases retain broad category
+  // coverage without turning this parity test into a heap-capacity test on CI runners.
+  private static final int MAX_CASES = 40;
   private static final int MIN_EXECUTED_CASES = 25;
   private static final int MIN_AST_NON_FALLBACK_CASES = 8;
   private static final String CURATED_CORPUS_RESOURCE = "/parity/three-backend-parity-corpus.txt";

@@ -2,7 +2,7 @@
 
 ---
 
-# tinyexpression Implementation Guide — Learning the 5 Backends through Dialogue
+# tinyexpression Implementation Guide — Learning the 4 Implementation Strategies through Dialogue
 
 > **Characters**
 > - **Senior (S)**: A senior developer who knows the tinyexpression design well
@@ -14,7 +14,7 @@
 
 **N:** Senior, there are so many similar-looking classes like `JavaCodeCalculatorV3` and `AstEvaluatorCalculator`. What's the difference between them?
 
-**S:** The goal is the same: evaluate an expression like `"$a + $b * 2"`. But *how* the evaluation happens differs. That's the backend. There are currently 5 families.
+**S:** The goal is the same: evaluate an expression like `"$a + $b * 2"`. But *how* the evaluation happens differs. That's the implementation strategy. There are currently 4 families.
 
 ```mermaid
 flowchart TD
@@ -24,8 +24,7 @@ flowchart TD
     C1["[1] compile-hand<br/>Hand-written codegen → javac"]
     C2["[2] compile-dsl<br/>P4 AST → codegen → javac"]
     A3["[3] ast-hand<br/>Annotation"]
-    A4["[4] P4-reflection<br/>reflection"]
-    A5["[5] P4-typed<br/>sealed switch"]
+    A4["[4] P4-typed<br/>sealed switch"]
 
     Expr --> Compile
     Expr --> AST
@@ -33,20 +32,18 @@ flowchart TD
     Compile --> C2
     AST --> A3
     AST --> A4
-    AST --> A5
 ```
 
 **N:** So there are two compile-family backends.
 
-**S:** Right. Both ultimately compile with javac and execute `.class` files. The difference is *how* the code is generated. Here's the summary of all 5:
+**S:** Right. Both ultimately compile with javac and execute `.class` files. The difference is *how* the code is generated. Here's the summary of all 4:
 
 | # | Name | Approach | Key Class |
 |---|------|----------|-----------|
 | 1 | **compile-hand** | Hand-written codegen logic -> javac | `JavaCodeCalculatorV3` |
 | 2 | **compile-dsl** | P4 AST -> code string generation -> javac | `DslJavaCodeCalculator` |
 | 3 | **ast-hand** | Annotation-driven AST with recursive evaluation | `AstNumberExpressionEvaluator` |
-| 4 | **P4-reflection** | Evaluate P4 AST via reflection | `GeneratedP4NumberAstEvaluator` |
-| 5 | **P4-typed** | Evaluate P4 AST via sealed switch | Subclass of `TinyExpressionP4Evaluator<T>` |
+| 4 | **P4-typed** | Evaluate P4 AST via sealed switch | Subclass of `TinyExpressionP4Evaluator<T>` |
 
 ---
 
@@ -127,7 +124,7 @@ Result: a string like `"((3.0f+4.0f)*2.0f)"` -- which gets wrapped in a class de
 
 **N:** However, looking at the current `DslGeneratedAstJavaEmitter`, it seems to only support literals.
 
-**S:** Correct, `isNumericExpressionCandidate()` always returns `false`. Arithmetic with variables currently falls back to compile-hand. Expanding compile-dsl's coverage is future work.
+**S:** That was a limitation of the early prototype. The current compile-dsl path uses the generated P4 AST and typed emitter, and unsupported cases fail explicitly instead of switching to the old generator.
 
 ---
 
@@ -167,15 +164,15 @@ Parse result token                           NumberGeneratedAstNode tree
 
 **N:** That's simple. But I heard it's "limited to literals"?
 
-**S:** Variables like `$a` don't have `@TinyAstNode` on their parser class, so `tryGenerate()` returns empty. In that case, `AstEvaluatorCalculator` falls back to compile-hand.
+**S:** That was a property of the older ast-hand experiment. The current `AstEvaluatorCalculator` uses only the generated P4 AST and typed evaluator; variables are resolved from AST nodes and `CalculationContext`.
 
 ---
 
-## Episode 5 — The P4-reflection Family (GeneratedP4NumberAstEvaluator)
+## Episode 5 — Why P4-reflection Was Removed
 
-**N:** What's the problem with the P4-reflection version?
+**N:** What was the problem with the former P4-reflection version?
 
-**S:** You can see it inside `GeneratedP4NumberAstEvaluator.evalNode()`:
+**S:** Its `GeneratedP4NumberAstEvaluator.evalNode()` was essentially structured like this:
 
 ```java
 // The problematic implementation
@@ -193,7 +190,7 @@ private Number evalNode(Object node, ...) throws Exception {
 
 **N:** Unlike compile-dsl's reflection, this is called on every execution.
 
-**S:** Exactly, that's the problem. compile-dsl's reflection is a one-time initialization cost, but this one calls `getMethod()` on every node evaluation. The deeper the tree, the more it compounds. **This is technical debt** -- internal code that remains.
+**S:** Exactly, that was the problem. It also recovered information that should live in the typed AST by reparsing source text, making grammar/runtime drift easy. It has now been removed; `P4TypedAstEvaluator` evaluates the generated sealed AST directly.
 
 ---
 
@@ -385,7 +382,6 @@ compile-hand/dsl    |            ~0.001-0.01us  <- nearly native
 ast-hand (cached)   ██           ~0.1us         <- tree recursion
 P4-typed (cached)   ██           ~0.1-0.5us     <- sealed switch
 ast-hand (full)     ████████     ~several us    <- parse every time
-P4-reflection       ████████████ ~several us    <- getMethod() tax
 ```
 
 **N:** compile-dsl has the same initialization cost as compile-hand.
@@ -406,11 +402,11 @@ P4-reflection       ████████████ ~several us    <- getMe
 | Dynamic expressions but want fast Java code (future) | compile-dsl (DslJavaCodeCalculator) ← currently literals only |
 | Dynamic expressions, want type-safe evaluation logic | P4-typed (extend TinyExpressionP4Evaluator&lt;T&gt;) ← recommended |
 | Currently adding/modifying the parser itself | ast-hand (+ @TinyAstNode annotations) |
-| Just want it to work, details later | AstEvaluatorCalculator (tries all paths, falls back to compile) |
+| Verify generated-backend coverage | AstEvaluatorCalculator (unsupported gaps fail explicitly) |
 
-**N:** What about P4-reflection?
+**N:** Can unsupported expressions silently fall back to an older implementation?
 
-**S:** It's not something you'd intentionally choose. It remains only as internal bridge code. It's a candidate for replacement by P4-typed in the future.
+**S:** Generated backends do not use implicit fallbacks. Callers explicitly choose a `JAVA_CODE` backend when they need the legacy implementation, so grammar or mapper gaps remain visible and fixable.
 
 ---
 
@@ -421,7 +417,6 @@ P4-reflection       ████████████ ~several us    <- getMe
 | compile-hand | `JavaCodeCalculatorV3` | No | Code generation logic is hand-written |
 | compile-dsl | `DslJavaCodeCalculator` | Partial | P4 mapper is generated, emitter is hand-written |
 | ast-hand | `AstEvaluatorCalculator` | No | Annotation-driven but dispatch is hand-written |
-| P4-reflection | `GeneratedP4NumberAstEvaluator` | No | Technical debt, not recommended for new use |
 | P4-typed | Subclass of `TinyExpressionP4Evaluator<T>` | Yes | Generated dispatch + human implements evalXxx() |
 
 | Generated File | GGP? | Role |

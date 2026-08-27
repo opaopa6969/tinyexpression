@@ -13,9 +13,8 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 /**
  * End-to-end spec coverage tests for areas not covered by existing test suites.
  *
- * Uses AST_EVALUATOR backend as the primary test backend because it supports
- * all documented features via its 4-stage fallback chain (P4TypedAstEvaluator →
- * GeneratedP4NumberAstEvaluator → AstTokenTreeEvaluator → JAVA_CODE fallback).
+ * Uses AST_EVALUATOR backend as the primary test backend because it evaluates
+ * formulas directly via the generated P4 typed AST (P4TypedAstEvaluator).
  * P4_AST_EVALUATOR is used for features strictly requiring the P4 UBNF parser.
  *
  * Covers SPEC.md sections: 2.2, 2.4, 2.6, 2.7.3, 2.8.1 (toNum), 2.8.2 (.in),

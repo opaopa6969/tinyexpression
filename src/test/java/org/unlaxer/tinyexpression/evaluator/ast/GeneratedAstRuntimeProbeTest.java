@@ -52,4 +52,15 @@ public class GeneratedAstRuntimeProbeTest {
     assertTrue("block-commented if should map to IfExpr",
         mapped.isPresent() && "IfExpr".equals(mapped.get().getClass().getSimpleName()));
   }
+
+  @Test
+  public void testPreferredIfRootSupportsParenthesizedSliceReceiver() {
+    Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+        "if(toLowerCase(($name)[0:6]+' is delicious')=='almond is delicious'){1}else{0}",
+        Thread.currentThread().getContextClassLoader(),
+        "IfExpr");
+
+    assertTrue("parenthesized slice receiver should map to IfExpr",
+        mapped.isPresent() && "IfExpr".equals(mapped.get().getClass().getSimpleName()));
+  }
 }

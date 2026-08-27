@@ -2,7 +2,7 @@
 
 ---
 
-# tinyexpression 実装ガイド — 会話で学ぶ5つのバックエンド
+# tinyexpression 実装ガイド — 会話で学ぶ4つの実装戦略
 
 > **登場人物**
 > - **先輩（S）**: tinyexpressionの設計をよく知るシニア開発者
@@ -14,7 +14,7 @@
 
 **N:** 先輩、`JavaCodeCalculatorV3` とか `AstEvaluatorCalculator` とか、似たようなクラスがいっぱいありますね。これ何が違うんですか？
 
-**S:** `"$a + $b * 2"` という式を評価する、という目標は同じ。ただ「どうやって評価するか」が違う。それがバックエンド。今は5系統ある。
+**S:** `"$a + $b * 2"` という式を評価する、という目標は同じ。ただ「どうやって評価するか」が違う。それが実装戦略。今は4系統ある。
 
 ```mermaid
 flowchart TD
@@ -24,8 +24,7 @@ flowchart TD
     C1["[1] compile-hand<br/>手書きコード生成 → javac"]
     C2["[2] compile-dsl<br/>P4 AST → コード生成 → javac"]
     A3["[3] ast-hand<br/>アノテーション"]
-    A4["[4] P4-reflection<br/>reflection"]
-    A5["[5] P4-typed<br/>sealed switch"]
+    A4["[4] P4-typed<br/>sealed switch"]
 
     Expr --> Compile
     Expr --> AST
@@ -33,20 +32,18 @@ flowchart TD
     Compile --> C2
     AST --> A3
     AST --> A4
-    AST --> A5
 ```
 
 **N:** compile系が2つあるんですね。
 
-**S:** そう。どちらも最終的にjavacでコンパイルして `.class` を実行するのは同じ。「コードをどうやって生成するか」が違う。5つをまとめると:
+**S:** そう。どちらも最終的にjavacでコンパイルして `.class` を実行するのは同じ。「コードをどうやって生成するか」が違う。4つをまとめると:
 
 | # | 名前 | 方式 | キークラス |
 |---|------|------|-----------|
 | 1 | **compile-hand** | 手書きコード生成ロジック → javac | `JavaCodeCalculatorV3` |
 | 2 | **compile-dsl** | P4 AST → コード文字列生成 → javac | `DslJavaCodeCalculator` |
 | 3 | **ast-hand** | アノテーション駆動ASTを再帰評価 | `AstNumberExpressionEvaluator` |
-| 4 | **P4-reflection** | P4 ASTをreflectionで評価 | `GeneratedP4NumberAstEvaluator` |
-| 5 | **P4-typed** | P4 ASTをsealed switch で評価 | `TinyExpressionP4Evaluator<T>` 継承 |
+| 4 | **P4-typed** | P4 ASTをsealed switch で評価 | `TinyExpressionP4Evaluator<T>` 継承 |
 
 ---
 
@@ -127,7 +124,7 @@ private String renderNumberExpressionFromBinary(Object binaryExpr, ...) {
 
 **N:** ただ現状の `DslGeneratedAstJavaEmitter` を見ると、リテラルしか対応していないみたいですね。
 
-**S:** そう、`isNumericExpressionCandidate()` が常に `false` を返している。変数入りの四則演算は今のところ compile-hand に fallback する。compile-dsl の適用範囲を広げるのは今後の拡張余地。
+**S:** これは初期プロトタイプの制限だった。現在の compile-dsl は生成 P4 AST を typed emitter で処理し、未対応なら明示的に失敗する。古い generator へ暗黙には戻らない。
 
 ---
 
@@ -167,15 +164,15 @@ public class PlusParser extends SingleCharacterParser implements NumberExpressio
 
 **N:** シンプルですね。でも「リテラル限定」って聞きましたが？
 
-**S:** `$a` のような変数はパーサークラスに `@TinyAstNode` がないから `tryGenerate()` が empty を返す。その場合は `AstEvaluatorCalculator` が compile-hand に fallback する。
+**S:** これは旧 ast-hand 実験の性質だった。現在の `AstEvaluatorCalculator` は生成 P4 AST と typed evaluator だけを使い、変数も AST ノードと `CalculationContext` から解決する。
 
 ---
 
-## 第5話 — P4-reflection系 (GeneratedP4NumberAstEvaluator)
+## 第5話 — なぜ P4-reflection を廃止したのか
 
-**N:** P4-reflection版の問題は？
+**N:** 以前あった P4-reflection版の問題は？
 
-**S:** `GeneratedP4NumberAstEvaluator.evalNode()` の中を見ると分かる:
+**S:** 当時の `GeneratedP4NumberAstEvaluator.evalNode()` は概ね次の構造だった:
 
 ```java
 // 問題のある実装
@@ -193,7 +190,7 @@ private Number evalNode(Object node, ...) throws Exception {
 
 **N:** compile-dsl のreflectionと違って、これは実行のたびに呼ばれますね。
 
-**S:** そう、これが問題。compile-dsl のreflectionは初期化1回で済むが、こちらはノード評価のたびに `getMethod()` を呼ぶ。ツリーが深いほど乗算で効く。**技術的負債**として残っている内部コード。
+**S:** そう、これが問題。さらに typed AST が保持すべき情報をソース文字列から復元するため、文法と実行系がずれやすかった。現在は削除され、生成 sealed AST を `P4TypedAstEvaluator` が直接評価する。
 
 ---
 
@@ -385,7 +382,6 @@ compile-hand/dsl    ▌            〜0.001〜0.01µs  ← ほぼネイティブ
 ast-hand (cached)   ██           〜0.1µs前後      ← ツリー再帰
 P4-typed (cached)   ██           〜0.1〜0.5µs     ← sealed switch
 ast-hand (full)     ████████     〜数µs           ← 毎回パース
-P4-reflection       ████████████ 〜数µs           ← getMethod()税
 ```
 
 **N:** compile-dsl は初期化コストが compile-hand と同じなんですね。
@@ -406,11 +402,11 @@ P4-reflection       ████████████ 〜数µs           ←
 | 式は動的だが高速なJavaコードにしたい（将来） | compile-dsl (DslJavaCodeCalculator) ← 現状リテラルのみ対応 |
 | 式が動的、型安全に評価ロジックを書きたい | P4-typed (TinyExpressionP4Evaluator<T> 継承) ← おすすめ |
 | パーサー自体を追加・変更している最中 | ast-hand (+ @TinyAstNode アノテーション) |
-| とにかく動かしたい、細かいことは後で | AstEvaluatorCalculator (全経路試してcompileにfallback) |
+| generated backend の対応範囲を確認したい | AstEvaluatorCalculator（未対応箇所は明示失敗） |
 
-**N:** P4-reflection は？
+**N:** 未対応式を自動で古い実装へ逃がせますか？
 
-**S:** 意図して選ぶものではない。内部ブリッジコードとして残っているだけ。将来 P4-typed に置き換える対象。
+**S:** generated backend は暗黙 fallback しない。必要なら `JAVA_CODE` 系を呼び出し側が明示選択する。そうすることで文法や mapper の不足を隠さず直せる。
 
 ---
 
@@ -421,7 +417,6 @@ P4-reflection       ████████████ 〜数µs           ←
 | compile-hand | `JavaCodeCalculatorV3` | ❌ | コード生成ロジック手書き |
 | compile-dsl | `DslJavaCodeCalculator` | 半分 | P4マッパーは生成、emitterは手書き |
 | ast-hand | `AstEvaluatorCalculator` | ❌ | アノテーション駆動だが dispatch 手書き |
-| P4-reflection | `GeneratedP4NumberAstEvaluator` | ❌ | 技術的負債、新規利用非推奨 |
 | P4-typed | `TinyExpressionP4Evaluator<T>` 継承 | ✅ | 生成 dispatch + 人間が evalXxx() 実装 |
 
 | 生成ファイル | GGP? | 役割 |
