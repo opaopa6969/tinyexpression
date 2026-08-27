@@ -4,6 +4,9 @@
   "scopeName": "source.tinyexpression",
   "patterns": [
     {
+      "include": "#javaCodeBlocks"
+    },
+    {
       "include": "#comments"
     },
     {
@@ -38,6 +41,31 @@
     }
   ],
   "repository": {
+    "javaCodeBlocks": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.java",
+          "begin": "^\\s*```java(?::[\\p{L}_][\\p{L}\\p{N}_.]*)?\\s*$",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.fenced.tinyexpression"
+            }
+          },
+          "end": "^\\s*```\\s*$",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.fenced.tinyexpression"
+            }
+          },
+          "contentName": "meta.embedded.block.java",
+          "patterns": [
+            {
+              "include": "source.java"
+            }
+          ]
+        }
+      ]
+    },
     "comments": {
       "patterns": [
         {

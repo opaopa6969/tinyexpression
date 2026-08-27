@@ -170,10 +170,16 @@ public final class P4StrictMatchTypingValidator {
     Matcher variableMatcher = BARE_VARIABLE_PATTERN.matcher(normalized);
     if (variableMatcher.matches()) {
       String actualHint = variableMatcher.group(1);
-      if (!expectedType.accepts(actualHint)) {
+      // A bare variable WITHOUT an inline type hint is fine: the generated P4 grammar parses it into
+      // the match family chosen by the result type, and P4TypedAstEvaluator resolves the variable to
+      // the correct value (verified for number/string/boolean — e.g. match{1==1->$val,default->0}
+      // with $val=7 yields 7 on the p4-typed path). Rejecting it only forced a needless legacy
+      // fallback. We still reject an EXPLICIT, mismatched hint (e.g. `$x as string` in a number
+      // match) — that is a genuine type error. (universal fallback=0)
+      if (actualHint != null && !expectedType.accepts(actualHint)) {
         return Optional.of(new Violation(
             "P4 strict match typing rejected direct "
-                + expectedType.label + " case value: " + normalized,
+                + expectedType.label + " case value with mismatched type hint: " + normalized,
             startOffset,
             endOffset,
             ViolationKind.DIRECT_VARIABLE_CASE_VALUE,

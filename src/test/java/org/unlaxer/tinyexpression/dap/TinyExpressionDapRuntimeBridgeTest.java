@@ -16,13 +16,10 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertEquals("true", dslJava.get("bridgeAttached"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("selectedExecutionBackend"));
     assertEquals("DSL_JAVA_CODE", dslJava.get("_tinyExecutionBackend"));
-    // P4-typed emitter now handles 1+1 natively (no bridge needed)
-    String impl = dslJava.get("_tinyExecutionImplementation");
-    assertTrue("impl=" + impl,
-        "dsl-javacode-native".equals(impl) || "legacy-javacode-bridge".equals(impl));
+    assertEquals("p4-typed-emitter", dslJava.get("_tinyExecutionImplementation"));
 
     Map<String, String> dslJavaLiteral = TinyExpressionDapRuntimeBridge.debugVariables("1", "dsl-javacode");
-    assertEquals("dsl-javacode-native", dslJavaLiteral.get("_tinyExecutionImplementation"));
+    assertEquals("p4-typed-emitter", dslJavaLiteral.get("_tinyExecutionImplementation"));
     String emitterMode = dslJavaLiteral.get("_tinyDslJavaEmitterMode");
     assertTrue("emitterMode=" + emitterMode,
         "native-generated-ast".equals(emitterMode) || "p4-typed-emitter".equals(emitterMode));
@@ -53,5 +50,65 @@ public class TinyExpressionDapRuntimeBridgeTest {
     assertNotNull(token.get("parity.JAVA_CODE_LEGACY_ASTCREATOR.normalized"));
     assertNotNull(token.get("parity.AST_EVALUATOR.normalized"));
     assertNotNull(token.get("parity.DSL_JAVA_CODE.normalized"));
+    assertNotNull(token.get("parity.P4_AST_EVALUATOR.normalized"));
+    assertNotNull(token.get("parity.P4_DSL_JAVA_CODE.normalized"));
+    assertEquals(token.get("parity.equalAll"), token.get("parity.equalAllWithP4"));
+  }
+
+  @Test
+  public void testInjectedVariablesReachSelectedBackendAndAllParityBackends() {
+    Map<String, Object> variables = Map.of("score", 42);
+    String formula = "var $score as number set if not exists 0 description='score';\n$score + 8";
+
+    assertEquals("50", TinyExpressionDapRuntimeBridge.evaluateForDisplay(
+        formula, "p4-ast", variables));
+
+    Map<String, String> debug = TinyExpressionDapRuntimeBridge.debugVariables(
+        formula, "p4-ast", variables);
+    assertEquals("P4_AST_EVALUATOR", debug.get("selectedExecutionBackend"));
+    assertEquals("50", debug.get("evaluationResultNormalized"));
+    assertEquals(debug.toString(), "true", debug.get("parity.allBackendsEvaluated"));
+    assertEquals(debug.toString(), "true", debug.get("parity.equalAll"));
+    assertEquals("50", debug.get("parity.P4_AST_EVALUATOR.normalized"));
+    assertEquals("50", debug.get("parity.P4_DSL_JAVA_CODE.normalized"));
+  }
+
+  @Test
+  public void testMissingModeDefaultsToGeneratedBackendAndInvalidModeDoesNotFallback() {
+    Map<String, String> defaulted = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "");
+    assertEquals("P4_AST_EVALUATOR", defaulted.get("selectedExecutionBackend"));
+
+    Map<String, String> invalid = TinyExpressionDapRuntimeBridge.debugVariables("1+1", "unknown");
+    assertEquals("UNSUPPORTED", invalid.get("selectedExecutionBackend"));
+    assertTrue(invalid.get("bridgeError").contains("Unsupported runtimeMode"));
+  }
+
+  @Test
+  public void testFormulaInfoDocumentExecutesDependenciesWithInjectedContext() {
+    String document = """
+        calculatorName:base
+        resultType:float
+        var:baseResult
+        formula:
+        5
+        ---END_OF_PART---
+        calculatorName:derived
+        resultType:float
+        executionBackend:P4_AST_EVALUATOR
+        dependsOn:base
+        formula:
+        $baseResult + $input
+        ---END_OF_PART---
+        """;
+
+    Map<String, String> debug = TinyExpressionDapRuntimeBridge.debugFormulaInfoVariables(
+        document, "derived", Map.of("input", 10));
+
+    assertEquals(debug.toString(), "true", debug.get("formulaInfoDocument"));
+    assertEquals(debug.toString(), "2", debug.get("formulaInfo.formulaCount"));
+    assertEquals(debug.toString(), "5", debug.get("formulaInfo.base.normalized"));
+    assertEquals(debug.toString(), "15", debug.get("formulaInfo.derived.normalized"));
+    assertEquals(debug.toString(), "15", debug.get("formulaInfo.selectedResultNormalized"));
+    assertEquals(debug.toString(), "P4_AST_EVALUATOR", debug.get("formulaInfo.selectedBackend"));
   }
 }

@@ -13,6 +13,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
+import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Calculator;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
@@ -27,7 +28,7 @@ public class DslJavaCodeGenerationExtractedParityTest {
       "calc\\(context\\s*,\\s*\"((?:\\\\.|[^\"\\\\])*)\"\\s*,\\s*new\\s+BigDecimal\\(\"([^\"]+)\"\\)\\)");
 
   @Test
-  public void testExtractedLegacyCorpusJavaCodeParity() throws Exception {
+  public void testExtractedLegacyCorpusRuntimeParity() throws Exception {
     List<String> formulas = extractedFormulas();
     assertTrue("extracted formulas should not be empty", !formulas.isEmpty());
 
@@ -46,8 +47,19 @@ public class DslJavaCodeGenerationExtractedParityTest {
       } catch (RuntimeException ignored) {
         continue;
       }
+      CalculationContext context = CalculationContext.newConcurrentContext();
+      Object legacyResult = legacy.apply(context);
+      Object dslResult = dslJava.apply(context);
+      if (legacyResult instanceof Number legacyNumber && dslResult instanceof Number dslNumber) {
+        assertEquals("formula=" + formula,
+            legacyNumber.doubleValue(), dslNumber.doubleValue(), 0.000_001d);
+      } else {
+        assertEquals("formula=" + formula, legacyResult, dslResult);
+      }
       assertEquals("formula=" + formula,
-          normalizeJavaCode(legacy.javaCode()), normalizeJavaCode(dslJava.javaCode()));
+          "p4-typed-emitter", dslJava.getObject("_tinyExecutionImplementation", String.class));
+      assertEquals("formula=" + formula,
+          false, dslJava.getObject("_tinyExecutionBridgeImplementation", Boolean.class));
       executed++;
     }
     assertTrue("executed extracted java parity cases should be >= " + MIN_EXECUTED + " but was " + executed,
@@ -106,13 +118,4 @@ public class DslJavaCodeGenerationExtractedParityTest {
     return builder.toString();
   }
 
-  private String normalizeJavaCode(String javaCode) {
-    String normalized = javaCode == null ? "" : javaCode.replace("\r\n", "\n").replace('\r', '\n');
-    normalized = normalized.replaceAll("\\bclass\\s+[A-Za-z0-9_]+", "class __CLASS__");
-    normalized = normalized.replaceAll("\\bnew\\s+[A-Za-z0-9_]+\\(", "new __CLASS__(");
-    normalized = normalized.replaceAll("(?m)^[ \\t]*import[^;]+;[ \\t]*", "");
-    normalized = normalized.replaceAll("\\s+", " ");
-    normalized = normalized.replaceAll(" \\)", ")");
-    return normalized.trim();
-  }
 }

@@ -132,7 +132,7 @@ public final class P4PreferredAstMapper {
     return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, deadlineNanos);
   }
 
-  /** パース期限超過。呼び出し側はフォールバック経路 (legacy parser) に切り替えること。 */
+  /** パース期限超過。生成 P4 専用バックエンドでは明示的なパース失敗として扱う。 */
   public static final class ParseDeadlineExceededException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
@@ -189,6 +189,14 @@ public final class P4PreferredAstMapper {
       return "(" + normalized + ")";
     }
     return normalized;
+  }
+
+  /** Removes semantically redundant parentheses around a variable used as a slice receiver. */
+  public static String normalizeParenthesizedSliceReceivers(String formula) {
+    if (formula == null || formula.isEmpty()) return formula;
+    return formula.replaceAll(
+        "\\(\\s*(\\$[A-Za-z_$][A-Za-z0-9_$]*(?:\\s+as\\s+(?:string|String))?)\\s*\\)(?=\\s*\\[)",
+        "$1");
   }
 
   public static List<String> preferredAstSimpleNames(String formula) {
@@ -284,7 +292,8 @@ public final class P4PreferredAstMapper {
     if (formula == null) {
       return "";
     }
-    return TinyExpressionParserCapabilities.normalizeStructuredHead(formula).strip();
+    String structured = TinyExpressionParserCapabilities.normalizeStructuredHead(formula).strip();
+    return normalizeParenthesizedSliceReceivers(structured);
   }
 
   private static List<String> candidateAstSimpleNames(
@@ -292,14 +301,23 @@ public final class P4PreferredAstMapper {
     String normalized = normalizeForPreferredParsing(formula);
     List<String> structuredPreferred = preferredAstSimpleNames(normalized, preferredResultType);
     if (!structuredPreferred.isEmpty()) {
-      return structuredPreferred;
+      ArrayList<String> rooted = new ArrayList<>();
+      addIfAbsent(rooted, "FormulaExpr");
+      for (String candidate : structuredPreferred) {
+        addIfAbsent(rooted, candidate);
+      }
+      return List.copyOf(rooted);
     }
 
     ArrayList<String> names = new ArrayList<>();
+    addIfAbsent(names, "FormulaExpr");
     boolean methodInvocationHead = hasMethodInvocationHead(normalized);
+    boolean externalInvocationHead = hasExternalInvocationHead(normalized);
     boolean ifHead = hasIfHead(normalized);
     boolean matchHead = hasMatchHead(normalized);
-    if (methodInvocationHead) {
+    if (externalInvocationHead) {
+      addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
+    } else if (methodInvocationHead) {
       addIfAbsent(names, "MethodInvocationExpr");
     }
     if (ifHead) {
@@ -353,6 +371,7 @@ public final class P4PreferredAstMapper {
     }
 
     addIfAbsent(names, "MethodInvocationExpr");
+    addIfAbsent(names, externalInvocationAstSimpleName(preferredResultType));
     addIfAbsent(names, "VariableRefExpr");
     if (profile == CandidateProfile.GENERATED_VALUE) {
       addIfAbsent(names, "IfExpr");
@@ -379,6 +398,29 @@ public final class P4PreferredAstMapper {
       }
     }
     return false;
+  }
+
+  private static boolean hasExternalInvocationHead(String normalized) {
+    return TinyExpressionParserCapabilities.hasHead(normalized, "external", null);
+  }
+
+  private static String externalInvocationAstSimpleName(ExpressionType resultType) {
+    if (resultType == null) {
+      return null;
+    }
+    if (resultType.isBoolean()) {
+      return "ExternalBooleanInvocationExpr";
+    }
+    if (resultType.isNumber()) {
+      return "ExternalNumberInvocationExpr";
+    }
+    if (resultType.isString()) {
+      return "ExternalStringInvocationExpr";
+    }
+    if (resultType.isObject()) {
+      return "ExternalObjectInvocationExpr";
+    }
+    return null;
   }
 
   private static String functionAstSimpleName(String normalized) {
@@ -956,26 +998,7 @@ public final class P4PreferredAstMapper {
 
   private static TinyExpressionP4AST parseViaMapperCompat(
       String source, String preferredAstSimpleName, long deadlineNanos) {
-    ParseContext context = new ParseContext(createRootSourceCompat(source));
-    ScopeStore.registerDispatcher(context);
-    if (deadlineNanos > 0L) {
-      registerDeadlineListener(context, deadlineNanos);
-    }
-    Parsed parsed;
-    try {
-      Parser rootParser = TinyExpressionP4Parsers.getRootParser();
-      parsed = rootParser.parse(context);
-    } finally {
-      closeParseContextQuietly(context);
-    }
-    if (!parsed.isSucceeded()) {
-      throw new IllegalArgumentException("Parse failed: " + source);
-    }
-    int consumed = consumedLengthCompat(parsed.getConsumed());
-    if (consumed != source.length()) {
-      throw new IllegalArgumentException("Parse failed at offset " + consumed + ": " + source);
-    }
-    Token rootToken = parsed.getRootToken(true);
+    Token rootToken = parseRootToken(source, deadlineNanos);
     clearMapperSourceSpans();
     Token bestMappedToken = invokeFindBestMappedToken(rootToken, preferredAstSimpleName);
     TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
@@ -983,6 +1006,94 @@ public final class P4PreferredAstMapper {
       throw new IllegalArgumentException("No mapped node found in parse tree");
     }
     return mapped;
+  }
+
+  /**
+   * Parses {@code source} fully and returns the root token.
+   *
+   * <p>The grammar's top-level {@code Expression} rule tries {@code NumberExpression}
+   * before {@code BooleanExpression} so that arithmetic such as {@code $a+$b} is fully
+   * consumed (a BooleanExpression-first ordering would consume only {@code $a}). The
+   * generated combinator {@code Choice} is PEG first-match and never backtracks into a
+   * later alternative once an earlier one commits, so for a bare top-level boolean
+   * comparison such as {@code 1 > 0 & 2 > 1} the {@code NumberExpression} alternative
+   * matches only the leading {@code 1} and the root {@code Formula} rule then fails at
+   * EOF (issue #23).
+   *
+   * <p>Reordering the grammar alternatives cannot fix both cases under PEG, and adding a
+   * comparison-anchored top-level alternative roughly doubles parse time for
+   * {@code if(...comparison...)} formulas (the comparison's number operand re-parses the
+   * whole {@code if} block before failing). So the fix is applied here instead: when the
+   * standard {@code Formula} parse fails or under-consumes, retry once treating
+   * {@code BooleanExpression} as the root. This adds cost only for inputs the standard
+   * parse already rejected, leaving the hot path untouched.
+   */
+  private static Token parseRootToken(String source, long deadlineNanos) {
+    ParseResult primary = parseWithRoot(TinyExpressionP4Parsers.getRootParser(), source, deadlineNanos);
+    if (primary.fullyConsumed(source)) {
+      return primary.rootToken();
+    }
+    // issue #23 compatibility retry: a bare top-level boolean comparison can be shadowed by
+    // top-level expression dispatch. Retry with BooleanExpression as the generated root.
+    ParseResult booleanRoot = parseWithRoot(
+        Parser.get(TinyExpressionP4Parsers.BooleanExpressionParser.class), source, deadlineNanos);
+    if (booleanRoot.fullyConsumed(source)) {
+      return booleanRoot.rootToken();
+    }
+    if (!primary.succeeded()) {
+      throw new IllegalArgumentException("Parse failed: " + source);
+    }
+    throw new IllegalArgumentException("Parse failed at offset " + primary.consumed() + ": " + source);
+  }
+
+  /**
+   * Packrat memoization is ON by default (see {@link #parseWithRoot}); opt out with
+   * {@code -Dtinyexpression.p4.memoize=false}.
+   */
+  private static boolean memoizeEnabled() {
+    return false == "false".equalsIgnoreCase(System.getProperty("tinyexpression.p4.memoize", "true"));
+  }
+
+  private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
+    ParseContext context = new ParseContext(createRootSourceCompat(source));
+    ScopeStore.registerDispatcher(context);
+    // Packrat memoization (unlaxer-parser #40): collapses the exponential backtracking that deeply
+    // nested fraud-detection formulas trigger (#19/#38). ON by default now that it is proven fast and
+    // parse-equivalent (parity verified in #40) and that the mapping phase no longer re-maps subtrees
+    // (tinyexpression #49) — together these let formulas that previously blew the parse deadline (e.g.
+    // toUpperCase('..')[4:6].in(..), the giant nested-if fraud formulas) stay on the P4 path instead of
+    // failing explicitly. Opt OUT with -Dtinyexpression.p4.memoize=false. Safe with the
+    // @scopeTree/@declares/@backref grammar because memoization excludes TransactionListener-bearing
+    // sub-trees (scope effects are never skipped).
+    if (memoizeEnabled()) {
+      try {
+        context.enableMemoize();
+      } catch (NoSuchMethodError _e) {
+        // unlaxer-common の版が enableMemoize() を持たない（Central の 3.0.11 が
+        // 旧版のまま publish されている等）。memoize は性能最適化で必須ではない —
+        // 深くネストした式で遅くなるが、機能はする。issue #67 参照。
+      }
+    }
+    if (deadlineNanos > 0L) {
+      registerDeadlineListener(context, deadlineNanos);
+    }
+    Parsed parsed;
+    try {
+      parsed = rootParser.parse(context);
+    } finally {
+      closeParseContextQuietly(context);
+    }
+    if (!parsed.isSucceeded()) {
+      return new ParseResult(false, -1, null);
+    }
+    int consumed = consumedLengthCompat(parsed.getConsumed());
+    return new ParseResult(true, consumed, parsed.getRootToken(true));
+  }
+
+  private record ParseResult(boolean succeeded, int consumed, Token rootToken) {
+    boolean fullyConsumed(String source) {
+      return succeeded && consumed == source.length();
+    }
   }
 
   /**
@@ -999,8 +1110,7 @@ public final class P4PreferredAstMapper {
           @Override public void onOpen(ParseContext parseContext) {}
           @Override public void onBegin(ParseContext parseContext, Parser parser) {
             if (System.nanoTime() > deadlineNanos) {
-              throw new ParseDeadlineExceededException(
-                  "P4 parse exceeded deadline; falling back to legacy parser");
+              throw new ParseDeadlineExceededException("P4 parse exceeded deadline");
             }
           }
           @Override public void onCommit(ParseContext parseContext, Parser parser, org.unlaxer.TokenList committedTokens) {}

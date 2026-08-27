@@ -27,14 +27,14 @@ public enum ExecutionBackend {
       case JAVA_CODE -> "legacy-javacode";
       case JAVA_CODE_LEGACY_ASTCREATOR -> "legacy-javacode-astcreator";
       case AST_EVALUATOR -> "ast-evaluator";
-      case DSL_JAVA_CODE -> "legacy-javacode-bridge";
+      case DSL_JAVA_CODE -> "p4-typed-emitter";
       case P4_AST_EVALUATOR -> "p4-ast-evaluator";
       case P4_DSL_JAVA_CODE -> "p4-dsl-javacode";
     };
   }
 
   public boolean bridgeImplementation() {
-    return this == DSL_JAVA_CODE || this == P4_DSL_JAVA_CODE;
+    return false;
   }
 
   public static Optional<ExecutionBackend> fromRuntimeMode(String runtimeMode) {

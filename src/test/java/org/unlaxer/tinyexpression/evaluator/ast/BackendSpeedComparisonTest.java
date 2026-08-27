@@ -31,14 +31,13 @@ import org.unlaxer.tinyexpression.parser.NumberExpressionParser;
 import org.unlaxer.tinyexpression.parser.NumberTermParser;
 
 /**
- * Comprehensive backend speed comparison — all 5 backends.
+ * Comprehensive backend speed comparison.
  *
  * Section 1 — Literal arithmetic (formula: 3+4+2+5-1):
  *   (A) compile-hand     — JavaCodeCalculatorV3: compile once -> JIT bytecode
  *   (B) ast-hand-cached  — @TinyAstNode AST, pre-parsed, eval only
  *   (C) ast-hand-full    — @TinyAstNode AST, parse+build+eval each call
- *   (D) P4-reflection    — P4 mapper + reflection-based evaluator
- *   (E) P4-typed-eval    — P4 AST + P4TypedAstEvaluator (sealed switch, no reflection)
+ *   (D) P4-typed-eval    — P4 AST + P4TypedAstEvaluator (sealed switch)
  *
  * Section 2 — Variable formula ($a+$b+$c+$d-$e):
  *   (F) compile-hand     — JavaCodeCalculatorV3 with variables
@@ -96,12 +95,8 @@ public class BackendSpeedComparisonTest {
     warmAndMeasure("ast-hand-full", () -> AstNumberExpressionEvaluator.tryEvaluate(LITERAL_FORMULA, TYPES, ctx));
     long astFullNs = measure(() -> AstNumberExpressionEvaluator.tryEvaluate(LITERAL_FORMULA, TYPES, ctx));
 
-    // (D) P4-reflection: parse AST via mapper, evaluate via reflection
+    // (D) P4-typed-eval: parse AST via mapper, evaluate via sealed switch
     TinyExpressionP4AST mappedAst = TinyExpressionP4Mapper.parse(LITERAL_FORMULA, "BinaryExpr");
-    warmAndMeasure("P4-reflection", () -> GeneratedP4ValueAstEvaluator.tryEvaluate(mappedAst, TYPES, ctx));
-    long p4ReflectionNs = measure(() -> GeneratedP4ValueAstEvaluator.tryEvaluate(mappedAst, TYPES, ctx));
-
-    // (E) P4-typed-eval: same AST, evaluate via sealed switch
     warmAndMeasure("P4-typed-eval", () -> {
       P4TypedAstEvaluator ev = new P4TypedAstEvaluator(TYPES, ctx);
       return ev.eval(mappedAst);
@@ -177,7 +172,6 @@ public class BackendSpeedComparisonTest {
     double compileUs      = usPerCall(compileNs);
     double cachedUs       = usPerCall(astCachedNs);
     double fullUs         = usPerCall(astFullNs);
-    double p4ReflUs       = usPerCall(p4ReflectionNs);
     double p4TypedUs      = usPerCall(p4TypedNs);
     double p4TypedReuseUs = usPerCall(p4TypedReuseNs);
     double compileVarUs   = usPerCall(compileVarNs);
@@ -193,9 +187,8 @@ public class BackendSpeedComparisonTest {
     System.out.printf("(A) compile-hand   [JVM bytecode]    : %8.4f us/call  (baseline)%n", compileUs);
     System.out.printf("(B) ast-hand-cached[tree eval only]  : %8.4f us/call  x%.1f%n", cachedUs, cachedUs / compileUs);
     System.out.printf("(C) ast-hand-full  [parse+build+eval]: %8.4f us/call  x%.1f%n", fullUs, fullUs / compileUs);
-    System.out.printf("(D) P4-reflection  [mapper+reflect]  : %8.4f us/call  x%.1f%n", p4ReflUs, p4ReflUs / compileUs);
-    System.out.printf("(E) P4-typed-eval  [sealed switch]   : %8.4f us/call  x%.1f%n", p4TypedUs, p4TypedUs / compileUs);
-    System.out.printf("(E2)P4-typed-reuse [instance reused] : %8.4f us/call  x%.1f%n%n", p4TypedReuseUs, p4TypedReuseUs / compileUs);
+    System.out.printf("(D) P4-typed-eval  [sealed switch]   : %8.4f us/call  x%.1f%n", p4TypedUs, p4TypedUs / compileUs);
+    System.out.printf("(D2)P4-typed-reuse [instance reused] : %8.4f us/call  x%.1f%n%n", p4TypedReuseUs, p4TypedReuseUs / compileUs);
 
     System.out.println("--- Section 2: Variable formula [$a+$b+$c+$d-$e] ---");
     System.out.printf("(F) compile-hand   [JVM bytecode]    : %8.4f us/call  (baseline)%n", compileVarUs);

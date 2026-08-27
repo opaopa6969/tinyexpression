@@ -5,13 +5,13 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.unlaxer</groupId>
-	<artifactId>tinyexpression</artifactId>
-	<version>1.4.11</version>
-	<name>tinyexpression</name>
+	<artifactId>tinyExpression</artifactId>
+	<version>1.4.15</version>
+	<name>tinyExpression</name>
 	<packaging>jar</packaging>
 
 	<description>TinyExpression implemented with Unlaxer</description>
-	<url>https://bitbucket.org/opaopa6969/unlaxer/src/master/</url>
+	<url>https://github.com/opaopa6969/tinyexpression</url>
 
 	<licenses>
 		<license>
@@ -21,9 +21,9 @@
 	</licenses>
 
 	<scm>
-		<connection>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</connection>
-		<developerConnection>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</developerConnection>
-		<url>scm:https://opaopa6969@bitbucket.org/opaopa6969/unlaxer.git</url>
+		<connection>scm:git:https://github.com/opaopa6969/tinyexpression.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/opaopa6969/tinyexpression.git</developerConnection>
+		<url>https://github.com/opaopa6969/tinyexpression</url>
 	</scm>
 
 	<developers>
@@ -43,8 +43,14 @@
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
-		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true to speed up dev/test iteration -->
+		<!-- Central upload is opt-in through scripts/release-central.sh. -->
+		<skipPublishing>true</skipPublishing>
+		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true -->
 		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
+		<!-- Forked JVMs surefire uses to run test classes. Default 1 (serial, stable).
+		     Opt into parallel speed with -Dte.forkCount=0.5C, but note some tests still
+		     share process-wide state and may fail under parallel forks (see findings §6). -->
+		<te.forkCount>1</te.forkCount>
 	</properties>
 
 	<dependencies>
@@ -57,12 +63,12 @@
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-common</artifactId>
-			<version>3.0.4</version>
+			<version>3.0.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-dsl</artifactId>
-			<version>3.0.4</version>
+			<version>3.0.14</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>
@@ -73,6 +79,11 @@
 			<groupId>net.arnx</groupId>
 			<artifactId>jsonic</artifactId>
 			<version>1.3.10</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.18.3</version>
 		</dependency>
 	</dependencies>
 
@@ -87,18 +98,18 @@
 			</plugins>
 		</pluginManagement>
 		<plugins>
-			<!--
 			<plugin>
 				<groupId>org.sonatype.central</groupId>
 				<artifactId>central-publishing-maven-plugin</artifactId>
-				<version>0.9.0</version>
+				<version>0.11.0</version>
 				<extensions>true</extensions>
 				<configuration>
 					<publishingServerId>central</publishingServerId>
 					<autoPublish>true</autoPublish>
+					<waitUntil>published</waitUntil>
+					<skipPublishing>${skipPublishing}</skipPublishing>
 				</configuration>
 			</plugin>
-			-->
 			<plugin>
 				<artifactId>maven-clean-plugin</artifactId>
 				<version>3.1.0</version>
@@ -144,7 +155,7 @@
 						</goals>
 						<configuration>
 							<skip>${tinyexpression.skipRailroad}</skip>
-						<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
+							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
 							<arguments>
 								<argument>${tinyexpression.p4.grammar}</argument>
 								<argument>${tinyexpression.p4.railroad.output}</argument>
@@ -181,13 +192,10 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
-					<!-- NOTE: surefire forkCount parallelism was tried for speed but several
-					     existing tests share process-wide static state (JavaCodeBlockPolicy,
-					     Parser.get cache) and fail when classes run in parallel forks, so it is
-					     intentionally NOT enabled. Test speed comes from the AST cache and from
-					     -Dtinyexpression.skipRailroad=true instead. -->
 					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
-					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
+					<forkCount>${te.forkCount}</forkCount>
+						<reuseForks>true</reuseForks>
+						<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
 					<excludes>
 						<!-- issue #20: legacy パーサーの指数バックトラックを意図的に繰り返す
 						     ベンチマーク。unlaxer のメモ化 (unlaxer-parser#40) 導入まで除外。
@@ -274,14 +282,4 @@
 		</profile>
 	</profiles>
 
-	<distributionManagement>
-		<snapshotRepository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
-		</snapshotRepository>
-		<repository>
-			<id>ossrh</id>
-			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-		</repository>
-	</distributionManagement>
 </project>

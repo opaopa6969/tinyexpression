@@ -16,7 +16,7 @@ import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 /**
- * Tests for {@link JavaCodeBlockPolicy} — opt-in disable of arbitrary Java code execution.
+ * Tests for {@link JavaCodeBlockPolicy} — explicit opt-in for arbitrary Java code execution.
  *
  * @since 1.4.11
  */

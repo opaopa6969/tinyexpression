@@ -2,7 +2,7 @@
 
 [日本語版](backends-ja.md)
 
-TinyExpression v1.4.11 provides 6 execution backends. This document describes their differences, selection contract, fallback chain, and recommended usage.
+TinyExpression v1.4.15 provides 6 execution backends. This document describes their differences, selection contract, and recommended usage.
 
 ---
 
@@ -13,7 +13,7 @@ TinyExpression v1.4.11 provides 6 execution backends. This document describes th
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | Production | Parse → generate Java → `javac` → load → invoke |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | Frozen (reference) | Same as above with pre-refactor AST creator |
 | `AST_EVALUATOR` | `AstEvaluatorCalculator` | Production | Parse → AST → tree-walking interpreter |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | Migration target | Hybrid: DSL native emitter + legacy bridge |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | Generated-only | P4 AST → typed Java emitter → `javac` |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | PRIMARY (P4) | UBNF parser → P4 AST → type-safe evaluator |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | Migration target (P4) | UBNF parser → P4 AST → DSL Java emitter |
 
@@ -41,36 +41,25 @@ Pre-refactor comparison baseline.
 
 ### AST_EVALUATOR
 
-AST traversal evaluator with a 3-level fallback chain.
+Generated P4 AST traversal evaluator.
 
 - **Class**: `AstEvaluatorCalculator`
-- **Fallback chain**:
-  ```
-  P4TypedAstEvaluator (PRIMARY)
-      │ P4 grammar gap
-      ▼
-  GeneratedP4NumberAstEvaluator
-      │ fails
-      ▼
-  AstTokenTreeEvaluator (legacy AST walk)
-      │ fails
-      ▼
-  JavaCode fallback (JAVA_CODE path)
-  ```
+- **Failure contract**: P4 parse or evaluation gaps fail explicitly; this backend never switches to a handwritten evaluator or Java-code generator
 - **Change policy**: Expanding generated-AST coverage is the primary target
 - **Pros**: No compilation overhead; suitable for lightweight deployments
-- **Cons**: Slightly slower than `JAVA_CODE` for hot paths; fallback to `JAVA_CODE` adds latency
+- **Cons**: Slightly slower than `JAVA_CODE` for hot paths; unsupported grammar is an explicit error
 
 ### DSL_JAVA_CODE
 
-Hybrid DSL Java emitter.
+Generated-only DSL Java emitter.
 
 - **Class**: `DslJavaCodeCalculator`
 - **Change policy**: Migration target for expanding native DSL Java emitter coverage
-- **How it works**: Tries the native DSL Java emitter first; falls back to legacy bridge if the expression is not covered
+- **How it works**: Maps the formula to the generated P4 AST and emits Java through `P4TypedJavaCodeEmitter`; unsupported syntax fails explicitly
 - **Runtime markers**:
-  - `_tinyDslJavaNativeEmitterUsed = true` → native path hit
-  - `_tinyExecutionImplementation = legacy-javacode-bridge` → fallback
+  - `_tinyDslJavaNativeEmitterUsed = true`
+  - `_tinyExecutionImplementation = p4-typed-emitter`
+  - `_tinyExecutionBridgeImplementation = false`
 
 ### P4_AST_EVALUATOR (PRIMARY for P4)
 
@@ -80,7 +69,7 @@ Type-safe UBNF-generated parser with AST evaluation.
 - **Change policy**: Expanding P4 grammar coverage; primary reference for LSP/DAP
 - **How it works**: Uses the UBNF-generated `TinyExpressionP4Parsers` to produce a sealed-interface P4 AST, then evaluates it via `P4TypedAstEvaluator`
 - **Advantage over AST_EVALUATOR**: No regex in LSP/DAP; fully `instanceof`-based dispatch; compile-time exhaustiveness
-- **Limitation**: Does not yet cover all language features (P4 grammar gaps fall back to legacy)
+- **Limitation**: Syntax outside the P4 grammar fails explicitly
 
 ### P4_DSL_JAVA_CODE
 
@@ -118,9 +107,9 @@ Type-safe UBNF-generated parser with DSL Java code emission.
 All 6 backends must return equivalent values for the same input. Key requirements:
 
 1. All 6 backends produce equivalent values for supported corpus (MUST)
-2. `AST_EVALUATOR` must avoid the `javacode-fallback` for supported expressions (MUST)
+2. `AST_EVALUATOR` and `DSL_JAVA_CODE` must not invoke handwritten fallback implementations (MUST)
 3. `P4_AST_EVALUATOR` and `P4_DSL_JAVA_CODE` must match the other 4 backends (MUST)
-4. **Known exception**: Formulas using syntax not yet covered by P4 grammar use the fallback path
+4. Formulas not covered by the P4 grammar must fail explicitly (MUST)
 
 ### DAP Parity Variables
 
@@ -144,7 +133,7 @@ All backends set these context markers after execution:
 | `_tinyExecutionBackend` | Backend name used |
 | `_tinyExecutionMode` | Execution mode |
 | `_tinyExecutionImplementation` | Implementation variant |
-| `_tinyExecutionBridgeImplementation` | Bridge implementation variant (DSL backends) |
+| `_tinyExecutionBridgeImplementation` | Always `false` for generated-only backends |
 
 ---
 

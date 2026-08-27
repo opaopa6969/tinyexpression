@@ -14,7 +14,7 @@
   "name": "tinyexpression-p4-lsp",
   "displayName": "TinyExpression P4 LSP/DAP",
   "description": "Type-safe LSP/DAP for TinyExpression P4 grammar (UBNF-generated parser, sealed-interface AST, 6-backend parity probe)",
-  "version": "0.2.3",
+  "version": "0.2.35",
   "publisher": "opaopa6969",
   "engines": {
     "vscode": "^1.85.0"
@@ -23,9 +23,18 @@
     "Programming Languages",
     "Debuggers"
   ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Editing, completion, hover, and diagnostics are available. Debug execution remains subject to VS Code workspace trust, and Java code blocks remain disabled by default."
+    }
+  },
   "activationEvents": [
     "onLanguage:tinyexpressionP4",
-    "onCommand:tinyExpressionP4Lsp.showServerOutput"
+    "onCommand:tinyExpressionP4Lsp.showServerOutput",
+    "onCommand:tinyExpressionP4Lsp.openLanguageGuide",
+    "onCommand:tinyExpressionP4Lsp.openWalkthrough",
+    "onCommand:tinyExpressionP4Lsp.createFormulaInfoSample"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -34,6 +43,68 @@
         "command": "tinyExpressionP4Lsp.showServerOutput",
         "title": "TinyExpression P4 LSP: Show Server Output",
         "category": "TinyExpression P4"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.openLanguageGuide",
+        "title": "Open Language Guide",
+        "category": "TinyExpression P4"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.openWalkthrough",
+        "title": "Open Getting Started",
+        "category": "TinyExpression P4"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.createFormulaInfoSample",
+        "title": "Create FormulaInfo Sample",
+        "category": "TinyExpression P4"
+      }
+    ],
+    "walkthroughs": [
+      {
+        "id": "gettingStarted",
+        "title": "TinyExpression: 式からデバッグまで",
+        "description": "初めてでも、FormulaInfoを書いてCalculationContextの値で実行するところまで進めます。",
+        "steps": [
+          {
+            "id": "learnLanguage",
+            "title": "言語の全体像を知る",
+            "description": "TinyExpressionの値、変数、条件式、FormulaInfoを短く確認します。\n[言語ガイドを開く](command:tinyExpressionP4Lsp.openLanguageGuide)",
+            "media": {
+              "markdown": "walkthrough/01-language.md"
+            },
+            "completionEvents": [
+              "onCommand:tinyExpressionP4Lsp.openLanguageGuide"
+            ]
+          },
+          {
+            "id": "createFormulaInfo",
+            "title": "FormulaInfoを書いてみる",
+            "description": "安全なサンプルを新しいエディタに作成します。\n[FormulaInfoサンプルを作成](command:tinyExpressionP4Lsp.createFormulaInfoSample)",
+            "media": {
+              "markdown": "walkthrough/02-formulainfo.md"
+            },
+            "completionEvents": [
+              "onCommand:tinyExpressionP4Lsp.createFormulaInfoSample"
+            ]
+          },
+          {
+            "id": "debugWithContext",
+            "title": "CalculationContextの値でデバッグする",
+            "description": "`launch.json` の `variables` がCalculationContextへ型付きで渡されます。",
+            "media": {
+              "markdown": "walkthrough/03-debug.md"
+            }
+          },
+          {
+            "id": "understandJavaSafety",
+            "title": "Javaコードの境界を理解する",
+            "description": "Javaブロックは編集できますが、コンパイル・実行は既定で無効です。",
+            "media": {
+              "markdown": "walkthrough/04-java-safety.md"
+            }
+          }
+        ]
       }
     ],
     "languages": [
@@ -44,11 +115,14 @@
           "tinyexpressionp4"
         ],
         "extensions": [
-          ".tinyexp"
+          ".tinyexp",
+          ".formulainfo"
         ],
         "filenames": [
           "default",
-          "emergency"
+          "emergency",
+          "formulaInfo.txt",
+          "formula-info.txt"
         ],
         "filenamePatterns": [
           "*.default",
@@ -61,7 +135,10 @@
       {
         "language": "tinyexpressionP4",
         "scopeName": "source.tinyexpression",
-        "path": "./syntaxes/tinyexpression.tmLanguage.json"
+        "path": "./syntaxes/tinyexpression.tmLanguage.json",
+        "embeddedLanguages": {
+          "meta.embedded.block.java": "java"
+        }
       }
     ],
     "semanticTokenScopes": [
@@ -106,28 +183,61 @@
         "configurationAttributes": {
           "launch": {
             "required": [
-              "formulaSource"
+              "program"
             ],
             "properties": {
-              "formulaSource": {
+              "program": {
                 "type": "string",
-                "description": "The TinyExpression formula source to debug."
+                "description": "Path to the TinyExpression source file to debug.",
+                "default": "${file}"
               },
               "runtimeMode": {
                 "type": "string",
                 "enum": [
+                  "metadata",
+                  "javacode",
+                  "legacy-astcreator",
+                  "ast-evaluator",
+                  "dsl-javacode",
                   "p4-ast",
                   "p4-dsl-javacode"
                 ],
-                "default": "p4-ast",
-                "description": "P4 execution backend."
+                "default": "metadata",
+                "description": "Execution backend. metadata follows FormulaInfo executionBackend and defaults plain files to p4-ast."
+              },
+              "calculatorName": {
+                "type": "string",
+                "description": "FormulaInfo calculatorName to debug. The first formula is selected when omitted."
+              },
+              "allowJavaCodeBlocks": {
+                "type": "boolean",
+                "default": false,
+                "description": "Explicitly allow embedded Java compilation/execution in this isolated debug-adapter process. Disabled by default because Java blocks execute arbitrary code."
               },
               "variables": {
                 "type": "object",
-                "description": "Variable values to inject into the debug session. Keys are variable names (without $), values are strings. These appear in the Variables view and are available for evaluation in the Debug Console.",
+                "description": "Typed variable values injected into CalculationContext and used by the selected backend, parity probe, Variables view, and Debug Console.",
                 "additionalProperties": {
-                  "type": "string"
+                  "type": [
+                    "number",
+                    "boolean",
+                    "string"
+                  ]
                 }
+              },
+              "stopOnEntry": {
+                "type": "boolean",
+                "description": "Pause on the first AST node before continuing.",
+                "default": true
+              },
+              "steppingMode": {
+                "type": "string",
+                "enum": [
+                  "ast",
+                  "token"
+                ],
+                "default": "ast",
+                "description": "Structural stepping model. AST mode does not silently fall back to token stepping."
               }
             }
           }
@@ -137,17 +247,21 @@
             "type": "tinyexpressionP4",
             "request": "launch",
             "name": "Debug TinyExpression P4",
-            "formulaSource": "${file}",
-            "runtimeMode": "p4-ast"
+            "program": "${file}",
+            "runtimeMode": "metadata",
+            "steppingMode": "ast",
+            "stopOnEntry": true
           },
           {
             "type": "tinyexpressionP4",
             "request": "launch",
             "name": "Debug TinyExpression P4 (with variables)",
-            "formulaSource": "${file}",
-            "runtimeMode": "p4-ast",
+            "program": "${file}",
+            "runtimeMode": "metadata",
+            "steppingMode": "ast",
+            "stopOnEntry": true,
             "variables": {
-              "score": "42",
+              "score": 42,
               "inputName": "alice"
             }
           }
@@ -179,11 +293,16 @@
         "tinyExpressionP4Lsp.runtimeMode": {
           "type": "string",
           "enum": [
+            "metadata",
+            "javacode",
+            "legacy-astcreator",
+            "ast-evaluator",
+            "dsl-javacode",
             "p4-ast",
             "p4-dsl-javacode"
           ],
-          "default": "p4-ast",
-          "description": "P4 execution backend for formula evaluation and DAP debug."
+          "default": "metadata",
+          "description": "Execution backend for formula evaluation and DAP debug. metadata follows FormulaInfo executionBackend."
         },
         "tinyExpressionP4Lsp.fileExtensions": {
           "type": "array",
@@ -191,7 +310,8 @@
             "type": "string"
           },
           "default": [
-            ".tinyexp"
+            ".tinyexp",
+            ".formulainfo"
           ],
           "description": "File extensions to watch for the TinyExpression P4 language (must match contributes.languages.extensions)."
         },

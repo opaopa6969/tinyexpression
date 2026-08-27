@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -14,7 +15,6 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
-import org.unlaxer.tinyexpression.p4.P4SliceSourceSupport;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class P4TypedAstEvaluatorTest {
@@ -216,7 +216,7 @@ public class P4TypedAstEvaluatorTest {
   public void testVariableRefExprNumber() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new VariableRefExpr("$x"));
+    Object result = evaluator.eval(new VariableRefExpr("$x", Optional.empty()));
     assertEquals(10.0f, ((Number) result).floatValue(), 0.001f);
   }
 
@@ -224,7 +224,7 @@ public class P4TypedAstEvaluatorTest {
   public void testVariableRefExprString() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new VariableRefExpr("$name"));
+    Object result = evaluator.eval(new VariableRefExpr("$name", Optional.empty()));
     assertEquals("hello", result);
   }
 
@@ -232,7 +232,7 @@ public class P4TypedAstEvaluatorTest {
   public void testVariableRefExprBoolean() {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new VariableRefExpr("$flag"));
+    Object result = evaluator.eval(new VariableRefExpr("$flag", Optional.empty()));
     assertEquals(true, result);
   }
 
@@ -241,7 +241,8 @@ public class P4TypedAstEvaluatorTest {
     CalculationContext context = newContext();
     context.setObject("payload", "ctx-object");
     String formula = "$payload";
-    VariableRefExpr mapped = (VariableRefExpr) TinyExpressionP4Mapper.parse(formula, "VariableRefExpr");
+    VariableRefExpr mapped = (VariableRefExpr) P4PreferredAstMapper.parseByAstSimpleName(
+        formula, "VariableRefExpr");
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.object, ExpressionTypes._float),
         context,
@@ -300,8 +301,8 @@ public class P4TypedAstEvaluatorTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
     ComparisonExpr comp = new ComparisonExpr(leaf("$a"), "<", leaf("$b"));
     BooleanOrExpr condition = boolWrap(comp);
-    ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
-    ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
+    BranchExpressionExpr thenExpr = new BranchExpressionExpr(leaf("100"));
+    BranchExpressionExpr elseExpr = new BranchExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
     Object result = evaluator.eval(ifExpr);
     assertEquals(100.0f, ((Number) result).floatValue(), 0.001f);
@@ -313,8 +314,8 @@ public class P4TypedAstEvaluatorTest {
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
     ComparisonExpr comp = new ComparisonExpr(leaf("$a"), ">", leaf("$b"));
     BooleanOrExpr condition = boolWrap(comp);
-    ExpressionExpr thenExpr = new ExpressionExpr(leaf("100"));
-    ExpressionExpr elseExpr = new ExpressionExpr(leaf("200"));
+    BranchExpressionExpr thenExpr = new BranchExpressionExpr(leaf("100"));
+    BranchExpressionExpr elseExpr = new BranchExpressionExpr(leaf("200"));
     IfExpr ifExpr = new IfExpr(condition, thenExpr, elseExpr);
     Object result = evaluator.eval(ifExpr);
     assertEquals(200.0f, ((Number) result).floatValue(), 0.001f);
@@ -460,28 +461,21 @@ public class P4TypedAstEvaluatorTest {
   }
 
   @Test
-  public void testSliceSourcePartsOfNode() {
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
-        "'gateman'[::-1]",
-        ExpressionTypes.string).ast();
-    assertTrue(ast instanceof SliceExpr);
-    P4SliceSourceSupport.SliceParts parts =
-        P4SliceSourceSupport.slicePartsOfNode(ast, "'gateman'[::-1]").orElseThrow();
-    assertEquals("'gateman'", parts.valueSource());
-    assertNull(parts.startSource());
-    assertNull(parts.endSource());
-    assertEquals("-1", parts.stepSource());
+  public void testSliceReverseAndStepOnAstPath() {
+    // The slice indices come from the SliceExpr AST (start/end/step), not from re-parsing the source
+    // text — so assert the actual evaluated result on the pure AST path. (former source-shadow test)
+    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
 
-    TinyExpressionP4AST steppedAst = P4PreferredAstMapper.parseDetailed(
-        "'1a2b3'[::2]",
-        ExpressionTypes.string).ast();
-    assertTrue(steppedAst instanceof SliceExpr);
-    P4SliceSourceSupport.SliceParts steppedParts =
-        P4SliceSourceSupport.slicePartsOfNode(steppedAst, "'1a2b3'[::2]").orElseThrow();
-    assertEquals("'1a2b3'", steppedParts.valueSource());
-    assertNull(steppedParts.startSource());
-    assertNull(steppedParts.endSource());
-    assertEquals("2", steppedParts.stepSource());
+    TinyExpressionP4AST reverse = P4PreferredAstMapper.parseDetailed(
+        "'gateman'[::-1]", ExpressionTypes.string).ast();
+    assertTrue(reverse instanceof SliceExpr);
+    assertEquals("nametag", evaluator.eval(reverse));
+
+    TinyExpressionP4AST stepped = P4PreferredAstMapper.parseDetailed(
+        "'1a2b3'[::2]", ExpressionTypes.string).ast();
+    assertTrue(stepped instanceof SliceExpr);
+    assertEquals("123", evaluator.eval(stepped));
   }
 
   // ── NumberMatchExpr ──
@@ -535,7 +529,7 @@ public class P4TypedAstEvaluatorTest {
     // $name.toUpperCase() → "HELLO"
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new ToUpperCaseDotExpr(new VariableRefExpr("$name")));
+    Object result = evaluator.eval(new ToUpperCaseDotExpr(new VariableRefExpr("$name", Optional.empty())));
     assertEquals("HELLO", result);
   }
 
@@ -544,7 +538,7 @@ public class P4TypedAstEvaluatorTest {
     // $name.toLowerCase() → "hello" (already lowercase)
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new ToLowerCaseDotExpr(new VariableRefExpr("$name")));
+    Object result = evaluator.eval(new ToLowerCaseDotExpr(new VariableRefExpr("$name", Optional.empty())));
     assertEquals("hello", result);
   }
 
@@ -555,7 +549,7 @@ public class P4TypedAstEvaluatorTest {
     ctx.set("spacey", "  hello  ");
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new TrimDotExpr(new VariableRefExpr("$spacey")));
+    Object result = evaluator.eval(new TrimDotExpr(new VariableRefExpr("$spacey", Optional.empty())));
     assertEquals("hello", result);
   }
 
@@ -564,7 +558,7 @@ public class P4TypedAstEvaluatorTest {
     // $name.length() → 5.0
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float), newContext());
-    Object result = evaluator.eval(new LengthDotExpr(new VariableRefExpr("$name")));
+    Object result = evaluator.eval(new LengthDotExpr(new VariableRefExpr("$name", Optional.empty())));
     assertEquals(5.0f, ((Number) result).floatValue(), 0.001f);
   }
 
@@ -578,7 +572,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", leaf("0"), leaf("3"), null));
+        "$s", "0", "3", null));
     assertEquals("hel", result);
   }
 
@@ -590,7 +584,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", leaf("1"), null, null));
+        "$s", "1", null, null));
     assertEquals("ello", result);
   }
 
@@ -602,7 +596,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", null, leaf("3"), null));
+        "$s", null, "3", null));
     assertEquals("hel", result);
   }
 
@@ -614,7 +608,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", null, null, leaf("2")));
+        "$s", null, null, "2"));
     assertEquals("hlo", result);
   }
 
@@ -626,7 +620,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", null, null, leaf("-1")));
+        "$s", null, null, "-1"));
     assertEquals("olleh", result);
   }
 
@@ -638,7 +632,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", leaf("-3"), null, null));
+        "$s", "-3", null, null));
     assertEquals("llo", result);
   }
 
@@ -650,7 +644,7 @@ public class P4TypedAstEvaluatorTest {
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
     Object result = evaluator.eval(new SliceExpr(
-        "$s", leaf("3"), leaf("3"), null));
+        "$s", "3", "3", null));
     assertEquals("", result);
   }
 }
