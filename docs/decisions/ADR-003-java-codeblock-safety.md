@@ -1,6 +1,6 @@
 # ADR-003: Java コードブロック実行のセキュリティモデル
 
-**Status**: Accepted  
+**Status**: Accepted (amended in 1.4.11)
 **Date**: 2026-03-01  
 **Deciders**: Project architect
 
@@ -43,7 +43,7 @@ This is intentional — the feature exists to allow advanced integrations with f
 
 ## Decision
 
-The Java code block feature is **retained as-is** with the following explicit policy:
+The Java code block feature is retained behind a **secure-by-default opt-in policy**:
 
 ### Usage Policy
 
@@ -53,7 +53,7 @@ The Java code block feature is **retained as-is** with the following explicit po
 
 3. **Explicit documentation**: All user-facing documentation (README, language guide, getting-started) must carry an explicit security warning on Java code blocks.
 
-4. **Feature isolation**: The Java code block compilation path (`TripleBackTickParser`, `CodeParser`, `MemoryClassLoader`) is distinct from the standard formula path. Host applications can disable this feature by intercepting `FormulaInfo` blocks before evaluation if code blocks are not needed.
+4. **Feature isolation**: The Java code block compilation path (`TripleBackTickParser`, `CodeParser`, `MemoryClassLoader`) is distinct from the standard formula path. `JavaCodeBlockPolicy` disables compilation by default; trusted hosts must explicitly call `setEnabled(true)`.
 
 ### Documentation Requirements
 
@@ -73,7 +73,7 @@ Every document that mentions Java code blocks must include this warning:
 
 ### Negative
 
-- Users who skim documentation may miss the warning and expose the feature to untrusted users
+- A trusted host that opts in can still expose arbitrary JVM capabilities to formula authors
 - There is no engine-level protection — all responsibility is on the host application
 
 ### Neutral
@@ -86,7 +86,7 @@ Every document that mentions Java code blocks must include this warning:
 
 **Remove the feature entirely**: Rejected. The feature enables legitimate advanced integrations and was an explicit design choice. Removing it would break existing users without an equivalent replacement.
 
-**Add an opt-in flag to enable code blocks**: Deferred. This would be a meaningful improvement for future versions. `FormulaInfoAdditionalFields` is the natural place for such a flag. Not implemented in v1.4.10.
+**Add an opt-in flag to enable code blocks**: Accepted after the original decision. `JavaCodeBlockPolicy` was added in v1.4.11 and defaults to disabled. The VS Code DAP exposes the same decision as `allowJavaCodeBlocks`, also defaulting to `false`.
 
 **Provide a SecurityManager-based sandbox**: Rejected. `SecurityManager` is deprecated and removed in recent Java versions. A meaningful sandbox would require process isolation, which is outside the scope of an embedded expression engine.
 

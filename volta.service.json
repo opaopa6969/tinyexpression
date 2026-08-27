@@ -1,0 +1,25 @@
+{
+  "id": "tinyexpression",
+  "name": "TinyExpression MCP",
+  "description": "Java 組み込み式評価エンジンの MCP サーバ。式文字列の評価・構文検証・バッチ実行・バックエンドパリティ比較を提供。6バックエンド（AST/P4/JavaCode系列）をサポート。",
+  "type": "java",
+  "hostname": "tinyexpr.unlaxer.org",
+  "port": 9237,
+  "host": "192.168.1.50",
+  "runtime": "systemd",
+  "exec_start": "/home/opa/tinyexpression/run.sh",
+  "user": "opa",
+  "auth": "minRole:MEMBER",
+  "health_check": "/healthz",
+  "tags": ["mcp", "expression", "evaluator", "java", "library", "opa"],
+  "repo_url": "https://github.com/opaopa6969/unlaxer-workspace/tinyexpression",
+  "mcp": {
+    "enabled": true,
+    "port": 9237,
+    "path": "/mcp",
+    "namespace": "tinyexpr",
+    "min_role": "MEMBER",
+    "timeoutMs": 110000,
+    "description": "式評価エンジン（evaluate/validate/execute_batch/parity_check/list_backends）"
+  }
+}

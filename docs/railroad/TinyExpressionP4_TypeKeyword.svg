@@ -1,0 +1,120 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="195" height="434">
+<style>
+  .rail { stroke: #333; stroke-width: 2; fill: none; }
+  .arrow { stroke: #333; stroke-width: 2; fill: none; }
+  .terminal-box { fill: #e8f5e9; stroke: #2e7d32; stroke-width: 2; }
+  .terminal-text { font-family: monospace; font-size: 12px; fill: #1b5e20; }
+  .nonterminal-box { fill: #e3f2fd; stroke: #1565c0; stroke-width: 2; }
+  .nonterminal-text { font-family: sans-serif; font-size: 12px; fill: #0d47a1; }
+  .start-circle { fill: #333; stroke: none; }
+  .end-circle-outer { fill: none; stroke: #333; stroke-width: 2; }
+  .end-circle-inner { fill: #333; stroke: none; }
+  rect, g { transition: all 0.3s; }
+</style>
+<text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TypeKeyword</text>
+<circle cx="24" cy="58" r="4" class="start-circle"/>
+<line x1="28" y1="58" x2="40" y2="58" class="rail"/>
+<g id="rr-10">
+<g id="rr-0">
+<rect x="59" y="44" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="62" text-anchor="middle" class="terminal-text">'number'</text>
+</g>
+<line x1="56" y1="58" x2="59" y2="58" class="rail"/>
+<line x1="135" y1="58" x2="139" y2="58" class="rail"/>
+<line x1="40" y1="58" x2="56" y2="58" class="rail"/>
+<line x1="139" y1="58" x2="155" y2="58" class="rail"/>
+<g id="rr-1">
+<rect x="59" y="82" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="100" text-anchor="middle" class="terminal-text">'Number'</text>
+</g>
+<line x1="56" y1="96" x2="59" y2="96" class="rail"/>
+<line x1="135" y1="96" x2="139" y2="96" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,88 Q48,96 56,96" class="rail" fill="none"/>
+<path d="M139,96 Q147,96 147,88" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-2">
+<rect x="63" y="120" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="138" text-anchor="middle" class="terminal-text">'float'</text>
+</g>
+<line x1="56" y1="134" x2="63" y2="134" class="rail"/>
+<line x1="132" y1="134" x2="139" y2="134" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,126 Q48,134 56,134" class="rail" fill="none"/>
+<path d="M139,134 Q147,134 147,126" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-3">
+<rect x="63" y="158" width="69" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="176" text-anchor="middle" class="terminal-text">'Float'</text>
+</g>
+<line x1="56" y1="172" x2="63" y2="172" class="rail"/>
+<line x1="132" y1="172" x2="139" y2="172" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,164 Q48,172 56,172" class="rail" fill="none"/>
+<path d="M139,172 Q147,172 147,164" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-4">
+<rect x="59" y="196" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="214" text-anchor="middle" class="terminal-text">'string'</text>
+</g>
+<line x1="56" y1="210" x2="59" y2="210" class="rail"/>
+<line x1="135" y1="210" x2="139" y2="210" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
+<path d="M139,210 Q147,210 147,202" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-5">
+<rect x="59" y="234" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="252" text-anchor="middle" class="terminal-text">'String'</text>
+</g>
+<line x1="56" y1="248" x2="59" y2="248" class="rail"/>
+<line x1="135" y1="248" x2="139" y2="248" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
+<path d="M139,248 Q147,248 147,240" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-6">
+<rect x="56" y="272" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="290" text-anchor="middle" class="terminal-text">'boolean'</text>
+</g>
+<line x1="56" y1="286" x2="56" y2="286" class="rail"/>
+<line x1="139" y1="286" x2="139" y2="286" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,278 Q48,286 56,286" class="rail" fill="none"/>
+<path d="M139,286 Q147,286 147,278" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-7">
+<rect x="56" y="310" width="83" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="328" text-anchor="middle" class="terminal-text">'Boolean'</text>
+</g>
+<line x1="56" y1="324" x2="56" y2="324" class="rail"/>
+<line x1="139" y1="324" x2="139" y2="324" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,316 Q48,324 56,324" class="rail" fill="none"/>
+<path d="M139,324 Q147,324 147,316" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-8">
+<rect x="59" y="348" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="366" text-anchor="middle" class="terminal-text">'object'</text>
+</g>
+<line x1="56" y1="362" x2="59" y2="362" class="rail"/>
+<line x1="135" y1="362" x2="139" y2="362" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,354 Q48,362 56,362" class="rail" fill="none"/>
+<path d="M139,362 Q147,362 147,354" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+<g id="rr-9">
+<rect x="59" y="386" width="76" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="97" y="404" text-anchor="middle" class="terminal-text">'Object'</text>
+</g>
+<line x1="56" y1="400" x2="59" y2="400" class="rail"/>
+<line x1="135" y1="400" x2="139" y2="400" class="rail"/>
+<path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
+<path d="M48,392 Q48,400 56,400" class="rail" fill="none"/>
+<path d="M139,400 Q147,400 147,392" class="rail" fill="none"/>
+<path d="M147,66 Q147,58 155,58" class="rail" fill="none"/>
+</g>
+<line x1="155" y1="58" x2="163" y2="58" class="rail"/>
+<circle cx="169" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="169" cy="58" r="3" class="end-circle-inner"/>
+</svg>

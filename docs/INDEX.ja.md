@@ -10,7 +10,7 @@
 |-------------|------|
 | [getting-started-ja.md](./getting-started-ja.md) | Maven 設定、単発式、複数式エグゼキュータ |
 | [language-guide-ja.md](./language-guide-ja.md) | 完全な言語仕様 |
-| [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、フォールバックチェーン、パリティ契約 |
+| [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、generated-only 境界、パリティ契約 |
 | [architecture-ja.md](./architecture-ja.md) | パーサーコンビネータ、AST、6 エバリュエータ、型システム |
 
 ## アーキテクチャ決定記録
@@ -20,6 +20,7 @@
 | [decisions/ADR-001-p4-primary.md](./decisions/ADR-001-p4-primary.md) | P4TypedAstEvaluator を PRIMARY に昇格した理由 |
 | [decisions/ADR-002-type-promotion.md](./decisions/ADR-002-type-promotion.md) | 数値型昇格ルール |
 | [decisions/ADR-003-java-codeblock-safety.md](./decisions/ADR-003-java-codeblock-safety.md) | Java コードブロックのセキュリティモデル |
+| [decisions/ADR-004-generated-backends-no-fallback.md](./decisions/ADR-004-generated-backends-no-fallback.md) | generated backend が手書き fallback を呼ばず明示的に失敗する理由 |
 
 ## 会話形式ガイド
 
@@ -32,11 +33,14 @@
 
 | ドキュメント | 説明 |
 |-------------|------|
-| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 5つの実行バックエンドのカバレッジマトリクス |
+| [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 6つの実行バックエンドのカバレッジ境界 |
 | [feature-parity-diff.md](./feature-parity-diff.md) | 手書きパスと UBNF (P4) パスの機能パリティ差分 |
 | [test-baseline.md](./test-baseline.md) | `test-baseline.txt` / `check-test-baseline.sh` の運用（既知の失敗の管理と更新手順） |
 
 ## その他のドキュメント
+
+ここには過去の計画・移行記録も含まれます。主要ガイドやバックエンド契約と
+矛盾する場合は、主要ドキュメントを正とします。
 
 | ドキュメント | 説明 |
 |-------------|------|

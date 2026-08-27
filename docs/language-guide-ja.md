@@ -2,7 +2,7 @@
 
 [English version](language-guide.md)
 
-TinyExpression v1.4.11 の完全言語仕様です。
+TinyExpression v1.4.15 の完全言語仕様です。
 
 ---
 
@@ -322,6 +322,8 @@ public class CheckDigits {
 > **セキュリティ警告**: Java コードブロックは式評価時に JVM 上で任意の Java コードをコンパイル・実行します。この機能は式の作成者を完全に信頼できる場合にのみ有効化してください。信頼できないユーザーへはこの機能を公開しないでください。
 >
 > **リスク**: ファイルシステムアクセス、ネットワーク呼び出し、`System.exit()` など、あらゆる Java コードが埋め込まれる可能性があります。サンドボックスの制御はホストアプリケーションの責任です。
+
+実行は既定で無効です。信頼できるホストだけが`JavaCodeBlockPolicy.setEnabled(true)`を明示的に呼び出してください。VS Codeデバッガーでは同等の許可として`launch.json`の`allowJavaCodeBlocks: true`が必要です。
 
 `formula` フィールドにトリプルバッククォート構文で Java クラスを直接埋め込めます:
 

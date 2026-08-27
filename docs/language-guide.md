@@ -2,7 +2,7 @@
 
 [日本語版](language-guide-ja.md)
 
-Complete language specification for TinyExpression v1.4.10.
+Complete language specification for TinyExpression v1.4.15.
 
 ---
 
@@ -322,6 +322,8 @@ public class CheckDigits {
 > **Security Warning**: Java code blocks compile and execute arbitrary Java code on the JVM at formula evaluation time. Only enable this feature when formula authors are fully trusted. Do not expose this capability to untrusted users.
 >
 > **Risk**: Any Java code, including file system access, network calls, or `System.exit()`, can be embedded. Sandbox control is the responsibility of the host application.
+
+Execution is disabled by default. Trusted hosts must explicitly call `JavaCodeBlockPolicy.setEnabled(true)`; the VS Code debugger equivalently requires `allowJavaCodeBlocks: true` in `launch.json`.
 
 A Java class can be embedded directly inside a `formula` field using triple-backtick syntax:
 

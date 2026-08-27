@@ -2,7 +2,7 @@
 
 [日本語](README.md) | English
 
-[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.unlaxer/tinyExpression/badge.svg)](https://central.sonatype.com/artifact/org.unlaxer/tinyExpression)
 
 A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 
@@ -47,7 +47,7 @@ Note: tests/runtime use reflective access and require `add-opens` options (confi
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.10</version>
+  <version>1.4.11</version>
 </dependency>
 ```
 

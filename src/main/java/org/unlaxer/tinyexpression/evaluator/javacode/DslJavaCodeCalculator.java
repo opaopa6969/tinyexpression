@@ -6,9 +6,9 @@ import java.util.Optional;
 import org.unlaxer.tinyexpression.Source;
 
 /**
- * Dedicated DSL backend seam.
- * <p>
- * Current runtime behavior intentionally bridges to the legacy JavaCode runtime.
+ * Java-code backend driven exclusively by the generated P4 AST emitter.
+ * Unsupported syntax fails explicitly instead of switching to the handwritten
+ * {@link JavaCodeCalculatorV3} generator.
  */
 public class DslJavaCodeCalculator extends JavaCodeCalculatorV3 {
 
@@ -29,7 +29,7 @@ public class DslJavaCodeCalculator extends JavaCodeCalculatorV3 {
     super(source, javaCode, className, specifiedExpressionTypes,
         byteCode, byteCodeHash, classNameAndByteCodeList, classLoader);
     this.nativeEmitterUsed = false;
-    this.dslEmitterMode = "legacy-bridge";
+    this.dslEmitterMode = "precompiled-bytecode";
   }
 
   private static ClassLoader captureClassLoader(ClassLoader classLoader) {
@@ -52,8 +52,9 @@ public class DslJavaCodeCalculator extends JavaCodeCalculatorV3 {
       return emitted.get().javaCode();
     }
     this.nativeEmitterUsed = false;
-    this.dslEmitterMode = "legacy-bridge";
-    return super.createJavaClass(className, tinyExpressionToken, specifiedExpressionTypes);
+    this.dslEmitterMode = "unsupported";
+    throw new UnsupportedOperationException(
+        "Generated DSL Java emitter cannot emit formula: " + source().source());
   }
 
   public boolean nativeEmitterUsed() {
