@@ -108,7 +108,7 @@ public class GrammarCoverageInterpreterTest {
     assertBool("not(true) & not(false)", false);
     assertBool("not(false) | not(true)", true);
     assertBool("not(true) | not(false)", true);
-    assertBool("not(not(true) & not(false))", true);   // not(false & true)=not(false)=true
+    assertBool("not(not(true) & not(false))", true);
     assertBool("not(true & true) | not(false)", true);
   }
 
@@ -118,9 +118,8 @@ public class GrammarCoverageInterpreterTest {
     assertBool("true | (false & false)", true);
     assertBool("(true ^ false) & false", false);
     assertBool("true ^ (false & false)", true);
-    // NOTE: a parenthesised boolean group used as an AND/XOR operand is mis-mapped
-    // (value captured as the literal "(") — see KnownP4BugsTest.parenthesisedBooleanOperand.
-    // e.g. "(true | false) & (false | true)" and "not((true | false) & false)" are broken.
+    assertBool("(true | false) & (false | true)", true);
+    assertBool("not((true | false) & false)", true);
   }
 
   // ───────────────────────── comparisons inside if ──────────────
