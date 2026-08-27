@@ -35,6 +35,7 @@
 |----------|-------------|
 | [backend-coverage-matrix.md](./backend-coverage-matrix.md) | Coverage boundary for the 6 execution backends |
 | [feature-parity-diff.md](./feature-parity-diff.md) | Feature parity diff between hand-written path and UBNF (P4) path |
+| [test-baseline.md](./test-baseline.md) | `test-baseline.txt` / `check-test-baseline.sh` の運用（既知の失敗の管理と更新手順） |
 
 ## Other Documentation
 

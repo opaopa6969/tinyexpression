@@ -35,6 +35,7 @@
 |-------------|------|
 | [backend-coverage-matrix.md](./backend-coverage-matrix.md) | 6つの実行バックエンドのカバレッジ境界 |
 | [feature-parity-diff.md](./feature-parity-diff.md) | 手書きパスと UBNF (P4) パスの機能パリティ差分 |
+| [test-baseline.md](./test-baseline.md) | `test-baseline.txt` / `check-test-baseline.sh` の運用（既知の失敗の管理と更新手順） |
 
 ## その他のドキュメント
 
