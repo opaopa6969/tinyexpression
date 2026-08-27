@@ -5,16 +5,20 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BinaryExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BooleanAndExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BooleanCaseValueExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BooleanFactorExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BooleanOrExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BooleanXorExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.MethodInvocationExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.NumberCaseValueExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.StringCaseValueExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.StringConcatExpr;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.VariableRefExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
-import org.unlaxer.tinyexpression.parser.ExpressionType;
-import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 /**
  * Semantic strict-typing guard for P4 match expressions.
@@ -29,13 +33,6 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
  */
 public final class P4StrictMatchTypingValidator {
 
-  private static final Pattern BARE_VARIABLE_PATTERN = Pattern.compile(
-      "^\\$[\\p{L}_][\\p{L}\\p{N}_]*(?:\\s+as\\s+(number|float|string|boolean|object))?$");
-
-  private static final Pattern BARE_METHOD_INVOCATION_PATTERN = Pattern.compile(
-      "^(?:call\\s+internal|call|internal)\\s+[\\p{L}_][\\p{L}\\p{N}_]*\\s*\\(.*\\)$",
-      Pattern.DOTALL);
-
   private P4StrictMatchTypingValidator() {}
 
   public static Optional<String> firstViolation(TinyExpressionP4AST ast, String formula) {
@@ -48,58 +45,11 @@ public final class P4StrictMatchTypingValidator {
     });
   }
 
-  public static Optional<String> firstHeuristicViolation(String formula, ExpressionType resultType) {
-    return firstHeuristicViolationDetail(formula, resultType).map(Violation::message);
-  }
-
   public static Optional<Violation> firstViolationDetail(TinyExpressionP4AST ast, String formula) {
     if (ast == null || formula == null || formula.isBlank()) {
       return Optional.empty();
     }
     return firstViolationRecursive(ast, formula, java.util.Collections.newSetFromMap(new IdentityHashMap<>()));
-  }
-
-  public static Optional<Violation> firstHeuristicViolationDetail(String formula, ExpressionType resultType) {
-    ExpectedType expectedType = ExpectedType.from(resultType);
-    if (expectedType == null || formula == null) {
-      return Optional.empty();
-    }
-    MatchBody matchBody = rootMatchBody(formula);
-    if (matchBody == null) {
-      return Optional.empty();
-    }
-    for (Segment caseClause : splitTopLevel(matchBody.body(), ',', matchBody.bodyStartOffset())) {
-      Segment rhs = extractCaseValue(caseClause);
-      if (rhs == null) {
-        continue;
-      }
-      Optional<Violation> violation = validateDirectCaseValueSnippet(rhs.text(), expectedType, rhs.startOffset(), rhs.endOffset());
-      if (violation.isPresent()) {
-        return violation;
-      }
-    }
-    return Optional.empty();
-  }
-
-  public static Optional<Violation> firstHeuristicViolationAnyExpectedType(String formula) {
-    if (formula == null) {
-      return Optional.empty();
-    }
-    MatchBody matchBody = rootMatchBody(formula);
-    if (matchBody == null) {
-      return Optional.empty();
-    }
-    for (Segment caseClause : splitTopLevel(matchBody.body(), ',', matchBody.bodyStartOffset())) {
-      Segment rhs = extractCaseValue(caseClause);
-      if (rhs == null) {
-        continue;
-      }
-      Optional<Violation> violation = validateDirectCaseValueSnippetWithoutExpectedType(rhs.text(), rhs.startOffset(), rhs.endOffset());
-      if (violation.isPresent()) {
-        return violation;
-      }
-    }
-    return Optional.empty();
   }
 
   private static Optional<Violation> firstViolationRecursive(Object node, String formula, Set<Object> visited) {
@@ -149,315 +99,87 @@ public final class P4StrictMatchTypingValidator {
 
   private static Optional<Violation> validateDirectCaseValue(
       String formula, Object caseValueNode, ExpectedType expectedType) {
-
-    Optional<int[]> span = TinyExpressionP4Mapper.sourceSpanOf(caseValueNode);
-    if (span.isEmpty()) {
+    TinyExpressionP4AST directValue = directCaseValueNode(caseValueNode);
+    if (directValue == null) {
       return Optional.empty();
     }
-    int start = Math.max(0, Math.min(span.get()[0], formula.length()));
-    int end = Math.max(start, Math.min(span.get()[1], formula.length()));
+
+    Optional<int[]> span = TinyExpressionP4Mapper.sourceSpanOf(directValue)
+        .or(() -> TinyExpressionP4Mapper.sourceSpanOf(caseValueNode));
+    int start = span.map(value -> Math.max(0, Math.min(value[0], formula.length()))).orElse(0);
+    int end = span.map(value -> Math.max(start, Math.min(value[1], formula.length())))
+        .orElse(formula.length());
     String snippet = formula.substring(start, end);
-    return validateDirectCaseValueSnippet(snippet, expectedType, start, end);
-  }
-
-  private static Optional<Violation> validateDirectCaseValueSnippet(
-      String snippet, ExpectedType expectedType, int startOffset, int endOffset) {
-    String normalized = normalizeCaseValueSnippet(snippet);
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-
-    Matcher variableMatcher = BARE_VARIABLE_PATTERN.matcher(normalized);
-    if (variableMatcher.matches()) {
-      String actualHint = variableMatcher.group(1);
-      // A bare variable WITHOUT an inline type hint is fine: the generated P4 grammar parses it into
-      // the match family chosen by the result type, and P4TypedAstEvaluator resolves the variable to
-      // the correct value (verified for number/string/boolean — e.g. match{1==1->$val,default->0}
-      // with $val=7 yields 7 on the p4-typed path). Rejecting it only forced a needless legacy
-      // fallback. We still reject an EXPLICIT, mismatched hint (e.g. `$x as string` in a number
-      // match) — that is a genuine type error. (universal fallback=0)
-      if (actualHint != null && !expectedType.accepts(actualHint)) {
+    if (directValue instanceof VariableRefExpr variable) {
+      Optional<String> actualHint = variable.type();
+      if (actualHint.isPresent() && !expectedType.accepts(actualHint.get())) {
         return Optional.of(new Violation(
             "P4 strict match typing rejected direct "
-                + expectedType.label + " case value with mismatched type hint: " + normalized,
-            startOffset,
-            endOffset,
+                + expectedType.label + " case value with mismatched type hint: " + snippet,
+            start,
+            end,
             ViolationKind.DIRECT_VARIABLE_CASE_VALUE,
-            normalized));
+            snippet));
       }
       return Optional.empty();
     }
-
-    if (BARE_METHOD_INVOCATION_PATTERN.matcher(normalized).matches()) {
+    if (directValue instanceof MethodInvocationExpr) {
       return Optional.of(new Violation(
           "P4 strict match typing rejected direct method invocation in "
-              + expectedType.label + " match case: " + normalized,
-          startOffset,
-          endOffset,
+              + expectedType.label + " match case: " + snippet,
+          start,
+          end,
           ViolationKind.DIRECT_METHOD_INVOCATION,
-          normalized));
+          snippet));
     }
     return Optional.empty();
   }
 
-  private static Optional<Violation> validateDirectCaseValueSnippetWithoutExpectedType(
-      String snippet, int startOffset, int endOffset) {
-    String normalized = normalizeCaseValueSnippet(snippet);
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-    Matcher variableMatcher = BARE_VARIABLE_PATTERN.matcher(normalized);
-    if (variableMatcher.matches() && variableMatcher.group(1) == null) {
-      return Optional.of(new Violation(
-          "P4 strict match typing rejected direct match case variable without inline type hint: "
-              + normalized,
-          startOffset,
-          endOffset,
-          ViolationKind.DIRECT_VARIABLE_CASE_VALUE,
-          normalized));
-    }
-    if (BARE_METHOD_INVOCATION_PATTERN.matcher(normalized).matches()) {
-      return Optional.of(new Violation(
-          "P4 strict match typing rejected direct method invocation in match case: " + normalized,
-          startOffset,
-          endOffset,
-          ViolationKind.DIRECT_METHOD_INVOCATION,
-          normalized));
-    }
-    return Optional.empty();
+  private static TinyExpressionP4AST directCaseValueNode(Object caseValueNode) {
+    return switch (caseValueNode) {
+      case NumberCaseValueExpr numberValue -> directValueNode(numberValue.value());
+      case StringCaseValueExpr stringValue -> directValueNode(stringValue.value());
+      case BooleanCaseValueExpr booleanValue -> directValueNode(booleanValue.value());
+      default -> null;
+    };
   }
 
-  private static String normalizeCaseValueSnippet(String snippet) {
-    if (snippet == null) {
-      return "";
-    }
-    String normalized = snippet
-        .replaceAll("(?s)/\\*.*?\\*/", " ")
-        .replaceAll("(?m)//.*$", " ")
-        .trim();
-    while (isWrappedByWholeParentheses(normalized)) {
-      normalized = normalized.substring(1, normalized.length() - 1).trim();
-    }
-    return normalized.replaceAll("\\s+", " ");
-  }
-
-  private static MatchBody rootMatchBody(String formula) {
-    int bodyStart = firstNonWhitespace(formula);
-    if (bodyStart < 0) {
-      return null;
-    }
-    if (!(formula.startsWith("match{", bodyStart) || formula.startsWith("match {", bodyStart))) {
-      return null;
-    }
-    int openBrace = formula.indexOf('{', bodyStart);
-    int closeBrace = findMatchingBrace(formula, openBrace);
-    if (openBrace < 0 || closeBrace <= openBrace) {
-      return null;
-    }
-    return new MatchBody(formula.substring(openBrace + 1, closeBrace), openBrace + 1);
-  }
-
-  private static int firstNonWhitespace(String text) {
-    for (int i = 0; i < text.length(); i++) {
-      if (!Character.isWhitespace(text.charAt(i))) {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static Segment extractCaseValue(Segment caseClause) {
-    if (caseClause == null || caseClause.text().isBlank()) {
-      return null;
-    }
-    int arrow = findTopLevelArrow(caseClause.text());
-    if (arrow < 0) {
-      return null;
-    }
-    int relativeStart = arrow + 2;
-    int localStart = trimLeadingIndex(caseClause.text(), relativeStart);
-    int localEnd = trimTrailingIndex(caseClause.text(), localStart, caseClause.text().length());
-    if (localStart >= localEnd) {
-      return null;
-    }
-    return new Segment(
-        caseClause.text().substring(localStart, localEnd),
-        caseClause.startOffset() + localStart,
-        caseClause.startOffset() + localEnd);
-  }
-
-  private static int trimLeadingIndex(String text, int start) {
-    int index = Math.max(0, start);
-    while (index < text.length() && Character.isWhitespace(text.charAt(index))) {
-      index++;
-    }
-    return index;
-  }
-
-  private static int trimTrailingIndex(String text, int start, int end) {
-    int index = Math.min(text.length(), Math.max(start, end));
-    while (index > start && Character.isWhitespace(text.charAt(index - 1))) {
-      index--;
-    }
-    return index;
-  }
-
-  private static int findTopLevelArrow(String text) {
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length() - 1; i++) {
-      char c = text.charAt(i);
-      char next = text.charAt(i + 1);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth == 0 && braceDepth == 0 && bracketDepth == 0 && c == '-' && next == '>') {
-        return i;
-      }
-    }
-    return -1;
-  }
-
-  private static int findMatchingBrace(String text, int openBrace) {
-    if (openBrace < 0 || openBrace >= text.length() || text.charAt(openBrace) != '{') {
-      return -1;
-    }
-    int depth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = openBrace; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      if (c == '{') {
-        depth++;
-      } else if (c == '}') {
-        depth--;
-        if (depth == 0) {
-          return i;
-        }
-      }
-    }
-    return -1;
-  }
-
-  private static List<Segment> splitTopLevel(String text, char separator, int baseOffset) {
-    java.util.ArrayList<Segment> parts = new java.util.ArrayList<>();
-    int start = 0;
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '{' -> braceDepth++;
-        case '}' -> braceDepth = Math.max(0, braceDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (c == separator && parenDepth == 0 && braceDepth == 0 && bracketDepth == 0) {
-        addSegment(parts, text, start, i, baseOffset);
-        start = i + 1;
-      }
-    }
-    addSegment(parts, text, start, text.length(), baseOffset);
-    return parts;
-  }
-
-  private static void addSegment(List<Segment> parts, String text, int rawStart, int rawEnd, int baseOffset) {
-    int start = trimLeadingIndex(text, rawStart);
-    int end = trimTrailingIndex(text, start, rawEnd);
-    parts.add(new Segment(text.substring(start, end), baseOffset + start, baseOffset + end));
-  }
-
-  private static boolean isWrappedByWholeParentheses(String text) {
-    if (text == null || text.length() < 2 || text.charAt(0) != '(' || text.charAt(text.length() - 1) != ')') {
-      return false;
-    }
-    int depth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-      } else if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      if (c == '(') {
-        depth++;
-      } else if (c == ')') {
-        depth--;
-        if (depth == 0 && i < text.length() - 1) {
-          return false;
-        }
-      }
-    }
-    return depth == 0;
+  private static TinyExpressionP4AST directValueNode(Object value) {
+    return switch (value) {
+      case VariableRefExpr variable -> variable;
+      case MethodInvocationExpr invocation -> invocation;
+      case BinaryExpr binary when binary.left() != null
+          && binary.op().isEmpty() && binary.right().isEmpty() -> directValueNode(binary.left());
+      case StringConcatExpr string when string.left() != null
+          && string.op().isEmpty() && string.right().isEmpty() -> directValueNode(string.left());
+      case BooleanOrExpr expression when expression.op().isEmpty()
+          && expression.right().isEmpty() -> directValueNode(expression.left());
+      case BooleanAndExpr expression when expression.op().isEmpty()
+          && expression.right().isEmpty() -> directValueNode(expression.left());
+      case BooleanXorExpr expression when expression.op().isEmpty()
+          && expression.right().isEmpty() -> directValueNode(expression.left());
+      case BooleanFactorExpr factor -> directValueNode(factor.value());
+      default -> null;
+    };
   }
 
   private enum ExpectedType {
     NUMBER("number") {
       @Override
       boolean accepts(String inlineHint) {
-        return "number".equals(inlineHint) || "float".equals(inlineHint);
+        return "number".equalsIgnoreCase(inlineHint) || "float".equalsIgnoreCase(inlineHint);
       }
     },
     STRING("string") {
       @Override
       boolean accepts(String inlineHint) {
-        return "string".equals(inlineHint);
+        return "string".equalsIgnoreCase(inlineHint);
       }
     },
     BOOLEAN("boolean") {
       @Override
       boolean accepts(String inlineHint) {
-        return "boolean".equals(inlineHint);
+        return "boolean".equalsIgnoreCase(inlineHint);
       }
     };
 
@@ -468,19 +190,6 @@ public final class P4StrictMatchTypingValidator {
     }
 
     abstract boolean accepts(String inlineHint);
-
-    static ExpectedType from(ExpressionType resultType) {
-      if (resultType == ExpressionTypes.string) {
-        return STRING;
-      }
-      if (resultType == ExpressionTypes._boolean) {
-        return BOOLEAN;
-      }
-      if (resultType instanceof ExpressionTypes expressionTypes && expressionTypes.isNumber()) {
-        return NUMBER;
-      }
-      return null;
-    }
   }
 
   public record Violation(
@@ -498,8 +207,4 @@ public final class P4StrictMatchTypingValidator {
     DIRECT_VARIABLE_CASE_VALUE,
     DIRECT_METHOD_INVOCATION
   }
-
-  private record Segment(String text, int startOffset, int endOffset) {}
-
-  private record MatchBody(String body, int bodyStartOffset) {}
 }

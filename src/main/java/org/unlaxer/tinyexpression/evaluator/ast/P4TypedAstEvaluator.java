@@ -10,14 +10,11 @@ import java.util.Optional;
 
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.CalculationException;
-import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.function.EmbeddedFunction;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
-import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -264,93 +261,11 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
         return zeroNumber();
       }
     }
-    Number structured = tryEvaluateStructuredNumberLeaf(literal);
-    if (structured != null) {
-      return structured;
-    }
-    // P4 mapper collapses term-level ops (e.g., "3*4") into a single leaf.
-    // Evaluate simple term expressions manually.
-    if (literal.contains("*") || literal.contains("/")) {
-      return evaluateCollapsedTerm(literal);
-    }
     return numberType.parseNumber(literal);
   }
 
   private Number zeroNumber() {
     return numberType.parseNumber("0");
-  }
-
-  private Number tryEvaluateStructuredNumberLeaf(String text) {
-    if (!looksLikeStructuredNumberLeaf(text)) {
-      return null;
-    }
-    try {
-      String normalized = text.strip();
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, numberType).ast();
-      Object value = new P4TypedAstEvaluator(
-          new SpecifiedExpressionTypes(numberType, numberType),
-          context,
-          parseSource,
-          classLoader).eval(ast);
-      return value instanceof Number number ? number : null;
-    } catch (RuntimeException ignored) {
-      return null;
-    }
-  }
-
-  private boolean looksLikeStructuredNumberLeaf(String text) {
-    if (text == null || text.isEmpty()) {
-      return false;
-    }
-    String normalized = text.strip();
-    if (normalized.isEmpty() || isExactVariableReference(normalized) || isPlainNumericLiteral(normalized)) {
-      return false;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      return looksLikeStructuredNumberLeaf(unwrapped);
-    }
-    return normalized.startsWith("call ")
-        || normalized.startsWith("internal ")
-        || normalized.startsWith("external ")
-        || normalized.indexOf('(') >= 0
-        || normalized.indexOf('[') >= 0
-        || normalized.indexOf('*') >= 0
-        || normalized.indexOf('/') >= 0
-        || normalized.indexOf(',') >= 0
-        || normalized.indexOf('?') >= 0;
-  }
-
-  private boolean isPlainNumericLiteral(String text) {
-    try {
-      numberType.parseNumber(text);
-      return true;
-    } catch (RuntimeException ignored) {
-      return false;
-    }
-  }
-
-  private Number evaluateCollapsedTerm(String term) {
-    // Split by * and / while preserving operator order
-    List<String> tokens = new java.util.ArrayList<>();
-    List<Character> ops = new java.util.ArrayList<>();
-    int start = 0;
-    for (int i = 0; i < term.length(); i++) {
-      char c = term.charAt(i);
-      if ((c == '*' || c == '/') && i > start) {
-        tokens.add(term.substring(start, i).strip());
-        ops.add(c);
-        start = i + 1;
-      }
-    }
-    tokens.add(term.substring(start).strip());
-    Number result = numberType.parseNumber(tokens.get(0));
-    for (int i = 0; i < ops.size(); i++) {
-      Number right = numberType.parseNumber(tokens.get(i + 1));
-      result = applyBinary(String.valueOf(ops.get(i)), result, right);
-    }
-    return result;
   }
 
   private Number applyBinary(String operator, Number left, Number right) {
@@ -482,25 +397,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     String rawName = node.name();
     String varName = extractVariableName(rawName);
-    // Generated mapper may emit an empty VariableRefExpr name.
     if ((varName == null || varName.isEmpty()) && rawName != null && !rawName.isBlank()) {
       String stripped = rawName.strip();
       varName = stripped.startsWith("$") ? extractVariableName(stripped) : stripped;
-    }
-    if ((varName == null || varName.isEmpty())
-        && sourceFormula != null
-        && !sourceFormula.isBlank()) {
-      Optional<String> snippet = sourceSnippetOfNode(node);
-      if (snippet.isPresent()) {
-        String stripped = snippet.get().strip();
-        String snippetVarName = extractVariableName(stripped);
-        if (snippetVarName != null && !snippetVarName.isEmpty()) {
-          return snippetVarName;
-        }
-        if (!stripped.isEmpty()) {
-          return stripped;
-        }
-      }
     }
     return (varName == null || varName.isEmpty()) ? null : varName;
   }
@@ -557,38 +456,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       if (unquoted != null) {
         return unquoted;
       }
-      Object structured = tryEvaluateStructuredStringLeaf(stripped);
-      if (structured != null) {
-        return String.valueOf(structured);
-      }
       return text;
     }
     return value == null ? "" : String.valueOf(value);
-  }
-
-  private Object tryEvaluateStructuredStringLeaf(String text) {
-    if (!looksLikeStructuredStringLeaf(text)) {
-      return null;
-    }
-    try {
-      String normalized = text.strip();
-      String unwrapped = unwrapWholeParentheses(normalized);
-      if (!unwrapped.equals(normalized)) {
-        Object inner = tryEvaluateStructuredStringLeaf(unwrapped);
-        if (inner != null) {
-          return inner;
-        }
-      }
-      ClassLoader effectiveClassLoader =
-          classLoader == null ? Thread.currentThread().getContextClassLoader() : classLoader;
-      SpecifiedExpressionTypes leafTypes = new SpecifiedExpressionTypes(ExpressionTypes.string, numberType);
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, ExpressionTypes.string).ast();
-      return new P4TypedAstEvaluator(
-          leafTypes, context, parseSource, effectiveClassLoader).eval(ast);
-    } catch (RuntimeException ignored) {
-      return null;
-    }
   }
 
   // =========================================================================
@@ -642,16 +512,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalBooleanFactorExpr(BooleanFactorExpr node) {
-    // The generated mapper has no @mapping recursion into NotExpression, so a
-    // top-level "not(...)" boolean factor is mis-mapped: the outer "not" is
-    // dropped and node.value() holds only the inner operand (as raw text for
-    // "not(false)", or as a ComparisonExpr node for "not(1>2)"). Detect this via
-    // the node's source snippet and re-parse the whole factor as a NotExpr so the
-    // negation is honoured. (issue #25)
-    Optional<Boolean> negated = tryEvaluateNotFactor(node);
-    if (negated.isPresent()) {
-      return negated.get();
-    }
     Object value = node.value();
     if (value instanceof ComparisonExpr comp) {
       return eval(comp);
@@ -661,6 +521,9 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     if (value instanceof VariableRefExpr varRef) {
       return eval(varRef);
+    }
+    if (value instanceof NotExpr notExpr) {
+      return eval(notExpr);
     }
     if (value instanceof TinyExpressionP4AST ast) {
       return eval(ast);
@@ -682,61 +545,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return bool;
     }
     return toBoolean(value);
-  }
-
-  /**
-   * If this boolean factor's source snippet is a top-level {@code not(...)}
-   * expression, re-parse it as a {@link NotExpr} and evaluate. The generated
-   * mapper drops the outer negation (see {@link #evalBooleanFactorExpr}), so this
-   * source-snippet-driven re-parse restores correct semantics. Returns empty when
-   * the factor is not a negation or cannot be re-parsed. (issue #25)
-   */
-  private Optional<Boolean> tryEvaluateNotFactor(BooleanFactorExpr node) {
-    Optional<String> snippet = sourceSnippetOfNode(node).map(String::strip);
-    if (snippet.isEmpty()) {
-      return Optional.empty();
-    }
-    String candidate = snippet.get();
-    if (!isTopLevelNotExpression(candidate)) {
-      return Optional.empty();
-    }
-    SpecifiedExpressionTypes booleanTypes =
-        new SpecifiedExpressionTypes(ExpressionTypes._boolean, numberType);
-    try {
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(candidate);
-      // Request the NotExpr node directly. The default mapper would otherwise wrap
-      // the formula back into BooleanOrExpr → BooleanFactorExpr, re-entering this
-      // same branch (infinite recursion).
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseByAstSimpleName(parseSource, "NotExpr");
-      if (!(ast instanceof NotExpr)) {
-        return Optional.empty();
-      }
-      Object result = new P4TypedAstEvaluator(
-          booleanTypes, context, parseSource, effectiveLookupFormulaSource(), classLoader).eval(ast);
-      return result == null ? Optional.empty() : Optional.of(Boolean.TRUE.equals(toBoolean(result)));
-    } catch (RuntimeException ignored) {
-      return Optional.empty();
-    }
-  }
-
-  /** True if {@code text} is exactly a top-level {@code not( ... )} expression. */
-  private static boolean isTopLevelNotExpression(String text) {
-    if (text == null) {
-      return false;
-    }
-    String normalized = text.strip();
-    if (!normalized.startsWith("not")) {
-      return false;
-    }
-    int i = 3;
-    while (i < normalized.length() && Character.isWhitespace(normalized.charAt(i))) {
-      i++;
-    }
-    if (i >= normalized.length() || normalized.charAt(i) != '(') {
-      return false;
-    }
-    int close = findMatching(normalized, i, '(', ')');
-    return close == normalized.length() - 1;
   }
 
   // =========================================================================
@@ -832,50 +640,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalTernaryExpr(TernaryExpr node) {
     return Boolean.TRUE.equals(toBoolean(eval(node.condition())))
         ? eval(node.thenExpr()) : eval(node.elseExpr());
-  }
-
-  private Optional<Object> tryEvaluateIfSourceSnippet(String snippetSource, ExpressionType expectedType) {
-    if (snippetSource == null) {
-      return Optional.empty();
-    }
-    String normalized = snippetSource.strip();
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-    if (isExactVariableReference(normalized)) {
-      Object resolved = resolveVariableAny(extractVariableName(normalized));
-      if (resolved != null) {
-        return Optional.of(resolved);
-      }
-    }
-    if (expectedType != null && expectedType.isNumber()) {
-      try {
-        return Optional.of(resolveNumberType(
-            new SpecifiedExpressionTypes(expectedType, numberType)).parseNumber(normalized));
-      } catch (RuntimeException ignored) {
-      }
-    }
-    if (expectedType != null && expectedType.isBoolean()) {
-      if ("true".equalsIgnoreCase(normalized) || "false".equalsIgnoreCase(normalized)) {
-        return Optional.of(Boolean.parseBoolean(normalized));
-      }
-    }
-    if (expectedType != null && expectedType.isString()) {
-      String unquoted = unquoteStringLiteral(normalized);
-      if (unquoted != null) {
-        return Optional.of(unquoted);
-      }
-    }
-    ExpressionType targetType = expectedType == null ? resultType : expectedType;
-    SpecifiedExpressionTypes targetTypes = new SpecifiedExpressionTypes(targetType, numberType);
-    try {
-      String parseSource = P4PreferredAstMapper.normalizeExpressionSnippetForParsing(normalized);
-      TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(parseSource, targetType).ast();
-      return Optional.ofNullable(new P4TypedAstEvaluator(
-          targetTypes, context, parseSource, classLoader).eval(ast));
-    } catch (RuntimeException ignored) {
-      return Optional.empty();
-    }
   }
 
   // =========================================================================
@@ -1114,155 +878,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
     return value;
   }
-
-  private String effectiveLookupFormulaSource() {
-    if (lookupFormulaSource != null && !lookupFormulaSource.isBlank()) {
-      return lookupFormulaSource;
-    }
-    return sourceFormula;
-  }
-
-  private Optional<Boolean> tryEvaluateSimpleCondition(String conditionSource) {
-    String normalized = conditionSource == null ? "" : conditionSource.strip();
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-    if ("true".equalsIgnoreCase(normalized)) {
-      return Optional.of(true);
-    }
-    if ("false".equalsIgnoreCase(normalized)) {
-      return Optional.of(false);
-    }
-    if (isExactVariableReference(normalized)) {
-      Object resolved = resolveVariableAny(extractVariableName(normalized));
-      if (resolved != null) {
-        return Optional.of(Boolean.TRUE.equals(toBoolean(resolved)));
-      }
-    }
-    Optional<SimpleComparisonSource> comparison = splitSimpleComparison(normalized);
-    if (comparison.isEmpty()) {
-      return Optional.empty();
-    }
-    Optional<Object> left = evaluateSimpleConditionOperand(comparison.get().left());
-    Optional<Object> right = evaluateSimpleConditionOperand(comparison.get().right());
-    if (left.isEmpty() || right.isEmpty()) {
-      return Optional.empty();
-    }
-    String op = comparison.get().op();
-    if (left.get() instanceof Number leftNumber && right.get() instanceof Number rightNumber) {
-      int compare = toBigDecimal(leftNumber).compareTo(toBigDecimal(rightNumber));
-      return switch (op) {
-        case "==" -> Optional.of(compare == 0);
-        case "!=" -> Optional.of(compare != 0);
-        case "<" -> Optional.of(compare < 0);
-        case "<=" -> Optional.of(compare <= 0);
-        case ">" -> Optional.of(compare > 0);
-        case ">=" -> Optional.of(compare >= 0);
-        default -> Optional.empty();
-      };
-    }
-    return switch (op) {
-      case "==" -> Optional.of(left.get().equals(right.get()));
-      case "!=" -> Optional.of(!left.get().equals(right.get()));
-      default -> Optional.empty();
-    };
-  }
-
-  private Optional<Object> evaluateSimpleConditionOperand(String operandSource) {
-    String normalized = operandSource == null ? "" : operandSource.strip();
-    if (normalized.isEmpty()) {
-      return Optional.empty();
-    }
-    if (isExactVariableReference(normalized)) {
-      Object resolved = resolveVariableAny(extractVariableName(normalized));
-      return Optional.ofNullable(resolved);
-    }
-    String unquoted = unquoteStringLiteral(normalized);
-    if (unquoted != null) {
-      return Optional.of(unquoted);
-    }
-    if ("true".equalsIgnoreCase(normalized) || "false".equalsIgnoreCase(normalized)) {
-      return Optional.of(Boolean.parseBoolean(normalized));
-    }
-    try {
-      return Optional.of(resolveNumberType(new SpecifiedExpressionTypes(numberType, numberType)).parseNumber(normalized));
-    } catch (RuntimeException ignored) {
-      return Optional.empty();
-    }
-  }
-
-  private Optional<SimpleComparisonSource> splitSimpleComparison(String source) {
-    int parenDepth = 0;
-    int braceDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < source.length() - 1; i++) {
-      char c = source.charAt(i);
-      char next = source.charAt(i + 1);
-      char prev = i > 0 ? source.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> {
-          parenDepth++;
-          continue;
-        }
-        case ')' -> {
-          parenDepth = Math.max(0, parenDepth - 1);
-          continue;
-        }
-        case '{' -> {
-          braceDepth++;
-          continue;
-        }
-        case '}' -> {
-          braceDepth = Math.max(0, braceDepth - 1);
-          continue;
-        }
-        case '[' -> {
-          bracketDepth++;
-          continue;
-        }
-        case ']' -> {
-          bracketDepth = Math.max(0, bracketDepth - 1);
-          continue;
-        }
-        default -> {
-        }
-      }
-      if (parenDepth != 0 || braceDepth != 0 || bracketDepth != 0) {
-        continue;
-      }
-      String op = null;
-      if ((c == '=' && next == '=') || (c == '!' && next == '=') || (c == '<' && next == '=') || (c == '>' && next == '=')) {
-        op = source.substring(i, i + 2);
-      } else if (c == '<' || c == '>') {
-        op = source.substring(i, i + 1);
-      }
-      if (op == null) {
-        continue;
-      }
-      int opLength = op.length();
-      String left = source.substring(0, i).strip();
-      String right = source.substring(i + opLength).strip();
-      if (!left.isEmpty() && !right.isEmpty()) {
-        return Optional.of(new SimpleComparisonSource(left, op, right));
-      }
-    }
-    return Optional.empty();
-  }
-
-  private record SimpleComparisonSource(String left, String op, String right) {}
 
   @Override
   protected Object evalExternalBooleanInvocationExpr(ExternalBooleanInvocationExpr node) {
@@ -1571,11 +1186,10 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     if (operand instanceof StringCastVariableRefExpr || operand instanceof StringTypedVariableRefExpr) {
       return true;
     }
-    Optional<String> snippet = sourceSnippetOfNode(operand);
-    if (snippet.isPresent()) {
-      String text = snippet.get();
-      if (text.matches("(?is).*\\bas\\s+string\\b.*")
-          || text.matches("(?is).*\\(\\s*string\\s*\\).*")) {
+    if (operand instanceof VariableRefExpr variable) {
+      Optional<ExpressionType> explicitType = variable.type()
+          .flatMap(P4TypedAstEvaluator::parseExpressionType);
+      if (explicitType.map(ExpressionType::isString).orElse(false)) {
         return true;
       }
     }
@@ -1848,124 +1462,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   // Utility
   // =========================================================================
 
-  private static boolean looksLikeStructuredStringLeaf(String text) {
-    if (text == null || text.isEmpty()) {
-      return false;
-    }
-    String normalized = text.strip();
-    if (normalized.isEmpty()) {
-      return false;
-    }
-    if (normalized.indexOf('[') >= 0 && normalized.endsWith("]")) {
-      return true;
-    }
-    String unwrapped = unwrapWholeParentheses(normalized);
-    if (!unwrapped.equals(normalized)) {
-      return looksLikeStructuredStringLeaf(unwrapped)
-          || hasTopLevelStringConcat(unwrapped);
-    }
-    return normalized.contains(".trim(")
-        || normalized.contains(".toUpperCase(")
-        || normalized.contains(".toLowerCase(")
-        || normalized.contains(".contains(")
-        || normalized.contains(".startsWith(")
-        || normalized.contains(".endsWith(")
-        || normalized.startsWith("trim(")
-        || normalized.startsWith("toUpperCase(")
-        || normalized.startsWith("toLowerCase(")
-        || normalized.startsWith("slice(")
-        || normalized.startsWith("call ")
-        || normalized.startsWith("internal ")
-        || normalized.startsWith("external ")
-        || hasTopLevelStringConcat(normalized);
-  }
-
-  private static String unwrapWholeParentheses(String text) {
-    String current = text;
-    while (isWrappedByWholeParentheses(current)) {
-      current = current.substring(1, current.length() - 1).strip();
-    }
-    return current;
-  }
-
-  private static boolean isWrappedByWholeParentheses(String text) {
-    if (text == null || text.length() < 2 || text.charAt(0) != '(' || text.charAt(text.length() - 1) != ')') {
-      return false;
-    }
-    int parenDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> {
-          parenDepth--;
-          if (parenDepth == 0 && i < text.length() - 1) {
-            return false;
-          }
-        }
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        default -> {
-        }
-      }
-      if (parenDepth < 0 || bracketDepth < 0) {
-        return false;
-      }
-    }
-    return parenDepth == 0 && bracketDepth == 0;
-  }
-
-  private static boolean hasTopLevelStringConcat(String text) {
-    int parenDepth = 0;
-    int bracketDepth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      char prev = i > 0 ? text.charAt(i - 1) : '\0';
-      if (c == '\'' && !inDoubleQuote && prev != '\\') {
-        inSingleQuote = !inSingleQuote;
-        continue;
-      }
-      if (c == '"' && !inSingleQuote && prev != '\\') {
-        inDoubleQuote = !inDoubleQuote;
-        continue;
-      }
-      if (inSingleQuote || inDoubleQuote) {
-        continue;
-      }
-      switch (c) {
-        case '(' -> parenDepth++;
-        case ')' -> parenDepth = Math.max(0, parenDepth - 1);
-        case '[' -> bracketDepth++;
-        case ']' -> bracketDepth = Math.max(0, bracketDepth - 1);
-        case '+' -> {
-          if (parenDepth == 0 && bracketDepth == 0) {
-            return true;
-          }
-        }
-        default -> {
-        }
-      }
-    }
-    return false;
-  }
-
 
   /**
    * BooleanComparable は透過 mapped choice のため、operand は実 AST ノード（Object）または
@@ -1977,21 +1473,17 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       return Boolean.TRUE.equals(toBoolean(eval(ast)));
     }
     if (operand instanceof String text) {
-      return resolveBooleanSourceOperand(text);
+      String normalized = text.strip();
+      if (normalized.isEmpty()) {
+        return false;
+      }
+      if (isExactVariableReference(normalized)) {
+        Object resolved = resolveVariableAny(extractVariableName(normalized));
+        return Boolean.TRUE.equals(toBoolean(resolved));
+      }
+      return Boolean.TRUE.equals(toBoolean(normalized));
     }
     return operand != null && Boolean.TRUE.equals(toBoolean(operand));
-  }
-
-  private boolean resolveBooleanSourceOperand(String rawSource) {
-    String normalized = rawSource == null ? "" : rawSource.strip();
-    if (normalized.isEmpty()) {
-      return false;
-    }
-    Optional<Object> evaluated = tryEvaluateIfSourceSnippet(normalized, ExpressionTypes._boolean);
-    if (evaluated.isPresent()) {
-      return Boolean.TRUE.equals(toBoolean(evaluated.get()));
-    }
-    return Boolean.TRUE.equals(toBoolean(normalized));
   }
 
   private static String unquoteStringLiteral(String raw) {
@@ -2062,26 +1554,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return null;
   }
 
-  private Optional<String> sourceSnippetOfNode(Object node) {
-    if (node == null || sourceFormula == null || sourceFormula.isEmpty()) {
-      return Optional.empty();
-    }
-    Optional<int[]> span = TinyExpressionP4Mapper.sourceSpanOf(node);
-    if (span.isEmpty()) {
-      return Optional.empty();
-    }
-    int[] positions = span.get();
-    if (positions.length < 2) {
-      return Optional.empty();
-    }
-    int start = Math.max(0, Math.min(sourceFormula.length(), positions[0]));
-    int end = Math.max(0, Math.min(sourceFormula.length(), positions[1]));
-    if (end <= start) {
-      return Optional.empty();
-    }
-    return Optional.of(sourceFormula.substring(start, end));
-  }
-
   private static Boolean toBoolean(Object value) {
     if (value instanceof Boolean bool) return bool;
     if (value == null) return false;
@@ -2121,57 +1593,6 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
       case "object" -> Optional.of(ExpressionTypes.object);
       default -> Optional.empty();
     };
-  }
-
-  private static int findMatching(String source, int openIndex, char open, char close) {
-    if (source == null || openIndex < 0 || openIndex >= source.length()
-        || source.charAt(openIndex) != open) {
-      return -1;
-    }
-    int depth = 0;
-    boolean inSingleQuote = false;
-    boolean inDoubleQuote = false;
-    boolean inLineComment = false;
-    boolean inBlockComment = false;
-    for (int i = openIndex; i < source.length(); i++) {
-      char c = source.charAt(i);
-      char next = i + 1 < source.length() ? source.charAt(i + 1) : '\0';
-      if (inLineComment) {
-        if (c == '\n') inLineComment = false;
-        continue;
-      }
-      if (inBlockComment) {
-        if (c == '*' && next == '/') {
-          i++;
-          inBlockComment = false;
-        }
-        continue;
-      }
-      if (inSingleQuote) {
-        if (c == '\'' && (i == 0 || source.charAt(i - 1) != '\\')) inSingleQuote = false;
-        continue;
-      }
-      if (inDoubleQuote) {
-        if (c == '"' && (i == 0 || source.charAt(i - 1) != '\\')) inDoubleQuote = false;
-        continue;
-      }
-      if (c == '/' && next == '/') {
-        inLineComment = true;
-        i++;
-      } else if (c == '/' && next == '*') {
-        inBlockComment = true;
-        i++;
-      } else if (c == '\'') {
-        inSingleQuote = true;
-      } else if (c == '"') {
-        inDoubleQuote = true;
-      } else if (c == open) {
-        depth++;
-      } else if (c == close && --depth == 0) {
-        return i;
-      }
-    }
-    return -1;
   }
 
   /** Calculation-local declaration/method-argument scope for the generated AST evaluator. */

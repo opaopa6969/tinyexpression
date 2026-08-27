@@ -17,7 +17,6 @@ import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
-import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
@@ -158,15 +157,9 @@ public class AstEvaluatorCalculator implements Calculator {
   public Object apply(CalculationContext calculationContext) {
     String formulaText = source.source() == null ? "" : source.source();
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
-    Optional<P4StrictMatchTypingValidator.Violation> rootSemanticViolation =
-        P4StrictMatchTypingValidator.firstHeuristicViolationDetail(formulaText, resultType());
-    if (rootSemanticViolation.isPresent()) {
-      setObject("_p4FailureFormula", formulaText);
-      setObject("_p4FailureReason", rootSemanticViolation.get().message());
-    }
 
     // The generated P4 AST and its typed evaluator are the only execution path.
-    if (generatedAstRuntimeAvailable && rootSemanticViolation.isEmpty()) {
+    if (generatedAstRuntimeAvailable) {
       for (String preferredAstSimpleName : preferredAstSimpleNames()) {
         Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
             source.source(), classLoader, preferredAstSimpleName);
@@ -174,7 +167,6 @@ public class AstEvaluatorCalculator implements Calculator {
           continue;
         }
         setObject("_astEvaluatorMappedAst", mapped.get());
-        setObject("_astEvaluatorGeneratedAstNodeCount", GeneratedP4NumberAstEvaluator.countAstNodes(mapped.get()));
 
         if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
           try {
@@ -196,10 +188,8 @@ public class AstEvaluatorCalculator implements Calculator {
 
       }
       setObject("_astEvaluatorMapperAvailable", true);
-    } else if (!generatedAstRuntimeAvailable) {
-      setObject("_astEvaluatorMapperAvailable", false);
     } else {
-      setObject("_astEvaluatorMapperAvailable", true);
+      setObject("_astEvaluatorMapperAvailable", false);
     }
 
     throw generatedAstFailure(formulaText);

@@ -112,20 +112,19 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
-    public void testStrictMatchTypingDiagnosticForBareVariable() throws Exception {
+    public void testStrictMatchTypingAllowsBareVariable() throws Exception {
         CapturingLanguageClient client = new CapturingLanguageClient();
         server.connect(client);
 
         server.parseDocument(TEST_URI, "match{1==1->$val,default->0}");
 
-        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
-        assertNotNull("TE025 diagnostic should be published", diag);
-        assertTrue(diag.getMessage().contains("inline type hint"));
+        assertFalse("generated number-match AST determines the bare variable type",
+            client.hasDiagnosticCode("TE025"));
 
         Hover hover = service.hover(hoverParams(0, 0)).get();
         assertNotNull(hover);
         assertNotNull(hover.getContents().getRight());
-        assertTrue(hover.getContents().getRight().getValue().contains("TE025"));
+        assertTrue(hover.getContents().getRight().getValue().contains("NumberMatchExpr"));
     }
 
     @Test
@@ -152,15 +151,14 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
-    public void testStrictMatchTypingDiagnosticForParenthesizedBareVariable() {
+    public void testStrictMatchTypingAllowsParenthesizedBareVariable() {
         CapturingLanguageClient client = new CapturingLanguageClient();
         server.connect(client);
 
         server.parseDocument(TEST_URI, "match{1==1->($val),default->0}");
 
-        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
-        assertNotNull("TE025 diagnostic should be published for parenthesized bare variable", diag);
-        assertTrue(diag.getMessage().contains("inline type hint"));
+        assertFalse("parentheses do not make a typed AST variable ambiguous",
+            client.hasDiagnosticCode("TE025"));
     }
 
     @Test

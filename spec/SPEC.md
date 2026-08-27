@@ -101,8 +101,8 @@ graph TB
 |------------|----------|------|----------|
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | Parse → Java ソース生成 → javac → ロード → 実行 | 本番（プロダクションベースライン） |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | 旧 AST クリエータ使用の同様パイプライン | **凍結**（リグレッション比較用） |
-| `AST_EVALUATOR` | `AstEvaluatorCalculator` | Parse → AST → ツリー走査評価（4 段フォールバックチェーン） | 本番 |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | ハイブリッド: ネイティブ DSL Java エミッタ + レガシーブリッジ | マイグレーションターゲット |
+| `AST_EVALUATOR` | `AstEvaluatorCalculator` | P4 パース → 生成 AST → 型安全ツリー走査評価 | 本番（generated-only） |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | P4 AST → typed Java エミッタ → javac | マイグレーションターゲット（generated-only） |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | UBNF パーサー → P4 AST → 型安全評価 | **PRIMARY (P4)**、LSP/DAP の参照実装 |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | UBNF パーサー → P4 AST → DSL Java エミッタ | マイグレーションターゲット (P4) |
 
@@ -672,40 +672,38 @@ TinyExpression はデータベースや永続ストレージを直接管理し�
 
 ## 4. ステートマシン
 
-### 4.1 Evaluator フォールバックチェーン（AST_EVALUATOR）
+### 4.1 Generated-only evaluator（AST_EVALUATOR）
 
-`AstEvaluatorCalculator.apply()` は以下の 4 段フォールバックチェーンで動作する（ADR-001 により P4TypedAstEvaluator が PRIMARY に昇格、v1.4.10 以降）:
+`AstEvaluatorCalculator.apply()` は生成 P4 AST を唯一の実行経路とする（ADR-004）。
+パース・mapping・型付け・評価の未対応箇所は明示的に失敗し、reflection evaluator、
+手書き token AST、JavaCode backend へ暗黙に切り替えない。
 
 ```mermaid
 flowchart TD
     START(["AstEvaluatorCalculator.apply()"])
 
-    S1["段階 1: P4TypedAstEvaluator<br/>(型安全 sealed switch)<br/>★ PRIMARY"]
-    S2["段階 2: GeneratedP4NumberAstEvaluator<br/>(リフレクション経由の生成 AST 評価)"]
-    S3["段階 3: AstTokenTreeEvaluator<br/>(レガシー AST ツリー走査・手書き)"]
-    S4["段階 4: JavaCode fallback<br/>(JAVA_CODE パス・最終安全網)"]
+    S1["P4 parser / mapper<br/>(UBNF から生成)"]
+    S2["P4TypedAstEvaluator<br/>(型安全な直接 AST 評価)"]
     OK(["結果を返す"])
+    ERROR(["未対応箇所を明示的に報告"])
 
     START --> S1
-    S1 -->|"成功"| OK
-    S1 -->|"UnsupportedOperationException<br/>(P4 文法ギャップ)"| S2
-    S2 -->|"成功 (Optional.present)"| OK
-    S2 -->|"Optional.empty()"| S3
-    S3 -->|"成功 (Optional.present)"| OK
-    S3 -->|"Optional.empty()"| S4
-    S4 --> OK
+    S1 -->|"成功"| S2
+    S1 -->|"失敗"| ERROR
+    S2 -->|"成功"| OK
+    S2 -->|"失敗"| ERROR
 
-    style S1 fill:#d4f1d4,stroke:#2e7d32
-    style S4 fill:#fff3e0,stroke:#e65100
+    style S2 fill:#d4f1d4,stroke:#2e7d32
+    style ERROR fill:#ffebee,stroke:#c62828
 ```
 
 **設計原則**:
 
-- フォールバックチェーンは **安全網（safety net）** であり、通常の実行パスではない
-- 段階 4 まで到達することは設計上の問題を意味する（監視が必要）
-- フォールバック発生は `_tinyExecutionImplementation` マーカーで観測可能
+- generated backend の選択は決定的で、実行途中に別 backend へ切り替わらない
+- legacy 実装が必要な場合は `JAVA_CODE` 系 backend を明示選択する
+- grammar と AST consumer の不足は parity test で可視化し、UBNF と typed consumer を同時に直す
 
-**段階 1（P4TypedAstEvaluator）で native に処理されるノードタイプ（v1.4.10+）**:
+**P4TypedAstEvaluator が直接処理する代表的なノードタイプ**:
 
 ```java
 IfExpr                        // if(...){...}else{...}
@@ -722,23 +720,23 @@ InTimeRangeExpr               // inTimeRange(9, 17)
 InDayTimeRangeExpr            // inDayTimeRange(MONDAY, 9, FRIDAY, 17)
 ```
 
-### 4.2 P4 バックエンドのフォールバック
+### 4.2 P4 バックエンドの失敗契約
 
 `P4_AST_EVALUATOR` および `P4_DSL_JAVA_CODE` は:
 
 1. P4 UBNF パーサーでパースを試行
 2. **成功**: `_tinyP4ParserUsed=true` を設定し、型安全 P4 AST で処理
-3. **失敗**（P4 文法ギャップ）: `_tinyP4ParserUsed=false` を設定し、対応する非 P4 バックエンドへグレースフルフォールバック
+3. **失敗**（P4 文法・mapping・型・実装ギャップ）: 原因を明示した例外または診断を返す
 
 ```mermaid
 flowchart TD
     P4TRY1["P4_AST_EVALUATOR: P4 UBNF パースを試行"]
     P4OK1["P4TypedAstEvaluator ベースの評価"]
-    P4NG1["AST_EVALUATOR チェーン（段階 1-4）"]
+    P4NG1["明示的な parse / mapping エラー"]
 
     P4TRY2["P4_DSL_JAVA_CODE: P4 UBNF パースを試行"]
     P4OK2["DSL Java エミッタ → javac → 実行"]
-    P4NG2["DSL_JAVA_CODE チェーン"]
+    P4NG2["明示的な parse / mapping / emit エラー"]
 
     P4TRY1 -->|"P4 パース成功"| P4OK1
     P4TRY1 -->|"P4 パース失敗"| P4NG1
@@ -754,24 +752,18 @@ sequenceDiagram
     autonumber
     participant Client
     participant DslCalc as DslJavaCodeCalculator
-    participant NativeEmitter as DSL Java ネイティブエミッタ
-    participant LegacyBridge as レガシー JavaCode ブリッジ
+    participant Mapper as P4 parser / mapper
+    participant NativeEmitter as P4 typed Java エミッタ
     participant Compiler as javax.tools.JavaCompiler
     participant MemCL as MemoryClassLoader
     participant Calc as 生成 Calculator
 
     Client->>DslCalc: apply(CalculationContext)
+    DslCalc->>Mapper: parse / map(formula)
+    Mapper-->>DslCalc: generated P4 AST
     DslCalc->>NativeEmitter: emit(ast)
-
-    alt ネイティブエミッタ対応構文
-        NativeEmitter-->>DslCalc: Java ソース文字列
-        Note over DslCalc: _tinyDslJavaNativeEmitterUsed = true
-    else 非対応構文（フォールバック）
-        NativeEmitter-->>DslCalc: UnsupportedOperationException
-        DslCalc->>LegacyBridge: generate(ast)
-        LegacyBridge-->>DslCalc: Java ソース文字列
-        Note over DslCalc: _tinyExecutionImplementation = legacy-javacode-bridge
-    end
+    NativeEmitter-->>DslCalc: Java ソース文字列
+    Note over DslCalc: _tinyDslJavaNativeEmitterUsed = true
 
     DslCalc->>Compiler: compile(javaSource)
     Compiler->>MemCL: loadClass(bytecode)
@@ -782,16 +774,16 @@ sequenceDiagram
     DslCalc-->>Client: result
 ```
 
-### 4.3b DSL_JAVA_CODE のハイブリッド状態遷移
+### 4.3b DSL_JAVA_CODE の generated-only 状態遷移
 
 ```mermaid
 flowchart TD
     IN["式テキスト入力"]
-    NATIVE["ネイティブ DSL Java エミッタ対応構文<br/>_tinyDslJavaNativeEmitterUsed = true<br/>_tinyExecutionImplementation = dsl-javacode-native<br/>→ Java ソース生成 → javac → 実行"]
-    LEGACY["非対応構文<br/>_tinyExecutionImplementation = legacy-javacode-bridge<br/>→ レガシー JavaCode ブリッジ → javac → 実行"]
+    NATIVE["P4 typed Java エミッタ対応構文<br/>_tinyDslJavaNativeEmitterUsed = true<br/>_tinyExecutionImplementation = p4-typed-emitter<br/>→ Java ソース生成 → javac → 実行"]
+    ERROR["非対応構文・mapping・emit<br/>→ 原因を明示して失敗"]
 
-    IN -->|"ネイティブエミッタ対応"| NATIVE
-    IN -->|"非対応（フォールバック）"| LEGACY
+    IN -->|"対応"| NATIVE
+    IN -->|"非対応"| ERROR
 ```
 
 ### 4.4 マルチフォーミュラ実行パイプライン
@@ -1403,9 +1395,9 @@ $baseScore + $bonusScore
 | 要件 | 強度 |
 |------|------|
 | 6 バックエンドがサポートコーパスに対して等価な値を返す | MUST |
-| `AST_EVALUATOR` がサポート済み式で `javacode-fallback` を回避する | MUST |
+| `AST_EVALUATOR` / `DSL_JAVA_CODE` が手書き fallback を呼ばない | MUST |
 | `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` が他 4 バックエンドと等価な値を返す | MUST |
-| P4 文法ギャップの式はフォールバックパスを使用する | 既知例外 |
+| generated backend の未対応式は原因を明示して失敗する | MUST |
 | バックエンド名を再利用してはならない | MUST NOT |
 
 **DAP パリティ変数**（デバッグモード時、`parity.*` として公開）:
@@ -1712,7 +1704,7 @@ stateDiagram-v2
 | `JAVA_CODE_LEGACY_ASTCREATOR` | 高 | 低 | 凍結状態。新規使用推奨せず |
 | `AST_EVALUATOR` | 低 | 中 | コンパイルオーバーヘッドなし。軽量デプロイ向け |
 | `DSL_JAVA_CODE` | 中〜高 | 中〜低 | ネイティブエミッタ使用時は JAVA_CODE に近い |
-| `P4_AST_EVALUATOR` | 低 | 中 | P4 文法ギャップ時はフォールバックで追加レイテンシ |
+| `P4_AST_EVALUATOR` | 低 | 中 | P4 文法ギャップは実行前に明示失敗 |
 | `P4_DSL_JAVA_CODE` | 中〜高 | 中〜低 | P4 パース + DSL Java 生成 + javac |
 
 ### 10.3 スレッドセーフティ
@@ -1734,7 +1726,8 @@ stateDiagram-v2
 
 ### 10.5 P4 文法カバレッジとパフォーマンス
 
-P4 文法ギャップが多い場合、`P4_AST_EVALUATOR` のフォールバック率が高くなりパフォーマンスが悪化する。`_tinyP4ParserUsed` マーカーを監視してフォールバック率を測定し、P4 UBNF の拡張計画を立てることを推奨する。
+P4 文法ギャップがある式は generated backend で明示失敗する。事前の parity/corpus test と
+`_tinyP4ParserUsed` マーカーで対応範囲を測定し、P4 UBNF の拡張計画を立てることを推奨する。
 
 ---
 
@@ -1767,7 +1760,7 @@ src/test/java/
                 AstEvaluatorBackendParityTest.java
                 AstEvaluatorGeneratedRuntimeIsolationTest.java
                 AstEvaluatorStringGeneratedPathTest.java
-                GeneratedP4NumberAstEvaluatorVariableTest.java
+                P4TypedAstEvaluatorDeclaredTypeTest.java
                 BackendSpeedComparisonTest.java
             javacode/
                 DslJavaCodeGenerationParityTest.java
@@ -1819,7 +1812,7 @@ private static final List<String> P4_PARSEABLE_NUMBER_FORMULAS = List.of(
     "max(3,7)"
 );
 
-// P4 文法でパースできないフォーミュラ（フォールバック検証）
+// P4 文法でパースできないフォーミュラ（明示失敗の検証）
 private static final List<String> NON_P4_PARSEABLE_FORMULAS = List.of(
     // P4 UBNF でカバーされていない構文
 );
@@ -1829,7 +1822,7 @@ private static final List<String> NON_P4_PARSEABLE_FORMULAS = List.of(
 
 1. 6 バックエンドが等価な値を返すこと
 2. `_tinyP4ParserUsed=true` が P4 パース可能なフォーミュラに設定されること
-3. `_tinyP4ParserUsed=false` が P4 非対応フォーミュラに設定され、グレースフルフォールバックが機能すること
+3. P4 非対応フォーミュラが別 backend へ切り替わらず、明示的に失敗すること
 
 #### ThreeExecutionBackendParityTest のサポートコーパス（代表例）
 
@@ -1864,12 +1857,12 @@ $message[0:3]
 
 ### 11.5 2 段階パリティ検証
 
-`ThreeExecutionBackendParityTest` は 2 段階の検証を行う:
+`ThreeExecutionBackendParityTest` は対応コーパスについて次を検証する:
 
-1. **サポートコーパス**: `AST_EVALUATOR` での `javacode-fallback` を禁止。すべてのバックエンドで等価な値を要求
-2. **リグレッションコーパス**: `javacode-fallback` を許容。ただし `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` での値パリティを要求
+1. generated backend が手書き runtime を呼ばないこと
+2. `JAVA_CODE` / `AST_EVALUATOR` / `DSL_JAVA_CODE` ほか対応 backend の値が等価であること
 
-抽出コーパステストはプロダクション式から自動抽出し、AST 非フォールバックの最低閾値を設ける。
+抽出コーパステストはプロダクション式から自動抽出し、generated backend の実行件数と値パリティを検証する。
 
 ### 11.6 個別パーサーテスト
 
@@ -1887,7 +1880,7 @@ $message[0:3]
 
 ### 11.7 既知のテスト上の制限・例外
 
-- P4 文法でカバーされていない構文を使用する式は `_tinyP4ParserUsed=false` となり、フォールバックパスを経由する（既知例外）
+- P4 文法でカバーされていない構文を使用する式は generated backend で明示的に失敗する
 - `JAVA_CODE_LEGACY_ASTCREATOR` は凍結状態のため、新機能のパリティ検証対象外
 - `BackendSpeedComparisonTest` はパリティではなくパフォーマンス特性の把握が目的
 - `BigDecimal` / `BigInteger` を使った混合算術のパリティは限定的
@@ -1970,11 +1963,11 @@ TinyExpression は **Maven Central Publisher Portal** で公開される。
 | マーカー / 指標 | 用途 |
 |--------------|------|
 | `_tinyExecutionBackend` | どのバックエンドが実行されたか（バックエンド分布） |
-| `_tinyExecutionImplementation` | フォールバック発生の検出（`legacy-javacode-bridge` 等） |
-| `_tinyP4ParserUsed` | P4 文法カバレッジの実測値（フォールバック率） |
+| `_tinyExecutionImplementation` | 実際に選択された実装の確認（`p4-typed-ast` 等） |
+| `_tinyP4ParserUsed` | P4 文法カバレッジの実測値 |
 | `parity.equalAll` | DAP デバッグでの 6 バックエンド等価確認 |
 
-**フォールバック率の改善手順**:
+**P4 カバレッジの改善手順**:
 
 1. `_tinyP4ParserUsed=false` となっている式を特定
 2. 式の構文と P4 UBNF のカバレッジを比較（`docs/feature-parity-diff.md` を参照）
@@ -1999,7 +1992,7 @@ TinyExpression は **Maven Central Publisher Portal** で公開される。
 | `BigDecimal`/`BigInteger` | 式言語での直接演算サポートは限定的 |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | 凍結状態。新機能追加対象外 |
 | `JavaCodeBlockPolicy` | Calculator 構築後の変更は既存インスタンスに影響しない |
-| P4 フォールバック | P4 文法ギャップの式はフォールバックパスを経由し、追加レイテンシが発生する |
+| P4 文法ギャップ | generated backend では明示失敗するため、導入前に corpus/parity test で確認が必要 |
 | 循環依存エラーメッセージ | 検出はされるが、エラーメッセージの詳細は限定的 |
 
 ---
@@ -2151,7 +2144,7 @@ org.unlaxer.tinyexpression.generated.p4   (自動生成)
 |--------|------|
 | `TinyExpressionParser` | 式文字列全体のエントリポイントパーサー |
 | `JavaCodeCalculatorV3` | `JAVA_CODE` バックエンドの Calculator 実装。コンストラクタで javac を実行 |
-| `AstEvaluatorCalculator` | `AST_EVALUATOR` バックエンド。4 段フォールバックチェーンを管理 |
+| `AstEvaluatorCalculator` | `AST_EVALUATOR` バックエンド。生成 P4 AST を typed evaluator で直接評価 |
 | `P4AstEvaluatorCalculator` | `P4_AST_EVALUATOR` バックエンド。P4 パース + 型安全 AST 評価 |
 | `FileBaseTinyExpressionInstancesCache` | テナントごとの Calculator リストをキャッシュ |
 | `TinyExpressionsExecutor` | 依存関係付きマルチフォーミュラ実行エンジン |
@@ -2164,9 +2157,10 @@ org.unlaxer.tinyexpression.generated.p4   (自動生成)
 
 | ADR | タイトル | ステータス | 決定内容 |
 |-----|---------|---------|--------|
-| ADR-001 | P4TypedAstEvaluator を PRIMARY 評価パスに昇格 | Accepted (2026-02-26) | `P4TypedAstEvaluator` を `AST_EVALUATOR` の PRIMARY に昇格。フォールバックチェーンは安全網のみ |
+| ADR-001 | P4TypedAstEvaluator を PRIMARY 評価パスに昇格 | Superseded (2026-02-26) | 当時の fallback 移行判断。ADR-004 が置換 |
 | ADR-002 | 数値型昇格ルール | Accepted (2026-03-01) | Java の拡大変換ルールを採用。`double > float > long > int > short > byte` |
 | ADR-003 | Java コードブロック実行のセキュリティモデル | Accepted (2026-03-01) | コードブロック機能を保持（削除しない）。サンドボックスなし。信頼環境専用。`JavaCodeBlockPolicy` opt-out を将来追加（v1.4.11 で実装） |
+| ADR-004 | Generated backends do not use handwritten fallbacks | Accepted (2026-08-26) | generated backend は P4 typed consumer のみを使い、未対応箇所は明示失敗 |
 
 ---
 
@@ -2184,7 +2178,7 @@ org.unlaxer.tinyexpression.generated.p4   (自動生成)
 | **P4** | UBNF（Unlaxer BNF Notation）から自動生成されたパーサースタックの世代名 |
 | **UBNF** | Unlaxer BNF Notation。P4 文法の記述言語 |
 | **パリティ** | 複数バックエンドが同一入力に対して等価な出力を返すこと |
-| **フォールバックチェーン** | `AST_EVALUATOR` の段階的評価チェーン（P4 → 生成 AST → レガシー AST → JavaCode） |
+| **generated-only** | 生成 P4 AST と typed consumer だけを使用し、別実装へ暗黙に切り替えない契約 |
 | **OOTC** | Operator Operand Tree Creator。旧式の演算子/オペランド木構築器（`JAVA_CODE_LEGACY_ASTCREATOR` で使用） |
 | **レガシーパーサー** | unlaxer-common のパーサーコンビネータを使った手書きパーサー群。全言語機能をカバー |
 | **JavaCodeBlockPolicy** | Java コードブロック実行の有効/無効を制御するグローバルポリシー（v1.4.11） |

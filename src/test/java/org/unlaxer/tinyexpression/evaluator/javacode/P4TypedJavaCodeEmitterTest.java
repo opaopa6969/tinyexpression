@@ -52,18 +52,6 @@ public class P4TypedJavaCodeEmitterTest {
   }
 
   @Test
-  public void testBinaryArithmeticWithStructuredNumberLeaf() {
-    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float));
-    BinaryExpr addSin = binary(leaf("1"), "+", leaf("sin(30)"));
-    BinaryExpr addMax = binary(leaf("1"), "+", leaf("max(3,7)"));
-    String sinCode = emitter.eval(addSin);
-    String maxCode = emitter.eval(addMax);
-    assertTrue(sinCode.contains("Math.sin"));
-    assertTrue(maxCode.contains("Math.max"));
-  }
-
-  @Test
   public void testMixedArithmeticWithNestedMathFunctionFromParsedAst() {
     String formula = "(1+1)/3+sin(30)";
     TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();

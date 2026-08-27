@@ -239,5 +239,5 @@ if(external returning as boolean isHighRisk($region)){100}else{0}
 ## 次のステップ
 
 - [言語ガイド](language-guide-ja.md) — 完全な言語仕様
-- [バックエンド](backends.md) — 6 バックエンドの比較とフォールバックチェーン
+- [バックエンド](backends.md) — 6 バックエンドの比較と generated-only 契約
 - [アーキテクチャ](architecture-ja.md) — パーサー、AST、エバリュエータの内部構造

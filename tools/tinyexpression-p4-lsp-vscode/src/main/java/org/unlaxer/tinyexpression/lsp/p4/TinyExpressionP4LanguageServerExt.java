@@ -258,7 +258,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     ERROR_CATALOG.put("TE022", new ErrorCatalogEntry("TE022", "利用可能な変数名ではありません。", "候補変数名へ修正"));
     ERROR_CATALOG.put("TE023", new ErrorCatalogEntry("TE023", "演算子/記法不正です。", "&/| の追加、&& -> &、$ の除去など"));
     ERROR_CATALOG.put("TE024", new ErrorCatalogEntry("TE024", "partialKey 変数のsuffix不足です。", "$prefix_<suffix> 形式に修正"));
-    ERROR_CATALOG.put("TE025", new ErrorCatalogEntry("TE025", "match case value の型が曖昧です。", "変数には as number/string/boolean を付けるか、直接の method invocation を避ける"));
+    ERROR_CATALOG.put("TE025", new ErrorCatalogEntry("TE025", "match case value の型が結果型と一致しないか、直接 method invocation が使われています。", "inline type hint を結果型へ合わせるか、method invocation を事前に変数化する"));
   }
 
   private String resolveCatalogMessage(String hint, String snippet, String leading) {
@@ -778,12 +778,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return List.of();
     }
 
-    P4StrictMatchTypingValidator.Violation violation = ast != null
-        ? P4StrictMatchTypingValidator.firstViolationDetail(ast, content).orElse(null)
-        : null;
-    if (violation == null) {
-      violation = P4StrictMatchTypingValidator.firstHeuristicViolationAnyExpectedType(content).orElse(null);
-    }
+    P4StrictMatchTypingValidator.Violation violation = ast == null
+        ? null
+        : P4StrictMatchTypingValidator.firstViolationDetail(ast, content).orElse(null);
     if (violation == null) {
       return List.of();
     }
@@ -793,8 +790,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   private SemanticIssue toStrictMatchSemanticIssue(P4StrictMatchTypingValidator.Violation violation) {
     String message = switch (violation.kind()) {
       case DIRECT_VARIABLE_CASE_VALUE ->
-          "[TE025] match の case value で直接変数を返す場合は inline type hint が必要です。"
-              + " 修正例: $value as number / $value as string / $value as boolean"
+          "[TE025] match の case value の inline type hint が match の結果型と一致しません。"
+              + " 修正例: number match では $value as number のように結果型へ合わせてください"
               + " (詳細: " + violation.snippet() + ")";
       case DIRECT_METHOD_INVOCATION ->
           "[TE025] match の case value で直接 method invocation は使えません。"

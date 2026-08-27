@@ -5,7 +5,6 @@ import java.util.Optional;
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
-import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 final class GeneratedAstRuntimeProbe {
 
@@ -24,7 +23,7 @@ final class GeneratedAstRuntimeProbe {
 
   /**
    * 生成 P4 文法のバックトラックは深いネストで指数的になり得るため (issue #19)、
-   * プローブ全体 (ソース変種の再試行を含む) に時間予算を設ける。予算超過時は
+   * プローブ全体に時間予算を設ける。予算超過時は
    * empty を返し、呼び出し側は未対応として明示的に失敗する。
    * システムプロパティ {@code tinyexpression.p4.probe.timeout.millis} で調整可能
    * (デフォルト 5000ms、0 以下で無効)。
@@ -43,84 +42,7 @@ final class GeneratedAstRuntimeProbe {
 
   private static Optional<Object> tryMapAst(
       String source, ClassLoader classLoader, String preferredAstSimpleName, long deadlineNanos) {
-    Optional<Object> mapped = tryMapAstOnce(source, classLoader, preferredAstSimpleName, deadlineNanos);
-    if (mapped.isPresent()) {
-      return mapped;
-    }
-    String normalizedSliceReceivers =
-        P4PreferredAstMapper.normalizeParenthesizedSliceReceivers(source);
-    if (!normalizedSliceReceivers.equals(source)) {
-      mapped = tryMapAstOnce(
-          normalizedSliceReceivers, classLoader, preferredAstSimpleName, deadlineNanos);
-      if (mapped.isPresent()) {
-        return mapped;
-      }
-    }
-    String withoutComments = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
-    if (!withoutComments.equals(source)) {
-      mapped = tryMapAstOnce(withoutComments, classLoader, preferredAstSimpleName, deadlineNanos);
-      if (mapped.isPresent()) {
-        return mapped;
-      }
-    }
-    String normalized = TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(source);
-    if (!normalized.equals(source)) {
-      mapped = tryMapAstOnce(normalized, classLoader, preferredAstSimpleName, deadlineNanos);
-      if (mapped.isPresent()) {
-        return mapped;
-      }
-    }
-    String normalizedWithoutComments = TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(withoutComments);
-    if (!normalizedWithoutComments.equals(source) && !normalizedWithoutComments.equals(normalized)) {
-      mapped = tryMapAstOnce(normalizedWithoutComments, classLoader, preferredAstSimpleName, deadlineNanos);
-      if (mapped.isPresent()) {
-        return mapped;
-      }
-    }
-    String normalizedHead = TinyExpressionParserCapabilities.normalizeStructuredHead(normalized);
-    if (!normalizedHead.equals(normalized)) {
-      mapped = tryMapAstOnce(normalizedHead, classLoader, preferredAstSimpleName, deadlineNanos);
-      if (mapped.isPresent()) {
-        return mapped;
-      }
-    }
-    String normalizedHeadWithoutComments = TinyExpressionParserCapabilities.normalizeStructuredHead(normalizedWithoutComments);
-    if (normalizedHeadWithoutComments.equals(source)
-        || normalizedHeadWithoutComments.equals(normalized)
-        || normalizedHeadWithoutComments.equals(normalizedHead)) {
-      String invocationHead = extractInvocationHeadCandidate(source);
-      if (invocationHead == null || invocationHead.equals(source)) {
-        return Optional.empty();
-      }
-      return tryMapAst(invocationHead, classLoader, preferredAstSimpleName, deadlineNanos);
-    }
-    mapped = tryMapAstOnce(normalizedHeadWithoutComments, classLoader, preferredAstSimpleName, deadlineNanos);
-    if (mapped.isPresent()) {
-      return mapped;
-    }
-    String invocationHead = extractInvocationHeadCandidate(source);
-    if (invocationHead == null || invocationHead.equals(source)) {
-      return Optional.empty();
-    }
-    return tryMapAst(invocationHead, classLoader, preferredAstSimpleName, deadlineNanos);
-  }
-
-  private static String extractInvocationHeadCandidate(String source) {
-    if (source == null || source.isBlank()) {
-      return null;
-    }
-    String trimmed = TinyExpressionParserCapabilities.trimLeadingJavaStyleDelimiters(source).stripLeading();
-    if (!(trimmed.startsWith("call ")
-        || trimmed.startsWith("internal ")
-        || trimmed.startsWith("external "))) {
-      return null;
-    }
-    int newline = trimmed.indexOf('\n');
-    if (newline < 0) {
-      return null;
-    }
-    String head = trimmed.substring(0, newline).strip();
-    return head.isEmpty() ? null : head;
+    return tryMapAstOnce(source, classLoader, preferredAstSimpleName, deadlineNanos);
   }
 
   private static Optional<Object> tryMapAstOnce(
