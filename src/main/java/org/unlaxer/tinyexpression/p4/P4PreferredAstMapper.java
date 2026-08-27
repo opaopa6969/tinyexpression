@@ -49,7 +49,8 @@ public final class P4PreferredAstMapper {
    * @throws IllegalArgumentException if the formula cannot be parsed
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, defaultParseDeadlineNanos());
+    return parseViaMapperCompat(
+        formula == null ? "" : formula, preferredAstSimpleName, defaultParseDeadlineNanos());
   }
 
   /**
@@ -80,7 +81,20 @@ public final class P4PreferredAstMapper {
    */
   public static TinyExpressionP4AST parseByAstSimpleName(
       String formula, String preferredAstSimpleName, long deadlineNanos) {
-    return parseViaMapperCompat(formula != null ? formula : "", preferredAstSimpleName, deadlineNanos);
+    return parseViaMapperCompat(formula == null ? "" : formula, preferredAstSimpleName, deadlineNanos);
+  }
+
+  /**
+   * Parses once and selects the first exact, whole-source AST root from {@code candidates}.
+   * Candidate order remains type-driven; importantly, candidates do not cause repeated parsing.
+   */
+  public static TinyExpressionP4AST parseByAstSimpleNames(
+      String formula, List<String> candidates, long deadlineNanos) {
+    String source = formula == null ? "" : formula;
+    if (candidates == null || candidates.isEmpty()) {
+      throw new IllegalArgumentException("No generated AST candidates supplied");
+    }
+    return parseMappedCandidates(source, candidates, false, deadlineNanos).ast();
   }
 
   /** パース期限超過。生成 P4 専用バックエンドでは明示的なパース失敗として扱う。 */
@@ -97,37 +111,10 @@ public final class P4PreferredAstMapper {
   }
 
   public static ParsedAst parseDetailed(String formula, ExpressionType preferredResultType) {
-    RuntimeException preferredFailure = null;
-    RuntimeException defaultFailure = null;
-    long deadlineNanos = defaultParseDeadlineNanos();
-    for (String candidateSource : candidateFormulaSources(formula)) {
-      for (String preferredAstSimpleName : preferredAstSimpleNames(candidateSource, preferredResultType)) {
-        try {
-          TinyExpressionP4AST ast = parseViaMapperCompat(candidateSource, preferredAstSimpleName, deadlineNanos);
-          if (ast != null && preferredAstSimpleName.equals(ast.getClass().getSimpleName())) {
-            return new ParsedAst(ast, "preferred:" + preferredAstSimpleName);
-          }
-        } catch (RuntimeException e) {
-          preferredFailure = e;
-        }
-      }
-
-      if (preferredResultType == null) {
-        try {
-          return new ParsedAst(parseViaMapperCompat(candidateSource, null, deadlineNanos), "default");
-        } catch (RuntimeException e) {
-          defaultFailure = e;
-        }
-      }
-    }
-
-    if (preferredFailure != null) {
-      throw toParseFailure(preferredFailure);
-    }
-    if (defaultFailure != null) {
-      throw toParseFailure(defaultFailure);
-    }
-    throw new IllegalArgumentException("Parse failed: " + formula);
+    String source = formula == null ? "" : formula;
+    List<String> candidates = preferredAstSimpleNames(source, preferredResultType);
+    return parseMappedCandidates(
+        source, candidates, preferredResultType == null, defaultParseDeadlineNanos());
   }
 
   /**
@@ -182,10 +169,6 @@ public final class P4PreferredAstMapper {
     return formula == null || formula.isBlank()
         ? List.of()
         : candidateAstSimpleNames(preferredResultType, CandidateProfile.DECLARATION);
-  }
-
-  private static List<String> candidateFormulaSources(String formula) {
-    return List.of(formula == null ? "" : formula);
   }
 
   private static List<String> candidateAstSimpleNames(
@@ -275,30 +258,55 @@ public final class P4PreferredAstMapper {
 
   private static TinyExpressionP4AST parseViaMapperCompat(
       String source, String preferredAstSimpleName, long deadlineNanos) {
+    return parseMappedCandidates(
+        source,
+        preferredAstSimpleName == null ? List.of() : List.of(preferredAstSimpleName),
+        preferredAstSimpleName == null,
+        deadlineNanos).ast();
+  }
+
+  private static ParsedAst parseMappedCandidates(
+      String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
     // unlaxer-dsl 3.0.14 emits only the // branch of @comment even though the
     // javaStyle contract also includes block comments. Preserve layout so mapper
     // source spans remain valid. This is one lexical input pass, not a retry or an
     // alternate parser path; remove it when the generator's delimiter is corrected.
     String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
     Token rootToken = parseRootToken(parserSource, deadlineNanos);
-    clearMapperSourceSpans();
-    Token bestMappedToken = invokeFindBestMappedToken(rootToken, preferredAstSimpleName);
-    if (preferredAstSimpleName != null && !coversWholeSource(parserSource, bestMappedToken)) {
-      throw new IllegalArgumentException(
-          "Requested generated AST " + preferredAstSimpleName + " is not the formula root");
+    RuntimeException lastFailure = null;
+    try {
+      for (String candidate : candidates) {
+        if (candidate == null || candidate.isBlank()) {
+          continue;
+        }
+        try {
+          clearMapperSourceSpans();
+          Token bestMappedToken = invokeFindBestMappedToken(rootToken, candidate);
+          if (!coversWholeSource(parserSource, bestMappedToken)) {
+            continue;
+          }
+          TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
+          if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
+            return new ParsedAst(mapped, "preferred:" + candidate);
+          }
+        } catch (RuntimeException failure) {
+          lastFailure = failure;
+        }
+      }
+      if (allowDefault) {
+        clearMapperSourceSpans();
+        TinyExpressionP4AST mapped = invokeMapToken(invokeFindBestMappedToken(rootToken, null));
+        if (mapped != null) {
+          return new ParsedAst(mapped, "default");
+        }
+      }
+    } finally {
+      clearMapperSourceSpans();
     }
-    TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
-    if (mapped == null) {
-      throw new IllegalArgumentException("No mapped node found in parse tree");
+    if (lastFailure != null) {
+      throw toParseFailure(lastFailure);
     }
-    if (preferredAstSimpleName != null
-        && !preferredAstSimpleName.isBlank()
-        && !preferredAstSimpleName.equals(mapped.getClass().getSimpleName())) {
-      throw new IllegalArgumentException(
-          "Requested generated AST " + preferredAstSimpleName
-              + " but mapper selected " + mapped.getClass().getSimpleName());
-    }
-    return mapped;
+    throw new IllegalArgumentException("No whole-source generated AST mapping found: " + source);
   }
 
   private static boolean coversWholeSource(String source, Token token) {

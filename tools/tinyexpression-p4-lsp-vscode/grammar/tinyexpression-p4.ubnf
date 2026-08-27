@@ -458,13 +458,16 @@ grammar TinyExpressionP4 {
 
   ParenthesizedStringExpression ::= '(' StringExpression ')' ;
 
+  // Slice precedes the bare parenthesized form under PEG first-match
+  // semantics. Otherwise `($name)[0:6]` commits after `($name)` and leaves
+  // the slice suffix unconsumed.
   StringTerm ::=
       StringMatchExpression
     | IfExpression
     | StringCastVariable
     | StringTypedVariable
-    | ParenthesizedStringExpression
     | SliceExpression
+    | ParenthesizedStringExpression
     | ExternalStringInvocation
     | ToUpperCaseFunction | ToLowerCaseFunction | TrimFunction
     | ToUpperCaseDotMethod | ToLowerCaseDotMethod | TrimDotMethod

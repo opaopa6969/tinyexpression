@@ -1,6 +1,7 @@
 package org.unlaxer.tinyexpression.evaluator.ast;
 
 import java.util.Optional;
+import java.util.List;
 
 import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
@@ -18,7 +19,7 @@ final class GeneratedAstRuntimeProbe {
   }
 
   static Optional<Object> tryMapAst(String source, ClassLoader classLoader) {
-    return tryMapAst(source, classLoader, null);
+    return tryMapAst(source, classLoader, (String) null);
   }
 
   /**
@@ -30,6 +31,25 @@ final class GeneratedAstRuntimeProbe {
    */
   static Optional<Object> tryMapAst(String source, ClassLoader classLoader, String preferredAstSimpleName) {
     return tryMapAst(source, classLoader, preferredAstSimpleName, probeDeadlineNanos());
+  }
+
+  static Optional<Object> tryMapAst(
+      String source, ClassLoader classLoader, List<String> preferredAstSimpleNames) {
+    long deadlineNanos = probeDeadlineNanos();
+    if (deadlineNanos > 0L && System.nanoTime() > deadlineNanos) {
+      return Optional.empty();
+    }
+    try {
+      Object ast = P4PreferredAstMapper.parseByAstSimpleNames(
+          source, preferredAstSimpleNames, deadlineNanos);
+      if (ast instanceof TinyExpressionP4AST typedAst
+          && P4StrictMatchTypingValidator.firstViolation(typedAst, source).isPresent()) {
+        return Optional.empty();
+      }
+      return Optional.ofNullable(ast);
+    } catch (Throwable failure) {
+      return Optional.empty();
+    }
   }
 
   private static long probeDeadlineNanos() {

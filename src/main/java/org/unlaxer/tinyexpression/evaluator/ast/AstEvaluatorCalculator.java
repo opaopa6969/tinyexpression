@@ -47,6 +47,7 @@ public class AstEvaluatorCalculator implements Calculator {
   private volatile Optional<Calculator> dependsOnBy = Optional.empty();
 
   private final boolean generatedAstRuntimeAvailable;
+  private final TinyExpressionP4AST generatedAst;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
@@ -58,7 +59,7 @@ public class AstEvaluatorCalculator implements Calculator {
     this.byteCodeHashFromStore = MD5.toHex(this.byteCodeFromStore);
     this.createdFromByteCode = false;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
-    validateFormulaParseable(source);
+    this.generatedAst = validateFormulaParseable(source);
   }
 
   public AstEvaluatorCalculator(Source source, String javaCode, String className,
@@ -72,6 +73,7 @@ public class AstEvaluatorCalculator implements Calculator {
     this.byteCodeHashFromStore = byteCodeHash == null ? MD5.toHex(this.byteCodeFromStore) : byteCodeHash;
     this.createdFromByteCode = true;
     this.generatedAstRuntimeAvailable = GeneratedAstRuntimeProbe.isAvailable(classLoader);
+    this.generatedAst = validateFormulaParseable(source);
   }
 
   public boolean generatedAstRuntimeAvailable() {
@@ -159,33 +161,24 @@ public class AstEvaluatorCalculator implements Calculator {
     setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
 
     // The generated P4 AST and its typed evaluator are the only execution path.
-    if (generatedAstRuntimeAvailable) {
-      for (String preferredAstSimpleName : preferredAstSimpleNames()) {
-        Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
-            source.source(), classLoader, preferredAstSimpleName);
-        if (mapped.isEmpty()) {
-          continue;
+    if (generatedAstRuntimeAvailable && generatedAst != null) {
+      setObject("_astEvaluatorMappedAst", generatedAst);
+      try {
+        Object p4TypedResult = new P4TypedAstEvaluator(
+            specifiedExpressionTypes, calculationContext, source.source(), classLoader)
+            .eval(generatedAst);
+        if (p4TypedResult != null) {
+          setObject("_astEvaluatorRuntime", "p4-typed");
+          setObject("_astEvaluatorMapperAvailable", true);
+          setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
+          return p4TypedResult;
+        } else {
+          setObject("_p4FailureFormula", formulaText);
+          setObject("_p4FailureReason", "result was null");
         }
-        setObject("_astEvaluatorMappedAst", mapped.get());
-
-        if (mapped.get() instanceof TinyExpressionP4AST typedAst) {
-          try {
-            Object p4TypedResult = new P4TypedAstEvaluator(specifiedExpressionTypes, calculationContext, source.source(), classLoader).eval(typedAst);
-            if (p4TypedResult != null) {
-              setObject("_astEvaluatorRuntime", "p4-typed");
-              setObject("_astEvaluatorMapperAvailable", true);
-              setObject("_astEvaluatorGeneratedEmbeddedBridgeUsed", false);
-              return p4TypedResult;
-            } else {
-              setObject("_p4FailureFormula", formulaText);
-              setObject("_p4FailureReason", "result was null");
-            }
-          } catch (UnsupportedOperationException | IllegalArgumentException p4Ex) {
-            setObject("_p4FailureFormula", formulaText);
-            setObject("_p4FailureReason", p4Ex.getClass().getSimpleName() + ": " + p4Ex.getMessage());
-          }
-        }
-
+      } catch (UnsupportedOperationException | IllegalArgumentException p4Ex) {
+        setObject("_p4FailureFormula", formulaText);
+        setObject("_p4FailureReason", p4Ex.getClass().getSimpleName() + ": " + p4Ex.getMessage());
       }
       setObject("_astEvaluatorMapperAvailable", true);
     } else {
@@ -236,24 +229,21 @@ public class AstEvaluatorCalculator implements Calculator {
     return List.of();
   }
 
-  private List<String> preferredAstSimpleNames() {
-    return P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(source.source(), resultType());
-  }
-
-  private void validateFormulaParseable(Source source) {
+  private TinyExpressionP4AST validateFormulaParseable(Source source) {
     String formula = source.source();
     if (formula == null || formula.isBlank()) {
-      return;
+      return null;
     }
     if (!generatedAstRuntimeAvailable) {
       throw new ParseException("generated P4 runtime is unavailable");
     }
     try {
-      for (String candidate : P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(
-          formula, resultType())) {
-        if (GeneratedAstRuntimeProbe.tryMapAst(formula, classLoader, candidate).isPresent()) {
-          return;
-        }
+      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+          formula,
+          classLoader,
+          P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(formula, resultType()));
+      if (mapped.isPresent() && mapped.get() instanceof TinyExpressionP4AST typedAst) {
+        return typedAst;
       }
       throw new ParseException("generated P4 grammar rejected formula: " + formula);
     } catch (ParseException failure) {
