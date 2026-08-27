@@ -24,6 +24,11 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Validate Central release guard
+        run: |
+          python3 scripts/tests/test_central_release_guard.py
+          bash -n scripts/release-central.sh
+
       - name: Smoke — root (P4 typed AST + parity matrix)
         run: mvn -B -P p4-smoke test -Dgpg.skip=true
 
