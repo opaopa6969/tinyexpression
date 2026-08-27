@@ -43,6 +43,8 @@
 		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
 		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
+		<!-- Central upload is opt-in through scripts/release-central.sh. -->
+		<skipPublishing>true</skipPublishing>
 		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true -->
 		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
 		<!-- Forked JVMs surefire uses to run test classes. Default 1 (serial, stable).
@@ -105,6 +107,7 @@
 					<publishingServerId>central</publishingServerId>
 					<autoPublish>true</autoPublish>
 					<waitUntil>published</waitUntil>
+					<skipPublishing>${skipPublishing}</skipPublishing>
 				</configuration>
 			</plugin>
 			<plugin>

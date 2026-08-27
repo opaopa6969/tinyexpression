@@ -15,6 +15,10 @@ dry-run できる状態を維持する。
 `pom.xml` は `central-publishing-maven-plugin` を有効化している。旧OSSRHは
 2025-06-30に終了済みのため使用しない。
 
+Centralは`org.unlaxer`全体でUTC月1回のrelease trainとする。正本の台帳は
+[unlaxer-parserのrelease queue](https://github.com/opaopa6969/unlaxer-parser/blob/master/release/central-release-queue.yml)。
+VSIX・文書だけの変更ではMaven versionを公開しない。
+
 ## 2. レシピ早見表
 
 | 用途 | コマンド | local repo 書込 | GPG | Network |
@@ -22,8 +26,8 @@ dry-run できる状態を維持する。
 | dry-run package | `mvn -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true package` | 不要 | 不要 | 不要 |
 | smoke test | `mvn -P p4-smoke test` | 不要 | 不要 | 不要 |
 | local install | `mvn -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true install` | 必要 | 不要 | 不要 |
-| snapshot deploy | `mvn -DskipTests deploy` (version が `*-SNAPSHOT` のとき) | 必要 | 必要 | 必要 |
-| release deploy | `mvn deploy` | 必要 | 必要 | 必要 |
+| Central利用量確認 | `scripts/release-central.sh` | 不要 | 不要 | 必要 |
+| release deploy | `scripts/release-central.sh --execute --confirm org.unlaxer/YYYY-MM` | 必要 | 必要 | 必要 |
 
 ## 3. 制約付き環境での逃がし先
 
@@ -43,19 +47,28 @@ mvn -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true package
 mvn -DskipTests -Dmaven.javadoc.skip=true -Dgpg.skip=true \
     -Dmaven.repo.local=/tmp/m2repo install
 
-# Central bundle作成のみ（upload/publishしない）
+# Central bundle作成のみ（POMの既定値もskipPublishing=true）
 mvn -DskipTests -Dgpg.skip=true \
     -Dmaven.repo.local=/tmp/m2repo \
     -DskipPublishing=true \
     deploy
 ```
 
-GPG を使う release deploy の場合のみ:
+GPG を使うrelease deployでも直接`mvn deploy`せず、guarded scriptを使う。
+スクリプトはcleanな`master`、`origin/master`との一致、未公開version、当月枠を
+検証してからだけ`skipPublishing=false`を渡す。
 
 ```bash
-export GNUPGHOME=/tmp/gnupg
-gpg --import < /path/to/private.key
-mvn deploy -Dmaven.repo.local=/tmp/m2repo
+scripts/release-central.sh
+scripts/release-central.sh --execute --confirm org.unlaxer/YYYY-MM
+```
+
+緊急のセキュリティ・データ損失・重大互換性修正のみ、理由と強い確認を要求する:
+
+```bash
+scripts/release-central.sh --execute --emergency \
+  --reason "critical compatibility fix" \
+  --confirm EMERGENCY:org.unlaxer/YYYY-MM
 ```
 
 ## 4. LSP モジュール込みのフル install
@@ -90,6 +103,7 @@ CI (`.github/workflows/ci.yml`) の `smoke` ジョブもこの順序を踏む
 - `central-publishing-maven-plugin` が`mvn deploy`時にbundleを作成してPortalへuploadする
 - `autoPublish=true`によりvalidation成功後に自動公開する
 - `waitUntil=published`により、コマンドは`PUBLISHED`到達まで待機する
+- `skipPublishing=true`が既定で、guarded scriptだけがuploadを有効化する
 - 認証にはCentral Portalで生成したuser tokenを使う
 
 ## 7. 関連ファイル
@@ -103,6 +117,9 @@ CI (`.github/workflows/ci.yml`) の `smoke` ジョブもこの順序を踏む
 ---
 
 ## VSIX (P4 LSP/DAP 拡張) のリリース
+
+VSIX releaseはCentralの月次枠とは独立している。VSIX、walkthrough、文書だけの
+変更ではroot Maven versionを上げず、VSIX側のversionだけを更新する。
 
 ### ビルド毎の artifact
 
@@ -119,9 +136,9 @@ artifact は保持期限 (既定90日) で消える。配布には下のタグ�
 ビルドして Release を自動作成 (リリースノート自動生成) し、恒久添付する:
 
 ```bash
-git tag -a vX.Y.Z -m "tinyexpression X.Y.Z"
-git push origin vX.Y.Z
-# → https://github.com/opaopa6969/tinyexpression/releases/tag/vX.Y.Z
+git tag -a vsix-vX.Y.Z -m "TinyExpression VSIX X.Y.Z"
+git push origin vsix-vX.Y.Z
+# → https://github.com/opaopa6969/tinyexpression/releases/tag/vsix-vX.Y.Z
 ```
 
 既存タグでの再実行は asset を上書き (`--clobber`) するので、失敗時はワークフローを
