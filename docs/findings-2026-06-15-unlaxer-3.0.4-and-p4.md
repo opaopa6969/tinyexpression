@@ -19,11 +19,11 @@ fallback しない設計へ移行した。この統合では古い経路分岐�
 - `GrammarCoverageInterpreterTest` — 算術、数学関数、boolean 優先順位、not、if、
   ternary、match、文字列、変数とコンテキスト更新を網羅する。
 - `InterpreterJavacodeParityTest` — 両バックエンドの共通サブセットを比較する。
-- `KnownP4BugsTest` — 過去の #21/#25 と unlaxer-parser#43 の再現を通常テストとして保持する。
+- `KnownP4BugsTest` — 過去の #21/#25 と unlaxer-parser#42/#43 の再現を通常テストとして保持する。
 - `UserFormulaParseTest` — import/external 呼び出しを含む実利用相当の式を検証する。
 - `BackendSpeedBenchmarkTest` — `@Ignore` の手動性能ベンチマーク。
 
-2026-08-27 の現行 `master` 取り込み後、通常テスト 29 件（上記 4 クラス）は
+2026-08-27 の現行 `master` 取り込み後、通常テスト 30 件（上記 4 クラス）は
 failure/error 0 で通過し、過去に ignore されていた 4 件も有効化して成功した。
 
 ## 過去に見つかった不具合
@@ -32,6 +32,7 @@ failure/error 0 で通過し、過去に ignore されていた 4 件も有効�
 |---|---|---|
 | tinyexpression#25 | top-level の `not(...)` が誤評価される | 修正済み。`standaloneNotReturnsFalse` で回帰検知 |
 | tinyexpression#21 | legacy cross-check が variadic min/max や boolean 優先順位を上書きする | fallback/cross-check を除去済み。2 テストで回帰検知 |
+| unlaxer-parser#42 | 括弧付き boolean operand のリテラルを誤捕捉する | 修正済み。`parenthesisedBooleanOperand` で回帰検知 |
 | unlaxer-parser#43 | 数学関数を含む二項式の生成 AST 型が狭い | 修正済み。`functionTermArithmetic` で回帰検知 |
 
 テストのプロセス共有状態については tinyexpression#27 で整理済みである。並列 fork を

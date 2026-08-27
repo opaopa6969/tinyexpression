@@ -36,11 +36,9 @@ public class InterpreterJavacodeParityTest {
       "if('a' == 'a'){1}else{0}",
   };
 
-  // NOTE: standalone top-level `not(...)` is excluded — the interpreter mis-evaluates
-  // it (always false) while javacode is correct, so it is a known divergence, not parity.
-  // Tracked in tinyexpression#25 / KnownP4BugsTest.standaloneNotReturnsFalse.
   static final String[] BOOLEAN = {
       "true", "false", "true & false", "true | false", "true ^ false",
+      "not(true)", "not(false)", "not(not(true))",
   };
 
   static final String[] STRING = {

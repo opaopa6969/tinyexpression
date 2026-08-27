@@ -16,6 +16,13 @@ public class KnownP4BugsTest {
 
   private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
 
+  /** unlaxer-parser#42: parenthesised boolean operands must map by literal text. */
+  @Test public void parenthesisedBooleanOperand() {
+    assertBool("(true | false) & (false | true)", true);
+    assertBool("true & (false | true)", true);
+    assertBool("(true & false) | (true & true)", true);
+  }
+
   /**
    * tinyexpression#25: a standalone top-level {@code not(...)} formula evaluated with a
    * {@code _boolean} result type always returns false on the P4 interpreter (the outer

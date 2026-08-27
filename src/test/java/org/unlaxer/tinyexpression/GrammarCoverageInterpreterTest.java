@@ -74,9 +74,8 @@ public class GrammarCoverageInterpreterTest {
     assertBool("false | false", false);
     assertBool("true ^ false", true);
     assertBool("true ^ true", false);
-    // NOTE: standalone top-level `not(...)` as a _boolean formula is broken on the P4
-    // interpreter (always false) — see KnownP4BugsTest.standaloneNotReturnsFalse /
-    // tinyexpression#25. `not` is exercised via the working if(...) form in notNesting.
+    assertBool("not(true)", false);
+    assertBool("not(false)", true);
   }
 
   // ───────────────────────── boolean PRECEDENCE (OR<AND<XOR) ─────
@@ -100,19 +99,17 @@ public class GrammarCoverageInterpreterTest {
   }
 
   // ───────────────────────── not nesting (nasty) ────────────────
-  // `not` nesting — exercised via the if(...) form because a bare top-level not(...)
-  // formula is broken on the interpreter (tinyexpression#25). 1 = condition true.
   @Test public void notNesting() {
-    assertNum("if(not(not(true))){1}else{0}", 1);
-    assertNum("if(not(not(not(true)))){1}else{0}", 0);
-    assertNum("if(not(true & false)){1}else{0}", 1);
-    assertNum("if(not(true | false)){1}else{0}", 0);
-    assertNum("if(not(true ^ false)){1}else{0}", 0);
-    assertNum("if(not(true) & not(false)){1}else{0}", 0);
-    assertNum("if(not(false) | not(true)){1}else{0}", 1);
-    assertNum("if(not(true) | not(false)){1}else{0}", 1);
-    assertNum("if(not(not(true) & not(false))){1}else{0}", 1); // not(false & true)=not(false)=true
-    assertNum("if(not(true & true) | not(false)){1}else{0}", 1);
+    assertBool("not(not(true))", true);
+    assertBool("not(not(not(true)))", false);
+    assertBool("not(true & false)", true);
+    assertBool("not(true | false)", false);
+    assertBool("not(true ^ false)", false);
+    assertBool("not(true) & not(false)", false);
+    assertBool("not(false) | not(true)", true);
+    assertBool("not(true) | not(false)", true);
+    assertBool("not(not(true) & not(false))", true);
+    assertBool("not(true & true) | not(false)", true);
   }
 
   // ───────────────────────── parenthesised regrouping ───────────
@@ -121,9 +118,8 @@ public class GrammarCoverageInterpreterTest {
     assertBool("true | (false & false)", true);
     assertBool("(true ^ false) & false", false);
     assertBool("true ^ (false & false)", true);
-    // NOTE: a parenthesised boolean group used as an AND/XOR operand is mis-mapped
-    // (value captured as the literal "(") — see KnownP4BugsTest.parenthesisedBooleanOperand.
-    // e.g. "(true | false) & (false | true)" and "not((true | false) & false)" are broken.
+    assertBool("(true | false) & (false | true)", true);
+    assertBool("not((true | false) & false)", true);
   }
 
   // ───────────────────────── comparisons inside if ──────────────
