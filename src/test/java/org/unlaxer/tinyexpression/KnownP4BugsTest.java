@@ -2,16 +2,14 @@ package org.unlaxer.tinyexpression;
 
 import static org.junit.Assert.assertEquals;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.model.CalculatorCreatorRegistry;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 /**
- * Reproductions of P4 interpreter (AST_EVALUATOR) correctness bugs found while adding
- * comprehensive coverage. Each states the CORRECT expected value and is @Ignore'd so
- * the suite stays green; removing @Ignore turns it into a regression check once fixed.
+ * Regression tests for P4 interpreter correctness bugs found while adding comprehensive
+ * coverage. The original issues are closed, so every reproduction runs in the normal suite.
  * See docs/findings-2026-06-15-unlaxer-3.0.4-and-p4.md.
  */
 public class KnownP4BugsTest {
@@ -24,7 +22,6 @@ public class KnownP4BugsTest {
    * NotExpr is dropped during root mapping). {@code not(...)} inside {@code if(...)} works,
    * and the javacode backend is correct.
    */
-  @Ignore("tinyexpression#25 standalone not(...) top-level returns false")
   @Test public void standaloneNotReturnsFalse() {
     assertBool("not(false)", true);
     assertBool("not(not(true))", true);
@@ -37,7 +34,6 @@ public class KnownP4BugsTest {
    * legacy token-AST evaluator (whose variadic min/max is broken, returns 3) and trusts
    * the legacy value on mismatch. Removing the cross-check is tracked in tinyexpression#21.
    */
-  @Ignore("tinyexpression#21 cross-check trusts buggy legacy variadic min/max")
   @Test public void variadicMinMax() {
     assertNum("min(3,5,1,9)", 1);
     assertNum("max(3,5,1,9)", 9);
@@ -48,7 +44,6 @@ public class KnownP4BugsTest {
    * but the number-result cross-check overrides it with the legacy flat-precedence value.
    * Tracked in tinyexpression#21.
    */
-  @Ignore("tinyexpression#21 cross-check overrides correct P4 boolean precedence")
   @Test public void booleanPrecedenceInIf() {
     assertNum("if(1>0 | 0>1 & 1>2){1}else{0}", 1);
   }
@@ -59,7 +54,6 @@ public class KnownP4BugsTest {
    * types its operands as BinaryExpr (not the common AST interface), so a MathFunction
    * operand cannot be represented.
    */
-  @Ignore("unlaxer-parser#43 BinaryExpr operand type too narrow for math-function terms")
   @Test public void functionTermArithmetic() {
     assertNum("abs(-3)+pow(2,3)", 11);
   }
