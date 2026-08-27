@@ -121,7 +121,7 @@ graph TB
 
 #### P4 パーサー（UBNF 自動生成）
 
-`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（589 行）から `unlaxer-dsl` により生成される。
+`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（649 行）から `unlaxer-dsl` により生成される。
 
 | 生成物 | 役割 |
 |--------|------|
@@ -1582,8 +1582,8 @@ export MAVEN_OPTS="--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.
 
 | グループ ID | アーティファクト ID | バージョン | 用途 |
 |------------|-------------------|----------|------|
-| `org.unlaxer` | `unlaxer-common` | **3.0.11** | パーサーコンビネータランタイム（レガシーパーサーのベース） |
-| `org.unlaxer` | `unlaxer-dsl` | **3.0.11** | UBNF 文法からのパーサー自動生成（P4 スタック） |
+| `org.unlaxer` | `unlaxer-common` | **3.0.14** | パーサーコンビネータランタイム（レガシーパーサーのベース） |
+| `org.unlaxer` | `unlaxer-dsl` | **3.0.14** | UBNF 文法からのパーサー自動生成（P4 スタック） |
 | `org.jetbrains` | `annotations` | `24.0.1` | `@NotNull` 等のアノテーション |
 | `net.arnx` | `jsonic` | `1.3.10` | JSON シリアライゼーション |
 
@@ -1609,6 +1609,7 @@ unlaxer-common はレガシーパーサースタックのランタイムライ�
 - v1.4.10: unlaxer-common 2.8.0 対応（`NoneChildCollectingParser` 移行）
 - v1.4.11 / 9b166fc: unlaxer-common/dsl **3.0.2** に移行（`StringSource` API 対応 + `validateWithWarnings`）
 - v1.4.x（#49/#50/#51）: unlaxer-common/dsl **3.0.11** に更新（`mapToken` メモ化・反射除去・packrat メモ化 default 有効化）
+- v1.4.x: unlaxer-common/dsl **3.0.14** に更新（現在のビルド依存）
 
 ### 9.4 unlaxer-dsl との関係
 
@@ -1626,7 +1627,7 @@ unlaxer-dsl は P4 パーサースタックの生成ツールである。
 
 | ファイル | 行数 | 説明 |
 |---------|------|------|
-| `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` | 589 行 | **権威**（ビルドが使用・生成元） |
+| `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` | 649 行 | **権威**（ビルドが使用・生成元） |
 | `docs/ubnf/tinyexpression-p4-draft.ubnf` | 239 行 | 初期ドラフト（参照用・生成には使用しない） |
 | `docs/ubnf/tinyexpression-p4-complete.ubnf` | 548 行 | 中間スナップショット（参照用・生成には使用しない） |
 | `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf` | 24 行 | 結合性再現用の最小再現セット（参照用・生成には使用しない） |

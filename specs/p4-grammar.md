@@ -15,7 +15,7 @@
 
 - [language.md](language.md) — TinyExpression 言語仕様
 - [backends.md](backends.md) — P4 バックエンド
-- [tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf](../tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf) — P4 文法定義（589行・権威・ビルド生成元）
+- [tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf](../tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf) — P4 文法定義（649行・権威・ビルド生成元）
 - [docs/ubnf/tinyexpression-p4-draft.ubnf](../docs/ubnf/tinyexpression-p4-draft.ubnf) — 初期ドラフト（239行・参照用・生成には使用しない）
 
 ---

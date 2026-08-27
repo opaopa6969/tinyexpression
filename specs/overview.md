@@ -53,7 +53,7 @@ TinyExpression は **レガシーパーサー** と **P4 DSL 生成パーサー*
 
 ### P4 DSL 生成パーサー
 
-- `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` で UBNF 文法を定義（589行・権威）
+- `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf` で UBNF 文法を定義（649行・権威）
 - unlaxer-dsl により型安全なパーサー・AST・マッパーを自動生成
 - 段階的にレガシーパーサーの機能をカバー中
 - LSP/DAP サポートのベース

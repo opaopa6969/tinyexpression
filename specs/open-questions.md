@@ -15,7 +15,7 @@
 ### 現在の UBNF カバレッジ
 
 P4 UBNF（権威は1つ、参照用が3つ）:
-- `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（589行、**権威**・ビルド生成元）
+- `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`（649行、**権威**・ビルド生成元）
 - `docs/ubnf/tinyexpression-p4-draft.ubnf`（239行、初期ドラフト・参照用）
 - `docs/ubnf/tinyexpression-p4-complete.ubnf`（548行、中間スナップショット・参照用）
 - `docs/ubnf/tinyexpression-p4-assoc-repro.ubnf`（24行、結合性再現用・参照用）
