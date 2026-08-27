@@ -1,6 +1,6 @@
 # ADR-001: P4TypedAstEvaluator を PRIMARY 評価パスに昇格
 
-**Status**: Accepted  
+**Status**: Superseded by [ADR-004](ADR-004-generated-backends-no-fallback.md)
 **Date**: 2026-02-26  
 **Deciders**: Project architect
 

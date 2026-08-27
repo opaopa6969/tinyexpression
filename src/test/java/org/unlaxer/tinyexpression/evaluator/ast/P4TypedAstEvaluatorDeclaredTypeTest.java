@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.math.RoundingMode;
 import java.util.Map;
+import java.util.Optional;
 
 import org.junit.Test;
 import org.unlaxer.tinyexpression.CalculationContext;
@@ -35,7 +36,8 @@ public class P4TypedAstEvaluatorDeclaredTypeTest {
         new SpecifiedExpressionTypes(ExpressionTypes._boolean, ExpressionTypes._float),
         context(), null, null, declaredTypes);
     BooleanEqualityExpr node =
-        new BooleanEqualityExpr(new VariableRefExpr("name"), "==", new VariableRefExpr("remitterAccountHolderKana"));
+        new BooleanEqualityExpr(new VariableRefExpr("name", Optional.empty()), "==",
+            new VariableRefExpr("remitterAccountHolderKana", Optional.empty()));
     return evaluator.eval(node);
   }
 

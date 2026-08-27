@@ -149,7 +149,7 @@ class P4AstEvaluatorCalculator extends AbstractCalculator {
     // 1. TinyExpressionP4Parsers.getRootParser() でパース (型安全)
     // 2. TinyExpressionP4Mapper.map(token) で AST 化 (Reflection 不使用)
     // 3. TinyExpressionP4Evaluator.evaluate(ast) で評価
-    // 4. 失敗時は AstEvaluatorCalculator へフォールバック
+    // 4. 未対応時は明示的に失敗（手書き evaluator への fallback なし）
     // 5. runtime markers を setObject() で記録
     //    _tinyExecutionBackend = "P4_AST_EVALUATOR"
     //    _tinyP4ParserUsed = "true" / "false"

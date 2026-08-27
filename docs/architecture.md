@@ -8,7 +8,7 @@ TinyExpression is a **hybrid architecture** — a hand-written legacy parser sta
 
 Verified baseline as of 2026-04-24:
 
-- `tinyexpression` `1.4.11`
+- `tinyexpression` `1.4.15`
 - `unlaxer-common` `3.0.2`
 - `unlaxer-dsl` `3.0.2`
 
@@ -89,25 +89,16 @@ This enables exhaustive `switch` expressions and eliminates runtime cast errors.
 |---------|-------|----------|
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | Parse → generate Java source → `javac` → load → invoke |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | Same as above with pre-refactor AST creator (frozen) |
-| `AST_EVALUATOR` | `AstEvaluatorCalculator` | Parse → AST → tree-walking interpreter; fallback chain: `generated-ast → token-ast → javacode` |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | Hybrid: native DSL Java emitter + legacy bridge fallback |
+| `AST_EVALUATOR` | `AstEvaluatorCalculator` | P4 parse → generated AST → typed tree-walking interpreter |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | P4 parse → generated AST → typed Java emitter |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | P4 parse → P4 AST → `P4TypedAstEvaluator` (PRIMARY) |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | P4 parse → P4 AST → DSL Java emitter |
 
-### Fallback Chain (AST_EVALUATOR)
+### Generated-only failure boundary
 
-```
-P4TypedAstEvaluator (PRIMARY)
-    │ fails (P4 grammar gap)
-    ▼
-GeneratedP4ValueAstEvaluator
-    │ fails
-    ▼
-AstDeclarationRuntime / AstTokenTreeEvaluator (legacy AST walk)
-    │ fails
-    ▼
-JavaCode fallback (JAVA_CODE path)
-```
+`AST_EVALUATOR`, `P4_AST_EVALUATOR`, `DSL_JAVA_CODE`, and
+`P4_DSL_JAVA_CODE` do not switch to handwritten evaluators or emitters. A P4
+grammar/mapping gap is reported as an explicit parse or unsupported-operation error.
 
 ### Backend Registration
 
@@ -209,7 +200,7 @@ External IDE repository: [tinyexpression-group/tinyexpression-ide](https://githu
 
 ## Related Documents
 
-- [backends.md](backends.md) — backend comparison table and fallback chain
+- [backends.md](backends.md) — backend comparison table and generated-only boundary
 - [language-guide.md](language-guide.md) — language specification
 - [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) — remaining work after the latest UBNF upgrade
 - [TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md) — operational guide for regeneration and verification

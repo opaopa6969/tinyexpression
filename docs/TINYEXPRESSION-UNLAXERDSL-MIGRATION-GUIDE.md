@@ -163,8 +163,8 @@ java --enable-preview -cp target/classes \
    (`target/generated-sources/tinyexpression-p4/runtime`) を source として自動取り込みする。
    - `tooling` 生成物（LSP/DAP）は依存差分が大きいため通常 compile には含めない。
    - 互換性 shim の履歴は `docs/TINYEXPRESSION-DEPENDENCY-EXTENSION-NOTES.md` を参照。
-5. `AST_EVALUATOR` backend は AST-first + JavaCode lazy fallback で動作する。
-   - 対応式はまず `AstNumberExpressionEvaluator` で評価し、非対応時のみ JavaCode runtime を遅延初期化する。
+5. `AST_EVALUATOR` backend は generated P4 AST と `P4TypedAstEvaluator` のみで動作する。
+   - 非対応構文・mapping・型・評価は明示的に失敗し、JavaCode runtime へ暗黙 fallback しない。
    - `FormulaInfo` 永続化では AST backend の `byteCode` を空配列で扱う（即時コンパイルを強制しない）。
 
 ### 3.4 Parser IR を中間契約として使う
@@ -331,11 +331,11 @@ AST 化は 2 通りある。
 4. `AST_EVALUATOR` 用の専用 calculator エントリを追加:
    - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/AstEvaluatorCalculator.java`
    - `src/main/java/org/unlaxer/tinyexpression/evaluator/ast/GeneratedAstRuntimeProbe.java`
-   - generated runtime (`TinyExpressionP4Parsers`, `TinyExpressionP4Mapper`) を probe し、
-     `generated-ast` -> `token-ast` -> `javacode-fallback` の順で段階実行。
+   - generated runtime (`TinyExpressionP4Parsers`, `TinyExpressionP4Mapper`) で AST を作り、
+     `P4TypedAstEvaluator` だけで実行する。
 
-注: `AST_EVALUATOR` はすでに generated-path 実行を優先し、非対応式のみ JavaCode fallback を使う。
-宣言 setter 実行は `AstDeclarationRuntime` で段階導入済み（現在は基本 object path を主対象）。
+注: `AST_EVALUATOR` は非対応式を JavaCode backend へ切り替えず、ギャップを明示的な例外として返す。
+legacy 実行が必要な場合は呼び出し側が backend を明示選択する。
 さらに mapper root 選択は `parse(source, preferredAstSimpleName)` で結果型に応じた優先指定が可能。
 
 ---

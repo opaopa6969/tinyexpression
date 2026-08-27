@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="683" height="92">
+<svg xmlns="http://www.w3.org/2000/svg" width="767" height="92">
 <style>
   .rail { stroke: #333; stroke-width: 2; fill: none; }
   .arrow { stroke: #333; stroke-width: 2; fill: none; }
@@ -14,49 +14,49 @@
 <text x="20" y="38" font-size="13" fill="#555" font-family="sans-serif">TernaryExpression</text>
 <circle cx="24" cy="58" r="4" class="start-circle"/>
 <line x1="28" y1="58" x2="40" y2="58" class="rail"/>
-<g id="850928097">
-<g id="728612903">
+<g id="rr-7">
+<g id="rr-0">
 <rect x="40" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="60" y="62" text-anchor="middle" class="terminal-text">'('</text>
 </g>
 <line x1="81" y1="58" x2="101" y2="58" class="rail"/>
 <polygon points="88,55 94,58 88,61" class="arrow"/>
-<g id="1797463000">
+<g id="rr-1">
 <rect x="101" y="44" width="139" height="28" class="nonterminal-box"/>
 <text x="170" y="62" text-anchor="middle" class="nonterminal-text">BooleanExpression</text>
 </g>
 <line x1="240" y1="58" x2="260" y2="58" class="rail"/>
 <polygon points="247,55 253,58 247,61" class="arrow"/>
-<g id="2065641473">
+<g id="rr-2">
 <rect x="260" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
 <text x="280" y="62" text-anchor="middle" class="terminal-text">'?'</text>
 </g>
 <line x1="301" y1="58" x2="321" y2="58" class="rail"/>
 <polygon points="308,55 314,58 308,61" class="arrow"/>
-<g id="1347472005">
-<rect x="321" y="44" width="90" height="28" class="nonterminal-box"/>
-<text x="366" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+<g id="rr-3">
+<rect x="321" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="387" y="62" text-anchor="middle" class="nonterminal-text">BranchExpression</text>
 </g>
-<line x1="411" y1="58" x2="431" y2="58" class="rail"/>
-<polygon points="418,55 424,58 418,61" class="arrow"/>
-<g id="368661584">
-<rect x="431" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="451" y="62" text-anchor="middle" class="terminal-text">':'</text>
+<line x1="453" y1="58" x2="473" y2="58" class="rail"/>
+<polygon points="460,55 466,58 460,61" class="arrow"/>
+<g id="rr-4">
+<rect x="473" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="493" y="62" text-anchor="middle" class="terminal-text">':'</text>
 </g>
-<line x1="472" y1="58" x2="492" y2="58" class="rail"/>
-<polygon points="479,55 485,58 479,61" class="arrow"/>
-<g id="1727488236">
-<rect x="492" y="44" width="90" height="28" class="nonterminal-box"/>
-<text x="537" y="62" text-anchor="middle" class="nonterminal-text">Expression</text>
+<line x1="514" y1="58" x2="534" y2="58" class="rail"/>
+<polygon points="521,55 527,58 521,61" class="arrow"/>
+<g id="rr-5">
+<rect x="534" y="44" width="132" height="28" class="nonterminal-box"/>
+<text x="600" y="62" text-anchor="middle" class="nonterminal-text">BranchExpression</text>
 </g>
-<line x1="582" y1="58" x2="602" y2="58" class="rail"/>
-<polygon points="589,55 595,58 589,61" class="arrow"/>
-<g id="1684720395">
-<rect x="602" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
-<text x="622" y="62" text-anchor="middle" class="terminal-text">')'</text>
+<line x1="666" y1="58" x2="686" y2="58" class="rail"/>
+<polygon points="673,55 679,58 673,61" class="arrow"/>
+<g id="rr-6">
+<rect x="686" y="44" width="41" height="28" rx="10" ry="10" class="terminal-box"/>
+<text x="706" y="62" text-anchor="middle" class="terminal-text">')'</text>
 </g>
 </g>
-<line x1="643" y1="58" x2="651" y2="58" class="rail"/>
-<circle cx="657" cy="58" r="6" class="end-circle-outer"/>
-<circle cx="657" cy="58" r="3" class="end-circle-inner"/>
+<line x1="727" y1="58" x2="735" y2="58" class="rail"/>
+<circle cx="741" cy="58" r="6" class="end-circle-outer"/>
+<circle cx="741" cy="58" r="3" class="end-circle-inner"/>
 </svg>

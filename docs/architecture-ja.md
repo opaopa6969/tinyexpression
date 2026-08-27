@@ -8,7 +8,7 @@ TinyExpression は **ハイブリッドアーキテクチャ** を採用して�
 
 2026-04-24 時点の確認済みベースライン:
 
-- `tinyexpression` `1.4.11`
+- `tinyexpression` `1.4.15`
 - `unlaxer-common` `3.0.2`
 - `unlaxer-dsl` `3.0.2`
 
@@ -90,25 +90,16 @@ record IfExpr(TinyExpressionNode condition, TinyExpressionNode then, TinyExpress
 |------------|-------|------|
 | `JAVA_CODE` | `JavaCodeCalculatorV3` | パース → Java ソース生成 → `javac` → ロード → 呼び出し |
 | `JAVA_CODE_LEGACY_ASTCREATOR` | `LegacyAstCreatorJavaCodeCalculator` | 上記と同様だがリファクタ前 AST クリエイターを使用（凍結） |
-| `AST_EVALUATOR` | `AstEvaluatorCalculator` | パース → AST → ツリーウォーキングインタープリタ。フォールバックチェーン: `generated-ast → token-ast → javacode` |
-| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | ハイブリッド: ネイティブ DSL Java エミッタ + レガシーブリッジフォールバック |
+| `AST_EVALUATOR` | `AstEvaluatorCalculator` | P4 パース → 生成 AST → 型付きツリーウォーキング評価 |
+| `DSL_JAVA_CODE` | `DslJavaCodeCalculator` | P4 パース → 生成 AST → 型付き Java エミッタ |
 | `P4_AST_EVALUATOR` | `P4AstEvaluatorCalculator` | P4 パース → P4 AST → `P4TypedAstEvaluator`（PRIMARY） |
 | `P4_DSL_JAVA_CODE` | `P4DslJavaCodeCalculator` | P4 パース → P4 AST → DSL Java エミッタ |
 
-### フォールバックチェーン（AST_EVALUATOR）
+### generated-only の失敗境界
 
-```
-P4TypedAstEvaluator（PRIMARY）
-    │ 失敗（P4 文法のギャップ）
-    ▼
-GeneratedP4ValueAstEvaluator
-    │ 失敗
-    ▼
-AstDeclarationRuntime / AstTokenTreeEvaluator（レガシー AST ウォーク）
-    │ 失敗
-    ▼
-JavaCode フォールバック（JAVA_CODE パス）
-```
+`AST_EVALUATOR`、`P4_AST_EVALUATOR`、`DSL_JAVA_CODE`、
+`P4_DSL_JAVA_CODE` は手書き評価器・エミッタへ切り替えません。P4 文法や
+マッピングの未対応箇所は、パースエラーまたは unsupported-operation として明示します。
 
 ### バックエンド登録
 
@@ -210,7 +201,7 @@ flowchart TD
 
 ## 関連ドキュメント
 
-- [backends.md](backends.md) — バックエンド比較表とフォールバックチェーン
+- [backends.md](backends.md) — バックエンド比較表と generated-only 境界
 - [language-guide.md](language-guide.md) — 言語仕様
 - [TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md](TINYEXPRESSION-P4-UPGRADE-FOLLOWUP-ISSUE-2026-04-24.md) — 最新 UBNF 適用後の残課題
 - [TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md](TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md) — 実装・再生成・検証の運用手順
