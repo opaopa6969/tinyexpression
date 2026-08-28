@@ -3,7 +3,6 @@ package org.unlaxer.tinyexpression.loader;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -12,6 +11,7 @@ import org.unlaxer.Tag;
 import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
+import org.unlaxer.compiler.CompileError;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.parser.combinator.LazyOneOrMore;
 import org.unlaxer.tinyexpression.Calculator;
@@ -64,7 +64,6 @@ public class FormulaInfoParser extends LazyOneOrMore{
     FormulaInfo formulaInfo = new FormulaInfo(formulaInfoAdditionalFields , calculatorCreator);
     formulaInfo.executionBackend = selectedBackend.name();
 
-    AtomicBoolean hasByteCode = new AtomicBoolean(false);
     for (Token token : elements) {
 
       String text = token.getToken().orElse("");
@@ -106,7 +105,6 @@ public class FormulaInfoParser extends LazyOneOrMore{
         match |= set(keyValue, "byteCode", (value)->{
           formulaInfo.byteCodeAsHex = value;
           formulaInfo.byteCode = Unchecked.supplier(()->HEX.decode(value)).get();
-          hasByteCode.set(true);
         });
 
         match |= setStartsWith(keyValue, "byteCode_", (value)->{
@@ -131,18 +129,24 @@ public class FormulaInfoParser extends LazyOneOrMore{
     }
 
     boolean formulaExists = StringUtils.isNoneBlank(formulaInfo.formulaText);
+    if(false == formulaExists) {
+      throw new CompileError(
+          "FormulaInfo must contain formula text. Stored bytecode is not executed without its source formula.");
+    }
+
     boolean needsUpdate = formulaInfo.needsUpdate();
-    if(needsUpdate && formulaExists) {
+    if(needsUpdate) {
       formulaInfo.updateHash();
     }
     formulaInfo.updateClassName();
 
-    if((false == hasByteCode.get() || needsUpdate) && formulaExists) {
-      formulaInfo.updateCalculatorFromFormula(classLoader);
-    }else {
-//      System.out.println(new String(formulaInfo.byteCode));
-      formulaInfo.updateCalculatorWithByteCode(classLoader);
-    }
+    // FormulaInfo files are editable documents, not authenticated binary containers.
+    // byteCode, hashByByteCode, and javaCode are all supplied by the same document, so
+    // a matching digest cannot establish provenance. Always rebuild under the current
+    // execution policies (including JavaCodeBlockPolicy) and never execute persisted
+    // bytecode merely because the stored hashes match.
+    formulaInfo.classNameAndByteCodeList.clear();
+    formulaInfo.updateCalculatorFromFormula(classLoader);
     return formulaInfo;
   }
 

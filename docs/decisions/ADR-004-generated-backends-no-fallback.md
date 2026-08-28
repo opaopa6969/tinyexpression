@@ -26,8 +26,10 @@ The generated backend families are strict:
 - A parse, mapping, typing, evaluation, or emission gap is an explicit failure.
 - `JAVA_CODE` and `JAVA_CODE_LEGACY_ASTCREATOR` remain explicit legacy choices;
   they are not implicit recovery paths.
-- Precompiled bytecode loaded for a DSL backend remains a valid stored artifact,
-  and is reported as `precompiled-bytecode` rather than a bridge.
+- A caller may construct a backend programmatically from a precompiled artifact it already
+  trusts, and that path is reported as `precompiled-bytecode` rather than a bridge.
+- Editable FormulaInfo documents are not authenticated artifact containers. Their persisted
+  bytecode is ignored on load and the required `formula` text is rebuilt by the selected backend.
 
 Grammar and AST coverage changes must update the UBNF grammar, typed consumers,
 and parity tests together.
