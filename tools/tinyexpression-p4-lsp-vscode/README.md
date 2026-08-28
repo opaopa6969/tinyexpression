@@ -127,6 +127,11 @@ hand-written adapter only supplies language-specific runtime binding through the
 `runtimeVariables(...)` hook. Debug Console evaluation delegates to TinyExpression itself; it
 does not contain a second arithmetic parser.
 
+The module's vocabulary conformance test extracts word literals from the UBNF and compares them
+with the static LSP completion vocabulary. An intentional omission must carry a reason in the
+test allow-list. The extractor is kept independent of LSP internals so the same check can later
+cover TextMate grammar scopes, DAP value vocabularies, and files bundled in the VSIX.
+
 AST stepping is currently structural: the formula result and parity snapshot are evaluated with
 the launch variables, while F10 changes the selected AST node. Per-node mutable runtime state and
 reverse/time-travel debugging are not provided.

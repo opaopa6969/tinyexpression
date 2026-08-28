@@ -241,6 +241,31 @@ public class TinyExpressionP4LanguageServerExtTest {
         assertEquals("sin($1)$0", sin.getInsertText());
     }
 
+    @Test
+    public void testCompletionIncludesGrammarOnlyValuesAndInternalKeyword() throws Exception {
+        String content = "";
+        server.parseAndEnrich(TEST_URI, content, 0, content);
+
+        CompletionParams params = new CompletionParams();
+        params.setTextDocument(new TextDocumentIdentifier(TEST_URI));
+        params.setPosition(new Position(0, 0));
+
+        List<CompletionItem> items = service.completion(params).get().getLeft();
+        CompletionItem monday = items.stream()
+            .filter(i -> "MONDAY".equals(i.getLabel()))
+            .findFirst()
+            .orElse(null);
+
+        assertNotNull("DayOfWeek grammar values should be suggested", monday);
+        assertEquals(CompletionItemKind.EnumMember, monday.getKind());
+        assertTrue("internal invocation keyword should be suggested",
+            items.stream().anyMatch(i -> "internal".equals(i.getLabel())));
+        assertTrue("description declaration keyword should be suggested",
+            items.stream().anyMatch(i -> "description".equals(i.getLabel())));
+        assertFalse("unsupported indexOf must not be suggested",
+            items.stream().anyMatch(i -> "indexOf".equals(i.getLabel())));
+    }
+
     /**
      * Block-keyword snippet completion — semicolon completion 由来。issue #11
      * §3 セミコロン補完を declaration テンプレート経由で復元する。"var" を
