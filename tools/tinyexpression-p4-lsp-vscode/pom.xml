@@ -210,7 +210,7 @@
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
-                            <test>org.unlaxer.tinyexpression.lsp.p4.TinyExpressionP4LanguageServerExtTest</test>
+                            <test>org.unlaxer.tinyexpression.lsp.p4.TinyExpressionP4LanguageServerExtTest,org.unlaxer.tinyexpression.lsp.p4.TinyExpressionP4VocabularyConformanceTest</test>
                             <failIfNoTests>true</failIfNoTests>
                         </configuration>
                     </plugin>

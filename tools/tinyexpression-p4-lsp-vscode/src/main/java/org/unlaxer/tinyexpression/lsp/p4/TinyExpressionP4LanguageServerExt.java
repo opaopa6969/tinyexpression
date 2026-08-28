@@ -141,7 +141,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "var", "variable", "as",
       "number", "string", "boolean", "object", "float",
       "set", "not", "exists", "description", "call",
-      "import", "external", "returning",
+      "import", "external", "returning", "internal",
       "true", "false");
 
   // ── Operator set ──
@@ -157,9 +157,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "if", "else", "match", "default",
       "var", "variable", "as",
       "number", "string", "boolean", "object", "float",
-      "set", "not", "exists", "call",
-      "import", "external", "returning",
+      "set", "not", "exists", "description", "call",
+      "import", "external", "returning", "internal",
       "true", "false");
+
+  /** Closed grammar values that are useful as expression completions. */
+  private static final List<String> COMPLETION_VALUES = List.of(
+      "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
+      "FRIDAY", "SATURDAY", "SUNDAY");
 
   /**
    * Snippet completions for callable functions. Accepting one of these inserts
@@ -180,7 +185,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       FUNCTION_SNIPPETS.put(f, f + "($1)$0");
     }
     // Math / string — two arguments
-    for (String f : List.of("pow", "indexOf", "startsWith", "endsWith", "contains")) {
+    for (String f : List.of("pow", "startsWith", "endsWith", "contains")) {
       FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
     }
     // Variadic — surface a 2-arg starter
@@ -216,6 +221,19 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     BLOCK_SNIPPETS.put("call", "call ${1:method}($2)$0");
     BLOCK_SNIPPETS.put("external",
         "external returning as ${1:number} ${2:name}($3)$0");
+  }
+
+  /**
+   * Package-private conformance seam. Tests compare this vocabulary with the
+   * UBNF source so a grammar addition cannot silently disappear from LSP
+   * completion.
+   */
+  static Set<String> staticCompletionVocabulary() {
+    Set<String> vocabulary = new LinkedHashSet<>(COMPLETION_KEYWORDS);
+    vocabulary.addAll(FUNCTION_SNIPPETS.keySet());
+    vocabulary.addAll(BLOCK_SNIPPETS.keySet());
+    vocabulary.addAll(COMPLETION_VALUES);
+    return Collections.unmodifiableSet(vocabulary);
   }
 
   /** Pattern for extracting $variable references from document text. */
@@ -1510,6 +1528,15 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         if (kw.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(kw);
           item.setKind(CompletionItemKind.Keyword);
+          items.add(item);
+        }
+      }
+
+      // 1a. Closed grammar values (currently DayOfWeek).
+      for (String value : COMPLETION_VALUES) {
+        if (value.startsWith(prefix)) {
+          CompletionItem item = new CompletionItem(value);
+          item.setKind(CompletionItemKind.EnumMember);
           items.add(item);
         }
       }
