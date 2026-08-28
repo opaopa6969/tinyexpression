@@ -170,6 +170,17 @@ List<CalculationResult> results = executor.execute(
 | `field` | ドメインオブジェクトフィールド名 |
 | `checkKind` | スコアマップ等の出力キー |
 
+### FormulaInfo の保存済みコードに関する信頼境界
+
+`FormulaInfo` の `byteCode`、`hashByByteCode`、`javaCode` は、過去の出力との互換性や
+監査のために文書へ含まれることがあります。ただし、これらは式と同じ編集可能な文書に
+保存されるため、署名の代わりにはなりません。ローダーは `formula` を必須とし、読込時は
+現在の実行ポリシーで式から Calculator を再構築します。保存済み bytecode は実行しません。
+
+再構築にはコンパイルコストが掛かるため、評価ごとに FormulaInfo を読み直さず、生成した
+Calculator を再利用してください。Java コードブロックを含む式には、引き続き以下の明示的な
+opt-in が必要です。
+
 ---
 
 ## Java コードブロック（セキュリティ注意）

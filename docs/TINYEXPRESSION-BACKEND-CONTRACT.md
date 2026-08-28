@@ -81,7 +81,9 @@ Last updated: 2026-08-26
    - `_tinyDslJavaNativeEmitterUsed`
 3. current DSL implementation values:
    - generated source: `_tinyExecutionImplementation=p4-typed-emitter`
-   - stored artifact: `_tinyExecutionImplementation=precompiled-bytecode`
+   - trusted, programmatically supplied artifact: `_tinyExecutionImplementation=precompiled-bytecode`
+   - FormulaInfo loading always rebuilds required `formula` text; persisted bytecode is not an
+     execution input
    - `_tinyExecutionBridgeImplementation=false`
 
 ## 5. Change Guidelines
