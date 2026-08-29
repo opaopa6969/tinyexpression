@@ -63,8 +63,14 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 	 */
 	@Override
 	public Optional<Float> getValue(String name) {
-
-		return Optional.ofNullable((Float)valueByName.get(name));
+		Number value = valueByName.get(name);
+		if (value == null) {
+			return Optional.empty();
+		}
+		if (value instanceof Float f) {
+			return Optional.of(f);
+		}
+		return Optional.of(value.floatValue());
 	}
 	
 	/* (non-Javadoc)
@@ -183,7 +189,10 @@ public abstract class AbstractCalculationContext implements CalculationContext{
 
     boolean withinTime = false;
     if (fromDayInclusive.getValue() == toDayInclusive.getValue()) {
-      withinTime = nowHour >= fromDayHourInclusive && nowHour < toDayHourExclusive;
+      boolean spansMidnight = fromDayHourInclusive > toDayHourExclusive;
+      withinTime = spansMidnight
+          ? (nowHour >= fromDayHourInclusive) || (nowHour < toDayHourExclusive)
+          : (nowHour >= fromDayHourInclusive) && (nowHour < toDayHourExclusive);
     } else if (fromDayInclusive.getValue() == nowDayOfWeek) {
       withinTime = nowHour >= fromDayHourInclusive;
     } else if (toDayInclusive.getValue() == nowDayOfWeek) {

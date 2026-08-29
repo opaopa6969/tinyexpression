@@ -1433,9 +1433,11 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalToNumExpr(ToNumExpr node) {
     Object strVal = eval(node.value());
     try {
-      return Double.parseDouble(String.valueOf(strVal));
+      return castToNumberType(Double.parseDouble(String.valueOf(strVal)));
     } catch (NumberFormatException e) {
-      return ((Number) eval(node.defaultValue())).doubleValue();
+      Object defaultValue = eval(node.defaultValue());
+      double dv = (defaultValue instanceof Number n) ? n.doubleValue() : 0.0;
+      return castToNumberType(dv);
     }
   }
 
