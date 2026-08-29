@@ -270,6 +270,22 @@ public class McpServerTest {
         assertTrue(text.contains("tinyexpression MCP"));
     }
 
+    @Test
+    public void oversizedBody_rejectedWith413() throws Exception {
+        long max = McpServer.MAX_REQUEST_BODY_BYTES;
+        byte[] padding = new byte[(int) Math.min(max + 1024, Integer.MAX_VALUE - 8)];
+        java.util.Arrays.fill(padding, (byte) ' ');
+        String body = new String(padding, java.nio.charset.StandardCharsets.UTF_8);
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + "/mcp"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body))
+                .build();
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(413, resp.statusCode());
+    }
+
     // ─── helpers ──────────────────────────────────────────────────
 
     private JsonNode rpc(String method, JsonNode params) throws Exception {

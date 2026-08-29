@@ -35,8 +35,20 @@ public class FileBaseTinyExpressionInstancesCache implements TinyExpressionInsta
   public FileBaseTinyExpressionInstancesCache(Path rootFolder ,
       FormulaInfoAdditionalFields formulaInfoAdditionalFields) {
     super();
-    this.rootFolder = rootFolder;
+    this.rootFolder = rootFolder != null ? rootFolder.toAbsolutePath().normalize() : null;
     this.formulaInfoAdditionalFields = formulaInfoAdditionalFields;
+  }
+
+  static Path resolveUnderRoot(Path rootFolder, String tenantIdString) {
+    if (rootFolder == null) {
+      throw new IllegalArgumentException("rootFolder is not set");
+    }
+    Path resolved = rootFolder.resolve(tenantIdString).normalize();
+    if (!resolved.startsWith(rootFolder)) {
+      throw new IllegalArgumentException(
+          "tenantId escapes rootFolder: " + tenantIdString);
+    }
+    return resolved;
   }
 
   @Override
@@ -51,7 +63,7 @@ public class FileBaseTinyExpressionInstancesCache implements TinyExpressionInsta
     List<Calculator> cache =
         calculatorsByTenantId.computeIfAbsent(tenantID,
             tenantId->{
-              Path resolve = rootFolder.resolve(tenantId.asString()).resolve(FILENAME);
+              Path resolve = resolveUnderRoot(rootFolder, tenantId.asString()).resolve(FILENAME);
               try(InputStream inputStream = Files.newInputStream(resolve);){
                 Try<FormulaInfoList> parse =
                     FormulaInfoList.parse(inputStream, formulaInfoAdditionalFields, classLoader);

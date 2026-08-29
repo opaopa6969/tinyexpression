@@ -41,6 +41,8 @@ public class McpServer {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    static final long MAX_REQUEST_BODY_BYTES = 16L * 1024 * 1024;
+
     private final HttpServer server;
     private final boolean allowJavaCode;
 
@@ -85,7 +87,13 @@ public class McpServer {
                 sessionId = UUID.randomUUID().toString();
             }
 
-            String bodyStr = readBody(ex);
+            String bodyStr;
+            try {
+                bodyStr = readBody(ex);
+            } catch (IOException e) {
+                sendWithSession(ex, 413, MAPPER.writeValueAsString(errorResp(null, -32603, "Request body too large")), sessionId);
+                return;
+            }
             JsonNode req;
             try {
                 req = MAPPER.readTree(bodyStr);
@@ -859,8 +867,19 @@ public class McpServer {
     // ─── HTTP helpers ──────────────────────────────────────────
 
     private static String readBody(HttpExchange ex) throws IOException {
+        String contentLength = ex.getRequestHeaders().getFirst("Content-Length");
+        if (contentLength != null) {
+            try {
+                long len = Long.parseLong(contentLength.trim());
+                if (len > MAX_REQUEST_BODY_BYTES) {
+                    throw new IOException("Request body too large: " + len + " > " + MAX_REQUEST_BODY_BYTES);
+                }
+            } catch (NumberFormatException ignored) {
+                // fall through to bounded read
+            }
+        }
         try (InputStream is = ex.getRequestBody()) {
-            return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+            return new String(is.readNBytes((int) MAX_REQUEST_BODY_BYTES), StandardCharsets.UTF_8);
         }
     }
 
