@@ -205,10 +205,12 @@ public class McpServer {
                     case "execute_batch" -> handleExecuteBatch(args);
                     case "parity_check" -> handleParityCheck(args);
                     case "list_backends" -> handleListBackends();
-                    default -> throw new IllegalArgumentException("Unknown tool: " + name);
+                    default -> throw new UnknownToolException("Unknown tool: " + name);
                 };
-            } catch (IllegalArgumentException e) {
+            } catch (UnknownToolException e) {
                 return errorResp(null, -32601, e.getMessage());
+            } catch (IllegalArgumentException e) {
+                return errorResp(null, -32602, e.getMessage());
             }
 
             ArrayNode content = MAPPER.createArrayNode();
@@ -225,12 +227,11 @@ public class McpServer {
 
         private String handleEvaluate(JsonNode args) throws Exception {
             String formula = args.path("formula").asText();
-            String backendStr = args.path("backend").asText("AST_EVALUATOR");
-            String resultTypeStr = args.path("resultType").asText("float");
+            String backendStr = optionText(args, "backend", "AST_EVALUATOR");
+            String resultTypeStr = optionText(args, "resultType", "float");
             JsonNode variablesNode = args.path("variables");
 
-            ExecutionBackend backend = ExecutionBackend.parse(backendStr)
-                    .orElse(ExecutionBackend.AST_EVALUATOR);
+            ExecutionBackend backend = parseBackend(backendStr);
             checkBackendAllowed(backend);
 
             ExpressionTypes resultType = parseResultType(resultTypeStr);
@@ -268,7 +269,8 @@ public class McpServer {
 
         private String handleValidate(JsonNode args) throws Exception {
             String formula = args.path("formula").asText();
-            String resultTypeStr = args.path("resultType").asText("float");
+            String resultTypeStr = optionText(args, "resultType", "float");
+            parseResultType(resultTypeStr);
 
             ObjectNode out = MAPPER.createObjectNode();
 
@@ -328,9 +330,9 @@ public class McpServer {
                         bf.dependsOn.add(d.asText());
                     }
                 }
-                String backendStr = fn.path("backend").asText("AST_EVALUATOR");
-                String resultTypeStr = fn.path("resultType").asText("float");
-                bf.backend = ExecutionBackend.parse(backendStr).orElse(ExecutionBackend.AST_EVALUATOR);
+                String backendStr = optionText(fn, "backend", "AST_EVALUATOR");
+                String resultTypeStr = optionText(fn, "resultType", "float");
+                bf.backend = parseBackend(backendStr);
                 bf.resultType = parseResultType(resultTypeStr);
                 checkBackendAllowed(bf.backend);
                 batchFormulas.add(bf);
@@ -417,7 +419,7 @@ public class McpServer {
 
         private String handleParityCheck(JsonNode args) throws Exception {
             String formula = args.path("formula").asText();
-            String resultTypeStr = args.path("resultType").asText("float");
+            String resultTypeStr = optionText(args, "resultType", "float");
             JsonNode variablesNode = args.path("variables");
 
             ExpressionTypes resultType = parseResultType(resultTypeStr);
@@ -765,6 +767,25 @@ public class McpServer {
                 || backend == ExecutionBackend.JAVA_CODE_LEGACY_ASTCREATOR;
     }
 
+    private static String optionText(JsonNode options, String field, String defaultValue) {
+        if (options == null || !options.has(field)) {
+            return defaultValue;
+        }
+        JsonNode value = options.get(field);
+        if (value == null || !value.isTextual() || value.asText().isBlank()) {
+            throw new IllegalArgumentException(
+                    "Option " + field + " must be a non-blank string when specified");
+        }
+        return value.asText();
+    }
+
+    private static ExecutionBackend parseBackend(String backend) {
+        return ExecutionBackend.parse(backend).orElseThrow(() ->
+                new IllegalArgumentException(
+                        "Unknown backend: " + backend + ". Allowed: "
+                                + java.util.Arrays.toString(ExecutionBackend.values())));
+    }
+
     private static ExpressionTypes parseResultType(String resultTypeStr) {
         return switch (resultTypeStr.toLowerCase().strip()) {
             case "float", "_float", "number" -> ExpressionTypes._float;
@@ -775,7 +796,9 @@ public class McpServer {
             case "boolean", "_boolean", "bool" -> ExpressionTypes._boolean;
             case "object" -> ExpressionTypes.object;
             case "bigdecimal", "_bigdecimal" -> ExpressionTypes.bigDecimal;
-            default -> ExpressionTypes._float;
+            default -> throw new IllegalArgumentException(
+                    "Unknown resultType: " + resultTypeStr
+                            + ". Allowed: float, double, int, long, string, boolean, object, bigdecimal");
         };
     }
 
@@ -862,6 +885,12 @@ public class McpServer {
         List<String> dependsOn;
         ExecutionBackend backend;
         ExpressionTypes resultType;
+    }
+
+    private static final class UnknownToolException extends IllegalArgumentException {
+        private UnknownToolException(String message) {
+            super(message);
+        }
     }
 
     // ─── HTTP helpers ──────────────────────────────────────────

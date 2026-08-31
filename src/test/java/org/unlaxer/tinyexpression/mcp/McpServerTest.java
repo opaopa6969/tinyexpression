@@ -86,6 +86,32 @@ public class McpServerTest {
     }
 
     @Test
+    public void toolsCall_evaluate_unknownBackendIsInvalidParams() throws Exception {
+        ObjectNode args = MAPPER.createObjectNode();
+        args.put("formula", "1+2");
+        args.put("backend", "P4_MAGIC");
+
+        JsonNode error = callToolError("evaluate", args);
+
+        assertEquals(-32602, error.get("code").asInt());
+        assertTrue(error.get("message").asText().contains("P4_MAGIC"));
+        assertTrue(error.get("message").asText().contains("P4_AST_EVALUATOR"));
+    }
+
+    @Test
+    public void toolsCall_evaluate_unknownResultTypeIsInvalidParams() throws Exception {
+        ObjectNode args = MAPPER.createObjectNode();
+        args.put("formula", "1+2");
+        args.put("resultType", "decimal128");
+
+        JsonNode error = callToolError("evaluate", args);
+
+        assertEquals(-32602, error.get("code").asInt());
+        assertTrue(error.get("message").asText().contains("decimal128"));
+        assertTrue(error.get("message").asText().contains("bigdecimal"));
+    }
+
+    @Test
     public void toolsCall_evaluate_withVariables() throws Exception {
         ObjectNode args = MAPPER.createObjectNode();
         args.put("formula", "if($x>0){1}else{0}");
@@ -165,14 +191,50 @@ public class McpServerTest {
         for (JsonNode r : results) {
             if ("base".equals(r.get("name").asText())) {
                 assertEquals(10.0, r.get("result").asDouble(), 0.001);
+                assertEquals("AST_EVALUATOR", r.get("backend_used").asText());
                 foundBase = true;
             }
             if ("total".equals(r.get("name").asText())) {
                 assertEquals(110.0, r.get("result").asDouble(), 0.001);
+                assertEquals("AST_EVALUATOR", r.get("backend_used").asText());
                 foundTotal = true;
             }
         }
         assertTrue(foundBase && foundTotal);
+    }
+
+    @Test
+    public void toolsCall_executeBatch_unknownOptionsFailBeforeExecution() throws Exception {
+        ObjectNode unknownBackend = MAPPER.createObjectNode();
+        unknownBackend.put("name", "badBackend");
+        unknownBackend.put("formula", "1+2");
+        unknownBackend.put("backend", "P4_MAGIC");
+        ObjectNode unknownResultType = MAPPER.createObjectNode();
+        unknownResultType.put("name", "badType");
+        unknownResultType.put("formula", "3+4");
+        unknownResultType.put("resultType", "decimal128");
+
+        ObjectNode backendArgs = MAPPER.createObjectNode();
+        backendArgs.set("formulas", MAPPER.createArrayNode().add(unknownBackend));
+        JsonNode backendError = callToolError("execute_batch", backendArgs);
+        assertEquals(-32602, backendError.get("code").asInt());
+        assertTrue(backendError.get("message").asText().contains("P4_MAGIC"));
+
+        ObjectNode typeArgs = MAPPER.createObjectNode();
+        typeArgs.set("formulas", MAPPER.createArrayNode().add(unknownResultType));
+        JsonNode typeError = callToolError("execute_batch", typeArgs);
+        assertEquals(-32602, typeError.get("code").asInt());
+        assertTrue(typeError.get("message").asText().contains("decimal128"));
+    }
+
+    @Test
+    public void toolsCall_validateAndParity_unknownResultTypeIsInvalidParams() throws Exception {
+        ObjectNode args = MAPPER.createObjectNode();
+        args.put("formula", "1+2");
+        args.put("resultType", "decimal128");
+
+        assertEquals(-32602, callToolError("validate", args).get("code").asInt());
+        assertEquals(-32602, callToolError("parity_check", args).get("code").asInt());
     }
 
     @Test
@@ -305,6 +367,27 @@ public class McpServerTest {
         JsonNode respBody = MAPPER.readTree(resp.body());
         assertNotNull("Response: " + resp.body(), respBody.get("result"));
         return respBody.get("result");
+    }
+
+    private JsonNode callToolError(String toolName, JsonNode arguments) throws Exception {
+        var reqBody = MAPPER.createObjectNode();
+        reqBody.put("jsonrpc", "2.0");
+        reqBody.put("id", 1);
+        reqBody.put("method", "tools/call");
+        reqBody.set("params", MAPPER.createObjectNode()
+                .put("name", toolName)
+                .set("arguments", arguments));
+
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + "/mcp"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(MAPPER.writeValueAsString(reqBody)))
+                .build();
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(200, resp.statusCode());
+        JsonNode response = MAPPER.readTree(resp.body());
+        assertNotNull("Response: " + resp.body(), response.get("error"));
+        return response.get("error");
     }
 
     private HttpResponse<String> httpGet(String path) throws Exception {
