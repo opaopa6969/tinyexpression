@@ -267,6 +267,11 @@ public final class P4PreferredAstMapper {
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
     Token rootToken = parseRootToken(source, deadlineNanos);
     String sourceWithoutComments = source;
+    // Interleave removes comments from mapped token text. Normalize only the span
+    // comparison; parsing itself must receive the original source so 3.0.15 can
+    // preserve comment-aware token layout.
+    String sourceForSpanComparison =
+        TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(sourceWithoutComments);
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
@@ -275,7 +280,7 @@ public final class P4PreferredAstMapper {
       try {
         TinyExpressionP4Mapper.MappedAst mappedAst =
             TinyExpressionP4Mapper.mapParsedToken(rootToken, candidate);
-        if (!coversWholeSource(sourceWithoutComments, mappedAst.token())) {
+        if (!coversWholeSource(sourceForSpanComparison, mappedAst.token())) {
           continue;
         }
         TinyExpressionP4AST mapped = mappedAst.ast();
