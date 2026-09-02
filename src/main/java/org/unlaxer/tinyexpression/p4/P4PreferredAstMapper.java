@@ -1,7 +1,5 @@
 package org.unlaxer.tinyexpression.p4;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -267,41 +265,35 @@ public final class P4PreferredAstMapper {
 
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
-    // unlaxer-dsl 3.0.14 emits only the // branch of @comment even though the
-    // javaStyle contract also includes block comments. Preserve layout so mapper
-    // source spans remain valid. This is one lexical input pass, not a retry or an
-    // alternate parser path; remove it when the generator's delimiter is corrected.
+    // Keep source offsets stable while accepting comments in positions where the generated
+    // grammar's interleave metadata is not applied to nested alternatives.
     String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
     Token rootToken = parseRootToken(parserSource, deadlineNanos);
+    String sourceForSpanComparison = parserSource;
     RuntimeException lastFailure = null;
-    try {
-      for (String candidate : candidates) {
-        if (candidate == null || candidate.isBlank()) {
+    for (String candidate : candidates) {
+      if (candidate == null || candidate.isBlank()) {
+        continue;
+      }
+      try {
+        TinyExpressionP4Mapper.MappedAst mappedAst =
+            TinyExpressionP4Mapper.mapParsedToken(rootToken, candidate);
+        if (!coversWholeSource(sourceForSpanComparison, mappedAst.token())) {
           continue;
         }
-        try {
-          clearMapperSourceSpans();
-          Token bestMappedToken = invokeFindBestMappedToken(rootToken, candidate);
-          if (!coversWholeSource(parserSource, bestMappedToken)) {
-            continue;
-          }
-          TinyExpressionP4AST mapped = invokeMapToken(bestMappedToken);
-          if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
-            return new ParsedAst(mapped, "preferred:" + candidate);
-          }
-        } catch (RuntimeException failure) {
-          lastFailure = failure;
+        TinyExpressionP4AST mapped = mappedAst.ast();
+        if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
+          return new ParsedAst(mapped, "preferred:" + candidate);
         }
+      } catch (RuntimeException failure) {
+        lastFailure = failure;
       }
-      if (allowDefault) {
-        clearMapperSourceSpans();
-        TinyExpressionP4AST mapped = invokeMapToken(invokeFindBestMappedToken(rootToken, null));
-        if (mapped != null) {
-          return new ParsedAst(mapped, "default");
-        }
+    }
+    if (allowDefault) {
+      TinyExpressionP4AST mapped = TinyExpressionP4Mapper.mapParsedToken(rootToken).ast();
+      if (mapped != null) {
+        return new ParsedAst(mapped, "default");
       }
-    } finally {
-      clearMapperSourceSpans();
     }
     if (lastFailure != null) {
       throw toParseFailure(lastFailure);
@@ -434,39 +426,6 @@ public final class P4PreferredAstMapper {
     }
   }
 
-  private static void clearMapperSourceSpans() {
-    try {
-      Field field = TinyExpressionP4Mapper.class.getDeclaredField("NODE_SOURCE_SPANS");
-      field.setAccessible(true);
-      Object value = field.get(null);
-      if (value instanceof java.util.Map<?, ?> map) {
-        map.clear();
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-  }
-
-  private static Token invokeFindBestMappedToken(Token rootToken, String preferredAstSimpleName) {
-    try {
-      Method method = TinyExpressionP4Mapper.class.getDeclaredMethod(
-          "findBestMappedToken", Token.class, String.class);
-      method.setAccessible(true);
-      return (Token) method.invoke(null, rootToken, preferredAstSimpleName);
-    } catch (ReflectiveOperationException e) {
-      throw new IllegalArgumentException("Failed to resolve mapped token", e);
-    }
-  }
-
-  private static TinyExpressionP4AST invokeMapToken(Token token) {
-    try {
-      Method method = TinyExpressionP4Mapper.class.getDeclaredMethod("mapToken", Token.class);
-      method.setAccessible(true);
-      return (TinyExpressionP4AST) method.invoke(null, token);
-    } catch (ReflectiveOperationException e) {
-      throw new IllegalArgumentException("Failed to map parse tree", e);
-    }
-  }
-
   private static int consumedLengthCompat(Token token) {
     String text = tokenTextCompat(token);
     return text == null ? 0 : text.length();
@@ -476,63 +435,11 @@ public final class P4PreferredAstMapper {
     if (token == null) {
       return null;
     }
-    try {
-      Method method = token.getClass().getMethod("getToken");
-      Object value = method.invoke(token);
-      if (value instanceof java.util.Optional<?> optional && optional.isPresent()) {
-        Object tokenValue = optional.get();
-        return tokenValue == null ? null : String.valueOf(tokenValue);
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-    try {
-      Field field = token.getClass().getField("tokenString");
-      Object value = field.get(token);
-      if (value instanceof java.util.Optional<?> optional && optional.isPresent()) {
-        Object tokenValue = optional.get();
-        return tokenValue == null ? null : String.valueOf(tokenValue);
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-    try {
-      Field field = token.getClass().getField("source");
-      Object source = field.get(token);
-      if (source != null) {
-        Method method = source.getClass().getMethod("sourceAsString");
-        Object value = method.invoke(source);
-        return value == null ? null : String.valueOf(value);
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-    return null;
+    return token.getToken().orElse(null);
   }
 
   private static StringSource createRootSourceCompat(String source) {
-    try {
-      Method method = StringSource.class.getMethod("createRootSource", String.class);
-      Object value = method.invoke(null, source);
-      if (value instanceof StringSource stringSource) {
-        return stringSource;
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-    try {
-      for (java.lang.reflect.Constructor<?> constructor : StringSource.class.getDeclaredConstructors()) {
-        Class<?>[] types = constructor.getParameterTypes();
-        if (types.length == 0 || types[0] != String.class) {
-          continue;
-        }
-        Object[] args = new Object[types.length];
-        args[0] = source;
-        constructor.setAccessible(true);
-        Object value = constructor.newInstance(args);
-        if (value instanceof StringSource stringSource) {
-          return stringSource;
-        }
-      }
-    } catch (ReflectiveOperationException ignored) {
-    }
-    throw new IllegalStateException("No compatible StringSource initializer found");
+    return StringSource.createRootSource(source);
   }
 
   private record MatchBody(String body, int bodyStartOffset) {}
