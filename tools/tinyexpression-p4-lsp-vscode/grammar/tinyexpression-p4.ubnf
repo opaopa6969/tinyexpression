@@ -2,7 +2,6 @@ grammar TinyExpressionP4 {
 
   @package: org.unlaxer.tinyexpression.generated.p4
   @whitespace: javaStyle
-  @comment: { line: '//' }
 
   token NUMBER     = org.unlaxer.parser.elementary.NumberParser
   token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser
