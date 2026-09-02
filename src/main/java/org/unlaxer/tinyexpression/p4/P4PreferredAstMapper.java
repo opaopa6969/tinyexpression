@@ -265,9 +265,8 @@ public final class P4PreferredAstMapper {
 
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
-    String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
-    Token rootToken = parseRootToken(parserSource, deadlineNanos);
-    String sourceWithoutComments = parserSource;
+    Token rootToken = parseRootToken(source, deadlineNanos);
+    String sourceWithoutComments = source;
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
