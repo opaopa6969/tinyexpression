@@ -13,6 +13,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 /**
  * Selects a more specific generated AST root when the generic mapper would
@@ -265,6 +266,11 @@ public final class P4PreferredAstMapper {
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
     Token rootToken = parseRootToken(source, deadlineNanos);
+    // Comments are consumed by the 3.0.15 grammar but are not part of the mapped
+    // node's token text. Normalize only for the selection check; the parser still
+    // receives the original source, preserving source spans and block comments.
+    String sourceWithoutComments = TinyExpressionParserCapabilities
+        .stripJavaStyleCommentsPreservingLayout(source);
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
@@ -273,6 +279,9 @@ public final class P4PreferredAstMapper {
       try {
         TinyExpressionP4Mapper.MappedAst mappedAst =
             TinyExpressionP4Mapper.mapParsedToken(rootToken, candidate);
+        if (!coversWholeSource(sourceWithoutComments, mappedAst.token())) {
+          continue;
+        }
         TinyExpressionP4AST mapped = mappedAst.ast();
         if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
           return new ParsedAst(mapped, "preferred:" + candidate);
@@ -291,6 +300,11 @@ public final class P4PreferredAstMapper {
       throw toParseFailure(lastFailure);
     }
     throw new IllegalArgumentException("No whole-source generated AST mapping found: " + source);
+  }
+
+  private static boolean coversWholeSource(String source, Token token) {
+    String mappedSource = tokenTextCompat(token);
+    return mappedSource != null && source.strip().equals(mappedSource.strip());
   }
 
   /**
