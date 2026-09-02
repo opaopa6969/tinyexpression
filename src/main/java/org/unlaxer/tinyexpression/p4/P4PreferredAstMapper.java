@@ -265,12 +265,9 @@ public final class P4PreferredAstMapper {
 
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
-    Token rootToken = parseRootToken(source, deadlineNanos);
-    // Comments are consumed by the 3.0.15 grammar but are not part of the mapped
-    // node's token text. Normalize only for the selection check; the parser still
-    // receives the original source, preserving source spans and block comments.
-    String sourceWithoutComments = TinyExpressionParserCapabilities
-        .stripJavaStyleCommentsPreservingLayout(source);
+    String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+    Token rootToken = parseRootToken(parserSource, deadlineNanos);
+    String sourceWithoutComments = parserSource;
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
