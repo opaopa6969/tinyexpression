@@ -901,6 +901,7 @@ public class McpServer {
             try {
                 long len = Long.parseLong(contentLength.trim());
                 if (len > MAX_REQUEST_BODY_BYTES) {
+                    drainRequestBody(ex.getRequestBody());
                     throw new IOException("Request body too large: " + len + " > " + MAX_REQUEST_BODY_BYTES);
                 }
             } catch (NumberFormatException ignored) {
@@ -908,7 +909,21 @@ public class McpServer {
             }
         }
         try (InputStream is = ex.getRequestBody()) {
-            return new String(is.readNBytes((int) MAX_REQUEST_BODY_BYTES), StandardCharsets.UTF_8);
+            byte[] body = is.readNBytes((int) MAX_REQUEST_BODY_BYTES + 1);
+            if (body.length > MAX_REQUEST_BODY_BYTES) {
+                drainRequestBody(is);
+                throw new IOException("Request body too large: more than " + MAX_REQUEST_BODY_BYTES);
+            }
+            return new String(body, StandardCharsets.UTF_8);
+        }
+    }
+
+    private static void drainRequestBody(InputStream is) throws IOException {
+        try (InputStream body = is) {
+            byte[] buffer = new byte[8192];
+            while (body.read(buffer) != -1) {
+                // Consume the request before sending the response so the HTTP exchange can finish cleanly.
+            }
         }
     }
 

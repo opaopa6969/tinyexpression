@@ -346,6 +346,37 @@ public class McpServerTest {
                 .build();
         HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
         assertEquals(413, resp.statusCode());
+        assertEquals(resp.body().getBytes(java.nio.charset.StandardCharsets.UTF_8).length,
+                Integer.parseInt(resp.headers().firstValue("Content-Length").orElseThrow()));
+    }
+
+    @Test
+    public void oversizedChunkedBody_rejectedWith413() throws Exception {
+        long max = McpServer.MAX_REQUEST_BODY_BYTES;
+        HttpRequest.BodyPublisher publisher = HttpRequest.BodyPublishers.fromPublisher(
+                subscriber -> subscriber.onSubscribe(new java.util.concurrent.Flow.Subscription() {
+                    private boolean sent;
+
+                    @Override
+                    public void request(long n) {
+                        if (!sent && n > 0) {
+                            sent = true;
+                            subscriber.onNext(java.nio.ByteBuffer.wrap(new byte[(int) max + 1]));
+                            subscriber.onComplete();
+                        }
+                    }
+
+                    @Override
+                    public void cancel() {
+                    }
+                }));
+        HttpRequest req = HttpRequest.newBuilder()
+                .uri(URI.create("http://127.0.0.1:" + port + "/mcp"))
+                .header("Content-Type", "application/json")
+                .POST(publisher)
+                .build();
+        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        assertEquals(413, resp.statusCode());
     }
 
     // ─── helpers ──────────────────────────────────────────────────
