@@ -273,9 +273,6 @@ public final class P4PreferredAstMapper {
       try {
         TinyExpressionP4Mapper.MappedAst mappedAst =
             TinyExpressionP4Mapper.mapParsedToken(rootToken, candidate);
-        if (!coversWholeSource(source, mappedAst.token())) {
-          continue;
-        }
         TinyExpressionP4AST mapped = mappedAst.ast();
         if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
           return new ParsedAst(mapped, "preferred:" + candidate);
@@ -294,11 +291,6 @@ public final class P4PreferredAstMapper {
       throw toParseFailure(lastFailure);
     }
     throw new IllegalArgumentException("No whole-source generated AST mapping found: " + source);
-  }
-
-  private static boolean coversWholeSource(String source, Token token) {
-    String mappedSource = tokenTextCompat(token);
-    return mappedSource != null && source.strip().equals(mappedSource.strip());
   }
 
   /**
