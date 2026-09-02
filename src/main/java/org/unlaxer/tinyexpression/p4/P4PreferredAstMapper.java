@@ -265,13 +265,11 @@ public final class P4PreferredAstMapper {
 
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
-    Token rootToken = parseRootToken(source, deadlineNanos);
-    String sourceWithoutComments = source;
-    // Interleave removes comments from mapped token text. Normalize only the span
-    // comparison; parsing itself must receive the original source so 3.0.15 can
-    // preserve comment-aware token layout.
-    String sourceForSpanComparison =
-        TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(sourceWithoutComments);
+    // Keep source offsets stable while accepting comments in positions where the generated
+    // grammar's interleave metadata is not applied to nested alternatives.
+    String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+    Token rootToken = parseRootToken(parserSource, deadlineNanos);
+    String sourceForSpanComparison = parserSource;
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
