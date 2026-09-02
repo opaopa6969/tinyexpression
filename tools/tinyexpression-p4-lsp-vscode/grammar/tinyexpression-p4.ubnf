@@ -12,6 +12,7 @@ grammar TinyExpressionP4 {
   token EOF        = org.unlaxer.parser.elementary.EndOfSourceParser
 
   @root
+  @interleave(profile=javaStyle)
   @scopeTree(mode=lexical)
   @mapping(FormulaExpr, params=[imports, declarations, expression, methods])
   Formula ::= { CodeBlock } { ImportDeclaration @imports } { VariableDeclaration @declarations }
