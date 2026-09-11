@@ -20,7 +20,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
           server-id: github-unlaxer
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
@@ -58,7 +57,6 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
-          cache: 'maven'
           server-id: github-unlaxer
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
