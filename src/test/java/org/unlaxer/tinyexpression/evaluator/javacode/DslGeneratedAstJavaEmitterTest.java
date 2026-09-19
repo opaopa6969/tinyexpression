@@ -24,11 +24,12 @@ public class DslGeneratedAstJavaEmitterTest {
         "'gateman'[::-1]", "'1a2b3'[::2]", "'abcdef'[1:4]",
         "'😀a'[1:2]", "'😀a'[0:1]", "'😀a'[::-1]", "'abcdef'[::0]",
         "'abcdef'[-3:-1]", "'abcdef'[2:]", "'abcdef'[:3]", "'abcdef'[:]",
-        "'abcdef'[3:3]", "'abcdef'[1:4:-1]", "'abcdef'[(1+1):5]"
+        "'abcdef'[3:3]", "'abcdef'[1:4:-1]", "'abcdef'[(1+1):5]",
+        "'abcdef'[(1):4]", "'abcdef'[(1/*c*/):4]", "'abcdef'[1/*c*/+1:5]"
     };
     String[] expected = {
         "nametag", "123", "bcd", "a", "😀", "a😀", "",
-        "de", "cdef", "abc", "abcdef", "", "dcb", "cde"
+        "de", "cdef", "abc", "abcdef", "", "dcb", "cde", "bcd", "bcd", "cde"
     };
     var types = new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float);
     ClassLoader loader = Thread.currentThread().getContextClassLoader();

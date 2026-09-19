@@ -11,6 +11,8 @@ import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.SliceExpr;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.p4.P4SourceText;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
@@ -97,6 +99,65 @@ public class P4OwnedSliceSourceTest {
     var zero = P4PreferredAstMapper.parseDetailed("'abcdef'[::0]", ExpressionTypes.string);
     var failure = assertThrows(IllegalArgumentException.class, () -> evaluator(zero.sourceText()).eval(zero.ast()));
     assertEquals("slice step cannot be zero", failure.getMessage());
+  }
+
+  @Test public void parsedAliasIndicesRetainTheirEntireLexicalExpression() throws Exception {
+    String expectedNodeAlias = System.getProperty("tinyexpression.expected.mapper.nodeAlias");
+    for (String[] sample : new String[][] {
+        {"(1)", "(1)"}, {"(1+1)", "(1+1)"}, {"-2", "-2"},
+        {"(1/*c*/)", "(1     )"}, {"1/*c*/+1", "1     +1"}
+    }) {
+      String formula = "/*😀*/ 'abcdef'[" + sample[0] + ":]";
+      var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
+      assertTrue(formula, parsed.ast() instanceof SliceExpr);
+      Object start = ((SliceExpr) parsed.ast()).start();
+      if (expectedNodeAlias != null) {
+        if (Boolean.parseBoolean(expectedNodeAlias)) {
+          assertTrue(formula + " must retain the generated semantic node", start instanceof TinyExpressionP4AST);
+        } else {
+          assertTrue(formula + " must exercise the published lexical API", start instanceof String);
+        }
+      }
+      P4PreferredAstMapper.parseDetailed("9876", ExpressionTypes._float);
+      assertEquals(formula, sample[1], parsed.sourceText().text(start).strip());
+      var ownedEvaluator = evaluator(parsed.sourceText());
+      if (sample[0].equals("-2")) {
+        assertEquals(-2, index(ownedEvaluator, start));
+        assertEquals("ef", ownedEvaluator.eval(parsed.ast()));
+      } else {
+        assertThrows(formula, NumberFormatException.class, () -> ownedEvaluator.eval(parsed.ast()));
+      }
+    }
+  }
+
+  @Test public void allThreeParsedIndicesUseTheDeclaredGeneratedContract() {
+    String formula = "/*😀*/ 'abcdef'[1:5:2]";
+    var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
+    var slice = (SliceExpr) parsed.ast();
+    String expected = System.getProperty("tinyexpression.expected.mapper.nodeAlias");
+    Object[] indices = {slice.start(), slice.end(), slice.step()};
+    String[] lexical = {"1", "5", "2"};
+    P4PreferredAstMapper.parseDetailed("9876", ExpressionTypes._float);
+    for (int i = 0; i < indices.length; i++) {
+      if (expected != null) {
+        assertTrue("index " + i + " uses the wrong generator contract",
+            Boolean.parseBoolean(expected) ? indices[i] instanceof TinyExpressionP4AST
+                : indices[i] instanceof String);
+      }
+      assertEquals(lexical[i], parsed.sourceText().text(indices[i]).strip());
+    }
+    assertEquals("bd", evaluator(parsed.sourceText()).eval(slice));
+  }
+
+  @Test public void parsedNonIntegerAndOverflowIndicesKeepFailureClassesInEveryPosition() {
+    for (String index : List.of("1.5", "2147483648")) {
+      for (String suffix : List.of("[" + index + ":]", "[:" + index + "]", "[::" + index + "]")) {
+        String formula = "'abcdef'" + suffix;
+        var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
+        P4PreferredAstMapper.parseDetailed("123", ExpressionTypes._float);
+        assertThrows(formula, NumberFormatException.class, () -> evaluator(parsed.sourceText()).eval(parsed.ast()));
+      }
+    }
   }
 
   @Test public void detailedProbeAndCalculatorRetainParseResultUntilLaterEvaluation() {
