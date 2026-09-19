@@ -6,11 +6,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Optional;
 import org.junit.Test;
-import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.CalculationContext;
 import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.SliceExpr;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
@@ -41,15 +39,6 @@ public class P4OwnedSliceSourceTest {
     return value instanceof Optional<?> optional ? optional.orElse(null) : value;
   }
 
-  private boolean hasOwnedSnapshotApi() {
-    try {
-      TinyExpressionP4Mapper.class.getMethod("selectParsedTokenWithSourceMap", Token.class, String.class);
-      return true;
-    } catch (NoSuchMethodException absentInPublishedGenerator) {
-      return false;
-    }
-  }
-
   @Test public void stringIndicesKeepIntegerLiteralContractAndFailureClasses() throws Exception {
     var evaluator = evaluator(P4SourceText.lexicalOnly());
     assertNull(index(evaluator, null));
@@ -65,16 +54,12 @@ public class P4OwnedSliceSourceTest {
     var literal = P4PreferredAstMapper.parseDetailed("2", ExpressionTypes._float);
     var expression = P4PreferredAstMapper.parseDetailed("1+1", ExpressionTypes._float);
     var literalEvaluator = evaluator(literal.sourceText());
-    if (hasOwnedSnapshotApi()) {
-      assertEquals(2, index(literalEvaluator, literal.ast()));
-      assertThrows(NumberFormatException.class, () -> index(evaluator(expression.sourceText()), expression.ast()));
-      // Later mapping must not invalidate the first result or let foreign nodes reuse its positions.
-      P4PreferredAstMapper.parseDetailed("12345", ExpressionTypes._float);
-      assertEquals(2, index(literalEvaluator, literal.ast()));
-      assertThrows(IllegalArgumentException.class, () -> index(literalEvaluator, expression.ast()));
-    } else {
-      assertThrows(IllegalArgumentException.class, () -> index(literalEvaluator, literal.ast()));
-    }
+    assertEquals(2, index(literalEvaluator, literal.ast()));
+    assertThrows(NumberFormatException.class, () -> index(evaluator(expression.sourceText()), expression.ast()));
+    // Later mapping must not invalidate the first result or let foreign nodes reuse its positions.
+    P4PreferredAstMapper.parseDetailed("12345", ExpressionTypes._float);
+    assertEquals(2, index(literalEvaluator, literal.ast()));
+    assertThrows(IllegalArgumentException.class, () -> index(literalEvaluator, expression.ast()));
     assertThrows(IllegalArgumentException.class, () -> index(evaluator(P4SourceText.lexicalOnly()), literal.ast()));
   }
 
