@@ -153,6 +153,22 @@ fn library_matches_java_root_expression_fixture() {
 }
 
 #[test]
+fn boolean_match_maps_on_an_explicit_two_mib_thread_stack() {
+    const SOURCE: &str = "match{true->true,false->$missing,default->$missing}";
+    let ast = std::thread::Builder::new()
+        .name("tinyexpression-small-stack".to_owned())
+        .stack_size(2 * 1024 * 1024)
+        .spawn(|| parse(SOURCE))
+        .expect("spawn 2 MiB parser thread")
+        .join()
+        .expect("parser thread must not overflow")
+        .expect("boolean match must parse and map");
+    assert_eq!(ast.span().start, 0);
+    assert_eq!(ast.span().end, SOURCE.chars().count());
+    assert!(ast.canonical_json().contains("BooleanMatchExpr"));
+}
+
+#[test]
 fn document_family_reselection_keeps_absolute_expression_spans() {
     let source = "var $s as string;/*😀*/$s as string string part(){'x'}";
     let ast = parse(source).expect("typed document");

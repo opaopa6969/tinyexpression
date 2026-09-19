@@ -18,6 +18,7 @@ number-if	if(true){1}else{2}	IfExpr	BinaryExpr	IfExpr
 number-match	match{true->1,default->2}	NumberMatchExpr	BinaryExpr	NumberMatchExpr
 string-match	match{true->'a',default->'b'}	StringMatchExpr	StringConcatExpr	StringCaseValueExpr
 boolean-match	match{true->true,default->false}	BooleanMatchExpr	BooleanOrExpr	BooleanCaseValueExpr
+boolean-match-lazy-variable	match{true->true,false->$missing,default->$missing}	BooleanMatchExpr	BooleanOrExpr	BooleanMatchExpr
 typed-number	$n as number	BinaryExpr	BinaryExpr	VariableRefExpr
 typed-float-no-as	$n Float	BinaryExpr	BinaryExpr	VariableRefExpr
 typed-string	$s as string	StringConcatExpr	StringConcatExpr	VariableRefExpr

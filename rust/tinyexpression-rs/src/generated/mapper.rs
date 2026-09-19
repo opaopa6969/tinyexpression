@@ -51,1524 +51,2063 @@ fn optional<T>(mut values: Vec<T>, name: &str) -> Result<Option<T>, String> {
 }
 
 fn map_node(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
-    let node = &tree.nodes[id];
-    match node.rule {
-        0 => Ok(vec![Ast::r#FormulaExpr {
-            span: node.span,
-            r#imports: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "imports") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-            r#declarations: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "declarations") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-            r#expression: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "expression") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "expression")?)
-            },
-            r#methods: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "methods") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        1 => Ok(vec![Ast::r#CodeBlockExpr {
-            span: node.span,
-        }]),
-        2 => Ok(vec![Ast::r#ImportDeclarationExpr {
-            span: node.span,
-            r#className: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "className") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "className")?)
-            },
-            r#method: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "method") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "method")?
-            },
-            r#alias: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "alias") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "alias")?
-            },
-        }]),
-        3 => Ok(vec![Ast::r#QualifiedNameExpr {
-            span: node.span,
-            r#head: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "head") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "head")?
-            },
-            r#tail: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "tail") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-        }]),
-        5 => Ok(vec![Ast::r#NumberVariableDeclarationExpr {
-            span: node.span,
-            r#varName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "varName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "varName")?
-            },
-            r#onlyIfAbsent: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "onlyIfAbsent")?.map(Box::new)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "value")?.map(Box::new)
-            },
-            r#desc: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "desc") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "desc")?
-            },
-        }]),
-        6 => Ok(vec![Ast::r#StringVariableDeclarationExpr {
-            span: node.span,
-            r#varName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "varName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "varName")?
-            },
-            r#onlyIfAbsent: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "onlyIfAbsent")?.map(Box::new)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "value")?.map(Box::new)
-            },
-            r#desc: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "desc") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "desc")?
-            },
-        }]),
-        7 => Ok(vec![Ast::r#BooleanVariableDeclarationExpr {
-            span: node.span,
-            r#varName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "varName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "varName")?
-            },
-            r#onlyIfAbsent: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "onlyIfAbsent")?.map(Box::new)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "value")?.map(Box::new)
-            },
-            r#desc: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "desc") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "desc")?
-            },
-        }]),
-        8 => Ok(vec![Ast::r#ObjectVariableDeclarationExpr {
-            span: node.span,
-            r#varName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "varName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "varName")?
-            },
-            r#onlyIfAbsent: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "onlyIfAbsent")?.map(Box::new)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "value")?.map(Box::new)
-            },
-            r#desc: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "desc") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "desc")?
-            },
-        }]),
-        14 => Ok(vec![Ast::r#OnlyIfAbsentExpr {
-            span: node.span,
-        }]),
-        20 => Ok(vec![Ast::r#NumberMethodDeclarationExpr {
-            span: node.span,
-            r#methodName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "methodName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "methodName")?
-            },
-            r#parameters: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "parameters") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "parameters")?.map(Box::new)
-            },
-            r#expression: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "expression") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "expression")?)
-            },
-        }]),
-        21 => Ok(vec![Ast::r#StringMethodDeclarationExpr {
-            span: node.span,
-            r#methodName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "methodName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "methodName")?
-            },
-            r#parameters: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "parameters") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "parameters")?.map(Box::new)
-            },
-            r#expression: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "expression") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "expression")?)
-            },
-        }]),
-        22 => Ok(vec![Ast::r#BooleanMethodDeclarationExpr {
-            span: node.span,
-            r#methodName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "methodName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "methodName")?
-            },
-            r#parameters: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "parameters") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "parameters")?.map(Box::new)
-            },
-            r#expression: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "expression") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "expression")?)
-            },
-        }]),
-        23 => Ok(vec![Ast::r#ObjectMethodDeclarationExpr {
-            span: node.span,
-            r#methodName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "methodName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "methodName")?
-            },
-            r#parameters: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "parameters") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "parameters")?.map(Box::new)
-            },
-            r#expression: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "expression") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "expression")?)
-            },
-        }]),
-        24 => Ok(vec![Ast::r#MethodParametersExpr {
-            span: node.span,
-            r#values: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "values") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        25 => Ok(vec![Ast::r#MethodParameterExpr {
-            span: node.span,
-            r#paramName: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "paramName") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "paramName")?
-            },
-            r#type: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "type") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "type")?
-            },
-        }]),
-        31 => Ok(vec![Ast::r#ExternalBooleanInvocationExpr {
-            span: node.span,
-            r#className: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "className") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "className")?.map(Box::new)
-            },
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#args: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "args") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "args")?.map(Box::new)
-            },
-        }]),
-        32 => Ok(vec![Ast::r#ExternalNumberInvocationExpr {
-            span: node.span,
-            r#className: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "className") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "className")?.map(Box::new)
-            },
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#args: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "args") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "args")?.map(Box::new)
-            },
-        }]),
-        33 => Ok(vec![Ast::r#ExternalStringInvocationExpr {
-            span: node.span,
-            r#className: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "className") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "className")?.map(Box::new)
-            },
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#args: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "args") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "args")?.map(Box::new)
-            },
-        }]),
-        34 => Ok(vec![Ast::r#ExternalObjectInvocationExpr {
-            span: node.span,
-            r#className: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "className") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "className")?.map(Box::new)
-            },
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#args: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "args") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "args")?.map(Box::new)
-            },
-        }]),
-        36 => Ok(vec![Ast::r#MethodInvocationExpr {
-            span: node.span,
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#args: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "args") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "args")?.map(Box::new)
-            },
-        }]),
-        37 => Ok(vec![Ast::r#TernaryExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#thenExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "thenExpr")?)
-            },
-            r#elseExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "elseExpr")?)
-            },
-        }]),
-        38 => Ok(vec![Ast::r#ArgumentExpressionExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        39 => Ok(vec![Ast::r#ArgumentsExpr {
-            span: node.span,
-            r#values: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "values") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        40 => Ok(vec![Ast::r#BinaryExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "left")?
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        41 => Ok(vec![Ast::r#BinaryExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "left")?
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        45 => Ok(vec![Ast::r#SinExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        46 => Ok(vec![Ast::r#CosExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        47 => Ok(vec![Ast::r#TanExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        48 => Ok(vec![Ast::r#SqrtExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        49 => Ok(vec![Ast::r#MinExpr {
-            span: node.span,
-            r#first: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "first") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "first")?)
-            },
-            r#rest: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "rest") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        50 => Ok(vec![Ast::r#MaxExpr {
-            span: node.span,
-            r#first: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "first") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "first")?)
-            },
-            r#rest: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "rest") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        51 => Ok(vec![Ast::r#RandomExpr {
-            span: node.span,
-        }]),
-        52 => Ok(vec![Ast::r#AbsExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        53 => Ok(vec![Ast::r#RoundExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        54 => Ok(vec![Ast::r#CeilExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        55 => Ok(vec![Ast::r#FloorExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        56 => Ok(vec![Ast::r#PowExpr {
-            span: node.span,
-            r#base: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "base") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "base")?)
-            },
-            r#exponent: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "exponent") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "exponent")?)
-            },
-        }]),
-        57 => Ok(vec![Ast::r#LogExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        58 => Ok(vec![Ast::r#ExpExpr {
-            span: node.span,
-            r#arg: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "arg") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "arg")?)
-            },
-        }]),
-        59 => Ok(vec![Ast::r#ToNumExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#defaultValue: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "defaultValue") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "defaultValue")?)
-            },
-        }]),
-        61 => Ok(vec![Ast::r#ToUpperCaseExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        62 => Ok(vec![Ast::r#ToLowerCaseExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        63 => Ok(vec![Ast::r#TrimExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        64 => Ok(vec![Ast::r#LengthExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        65 => Ok(vec![Ast::r#LengthExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        66 => Ok(vec![Ast::r#ToUpperCaseDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        67 => Ok(vec![Ast::r#ToLowerCaseDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        68 => Ok(vec![Ast::r#TrimDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        69 => Ok(vec![Ast::r#LengthDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        70 => Ok(vec![Ast::r#StartsWithExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        71 => Ok(vec![Ast::r#EndsWithExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        72 => Ok(vec![Ast::r#ContainsExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        73 => Ok(vec![Ast::r#InExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#candidates: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "candidates") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        74 => Ok(vec![Ast::r#StartsWithDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        75 => Ok(vec![Ast::r#EndsWithDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        76 => Ok(vec![Ast::r#ContainsDotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-            r#patterns: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "patterns") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        78 => Ok(vec![Ast::r#IsPresentExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        79 => Ok(vec![Ast::r#InTimeRangeExpr {
-            span: node.span,
-            r#startHour: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "startHour") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "startHour")?)
-            },
-            r#endHour: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "endHour") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "endHour")?)
-            },
-        }]),
-        80 => Ok(vec![Ast::r#InDayTimeRangeExpr {
-            span: node.span,
-            r#startDay: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "startDay") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "startDay")?
-            },
-            r#startHour: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "startHour") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "startHour")?)
-            },
-            r#endDay: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "endDay") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "endDay")?
-            },
-            r#endHour: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "endHour") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "endHour")?)
-            },
-        }]),
-        86 => Ok(vec![Ast::r#SliceExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "value")?
-            },
-            r#start: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "start") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "start")?.map(Box::new)
-            },
-            r#end: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "end") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "end")?.map(Box::new)
-            },
-            r#step: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "step") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "step")?.map(Box::new)
-            },
-        }]),
-        87 => Ok(vec![Ast::r#SliceExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "value")?
-            },
-            r#start: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "start") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "start")?.map(Box::new)
-            },
-            r#end: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "end") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "end")?.map(Box::new)
-            },
-            r#step: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "step") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                optional(values, "step")?.map(Box::new)
-            },
-        }]),
-        89 => Ok(vec![Ast::r#StringConcatExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "left")?
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        92 => Ok(vec![Ast::r#StringCastVariableRefExpr {
-            span: node.span,
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-        }]),
-        93 => Ok(vec![Ast::r#StringTypedVariableRefExpr {
-            span: node.span,
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-        }]),
-        94 => Ok(vec![Ast::r#BooleanOrExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "left")?)
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        95 => Ok(vec![Ast::r#BooleanAndExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "left")?)
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        96 => Ok(vec![Ast::r#BooleanXorExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "left")?)
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                values
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-        }]),
-        97 => Ok(vec![Ast::r#NotExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        99 => Ok(vec![Ast::r#BooleanEqualityExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "left")?
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "op")?
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "right")?
-            },
-        }]),
-        100 => Ok(vec![Ast::r#BooleanFactorExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_values(tree, &capture.nodes)?);
-                }
-                required(values, "value")?
-            },
-        }]),
-        101 => Ok(vec![Ast::r#StringComparisonExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "left")?)
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "op")?
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "right")?)
-            },
-        }]),
-        103 => Ok(vec![Ast::r#ComparisonExpr {
-            span: node.span,
-            r#left: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "left") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "left")?)
-            },
-            r#op: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "op") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "op")?
-            },
-            r#right: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "right") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "right")?)
-            },
-        }]),
-        105 => Ok(vec![Ast::r#ObjectExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        106 => Ok(vec![Ast::r#IfExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#thenExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "thenExpr")?)
-            },
-            r#elseExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "elseExpr")?)
-            },
-        }]),
-        107 => Ok(vec![Ast::r#BranchExpressionExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        108 => Ok(vec![Ast::r#TernaryExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#thenExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "thenExpr")?)
-            },
-            r#elseExpr: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "elseExpr")?)
-            },
-        }]),
-        109 => Ok(vec![Ast::r#NumberMatchExpr {
-            span: node.span,
-            r#firstCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "firstCase")?)
-            },
-            r#moreCases: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-            r#defaultCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "defaultCase")?)
-            },
-        }]),
-        110 => Ok(vec![Ast::r#NumberCaseExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        111 => Ok(vec![Ast::r#NumberDefaultCaseExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        112 => Ok(vec![Ast::r#NumberCaseValueExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        113 => Ok(vec![Ast::r#StringMatchExpr {
-            span: node.span,
-            r#firstCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "firstCase")?)
-            },
-            r#moreCases: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-            r#defaultCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "defaultCase")?)
-            },
-        }]),
-        114 => Ok(vec![Ast::r#StringCaseExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        115 => Ok(vec![Ast::r#StringDefaultCaseExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        116 => Ok(vec![Ast::r#StringCaseValueExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        117 => Ok(vec![Ast::r#BooleanMatchExpr {
-            span: node.span,
-            r#firstCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "firstCase")?)
-            },
-            r#moreCases: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                values
-            },
-            r#defaultCase: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "defaultCase")?)
-            },
-        }]),
-        118 => Ok(vec![Ast::r#BooleanCaseExpr {
-            span: node.span,
-            r#condition: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "condition") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "condition")?)
-            },
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        119 => Ok(vec![Ast::r#BooleanDefaultCaseExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        120 => Ok(vec![Ast::r#BooleanCaseValueExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        121 => Ok(vec![Ast::r#VariableRefExpr {
-            span: node.span,
-            r#name: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "name") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                required(values, "name")?
-            },
-            r#type: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "type") {
-                    values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
-                }
-                optional(values, "type")?
-            },
-        }]),
-        123 => Ok(vec![Ast::r#ExpressionExpr {
-            span: node.span,
-            r#value: {
-                let mut values = Vec::new();
-                for capture in node.captures.iter().filter(|c| c.name == "value") {
-                    values.extend(map_nodes(tree, &capture.nodes)?);
-                }
-                Box::new(required(values, "value")?)
-            },
-        }]),
-        _ => map_nodes(tree, &node.children),
+    match tree.nodes[id].rule {
+        0 => map_rule_0(tree, id),
+        1 => map_rule_1(tree, id),
+        2 => map_rule_2(tree, id),
+        3 => map_rule_3(tree, id),
+        5 => map_rule_5(tree, id),
+        6 => map_rule_6(tree, id),
+        7 => map_rule_7(tree, id),
+        8 => map_rule_8(tree, id),
+        14 => map_rule_14(tree, id),
+        20 => map_rule_20(tree, id),
+        21 => map_rule_21(tree, id),
+        22 => map_rule_22(tree, id),
+        23 => map_rule_23(tree, id),
+        24 => map_rule_24(tree, id),
+        25 => map_rule_25(tree, id),
+        31 => map_rule_31(tree, id),
+        32 => map_rule_32(tree, id),
+        33 => map_rule_33(tree, id),
+        34 => map_rule_34(tree, id),
+        36 => map_rule_36(tree, id),
+        37 => map_rule_37(tree, id),
+        38 => map_rule_38(tree, id),
+        39 => map_rule_39(tree, id),
+        40 => map_rule_40(tree, id),
+        41 => map_rule_41(tree, id),
+        45 => map_rule_45(tree, id),
+        46 => map_rule_46(tree, id),
+        47 => map_rule_47(tree, id),
+        48 => map_rule_48(tree, id),
+        49 => map_rule_49(tree, id),
+        50 => map_rule_50(tree, id),
+        51 => map_rule_51(tree, id),
+        52 => map_rule_52(tree, id),
+        53 => map_rule_53(tree, id),
+        54 => map_rule_54(tree, id),
+        55 => map_rule_55(tree, id),
+        56 => map_rule_56(tree, id),
+        57 => map_rule_57(tree, id),
+        58 => map_rule_58(tree, id),
+        59 => map_rule_59(tree, id),
+        61 => map_rule_61(tree, id),
+        62 => map_rule_62(tree, id),
+        63 => map_rule_63(tree, id),
+        64 => map_rule_64(tree, id),
+        65 => map_rule_65(tree, id),
+        66 => map_rule_66(tree, id),
+        67 => map_rule_67(tree, id),
+        68 => map_rule_68(tree, id),
+        69 => map_rule_69(tree, id),
+        70 => map_rule_70(tree, id),
+        71 => map_rule_71(tree, id),
+        72 => map_rule_72(tree, id),
+        73 => map_rule_73(tree, id),
+        74 => map_rule_74(tree, id),
+        75 => map_rule_75(tree, id),
+        76 => map_rule_76(tree, id),
+        78 => map_rule_78(tree, id),
+        79 => map_rule_79(tree, id),
+        80 => map_rule_80(tree, id),
+        86 => map_rule_86(tree, id),
+        87 => map_rule_87(tree, id),
+        89 => map_rule_89(tree, id),
+        92 => map_rule_92(tree, id),
+        93 => map_rule_93(tree, id),
+        94 => map_rule_94(tree, id),
+        95 => map_rule_95(tree, id),
+        96 => map_rule_96(tree, id),
+        97 => map_rule_97(tree, id),
+        99 => map_rule_99(tree, id),
+        100 => map_rule_100(tree, id),
+        101 => map_rule_101(tree, id),
+        103 => map_rule_103(tree, id),
+        105 => map_rule_105(tree, id),
+        106 => map_rule_106(tree, id),
+        107 => map_rule_107(tree, id),
+        108 => map_rule_108(tree, id),
+        109 => map_rule_109(tree, id),
+        110 => map_rule_110(tree, id),
+        111 => map_rule_111(tree, id),
+        112 => map_rule_112(tree, id),
+        113 => map_rule_113(tree, id),
+        114 => map_rule_114(tree, id),
+        115 => map_rule_115(tree, id),
+        116 => map_rule_116(tree, id),
+        117 => map_rule_117(tree, id),
+        118 => map_rule_118(tree, id),
+        119 => map_rule_119(tree, id),
+        120 => map_rule_120(tree, id),
+        121 => map_rule_121(tree, id),
+        123 => map_rule_123(tree, id),
+        _ => map_nodes(tree, &tree.nodes[id].children),
     }
+}
+
+#[inline(never)]
+fn map_rule_0(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#FormulaExpr {
+        span: node.span,
+        r#imports: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "imports") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+        r#declarations: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "declarations") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+        r#expression: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "expression") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "expression")?)
+        },
+        r#methods: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "methods") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_1(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#CodeBlockExpr {
+        span: node.span,
+    }])
+}
+
+#[inline(never)]
+fn map_rule_2(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ImportDeclarationExpr {
+        span: node.span,
+        r#className: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "className") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "className")?)
+        },
+        r#method: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "method") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "method")?
+        },
+        r#alias: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "alias") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "alias")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_3(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#QualifiedNameExpr {
+        span: node.span,
+        r#head: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "head") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "head")?
+        },
+        r#tail: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "tail") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_5(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberVariableDeclarationExpr {
+        span: node.span,
+        r#varName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "varName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "varName")?
+        },
+        r#onlyIfAbsent: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "onlyIfAbsent")?.map(Box::new)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "value")?.map(Box::new)
+        },
+        r#desc: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "desc") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "desc")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_6(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringVariableDeclarationExpr {
+        span: node.span,
+        r#varName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "varName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "varName")?
+        },
+        r#onlyIfAbsent: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "onlyIfAbsent")?.map(Box::new)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "value")?.map(Box::new)
+        },
+        r#desc: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "desc") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "desc")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_7(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanVariableDeclarationExpr {
+        span: node.span,
+        r#varName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "varName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "varName")?
+        },
+        r#onlyIfAbsent: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "onlyIfAbsent")?.map(Box::new)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "value")?.map(Box::new)
+        },
+        r#desc: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "desc") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "desc")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_8(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ObjectVariableDeclarationExpr {
+        span: node.span,
+        r#varName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "varName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "varName")?
+        },
+        r#onlyIfAbsent: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "onlyIfAbsent") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "onlyIfAbsent")?.map(Box::new)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "value")?.map(Box::new)
+        },
+        r#desc: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "desc") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "desc")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_14(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#OnlyIfAbsentExpr {
+        span: node.span,
+    }])
+}
+
+#[inline(never)]
+fn map_rule_20(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberMethodDeclarationExpr {
+        span: node.span,
+        r#methodName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "methodName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "methodName")?
+        },
+        r#parameters: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "parameters") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "parameters")?.map(Box::new)
+        },
+        r#expression: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "expression") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "expression")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_21(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringMethodDeclarationExpr {
+        span: node.span,
+        r#methodName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "methodName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "methodName")?
+        },
+        r#parameters: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "parameters") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "parameters")?.map(Box::new)
+        },
+        r#expression: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "expression") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "expression")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_22(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanMethodDeclarationExpr {
+        span: node.span,
+        r#methodName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "methodName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "methodName")?
+        },
+        r#parameters: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "parameters") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "parameters")?.map(Box::new)
+        },
+        r#expression: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "expression") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "expression")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_23(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ObjectMethodDeclarationExpr {
+        span: node.span,
+        r#methodName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "methodName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "methodName")?
+        },
+        r#parameters: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "parameters") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "parameters")?.map(Box::new)
+        },
+        r#expression: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "expression") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "expression")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_24(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#MethodParametersExpr {
+        span: node.span,
+        r#values: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "values") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_25(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#MethodParameterExpr {
+        span: node.span,
+        r#paramName: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "paramName") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "paramName")?
+        },
+        r#type: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "type") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "type")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_31(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExternalBooleanInvocationExpr {
+        span: node.span,
+        r#className: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "className") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "className")?.map(Box::new)
+        },
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#args: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "args") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "args")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_32(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExternalNumberInvocationExpr {
+        span: node.span,
+        r#className: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "className") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "className")?.map(Box::new)
+        },
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#args: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "args") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "args")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_33(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExternalStringInvocationExpr {
+        span: node.span,
+        r#className: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "className") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "className")?.map(Box::new)
+        },
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#args: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "args") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "args")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_34(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExternalObjectInvocationExpr {
+        span: node.span,
+        r#className: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "className") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "className")?.map(Box::new)
+        },
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#args: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "args") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "args")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_36(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#MethodInvocationExpr {
+        span: node.span,
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#args: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "args") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "args")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_37(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#TernaryExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#thenExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "thenExpr")?)
+        },
+        r#elseExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "elseExpr")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_38(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ArgumentExpressionExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_39(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ArgumentsExpr {
+        span: node.span,
+        r#values: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "values") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_40(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BinaryExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "left")?
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_41(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BinaryExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "left")?
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_45(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#SinExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_46(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#CosExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_47(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#TanExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_48(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#SqrtExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_49(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#MinExpr {
+        span: node.span,
+        r#first: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "first") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "first")?)
+        },
+        r#rest: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "rest") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_50(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#MaxExpr {
+        span: node.span,
+        r#first: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "first") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "first")?)
+        },
+        r#rest: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "rest") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_51(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#RandomExpr {
+        span: node.span,
+    }])
+}
+
+#[inline(never)]
+fn map_rule_52(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#AbsExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_53(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#RoundExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_54(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#CeilExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_55(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#FloorExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_56(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#PowExpr {
+        span: node.span,
+        r#base: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "base") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "base")?)
+        },
+        r#exponent: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "exponent") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "exponent")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_57(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#LogExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_58(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExpExpr {
+        span: node.span,
+        r#arg: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "arg") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "arg")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_59(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ToNumExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#defaultValue: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "defaultValue") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "defaultValue")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_61(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ToUpperCaseExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_62(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ToLowerCaseExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_63(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#TrimExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_64(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#LengthExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_65(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#LengthExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_66(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ToUpperCaseDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_67(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ToLowerCaseDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_68(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#TrimDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_69(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#LengthDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_70(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StartsWithExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_71(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#EndsWithExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_72(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ContainsExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_73(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#InExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#candidates: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "candidates") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_74(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StartsWithDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_75(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#EndsWithDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_76(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ContainsDotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+        r#patterns: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "patterns") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_78(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#IsPresentExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_79(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#InTimeRangeExpr {
+        span: node.span,
+        r#startHour: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "startHour") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "startHour")?)
+        },
+        r#endHour: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "endHour") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "endHour")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_80(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#InDayTimeRangeExpr {
+        span: node.span,
+        r#startDay: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "startDay") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "startDay")?
+        },
+        r#startHour: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "startHour") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "startHour")?)
+        },
+        r#endDay: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "endDay") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "endDay")?
+        },
+        r#endHour: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "endHour") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "endHour")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_86(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#SliceExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "value")?
+        },
+        r#start: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "start") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "start")?.map(Box::new)
+        },
+        r#end: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "end") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "end")?.map(Box::new)
+        },
+        r#step: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "step") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "step")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_87(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#SliceExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "value")?
+        },
+        r#start: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "start") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "start")?.map(Box::new)
+        },
+        r#end: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "end") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "end")?.map(Box::new)
+        },
+        r#step: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "step") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            optional(values, "step")?.map(Box::new)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_89(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringConcatExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "left")?
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_92(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringCastVariableRefExpr {
+        span: node.span,
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_93(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringTypedVariableRefExpr {
+        span: node.span,
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_94(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanOrExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "left")?)
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_95(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanAndExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "left")?)
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_96(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanXorExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "left")?)
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            values
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_97(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NotExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_99(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanEqualityExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "left")?
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "op")?
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "right")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_100(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanFactorExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_values(tree, &capture.nodes)?);
+            }
+            required(values, "value")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_101(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringComparisonExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "left")?)
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "op")?
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "right")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_103(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ComparisonExpr {
+        span: node.span,
+        r#left: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "left") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "left")?)
+        },
+        r#op: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "op") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "op")?
+        },
+        r#right: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "right") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "right")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_105(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ObjectExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_106(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#IfExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#thenExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "thenExpr")?)
+        },
+        r#elseExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "elseExpr")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_107(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BranchExpressionExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_108(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#TernaryExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#thenExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "thenExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "thenExpr")?)
+        },
+        r#elseExpr: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "elseExpr") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "elseExpr")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_109(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberMatchExpr {
+        span: node.span,
+        r#firstCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "firstCase")?)
+        },
+        r#moreCases: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+        r#defaultCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "defaultCase")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_110(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberCaseExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_111(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberDefaultCaseExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_112(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#NumberCaseValueExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_113(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringMatchExpr {
+        span: node.span,
+        r#firstCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "firstCase")?)
+        },
+        r#moreCases: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+        r#defaultCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "defaultCase")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_114(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringCaseExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_115(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringDefaultCaseExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_116(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#StringCaseValueExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_117(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanMatchExpr {
+        span: node.span,
+        r#firstCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "firstCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "firstCase")?)
+        },
+        r#moreCases: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "moreCases") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            values
+        },
+        r#defaultCase: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "defaultCase") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "defaultCase")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_118(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanCaseExpr {
+        span: node.span,
+        r#condition: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "condition") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "condition")?)
+        },
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_119(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanDefaultCaseExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_120(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#BooleanCaseValueExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_121(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#VariableRefExpr {
+        span: node.span,
+        r#name: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "name") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            required(values, "name")?
+        },
+        r#type: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "type") {
+                values.push(unlaxer_runtime::java_capture_text(tree.text(capture.span)).to_owned());
+            }
+            optional(values, "type")?
+        },
+    }])
+}
+
+#[inline(never)]
+fn map_rule_123(tree: &Tree, id: usize) -> Result<Vec<Ast>, String> {
+    let node = &tree.nodes[id];
+    Ok(vec![Ast::r#ExpressionExpr {
+        span: node.span,
+        r#value: {
+            let mut values = Vec::new();
+            for capture in node.captures.iter().filter(|c| c.name == "value") {
+                values.extend(map_nodes(tree, &capture.nodes)?);
+            }
+            Box::new(required(values, "value")?)
+        },
+    }])
 }
