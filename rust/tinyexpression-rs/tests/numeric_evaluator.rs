@@ -66,20 +66,22 @@ fn public_value_exposes_number_and_stable_bits() {
 }
 
 #[test]
-fn unsupported_typed_node_is_stable_and_has_source_span() {
-    let error = evaluate("/*lead*/ true").expect_err("boolean must not enter the numeric subset");
-    assert_eq!(error.kind(), "unsupported_node");
+fn scalar_value_variants_have_stable_accessors_and_json() {
+    let boolean = evaluate("/*lead*/ true").expect("evaluate boolean");
+    assert_eq!(boolean.boolean(), Some(true));
+    assert_eq!(boolean.number(), None);
+    assert_eq!(boolean.number_bits(), None);
     assert_eq!(
-        error.span().map(|span| (span.start, span.end)),
-        Some((9, 13))
+        boolean.canonical_json(),
+        r#"{"kind":"boolean","value":true}"#
     );
-    assert!(matches!(
-        error,
-        EvaluationError::UnsupportedNode {
-            ref node,
-            ..
-        } if node == "BooleanOrExpr"
-    ));
+
+    let string = evaluate("'hello'").expect("evaluate string");
+    assert_eq!(string.string(), Some("hello"));
+    assert_eq!(
+        string.canonical_json(),
+        r#"{"kind":"string","value":"hello"}"#
+    );
 }
 
 #[test]
@@ -123,12 +125,12 @@ fn eval_cli_reads_a_formula_file() {
 }
 
 #[test]
-fn eval_cli_reports_unsupported_node_and_exit_five() {
-    let output = run_with_stdin(&["eval"], "true");
+fn eval_cli_reports_context_dependent_node_and_exit_five() {
+    let output = run_with_stdin(&["eval"], "$missing");
     assert_eq!(output.status.code(), Some(5));
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.starts_with(
-        r#"{"ok":false,"stage":"evaluation","error":{"kind":"unsupported_node","span":[0,4],"node":"BooleanOrExpr","message":"#
+        r#"{"ok":false,"stage":"evaluation","error":{"kind":"unsupported_node","span":[0,8],"node":"VariableRefExpr","message":"#
     ));
     assert!(output.stderr.is_empty());
 }
