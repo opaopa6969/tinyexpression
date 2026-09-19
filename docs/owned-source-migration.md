@@ -30,6 +30,8 @@ Object value = evaluator.eval(parsed.ast());
 calculatorは解析結果とresolverを評価時まで保持する。Formula/methodのscopeや
 typed/default/template emitterにもresolverを渡す。既存constructorと
 `ParsedAst(ast, selectionMode)`は残し、旧経路は`P4SourceText.lexicalOnly()`を使う。
+recordのコンポーネント構成にはsourceTextが増えるため、record patternや全成分の
+serializationを利用するコードは更新が必要。ast/selectionMode accessorは維持する。
 ASTだけ返す既存入口はそのまま使えるが、Nodeからsourceを引く場合にはresolverも必要。
 
 `P4SourceText.text(value)`はnull/Stringをそのまま返し、Nodeは所有snapshotの
