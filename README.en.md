@@ -11,7 +11,7 @@ A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 - 6 execution backends (JavaCode / AST / P4 series)
 - LSP / DAP support (VS Code extension)
 
-**Docs**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md)
+**Docs**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md) | [Rust parser frontend](rust/tinyexpression-rs/README.md)
 
 **IDE**: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide) — VS Code extension (LSP + DAP)
 

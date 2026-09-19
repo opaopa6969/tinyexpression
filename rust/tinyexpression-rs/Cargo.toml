@@ -1,0 +1,18 @@
+[package]
+name = "tinyexpression-rs"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[dependencies]
+unlaxer-runtime.workspace = true
+
+[lib]
+name = "tinyexpression_rs"
+path = "src/lib.rs"
+
+[[bin]]
+name = "tinyexpression-rs"
+path = "src/main.rs"

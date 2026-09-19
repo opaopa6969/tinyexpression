@@ -11,7 +11,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - 6 つの実行バックエンド（JavaCode / AST / P4 系列）
 - LSP / DAP サポート（VS Code 拡張）
 
-**ドキュメント**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md)
+**ドキュメント**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md) | [Rust parser frontend](rust/tinyexpression-rs/README.md)
 
 **IDE**: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide) — VS Code 拡張（LSP + DAP）
 
