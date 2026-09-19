@@ -7,8 +7,17 @@ boolean-and	boolean	true&false	value	false
 boolean-xor	boolean	true^true	value	false
 boolean-precedence	boolean	true|false&false	value	true
 boolean-equality	boolean	true==false	value	false
-number-less-than	boolean	(1<2)	value	true
-number-greater-than-or-equal	boolean	(2>=2)	value	true
+number-less-than	boolean	1<2	value	true
+number-less-than-or-equal	boolean	1<=1	value	true
+number-greater-than	boolean	2>1	value	true
+number-greater-than-or-equal	boolean	2>=2	value	true
+number-equal	boolean	1==1	value	true
+number-not-equal	boolean	1!=2	value	true
+number-comparison-and	boolean	1<2&2<3	value	true
+number-comparison-or	boolean	1>2|3>2	value	true
+number-comparison-comments	boolean	/*a*/1 /*b*/ < /*c*/2	value	true
+number-less-than-parenthesized	boolean	(1<2)	value	true
+number-greater-than-or-equal-parenthesized	boolean	(2>=2)	value	true
 f32-nan-equals-nan	boolean	(0/0==0/0)	value	true
 f32-nan-orders-after-number	boolean	(0/0>1)	value	true
 f32-number-orders-before-nan	boolean	(1<0/0)	value	true

@@ -101,6 +101,92 @@ fn library_parses_multiline_document() {
 }
 
 #[test]
+fn library_retries_bare_boolean_comparisons_without_changing_numeric_root_selection() {
+    for source in ["1<2", "1==1", "1+2*3>=7", "1<2&2<3", "1>2|3>2"] {
+        let ast = parse(source).unwrap_or_else(|error| panic!("{source}: {error}"));
+        assert_eq!(ast.span().end, source.chars().count(), "{source}");
+        assert!(ast.canonical_json().contains("ComparisonExpr"), "{source}");
+    }
+
+    let arithmetic = parse("$a+$b").expect("numeric variable expression");
+    let Ast::r#FormulaExpr { expression, .. } = arithmetic else {
+        panic!("expected FormulaExpr");
+    };
+    let Ast::r#ExpressionExpr { value, .. } = *expression else {
+        panic!("expected ExpressionExpr");
+    };
+    assert!(matches!(*value, Ast::r#BinaryExpr { .. }));
+}
+
+#[test]
+fn library_matches_java_root_expression_fixture() {
+    for line in include_str!("fixtures/root-expression.tsv")
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        assert_eq!(fields.len(), 5, "invalid fixture row: {line}");
+        let (id, source, expected_root, expected_node) =
+            (fields[0], fields[1], fields[3], fields[4]);
+        let ast = parse(source).unwrap_or_else(|error| panic!("{id}: {source}: {error}"));
+        assert_eq!(ast.span().start, 0, "{id}");
+        assert_eq!(ast.span().end, source.chars().count(), "{id}");
+        let Ast::r#FormulaExpr { expression, .. } = &ast else {
+            panic!("{id}: expected FormulaExpr");
+        };
+        let Ast::r#ExpressionExpr { value, .. } = expression.as_ref() else {
+            panic!("{id}: expected ExpressionExpr");
+        };
+        assert!(
+            value
+                .canonical_json()
+                .starts_with(&format!(r#"{{"type":"{expected_root}""#)),
+            "{id}: expected direct root {expected_root}, got {}",
+            value.canonical_json()
+        );
+        assert!(
+            ast.canonical_json().contains(expected_node),
+            "{id}: expected {expected_node} in {}",
+            ast.canonical_json()
+        );
+    }
+}
+
+#[test]
+fn fallback_preserves_formula_and_expression_span_contract() {
+    for (source, expression_start) in [("/*lead*/1<2/*tail*/", 8), ("/*😀*/1<2/*終*/", 5)] {
+        let ast = parse(source).expect("commented bare comparison");
+        let Ast::r#FormulaExpr {
+            span, expression, ..
+        } = ast
+        else {
+            panic!("expected FormulaExpr");
+        };
+        assert_eq!((span.start, span.end), (0, source.chars().count()));
+        let Ast::r#ExpressionExpr { span, value } = *expression else {
+            panic!("expected ExpressionExpr");
+        };
+        assert_eq!(
+            (span.start, span.end),
+            (expression_start, source.chars().count())
+        );
+        assert_eq!(value.span(), span);
+    }
+}
+
+#[test]
+fn failed_boolean_retry_keeps_the_primary_formula_diagnostic() {
+    let source = "1<";
+    let primary = tinyexpression_rs::generated::parser::parse_tree_detailed(source)
+        .expect_err("primary Formula parse must fail");
+    let FrontendError::Parse(actual) = parse(source).expect_err("invalid comparison must fail")
+    else {
+        panic!("expected parse diagnostic");
+    };
+    assert_eq!(actual, primary);
+}
+
+#[test]
 fn cli_reads_stdin_when_parse_has_no_file_argument() {
     let output = run_with_stdin(&["parse"], include_str!("fixtures/valid-basic.tiny"));
 

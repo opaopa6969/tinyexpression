@@ -1,0 +1,18 @@
+# id	formula	Java semantic root	Rust Formula expression root	required AST node
+bare-less-than	1<2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+bare-less-than-or-equal	1<=2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+bare-greater-than	2>1	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+bare-greater-than-or-equal	2>=2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+bare-equal	1==1	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+bare-not-equal	1!=2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+arithmetic-operands	1+2*3>=7	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+compound-and	1<2&2<3	BooleanOrExpr	BooleanOrExpr	BooleanAndExpr
+compound-or	1>2|3>2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+commented-comparison	/*a*/1 /*b*/ < /*c*/2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+numeric-literal	1	BinaryExpr	BinaryExpr	BinaryExpr
+numeric-addition	1+2	BinaryExpr	BinaryExpr	BinaryExpr
+numeric-variable-addition	$a+$b	BinaryExpr	BinaryExpr	VariableRefExpr
+string-concatenation	'a'+'b'	FormulaExpr	StringConcatExpr	StringConcatExpr
+boolean-or	true|false	FormulaExpr	BooleanOrExpr	BooleanOrExpr
+number-if	if(true){1}else{2}	IfExpr	BinaryExpr	IfExpr
+number-match	match{true->1,default->2}	NumberMatchExpr	BinaryExpr	NumberMatchExpr
