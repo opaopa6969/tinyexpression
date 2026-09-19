@@ -16,3 +16,21 @@ string-concatenation	'a'+'b'	FormulaExpr	StringConcatExpr	StringConcatExpr
 boolean-or	true|false	FormulaExpr	BooleanOrExpr	BooleanOrExpr
 number-if	if(true){1}else{2}	IfExpr	BinaryExpr	IfExpr
 number-match	match{true->1,default->2}	NumberMatchExpr	BinaryExpr	NumberMatchExpr
+string-match	match{true->'a',default->'b'}	StringMatchExpr	StringConcatExpr	StringCaseValueExpr
+boolean-match	match{true->true,default->false}	BooleanMatchExpr	BooleanOrExpr	BooleanCaseValueExpr
+typed-number	$n as number	BinaryExpr	BinaryExpr	VariableRefExpr
+typed-float-no-as	$n Float	BinaryExpr	BinaryExpr	VariableRefExpr
+typed-string	$s as string	StringConcatExpr	StringConcatExpr	VariableRefExpr
+typed-string-uppercase-no-as	$s String	StringConcatExpr	StringConcatExpr	VariableRefExpr
+typed-boolean	$b as boolean	BooleanOrExpr	BooleanOrExpr	VariableRefExpr
+typed-boolean-uppercase-no-as	$b Boolean	BooleanOrExpr	BooleanOrExpr	VariableRefExpr
+typed-object	$o as object	ObjectExpr	ObjectExpr	VariableRefExpr
+typed-object-uppercase-no-as	$o Object	ObjectExpr	ObjectExpr	VariableRefExpr
+typed-number-match	match{true->$n as number,default->$m Float}	NumberMatchExpr	NumberMatchExpr	NumberCaseValueExpr
+typed-string-match	match{true->$s as string,default->$t String}	StringMatchExpr	StringMatchExpr	StringCaseValueExpr
+typed-boolean-match	match{true->$b as boolean,default->$c Boolean}	BooleanMatchExpr	BooleanMatchExpr	BooleanCaseValueExpr
+document-typed-string	var $s as string;$s as string	FormulaExpr	StringConcatExpr	VariableRefExpr
+document-typed-number-match	var $n as number;match{true->$n as number,default->$n Float}	FormulaExpr	NumberMatchExpr	NumberCaseValueExpr
+document-typed-string-match	var $s as string;match{true->$s as string,default->$s String}	FormulaExpr	StringMatchExpr	StringCaseValueExpr
+document-typed-string-with-method	var $s as string;$s as string string part(){'x'}	FormulaExpr	StringConcatExpr	VariableRefExpr
+annotation-typed-string	@foo(x=1) $s as string	FormulaExpr	StringConcatExpr	VariableRefExpr

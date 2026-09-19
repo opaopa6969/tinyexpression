@@ -153,6 +153,61 @@ fn library_matches_java_root_expression_fixture() {
 }
 
 #[test]
+fn document_family_reselection_keeps_absolute_expression_spans() {
+    let source = "var $s as string;/*😀*/$s as string string part(){'x'}";
+    let ast = parse(source).expect("typed document");
+    let Ast::r#FormulaExpr { expression, .. } = ast else {
+        panic!("expected FormulaExpr");
+    };
+    let Ast::r#ExpressionExpr { span, value } = *expression else {
+        panic!("expected ExpressionExpr");
+    };
+    let expression_text: String = source.chars().collect::<Vec<_>>()[span.start..span.end]
+        .iter()
+        .collect();
+    assert_eq!(expression_text.trim(), "$s as string");
+    let Ast::r#StringConcatExpr { ref r#left, .. } = *value else {
+        panic!("expected StringConcatExpr");
+    };
+    assert_eq!(value.span(), span);
+    assert_eq!(r#left.span(), span);
+}
+
+#[test]
+fn library_rejects_mixed_match_hint_families_explicitly() {
+    for line in include_str!("fixtures/typed-hint-errors.tsv")
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        assert_eq!(fields.len(), 2, "invalid fixture row: {line}");
+        let (id, source) = (fields[0], fields[1]);
+        let error = match parse(source) {
+            Ok(ast) => panic!("{id}: expected error, got {ast:?}"),
+            Err(error) => error,
+        };
+        let FrontendError::TypeMismatch { message, span } = error else {
+            panic!("{id}: expected explicit type mismatch");
+        };
+        assert!(message.contains("match type mismatch"), "{id}: {message}");
+        assert_eq!((span.start, span.end), (0, source.chars().count()), "{id}");
+
+        let output = run_with_stdin(&["parse"], source);
+        assert_eq!(output.status.code(), Some(4), "{id}: {}", stderr(&output));
+        assert!(stdout(&output).contains(r#""stage":"type""#), "{id}");
+
+        let output = run_with_stdin(&["eval"], source);
+        assert_eq!(output.status.code(), Some(4), "{id}: {}", stderr(&output));
+        let response = stdout(&output);
+        assert!(response.contains(r#""stage":"type""#), "{id}: {response}");
+        assert!(
+            response.contains(r#""kind":"type_mismatch""#),
+            "{id}: {response}"
+        );
+    }
+}
+
+#[test]
 fn fallback_preserves_formula_and_expression_span_contract() {
     for (source, expression_start) in [("/*lead*/1<2/*tail*/", 8), ("/*😀*/1<2/*終*/", 5)] {
         let ast = parse(source).expect("commented bare comparison");

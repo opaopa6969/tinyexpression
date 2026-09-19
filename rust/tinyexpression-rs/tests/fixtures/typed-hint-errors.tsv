@@ -1,0 +1,8 @@
+# id	formula
+mixed-string-number	match{true->$s as string,default->$n as number}
+mixed-boolean-string	match{true->$b as boolean,false->$s as string,default->$c Boolean}
+object-result-match	match{true->$o as object,default->$p Object}
+number-hint-inside-string-match	match{true->'a',false->$n as number,default->'b'}
+string-special-and-number	match{true->'a',false->$s as string,default->$n as number}
+typed-string-and-number-literal	match{true->$s as string,default->0}
+document-mixed-string-number	var $s as string;var $n as number;match{true->$s as string,default->$n as number}

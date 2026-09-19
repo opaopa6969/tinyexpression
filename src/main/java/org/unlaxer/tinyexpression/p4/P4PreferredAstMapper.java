@@ -105,7 +105,22 @@ public final class P4PreferredAstMapper {
     if (candidates == null || candidates.isEmpty()) {
       throw new IllegalArgumentException("No generated AST candidates supplied");
     }
-    return parseMappedCandidates(source, candidates, false, deadlineNanos);
+    ParsedAst parsed = parseMappedCandidates(source, candidates, false, deadlineNanos);
+    int parsedIndex = candidates.indexOf(parsed.ast().getClass().getSimpleName());
+    boolean earlierTypedFamily = parsedIndex > 0 && candidates.subList(0, parsedIndex).stream()
+        .anyMatch(P4PreferredAstMapper::isTypedFamilyRoot);
+    if (!earlierTypedFamily) return parsed;
+    ParsedAst selected = selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
+    int selectedIndex = candidates.indexOf(selected.ast().getClass().getSimpleName());
+    return selectedIndex >= 0 && selectedIndex <= parsedIndex ? selected : parsed;
+  }
+
+  private static boolean isTypedFamilyRoot(String candidate) {
+    return switch (candidate) {
+      case "StringConcatExpr", "BooleanOrExpr", "ObjectExpr",
+          "NumberMatchExpr", "StringMatchExpr", "BooleanMatchExpr" -> true;
+      default -> false;
+    };
   }
 
   /** パース期限超過。生成 P4 専用バックエンドでは明示的なパース失敗として扱う。 */
@@ -124,8 +139,10 @@ public final class P4PreferredAstMapper {
   public static ParsedAst parseDetailed(String formula, ExpressionType preferredResultType) {
     String source = formula == null ? "" : formula;
     List<String> candidates = preferredAstSimpleNames(source, preferredResultType);
-    return parseMappedCandidates(
-        source, candidates, preferredResultType == null, defaultParseDeadlineNanos());
+    long deadlineNanos = defaultParseDeadlineNanos();
+    ParsedAst parsed = parseMappedCandidates(
+        source, candidates, preferredResultType == null, deadlineNanos);
+    return selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
   }
 
   /**
@@ -282,6 +299,11 @@ public final class P4PreferredAstMapper {
     // grammar's interleave metadata is not applied to nested alternatives.
     String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
     ParsedRoot parsedRoot = parseRootToken(parserSource, deadlineNanos);
+    return mapCandidates(parserSource, candidates, allowDefault, parsedRoot);
+  }
+
+  private static ParsedAst mapCandidates(
+      String parserSource, List<String> candidates, boolean allowDefault, ParsedRoot parsedRoot) {
     Token rootToken = parsedRoot.token();
     String sourceForSpanComparison = parserSource;
     RuntimeException lastFailure = null;
@@ -314,7 +336,251 @@ public final class P4PreferredAstMapper {
     if (lastFailure != null) {
       throw toParseFailure(lastFailure);
     }
-    throw new IllegalArgumentException("No whole-source generated AST mapping found: " + source);
+    throw new IllegalArgumentException("No whole-source generated AST mapping found: " + parserSource);
+  }
+
+  /**
+   * Uses captured {@code VariableRefExpr.type} metadata to select a typed top-level family.
+   * The ordinary grammar remains permissive inside declarations and invocation arguments for
+   * backward compatibility; only a direct result variable (or direct match result variables)
+   * influences root-family selection.
+   */
+  private static ParsedAst selectExplicitResultFamily(
+      String source, List<String> candidates, ParsedAst parsed, long deadlineNanos) {
+    boolean document = isDocument(source, parsed);
+    ResultFamily family = explicitResultFamily(parsed.ast());
+    ResultFamily currentMatchFamily = matchFamily(parsed.ast());
+    if (family == null || (!document && family == currentMatchFamily)
+        || (currentMatchFamily == null && family == ResultFamily.NUMBER)) {
+      return parsed;
+    }
+    if (currentMatchFamily != null && family == ResultFamily.OBJECT) {
+      throw matchTypeMismatch(source);
+    }
+    String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+    TinyExpressionP4AST.FormulaExpr documentRoot =
+        document && parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula ? formula : null;
+    int[] documentExpressionSpan = null;
+    int documentExpressionOffset = 0;
+    if (documentRoot != null) {
+      documentExpressionSpan = parsed.sourceText().ownedSpan(documentRoot.expression())
+          .orElseThrow(() -> new IllegalArgumentException(
+              "No owned source span for Formula expression"));
+      documentExpressionOffset = documentExpressionSpan[0];
+      parserSource = parserSource.substring(
+          parserSource.offsetByCodePoints(0, documentExpressionSpan[0]),
+          parserSource.offsetByCodePoints(0, documentExpressionSpan[1]));
+    }
+    Class<? extends Parser> rootClass = switch (family) {
+      case STRING -> currentMatchFamily != null
+          ? TinyExpressionP4Parsers.StringMatchExpressionParser.class
+          : TinyExpressionP4Parsers.StringExpressionParser.class;
+      case BOOLEAN -> currentMatchFamily != null
+          ? TinyExpressionP4Parsers.BooleanMatchExpressionParser.class
+          : TinyExpressionP4Parsers.BooleanExpressionParser.class;
+      case OBJECT -> TinyExpressionP4Parsers.ObjectExpressionParser.class;
+      case NUMBER -> {
+        if (currentMatchFamily != null) {
+          yield TinyExpressionP4Parsers.NumberMatchExpressionParser.class;
+        }
+        throw new IllegalStateException("number family already selected");
+      }
+    };
+    ParseResult reparsed = parseWithRoot(Parser.get(rootClass), parserSource, deadlineNanos);
+    if (!reparsed.fullyConsumed(parserSource)) {
+      if (currentMatchFamily != null) throw matchTypeMismatch(source);
+      throw new IllegalArgumentException(
+          "Explicit result type could not be parsed as " + family.name().toLowerCase() + ": " + source);
+    }
+    ArrayList<String> familyCandidates = new ArrayList<>();
+    addIfAbsent(familyCandidates, switch (family) {
+      case STRING -> currentMatchFamily != null ? "StringMatchExpr" : "StringConcatExpr";
+      case BOOLEAN -> currentMatchFamily != null ? "BooleanMatchExpr" : "BooleanOrExpr";
+      case OBJECT -> "ObjectExpr";
+      case NUMBER -> null;
+    });
+    for (String candidate : candidates) addIfAbsent(familyCandidates, candidate);
+    ParsedAst selected = mapCandidates(
+        parserSource,
+        familyCandidates,
+        true,
+        new ParsedRoot(
+            reparsed.rootToken(), reparsed.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE));
+    if (family == ResultFamily.OBJECT) {
+      if (selected.ast() instanceof TinyExpressionP4AST.ObjectExpr) {
+        selected = new ParsedAst(selected.ast(), "explicit:object", selected.sourceText());
+      } else {
+        TinyExpressionP4AST.ObjectExpr object = new TinyExpressionP4AST.ObjectExpr(selected.ast());
+        selected = new ParsedAst(object, "explicit:object",
+            selected.sourceText().withWholeSourceNode(object));
+      }
+    }
+    if (documentRoot == null) return selected;
+
+    TinyExpressionP4AST.ExpressionExpr expression =
+        new TinyExpressionP4AST.ExpressionExpr(selected.ast());
+    TinyExpressionP4AST.FormulaExpr formula = new TinyExpressionP4AST.FormulaExpr(
+        documentRoot.imports(), documentRoot.declarations(), expression, documentRoot.methods());
+    P4SourceText sourceText = parsed.sourceText().withOverlay(
+        selected.sourceText(), documentExpressionOffset,
+        formula, documentRoot, expression, documentRoot.expression());
+    return new ParsedAst(formula, "document:" + selected.selectionMode(), sourceText);
+  }
+
+  private static ResultFamily matchFamily(TinyExpressionP4AST ast) {
+    TinyExpressionP4AST root = resultRoot(ast);
+    if (root instanceof TinyExpressionP4AST.NumberMatchExpr) return ResultFamily.NUMBER;
+    if (root instanceof TinyExpressionP4AST.StringMatchExpr) return ResultFamily.STRING;
+    if (root instanceof TinyExpressionP4AST.BooleanMatchExpr) return ResultFamily.BOOLEAN;
+    return null;
+  }
+
+  private static ResultFamily explicitResultFamily(TinyExpressionP4AST ast) {
+    ast = resultRoot(ast);
+    ArrayList<ResultFamily> families = new ArrayList<>();
+    if (ast instanceof TinyExpressionP4AST.NumberMatchExpr match) {
+      addDirectFamily(families, match.firstCase().value().value());
+      for (TinyExpressionP4AST.NumberCaseExpr entry : match.moreCases()) {
+        addDirectFamily(families, entry.value().value());
+      }
+      addDirectFamily(families, match.defaultCase().value().value());
+    } else if (ast instanceof TinyExpressionP4AST.StringMatchExpr match) {
+      addDirectFamily(families, match.firstCase().value().value());
+      for (TinyExpressionP4AST.StringCaseExpr entry : match.moreCases()) {
+        addDirectFamily(families, entry.value().value());
+      }
+      addDirectFamily(families, match.defaultCase().value().value());
+    } else if (ast instanceof TinyExpressionP4AST.BooleanMatchExpr match) {
+      addDirectFamily(families, match.firstCase().value().value());
+      for (TinyExpressionP4AST.BooleanCaseExpr entry : match.moreCases()) {
+        addDirectFamily(families, entry.value().value());
+      }
+      addDirectFamily(families, match.defaultCase().value().value());
+    } else {
+      addDirectFamily(families, ast);
+    }
+    ResultFamily selected = null;
+    for (ResultFamily family : families) {
+      if (selected != null && selected != family) {
+        throw matchTypeMismatch("captured explicit result hints");
+      }
+      selected = family;
+    }
+    return selected;
+  }
+
+  private static void addDirectFamily(List<ResultFamily> families, TinyExpressionP4AST ast) {
+    ResultFamily family = directFamily(ast);
+    if (family != null) families.add(family);
+  }
+
+  private static ResultFamily directFamily(TinyExpressionP4AST ast) {
+    if (ast instanceof TinyExpressionP4AST.VariableRefExpr variable
+        && variable.type().isPresent()) {
+      String type = variable.type().orElseThrow().toLowerCase(java.util.Locale.ROOT);
+      return switch (type) {
+        case "number", "float" -> ResultFamily.NUMBER;
+        case "string" -> ResultFamily.STRING;
+        case "boolean" -> ResultFamily.BOOLEAN;
+        case "object" -> ResultFamily.OBJECT;
+        default -> throw new IllegalArgumentException("Unknown explicit result type: " + type);
+      };
+    }
+    if (ast instanceof TinyExpressionP4AST.StringTypedVariableRefExpr
+        || ast instanceof TinyExpressionP4AST.StringCastVariableRefExpr) {
+      return ResultFamily.STRING;
+    }
+    if (ast instanceof TinyExpressionP4AST.BinaryExpr binary && binary.op().isEmpty()) {
+      return directFamily(binary.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.StringConcatExpr concat
+        && concat.op().isEmpty() && concat.left() instanceof TinyExpressionP4AST value) {
+      return directFamily(value);
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanOrExpr disjunction
+        && disjunction.op().isEmpty()) {
+      return directFamily(disjunction.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanAndExpr conjunction
+        && conjunction.op().isEmpty()) {
+      return directFamily(conjunction.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanXorExpr exclusive
+        && exclusive.op().isEmpty()) {
+      return directFamily(exclusive.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanFactorExpr factor
+        && factor.value() instanceof TinyExpressionP4AST value) {
+      return directFamily(value);
+    }
+    if (ast instanceof TinyExpressionP4AST.ObjectExpr object
+        && object.value() instanceof TinyExpressionP4AST value) {
+      return directFamily(value);
+    }
+    return null;
+  }
+
+  private static TinyExpressionP4AST resultRoot(TinyExpressionP4AST ast) {
+    if (ast instanceof TinyExpressionP4AST.FormulaExpr formula) {
+      return resultRoot(formula.expression());
+    }
+    if (ast instanceof TinyExpressionP4AST.ExpressionExpr expression
+        && expression.value() instanceof TinyExpressionP4AST value) {
+      return resultRoot(value);
+    }
+    if (ast instanceof TinyExpressionP4AST.BinaryExpr binary
+        && binary.op().isEmpty() && binary.right().isEmpty()) {
+      return resultRoot(binary.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.StringConcatExpr concat
+        && concat.op().isEmpty() && concat.right().isEmpty()
+        && concat.left() instanceof TinyExpressionP4AST value) {
+      return resultRoot(value);
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanOrExpr disjunction
+        && disjunction.op().isEmpty() && disjunction.right().isEmpty()) {
+      return resultRoot(disjunction.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanAndExpr conjunction
+        && conjunction.op().isEmpty() && conjunction.right().isEmpty()) {
+      return resultRoot(conjunction.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanXorExpr exclusive
+        && exclusive.op().isEmpty() && exclusive.right().isEmpty()) {
+      return resultRoot(exclusive.left());
+    }
+    if (ast instanceof TinyExpressionP4AST.BooleanFactorExpr factor
+        && factor.value() instanceof TinyExpressionP4AST value) {
+      return resultRoot(value);
+    }
+    return ast;
+  }
+
+  private static boolean isDocument(String source, ParsedAst parsed) {
+    if (!(parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula)) return false;
+    if (!formula.imports().isEmpty()
+        || !formula.declarations().isEmpty()
+        || !formula.methods().isEmpty()) return true;
+    try {
+      String parserSource = TinyExpressionParserCapabilities
+          .stripJavaStyleCommentsPreservingLayout(source);
+      return !parserSource.strip().equals(parsed.sourceText().text(formula.expression()).strip());
+    } catch (RuntimeException unavailableSpan) {
+      // A Formula without an owned expression span is conservatively kept intact.
+      return true;
+    }
+  }
+
+  private static IllegalArgumentException matchTypeMismatch(String source) {
+    return new IllegalArgumentException(
+        "P4 match type mismatch: case and default values must use one result family: " + source);
+  }
+
+  private enum ResultFamily {
+    NUMBER,
+    STRING,
+    BOOLEAN,
+    OBJECT
   }
 
   private static boolean coversWholeSource(String source, Token token) {
@@ -338,9 +604,10 @@ public final class P4PreferredAstMapper {
    * comparison-anchored top-level alternative roughly doubles parse time for
    * {@code if(...comparison...)} formulas (the comparison's number operand re-parses the
    * whole {@code if} block before failing). So the fix is applied here instead: when the
-   * standard {@code Formula} parse fails or under-consumes, retry once treating
-   * {@code BooleanExpression} as the root. This adds cost only for inputs the standard
-   * parse already rejected, leaving the hot path untouched.
+   * standard {@code Formula} parse fails or under-consumes, retry the boolean, string, and
+   * object family roots in public dispatch order. Explicit type hints on an otherwise successful
+   * parse are handled separately from captured AST metadata. These retries add cost only for
+   * inputs the standard parse already rejected, leaving the hot path untouched.
    */
   private static ParsedRoot parseRootToken(String source, long deadlineNanos) {
     ParseResult primary = parseWithRoot(TinyExpressionP4Parsers.getRootParser(), source, deadlineNanos);
@@ -348,13 +615,16 @@ public final class P4PreferredAstMapper {
       return new ParsedRoot(
           primary.rootToken(), primary.legacyToken(), P4SourceMapping.EntryPoint.ROOT);
     }
-    // issue #23 compatibility retry: a bare top-level boolean comparison can be shadowed by
-    // top-level expression dispatch. Retry with BooleanExpression as the generated root.
-    ParseResult booleanRoot = parseWithRoot(
-        Parser.get(TinyExpressionP4Parsers.BooleanExpressionParser.class), source, deadlineNanos);
-    if (booleanRoot.fullyConsumed(source)) {
-      return new ParsedRoot(
-          booleanRoot.rootToken(), booleanRoot.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE);
+    // Retry families in public dispatch order after the primary Formula rejects EOF.
+    for (Class<? extends Parser> alternate : List.of(
+        TinyExpressionP4Parsers.BooleanExpressionParser.class,
+        TinyExpressionP4Parsers.StringExpressionParser.class,
+        TinyExpressionP4Parsers.ObjectExpressionParser.class)) {
+      ParseResult result = parseWithRoot(Parser.get(alternate), source, deadlineNanos);
+      if (result.fullyConsumed(source)) {
+        return new ParsedRoot(
+            result.rootToken(), result.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE);
+      }
     }
     if (!primary.succeeded()) {
       throw new IllegalArgumentException("Parse failed: " + source);

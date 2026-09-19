@@ -26,6 +26,46 @@ public final class P4SourceText {
         Objects.requireNonNull(spans, "spans"));
   }
 
+  /** Adds an identity-mapped synthetic root spanning the complete owned parser input. */
+  public P4SourceText withWholeSourceNode(Object node) {
+    Objects.requireNonNull(node, "node");
+    if (parserSource == null) return this;
+    int end = parserSource.codePointCount(0, parserSource.length());
+    return new P4SourceText(parserSource,
+        value -> value == node ? Optional.of(new int[] {0, end}) : spans.apply(value));
+  }
+
+  Optional<int[]> ownedSpan(Object node) {
+    return spans.apply(node).map(value -> value.clone());
+  }
+
+  /**
+   * Combines a reparsed subtree snapshot with this document snapshot. Both snapshots use the same
+   * code-point coordinate space; {@code overlay} may own a whitespace-masked copy of the source.
+   */
+  P4SourceText withOverlay(
+      P4SourceText overlay,
+      int overlayOffset,
+      Object newOuter,
+      Object oldOuter,
+      Object newExpression,
+      Object oldExpression) {
+    Objects.requireNonNull(overlay, "overlay");
+    if (parserSource == null) return this;
+    return new P4SourceText(parserSource, value -> {
+      if (value == newOuter) return spans.apply(oldOuter);
+      if (value == newExpression) return spans.apply(oldExpression);
+      Optional<int[]> overlaid = overlay.spans.apply(value);
+      if (overlaid.isPresent()) {
+        int[] range = overlaid.orElseThrow().clone();
+        range[0] += overlayOffset;
+        range[1] += overlayOffset;
+        return Optional.of(range);
+      }
+      return spans.apply(value);
+    });
+  }
+
   /** Returns lexical input, without evaluating a node or using its debug representation. */
   public String text(Object value) {
     if (value == null) return null;

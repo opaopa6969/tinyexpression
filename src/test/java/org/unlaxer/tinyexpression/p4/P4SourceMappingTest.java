@@ -216,6 +216,17 @@ public class P4SourceMappingTest {
       var unicode = P4PreferredAstMapper.parseDetailed(unicodeExpression);
       assertEquals(unicodeExpression, unicode.sourceText().text(unicode.ast()));
     }
+    String objectSource = "/*😀*/$o as object/*終*/";
+    var object = P4PreferredAstMapper.parseDetailed(objectSource);
+    assertEquals("explicit:object", object.selectionMode());
+    assertTrue(object.ast() instanceof TinyExpressionP4AST.ObjectExpr);
+    TinyExpressionP4AST.ObjectExpr objectRoot = (TinyExpressionP4AST.ObjectExpr) object.ast();
+    String strippedObject = TinyExpressionParserCapabilities
+        .stripJavaStyleCommentsPreservingLayout(objectSource);
+    assertEquals(strippedObject.strip(), object.sourceText().text(objectRoot).strip());
+    assertEquals("$o as object", object.sourceText().text(objectRoot.value()).strip());
+    P4PreferredAstMapper.parseDetailed("$another as object");
+    assertEquals(strippedObject.strip(), object.sourceText().text(objectRoot).strip());
     var oldConstructor = new P4PreferredAstMapper.ParsedAst(first.ast(), "compat");
     assertSame(first.ast(), oldConstructor.ast());
     assertEquals("compat", oldConstructor.selectionMode());
@@ -225,7 +236,8 @@ public class P4SourceMappingTest {
   }
 
   @Test public void realSnapshotsRemainOwnedAfterConcurrentRootAndAlternateMappings() throws Exception {
-    List<String> formulas = List.of("1+2", "1<2", "1<2&2<3", "/*😀*/2>=1/*終*/");
+    List<String> formulas = List.of(
+        "1+2", "1<2", "1<2&2<3", "/*😀*/2>=1/*終*/", "/*😀*/$o Object/*終*/");
     List<Callable<P4PreferredAstMapper.ParsedAst>> jobs = formulas.stream()
         .<Callable<P4PreferredAstMapper.ParsedAst>>map(formula ->
             () -> P4PreferredAstMapper.parseDetailed(formula)).toList();
@@ -245,5 +257,18 @@ public class P4SourceMappingTest {
           .stripJavaStyleCommentsPreservingLayout(formulas.get(i)).strip();
       assertEquals(formulas.get(i), expected, parsed.get(i).sourceText().text(parsed.get(i).ast()).strip());
     }
+  }
+
+  @Test public void documentFamilyReselectionKeepsOuterAndExpressionSourceSpans() {
+    String source = "var $s as string;/*😀*/$s as string";
+    var parsed = P4PreferredAstMapper.parseDetailed(source);
+    var formula = (TinyExpressionP4AST.FormulaExpr) parsed.ast();
+    assertTrue(formula.expression().value() instanceof TinyExpressionP4AST.StringConcatExpr);
+    assertEquals("$s as string", parsed.sourceText().text(formula.expression()).strip());
+    assertEquals("$s as string", parsed.sourceText().text(formula.expression().value()).strip());
+    P4PreferredAstMapper.parseDetailed("$other as boolean");
+    assertEquals(TinyExpressionParserCapabilities
+            .stripJavaStyleCommentsPreservingLayout(source).strip(),
+        parsed.sourceText().text(formula).strip());
   }
 }

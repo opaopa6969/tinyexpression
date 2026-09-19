@@ -229,6 +229,11 @@ impl From<FrontendError> for EvaluationError {
         match error {
             FrontendError::Parse(error) => Self::Parse(error),
             FrontendError::Mapping(error) => Self::Mapping(error),
+            FrontendError::TypeMismatch { span, .. } => Self::TypeMismatch {
+                expected: "one match result family",
+                actual: "mixed explicit type hints",
+                span,
+            },
         }
     }
 }
