@@ -1,0 +1,95 @@
+use std::fs;
+use std::path::PathBuf;
+use std::time::Duration;
+
+use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
+use tinyexpression_rs::generated::{mapper, parser};
+
+const FIXTURES: &[(&str, &str)] = &[
+    ("complex", "complex.tiny"),
+    ("flat-arithmetic", "flat-arithmetic.tiny"),
+    ("large-match", "large-match.tiny"),
+];
+
+fn fixture_path(file_name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../benchmarks/fixtures")
+        .join(file_name)
+}
+
+fn parser_benchmarks(criterion: &mut Criterion) {
+    let fixtures = FIXTURES
+        .iter()
+        .map(|&(name, file_name)| {
+            let path = fixture_path(file_name);
+            let source = fs::read_to_string(&path)
+                .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+            let tree = parser::parse_tree_detailed(&source)
+                .unwrap_or_else(|error| panic!("invalid fixture {}: {error}", path.display()));
+            mapper::map(&tree).unwrap_or_else(|error| {
+                panic!("fixture {} cannot be mapped: {error}", path.display())
+            });
+            tinyexpression_rs::parse(&source).unwrap_or_else(|error| {
+                panic!(
+                    "fixture {} cannot be parsed and mapped: {error}",
+                    path.display()
+                )
+            });
+            (name, source, tree)
+        })
+        .collect::<Vec<_>>();
+
+    let mut group = criterion.benchmark_group("tinyexpression");
+
+    for (fixture_name, source, tree) in &fixtures {
+        // This intentionally exercises the current public implementation, including
+        // rebuilding the generated rules on every parse.
+        group.bench_with_input(
+            BenchmarkId::new("parse-only", fixture_name),
+            source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let tree = parser::parse_tree_detailed(black_box(source.as_str()))
+                        .expect("fixture was validated before measurement");
+                    black_box(tree)
+                });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("map-only", fixture_name),
+            tree,
+            |bencher, tree| {
+                bencher.iter(|| {
+                    let ast = mapper::map(black_box(tree))
+                        .expect("fixture was validated before measurement");
+                    black_box(ast)
+                });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("parse+map", fixture_name),
+            source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let ast = tinyexpression_rs::parse(black_box(source.as_str()))
+                        .expect("fixture was validated before measurement");
+                    black_box(ast)
+                });
+            },
+        );
+    }
+
+    group.finish();
+}
+
+criterion_group! {
+    name = benches;
+    config = Criterion::default()
+        .warm_up_time(Duration::from_secs(5))
+        .measurement_time(Duration::from_secs(10))
+        .sample_size(100);
+    targets = parser_benchmarks
+}
+criterion_main!(benches);
