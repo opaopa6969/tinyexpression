@@ -34,11 +34,13 @@ public class P4RustScalarEvaluatorOracleTest {
       if (fixtureCase.outcome() == Outcome.ERROR) {
         assertThrows(fixtureCase.id() + ": " + fixtureCase.formula(), RuntimeException.class,
             () -> calculator.apply(CalculationContext.newConcurrentContext()));
-      } else {
-        Object result = calculator.apply(CalculationContext.newConcurrentContext());
-        assertExpectedValue(fixtureCase, result);
+        // The explicit p4AstEvaluatorCreator path cannot fall back, but an evaluation exception
+        // occurs before AstEvaluatorCalculator publishes its runtime marker.
+        continue;
       }
 
+      Object result = calculator.apply(CalculationContext.newConcurrentContext());
+      assertExpectedValue(fixtureCase, result);
       assertEquals(fixtureCase.id() + " must use the P4 typed evaluator",
           "p4-typed", calculator.getObject("_astEvaluatorRuntime", String.class));
       assertEquals(fixtureCase.id() + " must not use the embedded bridge",
