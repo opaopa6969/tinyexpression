@@ -83,8 +83,10 @@ public class P4SourceMappingTest {
   @Test public void lexicalAndOwnedTextDoNotEvaluateOrStringifyNodes() {
     var lexical = P4SourceText.lexicalOnly();
     assertNull(lexical.text(null));
+    assertNull(lexical.text(Optional.empty()));
     for (String value : List.of("", " +2 ", "1+1", "(1)", "1.5", "2147483648")) {
       assertSame(value, lexical.text(value));
+      assertSame(value, lexical.text(Optional.of(value)));
     }
     Object node = new Object() {
       @Override public String toString() { throw new AssertionError("must not stringify node"); }
@@ -92,6 +94,7 @@ public class P4SourceMappingTest {
     var owned = P4SourceText.fromSnapshot("😀 ( 1+1 ) ", value -> value == node
         ? Optional.of(new int[]{2, 9}) : Optional.empty());
     assertEquals("( 1+1 )", owned.text(node));
+    assertEquals("( 1+1 )", owned.text(Optional.of(node)));
     assertThrows(IllegalArgumentException.class, () -> lexical.text(node));
     assertThrows(IllegalArgumentException.class, () -> owned.text(new Object()));
     assertEquals("", P4SourceText.fromSnapshot("😀", value -> Optional.of(new int[]{1, 1})).text(node));
