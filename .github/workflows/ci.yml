@@ -30,8 +30,8 @@ jobs:
         if: matrix.generator == 'source'
         with:
           repository: opaopa6969/unlaxer-parser
-          # Snapshot API prerequisite; update deliberately together with its compatibility oracle.
-          ref: dfd1aae3d7c6ac5cbef786499d6f15b3b104b1cb
+          # Node alias contract; update deliberately together with its compatibility oracle.
+          ref: 0d34c2d797a9e3dd959e9f305b6964413d8b4f00
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -44,7 +44,8 @@ jobs:
         run: >-
           mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
           -Dtinyexpression.expected.mapper.snapshot=${{ matrix.generator == 'source' }}
-          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest
+          -Dtinyexpression.expected.mapper.nodeAlias=${{ matrix.generator == 'source' }}
+          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest
       - uses: actions/upload-artifact@v6
         if: always()
         with:

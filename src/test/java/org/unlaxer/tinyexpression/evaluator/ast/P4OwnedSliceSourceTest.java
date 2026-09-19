@@ -130,6 +130,36 @@ public class P4OwnedSliceSourceTest {
     }
   }
 
+  @Test public void allThreeParsedIndicesUseTheDeclaredGeneratedContract() {
+    String formula = "/*😀*/ 'abcdef'[1:5:2]";
+    var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
+    var slice = (SliceExpr) parsed.ast();
+    String expected = System.getProperty("tinyexpression.expected.mapper.nodeAlias");
+    Object[] indices = {slice.start(), slice.end(), slice.step()};
+    String[] lexical = {"1", "5", "2"};
+    P4PreferredAstMapper.parseDetailed("9876", ExpressionTypes._float);
+    for (int i = 0; i < indices.length; i++) {
+      if (expected != null) {
+        assertTrue("index " + i + " uses the wrong generator contract",
+            Boolean.parseBoolean(expected) ? indices[i] instanceof TinyExpressionP4AST
+                : indices[i] instanceof String);
+      }
+      assertEquals(lexical[i], parsed.sourceText().text(indices[i]).strip());
+    }
+    assertEquals("bd", evaluator(parsed.sourceText()).eval(slice));
+  }
+
+  @Test public void parsedNonIntegerAndOverflowIndicesKeepFailureClassesInEveryPosition() {
+    for (String index : List.of("1.5", "2147483648")) {
+      for (String suffix : List.of("[" + index + ":]", "[:" + index + "]", "[::" + index + "]")) {
+        String formula = "'abcdef'" + suffix;
+        var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
+        P4PreferredAstMapper.parseDetailed("123", ExpressionTypes._float);
+        assertThrows(formula, NumberFormatException.class, () -> evaluator(parsed.sourceText()).eval(parsed.ast()));
+      }
+    }
+  }
+
   @Test public void detailedProbeAndCalculatorRetainParseResultUntilLaterEvaluation() {
     String formula = "/*😀*/ 'abcdef'[1:3]";
     var parsed = GeneratedAstRuntimeProbe.tryMapAstDetailed(formula,

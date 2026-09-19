@@ -1,7 +1,7 @@
 # AST sourceの所有とslice添字の互換移行
 
-追跡: tinyexpression #105、unlaxer-parser #163 / #165。
-これはJava/Rustのalias型を揃えるための**利用側の先行移行**であり、Rust full-specや
+追跡: tinyexpression #105 / #107、unlaxer-parser #163 / #165。
+これはJava/Rustのalias型を揃えるための利用側の移行と実Node生成の回帰検証であり、Rust full-specや
 tinyexpression-rs本体の完成を意味しない。文法・公開依存version・slice意味論は変更しない。
 
 ## 公開版と開発版
@@ -51,10 +51,13 @@ sourceの代わりにしたりしない。未知のidentity、不正な範囲は
 
 `P4SourceMappingTest`、`P4OwnedSliceSourceTest`、`P4JavaCodeEmitterSourceTextTest`が、
 旧String、新Node相当入力、欠損・符号・不正添字・Unicode・後続parse・未知Nodeを検証する。
-現行生成SliceExprのfield自体はまだStringなので、Node添字のテストはadapterと
-添字変換/生成経路へ直接Nodeを渡す。実際の生成fieldのNode化と共通Java/Rust比較は
-unlaxer-parser #163の次段階で行う。
+公開3.0.15の生成SliceExprのfieldはString、固定開発版ではNodeを保持するObjectである。
+手組みのString添字だけでなく、実parseからSliceExprとresolverを得て同じテストを実行する。
+括弧付き添字・演算式・コメントの字句も保持し、後続parse後に同じ結果となることを検証する。
+実生成Nodeを手書きSliceExprに組み込む場合、そのNodeを所有するsource resolverも渡す。
+開発版のObject fieldと字句bridgeは既存String手組みも引き続き受け付けるが、それだけを
+検証して実生成Nodeに対応できたとは判定しない。
 
-CIのmapper-compatibility matrixは、公開3.0.15と固定したsnapshot API導入commitを
-別々の空Maven repositoryで構築する。期待するAPI能力もテストでassertし、意図しない
+CIのmapper-compatibility matrixは、公開3.0.15と固定したNode alias対応commitを
+別々の空Maven repositoryで構築する。snapshot APIと実Node生成の期待値をテストでassertし、意図しない
 開発jar混入を検出する。通常CIの既知失敗baselineには新しい失敗を追加しない。
