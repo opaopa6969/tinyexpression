@@ -17,7 +17,6 @@ import org.unlaxer.tinyexpression.Source;
 import org.unlaxer.tinyexpression.TokenBaseOperator;
 import org.unlaxer.tinyexpression.evaluator.javacode.ClassNameAndByteCode;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.FormulaParser;
@@ -47,7 +46,7 @@ public class AstEvaluatorCalculator implements Calculator {
   private volatile Optional<Calculator> dependsOnBy = Optional.empty();
 
   private final boolean generatedAstRuntimeAvailable;
-  private final TinyExpressionP4AST generatedAst;
+  private final P4PreferredAstMapper.ParsedAst generatedAst;
 
   public AstEvaluatorCalculator(Source source, String className,
       SpecifiedExpressionTypes specifiedExpressionTypes, ClassLoader classLoader) {
@@ -162,11 +161,12 @@ public class AstEvaluatorCalculator implements Calculator {
 
     // The generated P4 AST and its typed evaluator are the only execution path.
     if (generatedAstRuntimeAvailable && generatedAst != null) {
-      setObject("_astEvaluatorMappedAst", generatedAst);
+      setObject("_astEvaluatorMappedAst", generatedAst.ast());
       try {
         Object p4TypedResult = new P4TypedAstEvaluator(
-            specifiedExpressionTypes, calculationContext, source.source(), classLoader)
-            .eval(generatedAst);
+            specifiedExpressionTypes, calculationContext, source.source(), source.source(), classLoader,
+            Map.of(), generatedAst.sourceText())
+            .eval(generatedAst.ast());
         if (p4TypedResult != null) {
           setObject("_astEvaluatorRuntime", "p4-typed");
           setObject("_astEvaluatorMapperAvailable", true);
@@ -229,7 +229,7 @@ public class AstEvaluatorCalculator implements Calculator {
     return List.of();
   }
 
-  private TinyExpressionP4AST validateFormulaParseable(Source source) {
+  private P4PreferredAstMapper.ParsedAst validateFormulaParseable(Source source) {
     String formula = source.source();
     if (formula == null || formula.isBlank()) {
       return null;
@@ -238,12 +238,12 @@ public class AstEvaluatorCalculator implements Calculator {
       throw new ParseException("generated P4 runtime is unavailable");
     }
     try {
-      Optional<Object> mapped = GeneratedAstRuntimeProbe.tryMapAst(
+      Optional<P4PreferredAstMapper.ParsedAst> mapped = GeneratedAstRuntimeProbe.tryMapAstDetailed(
           formula,
           classLoader,
           P4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(formula, resultType()));
-      if (mapped.isPresent() && mapped.get() instanceof TinyExpressionP4AST typedAst) {
-        return typedAst;
+      if (mapped.isPresent()) {
+        return mapped.get();
       }
       throw new ParseException("generated P4 grammar rejected formula: " + formula);
     } catch (ParseException failure) {

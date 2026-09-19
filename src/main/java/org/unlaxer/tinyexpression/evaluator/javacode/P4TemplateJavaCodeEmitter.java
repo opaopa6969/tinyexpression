@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
+import org.unlaxer.tinyexpression.p4.P4SourceText;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -43,7 +44,12 @@ public class P4TemplateJavaCodeEmitter extends TinyExpressionP4Evaluator<String>
    * @param templateOverrides map of kind -> template resource path overrides
    */
   public P4TemplateJavaCodeEmitter(SpecifiedExpressionTypes types, Map<String, String> templateOverrides) {
-    this.defaultEmitter = new P4DefaultJavaCodeEmitter(types);
+    this(types, templateOverrides, P4SourceText.lexicalOnly());
+  }
+
+  public P4TemplateJavaCodeEmitter(SpecifiedExpressionTypes types, Map<String, String> templateOverrides,
+      P4SourceText sourceText) {
+    this.defaultEmitter = new P4DefaultJavaCodeEmitter(types, null, sourceText);
     this.templateOverrides = templateOverrides != null ? templateOverrides : Map.of();
   }
 

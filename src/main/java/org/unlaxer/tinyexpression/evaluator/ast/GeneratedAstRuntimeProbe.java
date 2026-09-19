@@ -35,18 +35,23 @@ final class GeneratedAstRuntimeProbe {
 
   static Optional<Object> tryMapAst(
       String source, ClassLoader classLoader, List<String> preferredAstSimpleNames) {
+    return tryMapAstDetailed(source, classLoader, preferredAstSimpleNames).map(parsed -> parsed.ast());
+  }
+
+  static Optional<P4PreferredAstMapper.ParsedAst> tryMapAstDetailed(
+      String source, ClassLoader classLoader, List<String> preferredAstSimpleNames) {
     long deadlineNanos = probeDeadlineNanos();
     if (deadlineNanos > 0L && System.nanoTime() > deadlineNanos) {
       return Optional.empty();
     }
     try {
-      Object ast = P4PreferredAstMapper.parseByAstSimpleNames(
+      P4PreferredAstMapper.ParsedAst parsed = P4PreferredAstMapper.parseByAstSimpleNamesDetailed(
           source, preferredAstSimpleNames, deadlineNanos);
-      if (ast instanceof TinyExpressionP4AST typedAst
-          && P4StrictMatchTypingValidator.firstViolation(typedAst, source).isPresent()) {
+      if (parsed.ast() != null
+          && P4StrictMatchTypingValidator.firstViolation(parsed.ast(), source).isPresent()) {
         return Optional.empty();
       }
-      return Optional.ofNullable(ast);
+      return parsed.ast() == null ? Optional.empty() : Optional.of(parsed);
     } catch (Throwable failure) {
       return Optional.empty();
     }

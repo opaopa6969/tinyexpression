@@ -17,6 +17,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
+import org.unlaxer.tinyexpression.p4.P4SourceText;
 
 /**
  * GGP concrete implementation: AST traversal evaluator.
@@ -34,6 +35,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   private final String sourceFormula;
   private final String lookupFormulaSource;
   private final ClassLoader classLoader;
+  private final P4SourceText sourceText;
   /**
    * Declared variable types collected from {@code var}/{@code variable} declarations in the
    * preamble (e.g. {@code var $name as string ...}). The generated P4 AST drops declaration
@@ -47,6 +49,11 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context) {
     this(types, context, null, null);
+  }
+
+  public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
+      P4SourceText sourceText) {
+    this(types, context, null, null, null, Map.of(), sourceText);
   }
 
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
@@ -67,6 +74,13 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
       String sourceFormula, String lookupFormulaSource, ClassLoader classLoader,
       Map<String, ExpressionType> declaredVariableTypes) {
+    this(types, context, sourceFormula, lookupFormulaSource, classLoader,
+        declaredVariableTypes, P4SourceText.lexicalOnly());
+  }
+
+  public P4TypedAstEvaluator(SpecifiedExpressionTypes types, CalculationContext context,
+      String sourceFormula, String lookupFormulaSource, ClassLoader classLoader,
+      Map<String, ExpressionType> declaredVariableTypes, P4SourceText sourceText) {
     this.resultType = types.resultType() != null ? types.resultType() : ExpressionTypes.object;
     this.numberType = resolveNumberType(types);
     this.context = context;
@@ -74,6 +88,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     this.sourceFormula = sourceFormula;
     this.lookupFormulaSource = lookupFormulaSource;
     this.classLoader = classLoader;
+    this.sourceText = java.util.Objects.requireNonNull(sourceText, "sourceText");
     this.declaredVariableTypes = declaredVariableTypes == null
         ? new LinkedHashMap<>() : new LinkedHashMap<>(declaredVariableTypes);
   }
@@ -92,7 +107,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
         context, Map.of());
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
         specifiedExpressionTypes, scoped, sourceFormula, lookupFormulaSource, classLoader,
-        declaredVariableTypes);
+        declaredVariableTypes, sourceText);
     for (ImportDeclarationExpr declaration : node.imports()) {
       evaluator.eval(declaration);
     }
@@ -838,7 +853,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
         : new ScopedCalculationContext(context, localBindings);
     P4TypedAstEvaluator bodyEvaluator = new P4TypedAstEvaluator(
         specifiedExpressionTypes, scopedContext, sourceFormula, lookupFormulaSource, classLoader,
-        declaredVariableTypes);
+        declaredVariableTypes, sourceText);
     bodyEvaluator.methods.putAll(methods);
     bodyEvaluator.imports.putAll(imports);
     return bodyEvaluator.eval(methodExpression(method));
@@ -1374,8 +1389,8 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
   protected Object evalSliceExpr(SliceExpr node) {
     String value = resolveStringLeaf(node.value());
     int len = value.length();
-    // #35: start/end/step are grammar-disambiguated index literals (SliceStartIndex /
-    // SliceEndIndex / SliceStepIndex wrapper rules), so read them straight off the AST.
+    // #35: start/end/step are grammar-disambiguated by the SliceXxxIndex wrapper rules.
+    // Keep their lexical interpretation even when generated fields become typed nodes.
     // The former source-text colon splitting (P4SliceSourceSupport) is gone.
     Integer startValue = parseSliceIndex(node.start());
     Integer endValue = parseSliceIndex(node.end());
@@ -1406,12 +1421,13 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     return sb.toString();
   }
 
-  /** Slice indices are integer literals (optionally signed), per the SliceXxxIndex rules. */
-  private static Integer parseSliceIndex(String index) {
-    if (index == null) {
+  /** Preserve the legacy integer-literal contract; do not evaluate numeric expression nodes. */
+  private Integer parseSliceIndex(Object index) {
+    String text = sourceText.text(index);
+    if (text == null) {
       return null;
     }
-    String stripped = index.strip();
+    String stripped = text.strip();
     if (stripped.isEmpty()) {
       return null;
     }

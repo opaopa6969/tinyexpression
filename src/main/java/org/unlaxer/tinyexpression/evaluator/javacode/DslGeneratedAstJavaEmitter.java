@@ -26,17 +26,19 @@ final class DslGeneratedAstJavaEmitter {
       return Optional.empty();
     }
 
-    TinyExpressionP4AST ast;
+    P4PreferredAstMapper.ParsedAst parsed;
     try {
-      ast = P4PreferredAstMapper.parseDetailed(formula, resultType).ast();
+      parsed = P4PreferredAstMapper.parseDetailed(formula, resultType);
     } catch (RuntimeException parseFailure) {
       return Optional.empty();
     }
+    TinyExpressionP4AST ast = parsed.ast();
     if (ast == null) {
       return Optional.empty();
     }
 
-    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(specifiedExpressionTypes, formula);
+    P4TypedJavaCodeEmitter emitter = new P4TypedJavaCodeEmitter(
+        specifiedExpressionTypes, formula, parsed.sourceText());
     String expression = emitter.eval(ast);
     if (expression == null || expression.isBlank()) {
       return Optional.empty();
