@@ -29,6 +29,7 @@ public final class P4SourceText {
   /** Returns lexical input, without evaluating a node or using its debug representation. */
   public String text(Object value) {
     if (value == null) return null;
+    if (value instanceof Optional<?> optional) return text(optional.orElse(null));
     if (value instanceof String text) return text;
     int[] span = spans.apply(value).orElseThrow(() -> new IllegalArgumentException(
         "No owned source span for " + value.getClass().getSimpleName()));

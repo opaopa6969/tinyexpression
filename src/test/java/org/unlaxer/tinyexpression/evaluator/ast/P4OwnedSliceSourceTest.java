@@ -37,6 +37,10 @@ public class P4OwnedSliceSourceTest {
     }
   }
 
+  private Object captureValue(Object value) {
+    return value instanceof Optional<?> optional ? optional.orElse(null) : value;
+  }
+
   private boolean hasOwnedSnapshotApi() {
     try {
       TinyExpressionP4Mapper.class.getMethod("selectParsedTokenWithSourceMap", Token.class, String.class);
@@ -110,7 +114,7 @@ public class P4OwnedSliceSourceTest {
       String formula = "/*😀*/ 'abcdef'[" + sample[0] + ":]";
       var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
       assertTrue(formula, parsed.ast() instanceof SliceExpr);
-      Object start = ((SliceExpr) parsed.ast()).start();
+      Object start = captureValue(((SliceExpr) parsed.ast()).start());
       if (expectedNodeAlias != null) {
         if (Boolean.parseBoolean(expectedNodeAlias)) {
           assertTrue(formula + " must retain the generated semantic node", start instanceof TinyExpressionP4AST);
@@ -135,7 +139,8 @@ public class P4OwnedSliceSourceTest {
     var parsed = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes.string);
     var slice = (SliceExpr) parsed.ast();
     String expected = System.getProperty("tinyexpression.expected.mapper.nodeAlias");
-    Object[] indices = {slice.start(), slice.end(), slice.step()};
+    Object[] indices = {
+        captureValue(slice.start()), captureValue(slice.end()), captureValue(slice.step())};
     String[] lexical = {"1", "5", "2"};
     P4PreferredAstMapper.parseDetailed("9876", ExpressionTypes._float);
     for (int i = 0; i < indices.length; i++) {

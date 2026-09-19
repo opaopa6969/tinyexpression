@@ -14,3 +14,8 @@ CIのpublished/source generator行列は独立した空Maven repositoryを使い
 `P4OptionalExternalQualifierTest`で実際のfield型とgenerated backendの挙動を確認する。
 source pinはcapture cardinality修正revisionで固定する。
 これはJava外部呼び出しのAPI移行であり、RustからJava reflectionを実行できるという意味ではない。
+
+同じcardinality修正により、`SliceExpr.start/end/step`も開発版では
+`Optional<Object>`になる。`P4SourceText`はOptionalコンテナではなくpresent値のidentityを
+source-mapで引き、emptyは従来の欠落値と同じ`null`として扱う。これにより公開版の
+nullable/String・Node形状と開発版のOptional形状で、sliceの字句解釈を共通に保つ。
