@@ -14,9 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         generator: [published, source]
-    env:
-      # Never let a development install of version 3.0.15 masquerade as Central's release.
-      MAVEN_REPO: ${{ runner.temp }}/mapper-compatibility-${{ matrix.generator }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -25,6 +22,10 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Create an empty Maven repository on the assigned runner
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/mapper-compatibility.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
       - uses: actions/checkout@v6
         if: matrix.generator == 'source'
         with:
