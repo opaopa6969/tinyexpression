@@ -1,0 +1,11 @@
+[workspace]
+members = ["tinyexpression-rs"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.85"
+license = "MIT"
+
+[workspace.dependencies]
+unlaxer-runtime = { git = "https://github.com/opaopa6969/unlaxer-parser.git", rev = "77b3ca1b59f6e50d31c455a8a8c9930bc8fce3d5" }

@@ -7,6 +7,47 @@ on:
     branches: [ master, main ]
 
 jobs:
+  rust-parser:
+    name: Rust P4 parser binary
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6
+        with:
+          repository: opaopa6969/unlaxer-parser
+          ref: 77b3ca1b59f6e50d31c455a8a8c9930bc8fce3d5
+          path: unlaxer-parser
+      - name: Set up Rust 1.85
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustup default 1.85.0
+      - name: Verify generated P4 sources and pinned runtime
+        run: bash rust/check-generated.sh "$GITHUB_WORKSPACE/unlaxer-parser"
+      - name: Test and lint Rust parser
+        run: |
+          cargo fmt --all --manifest-path rust/Cargo.toml --check
+          cargo test --locked --manifest-path rust/Cargo.toml
+          cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets -- -D warnings
+      - name: Build and smoke-test release binary
+        run: |
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs
+          printf '%s' '1 + 2' | rust/target/release/tinyexpression-rs parse - | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
+          smoke_file=$(mktemp "$RUNNER_TEMP/tinyexpression-rs.XXXXXX")
+          printf '%s\n' "var \$price as number set 3;" "\$price + 4" > "$smoke_file"
+          rust/target/release/tinyexpression-rs parse "$smoke_file" | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
+      - name: Package Linux x86_64 binary
+        run: |
+          package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-rs-package.XXXXXX")
+          install -m 0755 rust/target/release/tinyexpression-rs "$package_dir/tinyexpression-rs"
+          install -m 0644 LICENSE "$package_dir/LICENSE"
+          install -m 0644 rust/tinyexpression-rs/README.md "$package_dir/README.md"
+          tar -czf rust/target/tinyexpression-rs-linux-x86_64.tar.gz -C "$package_dir" tinyexpression-rs LICENSE README.md
+      - uses: actions/upload-artifact@v6
+        with:
+          name: tinyexpression-rs-linux-x86_64
+          path: rust/target/tinyexpression-rs-linux-x86_64.tar.gz
+          if-no-files-found: error
+
   mapper-compatibility:
     name: Mapper compatibility (${{ matrix.generator }})
     runs-on: ubuntu-latest
@@ -31,7 +72,7 @@ jobs:
         with:
           repository: opaopa6969/unlaxer-parser
           # Capture cardinality contract; update together with its compatibility oracle.
-          ref: 247e7d4e86c408884c29bffb41b4e48c3463ae54
+          ref: 77b3ca1b59f6e50d31c455a8a8c9930bc8fce3d5
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -47,6 +88,13 @@ jobs:
           -Dtinyexpression.expected.mapper.nodeAlias=${{ matrix.generator == 'source' }}
           -Dtinyexpression.expected.mapper.optionalQualifier=${{ matrix.generator == 'source' }}
           -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest
+      - name: Verify shared Java/Rust parser fixtures with the pinned source generator
+        if: matrix.generator == 'source'
+        working-directory: tinyexpression
+        run: >-
+          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          -Dtinyexpression.skipRailroad=true -Dtinyexpression.rust.shared=true
+          -Dtest=P4RustSharedFixtureAcceptanceTest
       - uses: actions/upload-artifact@v6
         if: always()
         with:
