@@ -5,6 +5,7 @@ import java.util.List;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Evaluator;
+import org.unlaxer.tinyexpression.p4.P4SourceText;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
@@ -19,6 +20,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   private final ExpressionType resultType;
   private final ExpressionType numberType;
+  private final P4SourceText sourceText;
   private final java.util.Map<String, TinyExpressionP4AST> methods = new java.util.LinkedHashMap<>();
   private final java.util.Map<String, TinyExpressionP4AST> declarations = new java.util.LinkedHashMap<>();
   private final java.util.Map<String, ExpressionType> declaredVariableTypes = new java.util.LinkedHashMap<>();
@@ -37,8 +39,15 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
   }
 
   public P4TypedJavaCodeEmitter(SpecifiedExpressionTypes types, String sourceFormula) {
+    this(types, sourceFormula, P4SourceText.lexicalOnly());
+  }
+
+  /** The resolver must belong to the AST being emitted; slice indices retain their lexical meaning. */
+  public P4TypedJavaCodeEmitter(SpecifiedExpressionTypes types, String sourceFormula,
+      P4SourceText sourceText) {
     this.resultType = types.resultType() != null ? types.resultType() : ExpressionTypes.object;
     this.numberType = resolveNumberType(types);
+    this.sourceText = java.util.Objects.requireNonNull(sourceText, "sourceText");
   }
 
   private static ExpressionType resolveNumberType(SpecifiedExpressionTypes types) {
@@ -1068,11 +1077,12 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
     return sb.toString();
   }
 
-  private String renderSliceIndexExpr(String index) {
-    if (index == null) {
+  private String renderSliceIndexExpr(Object index) {
+    String text = sourceText.text(index);
+    if (text == null) {
       return null;
     }
-    String stripped = index.strip();
+    String stripped = text.strip();
     return stripped.isEmpty() ? null : stripped;
   }
 
