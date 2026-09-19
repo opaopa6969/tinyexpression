@@ -71,8 +71,8 @@ jobs:
         if: matrix.generator == 'source'
         with:
           repository: opaopa6969/unlaxer-parser
-          # Capture cardinality contract; update together with its compatibility oracle.
-          ref: 3c38c96a08aa452f5b50f8682fe04f6409f1008c
+          # Source-mapped alternate-entry contract; update together with its compatibility oracle.
+          ref: ea85386aea865cdbb775144e910ba96811b2a64d
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -87,7 +87,7 @@ jobs:
           -Dtinyexpression.expected.mapper.snapshot=${{ matrix.generator == 'source' }}
           -Dtinyexpression.expected.mapper.nodeAlias=${{ matrix.generator == 'source' }}
           -Dtinyexpression.expected.mapper.optionalQualifier=${{ matrix.generator == 'source' }}
-          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest
+          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
         working-directory: tinyexpression

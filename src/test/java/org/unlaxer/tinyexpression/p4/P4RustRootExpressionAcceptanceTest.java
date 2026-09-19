@@ -8,6 +8,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.Test;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 /** Verifies Java and Rust public P4 frontends against the same root-dispatch corpus. */
 public class P4RustRootExpressionAcceptanceTest {
@@ -34,6 +35,9 @@ public class P4RustRootExpressionAcceptanceTest {
           parsed.ast().getClass().getSimpleName());
       assertTrue(id + " must contain " + expectedNode + ": " + parsed.ast(),
           parsed.ast().toString().contains(expectedNode));
+      assertEquals(id + " owned source",
+          TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(formula).strip(),
+          parsed.sourceText().text(parsed.ast()).strip());
     }
   }
 }

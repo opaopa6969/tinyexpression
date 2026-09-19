@@ -281,7 +281,8 @@ public final class P4PreferredAstMapper {
     // Keep source offsets stable while accepting comments in positions where the generated
     // grammar's interleave metadata is not applied to nested alternatives.
     String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
-    Token rootToken = parseRootToken(parserSource, deadlineNanos);
+    ParsedRoot parsedRoot = parseRootToken(parserSource, deadlineNanos);
+    Token rootToken = parsedRoot.token();
     String sourceForSpanComparison = parserSource;
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
@@ -289,7 +290,8 @@ public final class P4PreferredAstMapper {
         continue;
       }
       try {
-        P4SourceMapping.Selection mappedAst = P4SourceMapping.select(rootToken, candidate, parserSource);
+        P4SourceMapping.Selection mappedAst = P4SourceMapping.select(
+            rootToken, parsedRoot.legacyToken(), candidate, parserSource, parsedRoot.entryPoint());
         if (!coversWholeSource(sourceForSpanComparison, mappedAst.token())) {
           continue;
         }
@@ -302,7 +304,8 @@ public final class P4PreferredAstMapper {
       }
     }
     if (allowDefault) {
-      P4SourceMapping.Selection selection = P4SourceMapping.select(rootToken, null, parserSource);
+      P4SourceMapping.Selection selection = P4SourceMapping.select(
+          rootToken, parsedRoot.legacyToken(), null, parserSource, parsedRoot.entryPoint());
       TinyExpressionP4AST mapped = selection.ast();
       if (mapped != null) {
         return new ParsedAst(mapped, "default", selection.sourceText());
@@ -339,17 +342,19 @@ public final class P4PreferredAstMapper {
    * {@code BooleanExpression} as the root. This adds cost only for inputs the standard
    * parse already rejected, leaving the hot path untouched.
    */
-  private static Token parseRootToken(String source, long deadlineNanos) {
+  private static ParsedRoot parseRootToken(String source, long deadlineNanos) {
     ParseResult primary = parseWithRoot(TinyExpressionP4Parsers.getRootParser(), source, deadlineNanos);
     if (primary.fullyConsumed(source)) {
-      return primary.rootToken();
+      return new ParsedRoot(
+          primary.rootToken(), primary.legacyToken(), P4SourceMapping.EntryPoint.ROOT);
     }
     // issue #23 compatibility retry: a bare top-level boolean comparison can be shadowed by
     // top-level expression dispatch. Retry with BooleanExpression as the generated root.
     ParseResult booleanRoot = parseWithRoot(
         Parser.get(TinyExpressionP4Parsers.BooleanExpressionParser.class), source, deadlineNanos);
     if (booleanRoot.fullyConsumed(source)) {
-      return booleanRoot.rootToken();
+      return new ParsedRoot(
+          booleanRoot.rootToken(), booleanRoot.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE);
     }
     if (!primary.succeeded()) {
       throw new IllegalArgumentException("Parse failed: " + source);
@@ -389,19 +394,35 @@ public final class P4PreferredAstMapper {
       registerDeadlineListener(context, deadlineNanos);
     }
     Parsed parsed;
+    int consumed = -1;
+    Token rootToken = null;
+    Token legacyToken = null;
     try {
       parsed = rootParser.parse(context);
+      if (parsed.isSucceeded()) {
+        consumed = consumedLengthCompat(parsed.getConsumed());
+        rootToken = parsed.getRootToken(false);
+        legacyToken = parsed.getRootToken(true);
+        for (Token committed : context.getCurrent().getTokens()) {
+          if (committed.parser == rootParser) {
+            rootToken = committed;
+            break;
+          }
+        }
+      }
     } finally {
       closeParseContextQuietly(context);
     }
     if (!parsed.isSucceeded()) {
-      return new ParseResult(false, -1, null);
+      return new ParseResult(false, -1, null, null);
     }
-    int consumed = consumedLengthCompat(parsed.getConsumed());
-    return new ParseResult(true, consumed, parsed.getRootToken(true));
+    return new ParseResult(true, consumed, rootToken, legacyToken);
   }
 
-  private record ParseResult(boolean succeeded, int consumed, Token rootToken) {
+  private record ParsedRoot(
+      Token token, Token legacyToken, P4SourceMapping.EntryPoint entryPoint) {}
+
+  private record ParseResult(boolean succeeded, int consumed, Token rootToken, Token legacyToken) {
     boolean fullyConsumed(String source) {
       return succeeded && consumed == source.length();
     }

@@ -155,8 +155,9 @@ public final class TinyExpressionParserCapabilities {
         builder.append(' ').append(' ');
         i += 2;
         while (i < source.length() && source.charAt(i) != '\n') {
-          builder.append(source.charAt(i) == '\r' ? '\r' : ' ');
-          i++;
+          int codePoint = source.codePointAt(i);
+          builder.append(codePoint == '\r' ? '\r' : ' ');
+          i += Character.charCount(codePoint);
         }
         if (i < source.length()) {
           builder.append(source.charAt(i));
@@ -174,8 +175,9 @@ public final class TinyExpressionParserCapabilities {
             i++;
             break;
           }
-          builder.append(inner == '\n' || inner == '\r' ? inner : ' ');
-          i++;
+          int codePoint = source.codePointAt(i);
+          builder.append(codePoint == '\n' || codePoint == '\r' ? (char) codePoint : ' ');
+          i += Character.charCount(codePoint);
         }
         continue;
       }

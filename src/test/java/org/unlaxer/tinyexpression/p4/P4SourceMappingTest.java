@@ -6,11 +6,15 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.unlaxer.Token;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BinaryExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 public class P4SourceMappingTest {
   private static BinaryExpr number(String value) { return new BinaryExpr(null, List.of(value), List.of()); }
@@ -50,6 +54,42 @@ public class P4SourceMappingTest {
   public static final class BrokenMapper extends LegacyMapper {
     public static Object selectParsedTokenWithSourceMap(Token token, String preferred) { return new Object(); }
   }
+  public static final class LegacyOwnedMapper {
+    private static final Map<Object, int[]> SPANS = new IdentityHashMap<>();
+    public static synchronized LegacySelection mapParsedToken(Token token, String preferred) {
+      TinyExpressionP4AST ast = number(preferred);
+      SPANS.clear();
+      SPANS.put(ast, new int[]{0, preferred.codePointCount(0, preferred.length())});
+      return new LegacySelection(token, ast);
+    }
+    public static synchronized Optional<int[]> sourceSpanOf(Object node) {
+      return Optional.ofNullable(SPANS.get(node)).map(int[]::clone);
+    }
+  }
+  public static final class LegacyUtf16LengthMapper {
+    private static final Map<Object, int[]> SPANS = new IdentityHashMap<>();
+    public static synchronized LegacySelection mapParsedToken(Token token, String preferred) {
+      TinyExpressionP4AST ast = number(preferred);
+      SPANS.clear();
+      SPANS.put(ast, new int[]{1, 1 + preferred.length()});
+      return new LegacySelection(token, ast);
+    }
+    public static synchronized Optional<int[]> sourceSpanOf(Object node) {
+      return Optional.ofNullable(SPANS.get(node)).map(int[]::clone);
+    }
+  }
+  public static final class EntryPointMapper {
+    static int rootCalls;
+    static int alternateCalls;
+    public static NewSelection selectParsedTokenWithSourceMap(Token token, String preferred) {
+      rootCalls++;
+      return new NewSelection(token, new Snapshot(number(preferred), 0, preferred.length()));
+    }
+    public static NewSelection selectSubtreeTokenWithSourceMap(Token token, String preferred) {
+      alternateCalls++;
+      return new NewSelection(token, new Snapshot(number(preferred), 0, preferred.length()));
+    }
+  }
 
   @Test public void legacyCapabilityFallsBackOnlyWhenSelectorIsAbsent() {
     LegacyMapper.calls = 0;
@@ -80,6 +120,30 @@ public class P4SourceMappingTest {
     assertEquals(0, LegacyMapper.calls);
   }
 
+  @Test public void alternateEntryUsesOnlyTheExplicitSubtreeSelector() {
+    EntryPointMapper.rootCalls = 0;
+    EntryPointMapper.alternateCalls = 0;
+    var selected = P4SourceMapping.select(EntryPointMapper.class, null, "12", "12",
+        P4SourceMapping.EntryPoint.ALTERNATE);
+    assertEquals(number("12"), selected.ast());
+    assertEquals(0, EntryPointMapper.rootCalls);
+    assertEquals(1, EntryPointMapper.alternateCalls);
+  }
+
+  @Test public void publishedCompatibilityCopiesLiveSpansBeforeLaterMappings() {
+    var first = P4SourceMapping.select(LegacyOwnedMapper.class, null, "12", "12");
+    var second = P4SourceMapping.select(LegacyOwnedMapper.class, null, "345", "345");
+    assertEquals("12", first.sourceText().text(first.ast()));
+    assertEquals("345", second.sourceText().text(second.ast()));
+    assertThrows(IllegalArgumentException.class, () -> first.sourceText().text(second.ast()));
+  }
+
+  @Test public void publishedCompatibilityNormalizesMixedUnicodeOffsets() {
+    var selected = P4SourceMapping.select(
+        LegacyUtf16LengthMapper.class, null, "'😀'", "x'😀'y");
+    assertEquals("'😀'", selected.sourceText().text(selected.ast()));
+  }
+
   @Test public void lexicalAndOwnedTextDoNotEvaluateOrStringifyNodes() {
     var lexical = P4SourceText.lexicalOnly();
     assertNull(lexical.text(null));
@@ -108,6 +172,16 @@ public class P4SourceMappingTest {
     }
   }
 
+  @Test public void commentStrippingPreservesUnicodeCodePointCoordinates() {
+    for (String source : List.of("/*😀*/1<2/*終*/", "//😀終\n1<2", "'/*😀*/'==\"//終\"")) {
+      String stripped = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+      assertEquals(source, source.codePointCount(0, source.length()),
+          stripped.codePointCount(0, stripped.length()));
+      assertEquals(source, source.chars().filter(value -> value == '\n').count(),
+          stripped.chars().filter(value -> value == '\n').count());
+    }
+  }
+
   @Test public void realGeneratedMapperUsesItsDeclaredCapabilityAndActualParserInput() throws Exception {
     boolean hasSnapshot;
     try {
@@ -120,13 +194,56 @@ public class P4SourceMappingTest {
     if (expected != null) assertEquals("wrong generator on test classpath", Boolean.parseBoolean(expected), hasSnapshot);
     var first = P4PreferredAstMapper.parseDetailed("/*😀*/ 2");
     P4PreferredAstMapper.parseDetailed("999");
-    if (hasSnapshot) assertEquals("2", first.sourceText().text(first.ast()).strip());
-    else assertThrows(IllegalArgumentException.class, () -> first.sourceText().text(first.ast()));
+    assertEquals("2", first.sourceText().text(first.ast()).strip());
+    boolean hasSubtreeSnapshot;
+    try {
+      TinyExpressionP4Mapper.class.getMethod(
+          "selectSubtreeTokenWithSourceMap", Token.class, String.class);
+      hasSubtreeSnapshot = true;
+    } catch (NoSuchMethodException absent) {
+      hasSubtreeSnapshot = false;
+    }
+    if (expected != null && hasSnapshot) {
+      assertEquals("source generator must expose the paired subtree selector",
+          Boolean.parseBoolean(expected), hasSubtreeSnapshot);
+    }
+    var comparison = P4PreferredAstMapper.parseDetailed("/*😀*/1<2/*終*/");
+    P4PreferredAstMapper.parseDetailed("8+9");
+    String comparisonInput = TinyExpressionParserCapabilities
+        .stripJavaStyleCommentsPreservingLayout("/*😀*/1<2/*終*/");
+    assertEquals(comparisonInput.strip(), comparison.sourceText().text(comparison.ast()).strip());
+    for (String unicodeExpression : List.of("'😀'", "'😀'=='😀'")) {
+      var unicode = P4PreferredAstMapper.parseDetailed(unicodeExpression);
+      assertEquals(unicodeExpression, unicode.sourceText().text(unicode.ast()));
+    }
     var oldConstructor = new P4PreferredAstMapper.ParsedAst(first.ast(), "compat");
     assertSame(first.ast(), oldConstructor.ast());
     assertEquals("compat", oldConstructor.selectionMode());
     assertEquals("2", oldConstructor.sourceText().text("2"));
     var detailed = P4PreferredAstMapper.parseByAstSimpleNamesDetailed("2", List.of("BinaryExpr"), 0L);
     assertEquals(P4PreferredAstMapper.parseByAstSimpleNames("2", List.of("BinaryExpr"), 0L), detailed.ast());
+  }
+
+  @Test public void realSnapshotsRemainOwnedAfterConcurrentRootAndAlternateMappings() throws Exception {
+    List<String> formulas = List.of("1+2", "1<2", "1<2&2<3", "/*😀*/2>=1/*終*/");
+    List<Callable<P4PreferredAstMapper.ParsedAst>> jobs = formulas.stream()
+        .<Callable<P4PreferredAstMapper.ParsedAst>>map(formula ->
+            () -> P4PreferredAstMapper.parseDetailed(formula)).toList();
+    List<P4PreferredAstMapper.ParsedAst> parsed;
+    try (var executor = Executors.newFixedThreadPool(formulas.size())) {
+      parsed = executor.invokeAll(jobs).stream().map(future -> {
+        try {
+          return future.get(30, TimeUnit.SECONDS);
+        } catch (Exception failure) {
+          throw new AssertionError(failure);
+        }
+      }).toList();
+    }
+    P4PreferredAstMapper.parseDetailed("999");
+    for (int i = 0; i < formulas.size(); i++) {
+      String expected = TinyExpressionParserCapabilities
+          .stripJavaStyleCommentsPreservingLayout(formulas.get(i)).strip();
+      assertEquals(formulas.get(i), expected, parsed.get(i).sourceText().text(parsed.get(i).ast()).strip());
+    }
   }
 }
