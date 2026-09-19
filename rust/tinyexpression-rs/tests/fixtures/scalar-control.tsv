@@ -49,6 +49,7 @@ ternary-boolean-lazy	boolean	(true?true:$missing)	value	true
 match-number	float	match{false->3,2>1->12,default->99}	value	41400000
 match-string	string	match{1>2->'no',true->'yes',default->'default'}	value	yes
 match-boolean	boolean	match{false->false,true->true,default->false}	value	true
+match-boolean-lazy-variable	boolean	match{true->true,false->$missing,default->$missing}	value	true
 match-number-lazy	float	match{true->12,false->$missing,default->$missing}	value	41400000
 or-eager	boolean	true|('abc'[::0]=='')	error	-
 and-eager	boolean	false&('abc'[::0]=='')	error	-

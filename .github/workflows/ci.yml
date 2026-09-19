@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           repository: opaopa6969/unlaxer-parser
-          ref: 3c38c96a08aa452f5b50f8682fe04f6409f1008c
+          ref: 063685303c28a145d5bd9a0ca0e3b969e228a122
           path: unlaxer-parser
       - name: Set up Rust 1.85
         run: |

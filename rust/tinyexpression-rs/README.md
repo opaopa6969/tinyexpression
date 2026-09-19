@@ -28,14 +28,14 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 
 ## 保証範囲
 
-- unlaxer-parser `3c38c96a08aa452f5b50f8682fe04f6409f1008c` のruntimeとgeneratorを固定している。
+- unlaxer-parser `063685303c28a145d5bd9a0ca0e3b969e228a122` のruntimeとgeneratorを固定している。生成mapperはrule別のbounded-size関数へ分割され、debug/test buildでも2 MiB thread stack上のP4 parse+mappingを検証する。
 - Java P4と同じUBNFをsource of truthとし、生成5ファイルはCIでdrift検査する。
 - parserとevaluatorはJava・手書きparser・別評価器へfallbackしない。
 - top-levelの裸のboolean比較は、通常の`Formula`解析が数値prefixを選んで失敗した場合に限り、同じ生成文法の`BooleanExpression` ruleで全文を再解析して`FormulaExpr`へ包む。これはJavaの`P4PreferredAstMapper`と同じroot disambiguationであり、別parserへのfallbackではない。
 - evaluatorの対応範囲は、状態を必要としない f32 数値literalと四則演算、boolean literal・`not`・`|`・`&`・`^`・equality、文字列literal・連結・比較、数値比較、`if`・ternary、number/string/boolean `match`、括弧、空白・commentである。優先順位と左結合は生成P4 typed ASTそのものに従う。
 - Java意味論と同じく `|`・`&`・`^` は右辺も評価する eager 演算であり、`if`・ternary・`match` は選択された値だけを評価する。f32比較は `Float.compare` のNaN・signed-zero順序に一致する。
 - import、宣言、method、変数、組み込み/外部関数、slice、objectは未対応である。文脈依存のdocument要素は `context_required`、その他のtyped AST nodeは `unsupported_node` として明示的に失敗する。
-- 型hint付きvariableはhintを保持するが、hintによるAST familyの選択は未対応である。string/boolean hintだけを値に持つ`match`がnumber familyへ分類される既知課題は [tinyexpression #124](https://github.com/opaopa6969/tinyexpression/issues/124) で追跡する。
+- 型hint付きvariableはhintを保持し、number/string/boolean/objectの結果familyを選択する。directな`match`のcase/defaultで異なるhint familyを混在させた場合と、対応するmatch familyがないobject-result matchは型エラーになる。
 - `tests/fixtures/numeric-f32.tsv` は独立した期待 f32 bits を保持し、Rust library/CLIとJava `P4TypedAstEvaluator` の `p4-typed` runtimeが共有する。
 - `tests/fixtures/scalar-control.tsv` はboolean/string/比較/制御構文について、値・評価順序・Java/Rust parityを共有する。
 - `tests/fixtures/root-expression.tsv` はroot dispatchの全文消費、Java/Rustそれぞれの厳密なsemantic root、必要な子nodeを共有検証する。
