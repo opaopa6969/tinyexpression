@@ -63,6 +63,16 @@ Generated artifacts:
 | `P4TypedAstEvaluator` | Type-safe AST evaluator (PRIMARY) |
 
 The P4 stack provides type-safe `instanceof`-based dispatch — no regex fallback in LSP/DAP.
+
+Typed variable references retain their captured `VariableRefExpr.type` metadata. For
+expression-only frontend inputs, Java and Rust use that AST metadata after the ordinary permissive
+parse to reselect the `number`/`float`, `string`, `boolean`, or `object` result family. Full Formula
+documents retain their outer declarations, imports, methods, and source coordinates while the
+result expression subtree is reselected to the hinted family. The `as` keyword is optional and capitalized hints are
+accepted. Unhinted references remain number-first, and unhinted direct matches are resolved in
+Number → String → Boolean order. A match whose direct case/default values contain explicit hints
+from different families is rejected as a type error instead of being misclassified as a Number
+AST; object-result matches are rejected because the grammar has no object match family.
 The current grammar covers CodeBlock, boolean equality, string dot methods, slice variants,
 `isPresent(...)`, `inTimeRange(...)`, `inDayTimeRange(...)`, typed `if/ternary`, and strict `match` typing.
 

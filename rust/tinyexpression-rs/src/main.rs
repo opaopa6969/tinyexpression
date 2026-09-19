@@ -70,6 +70,13 @@ fn run() -> Result<(), u8> {
                 println!("{}", json_error("mapping", &error));
                 Err(EXIT_MAPPING)
             }
+            Err(error @ EvaluationError::TypeMismatch { .. }) => {
+                println!(
+                    "{{\"ok\":false,\"stage\":\"type\",\"error\":{}}}",
+                    error.canonical_json()
+                );
+                Err(EXIT_MAPPING)
+            }
             Err(error) => {
                 println!(
                     "{{\"ok\":false,\"stage\":\"evaluation\",\"error\":{}}}",
@@ -94,6 +101,15 @@ fn run() -> Result<(), u8> {
         }
         Err(FrontendError::Mapping(error)) => {
             println!("{}", json_error("mapping", &error));
+            Err(EXIT_MAPPING)
+        }
+        Err(FrontendError::TypeMismatch { message, span }) => {
+            println!(
+                "{{\"ok\":false,\"stage\":\"type\",\"span\":[{},{}],\"message\":{}}}",
+                span.start,
+                span.end,
+                unlaxer_runtime::json_string(&message)
+            );
             Err(EXIT_MAPPING)
         }
     }
