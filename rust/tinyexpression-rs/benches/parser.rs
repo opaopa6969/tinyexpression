@@ -42,8 +42,8 @@ fn parser_benchmarks(criterion: &mut Criterion) {
     let mut group = criterion.benchmark_group("tinyexpression");
 
     for (fixture_name, source, tree) in &fixtures {
-        // This intentionally exercises the current public implementation, including
-        // rebuilding the generated rules on every parse.
+        // This exercises the public generated path. The immutable grammar graph is
+        // initialized once and shared; ParseContext and all mutable parse state stay local.
         group.bench_with_input(
             BenchmarkId::new("parse-only", fixture_name),
             source,

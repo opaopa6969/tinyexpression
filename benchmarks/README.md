@@ -4,7 +4,10 @@ This benchmark compares the generated Java and Rust frontends from the same
 TinyExpression P4 UBNF. It is an opt-in developer benchmark, not a CI timing
 gate.
 
-Recorded result: [2026-09-20 Java/Rust parser benchmark](results/2026-09-20-java-rust-parser.md)
+Recorded results:
+
+- [2026-09-20 Java/Rust parser benchmark](results/2026-09-20-java-rust-parser.md)
+- [2026-09-20 Rust shared-grammar follow-up](results/2026-09-20-rust-shared-grammar.md)
 
 ## Corpus
 
@@ -44,11 +47,12 @@ non-memoized baseline, while deliberately excluding facade-specific work.
 
 The current implementations do not perform identical internal setup. Java
 reuses a lazy singleton parser graph and its mapper serializes access to global
-identity-based source maps. Rust currently constructs the generated rule list
-for every parse before the runtime owns it. The benchmark intentionally
-measures the generated/runtime implementations currently shipped while keeping
-the cross-target operation boundaries comparable; these internal differences
-must be considered when interpreting language-level conclusions.
+identity-based source maps. Since unlaxer-parser `3c38c96`, Rust also reuses an
+immutable process-wide grammar graph while keeping every mutable `ParseContext`
+local. The benchmark intentionally measures the generated/runtime implementations
+currently shipped while keeping the cross-target operation boundaries comparable;
+other internal differences must still be considered when interpreting
+language-level conclusions.
 
 ## Running
 
