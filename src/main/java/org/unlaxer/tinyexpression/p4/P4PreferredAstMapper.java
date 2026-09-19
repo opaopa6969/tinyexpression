@@ -23,7 +23,11 @@ public final class P4PreferredAstMapper {
 
   private P4PreferredAstMapper() {}
 
-  public record ParsedAst(TinyExpressionP4AST ast, String selectionMode) {}
+  public record ParsedAst(TinyExpressionP4AST ast, String selectionMode, P4SourceText sourceText) {
+    public ParsedAst(TinyExpressionP4AST ast, String selectionMode) {
+      this(ast, selectionMode, P4SourceText.lexicalOnly());
+    }
+  }
 
   public static TinyExpressionP4AST parse(String formula) {
     return parseDetailed(formula, null).ast();
@@ -88,11 +92,17 @@ public final class P4PreferredAstMapper {
    */
   public static TinyExpressionP4AST parseByAstSimpleNames(
       String formula, List<String> candidates, long deadlineNanos) {
+    return parseByAstSimpleNamesDetailed(formula, candidates, deadlineNanos).ast();
+  }
+
+  /** Retains the selected AST's owned source resolver for delayed evaluation. */
+  public static ParsedAst parseByAstSimpleNamesDetailed(
+      String formula, List<String> candidates, long deadlineNanos) {
     String source = formula == null ? "" : formula;
     if (candidates == null || candidates.isEmpty()) {
       throw new IllegalArgumentException("No generated AST candidates supplied");
     }
-    return parseMappedCandidates(source, candidates, false, deadlineNanos).ast();
+    return parseMappedCandidates(source, candidates, false, deadlineNanos);
   }
 
   /** パース期限超過。生成 P4 専用バックエンドでは明示的なパース失敗として扱う。 */
@@ -276,23 +286,23 @@ public final class P4PreferredAstMapper {
         continue;
       }
       try {
-        TinyExpressionP4Mapper.MappedAst mappedAst =
-            TinyExpressionP4Mapper.mapParsedToken(rootToken, candidate);
+        P4SourceMapping.Selection mappedAst = P4SourceMapping.select(rootToken, candidate, parserSource);
         if (!coversWholeSource(sourceForSpanComparison, mappedAst.token())) {
           continue;
         }
         TinyExpressionP4AST mapped = mappedAst.ast();
         if (mapped != null && candidate.equals(mapped.getClass().getSimpleName())) {
-          return new ParsedAst(mapped, "preferred:" + candidate);
+          return new ParsedAst(mapped, "preferred:" + candidate, mappedAst.sourceText());
         }
       } catch (RuntimeException failure) {
         lastFailure = failure;
       }
     }
     if (allowDefault) {
-      TinyExpressionP4AST mapped = TinyExpressionP4Mapper.mapParsedToken(rootToken).ast();
+      P4SourceMapping.Selection selection = P4SourceMapping.select(rootToken, null, parserSource);
+      TinyExpressionP4AST mapped = selection.ast();
       if (mapped != null) {
-        return new ParsedAst(mapped, "default");
+        return new ParsedAst(mapped, "default", selection.sourceText());
       }
     }
     if (lastFailure != null) {
