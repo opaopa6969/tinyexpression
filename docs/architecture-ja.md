@@ -65,6 +65,7 @@ P4 パーサーは `tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4
 P4 スタックは `instanceof` ベースのディスパッチを提供します。LSP/DAP での正規表現フォールバックはありません。
 
 型hint付き変数参照は、通常の寛容なパース後にcapture済みの `VariableRefExpr.type` をJava/Rustが読み、`number`/`float`、`string`、`boolean`、`object` の結果familyを再選択します。完全なFormula文書でも外側の宣言・import・methodとsource座標を保持したまま、結果expression subtreeをhint指定のfamilyへ再選択します。`as` は省略可能で、hintの先頭大文字表記も受理します。hintなしの変数参照はnumber-firstとし、hintなしのdirect matchも Number → String → Boolean の順で決定します。directなcase/defaultの明示hintが単一familyに揃わないmatchは型エラーとして拒否し、object-result matchも対応するmatch familyがないため型エラーにします。
+strict match診断はparse結果が所有する不変な `P4SourceText` を利用します。spanはcode-point基準の半開区間とし、LSP境界でのみUTF-16 positionへ変換します。`P4SourceText` を受け取らない旧validator overloadはsource互換のため残しますが、正確なnode spanを取得できない場合はFormula全体を報告します。
 現行文法では CodeBlock、boolean equality、string dot method、slice、`isPresent(...)`、
 `inTimeRange(...)`、`inDayTimeRange(...)`、typed `if/ternary`、strict `match` typing を扱います。
 

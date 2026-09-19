@@ -208,6 +208,33 @@ fn library_rejects_mixed_match_hint_families_explicitly() {
 }
 
 #[test]
+fn strict_match_nodes_use_owned_unicode_safe_spans() {
+    for line in include_str!("fixtures/strict-match-errors.tsv")
+        .lines()
+        .filter(|line| !line.is_empty() && !line.starts_with('#'))
+    {
+        let fields: Vec<_> = line.split('\t').collect();
+        assert_eq!(fields.len(), 3, "invalid fixture row: {line}");
+        let (id, source, expected_snippet) = (fields[0], fields[1], fields[2]);
+        let ast = parse(source).unwrap_or_else(|error| panic!("{id}: {error}"));
+        let start = source[..source.find(expected_snippet).unwrap()]
+            .chars()
+            .count();
+        let end = start + expected_snippet.chars().count();
+        let canonical = ast.canonical_json();
+        assert!(
+            canonical.contains(&format!(
+                r#""type":"MethodInvocationExpr","span":[{start},{end}]"#
+            )),
+            "{id}: {canonical}"
+        );
+        let chars: Vec<_> = source.chars().collect();
+        let snippet: String = chars[start..end].iter().collect();
+        assert_eq!(snippet, expected_snippet, "{id}");
+    }
+}
+
+#[test]
 fn fallback_preserves_formula_and_expression_span_contract() {
     for (source, expression_start) in [("/*lead*/1<2/*tail*/", 8), ("/*😀*/1<2/*終*/", 5)] {
         let ast = parse(source).expect("commented bare comparison");

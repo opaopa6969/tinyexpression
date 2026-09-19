@@ -48,7 +48,8 @@ final class GeneratedAstRuntimeProbe {
       P4PreferredAstMapper.ParsedAst parsed = P4PreferredAstMapper.parseByAstSimpleNamesDetailed(
           source, preferredAstSimpleNames, deadlineNanos);
       if (parsed.ast() != null
-          && P4StrictMatchTypingValidator.firstViolation(parsed.ast(), source).isPresent()) {
+          && P4StrictMatchTypingValidator.firstViolation(
+              parsed.ast(), source, parsed.sourceText()).isPresent()) {
         return Optional.empty();
       }
       return parsed.ast() == null ? Optional.empty() : Optional.of(parsed);
@@ -80,7 +81,9 @@ final class GeneratedAstRuntimeProbe {
       // ScopeStore.registerDispatcher is called on the ParseContext before parsing,
       // preventing "transaction nest is illegal" errors that occur when the dispatcher
       // is absent from the generated TinyExpressionP4Mapper.parse method.
-      Object ast = P4PreferredAstMapper.parseByAstSimpleName(source, preferredAstSimpleName, deadlineNanos);
+      P4PreferredAstMapper.ParsedAst parsed = P4PreferredAstMapper.parseByAstSimpleNameDetailed(
+          source, preferredAstSimpleName, deadlineNanos);
+      Object ast = parsed.ast();
       if (ast != null
           && preferredAstSimpleName != null
           && !preferredAstSimpleName.isBlank()
@@ -88,7 +91,8 @@ final class GeneratedAstRuntimeProbe {
         return Optional.empty();
       }
       if (ast instanceof TinyExpressionP4AST typedAst
-          && P4StrictMatchTypingValidator.firstViolation(typedAst, source).isPresent()) {
+          && P4StrictMatchTypingValidator.firstViolation(
+              typedAst, source, parsed.sourceText()).isPresent()) {
         return Optional.empty();
       }
       return Optional.ofNullable(ast);

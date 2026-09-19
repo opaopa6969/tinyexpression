@@ -35,8 +35,16 @@ public final class P4SourceText {
         value -> value == node ? Optional.of(new int[] {0, end}) : spans.apply(value));
   }
 
-  Optional<int[]> ownedSpan(Object node) {
-    return spans.apply(node).map(value -> value.clone());
+  /** Returns an owned code-point half-open span, independent of later mapper calls. */
+  public Optional<int[]> spanOf(Object node) {
+    return spans.apply(node).map(value -> {
+      int sourceLength = parserSource == null ? -1 : parserSource.codePointCount(0, parserSource.length());
+      if (value.length != 2 || value[0] < 0 || value[1] < value[0]
+          || sourceLength < 0 || value[1] > sourceLength) {
+        throw new IllegalArgumentException("Invalid owned source span");
+      }
+      return value.clone();
+    });
   }
 
   /**
@@ -71,12 +79,8 @@ public final class P4SourceText {
     if (value == null) return null;
     if (value instanceof Optional<?> optional) return text(optional.orElse(null));
     if (value instanceof String text) return text;
-    int[] span = spans.apply(value).orElseThrow(() -> new IllegalArgumentException(
+    int[] span = spanOf(value).orElseThrow(() -> new IllegalArgumentException(
         "No owned source span for " + value.getClass().getSimpleName()));
-    if (parserSource == null || span.length != 2 || span[0] < 0 || span[1] < span[0]
-        || span[1] > parserSource.codePointCount(0, parserSource.length())) {
-      throw new IllegalArgumentException("Invalid owned source span");
-    }
     return parserSource.substring(parserSource.offsetByCodePoints(0, span[0]),
         parserSource.offsetByCodePoints(0, span[1]));
   }

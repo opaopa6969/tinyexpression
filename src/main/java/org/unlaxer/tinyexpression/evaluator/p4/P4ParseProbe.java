@@ -13,7 +13,8 @@ final class P4ParseProbe {
     try {
       P4PreferredAstMapper.ParsedAst parsed =
           P4PreferredAstMapper.parseDetailed(formula, specifiedExpressionTypes.resultType());
-      Optional<String> violation = P4StrictMatchTypingValidator.firstViolation(parsed.ast(), formula);
+      Optional<String> violation = P4StrictMatchTypingValidator.firstViolation(
+          parsed.ast(), formula, parsed.sourceText());
       if (violation.isPresent()) {
         return new Result(false, false, "semantic", parsed.ast().getClass().getSimpleName());
       }

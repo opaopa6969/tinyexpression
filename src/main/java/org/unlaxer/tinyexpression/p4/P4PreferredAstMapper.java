@@ -54,8 +54,8 @@ public final class P4PreferredAstMapper {
    * @throws IllegalArgumentException if the formula cannot be parsed
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
-    return parseViaMapperCompat(
-        formula == null ? "" : formula, preferredAstSimpleName, defaultParseDeadlineNanos());
+    return parseByAstSimpleNameDetailed(
+        formula, preferredAstSimpleName, defaultParseDeadlineNanos()).ast();
   }
 
   /**
@@ -86,7 +86,18 @@ public final class P4PreferredAstMapper {
    */
   public static TinyExpressionP4AST parseByAstSimpleName(
       String formula, String preferredAstSimpleName, long deadlineNanos) {
-    return parseViaMapperCompat(formula == null ? "" : formula, preferredAstSimpleName, deadlineNanos);
+    return parseByAstSimpleNameDetailed(formula, preferredAstSimpleName, deadlineNanos).ast();
+  }
+
+  /** Exact single-candidate mapping with its immutable owned source snapshot. */
+  public static ParsedAst parseByAstSimpleNameDetailed(
+      String formula, String preferredAstSimpleName, long deadlineNanos) {
+    String source = formula == null ? "" : formula;
+    return parseMappedCandidates(
+        source,
+        preferredAstSimpleName == null ? List.of() : List.of(preferredAstSimpleName),
+        preferredAstSimpleName == null,
+        deadlineNanos);
   }
 
   /**
@@ -280,19 +291,6 @@ public final class P4PreferredAstMapper {
     return new IllegalArgumentException(failure.getMessage(), failure);
   }
 
-  private static TinyExpressionP4AST parseViaMapperCompat(String source, String preferredAstSimpleName) {
-    return parseViaMapperCompat(source, preferredAstSimpleName, defaultParseDeadlineNanos());
-  }
-
-  private static TinyExpressionP4AST parseViaMapperCompat(
-      String source, String preferredAstSimpleName, long deadlineNanos) {
-    return parseMappedCandidates(
-        source,
-        preferredAstSimpleName == null ? List.of() : List.of(preferredAstSimpleName),
-        preferredAstSimpleName == null,
-        deadlineNanos).ast();
-  }
-
   private static ParsedAst parseMappedCandidates(
       String source, List<String> candidates, boolean allowDefault, long deadlineNanos) {
     // Keep source offsets stable while accepting comments in positions where the generated
@@ -363,7 +361,7 @@ public final class P4PreferredAstMapper {
     int[] documentExpressionSpan = null;
     int documentExpressionOffset = 0;
     if (documentRoot != null) {
-      documentExpressionSpan = parsed.sourceText().ownedSpan(documentRoot.expression())
+      documentExpressionSpan = parsed.sourceText().spanOf(documentRoot.expression())
           .orElseThrow(() -> new IllegalArgumentException(
               "No owned source span for Formula expression"));
       documentExpressionOffset = documentExpressionSpan[0];
