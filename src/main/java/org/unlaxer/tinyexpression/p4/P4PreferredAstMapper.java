@@ -10,7 +10,6 @@ import org.unlaxer.context.ParseContext;
 import org.unlaxer.dsl.runtime.ScopeStore;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
@@ -24,6 +23,10 @@ public final class P4PreferredAstMapper {
   private P4PreferredAstMapper() {}
 
   public record ParsedAst(TinyExpressionP4AST ast, String selectionMode, P4SourceText sourceText) {
+    public ParsedAst {
+      java.util.Objects.requireNonNull(sourceText, "sourceText");
+    }
+
     public ParsedAst(TinyExpressionP4AST ast, String selectionMode) {
       this(ast, selectionMode, P4SourceText.lexicalOnly());
     }

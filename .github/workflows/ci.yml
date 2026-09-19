@@ -7,6 +7,50 @@ on:
     branches: [ master, main ]
 
 jobs:
+  mapper-compatibility:
+    name: Mapper compatibility (${{ matrix.generator }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        generator: [published, source]
+    env:
+      # Never let a development install of version 3.0.15 masquerade as Central's release.
+      MAVEN_REPO: ${{ runner.temp }}/mapper-compatibility-${{ matrix.generator }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: tinyexpression
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - uses: actions/checkout@v6
+        if: matrix.generator == 'source'
+        with:
+          repository: opaopa6969/unlaxer-parser
+          # Snapshot API prerequisite; update deliberately together with its compatibility oracle.
+          ref: dfd1aae3d7c6ac5cbef786499d6f15b3b104b1cb
+          path: unlaxer-parser
+      - name: Install pinned development generator into its isolated repository
+        if: matrix.generator == 'source'
+        working-directory: unlaxer-parser
+        run: >-
+          mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
+          -Dmaven.repo.local="$MAVEN_REPO"
+      - name: Verify public and snapshot APIs without shared Maven state
+        working-directory: tinyexpression
+        run: >-
+          mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          -Dtinyexpression.expected.mapper.snapshot=${{ matrix.generator == 'source' }}
+          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: mapper-compatibility-${{ matrix.generator }}
+          path: tinyexpression/target/surefire-reports/
+          if-no-files-found: warn
+
   smoke:
     name: P4 smoke (targeted matrix)
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository

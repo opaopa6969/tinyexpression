@@ -20,6 +20,7 @@
 補助資料:
 
 - `docs/TINYEXPRESSION-UNLAXERDSL-HANDBOOK.md`（実装手順を運用目線で要約）
+- [AST sourceの所有とslice添字の互換移行](owned-source-migration.md)（公開版・開発版generatorの互換性）
 
 ---
 
