@@ -28,7 +28,7 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 
 ## 保証範囲
 
-- unlaxer-parser `77b3ca1b59f6e50d31c455a8a8c9930bc8fce3d5` のruntimeとgeneratorを固定している。
+- unlaxer-parser `3c38c96a08aa452f5b50f8682fe04f6409f1008c` のruntimeとgeneratorを固定している。
 - Java P4と同じUBNFをsource of truthとし、生成5ファイルはCIでdrift検査する。
 - parserとevaluatorはJava・手書きparser・別評価器へfallbackしない。
 - evaluatorの対応範囲は、状態を必要としない f32 数値literal（負数を含む）、四則演算、括弧、空白・commentである。生成 `FormulaExpr` → `ExpressionExpr` → `BinaryExpr` / `AstValue` のみを評価するため、優先順位と左結合はP4 typed ASTそのものに従う。
