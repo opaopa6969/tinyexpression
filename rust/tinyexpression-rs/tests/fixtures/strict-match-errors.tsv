@@ -1,0 +1,3 @@
+# id	formula	snippet
+unicode-direct-method	/*😀*/match{true->internal score(),default->0}	internal score()
+unicode-second-direct-method	/*𠮷*/match{false->0,true->internal calculate(),default->1}	internal calculate()

@@ -18,7 +18,7 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.NumberCaseVal
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.StringCaseValueExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.StringConcatExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.VariableRefExpr;
-import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
+import org.unlaxer.tinyexpression.p4.P4SourceText;
 
 /**
  * Semantic strict-typing guard for P4 match expressions.
@@ -36,33 +36,51 @@ public final class P4StrictMatchTypingValidator {
   private P4StrictMatchTypingValidator() {}
 
   public static Optional<String> firstViolation(TinyExpressionP4AST ast, String formula) {
-    return firstViolationDetail(ast, formula).map(Violation::message);
+    return firstViolation(ast, formula, P4SourceText.lexicalOnly());
+  }
+
+  public static Optional<String> firstViolation(
+      TinyExpressionP4AST ast, String formula, P4SourceText sourceText) {
+    return firstViolationDetail(ast, formula, sourceText).map(Violation::message);
   }
 
   public static void validateOrThrow(TinyExpressionP4AST ast, String formula) {
-    firstViolation(ast, formula).ifPresent(message -> {
+    validateOrThrow(ast, formula, P4SourceText.lexicalOnly());
+  }
+
+  public static void validateOrThrow(
+      TinyExpressionP4AST ast, String formula, P4SourceText sourceText) {
+    firstViolation(ast, formula, sourceText).ifPresent(message -> {
       throw new IllegalArgumentException(message);
     });
   }
 
   public static Optional<Violation> firstViolationDetail(TinyExpressionP4AST ast, String formula) {
+    return firstViolationDetail(ast, formula, P4SourceText.lexicalOnly());
+  }
+
+  public static Optional<Violation> firstViolationDetail(
+      TinyExpressionP4AST ast, String formula, P4SourceText sourceText) {
     if (ast == null || formula == null || formula.isBlank()) {
       return Optional.empty();
     }
-    return firstViolationRecursive(ast, formula, java.util.Collections.newSetFromMap(new IdentityHashMap<>()));
+    P4SourceText owned = sourceText == null ? P4SourceText.lexicalOnly() : sourceText;
+    return firstViolationRecursive(
+        ast, formula, owned, java.util.Collections.newSetFromMap(new IdentityHashMap<>()));
   }
 
-  private static Optional<Violation> firstViolationRecursive(Object node, String formula, Set<Object> visited) {
+  private static Optional<Violation> firstViolationRecursive(
+      Object node, String formula, P4SourceText sourceText, Set<Object> visited) {
     if (node == null || visited.add(node) == false) {
       return Optional.empty();
     }
     Optional<Violation> directViolation = switch (node) {
       case NumberCaseValueExpr numberCaseValue ->
-          validateDirectCaseValue(formula, numberCaseValue, ExpectedType.NUMBER);
+          validateDirectCaseValue(formula, sourceText, numberCaseValue, ExpectedType.NUMBER);
       case StringCaseValueExpr stringCaseValue ->
-          validateDirectCaseValue(formula, stringCaseValue, ExpectedType.STRING);
+          validateDirectCaseValue(formula, sourceText, stringCaseValue, ExpectedType.STRING);
       case BooleanCaseValueExpr booleanCaseValue ->
-          validateDirectCaseValue(formula, booleanCaseValue, ExpectedType.BOOLEAN);
+          validateDirectCaseValue(formula, sourceText, booleanCaseValue, ExpectedType.BOOLEAN);
       default -> Optional.empty();
     };
     if (directViolation.isPresent()) {
@@ -71,7 +89,7 @@ public final class P4StrictMatchTypingValidator {
 
     if (node instanceof List<?> list) {
       for (Object child : list) {
-        Optional<Violation> violation = firstViolationRecursive(child, formula, visited);
+        Optional<Violation> violation = firstViolationRecursive(child, formula, sourceText, visited);
         if (violation.isPresent()) {
           return violation;
         }
@@ -86,7 +104,7 @@ public final class P4StrictMatchTypingValidator {
     for (RecordComponent component : nodeClass.getRecordComponents()) {
       try {
         Object child = component.getAccessor().invoke(node);
-        Optional<Violation> violation = firstViolationRecursive(child, formula, visited);
+        Optional<Violation> violation = firstViolationRecursive(child, formula, sourceText, visited);
         if (violation.isPresent()) {
           return violation;
         }
@@ -98,18 +116,20 @@ public final class P4StrictMatchTypingValidator {
   }
 
   private static Optional<Violation> validateDirectCaseValue(
-      String formula, Object caseValueNode, ExpectedType expectedType) {
+      String formula, P4SourceText sourceText, Object caseValueNode, ExpectedType expectedType) {
     TinyExpressionP4AST directValue = directCaseValueNode(caseValueNode);
     if (directValue == null) {
       return Optional.empty();
     }
 
-    Optional<int[]> span = TinyExpressionP4Mapper.sourceSpanOf(directValue)
-        .or(() -> TinyExpressionP4Mapper.sourceSpanOf(caseValueNode));
-    int start = span.map(value -> Math.max(0, Math.min(value[0], formula.length()))).orElse(0);
-    int end = span.map(value -> Math.max(start, Math.min(value[1], formula.length())))
-        .orElse(formula.length());
-    String snippet = formula.substring(start, end);
+    Optional<int[]> span = sourceText.spanOf(directValue)
+        .or(() -> sourceText.spanOf(caseValueNode));
+    int formulaLength = formula.codePointCount(0, formula.length());
+    int start = span.map(value -> Math.max(0, Math.min(value[0], formulaLength))).orElse(0);
+    int end = span.map(value -> Math.max(start, Math.min(value[1], formulaLength)))
+        .orElse(formulaLength);
+    String snippet = formula.substring(
+        formula.offsetByCodePoints(0, start), formula.offsetByCodePoints(0, end));
     if (directValue instanceof VariableRefExpr variable) {
       Optional<String> actualHint = variable.type();
       if (actualHint.isPresent() && !expectedType.accepts(actualHint.get())) {

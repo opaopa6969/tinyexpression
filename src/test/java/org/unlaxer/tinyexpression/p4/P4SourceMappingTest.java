@@ -2,6 +2,9 @@ package org.unlaxer.tinyexpression.p4;
 
 import static org.junit.Assert.*;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,12 +14,15 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.unlaxer.Token;
+import org.unlaxer.tinyexpression.evaluator.p4.P4StrictMatchTypingValidator;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.BinaryExpr;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
 public class P4SourceMappingTest {
+  private static final Path STRICT_MATCH_ERRORS = Path.of(
+      "rust", "tinyexpression-rs", "tests", "fixtures", "strict-match-errors.tsv");
   private static BinaryExpr number(String value) { return new BinaryExpr(null, List.of(value), List.of()); }
 
   public record LegacySelection(Token token, TinyExpressionP4AST ast) {}
@@ -270,5 +276,46 @@ public class P4SourceMappingTest {
     assertEquals(TinyExpressionParserCapabilities
             .stripJavaStyleCommentsPreservingLayout(source).strip(),
         parsed.sourceText().text(formula).strip());
+  }
+
+  @Test public void strictMatchDiagnosticsUseOwnedUnicodeSafeSpans() throws Exception {
+    List<String[]> fixture = Files.readAllLines(STRICT_MATCH_ERRORS, StandardCharsets.UTF_8).stream()
+        .filter(line -> !line.isEmpty() && !line.startsWith("#"))
+        .map(line -> line.split("\\t", -1))
+        .toList();
+    for (String[] row : fixture) {
+      assertEquals("fixture row: " + String.join(" | ", row), 3, row.length);
+    }
+    // The published parser runtime is not itself concurrent-parse safe.  This
+    // test targets the stronger property introduced here: once produced, each
+    // owned source snapshot stays valid across later mappings and concurrent
+    // diagnostic reads.
+    List<P4PreferredAstMapper.ParsedAst> parsed = fixture.stream()
+        .map(row -> P4PreferredAstMapper.parseDetailed(row[1]))
+        .toList();
+    P4PreferredAstMapper.parseDetailed("match{true->1,default->0}");
+    try (var executor = Executors.newFixedThreadPool(fixture.size())) {
+      var violations = executor.invokeAll(java.util.stream.IntStream.range(0, fixture.size())
+          .<Callable<P4StrictMatchTypingValidator.Violation>>mapToObj(i -> () ->
+              P4StrictMatchTypingValidator.firstViolationDetail(
+                  parsed.get(i).ast(), fixture.get(i)[1], parsed.get(i).sourceText())
+                  .orElseThrow())
+          .toList()).stream().map(future -> {
+            try {
+              return future.get(30, TimeUnit.SECONDS);
+            } catch (Exception failure) {
+              throw new AssertionError(failure);
+            }
+          }).toList();
+      for (int i = 0; i < fixture.size(); i++) {
+        String[] row = fixture.get(i);
+        var violation = violations.get(i);
+        assertEquals(row[0], row[2], violation.snippet());
+        int startUtf16 = row[1].indexOf(row[2]);
+        int expectedStart = row[1].codePointCount(0, startUtf16);
+        assertEquals(row[0], expectedStart, violation.startOffset());
+        assertEquals(row[0], row[2].codePointCount(0, row[2].length()), violation.length());
+      }
+    }
   }
 }

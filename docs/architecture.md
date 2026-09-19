@@ -73,6 +73,10 @@ accepted. Unhinted references remain number-first, and unhinted direct matches a
 Number → String → Boolean order. A match whose direct case/default values contain explicit hints
 from different families is rejected as a type error instead of being misclassified as a Number
 AST; object-result matches are rejected because the grammar has no object match family.
+Strict-match diagnostics consume the immutable `P4SourceText` owned by the parse result. Their
+spans are code-point half-open intervals; the LSP adapter converts them to UTF-16 positions only at
+the protocol boundary. The legacy validator overload without `P4SourceText` remains source
+compatible, but can only report the whole formula when an exact node span is unavailable.
 The current grammar covers CodeBlock, boolean equality, string dot methods, slice variants,
 `isPresent(...)`, `inTimeRange(...)`, `inDayTimeRange(...)`, typed `if/ternary`, and strict `match` typing.
 

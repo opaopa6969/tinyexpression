@@ -558,10 +558,15 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         uri, chunks.size(), stats.entries(), stats.hits(), stats.misses(), stats.hitRate() * 100);
 
     TinyExpressionP4AST ast = null;
+    P4PreferredAstMapper.ParsedAst parsedAst = null;
     if (result.succeeded() && result.consumedLength() == result.totalLength()) {
-      try { ast = P4PreferredAstMapper.parse(formulaContent); } catch (Exception ignored) {}
+      try {
+        parsedAst = P4PreferredAstMapper.parseDetailed(formulaContent);
+        ast = parsedAst.ast();
+      } catch (Exception ignored) {}
     }
-    List<SemanticIssue> semanticIssues = computeStrictMatchSemanticIssues(formulaContent, ast, result);
+    List<SemanticIssue> semanticIssues =
+        computeStrictMatchSemanticIssues(formulaContent, parsedAst, result);
 
     ParseFailureDiagnostics failures = buildFailureDiagnostics(result, formulaContent, ctxDiag);
     extDocuments.put(uri, new ExtDocumentState(
@@ -736,7 +741,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
     for (SemanticIssue semanticIssue : semanticIssues) {
       Diagnostic d = new Diagnostic();
-      d.setRange(offsetToRangeWithOffset(content, semanticIssue.offset(), semanticIssue.length(), lineOffset));
+      d.setRange(codePointOffsetToRangeWithOffset(
+          content, semanticIssue.offset(), semanticIssue.length(), lineOffset));
       d.setSeverity(DiagnosticSeverity.Error);
       d.setSource("tinyexpression-p4-semantic");
       d.setCode(Either.forLeft(semanticIssue.code()));
@@ -786,7 +792,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
   private List<SemanticIssue> computeStrictMatchSemanticIssues(
       String content,
-      TinyExpressionP4AST ast,
+      P4PreferredAstMapper.ParsedAst parsed,
       ParseResult result) {
     if (content == null
         || content.isBlank()
@@ -796,9 +802,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       return List.of();
     }
 
-    P4StrictMatchTypingValidator.Violation violation = ast == null
+    P4StrictMatchTypingValidator.Violation violation = parsed == null
         ? null
-        : P4StrictMatchTypingValidator.firstViolationDetail(ast, content).orElse(null);
+        : P4StrictMatchTypingValidator.firstViolationDetail(
+            parsed.ast(), content, parsed.sourceText()).orElse(null);
     if (violation == null) {
       return List.of();
     }
@@ -839,6 +846,18 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     Position start = offsetToPositionWithOffset(content, offset, lineOffset);
     Position end = offsetToPositionWithOffset(content, offset + length, lineOffset);
     return new Range(start, end);
+  }
+
+  /** Convert code-point offsets from owned AST spans into LSP UTF-16 positions. */
+  static Range codePointOffsetToRangeWithOffset(
+      String content, int offset, int length, int lineOffset) {
+    int codePoints = content.codePointCount(0, content.length());
+    int startCodePoint = Math.max(0, Math.min(offset, codePoints));
+    int endCodePoint = Math.max(startCodePoint,
+        Math.min(startCodePoint + Math.max(0, length), codePoints));
+    int startUtf16 = content.offsetByCodePoints(0, startCodePoint);
+    int endUtf16 = content.offsetByCodePoints(0, endCodePoint);
+    return offsetToRangeWithOffset(content, startUtf16, endUtf16 - startUtf16, lineOffset);
   }
 
   // =========================================================================

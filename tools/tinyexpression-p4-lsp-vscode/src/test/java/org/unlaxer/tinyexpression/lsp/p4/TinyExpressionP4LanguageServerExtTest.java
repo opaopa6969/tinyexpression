@@ -174,6 +174,24 @@ public class TinyExpressionP4LanguageServerExtTest {
     }
 
     @Test
+    public void testStrictMatchTypingDiagnosticUsesUtf16RangeAfterNonBmpPrefix() {
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+        String content = "/*😀*/match{true->internal score(),default->0}";
+
+        server.parseDocument(TEST_URI, content);
+
+        Diagnostic diag = client.firstDiagnosticWithCode("TE025");
+        assertNotNull("TE025 diagnostic should be published", diag);
+        int expectedStart = content.indexOf("internal score()");
+        assertEquals(0, diag.getRange().getStart().getLine());
+        assertEquals(expectedStart, diag.getRange().getStart().getCharacter());
+        assertEquals(expectedStart + "internal score()".length(),
+            diag.getRange().getEnd().getCharacter());
+        assertTrue(diag.getMessage().contains("internal score()"));
+    }
+
+    @Test
     public void testCompletion() throws Exception {
         // Use MethodDeclaration to check ScopeStore completion
         String content = "10\nnumber myMethod($p) { $p }";
