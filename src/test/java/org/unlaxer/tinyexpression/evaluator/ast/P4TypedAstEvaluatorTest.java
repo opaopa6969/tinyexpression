@@ -15,9 +15,30 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST.*;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 public class P4TypedAstEvaluatorTest {
+
+  private static Object evalParsed(String formula, ExpressionType type, CalculationContext context) {
+    var parsed = P4PreferredAstMapper.parseDetailed(formula, type);
+    return new P4TypedAstEvaluator(new SpecifiedExpressionTypes(type, ExpressionTypes._float),
+        context, formula, formula, Thread.currentThread().getContextClassLoader(),
+        java.util.Map.of(), parsed.sourceText()).eval(parsed.ast());
+  }
+
+  private static Object evalVariableSlice(String indices, CalculationContext context) {
+    // The published parser does not accept bare variable receivers here. Preserve the
+    // original hand-built variable test, but obtain index fields from a real parse so
+    // both the old String schema and the new semantic-node schema compile unchanged.
+    var parsed = P4PreferredAstMapper.parseDetailed("'hello'[" + indices + "]", ExpressionTypes.string);
+    assertTrue(parsed.ast() instanceof SliceExpr);
+    var slice = (SliceExpr) parsed.ast();
+    var variableSlice = new SliceExpr("$s", slice.start(), slice.end(), slice.step());
+    return new P4TypedAstEvaluator(
+        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float),
+        context, parsed.sourceText()).eval(variableSlice);
+  }
 
   private static CalculationContext newContext() {
     CalculationContext ctx = new NormalCalculationContext(2, RoundingMode.HALF_UP, Angle.DEGREE);
@@ -122,13 +143,7 @@ public class P4TypedAstEvaluatorTest {
   @Test
   public void testIfExprWithInMethodFromParsedAst() {
     String formula = "if('cnjpuszn'[4:6].in('en','ca','us')){1}else{0}";
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
-        newContext(),
-        formula,
-        Thread.currentThread().getContextClassLoader());
-    Object result = evaluator.eval(ast);
+    Object result = evalParsed(formula, ExpressionTypes._float, newContext());
     assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
   }
 
@@ -166,13 +181,7 @@ public class P4TypedAstEvaluatorTest {
   @Test
   public void testIfExprWithNestedSliceFromParsedAst() {
     String formula = "if('gateman'[::-1][0:4]=='name'){1}else{0}";
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(formula, ExpressionTypes._float).ast();
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
-        newContext(),
-        formula,
-        Thread.currentThread().getContextClassLoader());
-    Object result = evaluator.eval(ast);
+    Object result = evalParsed(formula, ExpressionTypes._float, newContext());
     assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
   }
 
@@ -404,29 +413,15 @@ public class P4TypedAstEvaluatorTest {
 
   @Test
   public void testIfExprWithReverseSliceStringComparison() {
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
-        "if('gateman'[::-1]=='nametag'){1}else{0}",
-        ExpressionTypes._float).ast();
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
-        newContext(),
-        "if('gateman'[::-1]=='nametag'){1}else{0}",
-        Thread.currentThread().getContextClassLoader());
-    Object result = evaluator.eval(ast);
+    Object result = evalParsed("if('gateman'[::-1]=='nametag'){1}else{0}",
+        ExpressionTypes._float, newContext());
     assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
   }
 
   @Test
   public void testIfExprWithStepOnlySliceStringComparison() {
-    TinyExpressionP4AST ast = P4PreferredAstMapper.parseDetailed(
-        "if('1a2b3'[::2]=='123'){1}else{0}",
-        ExpressionTypes._float).ast();
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float),
-        newContext(),
-        "if('1a2b3'[::2]=='123'){1}else{0}",
-        Thread.currentThread().getContextClassLoader());
-    Object result = evaluator.eval(ast);
+    Object result = evalParsed("if('1a2b3'[::2]=='123'){1}else{0}",
+        ExpressionTypes._float, newContext());
     assertEquals(1.0f, ((Number) result).floatValue(), 0.001f);
   }
 
@@ -434,18 +429,8 @@ public class P4TypedAstEvaluatorTest {
   public void testSliceReverseAndStepOnAstPath() {
     // The slice indices come from the SliceExpr AST (start/end/step), not from re-parsing the source
     // text — so assert the actual evaluated result on the pure AST path. (former source-shadow test)
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), newContext());
-
-    TinyExpressionP4AST reverse = P4PreferredAstMapper.parseDetailed(
-        "'gateman'[::-1]", ExpressionTypes.string).ast();
-    assertTrue(reverse instanceof SliceExpr);
-    assertEquals("nametag", evaluator.eval(reverse));
-
-    TinyExpressionP4AST stepped = P4PreferredAstMapper.parseDetailed(
-        "'1a2b3'[::2]", ExpressionTypes.string).ast();
-    assertTrue(stepped instanceof SliceExpr);
-    assertEquals("123", evaluator.eval(stepped));
+    assertEquals("nametag", evalParsed("'gateman'[::-1]", ExpressionTypes.string, newContext()));
+    assertEquals("123", evalParsed("'1a2b3'[::2]", ExpressionTypes.string, newContext()));
   }
 
   // ── NumberMatchExpr ──
@@ -539,10 +524,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[0:3] on "hello" → "hel"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", "0", "3", null));
+    Object result = evalVariableSlice("0:3", ctx);
     assertEquals("hel", result);
   }
 
@@ -551,10 +533,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[1:] on "hello" → "ello"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", "1", null, null));
+    Object result = evalVariableSlice("1:", ctx);
     assertEquals("ello", result);
   }
 
@@ -563,10 +542,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[:3] on "hello" → "hel"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", null, "3", null));
+    Object result = evalVariableSlice(":3", ctx);
     assertEquals("hel", result);
   }
 
@@ -575,10 +551,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[::2] on "hello" → "hlo"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", null, null, "2"));
+    Object result = evalVariableSlice("::2", ctx);
     assertEquals("hlo", result);
   }
 
@@ -587,10 +560,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[::-1] on "hello" → "olleh"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", null, null, "-1"));
+    Object result = evalVariableSlice("::-1", ctx);
     assertEquals("olleh", result);
   }
 
@@ -599,10 +569,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[-3:] on "hello" → "llo"
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", "-3", null, null));
+    Object result = evalVariableSlice("-3:", ctx);
     assertEquals("llo", result);
   }
 
@@ -611,10 +578,7 @@ public class P4TypedAstEvaluatorTest {
     // $s[3:3] on "hello" → ""
     CalculationContext ctx = newContext();
     ctx.set("s", "hello");
-    P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
-        new SpecifiedExpressionTypes(ExpressionTypes.string, ExpressionTypes._float), ctx);
-    Object result = evaluator.eval(new SliceExpr(
-        "$s", "3", "3", null));
+    Object result = evalVariableSlice("3:3", ctx);
     assertEquals("", result);
   }
 }
