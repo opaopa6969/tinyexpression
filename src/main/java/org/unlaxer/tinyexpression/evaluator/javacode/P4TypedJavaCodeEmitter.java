@@ -778,6 +778,11 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
         + "." + methodName + "(calculateContext" + separator + args + ")";
   }
 
+  private String emitExternalInvocation(java.util.Optional<QualifiedNameExpr> qualifier, String name,
+      java.util.Optional<ArgumentsExpr> arguments) {
+    return emitExternalInvocation(qualifier.orElse(null), name, arguments);
+  }
+
   // =========================================================================
   // Math functions
   // =========================================================================

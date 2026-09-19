@@ -989,6 +989,11 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     }
   }
 
+  private Object evaluateExternalInvocation(Optional<QualifiedNameExpr> qualifier, String target,
+      List<ArgumentExpressionExpr> args, ExpressionType expectedReturnType) {
+    return evaluateExternalInvocation(qualifier.orElse(null), target, args, expectedReturnType);
+  }
+
   private ExpressionType expressionTypeOf(Object value) {
     if (value instanceof Boolean) return ExpressionTypes._boolean;
     if (value instanceof String) return ExpressionTypes.string;
