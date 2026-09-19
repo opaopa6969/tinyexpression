@@ -1,0 +1,14 @@
+# id	formula	expected f32 bits
+zero	0	00000000
+negative-literal	-1.5	bfc00000
+addition	1+2	40400000
+precedence	2+3*4	41600000
+parentheses	(2+3)*4	41a00000
+left-associative-subtraction	10-2-3	40a00000
+left-associative-division	8/4/2	3f800000
+f32-rounding	1/3	3eaaaaab
+whitespace-and-comment	( 1 /* plus */ + 2 ) * 3	41100000
+negative-arithmetic	-1.5*5	c0f00000
+f32-addition-rounding	16777216+1	4b800000
+positive-infinity	1/0	7f800000
+nan	0/0	ffc00000
