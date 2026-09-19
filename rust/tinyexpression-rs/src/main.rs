@@ -3,15 +3,17 @@ use std::fs;
 use std::io::{self, Read};
 use std::process::ExitCode;
 
-use tinyexpression_rs::{parse, FrontendError};
+use tinyexpression_rs::{evaluate, parse, EvaluationError, FrontendError};
 
 const EXIT_SUCCESS: u8 = 0;
 const EXIT_USAGE: u8 = 2;
 const EXIT_PARSE: u8 = 3;
-const EXIT_MAPPING_OR_IO: u8 = 4;
+const EXIT_MAPPING: u8 = 4;
+const EXIT_EVALUATION: u8 = 5;
+const EXIT_IO: u8 = 6;
 
 fn usage() -> &'static str {
-    "usage: tinyexpression-rs parse [FILE|-]"
+    "usage: tinyexpression-rs <parse|eval> [FILE|-]"
 }
 
 fn source(argument: Option<&str>) -> io::Result<String> {
@@ -39,10 +41,8 @@ fn run() -> Result<(), u8> {
         println!("{}", usage());
         return Ok(());
     }
-    if arguments.is_empty()
-        || arguments.first().map(String::as_str) != Some("parse")
-        || arguments.len() > 2
-    {
+    let command = arguments.first().map(String::as_str);
+    if arguments.is_empty() || !matches!(command, Some("parse" | "eval")) || arguments.len() > 2 {
         eprintln!("{}", usage());
         return Err(EXIT_USAGE);
     }
@@ -50,9 +50,36 @@ fn run() -> Result<(), u8> {
         Ok(source) => source,
         Err(error) => {
             println!("{}", json_error("io", &error.to_string()));
-            return Err(EXIT_MAPPING_OR_IO);
+            return Err(EXIT_IO);
         }
     };
+    if command == Some("eval") {
+        return match evaluate(&input) {
+            Ok(value) => {
+                println!("{{\"ok\":true,\"value\":{}}}", value.canonical_json());
+                Ok(())
+            }
+            Err(EvaluationError::Parse(error)) => {
+                println!(
+                    "{{\"ok\":false,\"stage\":\"parse\",\"diagnostic\":{}}}",
+                    error.canonical_json()
+                );
+                Err(EXIT_PARSE)
+            }
+            Err(EvaluationError::Mapping(error)) => {
+                println!("{}", json_error("mapping", &error));
+                Err(EXIT_MAPPING)
+            }
+            Err(error) => {
+                println!(
+                    "{{\"ok\":false,\"stage\":\"evaluation\",\"error\":{}}}",
+                    error.canonical_json()
+                );
+                Err(EXIT_EVALUATION)
+            }
+        };
+    }
+
     match parse(&input) {
         Ok(ast) => {
             println!("{{\"ok\":true,\"ast\":{}}}", ast.canonical_json());
@@ -67,7 +94,7 @@ fn run() -> Result<(), u8> {
         }
         Err(FrontendError::Mapping(error)) => {
             println!("{}", json_error("mapping", &error));
-            Err(EXIT_MAPPING_OR_IO)
+            Err(EXIT_MAPPING)
         }
     }
 }

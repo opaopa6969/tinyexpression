@@ -1,14 +1,16 @@
 //! Native parser frontend generated from the authoritative TinyExpression P4 grammar.
 //!
-//! Evaluation is intentionally not part of this crate yet. Parsing and mapping are strict:
-//! no Java parser, handwritten parser, or evaluator fallback is attempted.
+//! Parsing, mapping, and the context-free f32 evaluator are strict: no Java parser,
+//! handwritten parser, or evaluator fallback is attempted.
 
 #[rustfmt::skip]
 pub mod generated;
+mod evaluator;
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
+pub use evaluator::{evaluate, evaluate_ast, EvaluationError, Value};
 pub use generated::ast::Ast;
 use unlaxer_runtime::ParseDiagnostic;
 

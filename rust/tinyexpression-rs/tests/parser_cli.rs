@@ -152,18 +152,21 @@ fn cli_reports_usage_errors_on_stderr_and_exit_two() {
 
     assert_eq!(output.status.code(), Some(2));
     assert!(stdout(&output).is_empty());
-    assert_eq!(stderr(&output), "usage: tinyexpression-rs parse [FILE|-]\n");
+    assert_eq!(
+        stderr(&output),
+        "usage: tinyexpression-rs <parse|eval> [FILE|-]\n"
+    );
 }
 
 #[test]
-fn cli_reports_file_io_errors_as_json_and_exit_four() {
+fn cli_reports_file_io_errors_as_json_and_exit_six() {
     let missing = fixture("does-not-exist.tiny");
     let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
         .args(["parse", missing.to_str().unwrap()])
         .output()
         .expect("run parser with missing file");
 
-    assert_eq!(output.status.code(), Some(4));
+    assert_eq!(output.status.code(), Some(6));
     assert!(stdout(&output).starts_with(r#"{"ok":false,"stage":"io","message":"#));
     assert!(stderr(&output).is_empty());
 }
