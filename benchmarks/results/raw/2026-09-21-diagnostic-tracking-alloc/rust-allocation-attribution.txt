@@ -1,0 +1,21 @@
+# Rust allocation attribution for one public-facade parse of complex.tiny (baseline unlaxer-runtime at
+# unlaxer-parser c243638, grammar warmed). Counted with per-site counters temporarily added to
+# unlaxer-runtime and a counting GlobalAlloc (rust/unlaxer-alloc-audit); the counters were removed
+# before commit. Total 789,084 allocations / 17,715,406 bytes.
+site                                              allocations        bytes    share
+FailureDiagnostic::record expected storage             678413      8498429   85.97%
+FailureDiagnostic clone on memo hit                     42778      2816111    5.42%
+other                                                   41835      3674384    5.30%
+top-level expected storage (ParseContext.expected)      16381       138654    2.08%
+Fragment/CST nodes & captures Vec (out of scope)         9660       993816    1.22%
+failure_memo HashMap growth                                12      1589052    0.00%
+diagnostic_frames Vec growth                                5         4960    0.00%
+Lookahead expected/frame clone                              0            0    0.00%
+
+# Before/after one public-facade parse (grammar warmed), same method
+fixture                 before_allocs  before_bytes  after_allocs  after_bytes   allocs   bytes
+complex.tiny                   789084      17715406         89265     10112156  -88.69%  -42.92%
+comparison-heavy.tiny           82094       4017463         13478      3021260  -83.58%  -24.80%
+
+# Regression test: rust/unlaxer-alloc-audit/tests/diagnostic_allocation.rs
+# 1 failure = 10 allocations, 1024 identical failures at one position = 10 allocations
