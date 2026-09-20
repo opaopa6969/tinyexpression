@@ -1,0 +1,340 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java",
+        "jvmArgs" : [
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.9",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "21.0.9+7-LTS-338",
+        "warmupIterations" : 3,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 3,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixture" : "complex.tiny"
+        },
+        "primaryMetric" : {
+            "score" : 71460.78786607143,
+            "scoreError" : 102621.61813488713,
+            "scoreConfidence" : [
+                -31160.8302688157,
+                174082.40600095858
+            ],
+            "scorePercentiles" : {
+                "0.0" : 65602.3543125,
+                "50.0" : 71960.99035714286,
+                "90.0" : 76819.01892857143,
+                "95.0" : 76819.01892857143,
+                "99.0" : 76819.01892857143,
+                "99.9" : 76819.01892857143,
+                "99.99" : 76819.01892857143,
+                "99.999" : 76819.01892857143,
+                "99.9999" : 76819.01892857143,
+                "100.0" : 76819.01892857143
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    71960.99035714286,
+                    65602.3543125,
+                    76819.01892857143
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+            "gc.alloc.rate" : {
+                "score" : 1760.1249249493576,
+                "scoreError" : 2563.2036089865846,
+                "scoreConfidence" : [
+                    -803.078684037227,
+                    4323.328533935943
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 1630.351666206716,
+                    "50.0" : 1740.6977432539454,
+                    "90.0" : 1909.3253653874117,
+                    "95.0" : 1909.3253653874117,
+                    "99.0" : 1909.3253653874117,
+                    "99.9" : 1909.3253653874117,
+                    "99.99" : 1909.3253653874117,
+                    "99.999" : 1909.3253653874117,
+                    "99.9999" : 1909.3253653874117,
+                    "100.0" : 1909.3253653874117
+                },
+                "scoreUnit" : "MB/sec",
+                "rawData" : [
+                    [
+                        1740.6977432539454,
+                        1909.3253653874117,
+                        1630.351666206716
+                    ]
+                ]
+            },
+            "gc.alloc.rate.norm" : {
+                "score" : 1.3138238161904763E8,
+                "scoreError" : 151186.70054708977,
+                "scoreConfidence" : [
+                    1.3123119491850054E8,
+                    1.3153356831959471E8
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 1.3137453942857143E8,
+                    "50.0" : 1.31381554E8,
+                    "90.0" : 1.3139105142857143E8,
+                    "95.0" : 1.3139105142857143E8,
+                    "99.0" : 1.3139105142857143E8,
+                    "99.9" : 1.3139105142857143E8,
+                    "99.99" : 1.3139105142857143E8,
+                    "99.999" : 1.3139105142857143E8,
+                    "99.9999" : 1.3139105142857143E8,
+                    "100.0" : 1.3139105142857143E8
+                },
+                "scoreUnit" : "B/op",
+                "rawData" : [
+                    [
+                        1.3139105142857143E8,
+                        1.31381554E8,
+                        1.3137453942857143E8
+                    ]
+                ]
+            },
+            "gc.count" : {
+                "score" : 7.0,
+                "scoreError" : "NaN",
+                "scoreConfidence" : [
+                    7.0,
+                    7.0
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 2.0,
+                    "50.0" : 2.0,
+                    "90.0" : 3.0,
+                    "95.0" : 3.0,
+                    "99.0" : 3.0,
+                    "99.9" : 3.0,
+                    "99.99" : 3.0,
+                    "99.999" : 3.0,
+                    "99.9999" : 3.0,
+                    "100.0" : 3.0
+                },
+                "scoreUnit" : "counts",
+                "rawData" : [
+                    [
+                        2.0,
+                        3.0,
+                        2.0
+                    ]
+                ]
+            },
+            "gc.time" : {
+                "score" : 23.0,
+                "scoreError" : "NaN",
+                "scoreConfidence" : [
+                    23.0,
+                    23.0
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 7.0,
+                    "50.0" : 7.0,
+                    "90.0" : 9.0,
+                    "95.0" : 9.0,
+                    "99.0" : 9.0,
+                    "99.9" : 9.0,
+                    "99.99" : 9.0,
+                    "99.999" : 9.0,
+                    "99.9999" : 9.0,
+                    "100.0" : 9.0
+                },
+                "scoreUnit" : "ms",
+                "rawData" : [
+                    [
+                        7.0,
+                        9.0,
+                        7.0
+                    ]
+                ]
+            }
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 1,
+        "jvm" : "/home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java",
+        "jvmArgs" : [
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.9",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "21.0.9+7-LTS-338",
+        "warmupIterations" : 3,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 3,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixture" : "comparison-heavy.tiny"
+        },
+        "primaryMetric" : {
+            "score" : 41811.915507183905,
+            "scoreError" : 119533.22551299351,
+            "scoreConfidence" : [
+                -77721.3100058096,
+                161345.1410201774
+            ],
+            "scorePercentiles" : {
+                "0.0" : 34779.257896551724,
+                "50.0" : 42912.61729166667,
+                "90.0" : 47743.871333333336,
+                "95.0" : 47743.871333333336,
+                "99.0" : 47743.871333333336,
+                "99.9" : 47743.871333333336,
+                "99.99" : 47743.871333333336,
+                "99.999" : 47743.871333333336,
+                "99.9999" : 47743.871333333336,
+                "100.0" : 47743.871333333336
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    47743.871333333336,
+                    42912.61729166667,
+                    34779.257896551724
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+            "gc.alloc.rate" : {
+                "score" : 1649.701903374518,
+                "scoreError" : 4954.658606627307,
+                "scoreConfidence" : [
+                    -3304.9567032527884,
+                    6604.360510001825
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 1419.8615719929344,
+                    "50.0" : 1579.8611190724841,
+                    "90.0" : 1949.3830190581355,
+                    "95.0" : 1949.3830190581355,
+                    "99.0" : 1949.3830190581355,
+                    "99.9" : 1949.3830190581355,
+                    "99.99" : 1949.3830190581355,
+                    "99.999" : 1949.3830190581355,
+                    "99.9999" : 1949.3830190581355,
+                    "100.0" : 1949.3830190581355
+                },
+                "scoreUnit" : "MB/sec",
+                "rawData" : [
+                    [
+                        1419.8615719929344,
+                        1579.8611190724841,
+                        1949.3830190581355
+                    ]
+                ]
+            },
+            "gc.alloc.rate.norm" : {
+                "score" : 7.11111609567597E7,
+                "scoreError" : 19911.172770093068,
+                "scoreConfidence" : [
+                    7.109124978398961E7,
+                    7.11310721295298E7
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 7.110990096551724E7,
+                    "50.0" : 7.111176933333333E7,
+                    "90.0" : 7.111181257142857E7,
+                    "95.0" : 7.111181257142857E7,
+                    "99.0" : 7.111181257142857E7,
+                    "99.9" : 7.111181257142857E7,
+                    "99.99" : 7.111181257142857E7,
+                    "99.999" : 7.111181257142857E7,
+                    "99.9999" : 7.111181257142857E7,
+                    "100.0" : 7.111181257142857E7
+                },
+                "scoreUnit" : "B/op",
+                "rawData" : [
+                    [
+                        7.111181257142857E7,
+                        7.111176933333333E7,
+                        7.110990096551724E7
+                    ]
+                ]
+            },
+            "gc.count" : {
+                "score" : 5.0,
+                "scoreError" : "NaN",
+                "scoreConfidence" : [
+                    5.0,
+                    5.0
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 1.0,
+                    "50.0" : 2.0,
+                    "90.0" : 2.0,
+                    "95.0" : 2.0,
+                    "99.0" : 2.0,
+                    "99.9" : 2.0,
+                    "99.99" : 2.0,
+                    "99.999" : 2.0,
+                    "99.9999" : 2.0,
+                    "100.0" : 2.0
+                },
+                "scoreUnit" : "counts",
+                "rawData" : [
+                    [
+                        2.0,
+                        1.0,
+                        2.0
+                    ]
+                ]
+            },
+            "gc.time" : {
+                "score" : 21.0,
+                "scoreError" : "NaN",
+                "scoreConfidence" : [
+                    21.0,
+                    21.0
+                ],
+                "scorePercentiles" : {
+                    "0.0" : 5.0,
+                    "50.0" : 7.0,
+                    "90.0" : 9.0,
+                    "95.0" : 9.0,
+                    "99.0" : 9.0,
+                    "99.9" : 9.0,
+                    "99.99" : 9.0,
+                    "99.999" : 9.0,
+                    "99.9999" : 9.0,
+                    "100.0" : 9.0
+                },
+                "scoreUnit" : "ms",
+                "rawData" : [
+                    [
+                        9.0,
+                        5.0,
+                        7.0
+                    ]
+                ]
+            }
+        }
+    }
+]
+
+
