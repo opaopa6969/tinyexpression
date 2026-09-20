@@ -1,0 +1,39 @@
+samples=189
+ 66.14%  diagnostics (hint collection / snapshots / memo replay)
+ 13.76%  commit token collection / listeners
+ 11.11%  transaction bookkeeping
+  8.99%  other(parser dispatch etc.)
+--- top self frames ---
+ 15.87%  java.util.HashMap.putVal
+ 11.11%  org.unlaxer.context.ParseContext.registerFailureCandidate
+  7.41%  java.lang.String.equals
+  5.29%  java.util.HashMap.hash
+  3.17%  java.util.HashMap$Node.<init>
+  3.17%  java.util.HashMap.resize
+  3.17%  org.unlaxer.context.ParseContext.localStackDepth
+  2.12%  org.unlaxer.context.ParseContext.trackCursorProgress
+  2.12%  java.util.ArrayList.add
+  2.12%  java.util.ArrayDeque.inc
+  1.59%  java.util.LinkedHashMap$LinkedValues.size
+  1.59%  java.util.ArrayDeque.pollFirst
+  1.59%  java.util.LinkedHashMap.get
+  1.59%  java.util.ArrayDeque$DeqIterator.next
+  1.06%  java.util.Collections$UnmodifiableCollection$1.hasNext
+  1.06%  java.lang.String.indexOfNonWhitespace
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 65.08%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 51.85%  org.unlaxer.parser.combinator.LazyChain.parse
+ 50.79%  org.unlaxer.context.ParseContext.endParse
+ 50.79%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 46.03%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 30.69%  org.unlaxer.context.ParseContext.addMemoFrameHint
+ 29.10%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 23.81%  org.unlaxer.context.ParseContext$FailureDiagnostic.addExpectedHint
+ 12.17%  org.unlaxer.context.ParseContext$FailureDiagnostic.addExpectedParser
+ 11.64%  org.unlaxer.parser.combinator.Occurs.parse
+ 11.11%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+  8.99%  org.unlaxer.context.ParseContext.trackCursorProgress
+  8.47%  org.unlaxer.parser.combinator.LazyOccurs.parse
+  8.47%  org.unlaxer.context.Transaction.commit
+  8.47%  org.unlaxer.context.PackratMemoTable.lookup
+  7.41%  org.unlaxer.context.ParseContext.replayFailureDiagnostic

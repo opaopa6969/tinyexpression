@@ -1,0 +1,31 @@
+# Rust CPU attribution for one public-facade parse (unlaxer-runtime at unlaxer-parser 629709f / 90530cb,
+# tinyexpression a4d2a7e). Measured by codex with temporary thread_local Instant accumulators around
+# runtime categories (release build, taskset -c 0, median of 7 rounds). Instrumentation overhead is
+# large (complex +62.5%, comparison-heavy +114%), so use the shares for comparison, not the ms values.
+# Categories are inclusive and nest (diagnostics run inside leaf matching and memo replay), so shares
+# add up to more than 100%. "runtime remainder" is dispatch/recursion plus uninstrumented time (upper bound).
+
+## complex.tiny (instrumented facade 29.897 ms/op; baseline 18.394 ms/op)
+category                                  calls/op   inclusive_ms   share
+failure diagnostics (fail_at / failure())    42358        13.070   43.72%
+memo lookup/insert/frame/replay              47341        13.707   45.85%
+checkpoint/restore/commit                   107968         2.371    7.93%
+CST/Fragment                                  7757         0.271    0.91%
+trivia skip()                                13630         0.258    0.86%
+leaf matching                                10272         3.629   12.14%
+runtime remainder (upper bound)                  -         9.601   32.11%
+facade outside runtime                           -         0.080    0.27%
+
+## comparison-heavy.tiny (instrumented facade 5.723 ms/op; baseline 2.673 ms/op; 2 runtime calls/op)
+category                                  calls/op   inclusive_ms   share
+failure diagnostics                           5889         1.687   29.48%
+memo lookup/insert/frame/replay              13451         1.452   25.36%
+checkpoint/restore/commit                    30266         0.598   10.46%
+CST/Fragment                                   847         0.043    0.76%
+trivia skip()                                 3559         0.067    1.17%
+leaf matching                                 2739         1.301   22.73%
+runtime remainder (upper bound)                  -         2.199   38.42%
+facade outside runtime                           -         0.062    1.08%
+
+# Conclusion for #219: Rust shares the Java shape (failure diagnostics + memo replay dominate);
+# checkpoint stays under ~10% (consistent with #209 not adopted). Harness and patch were not kept.
