@@ -1,0 +1,98 @@
+diff --git a/unlaxer-common/src/main/java/org/unlaxer/TokenList.java b/unlaxer-common/src/main/java/org/unlaxer/TokenList.java
+index 94737b8..3f38a89 100644
+--- a/unlaxer-common/src/main/java/org/unlaxer/TokenList.java
++++ b/unlaxer-common/src/main/java/org/unlaxer/TokenList.java
+@@ -12,7 +12,6 @@ import java.util.function.Consumer;
+ import java.util.function.IntFunction;
+ import java.util.function.Predicate;
+ import java.util.function.UnaryOperator;
+-import java.util.stream.Collectors;
+ import java.util.stream.Stream;
+ 
+ import org.unlaxer.Source.SourceKind;
+@@ -38,6 +37,12 @@ public class TokenList implements List<Token>{
+     super();
+     this.tokens = new ArrayList<>();
+   }
++
++  /** Creates an empty list that can hold {@code initialCapacity} tokens without growing. */
++  public TokenList(int initialCapacity) {
++    super();
++    this.tokens = new ArrayList<>(initialCapacity);
++  }
+   
+   public static TokenList of(List<Token> tokens) {
+     return new TokenList(tokens);
+@@ -249,7 +254,8 @@ public class TokenList implements List<Token>{
+   }
+   
+   public Source toSource(SourceKind sourceKind) {
+-    return toSource(TokenList.of(tokens) , sourceKind);
++    // toSource(TokenList, SourceKind) only reads the list, so no defensive copy is needed.
++    return toSource(this , sourceKind);
+   }
+ 
+   
+@@ -270,19 +276,19 @@ public class TokenList implements List<Token>{
+       return StringSource.createDetachedSource("");
+     }
+     
+-    String collect = tokens.stream()
+-      .map(Token::getSource)
+-      .map(Source::toString)
+-      .collect(Collectors.joining());
++    StringBuilder collect = new StringBuilder();
++    for (int i = 0, size = tokens.size(); i < size; i++) {
++      collect.append(tokens.get(i).getSource().toString());
++    }
+     
+     Token token = firstPrintableToken.get();
+     
+     CodePointOffset offsetFromRoot = token.source.offsetFromRoot();
+     
+     if(sourceKind == SourceKind.subSource) {
+-      return StringSource.createSubSource(collect , token.source.root() , offsetFromRoot);
++      return StringSource.createSubSource(collect.toString() , token.source.root() , offsetFromRoot);
+     }else {
+-      return StringSource.create(collect, sourceKind );
++      return StringSource.create(collect.toString(), sourceKind );
+     }
+   }
+ }
+diff --git a/unlaxer-common/src/main/java/org/unlaxer/parser/CollectingParser.java b/unlaxer-common/src/main/java/org/unlaxer/parser/CollectingParser.java
+index f9c3289..c36206d 100644
+--- a/unlaxer-common/src/main/java/org/unlaxer/parser/CollectingParser.java
++++ b/unlaxer-common/src/main/java/org/unlaxer/parser/CollectingParser.java
+@@ -2,7 +2,6 @@ package org.unlaxer.parser;
+ 
+ import java.util.List;
+ import java.util.function.Predicate;
+-import java.util.stream.Collectors;
+ 
+ import org.unlaxer.Token;
+ import org.unlaxer.TokenKind;
+@@ -15,15 +14,15 @@ public interface CollectingParser extends Parser {
+ 	public default Token collect(List<Token> tokens, TokenKind tokenKind ,
+ 			Predicate<Token> tokenFilter){
+ 			
+-		TokenList collect = TokenList.of( 
+-		    tokens.stream()
+-					.filter(tokenFilter)
+-					.collect(Collectors.toList()));
+-		
+-    return new Token(tokenKind,
+-				collect
+-				, this //
+-				);
++		// Runs on every commit: collect into the child list directly instead of building a
++		// Stream pipeline, an intermediate List and a copy of it.
++		int size = tokens.size();
++		TokenList collect = new TokenList(size);
++		for (int i = 0; i < size; i++) {
++			Token token = tokens.get(i);
++			if (tokenFilter.test(token)) collect.add(token);
++		}
++		return new Token(tokenKind, collect, this);
+ 
+ 	}
+ 	

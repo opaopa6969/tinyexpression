@@ -1,0 +1,39 @@
+samples=339
+ 84.37%  diagnostics (hint collection / snapshots / memo replay)
+  7.67%  commit token collection / listeners
+  5.31%  other(parser dispatch etc.)
+  2.65%  transaction bookkeeping
+--- top self frames ---
+ 38.64%  java.lang.String.equals
+  9.14%  org.unlaxer.context.ParseContext.collectExpectedCandidatesIterative
+  7.96%  org.unlaxer.context.ParseContext.deepestTerminalHintCandidate
+  4.13%  org.unlaxer.context.ParseContext.addExpectedHintCandidate
+  3.83%  java.util.ArrayList$Itr.next
+  2.36%  java.util.ArrayDeque.<init>
+  1.47%  org.unlaxer.context.ParseContext.registerFailureCandidate
+  1.47%  java.util.IdentityHashMap.resize
+  1.47%  java.lang.StringLatin1.hashCode
+  1.47%  java.util.HashMap.resize
+  1.18%  org.unlaxer.PositionResolverImpl.<init>
+  1.18%  java.lang.Class.annotationData
+  1.18%  org.unlaxer.context.ParseContext.localStackDepth
+  1.18%  java.util.HashMap.putVal
+  1.18%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+  0.88%  java.util.HashMap.getNode
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 72.27%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 70.21%  org.unlaxer.context.ParseContext.endParse
+ 69.91%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 64.01%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 58.70%  org.unlaxer.parser.combinator.LazyChain.parse
+ 45.13%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 34.51%  org.unlaxer.context.ParseContext.addExpectedHintCandidate
+ 18.29%  org.unlaxer.context.ParseContext.collectExpectedCandidatesIterative
+ 18.29%  org.unlaxer.context.ParseContext.expectedHintCandidatesFor
+ 13.57%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+ 10.03%  org.unlaxer.context.PackratMemoTable.lookup
+  9.73%  org.unlaxer.context.ParseContext.replayFailureDiagnostic
+  8.85%  org.unlaxer.context.ParseContext.deepestTerminalHintCandidate
+  8.85%  org.unlaxer.context.ParseContext.mergeFailureDiagnostic
+  7.67%  org.unlaxer.parser.combinator.Occurs.parse
+  7.08%  org.unlaxer.parser.combinator.Choice.parse

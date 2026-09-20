@@ -1,0 +1,39 @@
+samples=419
+ 77.33%  diagnostics (hint collection / snapshots / memo replay)
+ 12.65%  commit token collection / listeners
+  5.97%  transaction bookkeeping
+  4.06%  other(parser dispatch etc.)
+--- top self frames ---
+ 32.94%  java.lang.String.equals
+ 11.46%  org.unlaxer.context.ParseContext.deepestTerminalHintCandidate
+  5.73%  org.unlaxer.context.ParseContext.registerFailureCandidate
+  4.30%  org.unlaxer.context.ParseContext.collectExpectedCandidatesIterative
+  3.10%  java.util.ArrayList$Itr.next
+  1.91%  java.util.ArrayList.indexOfRange
+  1.91%  java.util.ArrayDeque.inc
+  1.91%  java.util.ArrayList.addAll
+  1.67%  java.lang.Class.annotationData
+  1.43%  org.unlaxer.context.ParseContext.addExpectedHintCandidate
+  1.19%  org.unlaxer.context.ParseContext.trackCursorProgress
+  1.19%  org.unlaxer.context.ParseContext.localStackDepth
+  1.19%  java.util.ArrayDeque.nonNullElementAt
+  0.95%  java.util.stream.AbstractPipeline.wrapAndCopyInto
+  0.95%  org.unlaxer.parser.elementary.WordParser.expectedDisplayText
+  0.95%  org.unlaxer.context.ParseContext.mergeFailureDiagnostic
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 73.99%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 63.72%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 57.28%  org.unlaxer.context.ParseContext.endParse
+ 56.32%  org.unlaxer.parser.combinator.LazyChain.parse
+ 55.37%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 31.50%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 22.67%  org.unlaxer.parser.combinator.Occurs.parse
+ 21.96%  org.unlaxer.context.ParseContext.addExpectedHintCandidate
+ 19.09%  org.unlaxer.parser.combinator.Choice.parse
+ 17.90%  org.unlaxer.context.ParseContext.replayFailureDiagnostic
+ 17.90%  org.unlaxer.context.PackratMemoTable.lookup
+ 16.95%  org.unlaxer.parser.combinator.LazyOccurs.parse
+ 15.27%  org.unlaxer.context.ParseContext.mergeFailureDiagnostic
+ 12.65%  org.unlaxer.context.ParseContext.deepestTerminalHintCandidate
+  8.35%  org.unlaxer.context.Transaction.commit
+  8.11%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
