@@ -1,0 +1,44 @@
+samples=1814 total_weight=19.86GB
+## by object class
+ 28.75%  org.unlaxer.EndExclusiveCursorImpl
+  9.25%  int[]
+  6.48%  java.lang.Object[]
+  3.06%  java.util.ArrayList
+  3.02%  java.util.stream.ReferencePipeline$Head
+  2.94%  org.unlaxer.CodePointIndex
+  2.84%  org.unlaxer.StringSource
+  2.58%  java.util.HashMap
+  2.54%  org.unlaxer.parser.Parser[]
+  2.50%  org.unlaxer.util.NullSafetyConcurrentHashMap
+  2.22%  java.util.stream.IntPipeline$Head
+  1.73%  org.unlaxer.StartInclusiveCursorImpl
+## by site (class <- top 3 frames)
+ 27.06%  ('org.unlaxer.EndExclusiveCursorImpl', 'org.unlaxer.ParserCursor.<init>', 'org.unlaxer.TransactionElement.createNew', 'org.unlaxer.context.Transaction.begin')
+  4.54%  ('int[]', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.trackCursorProgress', 'org.unlaxer.context.ParseContext.startParse')
+  2.22%  ('java.util.stream.IntPipeline$Head', 'java.util.stream.StreamSupport.intStream', 'java.lang.String.codePoints', 'org.unlaxer.StringSource.<init>')
+  2.18%  ('int[]', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.registerFailureCandidate', 'org.unlaxer.context.ParseContext.endParse')
+  2.01%  ('java.util.HashMap', 'org.unlaxer.PositionResolverImpl.<init>', 'org.unlaxer.PositionResolver.createPositionResolver', 'org.unlaxer.StringSource.<init>')
+  1.61%  ('org.unlaxer.util.NullSafetyConcurrentHashMap', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.empty')
+  1.61%  ('java.util.stream.ReferencePipeline$2', 'java.util.stream.ReferencePipeline.filter', 'org.unlaxer.context.ParseContext.checkpointTransactionalState', 'org.unlaxer.context.Transaction.begin')
+  1.41%  ('java.util.stream.ReferencePipeline$Head', 'java.util.stream.StreamSupport.stream', 'java.util.Collection.stream', 'org.unlaxer.context.ParseContext.isMemoizationSessionSafe')
+  1.37%  ('org.unlaxer.parser.Parser[]', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.trackCursorProgress', 'org.unlaxer.context.ParseContext.startParse')
+  1.33%  ('java.lang.Object', 'org.unlaxer.util.NullSafetyConcurrentHashMap.<init>', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.<init>')
+  1.25%  ('org.unlaxer.StartInclusiveCursorImpl', 'org.unlaxer.CursorRange.of', 'org.unlaxer.CursorRange.fromRootOffset', 'org.unlaxer.StringSource.<init>')
+  1.21%  ('java.lang.Object[]', 'java.util.ArrayList.grow', 'java.util.ArrayList.grow', 'java.util.ArrayList.add')
+  1.21%  ('java.lang.Object[]', 'java.util.Arrays.copyOf', 'java.util.ArrayList.grow', 'java.util.ArrayList.grow')
+  1.17%  ('java.util.stream.ReferencePipeline$Head', 'java.util.stream.StreamSupport.stream', 'java.util.Collection.stream', 'org.unlaxer.context.ParseContext.checkpointTransactionalState')
+  1.13%  ('org.unlaxer.EndExclusiveCursorImpl', 'org.unlaxer.CursorRange.of', 'org.unlaxer.CursorRange.fromRootOffset', 'org.unlaxer.StringSource.<init>')
+  1.09%  ('java.util.HashMap$Node[]', 'java.util.HashMap.resize', 'java.util.HashMap.putVal', 'java.util.HashMap.put')
+## transaction-frame related total: 45.41%
+ 28.75%  object:org.unlaxer.EndExclusiveCursorImpl
+  2.94%  object:org.unlaxer.CodePointIndex
+  2.01%  path:org.unlaxer.TokenList.<init><-java.util.ArrayList
+  1.61%  path:org.unlaxer.context.ParseContext.checkpointTransactionalState<-java.util.stream.ReferencePipeline$2
+  1.29%  object:org.unlaxer.TokenList
+  1.25%  object:org.unlaxer.TransactionElement
+  1.17%  path:org.unlaxer.context.ParseContext.checkpointTransactionalState<-java.util.stream.ReferencePipeline$Head
+  0.77%  path:org.unlaxer.Token.<init><-org.unlaxer.util.NullSafetyConcurrentHashMap
+  0.68%  path:org.unlaxer.context.ParseContext.checkpointTransactionalState<-java.util.stream.ForEachOps$ForEachOp$OfRef
+  0.68%  path:org.unlaxer.context.ParseContext.checkpointTransactionalState<-java.util.ArrayList$ArrayListSpliterator
+  0.68%  object:org.unlaxer.ParserCursor
+  0.60%  path:org.unlaxer.context.ParseContext.checkpointTransactionalState<-org.unlaxer.context.ParseContext$$Lambda+0x00007537a4113c10.947516880

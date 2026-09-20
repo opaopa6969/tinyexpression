@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 lazy diagnostic stack snapshot experiment](results/2026-09-21-lazy-stack-snapshot-experiment.md)
 - [2026-09-21 StringSource construction experiment](results/2026-09-21-string-source-construction-experiment.md)
 - [2026-09-21 direct-rule-call execution tier experiment (not adopted)](results/2026-09-21-direct-rule-tier-experiment.md)
 - [2026-09-21 commit-time token path Stream removal experiment](results/2026-09-21-commit-token-collection-experiment.md)
