@@ -1,0 +1,22 @@
+{
+  "benchmark": "tinyexpression generated Rust frontend, safe memoization, complex.tiny",
+  "unit": "ns/op",
+  "candidate": "RootExpression annotated with @longestChoice over six expression families",
+  "runs": [
+    {
+      "run": 1,
+      "parse_only": {"mean": 200646237.24, "ci_lower": 197224002.90925002, "ci_upper": 204529200.46},
+      "parse_map": {"mean": 204808747.43, "ci_lower": 202826796.17, "ci_upper": 207146979.39}
+    },
+    {
+      "run": 2,
+      "parse_only": {"mean": 196364887.28, "ci_lower": 194374546.98, "ci_upper": 198659337.47599998},
+      "parse_map": {"mean": 201985391.59, "ci_lower": 200198694.93, "ci_upper": 203980536.92875}
+    },
+    {
+      "run": 3,
+      "parse_only": {"mean": 196998177.14, "ci_lower": 195130637.414, "ci_upper": 199067916.2685},
+      "parse_map": {"mean": 202796115.55, "ci_lower": 201174795.75, "ci_upper": 204689234.93}
+    }
+  ]
+}
