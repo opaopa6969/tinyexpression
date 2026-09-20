@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 ParseContext failure-diagnostic lazy hint materialization experiment](results/2026-09-21-lazy-hint-materialization-experiment.md)
 - [2026-09-21 ParseContext failure-diagnostic hint collection CPU experiment](results/2026-09-21-diagnostic-hint-cpu-experiment.md)
 - [2026-09-21 ParseContext failure-diagnostic bookkeeping allocation experiment](results/2026-09-21-diagnostic-tracking-alloc-experiment.md)
 - [2026-09-20 ParseContext transaction frame reuse allocation audit (not adopted)](results/2026-09-20-frame-reuse-audit.md)

@@ -1,0 +1,39 @@
+samples=122
+ 56.56%  diagnostics (hint collection / snapshots / memo replay)
+ 20.49%  commit token collection / listeners
+ 13.93%  other(parser dispatch etc.)
+  9.02%  transaction bookkeeping
+--- top self frames ---
+ 15.57%  java.util.IdentityHashMap.put
+  7.38%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+  4.92%  java.util.ArrayDeque.inc
+  3.28%  org.unlaxer.context.ParseContext.trackCursorProgress
+  2.46%  org.unlaxer.context.ParseContext.registerFailureCandidate
+  2.46%  java.util.HashMap.resize
+  2.46%  java.util.stream.ReferencePipeline$3$1.accept
+  2.46%  java.util.ArrayList.elementData
+  2.46%  java.util.IdentityHashMap.resize
+  2.46%  java.util.IdentityHashMap.hash
+  2.46%  org.unlaxer.Token.<init>
+  2.46%  java.util.ArrayDeque.nonNullElementAt
+  1.64%  org.unlaxer.context.ParseContext$ExpectedSources.addTerminal
+  1.64%  java.util.ArrayList.clear
+  1.64%  org.unlaxer.base.IntegerValue.<init>
+  1.64%  java.lang.Class.annotationData
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 67.21%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 54.10%  org.unlaxer.parser.combinator.LazyChain.parse
+ 42.62%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 31.97%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 27.87%  org.unlaxer.context.ParseContext.endParse
+ 23.77%  org.unlaxer.context.PackratMemoTable.lookup
+ 22.95%  org.unlaxer.context.ParseContext.replayFailureDiagnostic
+ 21.31%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 19.67%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+ 15.57%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+ 13.11%  org.unlaxer.context.ParseContext$ExpectedSources.addFailed
+ 12.30%  org.unlaxer.parser.combinator.Occurs.parse
+ 12.30%  org.unlaxer.context.ParseContext.recordSources
+ 10.66%  org.unlaxer.context.Transaction.commit
+  9.02%  org.unlaxer.context.ParseContext$ExpectedSources.addTerminal
+  7.38%  org.unlaxer.context.ParseContext.trackCursorProgress

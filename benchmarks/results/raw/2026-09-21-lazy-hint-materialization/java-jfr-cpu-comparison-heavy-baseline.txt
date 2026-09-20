@@ -1,0 +1,39 @@
+samples=148
+ 66.22%  diagnostics (hint collection / snapshots / memo replay)
+ 14.19%  other(parser dispatch etc.)
+ 13.51%  commit token collection / listeners
+  6.08%  transaction bookkeeping
+--- top self frames ---
+ 22.97%  java.util.HashMap.putVal
+ 10.14%  java.lang.String.equals
+  8.11%  org.unlaxer.context.ParseContext.registerFailureCandidate
+  4.05%  java.util.ArrayList$Itr.next
+  2.70%  java.util.HashMap$Node.<init>
+  2.03%  org.unlaxer.context.ParseContext.collectExpectedCandidatesIterative
+  2.03%  java.util.HashMap.getNode
+  2.03%  org.unlaxer.TokenList.isEmpty
+  2.03%  java.util.Collections$UnmodifiableCollection$1.hasNext
+  2.03%  org.unlaxer.context.ParseContext.expectedHintCandidatesFor
+  2.03%  java.util.HashMap.hash
+  1.35%  java.util.IdentityHashMap.forEach
+  1.35%  java.util.IdentityHashMap.remove
+  1.35%  org.unlaxer.context.ParseContext.endParse
+  1.35%  org.unlaxer.base.MinIntegerValue.minIntegerValue
+  1.35%  java.util.stream.ReferencePipeline$3$1.accept
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 56.76%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 56.76%  org.unlaxer.context.ParseContext.endParse
+ 54.73%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 44.59%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 42.57%  org.unlaxer.parser.combinator.LazyChain.parse
+ 31.76%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 29.05%  org.unlaxer.context.ParseContext.addMemoFrameHint
+ 18.24%  org.unlaxer.context.ParseContext$FailureDiagnostic.addExpectedHint
+ 12.84%  org.unlaxer.context.ParseContext$FailureDiagnostic.addExpectedParser
+ 11.49%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+  6.08%  org.unlaxer.context.ParseContext.expectedHintCandidatesFor
+  6.08%  org.unlaxer.context.ParseContext.addExpectedHintCandidate
+  5.41%  org.unlaxer.context.PackratMemoTable.lookup
+  5.41%  org.unlaxer.context.Transaction.rollback
+  5.41%  org.unlaxer.base.IntegerValue.<init>
+  5.41%  org.unlaxer.context.PackratMemoTable.memoizeFailure

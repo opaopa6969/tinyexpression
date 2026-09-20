@@ -1,0 +1,6 @@
+# baseline (unlaxer-parser b443676 / #219)
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm           complex.tiny  avgt    3  183704103.259 ± 710103.802    B/op
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm  comparison-heavy.tiny  avgt    3   94147559.235 ±   9755.786    B/op
+# candidate (#220 Java f9eb905)
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm           complex.tiny  avgt    3  181351559.467 ± 491779.312    B/op
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm  comparison-heavy.tiny  avgt    3   91726397.241 ±   7728.559    B/op
