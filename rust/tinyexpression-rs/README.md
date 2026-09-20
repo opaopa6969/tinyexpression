@@ -28,7 +28,7 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 
 ## 保証範囲
 
-- unlaxer-parser `063685303c28a145d5bd9a0ca0e3b969e228a122` のruntimeとgeneratorを固定している。生成mapperはrule別のbounded-size関数へ分割され、debug/test buildでも2 MiB thread stack上のP4 parse+mappingを検証する。
+- unlaxer-parser `4a27d27d78c6965854ebb076e0a55c72e2d8ed3f` のruntimeとgeneratorを固定している。生成mapperはrule別のbounded-size関数へ分割され、debug/test buildでも2 MiB thread stack上のP4 parse+mappingを検証する。Rust frontendのprimary parse、result-family reparse、alternate-root reparseは、状態依存規則を除外するfailure-only memoizationを明示的に有効化する。
 - Java P4と同じUBNFをsource of truthとし、生成5ファイルはCIでdrift検査する。
 - parserとevaluatorはJava・手書きparser・別評価器へfallbackしない。
 - top-levelの裸のboolean比較は、通常の`Formula`解析が数値prefixを選んで失敗した場合に限り、同じ生成文法の`BooleanExpression` ruleで全文を再解析して`FormulaExpr`へ包む。これはJavaの`P4PreferredAstMapper`と同じroot disambiguationであり、別parserへのfallbackではない。

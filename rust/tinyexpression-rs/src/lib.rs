@@ -13,7 +13,11 @@ use std::fmt::{self, Display, Formatter};
 pub use evaluator::{evaluate, evaluate_ast, EvaluationError, Value};
 pub use generated::ast::Ast;
 use generated::ast::AstValue;
-use unlaxer_runtime::{parse_detailed_shared, ParseDiagnostic, Span};
+use unlaxer_runtime::{
+    parse_detailed_shared_with_options, Memoization, ParseDiagnostic, ParseOptions, Span,
+};
+
+const PARSE_OPTIONS: ParseOptions = ParseOptions::with_memoization(Memoization::SafeFailures);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FrontendError {
@@ -36,7 +40,7 @@ impl Error for FrontendError {}
 
 /// Parses the complete UTF-8 source and returns an owned, source-preserving typed AST.
 pub fn parse(source: &str) -> Result<Ast, FrontendError> {
-    match generated::parser::parse_tree_detailed(source) {
+    match generated::parser::parse_tree_detailed_with_options(source, PARSE_OPTIONS) {
         Ok(tree) => generated::mapper::map(&tree)
             .map_err(FrontendError::Mapping)
             .and_then(|ast| select_explicit_result_family(source, ast)),
@@ -311,8 +315,8 @@ fn parse_family_root(
         .iter()
         .position(|rule| rule.name == rule_name)
         .ok_or_else(|| FrontendError::Mapping(format!("missing generated rule {rule_name}")))?;
-    let mut tree =
-        parse_detailed_shared(grammar, root, true, source).map_err(FrontendError::Parse)?;
+    let mut tree = parse_detailed_shared_with_options(grammar, root, true, source, PARSE_OPTIONS)
+        .map_err(FrontendError::Parse)?;
     if let Some(bounds) = clip_to {
         for node in &mut tree.nodes {
             clip_span(&mut node.span, bounds);
@@ -483,7 +487,9 @@ fn parse_alternate_root(source: &str) -> Option<Result<Ast, FrontendError>> {
     let grammar = generated::parser::grammar();
     for rule_name in ["BooleanExpression", "StringExpression", "ObjectExpression"] {
         let root = grammar.iter().position(|rule| rule.name == rule_name)?;
-        if let Ok(tree) = parse_detailed_shared(grammar, root, true, source) {
+        if let Ok(tree) =
+            parse_detailed_shared_with_options(grammar, root, true, source, PARSE_OPTIONS)
+        {
             return Some(
                 generated::mapper::map(&tree)
                     .map(|value| wrap_expression_root(value, source.chars().count()))

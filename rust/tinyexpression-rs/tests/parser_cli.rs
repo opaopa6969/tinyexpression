@@ -1,9 +1,12 @@
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
+use std::sync::mpsc;
+use std::time::Duration;
 
 use tinyexpression_rs::generated::parser::CATALOGS;
 use tinyexpression_rs::{parse, Ast, FrontendError};
+use unlaxer_runtime::{Memoization, ParseOptions};
 
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -277,11 +280,36 @@ fn failed_boolean_retry_keeps_the_primary_formula_diagnostic() {
     let source = "1<";
     let primary = tinyexpression_rs::generated::parser::parse_tree_detailed(source)
         .expect_err("primary Formula parse must fail");
+    let memoized = tinyexpression_rs::generated::parser::parse_tree_detailed_with_options(
+        source,
+        ParseOptions::with_memoization(Memoization::SafeFailures),
+    )
+    .expect_err("memoized primary Formula parse must fail");
     let FrontendError::Parse(actual) = parse(source).expect_err("invalid comparison must fail")
     else {
         panic!("expected parse diagnostic");
     };
+    assert_eq!(memoized, primary);
     assert_eq!(actual, primary);
+}
+
+#[test]
+fn invalid_nested_ternary_returns_a_diagnostic_within_two_seconds() {
+    const SOURCE: &str = "(true ? (false ? 1 : 2 : 3)";
+    let (sender, receiver) = mpsc::sync_channel(1);
+    let parser = std::thread::spawn(move || sender.send(parse(SOURCE)));
+    let result = receiver
+        .recv_timeout(Duration::from_secs(2))
+        .expect("memoized invalid parse exceeded two seconds");
+    parser
+        .join()
+        .expect("invalid nested ternary parser thread panicked")
+        .expect("result receiver remains alive");
+    let FrontendError::Parse(diagnostic) = result.expect_err("nested ternary must be rejected")
+    else {
+        panic!("expected parse diagnostic");
+    };
+    assert!(!diagnostic.farthest.expected.is_empty());
 }
 
 #[test]
