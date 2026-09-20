@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 ParseContext failure-diagnostic bookkeeping allocation experiment](results/2026-09-21-diagnostic-tracking-alloc-experiment.md)
 - [2026-09-20 ParseContext transaction frame reuse allocation audit (not adopted)](results/2026-09-20-frame-reuse-audit.md)
 - [2026-09-20 ParseContext checkpoint copy-on-write experiment](results/2026-09-20-checkpoint-cow-experiment.md)
 - [2026-09-20 Formula suffix factoring experiment](results/2026-09-20-formula-suffix-experiment.md)
