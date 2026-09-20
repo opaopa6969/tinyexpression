@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 StringSource construction experiment](results/2026-09-21-string-source-construction-experiment.md)
 - [2026-09-21 direct-rule-call execution tier experiment (not adopted)](results/2026-09-21-direct-rule-tier-experiment.md)
 - [2026-09-21 commit-time token path Stream removal experiment](results/2026-09-21-commit-token-collection-experiment.md)
 - [2026-09-21 Java innermost-frame diagnostic merge experiment](results/2026-09-21-innermost-frame-merge-experiment.md)
