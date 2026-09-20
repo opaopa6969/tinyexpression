@@ -1,0 +1,10 @@
+# Rust allocation count per public-facade parse (baseline unlaxer-runtime 74527e5 / tinyexpression a195067d)
+# Measured with a counting GlobalAlloc wrapped around System in a throw-away integration test
+# of tinyexpression-rs (allocations + reallocations, bytes requested). The grammar was warmed
+# with one parse before counting. Not attributable to checkpoints: unlaxer-parser's
+# rust/unlaxer-alloc-audit/tests/checkpoint_allocation.rs shows that extra checkpoint layers add
+# zero allocations.
+fixture                 allocations   bytes
+complex.tiny                789084   17715406
+comparison-heavy.tiny        82094    4017463
+# Reference: #207 counter profile opened 53,985 (complex) / 15,135 (comparison-heavy) checkpoints.

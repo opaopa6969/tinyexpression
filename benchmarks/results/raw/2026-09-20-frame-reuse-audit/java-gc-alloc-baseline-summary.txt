@@ -1,0 +1,22 @@
+                 gc.alloc.rate.norm: 1176475852.000 B/op
+                 gc.count:           4.000 counts
+                 gc.alloc.rate.norm: 1176440680.000 B/op
+                 gc.count:           4.000 counts
+                 gc.alloc.rate.norm: 1176428648.000 B/op
+                 gc.count:           4.000 counts
+Secondary result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade:gc.alloc.rate.norm":
+Secondary result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade:gc.count":
+                 gc.alloc.rate.norm: 432498790.667 B/op
+                 gc.count:           3.000 counts
+                 gc.alloc.rate.norm: 431661805.333 B/op
+                 gc.count:           2.000 counts
+                 gc.alloc.rate.norm: 431661558.857 B/op
+                 gc.count:           3.000 counts
+Secondary result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade:gc.alloc.rate.norm":
+Secondary result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade:gc.count":
+P4ParserBenchmark.publicFacade                              complex.tiny  avgt    3      306896.711 ±  192244.594   us/op
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm           complex.tiny  avgt    3  1176448393.333 ±  447501.834    B/op
+P4ParserBenchmark.publicFacade:gc.count                     complex.tiny  avgt    3          12.000                counts
+P4ParserBenchmark.publicFacade                     comparison-heavy.tiny  avgt    3      166020.327 ±  229496.691   us/op
+P4ParserBenchmark.publicFacade:gc.alloc.rate.norm  comparison-heavy.tiny  avgt    3   431940718.286 ± 8817280.098    B/op
+P4ParserBenchmark.publicFacade:gc.count            comparison-heavy.tiny  avgt    3           8.000                counts
