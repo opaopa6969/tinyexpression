@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-20 final Java/Rust complex-expression benchmark](results/2026-09-20-final-java-rust-complex.md)
 - [2026-09-20 Java/Rust parser benchmark](results/2026-09-20-java-rust-parser.md)
 - [2026-09-20 Rust shared-grammar follow-up](results/2026-09-20-rust-shared-grammar.md)
 
@@ -25,25 +26,29 @@ Java/Rust AST and diagnostic parity on the shared conformance fixtures.
 
 ## Measurement boundaries
 
-Each language reports three steady-state operations:
+Each language reports the same steady-state operation boundaries:
 
-- `parse-only`: parse the complete source into its native parse tree.
+- `parse-only-off` / `parse-only-safe`: parse the complete source into its native parse tree
+  with memoization disabled or with safe failure memoization.
 - `map-only`: map an already parsed tree/token into the generated typed AST.
-- `parse+map`: run the generated parser and mapper path from source to typed AST.
+- `parse+map-off` / `parse+map-safe`: run the generated parser and mapper path from source to
+  typed AST with the corresponding parse policy.
 
 File I/O, process startup, JSON serialization, full-input benchmark validation,
 and the first lazy Java parser lookup are outside the timed region. The Java
 parse path returns the committed grammar-root token without rendering or
-reducing its tree. Its default and memoized measurements use the same manual
-parser/mapper path, so the `ParseContext.enableMemoize()` flag is the only A/B
-difference. Java uses JMH and Rust uses Criterion; their reported distributions
+reducing its tree. Both targets use their immutable `ParseOptions` API, and OFF versus
+`SAFE_FAILURES` / `SafeFailures` is the only A/B difference. Java uses JMH and Rust uses
+Criterion; their reported distributions
 are more useful than a single wall-clock loop. Do not compare CLI startup
 timing with these values.
 
 These are direct generated-frontend measurements. TinyExpression's production
-`P4PreferredAstMapper` facade enables Java packrat memoization by default; the
-memoized JMH rows therefore approximate its parser policy more closely than the
-non-memoized baseline, while deliberately excluding facade-specific work.
+`P4PreferredAstMapper` facade enables the published runtime's legacy memoization by
+default; the safe JMH rows measure the new explicit policy rather than that production
+policy. They deliberately exclude facade-specific work. Safe failure memoization is not
+promoted to the production default until its deeply nested fraud-formula performance
+meets the existing deadline contract.
 
 The current implementations do not perform identical internal setup. Java
 reuses a lazy singleton parser graph and its mapper serializes access to global

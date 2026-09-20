@@ -24,6 +24,8 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.context.Memoization;
+import org.unlaxer.context.ParseOptions;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
@@ -85,10 +87,7 @@ public class P4ParserBenchmark {
 
     /** Parse into the committed grammar-root token without reducing or re-rendering the tree. */
     final Token parseFreshToken(boolean memoized) {
-      try (ParseContext context = new ParseContext(StringSource.createRootSource(source))) {
-        if (memoized) {
-          context.enableMemoize();
-        }
+      try (ParseContext context = newParseContext(memoized)) {
         Parsed parsed = rootParser.parse(context);
         if (!parsed.isSucceeded()) {
           throw new IllegalArgumentException("P4 parse failed for fixture " + fixture);
@@ -105,10 +104,7 @@ public class P4ParserBenchmark {
 
     /** Trial-only acceptance check; string materialization is deliberately outside measurement. */
     private Token parseFreshTokenAndValidate(boolean memoized) {
-      try (ParseContext context = new ParseContext(StringSource.createRootSource(source))) {
-        if (memoized) {
-          context.enableMemoize();
-        }
+      try (ParseContext context = newParseContext(memoized)) {
         Parsed parsed = rootParser.parse(context);
         if (!parsed.isSucceeded()) {
           throw new IllegalArgumentException("P4 parse failed for fixture " + fixture);
@@ -129,6 +125,15 @@ public class P4ParserBenchmark {
       }
     }
 
+    private ParseContext newParseContext(boolean memoized) {
+      if (memoized) {
+        return ParseContext.withOptions(
+            StringSource.createRootSource(source),
+            ParseOptions.withMemoization(Memoization.SAFE_FAILURES));
+      }
+      return new ParseContext(StringSource.createRootSource(source));
+    }
+
     final TinyExpressionP4Mapper.MappedAst mapToken(Token token) {
       synchronized (MAPPER_LOCK) {
         return TinyExpressionP4Mapper.mapParsedToken(token, "FormulaExpr");
@@ -145,7 +150,7 @@ public class P4ParserBenchmark {
   }
 
   @Benchmark
-  public void parseOnly(ParserState state, Blackhole blackhole) {
+  public void parseOnlyOff(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseFreshToken(false));
   }
 
@@ -155,19 +160,19 @@ public class P4ParserBenchmark {
   }
 
   @Benchmark
-  public void parseAndMap(ParserState state, Blackhole blackhole) {
+  public void parseAndMapOff(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseAndMap(false));
   }
 
-  /** A/B candidate: existing opt-in packrat mode, kept separate from the public default. */
+  /** A/B candidate: safe failure memoization, kept separate from the non-memoized baseline. */
   @Benchmark
-  public void parseOnlyMemoized(ParserState state, Blackhole blackhole) {
+  public void parseOnlySafe(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseFreshToken(true));
   }
 
-  /** A/B candidate combining memoized parsing with the generated mapper. */
+  /** A/B candidate combining safe failure memoization with the generated mapper. */
   @Benchmark
-  public void parseAndMapMemoized(ParserState state, Blackhole blackhole) {
+  public void parseAndMapSafe(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseAndMap(true));
   }
 }
