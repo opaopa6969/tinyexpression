@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-20 ParseContext checkpoint copy-on-write experiment](results/2026-09-20-checkpoint-cow-experiment.md)
 - [2026-09-20 Formula suffix factoring experiment](results/2026-09-20-formula-suffix-experiment.md)
 - [2026-09-20 predictive-choice experiment](results/2026-09-20-predictive-choice-experiment.md)
 - [2026-09-20 longest-choice root dispatch experiment](results/2026-09-20-longest-root-experiment.md)
