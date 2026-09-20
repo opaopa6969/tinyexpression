@@ -6,6 +6,8 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 persistent parse stack snapshot experiment (Java)](results/2026-09-21-persistent-stack-snapshot-experiment.md)
+- [2026-09-21 bulk memoized diagnostic replay experiment (Rust)](results/2026-09-21-bulk-diagnostic-replay-experiment.md)
 - [2026-09-21 scope mutation journal experiment](results/2026-09-21-scope-mutation-journal-experiment.md)
 - [2026-09-21 transaction frame pool re-evaluation (not adopted)](results/2026-09-21-transaction-frame-pool-experiment.md)
 - [2026-09-21 lazy diagnostic stack snapshot experiment](results/2026-09-21-lazy-stack-snapshot-experiment.md)
