@@ -44,9 +44,11 @@ are more useful than a single wall-clock loop. Do not compare CLI startup
 timing with these values.
 
 These are direct generated-frontend measurements. TinyExpression's production
-`P4PreferredAstMapper` facade enables Java safe failure memoization by default; the
-safe JMH rows therefore approximate its parser policy more closely than the
-non-memoized baseline, while deliberately excluding facade-specific work.
+`P4PreferredAstMapper` facade enables the published runtime's legacy memoization by
+default; the safe JMH rows measure the new explicit policy rather than that production
+policy. They deliberately exclude facade-specific work. Safe failure memoization is not
+promoted to the production default until its deeply nested fraud-formula performance
+meets the existing deadline contract.
 
 The current implementations do not perform identical internal setup. Java
 reuses a lazy singleton parser graph and its mapper serializes access to global

@@ -119,19 +119,24 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Create an empty Maven repository on the self-hosted runner
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-smoke.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+
       - name: Validate Central release guard
         run: |
           python3 scripts/tests/test_central_release_guard.py
           bash -n scripts/release-central.sh
 
       - name: Smoke — root (P4 typed AST + parity matrix)
-        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Install main artifact to local repo (for LSP smoke)
-        run: mvn -B install -DskipTests -Dgpg.skip=true
+        run: mvn -B install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Smoke — LSP module
-        run: mvn -B -P p4-smoke test -Dgpg.skip=true
+        run: mvn -B -P p4-smoke test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
         working-directory: tools/tinyexpression-p4-lsp-vscode
         env:
           MAVEN_OPTS: >-
@@ -156,16 +161,23 @@ jobs:
           server-username: GITHUB_ACTOR
           server-password: GITHUB_TOKEN
 
+      - name: Create an empty Maven repository on the self-hosted runner
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-build.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+
       # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
       # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
       - name: Build and verify (main, baseline-gated)
-        run: mvn -B verify -Dgpg.skip=true -Dmaven.test.failure.ignore=true
+        run: >-
+          mvn -B verify -Dgpg.skip=true -Dmaven.test.failure.ignore=true
+          -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Check test failures against baseline
         run: bash tools/ci/check-test-baseline.sh
 
       - name: Install main artifact to local repo
-        run: mvn -B install -DskipTests -Dgpg.skip=true
+        run: mvn -B install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
 
       - name: Set up Node.js (for vsce packaging in tools)
         uses: actions/setup-node@v6
@@ -173,7 +185,7 @@ jobs:
           node-version: '24'
 
       - name: Build and verify tools/tinyexpression-p4-lsp-vscode
-        run: mvn -B verify -Dgpg.skip=true
+        run: mvn -B verify -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
         working-directory: tools/tinyexpression-p4-lsp-vscode
         env:
           MAVEN_OPTS: >-

@@ -12,6 +12,12 @@ Safe failure memoizationの効果は大きく、JavaはOff比21.53〜22.26倍、
 10.74〜10.84倍高速になった。mapping単体はJava 137.390 µs/op、Rust 16.416 µs/opで、
 両実装とも複雑式の総時間はparser探索が支配している。
 
+このSafe policyをTinyExpression production facadeへそのまま適用するのは、今回のPRでは
+見送った。追加の互換性検証で、既存のfraud-formula性能testがSafeでは3.323秒まで退行し、
+深いnested `if` が10秒deadlineを超えることを確認した。公開runtimeのlegacy memoizationでは
+同じ5式が43/9/4/34/29 msで通る。Safeは正しさを優先した新しい比較対象であり、既存の
+production policyを置き換えるには成功結果を含む安全な高速化が別途必要である。
+
 したがってJava側の次の最適化はmapperではなく、`@longestChoice` を含む探索分岐と
 alternate-root/result-family retryの除去を優先する。allocation、diagnostic frame、token treeは
 その後にprofilerで分離する。成功結果のmemoizationや生成された直接parser codeも候補だが、
@@ -77,6 +83,8 @@ map-onlyのJava / Rust比は8.37×だが、絶対時間はparseに比べて小�
    keyへ反映できる。この差を解消してからSafe policyの完全な言語間parityを主張する。
 5. generated direct parser codeはcombinator runtimeを置き換えるのではなく、同じ
    `ParseContext` 契約を共有する追加backendとしてA/B測定する。
+6. self-hosted CIはjobごとの空Maven repositoryを使う。同一version番号の開発artifactを
+   共有 `~/.m2` にinstallしても、公開artifact向けFull verifyへ混入させない。
 
 generated typed ASTを使う通常のcurated/supported経路には手書きevaluator fallbackはない。
 ただしJava `P4PreferredAstMapper.parseRootToken` とRust `parse_alternate_root` には、現時点で
