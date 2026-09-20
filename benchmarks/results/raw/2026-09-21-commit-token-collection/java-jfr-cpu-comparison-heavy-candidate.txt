@@ -1,0 +1,39 @@
+samples=34
+ 35.29%  other(parser dispatch etc.)
+ 29.41%  commit token collection / listeners
+ 26.47%  diagnostics (hint collection / snapshots / memo replay)
+  8.82%  transaction bookkeeping
+--- top self frames ---
+ 11.76%  org.unlaxer.TokenList.isEmpty
+  5.88%  java.util.IdentityHashMap.resize
+  5.88%  java.util.IdentityHashMap.put
+  5.88%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.lambda$new$0
+  5.88%  java.lang.ref.SoftReference.get
+  2.94%  java.util.concurrent.ConcurrentHashMap.get
+  2.94%  java.util.IdentityHashMap.forEach
+  2.94%  org.unlaxer.ParserCursor.getPosition
+  2.94%  org.unlaxer.TransactionElement.createNew
+  2.94%  java.util.stream.StreamSupport.intStream
+  2.94%  java.util.stream.ForEachOps$ForEachOp.<init>
+  2.94%  org.unlaxer.context.ParseContext.snapshotStackElements
+  2.94%  java.util.stream.ReferencePipeline.lambda$toArray$0
+  2.94%  java.util.HashMap.resize
+  2.94%  java.lang.String.<init>
+  2.94%  java.lang.Class.reflectionData
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 35.29%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 20.59%  org.unlaxer.reducer.AbstractTokenReducer.reduce
+ 20.59%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+ 20.59%  org.unlaxer.parser.combinator.LazyChain.parse
+ 17.65%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 14.71%  org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.parseWithRoot
+ 14.71%  org.unlaxer.context.PackratMemoTable.memoizeFailure
+ 11.76%  org.unlaxer.TokenList.isEmpty
+ 11.76%  org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.parseRootToken
+ 11.76%  org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.parseMappedCandidates
+ 11.76%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.<init>
+ 11.76%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper.selectSubtreeTokenWithSourceMap
+ 11.76%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+ 11.76%  org.unlaxer.context.ParseContext.mergeFrame
+ 11.76%  org.unlaxer.context.ParseContext.discardMemoDiagnosticFrame
+ 11.76%  org.unlaxer.context.ParseContext.snapshotStackElements

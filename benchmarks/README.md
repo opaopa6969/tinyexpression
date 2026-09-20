@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 commit-time token path Stream removal experiment](results/2026-09-21-commit-token-collection-experiment.md)
 - [2026-09-21 Java innermost-frame diagnostic merge experiment](results/2026-09-21-innermost-frame-merge-experiment.md)
 - [2026-09-21 ParseContext failure-diagnostic lazy hint materialization experiment](results/2026-09-21-lazy-hint-materialization-experiment.md)
 - [2026-09-21 ParseContext failure-diagnostic hint collection CPU experiment](results/2026-09-21-diagnostic-hint-cpu-experiment.md)

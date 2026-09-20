@@ -1,0 +1,39 @@
+samples=52
+ 46.15%  other(parser dispatch etc.)
+ 25.00%  commit token collection / listeners
+ 21.15%  diagnostics (hint collection / snapshots / memo replay)
+  7.69%  transaction bookkeeping
+--- top self frames ---
+ 17.31%  java.util.stream.ReferencePipeline$3$1.accept
+ 11.54%  org.unlaxer.TokenList.isEmpty
+  5.77%  java.util.IdentityHashMap.put
+  3.85%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+  3.85%  java.util.HashMap.resize
+  3.85%  java.util.IdentityHashMap.hash
+  3.85%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+  3.85%  java.util.stream.StreamSupport.stream
+  3.85%  java.util.ArrayList.grow
+  3.85%  org.unlaxer.base.IntegerValue.<init>
+  1.92%  org.unlaxer.ParserCursor.getCursor
+  1.92%  org.unlaxer.context.ParseContext.getTokenStack
+  1.92%  java.util.ArrayList.iterator
+  1.92%  org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.parseWithRoot
+  1.92%  java.util.IdentityHashMap.forEach
+  1.92%  org.unlaxer.context.ParseContext.trackCursorProgress
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 34.62%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 28.85%  org.unlaxer.parser.combinator.LazyChain.parse
+ 25.00%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 11.54%  org.unlaxer.parser.combinator.Choice.parse
+ 11.54%  org.unlaxer.context.PackratMemoTable.memoizeFailure
+ 11.54%  org.unlaxer.TokenList.isEmpty
+ 11.54%  org.unlaxer.reducer.AbstractTokenReducer.reduce
+  9.62%  org.unlaxer.parser.combinator.Occurs.parse
+  9.62%  org.unlaxer.parser.combinator.LazyChoice.parse
+  9.62%  org.unlaxer.context.ParseContext.endParse
+  9.62%  org.unlaxer.context.ParseContext.mergeFrame
+  9.62%  org.unlaxer.context.ParseContext.discardMemoDiagnosticFrame
+  7.69%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.<init>
+  7.69%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper.selectSubtreeTokenWithSourceMap
+  7.69%  org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.parseDetailed
+  7.69%  org.unlaxer.context.ParseContext$ExpectedSources.addAll

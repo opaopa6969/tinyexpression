@@ -1,0 +1,175 @@
+[INFO] Scanning for projects...
+[INFO] Inspecting build with total of 1 modules
+[INFO] Installing Central Publishing features
+[INFO] 
+[INFO] ---------------------< org.unlaxer:tinyExpression >---------------------
+[INFO] Building tinyExpression 1.4.15
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.3.0:java (generate-tinyexpression-p4-runtime) @ tinyExpression ---
+Generated: /home/opa/work/unlaxer-workspace/wt-te-223/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Parsers.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-223/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4AST.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-223/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Mapper.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-223/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Evaluator.java
+[INFO] 
+[INFO] --- exec:3.3.0:java (generate-tinyexpression-p4-railroad) @ tinyExpression ---
+[INFO] skipping execute as per configuration
+[INFO] 
+[INFO] --- build-helper:3.5.0:add-source (add-generated-p4-runtime-sources) @ tinyExpression ---
+[INFO] Source directory: /home/opa/work/unlaxer-workspace/wt-te-223/target/generated-sources/tinyexpression-p4/runtime added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ tinyExpression ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 6 resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ tinyExpression ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 624 source files with javac [debug target 21] to target/classes
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-223/src/main/java/org/unlaxer/compiler/PackageInternalsFinder.java: 一部の入力ファイルは推奨されないAPIを使用またはオーバーライドしています。
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-223/src/main/java/org/unlaxer/compiler/PackageInternalsFinder.java: 詳細は、-Xlint:deprecationオプションを指定して再コンパイルしてください。
+[INFO] 
+[INFO] --- build-helper:3.5.0:add-test-source (add-jmh-source) @ tinyExpression ---
+[INFO] Test Source directory: /home/opa/work/unlaxer-workspace/wt-te-223/src/jmh/java added.
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ tinyExpression ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 6 resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ tinyExpression ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 163 source files with javac [debug target 21] to target/test-classes
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-223/src/test/java/org/unlaxer/ParserTestBase.java: 一部の入力ファイルは推奨されないAPIを使用またはオーバーライドしています。
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-223/src/test/java/org/unlaxer/ParserTestBase.java: 詳細は、-Xlint:deprecationオプションを指定して再コンパイルしてください。
+[INFO] 
+[INFO] --- dependency:3.7.0:build-classpath (default-cli) @ tinyExpression ---
+[INFO] Skipped writing classpath file '/home/opa/work/unlaxer-workspace/wt-te-223/target/jmh-classpath.txt'.  No changes found.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  10.106 s
+[INFO] Finished at: 2026-09-21T03:05:28+09:00
+[INFO] ------------------------------------------------------------------------
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 8 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade
+# Parameters: (fixture = complex.tiny)
+
+# Run progress: 0.00% complete, ETA 00:00:52
+# Fork: 1 of 2
+# Warmup Iteration   1: 132908.956 us/op
+# Warmup Iteration   2: 127274.722 us/op
+# Warmup Iteration   3: 74891.638 us/op
+# Warmup Iteration   4: 74142.301 us/op
+# Warmup Iteration   5: 75104.318 us/op
+Iteration   1: 79204.124 us/op
+Iteration   2: 79262.088 us/op
+Iteration   3: 73108.818 us/op
+Iteration   4: 80912.193 us/op
+Iteration   5: 73757.804 us/op
+Iteration   6: 78348.049 us/op
+Iteration   7: 73118.076 us/op
+Iteration   8: 72207.533 us/op
+
+# Run progress: 25.00% complete, ETA 00:00:43
+# Fork: 2 of 2
+# Warmup Iteration   1: 131980.488 us/op
+# Warmup Iteration   2: 117480.698 us/op
+# Warmup Iteration   3: 72585.096 us/op
+# Warmup Iteration   4: 74597.343 us/op
+# Warmup Iteration   5: 79341.805 us/op
+Iteration   1: 78827.157 us/op
+Iteration   2: 75103.710 us/op
+Iteration   3: 73650.772 us/op
+Iteration   4: 73839.906 us/op
+Iteration   5: 74125.130 us/op
+Iteration   6: 74257.636 us/op
+Iteration   7: 71662.551 us/op
+Iteration   8: 75945.110 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade":
+  75458.166 ±(99.9%) 2954.234 us/op [Average]
+  (min, avg, max) = (71662.551, 75458.166, 80912.193), stdev = 2901.453
+  CI (99.9%): [72503.932, 78412.400] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 5 iterations, 1 s each
+# Measurement: 8 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade
+# Parameters: (fixture = comparison-heavy.tiny)
+
+# Run progress: 50.00% complete, ETA 00:00:28
+# Fork: 1 of 2
+# Warmup Iteration   1: 106194.369 us/op
+# Warmup Iteration   2: 50522.590 us/op
+# Warmup Iteration   3: 54467.518 us/op
+# Warmup Iteration   4: 44582.384 us/op
+# Warmup Iteration   5: 47200.309 us/op
+Iteration   1: 44892.763 us/op
+Iteration   2: 48345.081 us/op
+Iteration   3: 39220.174 us/op
+Iteration   4: 41328.772 us/op
+Iteration   5: 44103.521 us/op
+Iteration   6: 44295.146 us/op
+Iteration   7: 42023.659 us/op
+Iteration   8: 39798.350 us/op
+
+# Run progress: 75.00% complete, ETA 00:00:14
+# Fork: 2 of 2
+# Warmup Iteration   1: 80011.169 us/op
+# Warmup Iteration   2: 41343.014 us/op
+# Warmup Iteration   3: 44761.562 us/op
+# Warmup Iteration   4: 39855.003 us/op
+# Warmup Iteration   5: 40032.614 us/op
+Iteration   1: 45100.971 us/op
+Iteration   2: 39266.183 us/op
+Iteration   3: 38094.034 us/op
+Iteration   4: 39738.737 us/op
+Iteration   5: 39177.225 us/op
+Iteration   6: 38695.411 us/op
+Iteration   7: 40309.173 us/op
+Iteration   8: 38980.254 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade":
+  41460.591 ±(99.9%) 3054.764 us/op [Average]
+  (min, avg, max) = (38094.034, 41460.591, 48345.081), stdev = 3000.187
+  CI (99.9%): [38405.827, 44515.355] (assumes normal distribution)
+
+
+# Run complete. Total time: 00:00:57
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                                   (fixture)  Mode  Cnt      Score      Error  Units
+P4ParserBenchmark.publicFacade           complex.tiny  avgt   16  75458.166 ± 2954.234  us/op
+P4ParserBenchmark.publicFacade  comparison-heavy.tiny  avgt   16  41460.591 ± 3054.764  us/op
+
+Benchmark result is saved to /home/opa/work/unlaxer-workspace/wt-te-223/benchmarks/results/raw/2026-09-21-commit-token-collection/java-baseline-run3.json
