@@ -30,6 +30,7 @@ import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 
 /** JMH coverage for the generated P4 parser and AST mapper. */
 @BenchmarkMode(Mode.AverageTime)
@@ -149,6 +150,33 @@ public class P4ParserBenchmark {
     }
   }
 
+  @State(Scope.Thread)
+  public static class FacadeState {
+    @Param({"complex.tiny", "comparison-heavy.tiny"})
+    public String fixture;
+
+    private String source;
+
+    @Setup(Level.Trial)
+    public void prepareTrial() throws IOException {
+      Path fixtureDir = Path.of(System.getProperty(
+          "tinyexpression.benchmark.fixtureDir", "benchmarks/fixtures"))
+          .toAbsolutePath().normalize();
+      Path fixturePath = fixtureDir.resolve(fixture).normalize();
+      if (!fixturePath.startsWith(fixtureDir) || !Files.isRegularFile(fixturePath)) {
+        throw new IllegalArgumentException("Benchmark fixture does not exist: " + fixturePath);
+      }
+      source = Files.readString(fixturePath, StandardCharsets.UTF_8);
+      if (source.isBlank() || P4PreferredAstMapper.parseDetailed(source).ast() == null) {
+        throw new IllegalArgumentException("Public facade did not map fixture: " + fixturePath);
+      }
+    }
+
+    final TinyExpressionP4AST parsePublicFacade() {
+      return P4PreferredAstMapper.parseDetailed(source).ast();
+    }
+  }
+
   @Benchmark
   public void parseOnlyOff(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseFreshToken(false));
@@ -174,5 +202,11 @@ public class P4ParserBenchmark {
   @Benchmark
   public void parseAndMapSafe(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseAndMap(true));
+  }
+
+  /** Production-facing parse, semantic-root projection, and owned source mapping. */
+  @Benchmark
+  public void publicFacade(FacadeState state, Blackhole blackhole) {
+    blackhole.consume(state.parsePublicFacade());
   }
 }

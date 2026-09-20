@@ -12,6 +12,11 @@ const FIXTURES: &[(&str, &str)] = &[
     ("large-match", "large-match.tiny"),
 ];
 
+const FACADE_FIXTURES: &[(&str, &str)] = &[
+    ("complex", "complex.tiny"),
+    ("comparison-heavy", "comparison-heavy.tiny"),
+];
+
 fn fixture_path(file_name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../benchmarks/fixtures")
@@ -108,6 +113,25 @@ fn parser_benchmarks(criterion: &mut Criterion) {
                         parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
                             .expect("fixture was validated before measurement");
                     let ast = mapper::map(&tree).expect("fixture was validated before measurement");
+                    black_box(ast)
+                });
+            },
+        );
+    }
+
+    for &(fixture_name, file_name) in FACADE_FIXTURES {
+        let path = fixture_path(file_name);
+        let source = fs::read_to_string(&path)
+            .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
+        tinyexpression_rs::parse(&source)
+            .unwrap_or_else(|error| panic!("invalid facade fixture {}: {error}", path.display()));
+        group.bench_with_input(
+            BenchmarkId::new("public-facade", fixture_name),
+            &source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let ast = tinyexpression_rs::parse(black_box(source.as_str()))
+                        .expect("fixture was validated before measurement");
                     black_box(ast)
                 });
             },

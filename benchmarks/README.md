@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-20 Formula suffix factoring experiment](results/2026-09-20-formula-suffix-experiment.md)
 - [2026-09-20 predictive-choice experiment](results/2026-09-20-predictive-choice-experiment.md)
 - [2026-09-20 longest-choice root dispatch experiment](results/2026-09-20-longest-root-experiment.md)
 - [2026-09-20 final Java/Rust complex-expression benchmark](results/2026-09-20-final-java-rust-complex.md)
@@ -23,6 +24,7 @@ Java/Rust AST and diagnostic parity on the shared conformance fixtures.
 | fixture | purpose | Unicode code points | UTF-8 bytes |
 |---|---|---:|---:|
 | `complex.tiny` | declarations, annotation, boolean logic, functions, `if`, `match`, method declaration, non-BMP text | 325 | 332 |
+| `comparison-heavy.tiny` | 16 chained arithmetic comparisons that exercise alternate root-family dispatch | 179 | 179 |
 | `flat-arithmetic.tiny` | 256 operands in one left-associative arithmetic expression | 1,426 | 1,426 |
 | `large-match.tiny` | declaration and 64 match cases | 1,380 | 1,380 |
 
@@ -35,6 +37,9 @@ Each language reports the same steady-state operation boundaries:
 - `map-only`: map an already parsed tree/token into the generated typed AST.
 - `parse+map-off` / `parse+map-safe`: run the generated parser and mapper path from source to
   typed AST with the corresponding parse policy.
+- `public-facade`: run the production-facing Java/Rust API, including root-family dispatch,
+  parsing, mapping, and semantic-root projection. This row is used when an experiment changes
+  work outside the direct generated `Formula` entry point.
 
 File I/O, process startup, JSON serialization, full-input benchmark validation,
 and the first lazy Java parser lookup are outside the timed region. The Java
