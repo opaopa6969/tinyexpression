@@ -2,6 +2,12 @@ grammar TinyExpressionP4 {
 
   @package: org.unlaxer.tinyexpression.generated.p4
   @whitespace: javaStyle
+  @memoSafeToken: NUMBER
+  @memoSafeToken: IDENTIFIER
+  @memoSafeToken: STRING
+  @memoSafeToken: CODE_START
+  @memoSafeToken: CODE_END
+  @memoSafeToken: EOF
 
   token NUMBER     = org.unlaxer.parser.elementary.NumberParser
   token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser
