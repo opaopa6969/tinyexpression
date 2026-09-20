@@ -15,6 +15,13 @@ const FIXTURES: &[(&str, &str)] = &[
 const FACADE_FIXTURES: &[(&str, &str)] = &[
     ("complex", "complex.tiny"),
     ("comparison-heavy", "comparison-heavy.tiny"),
+    // Scaled copies (x4 / x16 / x64 of the base fixtures) for checking linearity in input size.
+    ("complex-x4", "complex-x4.tiny"),
+    ("complex-x16", "complex-x16.tiny"),
+    ("complex-x64", "complex-x64.tiny"),
+    ("comparison-heavy-x4", "comparison-heavy-x4.tiny"),
+    ("comparison-heavy-x16", "comparison-heavy-x16.tiny"),
+    ("comparison-heavy-x64", "comparison-heavy-x64.tiny"),
 ];
 
 fn fixture_path(file_name: &str) -> PathBuf {

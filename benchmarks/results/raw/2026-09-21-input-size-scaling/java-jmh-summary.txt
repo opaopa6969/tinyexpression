@@ -1,0 +1,11 @@
+# Run complete. Total time: 00:06:43
+Benchmark                                       (fixture)  Mode  Cnt        Score        Error  Units
+P4ParserBenchmark.publicFacade               complex.tiny  avgt   16    44710.975 ±   6723.032  us/op
+P4ParserBenchmark.publicFacade      comparison-heavy.tiny  avgt   16    26368.977 ±   2002.967  us/op
+P4ParserBenchmark.publicFacade            complex-x4.tiny  avgt   16   179976.509 ±  21009.068  us/op
+P4ParserBenchmark.publicFacade           complex-x16.tiny  avgt   16   788080.771 ±  70781.026  us/op
+P4ParserBenchmark.publicFacade           complex-x64.tiny  avgt   16  3859322.121 ± 333015.978  us/op
+P4ParserBenchmark.publicFacade   comparison-heavy-x4.tiny  avgt   16   117931.237 ±  11549.624  us/op
+P4ParserBenchmark.publicFacade  comparison-heavy-x16.tiny  avgt   16   559655.462 ± 168605.426  us/op
+P4ParserBenchmark.publicFacade  comparison-heavy-x64.tiny  avgt   16  3230331.846 ± 268277.157  us/op
+Benchmark result is saved to /home/opa/work/unlaxer-workspace/wt-te-scale/benchmarks/results/raw/2026-09-21-input-size-scaling/java-publicFacade.json

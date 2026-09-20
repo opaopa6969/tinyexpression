@@ -1,0 +1,57 @@
+var $price1 as number set 11;
+var $country1 as string set 'jp';
+var $price2 as number set 12;
+var $country2 as string set 'jp';
+var $price3 as number set 13;
+var $country3 as string set 'jp';
+var $price4 as number set 14;
+var $country4 as string set 'jp';
+@bench(name='scaling')
+if(not($price1 * 2 <= 10) & $country1.in('jp', 'us')) {
+  max(pow($price1, 2), abs(-3)) + call bonus1($price1)
+} else {
+  match {
+    $price1 > 100 -> 1,
+    $price1 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price2 * 2 <= 10) & $country2.in('jp', 'us')) {
+  max(pow($price2, 2), abs(-3)) + call bonus2($price2)
+} else {
+  match {
+    $price2 > 100 -> 1,
+    $price2 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price3 * 2 <= 10) & $country3.in('jp', 'us')) {
+  max(pow($price3, 2), abs(-3)) + call bonus3($price3)
+} else {
+  match {
+    $price3 > 100 -> 1,
+    $price3 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price4 * 2 <= 10) & $country4.in('jp', 'us')) {
+  max(pow($price4, 2), abs(-3)) + call bonus4($price4)
+} else {
+  match {
+    $price4 > 100 -> 1,
+    $price4 > 50 -> 2,
+    default -> 0
+  }
+}
+float bonus1($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus2($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus3($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus4($x as number) {
+  sqrt($x) + sin(30)
+}
