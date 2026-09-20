@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use tinyexpression_rs::generated::{mapper, parser};
+use unlaxer_runtime::{Memoization, ParseOptions};
 
 const FIXTURES: &[(&str, &str)] = &[
     ("complex", "complex.tiny"),
@@ -18,13 +19,15 @@ fn fixture_path(file_name: &str) -> PathBuf {
 }
 
 fn parser_benchmarks(criterion: &mut Criterion) {
+    let off = ParseOptions::with_memoization(Memoization::Off);
+    let safe = ParseOptions::with_memoization(Memoization::SafeFailures);
     let fixtures = FIXTURES
         .iter()
         .map(|&(name, file_name)| {
             let path = fixture_path(file_name);
             let source = fs::read_to_string(&path)
                 .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
-            let tree = parser::parse_tree_detailed(&source)
+            let tree = parser::parse_tree_detailed_with_options(&source, off)
                 .unwrap_or_else(|error| panic!("invalid fixture {}: {error}", path.display()));
             mapper::map(&tree).unwrap_or_else(|error| {
                 panic!("fixture {} cannot be mapped: {error}", path.display())
@@ -45,12 +48,26 @@ fn parser_benchmarks(criterion: &mut Criterion) {
         // This exercises the public generated path. The immutable grammar graph is
         // initialized once and shared; ParseContext and all mutable parse state stay local.
         group.bench_with_input(
-            BenchmarkId::new("parse-only", fixture_name),
+            BenchmarkId::new("parse-only-off", fixture_name),
             source,
             |bencher, source| {
                 bencher.iter(|| {
-                    let tree = parser::parse_tree_detailed(black_box(source.as_str()))
-                        .expect("fixture was validated before measurement");
+                    let tree =
+                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), off)
+                            .expect("fixture was validated before measurement");
+                    black_box(tree)
+                });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("parse-only-safe", fixture_name),
+            source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let tree =
+                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
+                            .expect("fixture was validated before measurement");
                     black_box(tree)
                 });
             },
@@ -69,12 +86,28 @@ fn parser_benchmarks(criterion: &mut Criterion) {
         );
 
         group.bench_with_input(
-            BenchmarkId::new("parse+map", fixture_name),
+            BenchmarkId::new("parse+map-off", fixture_name),
             source,
             |bencher, source| {
                 bencher.iter(|| {
-                    let ast = tinyexpression_rs::parse(black_box(source.as_str()))
-                        .expect("fixture was validated before measurement");
+                    let tree =
+                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), off)
+                            .expect("fixture was validated before measurement");
+                    let ast = mapper::map(&tree).expect("fixture was validated before measurement");
+                    black_box(ast)
+                });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("parse+map-safe", fixture_name),
+            source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let tree =
+                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
+                            .expect("fixture was validated before measurement");
+                    let ast = mapper::map(&tree).expect("fixture was validated before measurement");
                     black_box(ast)
                 });
             },

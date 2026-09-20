@@ -703,8 +703,8 @@ public final class P4PreferredAstMapper {
    * 同一スレッドで巻き戻る (スレッド・割り込み不要)。
    */
   private static void registerDeadlineListener(ParseContext context, long deadlineNanos) {
-    context.addTransactionListener(
-        org.unlaxer.Name.of(P4PreferredAstMapper.class, "parseDeadline"),
+    org.unlaxer.Name name = org.unlaxer.Name.of(P4PreferredAstMapper.class, "parseDeadline");
+    org.unlaxer.listener.TransactionListener listener =
         new org.unlaxer.listener.TransactionListener() {
           @Override public void setLevel(org.unlaxer.listener.OutputLevel level) {}
           @Override public void onOpen(ParseContext parseContext) {}
@@ -716,7 +716,17 @@ public final class P4PreferredAstMapper {
           @Override public void onCommit(ParseContext parseContext, Parser parser, org.unlaxer.TokenList committedTokens) {}
           @Override public void onRollback(ParseContext parseContext, Parser parser, org.unlaxer.TokenList rollbackedTokens) {}
           @Override public void onClose(ParseContext parseContext) {}
-        });
+        };
+    try {
+      ParseContext.class
+          .getMethod("addMemoizationTransparentTransactionListener",
+              org.unlaxer.Name.class, org.unlaxer.listener.TransactionListener.class)
+          .invoke(context, name, listener);
+    } catch (NoSuchMethodException unavailableBeforeSafeMemoization) {
+      context.addTransactionListener(name, listener);
+    } catch (ReflectiveOperationException registrationFailure) {
+      throw new IllegalStateException("cannot register P4 parse deadline listener", registrationFailure);
+    }
   }
 
   private static void closeParseContextQuietly(ParseContext context) {
