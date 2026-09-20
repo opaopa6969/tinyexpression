@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@v6
         with:
           repository: opaopa6969/unlaxer-parser
-          ref: eb8697b475383fa80e6731e28a0cc35152cf89e6
+          ref: c1499b909ad03fac95791a82f0268d6924a2d630
           path: unlaxer-parser
       - name: Set up Rust 1.85
         run: |
@@ -72,7 +72,7 @@ jobs:
         with:
           repository: opaopa6969/unlaxer-parser
           # Source-mapped alternate-entry contract; update together with its compatibility oracle.
-          ref: eb8697b475383fa80e6731e28a0cc35152cf89e6
+          ref: c1499b909ad03fac95791a82f0268d6924a2d630
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
