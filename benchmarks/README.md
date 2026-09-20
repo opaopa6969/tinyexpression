@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-20 predictive-choice experiment](results/2026-09-20-predictive-choice-experiment.md)
 - [2026-09-20 longest-choice root dispatch experiment](results/2026-09-20-longest-root-experiment.md)
 - [2026-09-20 final Java/Rust complex-expression benchmark](results/2026-09-20-final-java-rust-complex.md)
 - [2026-09-20 Java/Rust parser benchmark](results/2026-09-20-java-rust-parser.md)
