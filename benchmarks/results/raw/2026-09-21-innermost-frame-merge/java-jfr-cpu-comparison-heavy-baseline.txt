@@ -1,0 +1,39 @@
+samples=63
+ 38.10%  other(parser dispatch etc.)
+ 28.57%  diagnostics (hint collection / snapshots / memo replay)
+ 23.81%  commit token collection / listeners
+  9.52%  transaction bookkeeping
+--- top self frames ---
+ 12.70%  java.util.stream.ReferencePipeline$3$1.accept
+  4.76%  org.unlaxer.TokenList.isEmpty
+  4.76%  java.util.IdentityHashMap.forEach
+  4.76%  java.util.IdentityHashMap.resize
+  3.17%  org.unlaxer.context.ParseContext.trackCursorProgress
+  3.17%  java.util.IdentityHashMap.remove
+  3.17%  java.lang.Class.annotationData
+  3.17%  java.util.IdentityHashMap.put
+  3.17%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.lambda$new$0
+  3.17%  java.util.IdentityHashMap.hash
+  1.59%  java.util.concurrent.ConcurrentHashMap$Traverser.<init>
+  1.59%  java.lang.Class.reflectionData
+  1.59%  java.util.Objects.requireNonNull
+  1.59%  java.util.HashMap$Node.<init>
+  1.59%  java.util.LinkedHashMap.sequencedValues
+  1.59%  org.unlaxer.context.PackratMemoTable.isExactSafeClass
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 33.33%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 25.40%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 23.81%  org.unlaxer.parser.combinator.LazyChain.parse
+ 19.05%  org.unlaxer.context.ParseContext.endParse
+ 15.87%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 12.70%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.<init>
+ 12.70%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper.selectSubtreeTokenWithSourceMap
+ 12.70%  org.unlaxer.context.ParseContext.registerFailureCandidate
+ 11.11%  org.unlaxer.tinyexpression.p4.P4SourceMapping.invoke
+ 11.11%  org.unlaxer.context.ParseContext.recordSources
+  9.52%  org.unlaxer.parser.combinator.Occurs.parse
+  9.52%  org.unlaxer.StringSource.<init>
+  9.52%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+  9.52%  org.unlaxer.tinyexpression.p4.P4SourceMapping.select
+  7.94%  org.unlaxer.context.ParseContext.trackCursorProgress
+  7.94%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.lambda$new$0

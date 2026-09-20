@@ -1,0 +1,40 @@
+# Rust CPU attribution after unlaxer-parser #220 (runtime 4658223 == 0fba746 source), one public-facade parse.
+# Method (codex): temporary thread_local Instant accumulators in unlaxer-runtime, release build, taskset -c 0,
+# median of 7 rounds; shares are of the instrumented facade time; categories are inclusive and overlap;
+# "runtime remainder" = runtime time minus the union of the six main categories.
+# Instrumentation overhead: complex 5.700 -> 19.933 ms/op (+250%), comparison-heavy 1.461 -> 4.863 ms/op (+233%).
+# Use the shares/counts for direction, not the ms values.
+
+## complex.tiny (instrumented facade 19.933 ms/op; runtime 19.861; union 10.403)
+category                        calls/op   inclusive_ms   share
+failure diagnostics                42358          1.917    9.6%     (was 43.7% after #215)
+memo lookup/frame/merge/replay     42728          4.968   24.9%     (was 45.9%)
+checkpoint/restore/commit         107968          2.458   12.3%     (was 7.9%)
+CST/Fragment construction          24201          1.612    8.1%
+trivia skip                        13630          0.274    1.4%
+leaf matching                      10272          1.220    6.1%
+runtime remainder (dispatch)           -          9.458   47.4%
+facade outside runtime                 -          0.072    0.4%
+
+## comparison-heavy.tiny (instrumented facade 4.863 ms/op; runtime 4.801; union 2.362; 2 runtime calls/op)
+failure diagnostics                 5889          0.358    7.4%
+memo                               13204          1.071   22.0%
+checkpoint/restore/commit          30266          0.608   12.5%
+CST/Fragment construction           4801          0.222    4.6%
+trivia skip                         3559          0.069    1.4%
+leaf matching                       2739          0.401    8.2%
+runtime remainder                      -          2.439   50.2%
+facade outside runtime                 -          0.062    1.3%
+
+## remainder breakdown: expression_inner self-time by node kind (child intervals subtracted; overlaps other categories)
+kind                               complex calls/ms/share        comparison-heavy calls/ms/share
+Expr::Rule / rule()                13901 / 7.979 / 40.0%         3547 / 1.932 / 39.7%
+Sequence / Repeat loop              9412 / 3.086 / 15.5%         3313 / 0.828 / 17.0%
+Choice dispatch / loop              2387 / 2.070 / 10.4%          543 / 0.435 /  8.9%
+other match dispatch / wrapper     28284 / 5.708 / 28.6%         7730 / 1.311 / 27.0%
+
+## implications for the remaining #214 candidates (Rust)
+# #210 direct-rule-call tier: Expr::Rule self-time ~40% is the largest structural bucket -> highest upper bound.
+# #211 CST compact storage: direct CST/Fragment share 8.1% / 4.6% -> single-digit upper bound.
+# #212 root-family dispatcher: in comparison-heavy the failing Formula attempt costs 0.076 ms of 1.504 ms (5.1%)
+#      before the Boolean root succeeds (1.376 ms) -> upper bound ~5%, minus probe cost.
