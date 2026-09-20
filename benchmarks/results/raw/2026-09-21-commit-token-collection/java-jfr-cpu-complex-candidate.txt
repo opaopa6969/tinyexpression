@@ -1,0 +1,39 @@
+samples=68
+ 36.76%  other(parser dispatch etc.)
+ 25.00%  diagnostics (hint collection / snapshots / memo replay)
+ 19.12%  transaction bookkeeping
+ 19.12%  commit token collection / listeners
+--- top self frames ---
+  5.88%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+  5.88%  java.util.IdentityHashMap.put
+  4.41%  org.unlaxer.context.ParseContext.snapshotStackElements
+  4.41%  org.unlaxer.TokenList.get
+  4.41%  org.unlaxer.reducer.AbstractTokenReducer.reduce
+  4.41%  java.util.IdentityHashMap.resize
+  2.94%  java.util.ArrayList.grow
+  2.94%  org.unlaxer.AbstractCursorImpl.offsetFromRoot
+  2.94%  java.util.ArrayDeque.inc
+  2.94%  org.unlaxer.TokenList.<init>
+  2.94%  java.util.HashMap.resize
+  2.94%  java.util.IdentityHashMap.forEach
+  1.47%  java.util.IdentityHashMap.containsKey
+  1.47%  org.unlaxer.base.IntegerValue.<init>
+  1.47%  java.util.ArrayList$Itr.next
+  1.47%  java.util.Collections$SetFromMap.add
+--- inclusive (org.unlaxer frames within depth 8) ---
+ 42.65%  org.unlaxer.parser.combinator.ChainInterface.parse
+ 30.88%  org.unlaxer.parser.combinator.LazyChain.parse
+ 29.41%  org.unlaxer.parser.combinator.ChoiceInterface.parse
+ 16.18%  org.unlaxer.parser.combinator.LazyChoice.parse
+ 16.18%  org.unlaxer.context.PackratMemoTable.memoizeFailure
+ 14.71%  org.unlaxer.context.ParseContext$ExpectedSources.addAll
+ 13.24%  org.unlaxer.context.ParseContext.mergeFrame
+ 13.24%  org.unlaxer.context.ParseContext.discardMemoDiagnosticFrame
+ 11.76%  org.unlaxer.context.ParseContext.trackCursorProgress
+ 11.76%  org.unlaxer.reducer.AbstractTokenReducer.reduce
+ 10.29%  org.unlaxer.parser.elementary.AbstractTokenParser.parse
+ 10.29%  org.unlaxer.parser.combinator.Occurs.parse
+ 10.29%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper.selectParsedTokenWithSourceMap
+  8.82%  org.unlaxer.context.Transaction.commit
+  8.82%  org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Mapper$SourceMappedAst.<init>
+  7.35%  org.unlaxer.parser.combinator.Choice.parse
