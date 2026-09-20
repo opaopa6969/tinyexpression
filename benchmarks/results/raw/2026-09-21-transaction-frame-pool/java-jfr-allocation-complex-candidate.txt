@@ -1,0 +1,44 @@
+samples=1638 total_weight=18.14GB
+## by object class
+ 27.30%  java.util.HashMap$Node
+ 23.33%  org.unlaxer.context.ParseFailureDiagnostics$ParseStackElement
+ 12.63%  java.lang.Object[]
+  3.70%  org.unlaxer.util.NullSafetyConcurrentHashMap
+  3.03%  java.util.ArrayList
+  3.00%  org.unlaxer.StringSource
+  2.60%  org.unlaxer.CodePointIndex
+  2.03%  org.unlaxer.EndExclusiveCursorImpl
+  1.81%  org.unlaxer.CodePointOffset
+  1.68%  org.unlaxer.StartInclusiveCursorImpl
+  1.46%  java.lang.Object
+  1.41%  org.unlaxer.CodePointLength
+## by site (class <- top 3 frames)
+ 27.26%  ('java.util.HashMap$Node', 'java.util.HashMap.newNode', 'java.util.HashMap.putVal', 'java.util.HashMap.putMapEntries')
+ 14.00%  ('org.unlaxer.context.ParseFailureDiagnostics$ParseStackElement', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.trackCursorProgress', 'org.unlaxer.context.ParseContext.startParse')
+  6.30%  ('org.unlaxer.context.ParseFailureDiagnostics$ParseStackElement', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.registerFailureCandidate', 'org.unlaxer.context.ParseContext.endParse')
+  2.47%  ('java.lang.Object[]', 'java.util.ArrayList.<init>', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.trackCursorProgress')
+  2.40%  ('java.lang.Object[]', 'java.util.Arrays.copyOf', 'java.util.ArrayList.grow', 'java.util.ArrayList.grow')
+  2.02%  ('org.unlaxer.util.NullSafetyConcurrentHashMap', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.empty')
+  1.68%  ('org.unlaxer.StartInclusiveCursorImpl', 'org.unlaxer.CursorRange.of', 'org.unlaxer.CursorRange.fromRootOffset', 'org.unlaxer.StringSource.<init>')
+  1.46%  ('java.lang.Object[]', 'java.util.ArrayList.grow', 'java.util.ArrayList.grow', 'java.util.ArrayList.add')
+  1.46%  ('org.unlaxer.context.ParseFailureDiagnostics$ParseStackElement', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.rebaseMemoStack', 'org.unlaxer.context.ParseContext.replayFailureDiagnostic')
+  1.41%  ('java.lang.Object[]', 'java.util.IdentityHashMap.init', 'java.util.IdentityHashMap.<init>', 'org.unlaxer.context.ParseContext$ExpectedSources.<init>')
+  1.41%  ('org.unlaxer.EndExclusiveCursorImpl', 'org.unlaxer.CursorRange.of', 'org.unlaxer.CursorRange.fromRootOffset', 'org.unlaxer.StringSource.<init>')
+  1.32%  ('java.lang.Object', 'org.unlaxer.util.NullSafetyConcurrentHashMap.<init>', 'org.unlaxer.Token.<init>', 'org.unlaxer.Token.<init>')
+  1.31%  ('org.unlaxer.context.ParseFailureDiagnostics$ParseStackElement', 'org.unlaxer.context.ParseContext.snapshotStackElements', 'org.unlaxer.context.ParseContext.trackCursorProgress', 'org.unlaxer.context.ParseContext.consume')
+  1.19%  ('org.unlaxer.CursorRange', 'org.unlaxer.CursorRange.of', 'org.unlaxer.CursorRange.fromRootOffset', 'org.unlaxer.StringSource.<init>')
+  1.06%  ('org.unlaxer.CodePointIndex', 'org.unlaxer.CodePointIndex.create', 'org.unlaxer.CodePointIndex.create', 'org.unlaxer.base.IntegerValue.newWithAdd')
+  0.93%  ('org.unlaxer.StringSource', 'org.unlaxer.StringSource.subSource', 'org.unlaxer.StringSource.peek', 'org.unlaxer.context.Transaction.peek')
+## transaction-frame related total: 12.91%
+  2.60%  object:org.unlaxer.CodePointIndex
+  2.03%  object:org.unlaxer.EndExclusiveCursorImpl
+  1.54%  path:org.unlaxer.Token.<init><-org.unlaxer.util.NullSafetyConcurrentHashMap
+  1.54%  path:org.unlaxer.TokenList.<init><-java.util.ArrayList
+  1.19%  object:org.unlaxer.TokenList
+  0.62%  path:org.unlaxer.TransactionElement.recordChosenParser<-java.lang.Object[]
+  0.57%  path:org.unlaxer.TransactionElement.restoreState<-java.util.IdentityHashMap$ValueIterator
+  0.31%  path:org.unlaxer.CodePointLength.toOffset<-org.unlaxer.CodePointOffset
+  0.31%  path:org.unlaxer.Token.anchorCollectedEmptySource<-java.util.concurrent.ConcurrentHashMap$EntryIterator
+  0.26%  path:org.unlaxer.context.TransactionListenerContainer.onBegin<-java.util.LinkedHashMap$LinkedValueIterator
+  0.22%  path:org.unlaxer.Token.anchorCollectedEmptySource<-org.unlaxer.Token
+  0.18%  path:org.unlaxer.context.Transaction.commit<-org.unlaxer.Token[]

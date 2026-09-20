@@ -6,6 +6,8 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 scope mutation journal experiment](results/2026-09-21-scope-mutation-journal-experiment.md)
+- [2026-09-21 transaction frame pool re-evaluation (not adopted)](results/2026-09-21-transaction-frame-pool-experiment.md)
 - [2026-09-21 lazy diagnostic stack snapshot experiment](results/2026-09-21-lazy-stack-snapshot-experiment.md)
 - [2026-09-21 StringSource construction experiment](results/2026-09-21-string-source-construction-experiment.md)
 - [2026-09-21 direct-rule-call execution tier experiment (not adopted)](results/2026-09-21-direct-rule-tier-experiment.md)
