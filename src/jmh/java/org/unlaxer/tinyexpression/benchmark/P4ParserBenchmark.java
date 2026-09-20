@@ -152,7 +152,9 @@ public class P4ParserBenchmark {
 
   @State(Scope.Thread)
   public static class FacadeState {
-    @Param({"complex.tiny", "comparison-heavy.tiny"})
+    @Param({"complex.tiny", "comparison-heavy.tiny",
+        "complex-x4.tiny", "complex-x16.tiny", "complex-x64.tiny",
+        "comparison-heavy-x4.tiny", "comparison-heavy-x16.tiny", "comparison-heavy-x64.tiny"})
     public String fixture;
 
     private String source;

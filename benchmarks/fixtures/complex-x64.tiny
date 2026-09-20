@@ -1,0 +1,897 @@
+var $price1 as number set 11;
+var $country1 as string set 'jp';
+var $price2 as number set 12;
+var $country2 as string set 'jp';
+var $price3 as number set 13;
+var $country3 as string set 'jp';
+var $price4 as number set 14;
+var $country4 as string set 'jp';
+var $price5 as number set 15;
+var $country5 as string set 'jp';
+var $price6 as number set 16;
+var $country6 as string set 'jp';
+var $price7 as number set 17;
+var $country7 as string set 'jp';
+var $price8 as number set 18;
+var $country8 as string set 'jp';
+var $price9 as number set 19;
+var $country9 as string set 'jp';
+var $price10 as number set 20;
+var $country10 as string set 'jp';
+var $price11 as number set 21;
+var $country11 as string set 'jp';
+var $price12 as number set 22;
+var $country12 as string set 'jp';
+var $price13 as number set 23;
+var $country13 as string set 'jp';
+var $price14 as number set 24;
+var $country14 as string set 'jp';
+var $price15 as number set 25;
+var $country15 as string set 'jp';
+var $price16 as number set 26;
+var $country16 as string set 'jp';
+var $price17 as number set 27;
+var $country17 as string set 'jp';
+var $price18 as number set 28;
+var $country18 as string set 'jp';
+var $price19 as number set 29;
+var $country19 as string set 'jp';
+var $price20 as number set 30;
+var $country20 as string set 'jp';
+var $price21 as number set 31;
+var $country21 as string set 'jp';
+var $price22 as number set 32;
+var $country22 as string set 'jp';
+var $price23 as number set 33;
+var $country23 as string set 'jp';
+var $price24 as number set 34;
+var $country24 as string set 'jp';
+var $price25 as number set 35;
+var $country25 as string set 'jp';
+var $price26 as number set 36;
+var $country26 as string set 'jp';
+var $price27 as number set 37;
+var $country27 as string set 'jp';
+var $price28 as number set 38;
+var $country28 as string set 'jp';
+var $price29 as number set 39;
+var $country29 as string set 'jp';
+var $price30 as number set 40;
+var $country30 as string set 'jp';
+var $price31 as number set 41;
+var $country31 as string set 'jp';
+var $price32 as number set 42;
+var $country32 as string set 'jp';
+var $price33 as number set 43;
+var $country33 as string set 'jp';
+var $price34 as number set 44;
+var $country34 as string set 'jp';
+var $price35 as number set 45;
+var $country35 as string set 'jp';
+var $price36 as number set 46;
+var $country36 as string set 'jp';
+var $price37 as number set 47;
+var $country37 as string set 'jp';
+var $price38 as number set 48;
+var $country38 as string set 'jp';
+var $price39 as number set 49;
+var $country39 as string set 'jp';
+var $price40 as number set 50;
+var $country40 as string set 'jp';
+var $price41 as number set 51;
+var $country41 as string set 'jp';
+var $price42 as number set 52;
+var $country42 as string set 'jp';
+var $price43 as number set 53;
+var $country43 as string set 'jp';
+var $price44 as number set 54;
+var $country44 as string set 'jp';
+var $price45 as number set 55;
+var $country45 as string set 'jp';
+var $price46 as number set 56;
+var $country46 as string set 'jp';
+var $price47 as number set 57;
+var $country47 as string set 'jp';
+var $price48 as number set 58;
+var $country48 as string set 'jp';
+var $price49 as number set 59;
+var $country49 as string set 'jp';
+var $price50 as number set 60;
+var $country50 as string set 'jp';
+var $price51 as number set 61;
+var $country51 as string set 'jp';
+var $price52 as number set 62;
+var $country52 as string set 'jp';
+var $price53 as number set 63;
+var $country53 as string set 'jp';
+var $price54 as number set 64;
+var $country54 as string set 'jp';
+var $price55 as number set 65;
+var $country55 as string set 'jp';
+var $price56 as number set 66;
+var $country56 as string set 'jp';
+var $price57 as number set 67;
+var $country57 as string set 'jp';
+var $price58 as number set 68;
+var $country58 as string set 'jp';
+var $price59 as number set 69;
+var $country59 as string set 'jp';
+var $price60 as number set 70;
+var $country60 as string set 'jp';
+var $price61 as number set 71;
+var $country61 as string set 'jp';
+var $price62 as number set 72;
+var $country62 as string set 'jp';
+var $price63 as number set 73;
+var $country63 as string set 'jp';
+var $price64 as number set 74;
+var $country64 as string set 'jp';
+@bench(name='scaling')
+if(not($price1 * 2 <= 10) & $country1.in('jp', 'us')) {
+  max(pow($price1, 2), abs(-3)) + call bonus1($price1)
+} else {
+  match {
+    $price1 > 100 -> 1,
+    $price1 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price2 * 2 <= 10) & $country2.in('jp', 'us')) {
+  max(pow($price2, 2), abs(-3)) + call bonus2($price2)
+} else {
+  match {
+    $price2 > 100 -> 1,
+    $price2 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price3 * 2 <= 10) & $country3.in('jp', 'us')) {
+  max(pow($price3, 2), abs(-3)) + call bonus3($price3)
+} else {
+  match {
+    $price3 > 100 -> 1,
+    $price3 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price4 * 2 <= 10) & $country4.in('jp', 'us')) {
+  max(pow($price4, 2), abs(-3)) + call bonus4($price4)
+} else {
+  match {
+    $price4 > 100 -> 1,
+    $price4 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price5 * 2 <= 10) & $country5.in('jp', 'us')) {
+  max(pow($price5, 2), abs(-3)) + call bonus5($price5)
+} else {
+  match {
+    $price5 > 100 -> 1,
+    $price5 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price6 * 2 <= 10) & $country6.in('jp', 'us')) {
+  max(pow($price6, 2), abs(-3)) + call bonus6($price6)
+} else {
+  match {
+    $price6 > 100 -> 1,
+    $price6 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price7 * 2 <= 10) & $country7.in('jp', 'us')) {
+  max(pow($price7, 2), abs(-3)) + call bonus7($price7)
+} else {
+  match {
+    $price7 > 100 -> 1,
+    $price7 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price8 * 2 <= 10) & $country8.in('jp', 'us')) {
+  max(pow($price8, 2), abs(-3)) + call bonus8($price8)
+} else {
+  match {
+    $price8 > 100 -> 1,
+    $price8 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price9 * 2 <= 10) & $country9.in('jp', 'us')) {
+  max(pow($price9, 2), abs(-3)) + call bonus9($price9)
+} else {
+  match {
+    $price9 > 100 -> 1,
+    $price9 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price10 * 2 <= 10) & $country10.in('jp', 'us')) {
+  max(pow($price10, 2), abs(-3)) + call bonus10($price10)
+} else {
+  match {
+    $price10 > 100 -> 1,
+    $price10 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price11 * 2 <= 10) & $country11.in('jp', 'us')) {
+  max(pow($price11, 2), abs(-3)) + call bonus11($price11)
+} else {
+  match {
+    $price11 > 100 -> 1,
+    $price11 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price12 * 2 <= 10) & $country12.in('jp', 'us')) {
+  max(pow($price12, 2), abs(-3)) + call bonus12($price12)
+} else {
+  match {
+    $price12 > 100 -> 1,
+    $price12 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price13 * 2 <= 10) & $country13.in('jp', 'us')) {
+  max(pow($price13, 2), abs(-3)) + call bonus13($price13)
+} else {
+  match {
+    $price13 > 100 -> 1,
+    $price13 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price14 * 2 <= 10) & $country14.in('jp', 'us')) {
+  max(pow($price14, 2), abs(-3)) + call bonus14($price14)
+} else {
+  match {
+    $price14 > 100 -> 1,
+    $price14 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price15 * 2 <= 10) & $country15.in('jp', 'us')) {
+  max(pow($price15, 2), abs(-3)) + call bonus15($price15)
+} else {
+  match {
+    $price15 > 100 -> 1,
+    $price15 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price16 * 2 <= 10) & $country16.in('jp', 'us')) {
+  max(pow($price16, 2), abs(-3)) + call bonus16($price16)
+} else {
+  match {
+    $price16 > 100 -> 1,
+    $price16 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price17 * 2 <= 10) & $country17.in('jp', 'us')) {
+  max(pow($price17, 2), abs(-3)) + call bonus17($price17)
+} else {
+  match {
+    $price17 > 100 -> 1,
+    $price17 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price18 * 2 <= 10) & $country18.in('jp', 'us')) {
+  max(pow($price18, 2), abs(-3)) + call bonus18($price18)
+} else {
+  match {
+    $price18 > 100 -> 1,
+    $price18 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price19 * 2 <= 10) & $country19.in('jp', 'us')) {
+  max(pow($price19, 2), abs(-3)) + call bonus19($price19)
+} else {
+  match {
+    $price19 > 100 -> 1,
+    $price19 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price20 * 2 <= 10) & $country20.in('jp', 'us')) {
+  max(pow($price20, 2), abs(-3)) + call bonus20($price20)
+} else {
+  match {
+    $price20 > 100 -> 1,
+    $price20 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price21 * 2 <= 10) & $country21.in('jp', 'us')) {
+  max(pow($price21, 2), abs(-3)) + call bonus21($price21)
+} else {
+  match {
+    $price21 > 100 -> 1,
+    $price21 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price22 * 2 <= 10) & $country22.in('jp', 'us')) {
+  max(pow($price22, 2), abs(-3)) + call bonus22($price22)
+} else {
+  match {
+    $price22 > 100 -> 1,
+    $price22 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price23 * 2 <= 10) & $country23.in('jp', 'us')) {
+  max(pow($price23, 2), abs(-3)) + call bonus23($price23)
+} else {
+  match {
+    $price23 > 100 -> 1,
+    $price23 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price24 * 2 <= 10) & $country24.in('jp', 'us')) {
+  max(pow($price24, 2), abs(-3)) + call bonus24($price24)
+} else {
+  match {
+    $price24 > 100 -> 1,
+    $price24 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price25 * 2 <= 10) & $country25.in('jp', 'us')) {
+  max(pow($price25, 2), abs(-3)) + call bonus25($price25)
+} else {
+  match {
+    $price25 > 100 -> 1,
+    $price25 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price26 * 2 <= 10) & $country26.in('jp', 'us')) {
+  max(pow($price26, 2), abs(-3)) + call bonus26($price26)
+} else {
+  match {
+    $price26 > 100 -> 1,
+    $price26 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price27 * 2 <= 10) & $country27.in('jp', 'us')) {
+  max(pow($price27, 2), abs(-3)) + call bonus27($price27)
+} else {
+  match {
+    $price27 > 100 -> 1,
+    $price27 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price28 * 2 <= 10) & $country28.in('jp', 'us')) {
+  max(pow($price28, 2), abs(-3)) + call bonus28($price28)
+} else {
+  match {
+    $price28 > 100 -> 1,
+    $price28 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price29 * 2 <= 10) & $country29.in('jp', 'us')) {
+  max(pow($price29, 2), abs(-3)) + call bonus29($price29)
+} else {
+  match {
+    $price29 > 100 -> 1,
+    $price29 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price30 * 2 <= 10) & $country30.in('jp', 'us')) {
+  max(pow($price30, 2), abs(-3)) + call bonus30($price30)
+} else {
+  match {
+    $price30 > 100 -> 1,
+    $price30 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price31 * 2 <= 10) & $country31.in('jp', 'us')) {
+  max(pow($price31, 2), abs(-3)) + call bonus31($price31)
+} else {
+  match {
+    $price31 > 100 -> 1,
+    $price31 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price32 * 2 <= 10) & $country32.in('jp', 'us')) {
+  max(pow($price32, 2), abs(-3)) + call bonus32($price32)
+} else {
+  match {
+    $price32 > 100 -> 1,
+    $price32 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price33 * 2 <= 10) & $country33.in('jp', 'us')) {
+  max(pow($price33, 2), abs(-3)) + call bonus33($price33)
+} else {
+  match {
+    $price33 > 100 -> 1,
+    $price33 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price34 * 2 <= 10) & $country34.in('jp', 'us')) {
+  max(pow($price34, 2), abs(-3)) + call bonus34($price34)
+} else {
+  match {
+    $price34 > 100 -> 1,
+    $price34 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price35 * 2 <= 10) & $country35.in('jp', 'us')) {
+  max(pow($price35, 2), abs(-3)) + call bonus35($price35)
+} else {
+  match {
+    $price35 > 100 -> 1,
+    $price35 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price36 * 2 <= 10) & $country36.in('jp', 'us')) {
+  max(pow($price36, 2), abs(-3)) + call bonus36($price36)
+} else {
+  match {
+    $price36 > 100 -> 1,
+    $price36 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price37 * 2 <= 10) & $country37.in('jp', 'us')) {
+  max(pow($price37, 2), abs(-3)) + call bonus37($price37)
+} else {
+  match {
+    $price37 > 100 -> 1,
+    $price37 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price38 * 2 <= 10) & $country38.in('jp', 'us')) {
+  max(pow($price38, 2), abs(-3)) + call bonus38($price38)
+} else {
+  match {
+    $price38 > 100 -> 1,
+    $price38 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price39 * 2 <= 10) & $country39.in('jp', 'us')) {
+  max(pow($price39, 2), abs(-3)) + call bonus39($price39)
+} else {
+  match {
+    $price39 > 100 -> 1,
+    $price39 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price40 * 2 <= 10) & $country40.in('jp', 'us')) {
+  max(pow($price40, 2), abs(-3)) + call bonus40($price40)
+} else {
+  match {
+    $price40 > 100 -> 1,
+    $price40 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price41 * 2 <= 10) & $country41.in('jp', 'us')) {
+  max(pow($price41, 2), abs(-3)) + call bonus41($price41)
+} else {
+  match {
+    $price41 > 100 -> 1,
+    $price41 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price42 * 2 <= 10) & $country42.in('jp', 'us')) {
+  max(pow($price42, 2), abs(-3)) + call bonus42($price42)
+} else {
+  match {
+    $price42 > 100 -> 1,
+    $price42 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price43 * 2 <= 10) & $country43.in('jp', 'us')) {
+  max(pow($price43, 2), abs(-3)) + call bonus43($price43)
+} else {
+  match {
+    $price43 > 100 -> 1,
+    $price43 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price44 * 2 <= 10) & $country44.in('jp', 'us')) {
+  max(pow($price44, 2), abs(-3)) + call bonus44($price44)
+} else {
+  match {
+    $price44 > 100 -> 1,
+    $price44 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price45 * 2 <= 10) & $country45.in('jp', 'us')) {
+  max(pow($price45, 2), abs(-3)) + call bonus45($price45)
+} else {
+  match {
+    $price45 > 100 -> 1,
+    $price45 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price46 * 2 <= 10) & $country46.in('jp', 'us')) {
+  max(pow($price46, 2), abs(-3)) + call bonus46($price46)
+} else {
+  match {
+    $price46 > 100 -> 1,
+    $price46 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price47 * 2 <= 10) & $country47.in('jp', 'us')) {
+  max(pow($price47, 2), abs(-3)) + call bonus47($price47)
+} else {
+  match {
+    $price47 > 100 -> 1,
+    $price47 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price48 * 2 <= 10) & $country48.in('jp', 'us')) {
+  max(pow($price48, 2), abs(-3)) + call bonus48($price48)
+} else {
+  match {
+    $price48 > 100 -> 1,
+    $price48 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price49 * 2 <= 10) & $country49.in('jp', 'us')) {
+  max(pow($price49, 2), abs(-3)) + call bonus49($price49)
+} else {
+  match {
+    $price49 > 100 -> 1,
+    $price49 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price50 * 2 <= 10) & $country50.in('jp', 'us')) {
+  max(pow($price50, 2), abs(-3)) + call bonus50($price50)
+} else {
+  match {
+    $price50 > 100 -> 1,
+    $price50 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price51 * 2 <= 10) & $country51.in('jp', 'us')) {
+  max(pow($price51, 2), abs(-3)) + call bonus51($price51)
+} else {
+  match {
+    $price51 > 100 -> 1,
+    $price51 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price52 * 2 <= 10) & $country52.in('jp', 'us')) {
+  max(pow($price52, 2), abs(-3)) + call bonus52($price52)
+} else {
+  match {
+    $price52 > 100 -> 1,
+    $price52 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price53 * 2 <= 10) & $country53.in('jp', 'us')) {
+  max(pow($price53, 2), abs(-3)) + call bonus53($price53)
+} else {
+  match {
+    $price53 > 100 -> 1,
+    $price53 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price54 * 2 <= 10) & $country54.in('jp', 'us')) {
+  max(pow($price54, 2), abs(-3)) + call bonus54($price54)
+} else {
+  match {
+    $price54 > 100 -> 1,
+    $price54 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price55 * 2 <= 10) & $country55.in('jp', 'us')) {
+  max(pow($price55, 2), abs(-3)) + call bonus55($price55)
+} else {
+  match {
+    $price55 > 100 -> 1,
+    $price55 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price56 * 2 <= 10) & $country56.in('jp', 'us')) {
+  max(pow($price56, 2), abs(-3)) + call bonus56($price56)
+} else {
+  match {
+    $price56 > 100 -> 1,
+    $price56 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price57 * 2 <= 10) & $country57.in('jp', 'us')) {
+  max(pow($price57, 2), abs(-3)) + call bonus57($price57)
+} else {
+  match {
+    $price57 > 100 -> 1,
+    $price57 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price58 * 2 <= 10) & $country58.in('jp', 'us')) {
+  max(pow($price58, 2), abs(-3)) + call bonus58($price58)
+} else {
+  match {
+    $price58 > 100 -> 1,
+    $price58 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price59 * 2 <= 10) & $country59.in('jp', 'us')) {
+  max(pow($price59, 2), abs(-3)) + call bonus59($price59)
+} else {
+  match {
+    $price59 > 100 -> 1,
+    $price59 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price60 * 2 <= 10) & $country60.in('jp', 'us')) {
+  max(pow($price60, 2), abs(-3)) + call bonus60($price60)
+} else {
+  match {
+    $price60 > 100 -> 1,
+    $price60 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price61 * 2 <= 10) & $country61.in('jp', 'us')) {
+  max(pow($price61, 2), abs(-3)) + call bonus61($price61)
+} else {
+  match {
+    $price61 > 100 -> 1,
+    $price61 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price62 * 2 <= 10) & $country62.in('jp', 'us')) {
+  max(pow($price62, 2), abs(-3)) + call bonus62($price62)
+} else {
+  match {
+    $price62 > 100 -> 1,
+    $price62 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price63 * 2 <= 10) & $country63.in('jp', 'us')) {
+  max(pow($price63, 2), abs(-3)) + call bonus63($price63)
+} else {
+  match {
+    $price63 > 100 -> 1,
+    $price63 > 50 -> 2,
+    default -> 0
+  }
+}
++ if(not($price64 * 2 <= 10) & $country64.in('jp', 'us')) {
+  max(pow($price64, 2), abs(-3)) + call bonus64($price64)
+} else {
+  match {
+    $price64 > 100 -> 1,
+    $price64 > 50 -> 2,
+    default -> 0
+  }
+}
+float bonus1($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus2($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus3($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus4($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus5($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus6($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus7($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus8($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus9($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus10($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus11($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus12($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus13($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus14($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus15($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus16($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus17($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus18($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus19($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus20($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus21($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus22($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus23($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus24($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus25($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus26($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus27($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus28($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus29($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus30($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus31($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus32($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus33($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus34($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus35($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus36($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus37($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus38($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus39($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus40($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus41($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus42($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus43($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus44($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus45($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus46($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus47($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus48($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus49($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus50($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus51($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus52($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus53($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus54($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus55($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus56($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus57($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus58($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus59($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus60($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus61($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus62($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus63($x as number) {
+  sqrt($x) + sin(30)
+}
+float bonus64($x as number) {
+  sqrt($x) + sin(30)
+}
