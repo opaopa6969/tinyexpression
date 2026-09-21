@@ -6,6 +6,9 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 failure memo bucketing experiment (Rust, superlinear fix)](results/2026-09-21-memo-buckets-experiment.md)
+- [2026-09-21 mapper linear selection experiment (Java, superlinear fix)](results/2026-09-21-mapper-linear-selection-experiment.md)
+- [2026-09-21 capture mutation journal experiment (Rust, superlinear fix)](results/2026-09-21-capture-journal-experiment.md)
 - [2026-09-21 input size scaling (x4 / x16 / x64 fixtures, superlinear)](results/2026-09-21-input-size-scaling.md)
 - [2026-09-21 atom checkpoint elision experiment (Rust, not adopted)](results/2026-09-21-atom-checkpoint-elision-experiment.md)
 - [2026-09-21 persistent parse stack snapshot experiment (Java)](results/2026-09-21-persistent-stack-snapshot-experiment.md)
