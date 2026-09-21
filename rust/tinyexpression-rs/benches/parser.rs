@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
 use tinyexpression_rs::generated::{mapper, parser};
-use unlaxer_runtime::{Memoization, ParseOptions};
+use unlaxer_runtime::{Diagnostics, Memoization, ParseOptions};
 
 const FIXTURES: &[(&str, &str)] = &[
     ("complex", "complex.tiny"),
@@ -37,6 +37,8 @@ fn fixture_path(file_name: &str) -> PathBuf {
 fn parser_benchmarks(criterion: &mut Criterion) {
     let off = ParseOptions::with_memoization(Memoization::Off);
     let safe = ParseOptions::with_memoization(Memoization::SafeFailures);
+    // Diagnostics are recorded only when the parse fails (unlaxer-parser #257).
+    let deferred = safe.with_diagnostics(Diagnostics::DetailedOnFailure);
     let fixtures = FIXTURES
         .iter()
         .map(|&(name, file_name)| {
@@ -84,6 +86,21 @@ fn parser_benchmarks(criterion: &mut Criterion) {
                     let tree =
                         parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
                             .expect("fixture was validated before measurement");
+                    black_box(tree)
+                });
+            },
+        );
+
+        group.bench_with_input(
+            BenchmarkId::new("parse-only-deferred", fixture_name),
+            source,
+            |bencher, source| {
+                bencher.iter(|| {
+                    let tree = parser::parse_tree_detailed_with_options(
+                        black_box(source.as_str()),
+                        deferred,
+                    )
+                    .expect("fixture was validated before measurement");
                     black_box(tree)
                 });
             },
