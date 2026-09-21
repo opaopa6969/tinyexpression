@@ -136,6 +136,26 @@ public class P4ParserBenchmark {
       return new ParseContext(StringSource.createRootSource(source));
     }
 
+    /** Success path without failure bookkeeping (unlaxer-parser #259, DETAILED_ON_FAILURE). */
+    final Token parseFreshTokenDeferred() {
+      try (ParseContext context = ParseContext.withOptions(
+          StringSource.createRootSource(source),
+          ParseOptions.withMemoization(Memoization.SAFE_FAILURES)
+              .withDiagnostics(ParseOptions.Diagnostics.DETAILED_ON_FAILURE))) {
+        Parsed parsed = rootParser.parse(context);
+        if (!parsed.isSucceeded()) {
+          throw new IllegalArgumentException("P4 parse failed for fixture " + fixture);
+        }
+        Token rootToken = parsed.getRootToken(false);
+        for (Token committed : context.getCurrent().getTokens()) {
+          if (committed.parser == rootParser) {
+            return committed;
+          }
+        }
+        return rootToken;
+      }
+    }
+
     final TinyExpressionP4Mapper.MappedAst mapToken(Token token) {
       synchronized (MAPPER_LOCK) {
         return TinyExpressionP4Mapper.mapParsedToken(token, "FormulaExpr");
@@ -183,6 +203,54 @@ public class P4ParserBenchmark {
   @Benchmark
   public void parseOnlyOff(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.parseFreshToken(false));
+  }
+
+  @Benchmark
+  public void parseOnlyDeferred(ParserState state, Blackhole blackhole) {
+    blackhole.consume(state.parseFreshTokenDeferred());
+  }
+
+  /**
+   * Generated entry point on inputs that may fail: DETAILED records diagnostics during the
+   * parse, DETAILED_ON_FAILURE skips them and re-parses with diagnostics only when the input
+   * fails (unlaxer-parser #259). complex-half/complex-tail are invalid on purpose.
+   */
+  @State(Scope.Thread)
+  public static class EntryState {
+    @Param({"complex.tiny", "complex-half.tiny", "complex-tail.tiny"})
+    public String fixture;
+
+    private String source;
+
+    @Setup(Level.Trial)
+    public void prepareTrial() throws IOException {
+      Path fixtureDir = Path.of(System.getProperty(
+          "tinyexpression.benchmark.fixtureDir", "benchmarks/fixtures"))
+          .toAbsolutePath().normalize();
+      source = Files.readString(fixtureDir.resolve(fixture).normalize(), StandardCharsets.UTF_8);
+    }
+
+    final Object parseEntry(ParseOptions.Diagnostics diagnostics) {
+      ParseOptions options = ParseOptions.withMemoization(Memoization.SAFE_FAILURES)
+          .withDiagnostics(diagnostics);
+      synchronized (MAPPER_LOCK) {
+        try {
+          return TinyExpressionP4Mapper.parse(source, null, options);
+        } catch (RuntimeException failure) {
+          return failure.getMessage();
+        }
+      }
+    }
+  }
+
+  @Benchmark
+  public void entryDetailed(EntryState state, Blackhole blackhole) {
+    blackhole.consume(state.parseEntry(ParseOptions.Diagnostics.DETAILED));
+  }
+
+  @Benchmark
+  public void entryDeferred(EntryState state, Blackhole blackhole) {
+    blackhole.consume(state.parseEntry(ParseOptions.Diagnostics.DETAILED_ON_FAILURE));
   }
 
   @Benchmark
