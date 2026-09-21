@@ -1,0 +1,10 @@
+Benchmark                                       (fixture)  Mode  Cnt        Score        Error  Units
+P4ParserBenchmark.publicFacade               complex.tiny  avgt   16    43457.531 ±   4311.914  us/op
+P4ParserBenchmark.publicFacade      comparison-heavy.tiny  avgt   16    24846.655 ±    812.714  us/op
+P4ParserBenchmark.publicFacade            complex-x4.tiny  avgt   16   172998.309 ±  20675.451  us/op
+P4ParserBenchmark.publicFacade           complex-x16.tiny  avgt   16   724218.246 ± 124061.577  us/op
+P4ParserBenchmark.publicFacade           complex-x64.tiny  avgt   16  3720516.115 ± 291459.052  us/op
+P4ParserBenchmark.publicFacade   comparison-heavy-x4.tiny  avgt   16   123222.044 ±  19862.165  us/op
+P4ParserBenchmark.publicFacade  comparison-heavy-x16.tiny  avgt   16   497833.000 ± 106875.517  us/op
+P4ParserBenchmark.publicFacade  comparison-heavy-x64.tiny  avgt   16  3167530.424 ± 274909.939  us/op
+Benchmark result is saved to /home/opa/work/unlaxer-workspace/wt-te-pin/benchmarks/results/raw/2026-09-21-input-size-scaling-after/java-publicFacade.json

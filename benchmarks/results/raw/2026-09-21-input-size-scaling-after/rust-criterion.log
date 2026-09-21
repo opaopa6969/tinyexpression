@@ -1,0 +1,133 @@
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling crossbeam-utils v0.8.23
+   Compiling zerocopy v0.8.57
+   Compiling crossbeam-epoch v0.9.21
+   Compiling zmij v1.0.23
+   Compiling crossbeam-deque v0.8.8
+   Compiling autocfg v1.5.1
+   Compiling serde v1.0.229
+   Compiling cfg-if v1.0.5
+   Compiling rayon-core v1.13.0
+   Compiling either v1.18.0
+   Compiling serde_json v1.0.151
+   Compiling libc v0.2.189
+   Compiling clap_lex v1.1.1
+   Compiling regex-syntax v0.8.11
+   Compiling memchr v2.8.3
+   Compiling itoa v1.0.18
+   Compiling plotters-backend v0.3.7
+   Compiling ciborium-io v0.2.2
+   Compiling anstyle v1.0.14
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling oorandom v11.1.5
+   Compiling once_cell v1.21.4
+   Compiling anes v0.1.6
+   Compiling unlaxer-runtime v0.1.0 (https://github.com/opaopa6969/unlaxer-parser.git?rev=3c64061fa6a507cc71d8a6716f0750371a478cce#3c64061f)
+   Compiling walkdir v2.5.0
+   Compiling itertools v0.10.5
+   Compiling clap_builder v4.6.7
+   Compiling num-traits v0.2.19
+   Compiling plotters-svg v0.3.7
+   Compiling syn v2.0.119
+   Compiling syn v3.0.6
+   Compiling plotters v0.3.7
+   Compiling is-terminal v0.4.17
+   Compiling regex-automata v0.4.18
+   Compiling rayon v1.12.0
+   Compiling criterion-plot v0.5.0
+   Compiling clap v4.6.7
+   Compiling serde_derive v1.0.229
+   Compiling regex v1.13.1
+   Compiling zerocopy-derive v0.8.57
+   Compiling tinytemplate v1.2.1
+   Compiling half v2.7.1
+   Compiling ciborium-ll v0.2.2
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+   Compiling tinyexpression-rs v0.1.0 (/home/opa/work/unlaxer-workspace/wt-te-pin/rust/tinyexpression-rs)
+    Finished `bench` profile [optimized] target(s) in 12.58s
+     Running benches/parser.rs (rust/target/release/deps/parser-bbba117efad1b5e6)
+Gnuplot not found, using plotters backend
+Benchmarking tinyexpression/public-facade/complex
+Benchmarking tinyexpression/public-facade/complex: Warming up for 5.0000 s
+
+Warning: Unable to complete 100 samples in 10.0s. You may wish to increase target time to 14.6s, enable flat sampling, or reduce sample count to 50.
+Benchmarking tinyexpression/public-facade/complex: Collecting 100 samples in estimated 14.629 s (5050 iterations)
+Benchmarking tinyexpression/public-facade/complex: Analyzing
+tinyexpression/public-facade/complex
+                        time:   [2.9492 ms 3.0563 ms 3.1849 ms]
+Found 14 outliers among 100 measurements (14.00%)
+  8 (8.00%) high mild
+  6 (6.00%) high severe
+Benchmarking tinyexpression/public-facade/comparison-heavy
+Benchmarking tinyexpression/public-facade/comparison-heavy: Warming up for 5.0000 s
+Benchmarking tinyexpression/public-facade/comparison-heavy: Collecting 100 samples in estimated 13.320 s (15k iterations)
+Benchmarking tinyexpression/public-facade/comparison-heavy: Analyzing
+tinyexpression/public-facade/comparison-heavy
+                        time:   [874.59 µs 880.87 µs 887.81 µs]
+Found 9 outliers among 100 measurements (9.00%)
+  7 (7.00%) high mild
+  2 (2.00%) high severe
+Benchmarking tinyexpression/public-facade/complex-x4
+Benchmarking tinyexpression/public-facade/complex-x4: Warming up for 5.0000 s
+Benchmarking tinyexpression/public-facade/complex-x4: Collecting 100 samples in estimated 10.879 s (900 iterations)
+Benchmarking tinyexpression/public-facade/complex-x4: Analyzing
+tinyexpression/public-facade/complex-x4
+                        time:   [12.431 ms 12.971 ms 13.601 ms]
+Found 13 outliers among 100 measurements (13.00%)
+  2 (2.00%) high mild
+  11 (11.00%) high severe
+Benchmarking tinyexpression/public-facade/complex-x16
+Benchmarking tinyexpression/public-facade/complex-x16: Warming up for 5.0000 s
+Benchmarking tinyexpression/public-facade/complex-x16: Collecting 100 samples in estimated 10.555 s (200 iterations)
+Benchmarking tinyexpression/public-facade/complex-x16: Analyzing
+tinyexpression/public-facade/complex-x16
+                        time:   [53.074 ms 53.819 ms 54.673 ms]
+Found 12 outliers among 100 measurements (12.00%)
+  7 (7.00%) high mild
+  5 (5.00%) high severe
+Benchmarking tinyexpression/public-facade/complex-x64
+Benchmarking tinyexpression/public-facade/complex-x64: Warming up for 5.0000 s
+
+Warning: Unable to complete 100 samples in 10.0s. You may wish to increase target time to 21.8s, or reduce sample count to 40.
+Benchmarking tinyexpression/public-facade/complex-x64: Collecting 100 samples in estimated 21.753 s (100 iterations)
+Benchmarking tinyexpression/public-facade/complex-x64: Analyzing
+tinyexpression/public-facade/complex-x64
+                        time:   [217.98 ms 224.29 ms 231.78 ms]
+Found 13 outliers among 100 measurements (13.00%)
+  2 (2.00%) high mild
+  11 (11.00%) high severe
+Benchmarking tinyexpression/public-facade/comparison-heavy-x4
+Benchmarking tinyexpression/public-facade/comparison-heavy-x4: Warming up for 5.0000 s
+
+Warning: Unable to complete 100 samples in 10.0s. You may wish to increase target time to 16.7s, enable flat sampling, or reduce sample count to 50.
+Benchmarking tinyexpression/public-facade/comparison-heavy-x4: Collecting 100 samples in estimated 16.726 s (5050 iterations)
+Benchmarking tinyexpression/public-facade/comparison-heavy-x4: Analyzing
+tinyexpression/public-facade/comparison-heavy-x4
+                        time:   [3.3965 ms 3.5385 ms 3.7119 ms]
+Found 11 outliers among 100 measurements (11.00%)
+  3 (3.00%) high mild
+  8 (8.00%) high severe
+Benchmarking tinyexpression/public-facade/comparison-heavy-x16
+Benchmarking tinyexpression/public-facade/comparison-heavy-x16: Warming up for 5.0000 s
+Benchmarking tinyexpression/public-facade/comparison-heavy-x16: Collecting 100 samples in estimated 11.665 s (700 iterations)
+Benchmarking tinyexpression/public-facade/comparison-heavy-x16: Analyzing
+tinyexpression/public-facade/comparison-heavy-x16
+                        time:   [15.961 ms 16.297 ms 16.675 ms]
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking tinyexpression/public-facade/comparison-heavy-x64
+Benchmarking tinyexpression/public-facade/comparison-heavy-x64: Warming up for 5.0000 s
+Benchmarking tinyexpression/public-facade/comparison-heavy-x64: Collecting 100 samples in estimated 16.438 s (200 iterations)
+Benchmarking tinyexpression/public-facade/comparison-heavy-x64: Analyzing
+tinyexpression/public-facade/comparison-heavy-x64
+                        time:   [73.821 ms 75.051 ms 76.581 ms]
+Found 9 outliers among 100 measurements (9.00%)
+  3 (3.00%) high mild
+  6 (6.00%) high severe
+
