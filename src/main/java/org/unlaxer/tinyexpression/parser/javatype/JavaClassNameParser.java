@@ -12,7 +12,7 @@ import org.unlaxer.parser.combinator.ZeroOrMore;
 import org.unlaxer.parser.posix.DotParser;
 
 // Only composes identifier/dot parsers; no diagnostic reads or external parse-time effects.
-public class JavaClassNameParser extends LazyChain implements org.unlaxer.context.DiagnosticsAgnostic {
+public class JavaClassNameParser extends LazyChain {
 
 	private static final long serialVersionUID = -8875168129834784571L;
 

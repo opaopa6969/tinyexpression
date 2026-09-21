@@ -1,24 +1,33 @@
 package org.unlaxer.tinyexpression.p4;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.unlaxer.Parsed;
+import org.unlaxer.Source;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
-import org.unlaxer.context.DiagnosticsSafety;
-import org.unlaxer.context.Memoization;
 import org.unlaxer.context.ParseContext;
-import org.unlaxer.context.ParseOptions;
+import org.unlaxer.context.ParseContextEffector;
 import org.unlaxer.dsl.runtime.ScopeStore;
+import org.unlaxer.parser.HasChildrenParser;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
+import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
+import org.unlaxer.tinyexpression.parser.javalang.CodeEndParser;
+import org.unlaxer.tinyexpression.parser.javalang.CodeStartParser;
+import org.unlaxer.tinyexpression.parser.javalang.TripleBackTickParser;
+import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
 
 /**
  * Selects a more specific generated AST root when the generic mapper would
@@ -29,6 +38,15 @@ public final class P4PreferredAstMapper {
   // Generated root graphs are fixed after preparation. Check each root only once, by identity.
   private static final Map<Parser, Boolean> DEFERRED_DIAGNOSTICS_SAFE =
       Collections.synchronizedMap(new IdentityHashMap<>());
+
+  // These exact classes neither read diagnostics while parsing nor perform non-repeatable effects.
+  // Do not accept subclasses implicitly: their overrides have not been audited.
+  private static final Set<Class<? extends Parser>> DEFERRED_SAFE_CUSTOM_PARSERS = Set.of(
+      StringLiteralParser.class, CodeStartParser.class, CodeEndParser.class,
+      TripleBackTickParser.class, JavaClassNameParser.class);
+
+  // Published 3.0.15 lacks the options API. Resolve the entire capability once, without linking it.
+  private static final DiagnosticsCompat DIAGNOSTICS_COMPAT = DiagnosticsCompat.resolve();
 
   private P4PreferredAstMapper() {}
 
@@ -649,34 +667,65 @@ public final class P4PreferredAstMapper {
     return false == "false".equalsIgnoreCase(System.getProperty("tinyexpression.p4.memoize", "true"));
   }
 
+  private static boolean isDeferredDiagnosticsSafe(Parser root) {
+    Set<Parser> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    var pending = new ArrayDeque<Parser>();
+    pending.push(root);
+    while (!pending.isEmpty()) {
+      Parser parser = pending.pop();
+      if (!visited.add(parser)) continue;
+      Class<?> type = parser.getClass();
+      // The nest includes generated anonymous parsers inside generated rule classes too.
+      if (!type.getName().startsWith("org.unlaxer.parser.")
+          && type.getNestHost() != TinyExpressionP4Parsers.class
+          && !DEFERRED_SAFE_CUSTOM_PARSERS.contains(type)) {
+        return false;
+      }
+      // The shadow AbstractParser/Parser exposes children even for repeats that do not implement
+      // HasChildrenParser. Those edges must also be checked, including shared nodes and cycles.
+      pending.addAll(parser instanceof HasChildrenParser parent
+          ? parent.getChildren() : parser.getChildren());
+    }
+    return true;
+  }
+
   private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
-    ParseOptions options = ParseOptions.withMemoization(
-        memoizeEnabled() ? Memoization.SAFE_FAILURES : Memoization.OFF)
-        .resolveDiagnostics(DEFERRED_DIAGNOSTICS_SAFE.computeIfAbsent(
-            rootParser, DiagnosticsSafety::isDeferredDiagnosticsSafe));
+    if (DIAGNOSTICS_COMPAT == null) {
+      return parseWithRoot(rootParser, source, deadlineNanos, null);
+    }
+    Object options = DIAGNOSTICS_COMPAT.options(memoizeEnabled(),
+        DEFERRED_DIAGNOSTICS_SAFE.computeIfAbsent(
+            rootParser, P4PreferredAstMapper::isDeferredDiagnosticsSafe));
     long retryBudgetNanos = deadlineNanos > 0L ? deadlineNanos - System.nanoTime() : 0L;
     ParseResult result = parseWithRoot(rootParser, source, deadlineNanos, options);
-    if (!result.fullyConsumed(source)
-        && options.diagnostics() == ParseOptions.Diagnostics.DETAILED_ON_FAILURE) {
+    if (!result.fullyConsumed(source) && DIAGNOSTICS_COMPAT.isDeferred(options)) {
       // The first context is already closed. Retry the same root/input with fresh scope and memo
       // state, using the same time budget. Failure can therefore cost two parse budgets.
       long retryDeadlineNanos = deadlineNanos > 0L ? System.nanoTime() + retryBudgetNanos : 0L;
       return parseWithRoot(rootParser, source, retryDeadlineNanos,
-          options.withDiagnostics(ParseOptions.Diagnostics.DETAILED));
+          DIAGNOSTICS_COMPAT.detailed(options));
     }
     return result;
   }
 
   private static ParseResult parseWithRoot(
-      Parser rootParser, String source, long deadlineNanos, ParseOptions options) {
-    // unlaxer 3.0.15's enableMemoize() is an adapter for this same SAFE_FAILURES policy.
-    ParseContext context = ParseContext.withOptions(createRootSourceCompat(source), options);
+      Parser rootParser, String source, long deadlineNanos, Object options) {
+    ParseContext context = options == null
+        ? new ParseContext(createRootSourceCompat(source))
+        : DIAGNOSTICS_COMPAT.context(source, options);
     Parsed parsed;
     int consumed = -1;
     Token rootToken = null;
     Token legacyToken = null;
     try {
       ScopeStore.registerDispatcher(context);
+      if (options == null && memoizeEnabled()) {
+        try {
+          context.enableMemoize();
+        } catch (NoSuchMethodError unavailableBeforeMemoization) {
+          // Keep the original published-version path: memoization is an optional optimization.
+        }
+      }
       if (deadlineNanos > 0L) {
         registerDeadlineListener(context, deadlineNanos);
       }
@@ -699,6 +748,61 @@ public final class P4PreferredAstMapper {
       return new ParseResult(false, -1, null, null);
     }
     return new ParseResult(true, consumed, rootToken, legacyToken);
+  }
+
+  /** Reflection boundary: none of the development-only types occur in bytecode signatures. */
+  private record DiagnosticsCompat(
+      Method withMemoization, Method resolveDiagnostics, Method withDiagnostics,
+      Method diagnostics, Method withOptions,
+      Object safeFailures, Object off, Object detailed, Object deferred) {
+    static DiagnosticsCompat resolve() {
+      try {
+        Class<?> options = Class.forName("org.unlaxer.context.ParseOptions");
+        Class<?> memoization = Class.forName("org.unlaxer.context.Memoization");
+        Class<?> policy = Class.forName("org.unlaxer.context.ParseOptions$Diagnostics");
+        return new DiagnosticsCompat(
+            options.getMethod("withMemoization", memoization),
+            options.getMethod("resolveDiagnostics", boolean.class),
+            options.getMethod("withDiagnostics", policy),
+            options.getMethod("diagnostics"),
+            ParseContext.class.getMethod("withOptions", Source.class, options, ParseContextEffector[].class),
+            memoization.getField("SAFE_FAILURES").get(null), memoization.getField("OFF").get(null),
+            policy.getField("DETAILED").get(null), policy.getField("DETAILED_ON_FAILURE").get(null));
+      } catch (ReflectiveOperationException | LinkageError unavailableInPublishedVersion) {
+        return null;
+      }
+    }
+
+    Object options(boolean memoize, boolean safe) {
+      Object options = invoke(withMemoization, null, memoize ? safeFailures : off);
+      return invoke(resolveDiagnostics, options, safe);
+    }
+
+    boolean isDeferred(Object options) {
+      return invoke(diagnostics, options) == deferred;
+    }
+
+    Object detailed(Object options) {
+      return invoke(withDiagnostics, options, detailed);
+    }
+
+    ParseContext context(String source, Object options) {
+      return (ParseContext) invoke(withOptions, null,
+          createRootSourceCompat(source), options, new ParseContextEffector[0]);
+    }
+
+    private static Object invoke(Method method, Object receiver, Object... args) {
+      try {
+        return method.invoke(receiver, args);
+      } catch (InvocationTargetException failure) {
+        // Once available, API failures must propagate rather than silently switching semantics.
+        if (failure.getCause() instanceof RuntimeException cause) throw cause;
+        if (failure.getCause() instanceof Error cause) throw cause;
+        throw new IllegalStateException("cannot invoke P4 diagnostics API", failure.getCause());
+      } catch (ReflectiveOperationException failure) {
+        throw new IllegalStateException("cannot invoke P4 diagnostics API", failure);
+      }
+    }
   }
 
   private record ParsedRoot(
