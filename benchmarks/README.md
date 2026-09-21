@@ -6,6 +6,8 @@ gate.
 
 Recorded results:
 
+- [2026-09-21 interned expected names experiment (Rust, memo drop cost)](results/2026-09-21-intern-expected-experiment.md)
+- [2026-09-21 packrat memo position blocks experiment (Java, not adopted)](results/2026-09-21-memo-position-blocks-experiment.md)
 - [2026-09-21 failure memo bucketing experiment (Rust, superlinear fix)](results/2026-09-21-memo-buckets-experiment.md)
 - [2026-09-21 mapper linear selection experiment (Java, superlinear fix)](results/2026-09-21-mapper-linear-selection-experiment.md)
 - [2026-09-21 capture mutation journal experiment (Rust, superlinear fix)](results/2026-09-21-capture-journal-experiment.md)
