@@ -10,6 +10,10 @@ const FIXTURES: &[(&str, &str)] = &[
     ("complex", "complex.tiny"),
     ("flat-arithmetic", "flat-arithmetic.tiny"),
     ("large-match", "large-match.tiny"),
+    // Scaled copies for checking linearity of parse-only and map-only separately.
+    ("complex-x4", "complex-x4.tiny"),
+    ("complex-x16", "complex-x16.tiny"),
+    ("complex-x64", "complex-x64.tiny"),
 ];
 
 const FACADE_FIXTURES: &[(&str, &str)] = &[

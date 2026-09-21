@@ -38,6 +38,22 @@ deep copy する。`Sequence` の各要素が checkpoint を開いて captures �
 
 KB/s は入力バイト数 ÷ 時間。線形なら一定になるはずで、両 runtime とも入力が大きいほど下がっている。
 
+## 追記: parser 単体と mapper 単体の分離（complex 系、unlaxer-parser `b21a965`）
+
+`P4ParserBenchmark.parseOnlySafe` / `mapOnly`（JMH、1 fork、warmup 3 × 1 s、measurement 5 × 1 s）と Criterion `parse-only-safe` / `map-only`。
+comparison-heavy 系は alternate entry が必要で parse-only 系では使えない。
+
+| Fixture | サイズ倍率 | Java parseOnlySafe ms（倍率） | Java mapOnly ms（倍率） | Rust parse-only-safe ms（倍率） | Rust map-only ms（倍率） |
+|---|---:|---:|---:|---:|---:|
+| complex | 1.0x | 34.981（1.0x） | 0.138（1.0x） | 3.889（1.0x） | 0.018（1.0x） |
+| complex-x4 | 3.9x | 153.038（4.4x） | 0.740（5.4x） | 21.210（5.5x） | 0.069（3.9x） |
+| complex-x16 | 15.6x | 694.896（19.9x） | 3.276（23.7x） | 161.102（41.4x） | 0.466（26.0x） |
+| complex-x64 | 63.0x | 2465.029（70.5x） | 38.412（278.0x） | 655.533（168.6x） | 1.252（69.7x） |
+
+- **Java は parser がほぼ線形（63 倍で 70.5 倍）、mapper が強く超線形（278 倍）**。facade の超線形は生成 mapper と候補選択（`P4PreferredAstMapper.mapCandidates` が候補ごとに再 mapping と `SourceMappedAst` の全 span コピー）にある → unlaxer-parser #242
+- **Rust は mapper が線形（69.7 倍）、parser が超線形（168.6 倍）** → runtime 側（#241 の capture COW を直しても 156 倍。残りは #245）
+
 ## 生データ
 
-`raw/2026-09-21-input-size-scaling/`: `java-publicFacade.json`、`java-jmh-summary.txt`、`rust/<fixture>-estimates.json`、`rust-criterion.log`
+`raw/2026-09-21-input-size-scaling/`: `java-publicFacade.json`、`java-jmh-summary.txt`、`rust/<fixture>-estimates.json`、`rust-criterion.log`。
+`raw/2026-09-21-input-size-scaling-split/`: `java-split.json`（parseOnlySafe / mapOnly）、`rust/{parse-only-safe,map-only}/<fixture>-estimates.json`
