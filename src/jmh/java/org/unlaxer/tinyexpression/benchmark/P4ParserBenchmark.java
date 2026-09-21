@@ -50,7 +50,8 @@ public class P4ParserBenchmark {
 
   @State(Scope.Thread)
   public static class ParserState {
-    @Param({"complex.tiny", "flat-arithmetic.tiny", "large-match.tiny"})
+    @Param({"complex.tiny", "flat-arithmetic.tiny", "large-match.tiny",
+        "complex-x4.tiny", "complex-x16.tiny", "complex-x64.tiny"})
     public String fixture;
 
     private String source;

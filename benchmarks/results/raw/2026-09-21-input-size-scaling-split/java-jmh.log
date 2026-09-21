@@ -1,0 +1,613 @@
+[INFO] Scanning for projects...
+[INFO] Inspecting build with total of 1 modules
+[INFO] Installing Central Publishing features
+[INFO] 
+[INFO] ---------------------< org.unlaxer:tinyExpression >---------------------
+[INFO] Building tinyExpression 1.4.15
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- exec:3.3.0:java (generate-tinyexpression-p4-runtime) @ tinyExpression ---
+Generated: /home/opa/work/unlaxer-workspace/wt-te-scale/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Parsers.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-scale/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4AST.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-scale/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Mapper.java
+Generated: /home/opa/work/unlaxer-workspace/wt-te-scale/target/generated-sources/tinyexpression-p4/runtime/org/unlaxer/tinyexpression/generated/p4/TinyExpressionP4Evaluator.java
+[INFO] 
+[INFO] --- exec:3.3.0:java (generate-tinyexpression-p4-railroad) @ tinyExpression ---
+[INFO] skipping execute as per configuration
+[INFO] 
+[INFO] --- build-helper:3.5.0:add-source (add-generated-p4-runtime-sources) @ tinyExpression ---
+[INFO] Source directory: /home/opa/work/unlaxer-workspace/wt-te-scale/target/generated-sources/tinyexpression-p4/runtime added.
+[INFO] 
+[INFO] --- resources:3.0.2:resources (default-resources) @ tinyExpression ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 6 resources
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ tinyExpression ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 624 source files with javac [debug target 21] to target/classes
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-scale/src/main/java/org/unlaxer/compiler/PackageInternalsFinder.java: 一部の入力ファイルは推奨されないAPIを使用またはオーバーライドしています。
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-scale/src/main/java/org/unlaxer/compiler/PackageInternalsFinder.java: 詳細は、-Xlint:deprecationオプションを指定して再コンパイルしてください。
+[INFO] 
+[INFO] --- build-helper:3.5.0:add-test-source (add-jmh-source) @ tinyExpression ---
+[INFO] Test Source directory: /home/opa/work/unlaxer-workspace/wt-te-scale/src/jmh/java added.
+[INFO] 
+[INFO] --- resources:3.0.2:testResources (default-testResources) @ tinyExpression ---
+[INFO] Using 'UTF-8' encoding to copy filtered resources.
+[INFO] Copying 6 resources
+[INFO] 
+[INFO] --- compiler:3.13.0:testCompile (default-testCompile) @ tinyExpression ---
+[INFO] Recompiling the module because of changed dependency.
+[INFO] Compiling 163 source files with javac [debug target 21] to target/test-classes
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-scale/src/test/java/org/unlaxer/ParserTestBase.java: 一部の入力ファイルは推奨されないAPIを使用またはオーバーライドしています。
+[INFO] /home/opa/work/unlaxer-workspace/wt-te-scale/src/test/java/org/unlaxer/ParserTestBase.java: 詳細は、-Xlint:deprecationオプションを指定して再コンパイルしてください。
+[INFO] 
+[INFO] --- dependency:3.7.0:build-classpath (default-cli) @ tinyExpression ---
+[INFO] Wrote classpath file '/home/opa/work/unlaxer-workspace/wt-te-scale/target/jmh-classpath.txt'.
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  9.199 s
+[INFO] Finished at: 2026-09-21T08:58:36+09:00
+[INFO] ------------------------------------------------------------------------
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = complex.tiny)
+
+# Run progress: 0.00% complete, ETA 00:02:08
+# Fork: 1 of 1
+# Warmup Iteration   1: 158.410 us/op
+# Warmup Iteration   2: 132.763 us/op
+# Warmup Iteration   3: 131.846 us/op
+Iteration   1: 130.993 us/op
+Iteration   2: 162.903 us/op
+Iteration   3: 133.960 us/op
+Iteration   4: 131.688 us/op
+Iteration   5: 131.289 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly":
+  138.167 ±(99.9%) 53.437 us/op [Average]
+  (min, avg, max) = (130.993, 138.167, 162.903), stdev = 13.877
+  CI (99.9%): [84.729, 191.604] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = complex-x4.tiny)
+
+# Run progress: 6.25% complete, ETA 00:02:36
+# Fork: 1 of 1
+# Warmup Iteration   1: 708.475 us/op
+# Warmup Iteration   2: 670.508 us/op
+# Warmup Iteration   3: 645.838 us/op
+Iteration   1: 664.033 us/op
+Iteration   2: 707.366 us/op
+Iteration   3: 672.785 us/op
+Iteration   4: 656.453 us/op
+Iteration   5: 996.870 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly":
+  739.501 ±(99.9%) 559.056 us/op [Average]
+  (min, avg, max) = (656.453, 739.501, 996.870), stdev = 145.185
+  CI (99.9%): [180.446, 1298.557] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = complex-x16.tiny)
+
+# Run progress: 12.50% complete, ETA 00:02:52
+# Fork: 1 of 1
+# Warmup Iteration   1: 3499.942 us/op
+# Warmup Iteration   2: 3482.998 us/op
+# Warmup Iteration   3: 3328.821 us/op
+Iteration   1: 3693.119 us/op
+Iteration   2: 3205.919 us/op
+Iteration   3: 3172.632 us/op
+Iteration   4: 3055.091 us/op
+Iteration   5: 3254.189 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly":
+  3276.190 ±(99.9%) 940.970 us/op [Average]
+  (min, avg, max) = (3055.091, 3276.190, 3693.119), stdev = 244.367
+  CI (99.9%): [2335.220, 4217.160] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = complex-x64.tiny)
+
+# Run progress: 18.75% complete, ETA 00:03:59
+# Fork: 1 of 1
+# Warmup Iteration   1: 48968.865 us/op
+# Warmup Iteration   2: 35927.229 us/op
+# Warmup Iteration   3: 32985.348 us/op
+Iteration   1: 34892.193 us/op
+Iteration   2: 32558.503 us/op
+Iteration   3: 38517.457 us/op
+Iteration   4: 40240.609 us/op
+Iteration   5: 45853.392 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly":
+  38412.431 ±(99.9%) 19764.507 us/op [Average]
+  (min, avg, max) = (32558.503, 38412.431, 45853.392), stdev = 5132.780
+  CI (99.9%): [18647.924, 58176.938] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = comparison-heavy.tiny)
+
+# Run progress: 25.00% complete, ETA 00:07:25
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_mapOnly_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest.mapOnly_AverageTime(P4ParserBenchmark_mapOnly_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = comparison-heavy-x4.tiny)
+
+# Run progress: 31.25% complete, ETA 00:05:27
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x4.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_mapOnly_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest.mapOnly_AverageTime(P4ParserBenchmark_mapOnly_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = comparison-heavy-x16.tiny)
+
+# Run progress: 37.50% complete, ETA 00:04:08
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x16.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_mapOnly_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest.mapOnly_AverageTime(P4ParserBenchmark_mapOnly_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.mapOnly
+# Parameters: (fixture = comparison-heavy-x64.tiny)
+
+# Run progress: 43.75% complete, ETA 00:03:12
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x64.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_mapOnly_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_mapOnly_jmhTest.mapOnly_AverageTime(P4ParserBenchmark_mapOnly_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = complex.tiny)
+
+# Run progress: 50.00% complete, ETA 00:02:29
+# Fork: 1 of 1
+# Warmup Iteration   1: 36567.108 us/op
+# Warmup Iteration   2: 36247.258 us/op
+# Warmup Iteration   3: 37435.870 us/op
+Iteration   1: 34746.830 us/op
+Iteration   2: 34961.853 us/op
+Iteration   3: 34722.693 us/op
+Iteration   4: 35239.250 us/op
+Iteration   5: 35233.979 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe":
+  34980.921 ±(99.9%) 967.685 us/op [Average]
+  (min, avg, max) = (34722.693, 34980.921, 35239.250), stdev = 251.305
+  CI (99.9%): [34013.236, 35948.606] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = complex-x4.tiny)
+
+# Run progress: 56.25% complete, ETA 00:02:04
+# Fork: 1 of 1
+# Warmup Iteration   1: 139463.571 us/op
+# Warmup Iteration   2: 168861.410 us/op
+# Warmup Iteration   3: 207880.513 us/op
+Iteration   1: 168239.423 us/op
+Iteration   2: 150214.135 us/op
+Iteration   3: 139047.859 us/op
+Iteration   4: 169822.021 us/op
+Iteration   5: 137865.816 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe":
+  153037.851 ±(99.9%) 59238.626 us/op [Average]
+  (min, avg, max) = (137865.816, 153037.851, 169822.021), stdev = 15384.083
+  CI (99.9%): [93799.225, 212276.477] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = complex-x16.tiny)
+
+# Run progress: 62.50% complete, ETA 00:01:45
+# Fork: 1 of 1
+# Warmup Iteration   1: 570465.125 us/op
+# Warmup Iteration   2: 691918.398 us/op
+# Warmup Iteration   3: 605335.028 us/op
+Iteration   1: 574009.607 us/op
+Iteration   2: 559712.063 us/op
+Iteration   3: 605293.396 us/op
+Iteration   4: 1099706.699 us/op
+Iteration   5: 635760.395 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe":
+  694896.432 ±(99.9%) 878684.473 us/op [Average]
+  (min, avg, max) = (559712.063, 694896.432, 1099706.699), stdev = 228191.567
+  CI (99.9%): [≈ 0, 1573580.905] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = complex-x64.tiny)
+
+# Run progress: 68.75% complete, ETA 00:01:34
+# Fork: 1 of 1
+# Warmup Iteration   1: 2989880.446 us/op
+# Warmup Iteration   2: 2419547.625 us/op
+# Warmup Iteration   3: 3166810.890 us/op
+Iteration   1: 2432040.363 us/op
+Iteration   2: 2309137.227 us/op
+Iteration   3: 2581915.898 us/op
+Iteration   4: 2679877.787 us/op
+Iteration   5: 2322176.187 us/op
+
+
+Result "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe":
+  2465029.492 ±(99.9%) 625714.738 us/op [Average]
+  (min, avg, max) = (2309137.227, 2465029.492, 2679877.787), stdev = 162496.130
+  CI (99.9%): [1839314.755, 3090744.230] (assumes normal distribution)
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = comparison-heavy.tiny)
+
+# Run progress: 75.00% complete, ETA 00:01:44
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_parseOnlySafe_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest.parseOnlySafe_AverageTime(P4ParserBenchmark_parseOnlySafe_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = comparison-heavy-x4.tiny)
+
+# Run progress: 81.25% complete, ETA 00:01:12
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x4.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_parseOnlySafe_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest.parseOnlySafe_AverageTime(P4ParserBenchmark_parseOnlySafe_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = comparison-heavy-x16.tiny)
+
+# Run progress: 87.50% complete, ETA 00:00:44
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x16.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_parseOnlySafe_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest.parseOnlySafe_AverageTime(P4ParserBenchmark_parseOnlySafe_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# JMH version: 1.37
+# VM version: JDK 21.0.9, Java HotSpot(TM) 64-Bit Server VM, 21.0.9+7-LTS-338
+# VM invoker: /home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java
+# VM options: --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.lang=ALL-UNNAMED
+# Blackhole mode: compiler (auto-detected, use -Djmh.blackhole.autoDetect=false to disable)
+# Warmup: 3 iterations, 1 s each
+# Measurement: 5 iterations, 1 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Average time, time/op
+# Benchmark: org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.parseOnlySafe
+# Parameters: (fixture = comparison-heavy-x64.tiny)
+
+# Run progress: 93.75% complete, ETA 00:00:20
+# Fork: 1 of 1
+# Warmup Iteration   1: <failure>
+
+java.lang.IllegalArgumentException: P4 parse failed for fixture comparison-heavy-x64.tiny
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.parseFreshTokenAndValidate(P4ParserBenchmark.java:113)
+	at org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark$ParserState.prepareTrial(P4ParserBenchmark.java:78)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest._jmh_tryInit_f_parserstate1_1(P4ParserBenchmark_parseOnlySafe_jmhTest.java:365)
+	at org.unlaxer.tinyexpression.benchmark.jmh_generated.P4ParserBenchmark_parseOnlySafe_jmhTest.parseOnlySafe_AverageTime(P4ParserBenchmark_parseOnlySafe_jmhTest.java:144)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:527)
+	at org.openjdk.jmh.runner.BenchmarkHandler$BenchmarkTask.call(BenchmarkHandler.java:504)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1144)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:642)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+
+
+
+
+# Run complete. Total time: 00:05:13
+
+REMEMBER: The numbers below are just data. To gain reusable insights, you need to follow up on
+why the numbers are the way they are. Use profilers (see -prof, -lprof), design factorial
+experiments, perform baseline and negative tests that provide experimental control, make sure
+the benchmarking environment is safe on JVM/OS/HW level, ask for reviews from the domain experts.
+Do not assume the numbers tell you what you want them to tell.
+
+NOTE: Current JVM experimentally supports Compiler Blackholes, and they are in use. Please exercise
+extra caution when trusting the results, look into the generated code to check the benchmark still
+works, and factor in a small probability of new VM bugs. Additionally, while comparisons between
+different JVMs are already problematic, the performance difference caused by different Blackhole
+modes can be very significant. Please make sure you use the consistent Blackhole mode for comparisons.
+
+Benchmark                               (fixture)  Mode  Cnt        Score        Error  Units
+P4ParserBenchmark.mapOnly            complex.tiny  avgt    5      138.167 ±     53.437  us/op
+P4ParserBenchmark.mapOnly         complex-x4.tiny  avgt    5      739.501 ±    559.056  us/op
+P4ParserBenchmark.mapOnly        complex-x16.tiny  avgt    5     3276.190 ±    940.970  us/op
+P4ParserBenchmark.mapOnly        complex-x64.tiny  avgt    5    38412.431 ±  19764.507  us/op
+P4ParserBenchmark.parseOnlySafe      complex.tiny  avgt    5    34980.921 ±    967.685  us/op
+P4ParserBenchmark.parseOnlySafe   complex-x4.tiny  avgt    5   153037.851 ±  59238.626  us/op
+P4ParserBenchmark.parseOnlySafe  complex-x16.tiny  avgt    5   694896.432 ± 878684.473  us/op
+P4ParserBenchmark.parseOnlySafe  complex-x64.tiny  avgt    5  2465029.492 ± 625714.738  us/op
+
+Benchmark result is saved to /home/opa/work/unlaxer-workspace/wt-te-scale/benchmarks/results/raw/2026-09-21-input-size-scaling-split/java-split.json

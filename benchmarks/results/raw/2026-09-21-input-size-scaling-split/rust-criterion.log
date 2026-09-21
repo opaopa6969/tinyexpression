@@ -1,0 +1,80 @@
+   Compiling tinyexpression-rs v0.1.0 (/home/opa/work/unlaxer-workspace/wt-te-scale/rust/tinyexpression-rs)
+    Finished `bench` profile [optimized] target(s) in 1.00s
+     Running benches/parser.rs (rust/target/release/deps/parser-f848f50ead054a88)
+Gnuplot not found, using plotters backend
+Benchmarking tinyexpression/parse-only-safe/complex
+Benchmarking tinyexpression/parse-only-safe/complex: Warming up for 5.0000 s
+Benchmarking tinyexpression/parse-only-safe/complex: Collecting 100 samples in estimated 10.285 s (2400 iterations)
+Benchmarking tinyexpression/parse-only-safe/complex: Analyzing
+tinyexpression/parse-only-safe/complex
+                        time:   [3.8078 ms 3.8889 ms 3.9807 ms]
+Found 12 outliers among 100 measurements (12.00%)
+  5 (5.00%) high mild
+  7 (7.00%) high severe
+Benchmarking tinyexpression/map-only/complex
+Benchmarking tinyexpression/map-only/complex: Warming up for 5.0000 s
+Benchmarking tinyexpression/map-only/complex: Collecting 100 samples in estimated 10.015 s (586k iterations)
+Benchmarking tinyexpression/map-only/complex: Analyzing
+tinyexpression/map-only/complex
+                        time:   [18.006 µs 18.593 µs 19.259 µs]
+Found 8 outliers among 100 measurements (8.00%)
+  5 (5.00%) high mild
+  3 (3.00%) high severe
+Benchmarking tinyexpression/parse-only-safe/complex-x4
+Benchmarking tinyexpression/parse-only-safe/complex-x4: Warming up for 5.0000 s
+Benchmarking tinyexpression/parse-only-safe/complex-x4: Collecting 100 samples in estimated 11.034 s (400 iterations)
+Benchmarking tinyexpression/parse-only-safe/complex-x4: Analyzing
+tinyexpression/parse-only-safe/complex-x4
+                        time:   [20.572 ms 21.210 ms 21.922 ms]
+Found 6 outliers among 100 measurements (6.00%)
+  2 (2.00%) high mild
+  4 (4.00%) high severe
+Benchmarking tinyexpression/map-only/complex-x4
+Benchmarking tinyexpression/map-only/complex-x4: Warming up for 5.0000 s
+Benchmarking tinyexpression/map-only/complex-x4: Collecting 100 samples in estimated 10.232 s (152k iterations)
+Benchmarking tinyexpression/map-only/complex-x4: Analyzing
+tinyexpression/map-only/complex-x4
+                        time:   [64.494 µs 65.545 µs 66.724 µs]
+Found 8 outliers among 100 measurements (8.00%)
+  1 (1.00%) high mild
+  7 (7.00%) high severe
+Benchmarking tinyexpression/parse-only-safe/complex-x16
+Benchmarking tinyexpression/parse-only-safe/complex-x16: Warming up for 5.0000 s
+
+Warning: Unable to complete 100 samples in 10.0s. You may wish to increase target time to 19.4s, or reduce sample count to 50.
+Benchmarking tinyexpression/parse-only-safe/complex-x16: Collecting 100 samples in estimated 19.403 s (100 iterations)
+Benchmarking tinyexpression/parse-only-safe/complex-x16: Analyzing
+tinyexpression/parse-only-safe/complex-x16
+                        time:   [155.47 ms 161.10 ms 167.09 ms]
+Found 4 outliers among 100 measurements (4.00%)
+  3 (3.00%) high mild
+  1 (1.00%) high severe
+Benchmarking tinyexpression/map-only/complex-x16
+Benchmarking tinyexpression/map-only/complex-x16: Warming up for 5.0000 s
+Benchmarking tinyexpression/map-only/complex-x16: Collecting 100 samples in estimated 11.744 s (30k iterations)
+Benchmarking tinyexpression/map-only/complex-x16: Analyzing
+tinyexpression/map-only/complex-x16
+                        time:   [468.27 µs 496.85 µs 528.57 µs]
+Found 3 outliers among 100 measurements (3.00%)
+  3 (3.00%) high mild
+Benchmarking tinyexpression/parse-only-safe/complex-x64
+Benchmarking tinyexpression/parse-only-safe/complex-x64: Warming up for 5.0000 s
+
+Warning: Unable to complete 100 samples in 10.0s. You may wish to increase target time to 69.5s, or reduce sample count to 10.
+Benchmarking tinyexpression/parse-only-safe/complex-x64: Collecting 100 samples in estimated 69.516 s (100 iterations)
+Benchmarking tinyexpression/parse-only-safe/complex-x64: Analyzing
+tinyexpression/parse-only-safe/complex-x64
+                        time:   [642.19 ms 655.53 ms 671.07 ms]
+Found 12 outliers among 100 measurements (12.00%)
+  5 (5.00%) high mild
+  7 (7.00%) high severe
+Benchmarking tinyexpression/map-only/complex-x64
+Benchmarking tinyexpression/map-only/complex-x64: Warming up for 5.0000 s
+Benchmarking tinyexpression/map-only/complex-x64: Collecting 100 samples in estimated 12.978 s (10k iterations)
+Benchmarking tinyexpression/map-only/complex-x64: Analyzing
+tinyexpression/map-only/complex-x64
+                        time:   [1.2374 ms 1.2684 ms 1.3066 ms]
+Found 10 outliers among 100 measurements (10.00%)
+  7 (7.00%) high mild
+  3 (3.00%) high severe
+
