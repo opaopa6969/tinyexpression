@@ -1,0 +1,5 @@
+fraud formula #1 parsed in 495ms
+fraud formula #2 parsed in 30ms
+fraud formula #3 parsed in 9ms
+fraud formula #4 parsed in 82ms
+fraud formula #5 parsed in 86ms

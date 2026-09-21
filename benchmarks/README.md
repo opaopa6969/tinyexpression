@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-22 unlaxer memo state version fix, safe success memo, IntegerValue reflection (unlaxer #269 / #270: facade -25% → -60% cumulative, fraud formula #5 4.7 s → 59 ms)](results/2026-09-22-memo-version-and-success-memo-experiment.md)
 - [2026-09-22 single mapping per root (tinyexpression #167 / unlaxer #267: facade -13% / -20%, x64 -33% / -60%, facade scaling 86x → 66x)](results/2026-09-22-single-mapping-per-root-experiment.md)
 - [2026-09-21 facade deferred diagnostics (tinyexpression #168: facade -13% / -13%, failures +52..+85%)](results/2026-09-21-facade-deferred-diagnostics-experiment.md)
 - [2026-09-21 Auto diagnostics default (design proposal 2 minimal form: Rust facade -34% / -23%, Java unchanged until tinyexpression #168)](results/2026-09-21-diagnostics-auto-experiment.md)
