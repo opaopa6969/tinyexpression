@@ -253,6 +253,12 @@ public class P4ParserBenchmark {
     blackhole.consume(state.parseEntry(ParseOptions.Diagnostics.DETAILED_ON_FAILURE));
   }
 
+  /** Default options (AUTO since unlaxer-parser #261): the generated entry resolves the policy itself. */
+  @Benchmark
+  public void entryAuto(EntryState state, Blackhole blackhole) {
+    blackhole.consume(state.parseEntry(ParseOptions.Diagnostics.AUTO));
+  }
+
   @Benchmark
   public void mapOnly(ParserState state, Blackhole blackhole) {
     blackhole.consume(state.mapPreparsedToken());
