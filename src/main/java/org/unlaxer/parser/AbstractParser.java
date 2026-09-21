@@ -45,7 +45,7 @@ public abstract class AbstractParser implements Parser {
   ASTNodeKind astNodeKind;
   Opecode opecode;
 
-  boolean donePrepareChildren = false;
+  volatile boolean donePrepareChildren = false;
 
 	NodeReduceMarker nodeReduceMarker;
 
@@ -138,11 +138,20 @@ public abstract class AbstractParser implements Parser {
 		nodeReduceMarker.parent = Optional.of(nodeReduceMarker);
 	}
 
+	/**
+	 * Parsers are shared singletons, so the lazy child preparation must happen exactly once even
+	 * when several threads start parsing at the same time (unlaxer-parser #202). This mirrors the
+	 * upstream org.unlaxer.parser.AbstractParser, which this copy shadows on the classpath.
+	 */
 	@Override
 	public Parsers getChildren() {
 		if(false == donePrepareChildren){
-			prepareChildren(children);
-			donePrepareChildren = true;
+			synchronized (this) {
+				if(false == donePrepareChildren){
+					prepareChildren(children);
+					donePrepareChildren = true;
+				}
+			}
 		}
 		return children;
 	}
