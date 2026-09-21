@@ -53,7 +53,26 @@ comparison-heavy 系は alternate entry が必要で parse-only 系では使え�
 - **Java は parser がほぼ線形（63 倍で 70.5 倍）、mapper が強く超線形（278 倍）**。facade の超線形は生成 mapper と候補選択（`P4PreferredAstMapper.mapCandidates` が候補ごとに再 mapping と `SourceMappedAst` の全 span コピー）にある → unlaxer-parser #242
 - **Rust は mapper が線形（69.7 倍）、parser が超線形（168.6 倍）** → runtime 側（#241 の capture COW を直しても 156 倍。残りは #245）
 
+## 追記: 修正後（unlaxer-parser `3c64061` = #241 / #242 / #245 / #202 適用後、public facade、1 run）
+
+| Fixture | bytes | 倍率 | Java ms/op | Java 倍率 | Java KB/s | Rust ms/op | Rust 倍率 | Rust KB/s |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| complex | 332 | 1.0x | 43.5 ± 4.3 | 1.0x | 7 | 3.007 | 1.0x | 108 |
+| complex-x4 | 1,293 | 3.9x | 173.0 ± 20.7 | 4.0x | 7 | 12.971 | 4.3x | 97 |
+| complex-x16 | 5,179 | 15.6x | 724.2 ± 124.1 | 16.7x | 7 | 53.819 | 17.9x | 94 |
+| complex-x64 | 20,923 | 63.0x | 3720.5 ± 291.5 | 85.6x | 5 | 224.294 | 74.6x | 91 |
+| comparison-heavy | 179 | 1.0x | 24.8 ± 0.8 | 1.0x | 7 | 0.878 | 1.0x | 199 |
+| comparison-heavy-x4 | 716 | 4.0x | 123.2 ± 19.9 | 5.0x | 6 | 3.433 | 3.9x | 204 |
+| comparison-heavy-x16 | 2,864 | 16.0x | 497.8 ± 106.9 | 20.0x | 6 | 16.297 | 18.6x | 172 |
+| comparison-heavy-x64 | 11,456 | 64.0x | 3167.5 ± 274.9 | 127.5x | 4 | 75.051 | 85.5x | 149 |
+
+- Rust: x64 で complex 654.4 → 224.3 ms（倍率 172 → 75）、comparison-heavy 191.5 → 75.1 ms（193 → 86）。KB/s が 91〜108 / 149〜204 とほぼ一定になり、
+  入力倍率の 1.2〜1.3 倍以内。残りは parse 終了時の memo 破棄（#245 の記録）
+- Java: x64 で 3,859 → 3,721 ms（倍率 86 → 86）、3,230 → 3,168 ms（122 → 128、ノイズ内）。#242 で mapper 単体は -30% だが facade の倍率は変わらず。
+  残りは parser 自体の 1.12 倍と、facade が候補型ごとに公開 mapping を呼び直す分（x64 で約 960 ms）。後者は tinyexpression 側の設計判断（#242 の記録）
+
 ## 生データ
 
 `raw/2026-09-21-input-size-scaling/`: `java-publicFacade.json`、`java-jmh-summary.txt`、`rust/<fixture>-estimates.json`、`rust-criterion.log`。
-`raw/2026-09-21-input-size-scaling-split/`: `java-split.json`（parseOnlySafe / mapOnly）、`rust/{parse-only-safe,map-only}/<fixture>-estimates.json`
+`raw/2026-09-21-input-size-scaling-split/`: `java-split.json`（parseOnlySafe / mapOnly）、`rust/{parse-only-safe,map-only}/<fixture>-estimates.json`。
+`raw/2026-09-21-input-size-scaling-after/`: 修正後の `java-publicFacade.json`、`rust/<fixture>-estimates.json`
