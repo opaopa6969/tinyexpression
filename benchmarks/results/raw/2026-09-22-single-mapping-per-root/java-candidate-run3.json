@@ -1,0 +1,146 @@
+[
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java",
+        "jvmArgs" : [
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.9",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "21.0.9+7-LTS-338",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 8,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixture" : "complex.tiny"
+        },
+        "primaryMetric" : {
+            "score" : 30130.075935038574,
+            "scoreError" : 574.0264455878101,
+            "scoreConfidence" : [
+                29556.049489450765,
+                30704.102380626384
+            ],
+            "scorePercentiles" : {
+                "0.0" : 29428.587323529413,
+                "50.0" : 29933.96038235294,
+                "90.0" : 31333.628914299243,
+                "95.0" : 31407.11690625,
+                "99.0" : 31407.11690625,
+                "99.9" : 31407.11690625,
+                "99.99" : 31407.11690625,
+                "99.999" : 31407.11690625,
+                "99.9999" : 31407.11690625,
+                "100.0" : 31407.11690625
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    30217.123176470588,
+                    29872.73176470588,
+                    29749.59017647059,
+                    29861.761647058822,
+                    29969.75555882353,
+                    30189.178647058823,
+                    31302.134060606062,
+                    30387.24521212121
+                ],
+                [
+                    29898.165205882353,
+                    30613.365575757576,
+                    30056.77961764706,
+                    31407.11690625,
+                    29516.527647058825,
+                    29428.587323529413,
+                    29754.29844117647,
+                    29856.854
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    },
+    {
+        "jmhVersion" : "1.37",
+        "benchmark" : "org.unlaxer.tinyexpression.benchmark.P4ParserBenchmark.publicFacade",
+        "mode" : "avgt",
+        "threads" : 1,
+        "forks" : 2,
+        "jvm" : "/home/opa/.sdkman/candidates/java/21.0.9-oracle/bin/java",
+        "jvmArgs" : [
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED",
+            "--add-opens=java.base/java.util=ALL-UNNAMED",
+            "--add-opens=java.base/java.lang=ALL-UNNAMED"
+        ],
+        "jdkVersion" : "21.0.9",
+        "vmName" : "Java HotSpot(TM) 64-Bit Server VM",
+        "vmVersion" : "21.0.9+7-LTS-338",
+        "warmupIterations" : 5,
+        "warmupTime" : "1 s",
+        "warmupBatchSize" : 1,
+        "measurementIterations" : 8,
+        "measurementTime" : "1 s",
+        "measurementBatchSize" : 1,
+        "params" : {
+            "fixture" : "comparison-heavy.tiny"
+        },
+        "primaryMetric" : {
+            "score" : 19540.25560187183,
+            "scoreError" : 4628.7429929793025,
+            "scoreConfidence" : [
+                14911.512608892528,
+                24168.998594851135
+            ],
+            "scorePercentiles" : {
+                "0.0" : 17389.966879310345,
+                "50.0" : 18183.36309724026,
+                "90.0" : 26180.108355745353,
+                "95.0" : 36101.051178571426,
+                "99.0" : 36101.051178571426,
+                "99.9" : 36101.051178571426,
+                "99.99" : 36101.051178571426,
+                "99.999" : 36101.051178571426,
+                "99.9999" : 36101.051178571426,
+                "100.0" : 36101.051178571426
+            },
+            "scoreUnit" : "us/op",
+            "rawData" : [
+                [
+                    18365.34312727273,
+                    18578.40777777778,
+                    19360.8825,
+                    36101.051178571426,
+                    21928.275717391305,
+                    18830.22925925926,
+                    17981.30075,
+                    18167.223303571427
+                ],
+                [
+                    18199.50289090909,
+                    17937.01064285714,
+                    17583.651421052633,
+                    17636.030719298247,
+                    17862.35375,
+                    19008.36190566038,
+                    17714.497807017542,
+                    17389.966879310345
+                ]
+            ]
+        },
+        "secondaryMetrics" : {
+        }
+    }
+]
+
+
