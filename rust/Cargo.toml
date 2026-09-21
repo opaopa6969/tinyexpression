@@ -8,4 +8,4 @@ rust-version = "1.85"
 license = "MIT"
 
 [workspace.dependencies]
-unlaxer-runtime = { git = "https://github.com/opaopa6969/unlaxer-parser.git", rev = "ab6a3685902ca16b6ad5d1282b20ed0bc35ea80d" }
+unlaxer-runtime = { git = "https://github.com/opaopa6969/unlaxer-parser.git", rev = "81a960adf846be94eab2bcffe345e08d42c18b66" }
