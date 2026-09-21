@@ -497,7 +497,7 @@ checksum = "d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954"
 [[package]]
 name = "unlaxer-runtime"
 version = "0.1.0"
-source = "git+https://github.com/opaopa6969/unlaxer-parser.git?rev=81a960adf846be94eab2bcffe345e08d42c18b66#81a960adf846be94eab2bcffe345e08d42c18b66"
+source = "git+https://github.com/opaopa6969/unlaxer-parser.git?rev=516b809307a7dbc413dfceac32cf759c0dd9c1d4#516b809307a7dbc413dfceac32cf759c0dd9c1d4"
 
 [[package]]
 name = "walkdir"
