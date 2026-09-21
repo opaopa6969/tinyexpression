@@ -253,6 +253,36 @@ public class P4ParserBenchmark {
     blackhole.consume(state.parseEntry(ParseOptions.Diagnostics.DETAILED_ON_FAILURE));
   }
 
+  /** Public facade on inputs that may fail (complex-half / complex-tail): failures are caught. */
+  @State(Scope.Thread)
+  public static class FacadeAnyState {
+    @Param({"complex.tiny", "complex-half.tiny", "complex-tail.tiny"})
+    public String fixture;
+
+    private String source;
+
+    @Setup(Level.Trial)
+    public void prepareTrial() throws IOException {
+      Path fixtureDir = Path.of(System.getProperty(
+          "tinyexpression.benchmark.fixtureDir", "benchmarks/fixtures"))
+          .toAbsolutePath().normalize();
+      source = Files.readString(fixtureDir.resolve(fixture).normalize(), StandardCharsets.UTF_8);
+    }
+
+    final Object parseFacade() {
+      try {
+        return P4PreferredAstMapper.parseDetailed(source);
+      } catch (RuntimeException failure) {
+        return failure.getMessage();
+      }
+    }
+  }
+
+  @Benchmark
+  public void facadeAny(FacadeAnyState state, Blackhole blackhole) {
+    blackhole.consume(state.parseFacade());
+  }
+
   /** Default options (AUTO since unlaxer-parser #261): the generated entry resolves the policy itself. */
   @Benchmark
   public void entryAuto(EntryState state, Blackhole blackhole) {

@@ -9,7 +9,8 @@ import org.unlaxer.parser.combinator.LazyChain;
 import org.unlaxer.parser.elementary.EndOfLineParser;
 import org.unlaxer.parser.elementary.StartOfLineParser;
 
-public class CodeEndParser extends LazyChain{
+// Builds a fixed delimiter sequence; no diagnostic reads or external parse-time effects.
+public class CodeEndParser extends LazyChain {
   
   @Override
   public Parsed parse(ParseContext parseContext, TokenKind tokenKind, boolean invertMatch) {
