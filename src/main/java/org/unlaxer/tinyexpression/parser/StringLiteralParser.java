@@ -5,7 +5,9 @@ import org.unlaxer.parser.combinator.LazyChoice;
 import org.unlaxer.parser.elementary.DoubleQuotedParser;
 import org.unlaxer.parser.elementary.SingleQuotedParser;
 
-public class StringLiteralParser extends LazyChoice implements StringExpression{
+// Only selects the library quote parsers; no diagnostic reads or external parse-time effects.
+public class StringLiteralParser extends LazyChoice
+    implements StringExpression, org.unlaxer.context.DiagnosticsAgnostic {
 
 	private static final long serialVersionUID = 3503116045698010940L;
 

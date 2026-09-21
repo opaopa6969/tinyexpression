@@ -1,12 +1,18 @@
 package org.unlaxer.tinyexpression.p4;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.Token;
+import org.unlaxer.context.DiagnosticsSafety;
+import org.unlaxer.context.Memoization;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.context.ParseOptions;
 import org.unlaxer.dsl.runtime.ScopeStore;
 import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
@@ -19,6 +25,10 @@ import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
  * otherwise settle on a shallow wrapper such as {@code ExpressionExpr}.
  */
 public final class P4PreferredAstMapper {
+
+  // Generated root graphs are fixed after preparation. Check each root only once, by identity.
+  private static final Map<Parser, Boolean> DEFERRED_DIAGNOSTICS_SAFE =
+      Collections.synchronizedMap(new IdentityHashMap<>());
 
   private P4PreferredAstMapper() {}
 
@@ -79,6 +89,7 @@ public final class P4PreferredAstMapper {
    * 実質終了しないことがある (issue #19)。{@code deadlineNanos}
    * ({@link System#nanoTime()} 基準の絶対時刻) を過ぎるとパースを
    * {@link ParseDeadlineExceededException} で中断する。0 以下なら無期限。
+   * 構文失敗時の詳細診断用再解析には、初回開始時の残り予算をもう一度適用する。
    *
    * <p>実装はスレッドを使わない: 全パーサーのトランザクション begin で呼ばれる
    * {@link org.unlaxer.listener.TransactionListener} を {@link ParseContext} に
@@ -639,33 +650,36 @@ public final class P4PreferredAstMapper {
   }
 
   private static ParseResult parseWithRoot(Parser rootParser, String source, long deadlineNanos) {
-    ParseContext context = new ParseContext(createRootSourceCompat(source));
-    ScopeStore.registerDispatcher(context);
-    // Packrat memoization (unlaxer-parser #40): collapses the exponential backtracking that deeply
-    // nested fraud-detection formulas trigger (#19/#38). ON by default now that it is proven fast and
-    // parse-equivalent (parity verified in #40) and that the mapping phase no longer re-maps subtrees
-    // (tinyexpression #49) — together these let formulas that previously blew the parse deadline (e.g.
-    // toUpperCase('..')[4:6].in(..), the giant nested-if fraud formulas) stay on the P4 path instead of
-    // failing explicitly. Opt OUT with -Dtinyexpression.p4.memoize=false. Safe with the
-    // @scopeTree/@declares/@backref grammar because memoization excludes TransactionListener-bearing
-    // sub-trees (scope effects are never skipped).
-    if (memoizeEnabled()) {
-      try {
-        context.enableMemoize();
-      } catch (NoSuchMethodError _e) {
-        // unlaxer-common の版が enableMemoize() を持たない（Central の 3.0.11 が
-        // 旧版のまま publish されている等）。memoize は性能最適化で必須ではない —
-        // 深くネストした式で遅くなるが、機能はする。issue #67 参照。
-      }
+    ParseOptions options = ParseOptions.withMemoization(
+        memoizeEnabled() ? Memoization.SAFE_FAILURES : Memoization.OFF)
+        .resolveDiagnostics(DEFERRED_DIAGNOSTICS_SAFE.computeIfAbsent(
+            rootParser, DiagnosticsSafety::isDeferredDiagnosticsSafe));
+    long retryBudgetNanos = deadlineNanos > 0L ? deadlineNanos - System.nanoTime() : 0L;
+    ParseResult result = parseWithRoot(rootParser, source, deadlineNanos, options);
+    if (!result.fullyConsumed(source)
+        && options.diagnostics() == ParseOptions.Diagnostics.DETAILED_ON_FAILURE) {
+      // The first context is already closed. Retry the same root/input with fresh scope and memo
+      // state, using the same time budget. Failure can therefore cost two parse budgets.
+      long retryDeadlineNanos = deadlineNanos > 0L ? System.nanoTime() + retryBudgetNanos : 0L;
+      return parseWithRoot(rootParser, source, retryDeadlineNanos,
+          options.withDiagnostics(ParseOptions.Diagnostics.DETAILED));
     }
-    if (deadlineNanos > 0L) {
-      registerDeadlineListener(context, deadlineNanos);
-    }
+    return result;
+  }
+
+  private static ParseResult parseWithRoot(
+      Parser rootParser, String source, long deadlineNanos, ParseOptions options) {
+    // unlaxer 3.0.15's enableMemoize() is an adapter for this same SAFE_FAILURES policy.
+    ParseContext context = ParseContext.withOptions(createRootSourceCompat(source), options);
     Parsed parsed;
     int consumed = -1;
     Token rootToken = null;
     Token legacyToken = null;
     try {
+      ScopeStore.registerDispatcher(context);
+      if (deadlineNanos > 0L) {
+        registerDeadlineListener(context, deadlineNanos);
+      }
       parsed = rootParser.parse(context);
       if (parsed.isSucceeded()) {
         consumed = consumedLengthCompat(parsed.getConsumed());

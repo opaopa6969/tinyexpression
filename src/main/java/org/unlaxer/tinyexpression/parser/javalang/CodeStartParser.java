@@ -13,7 +13,8 @@ import org.unlaxer.parser.elementary.StartOfLineParser;
 import org.unlaxer.parser.elementary.WordParser;
 import org.unlaxer.tinyexpression.parser.javatype.JavaClassNameParser;
 
-public class CodeStartParser extends LazyChain{
+// Builds a fixed delimiter/name sequence; parsing only changes the supplied context.
+public class CodeStartParser extends LazyChain implements org.unlaxer.context.DiagnosticsAgnostic {
 
   public enum CodeStartParts{
     scheme,
