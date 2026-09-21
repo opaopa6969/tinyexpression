@@ -1,0 +1,265 @@
+     Locking 49 packages to latest compatible versions
+   Compiling proc-macro2 v1.0.107
+   Compiling unicode-ident v1.0.26
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling zerocopy v0.8.57
+   Compiling serde v1.0.229
+   Compiling zmij v1.0.23
+   Compiling libc v0.2.189
+   Compiling autocfg v1.5.1
+   Compiling cfg-if v1.0.5
+   Compiling serde_json v1.0.151
+   Compiling ciborium-io v0.2.2
+   Compiling anstyle v1.0.14
+   Compiling memchr v2.8.3
+   Compiling regex-syntax v0.8.11
+   Compiling itoa v1.0.18
+   Compiling either v1.18.0
+   Compiling clap_lex v1.1.1
+   Compiling unlaxer-runtime v0.1.0 (/home/opa/work/unlaxer-workspace/wt-257/rust/unlaxer-runtime)
+   Compiling same-file v1.0.6
+   Compiling cast v0.3.0
+   Compiling oorandom v11.1.5
+   Compiling once_cell v1.21.4
+   Compiling anes v0.1.6
+   Compiling walkdir v2.5.0
+   Compiling clap_builder v4.6.7
+   Compiling itertools v0.10.5
+   Compiling num-traits v0.2.19
+   Compiling tinyexpression-rs v0.1.0 (/home/opa/work/unlaxer-workspace/wt-te-next/rust/tinyexpression-rs)
+   Compiling syn v2.0.119
+   Compiling syn v3.0.6
+   Compiling is-terminal v0.4.17
+   Compiling regex-automata v0.4.18
+   Compiling criterion-plot v0.5.0
+   Compiling clap v4.6.7
+   Compiling te-diag-bench v0.0.0 (/tmp/claude-1000/-home-opa-work-unlaxer-workspace-unlaxer-parser/1408e82a-a6db-46cb-9729-ba67625383fc/scratchpad/diagbench)
+   Compiling serde_derive v1.0.229
+   Compiling regex v1.13.1
+   Compiling zerocopy-derive v0.8.57
+   Compiling tinytemplate v1.2.1
+   Compiling half v2.7.1
+   Compiling ciborium-ll v0.2.2
+   Compiling ciborium v0.2.2
+   Compiling criterion v0.5.1
+    Finished `bench` profile [optimized] target(s) in 11.62s
+     Running benches/diag.rs (target/release/deps/diag-eeaff3101ae5660f)
+Benchmarking diag/detailed/ok/complex
+Benchmarking diag/detailed/ok/complex: Warming up for 3.0000 s
+Benchmarking diag/detailed/ok/complex: Collecting 50 samples in estimated 6.3887 s (2550 iterations)
+Benchmarking diag/detailed/ok/complex: Analyzing
+diag/detailed/ok/complex
+                        time:   [2.5779 ms 2.6566 ms 2.7668 ms]
+Found 7 outliers among 50 measurements (14.00%)
+  2 (4.00%) high mild
+  5 (10.00%) high severe
+Benchmarking diag/deferred/ok/complex
+Benchmarking diag/deferred/ok/complex: Warming up for 3.0000 s
+Benchmarking diag/deferred/ok/complex: Collecting 50 samples in estimated 6.8802 s (5100 iterations)
+Benchmarking diag/deferred/ok/complex: Analyzing
+diag/deferred/ok/complex
+                        time:   [1.3519 ms 1.3727 ms 1.4010 ms]
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/detailed/half/complex
+Benchmarking diag/detailed/half/complex: Warming up for 3.0000 s
+Benchmarking diag/detailed/half/complex: Collecting 50 samples in estimated 11.930 s (2550 iterations)
+Benchmarking diag/detailed/half/complex: Analyzing
+diag/detailed/half/complex
+                        time:   [4.7075 ms 4.9073 ms 5.1713 ms]
+Found 5 outliers among 50 measurements (10.00%)
+  3 (6.00%) high mild
+  2 (4.00%) high severe
+Benchmarking diag/deferred/half/complex
+Benchmarking diag/deferred/half/complex: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 10.1s, enable flat sampling, or reduce sample count to 20.
+Benchmarking diag/deferred/half/complex: Collecting 50 samples in estimated 10.065 s (1275 iterations)
+Benchmarking diag/deferred/half/complex: Analyzing
+diag/deferred/half/complex
+                        time:   [7.9715 ms 8.2309 ms 8.5348 ms]
+Found 4 outliers among 50 measurements (8.00%)
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/detailed/tail/complex
+Benchmarking diag/detailed/tail/complex: Warming up for 3.0000 s
+Benchmarking diag/detailed/tail/complex: Collecting 50 samples in estimated 6.0195 s (2550 iterations)
+Benchmarking diag/detailed/tail/complex: Analyzing
+diag/detailed/tail/complex
+                        time:   [2.3483 ms 2.4259 ms 2.5234 ms]
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking diag/deferred/tail/complex
+Benchmarking diag/deferred/tail/complex: Warming up for 3.0000 s
+Benchmarking diag/deferred/tail/complex: Collecting 50 samples in estimated 10.939 s (2550 iterations)
+Benchmarking diag/deferred/tail/complex: Analyzing
+diag/deferred/tail/complex
+                        time:   [3.8378 ms 3.9983 ms 4.2085 ms]
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/detailed/ok/complex-x4
+Benchmarking diag/detailed/ok/complex-x4: Warming up for 3.0000 s
+Benchmarking diag/detailed/ok/complex-x4: Collecting 50 samples in estimated 6.4368 s (650 iterations)
+Benchmarking diag/detailed/ok/complex-x4: Analyzing
+diag/detailed/ok/complex-x4
+                        time:   [9.6144 ms 9.8423 ms 10.117 ms]
+Found 5 outliers among 50 measurements (10.00%)
+  4 (8.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/deferred/ok/complex-x4
+Benchmarking diag/deferred/ok/complex-x4: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 7.7s, enable flat sampling, or reduce sample count to 30.
+Benchmarking diag/deferred/ok/complex-x4: Collecting 50 samples in estimated 7.7341 s (1275 iterations)
+Benchmarking diag/deferred/ok/complex-x4: Analyzing
+diag/deferred/ok/complex-x4
+                        time:   [6.0422 ms 6.1800 ms 6.3325 ms]
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking diag/detailed/half/complex-x4
+Benchmarking diag/detailed/half/complex-x4: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 6.8s, enable flat sampling, or reduce sample count to 30.
+Benchmarking diag/detailed/half/complex-x4: Collecting 50 samples in estimated 6.8443 s (1275 iterations)
+Benchmarking diag/detailed/half/complex-x4: Analyzing
+diag/detailed/half/complex-x4
+                        time:   [4.5388 ms 4.7938 ms 5.1686 ms]
+Found 6 outliers among 50 measurements (12.00%)
+  1 (2.00%) high mild
+  5 (10.00%) high severe
+Benchmarking diag/deferred/half/complex-x4
+Benchmarking diag/deferred/half/complex-x4: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 9.6s, enable flat sampling, or reduce sample count to 20.
+Benchmarking diag/deferred/half/complex-x4: Collecting 50 samples in estimated 9.5925 s (1275 iterations)
+Benchmarking diag/deferred/half/complex-x4: Analyzing
+diag/deferred/half/complex-x4
+                        time:   [7.2508 ms 7.4365 ms 7.6392 ms]
+Benchmarking diag/detailed/tail/complex-x4
+Benchmarking diag/detailed/tail/complex-x4: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 11.5s, enable flat sampling, or reduce sample count to 20.
+Benchmarking diag/detailed/tail/complex-x4: Collecting 50 samples in estimated 11.546 s (1275 iterations)
+Benchmarking diag/detailed/tail/complex-x4: Analyzing
+diag/detailed/tail/complex-x4
+                        time:   [9.7648 ms 10.280 ms 10.942 ms]
+Found 3 outliers among 50 measurements (6.00%)
+  2 (4.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/deferred/tail/complex-x4
+Benchmarking diag/deferred/tail/complex-x4: Warming up for 3.0000 s
+Benchmarking diag/deferred/tail/complex-x4: Collecting 50 samples in estimated 6.6380 s (450 iterations)
+Benchmarking diag/deferred/tail/complex-x4: Analyzing
+diag/deferred/tail/complex-x4
+                        time:   [14.341 ms 14.790 ms 15.304 ms]
+Found 7 outliers among 50 measurements (14.00%)
+  2 (4.00%) high mild
+  5 (10.00%) high severe
+Benchmarking diag/detailed/ok/complex-x16
+Benchmarking diag/detailed/ok/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/detailed/ok/complex-x16: Collecting 50 samples in estimated 7.6469 s (200 iterations)
+Benchmarking diag/detailed/ok/complex-x16: Analyzing
+diag/detailed/ok/complex-x16
+                        time:   [38.206 ms 39.266 ms 40.456 ms]
+Found 6 outliers among 50 measurements (12.00%)
+  4 (8.00%) high mild
+  2 (4.00%) high severe
+Benchmarking diag/deferred/ok/complex-x16
+Benchmarking diag/deferred/ok/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/deferred/ok/complex-x16: Collecting 50 samples in estimated 6.7228 s (300 iterations)
+Benchmarking diag/deferred/ok/complex-x16: Analyzing
+diag/deferred/ok/complex-x16
+                        time:   [25.862 ms 27.253 ms 28.782 ms]
+Found 3 outliers among 50 measurements (6.00%)
+  3 (6.00%) high mild
+Benchmarking diag/detailed/half/complex-x16
+Benchmarking diag/detailed/half/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/detailed/half/complex-x16: Collecting 50 samples in estimated 6.1286 s (350 iterations)
+Benchmarking diag/detailed/half/complex-x16: Analyzing
+diag/detailed/half/complex-x16
+                        time:   [15.850 ms 16.048 ms 16.256 ms]
+Found 4 outliers among 50 measurements (8.00%)
+  1 (2.00%) low mild
+  3 (6.00%) high mild
+Benchmarking diag/deferred/half/complex-x16
+Benchmarking diag/deferred/half/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/deferred/half/complex-x16: Collecting 50 samples in estimated 6.7124 s (200 iterations)
+Benchmarking diag/deferred/half/complex-x16: Analyzing
+diag/deferred/half/complex-x16
+                        time:   [27.045 ms 27.764 ms 28.555 ms]
+Found 2 outliers among 50 measurements (4.00%)
+  2 (4.00%) high mild
+Benchmarking diag/detailed/tail/complex-x16
+Benchmarking diag/detailed/tail/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/detailed/tail/complex-x16: Collecting 50 samples in estimated 7.2821 s (150 iterations)
+Benchmarking diag/detailed/tail/complex-x16: Analyzing
+diag/detailed/tail/complex-x16
+                        time:   [53.536 ms 57.304 ms 61.289 ms]
+Benchmarking diag/deferred/tail/complex-x16
+Benchmarking diag/deferred/tail/complex-x16: Warming up for 3.0000 s
+Benchmarking diag/deferred/tail/complex-x16: Collecting 50 samples in estimated 7.9711 s (100 iterations)
+Benchmarking diag/deferred/tail/complex-x16: Analyzing
+diag/deferred/tail/complex-x16
+                        time:   [64.359 ms 65.773 ms 67.239 ms]
+Benchmarking diag/detailed/ok/complex-x64
+Benchmarking diag/detailed/ok/complex-x64: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 8.3s, or reduce sample count to 30.
+Benchmarking diag/detailed/ok/complex-x64: Collecting 50 samples in estimated 8.2635 s (50 iterations)
+Benchmarking diag/detailed/ok/complex-x64: Analyzing
+diag/detailed/ok/complex-x64
+                        time:   [158.34 ms 161.30 ms 164.57 ms]
+Found 4 outliers among 50 measurements (8.00%)
+  3 (6.00%) high mild
+  1 (2.00%) high severe
+Benchmarking diag/deferred/ok/complex-x64
+Benchmarking diag/deferred/ok/complex-x64: Warming up for 3.0000 s
+Benchmarking diag/deferred/ok/complex-x64: Collecting 50 samples in estimated 9.2282 s (100 iterations)
+Benchmarking diag/deferred/ok/complex-x64: Analyzing
+diag/deferred/ok/complex-x64
+                        time:   [99.133 ms 104.73 ms 111.08 ms]
+Found 6 outliers among 50 measurements (12.00%)
+  4 (8.00%) high mild
+  2 (4.00%) high severe
+Benchmarking diag/detailed/half/complex-x64
+Benchmarking diag/detailed/half/complex-x64: Warming up for 3.0000 s
+Benchmarking diag/detailed/half/complex-x64: Collecting 50 samples in estimated 6.8863 s (100 iterations)
+Benchmarking diag/detailed/half/complex-x64: Analyzing
+diag/detailed/half/complex-x64
+                        time:   [68.563 ms 70.233 ms 72.029 ms]
+Found 1 outliers among 50 measurements (2.00%)
+  1 (2.00%) high mild
+Benchmarking diag/deferred/half/complex-x64
+Benchmarking diag/deferred/half/complex-x64: Warming up for 3.0000 s
+Benchmarking diag/deferred/half/complex-x64: Collecting 50 samples in estimated 10.023 s (100 iterations)
+Benchmarking diag/deferred/half/complex-x64: Analyzing
+diag/deferred/half/complex-x64
+                        time:   [101.58 ms 102.73 ms 104.16 ms]
+Found 4 outliers among 50 measurements (8.00%)
+  2 (4.00%) high mild
+  2 (4.00%) high severe
+Benchmarking diag/detailed/tail/complex-x64
+Benchmarking diag/detailed/tail/complex-x64: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 7.9s, or reduce sample count to 30.
+Benchmarking diag/detailed/tail/complex-x64: Collecting 50 samples in estimated 7.8599 s (50 iterations)
+Benchmarking diag/detailed/tail/complex-x64: Analyzing
+diag/detailed/tail/complex-x64
+                        time:   [153.29 ms 160.12 ms 168.44 ms]
+Found 3 outliers among 50 measurements (6.00%)
+  3 (6.00%) high severe
+Benchmarking diag/deferred/tail/complex-x64
+Benchmarking diag/deferred/tail/complex-x64: Warming up for 3.0000 s
+
+Warning: Unable to complete 50 samples in 6.0s. You may wish to increase target time to 12.6s, or reduce sample count to 20.
+Benchmarking diag/deferred/tail/complex-x64: Collecting 50 samples in estimated 12.639 s (50 iterations)
+Benchmarking diag/deferred/tail/complex-x64: Analyzing
+diag/deferred/tail/complex-x64
+                        time:   [238.99 ms 242.63 ms 246.79 ms]
+Found 2 outliers among 50 measurements (4.00%)
+  1 (2.00%) high mild
+  1 (2.00%) high severe
+
