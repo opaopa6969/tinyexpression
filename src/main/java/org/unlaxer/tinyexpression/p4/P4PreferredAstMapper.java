@@ -333,14 +333,21 @@ public final class P4PreferredAstMapper {
       String parserSource, List<String> candidates, boolean allowDefault, ParsedRoot parsedRoot) {
     Token rootToken = parsedRoot.token();
     String sourceForSpanComparison = parserSource;
+    P4SourceMapping.Mapped tree;
+    try {
+      tree = P4SourceMapping.mapOnce(
+          rootToken, parsedRoot.legacyToken(), parserSource, parsedRoot.entryPoint());
+    } catch (RuntimeException failure) {
+      // Preserve candidate conversion and default propagation even when mapping itself fails.
+      tree = preferred -> { throw failure; };
+    }
     RuntimeException lastFailure = null;
     for (String candidate : candidates) {
       if (candidate == null || candidate.isBlank()) {
         continue;
       }
       try {
-        P4SourceMapping.Selection mappedAst = P4SourceMapping.select(
-            rootToken, parsedRoot.legacyToken(), candidate, parserSource, parsedRoot.entryPoint());
+        P4SourceMapping.Selection mappedAst = tree.select(candidate);
         if (!coversWholeSource(sourceForSpanComparison, mappedAst.token())) {
           continue;
         }
@@ -353,8 +360,7 @@ public final class P4PreferredAstMapper {
       }
     }
     if (allowDefault) {
-      P4SourceMapping.Selection selection = P4SourceMapping.select(
-          rootToken, parsedRoot.legacyToken(), null, parserSource, parsedRoot.entryPoint());
+      P4SourceMapping.Selection selection = tree.select(null);
       TinyExpressionP4AST mapped = selection.ast();
       if (mapped != null) {
         return new ParsedAst(mapped, "default", selection.sourceText());

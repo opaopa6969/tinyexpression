@@ -19,6 +19,30 @@ final class P4SourceMapping {
 
   record Selection(Token token, TinyExpressionP4AST ast, P4SourceText sourceText) {}
 
+  @FunctionalInterface
+  interface Mapped {
+    Selection select(String preferred);
+  }
+
+  static Mapped mapOnce(Token token, Token legacyToken, String parserSource, EntryPoint entryPoint) {
+    return mapOnce(TinyExpressionP4Mapper.class, token, legacyToken, parserSource, entryPoint);
+  }
+
+  static Mapped mapOnce(Class<?> mapper, Token token, Token legacyToken,
+      String parserSource, EntryPoint entryPoint) {
+    String mappingName = entryPoint == EntryPoint.ALTERNATE ? "mapSubtreeTree" : "mapParsedTree";
+    Method mapping;
+    try {
+      mapping = mapper.getMethod(mappingName, Token.class);
+    } catch (NoSuchMethodException absent) {
+      return preferred -> select(mapper, token, legacyToken, preferred, parserSource, entryPoint);
+    }
+    // Keep invocation and API-shape failures outside the capability fallback.
+    Object tree = invoke(mapping, null, token);
+    Method selector = method(tree.getClass(), "select", String.class);
+    return preferred -> selection(invoke(selector, tree, preferred), parserSource);
+  }
+
   static Selection select(Token token, String preferred, String parserSource) {
     return select(TinyExpressionP4Mapper.class, token, preferred, parserSource, EntryPoint.ROOT);
   }
@@ -52,7 +76,10 @@ final class P4SourceMapping {
       return selectLegacy(mapper, legacyToken, preferred, parserSource);
     }
     // Invocation failures or an incompatible new API must not silently retry legacy mapping.
-    Object selected = invoke(selector, null, token, preferred);
+    return selection(invoke(selector, null, token, preferred), parserSource);
+  }
+
+  private static Selection selection(Object selected, String parserSource) {
     Object snapshot = accessor(selected, "sourceMap");
     Method lookup = method(snapshot.getClass(), "sourceSpanOf", Object.class);
     P4SourceText sourceText = P4SourceText.fromSnapshot(parserSource, node -> {

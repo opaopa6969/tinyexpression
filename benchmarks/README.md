@@ -6,6 +6,7 @@ gate.
 
 Recorded results:
 
+- [2026-09-22 single mapping per root (tinyexpression #167 / unlaxer #267: facade -13% / -20%, x64 -33% / -60%, facade scaling 86x → 66x)](results/2026-09-22-single-mapping-per-root-experiment.md)
 - [2026-09-21 facade deferred diagnostics (tinyexpression #168: facade -13% / -13%, failures +52..+85%)](results/2026-09-21-facade-deferred-diagnostics-experiment.md)
 - [2026-09-21 Auto diagnostics default (design proposal 2 minimal form: Rust facade -34% / -23%, Java unchanged until tinyexpression #168)](results/2026-09-21-diagnostics-auto-experiment.md)
 - [2026-09-21 Java DETAILED_ON_FAILURE diagnostics experiment (opt-in: parser -17..-25%, failure +59..+79%)](results/2026-09-21-java-detailed-on-failure-experiment.md)
