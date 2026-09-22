@@ -1,0 +1,58 @@
+package org.unlaxer.tinyexpression.p4;
+
+import java.util.*;
+import org.junit.Test;
+import org.unlaxer.Name;
+import org.unlaxer.Parsed;
+import org.unlaxer.TokenList;
+import org.unlaxer.StringSource;
+import org.unlaxer.context.Memoization;
+import org.unlaxer.context.ParseContext;
+import org.unlaxer.context.ParseOptions;
+import org.unlaxer.listener.OutputLevel;
+import org.unlaxer.listener.TransactionListener;
+import org.unlaxer.parser.Parser;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
+
+public class MemoHistProbeTest // copy into src/test/java/org/unlaxer/tinyexpression/p4/ temporarily; do not commit {
+  private static final String F5 =
+      "if(not(isPresent($calculated_FirstAccessUserHash))){1}else{if($ForcedRelativeSuspiciousValue1){1}else{if($ForcedRelativeSuspiciousValue5){5}else{if($default_RelativeSuspiciousValue==5){5}else{if(($POST_PROCESS_OriginalSpec_CountryIsNotJapan>0.0)|($POST_PROCESS_OriginalSpec_BlackListOnOtherSites>0.0)|($POST_PROCESS_OriginalSpec_SuspiciousProvider>0.0)|($POST_PROCESS_OriginalSpec_OneUserAccessToMultiAccount>0.0)){5}else{$default_RelativeSuspiciousValue}}}}}";
+
+  @Test
+  public void hist() {
+    Parser root = Parser.get(TinyExpressionP4Parsers.FormulaParser.class);
+    Map<String, long[]> byClass = new HashMap<>(); // begins, commits, rollbacks
+    Map<String, Integer> commitsAtPos = new HashMap<>(); // class@pos -> commits
+    long[] totals = new long[3];
+    try (ParseContext context = ParseContext.withOptions(StringSource.createRootSource(F5),
+        ParseOptions.withMemoization(Memoization.SAFE_FAILURES))) {
+      context.addMemoizationTransparentTransactionListener(Name.of(MemoHistProbeTest.class, "hist"),
+          new TransactionListener() {
+            @Override public void setLevel(OutputLevel level) {}
+            @Override public void onOpen(ParseContext c) {}
+            @Override public void onBegin(ParseContext c, Parser p) {
+              byClass.computeIfAbsent(p.getClass().getSimpleName(), k -> new long[3])[0]++; totals[0]++;
+            }
+            @Override public void onCommit(ParseContext c, Parser p, TokenList t) {
+              byClass.computeIfAbsent(p.getClass().getSimpleName(), k -> new long[3])[1]++; totals[1]++;
+              commitsAtPos.merge(p.getClass().getSimpleName() + "@" + c.getConsumedPosition().value(), 1, Integer::sum);
+            }
+            @Override public void onRollback(ParseContext c, Parser p, TokenList t) {
+              byClass.computeIfAbsent(p.getClass().getSimpleName(), k -> new long[3])[2]++; totals[2]++;
+            }
+            @Override public void onClose(ParseContext c) {}
+          });
+      long start = System.nanoTime();
+      Parsed parsed = root.parse(context);
+      System.out.printf("HIST %d ms succeeded=%s sessionSafe=%s failureHits=%d begins=%d commits=%d rollbacks=%d%n",
+          (System.nanoTime() - start) / 1_000_000, parsed.isSucceeded(), context.isMemoizationSessionSafe(),
+          context.getPackratMemoTable().failureHits(), totals[0], totals[1], totals[2]);
+    }
+    byClass.entrySet().stream().sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0])).limit(25)
+        .forEach(e -> System.out.printf("HIST class %-40s begins=%8d commits=%8d rollbacks=%8d%n", e.getKey(), e.getValue()[0], e.getValue()[1], e.getValue()[2]));
+    Map<String, long[]> dupByClass = new HashMap<>(); // redundant commits (commits-1 at same pos), distinct positions
+    commitsAtPos.forEach((k, v) -> { String cls = k.substring(0, k.indexOf('@')); long[] a = dupByClass.computeIfAbsent(cls, x -> new long[2]); a[0] += v - 1; a[1]++; });
+    dupByClass.entrySet().stream().sorted((a, b) -> Long.compare(b.getValue()[0], a.getValue()[0])).limit(20)
+        .forEach(e -> System.out.printf("HIST redundant-success %-40s redundantCommits=%8d distinctPositions=%6d%n", e.getKey(), e.getValue()[0], e.getValue()[1]));
+  }
+}
