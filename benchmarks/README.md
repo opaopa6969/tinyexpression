@@ -114,3 +114,16 @@ classloader is intentionally avoided.
 
 Use an otherwise idle machine, retain the raw JMH/Criterion output, and record
 the Java, Rust, OS, CPU, repository, and pinned unlaxer revisions with results.
+
+## A/B tooling
+
+- `benchmarks/tools/run-java-ab.sh <results-dir> <name>=<maven-repo-local> ...` runs the JMH
+  facade/parse-only benchmarks alternately for several isolated unlaxer builds (3 runs each,
+  idle wait before every run, then the x64 and failure fixtures).
+- `benchmarks/tools/ab-summary.py <results-dir> <baseline> <candidate> ...` prints the 3-run
+  medians and scaled results as Markdown tables in the format used under `results/`.
+- `benchmarks/tools/MemoHistProbeTest.java.txt` is a temporary JUnit probe that counts, per
+  parser class and consumed position, how often a rule is re-derived (commits at the same
+  position). Copy it into `src/test/java/org/unlaxer/tinyexpression/p4/`, run it with
+  `-Dtest=MemoHistProbeTest`, and delete it again. Memo hit counters alone do not show whether
+  memoization is effective; redundant commits do (unlaxer #269).
