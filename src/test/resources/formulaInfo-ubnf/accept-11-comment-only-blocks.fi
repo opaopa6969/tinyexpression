@@ -1,0 +1,8 @@
+# a block with only comments is parsed and ignored
+---END_OF_PART---
+calculatorName:afterCommentBlock
+formula:
+11
+---END_OF_PART---
+# trailing comment-only tail
+

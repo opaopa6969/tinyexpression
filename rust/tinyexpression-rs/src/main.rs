@@ -3,6 +3,8 @@ use std::fs;
 use std::io::{self, Read};
 use std::process::ExitCode;
 
+use tinyexpression_rs::formula_info::{self, ExecutionBackend, LoadError, LoaderOptions};
+use tinyexpression_rs::runtime::{Context, ContextClock, Host, NoExternals, XorShiftRandom};
 use tinyexpression_rs::{evaluate, parse, EvaluationError, FrontendError};
 
 const EXIT_SUCCESS: u8 = 0;
@@ -11,9 +13,10 @@ const EXIT_PARSE: u8 = 3;
 const EXIT_MAPPING: u8 = 4;
 const EXIT_EVALUATION: u8 = 5;
 const EXIT_IO: u8 = 6;
+const EXIT_LOAD: u8 = 7;
 
 fn usage() -> &'static str {
-    "usage: tinyexpression-rs <parse|eval> [FILE|-]"
+    "usage: tinyexpression-rs <parse|eval> [FILE|-]\n       tinyexpression-rs <load|run> [--default-backend NAME] [FILE|-]"
 }
 
 fn source(argument: Option<&str>) -> io::Result<String> {
@@ -42,6 +45,9 @@ fn run() -> Result<(), u8> {
         return Ok(());
     }
     let command = arguments.first().map(String::as_str);
+    if matches!(command, Some("load" | "run")) {
+        return formula_info_command(command == Some("run"), &arguments[1..]);
+    }
     if arguments.is_empty() || !matches!(command, Some("parse" | "eval")) || arguments.len() > 2 {
         eprintln!("{}", usage());
         return Err(EXIT_USAGE);
@@ -112,6 +118,85 @@ fn run() -> Result<(), u8> {
             );
             Err(EXIT_MAPPING)
         }
+    }
+}
+
+/// `load` / `run`: a FormulaInfo document (issue #180). The loader is configured as the Java
+/// loader tests configure it (`siteId` multi-tenancy attribute, `checkKind` else
+/// `calculatorName` as the name); `run` also evaluates every formula once on an empty context.
+fn formula_info_command(run: bool, arguments: &[String]) -> Result<(), u8> {
+    let mut options = LoaderOptions::java_tests();
+    let mut path = None;
+    let mut rest = arguments.iter();
+    while let Some(argument) = rest.next() {
+        if argument == "--default-backend" {
+            let Some(backend) = rest.next().and_then(|name| ExecutionBackend::parse(name)) else {
+                eprintln!("{}", usage());
+                return Err(EXIT_USAGE);
+            };
+            options.default_backend = backend;
+        } else if path.is_none() {
+            path = Some(argument.as_str());
+        } else {
+            eprintln!("{}", usage());
+            return Err(EXIT_USAGE);
+        }
+    }
+    let input = match source(path) {
+        Ok(source) => source,
+        Err(error) => {
+            println!("{}", json_error("io", &error.to_string()));
+            return Err(EXIT_IO);
+        }
+    };
+    let formulas = match formula_info::load(&input, &options) {
+        Ok(formulas) => formulas,
+        Err(error) => {
+            println!(
+                "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
+                error.canonical_json()
+            );
+            return Err(if matches!(error, LoadError::Syntax(_)) {
+                EXIT_PARSE
+            } else {
+                EXIT_LOAD
+            });
+        }
+    };
+    let mut failed = false;
+    let mut items = Vec::with_capacity(formulas.len());
+    if run {
+        let mut external = NoExternals;
+        let mut random = XorShiftRandom::default();
+        let mut host = Host {
+            external: &mut external,
+            clock: &ContextClock,
+            random: &mut random,
+        };
+        let results = formula_info::evaluate_all(&formulas, &Context::new(), &mut host);
+        for (formula, result) in formulas.iter().zip(results) {
+            let result = match result {
+                Ok(value) => format!("\"value\":{}", value.canonical_json()),
+                Err(error) => {
+                    failed = true;
+                    format!("\"error\":{}", error.canonical_json())
+                }
+            };
+            items.push(format!(
+                "{{\"info\":{},{result}}}",
+                formula.info.canonical_json()
+            ));
+        }
+    } else {
+        for formula in &formulas {
+            items.push(format!("{{\"info\":{}}}", formula.info.canonical_json()));
+        }
+    }
+    println!("{{\"ok\":{},\"formulas\":[{}]}}", !failed, items.join(","));
+    if failed {
+        Err(EXIT_EVALUATION)
+    } else {
+        Ok(())
     }
 }
 

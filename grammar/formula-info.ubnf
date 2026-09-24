@@ -1,0 +1,105 @@
+// FormulaInfo document — the block format read by the Java loader
+// (src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfo*Parser.java), in UBNF v2.
+//
+// Accepts exactly the documents FormulaInfoSourceDocument.parse accepts: the Java
+// FormulaInfoBlocksParser run over the whole input (full consumption). FormulaInfoList.parse
+// does not check full consumption and silently keeps only the blocks before the first
+// unparsable line; this grammar rejects such documents. Issue #180; accept/reject fixtures
+// are src/test/resources/formulaInfo-ubnf/*.fi.
+//
+//   tags:NORMAL                <- entry: key at column 0, ':' , value
+//   # a comment                <- '#' / blank lines before the first entry of a block
+//   formula:                   <- a value runs over the following lines ...
+//   1 + 2                      <-   ... until a line that starts a new entry (KEY ':'),
+//   ---END_OF_PART---          <-   ... the end mark line, or the end of input.
+//
+// The grammar owns only the syntax layer: block split, key/value slicing, the end mark.
+// Everything the Java loader does afterwards stays in the host (Rust: formula_info.rs):
+// dropping '#'-lines and blank lines from a value, stripTrailing, the known-key mapping,
+// executionBackend resolution, MD5 hash refresh and compiling the formula.
+grammar FormulaInfo {
+
+  @ubnf: 2
+  @package: org.unlaxer.tinyexpression.loader.generated
+
+  // Lines are significant: nothing is skipped implicitly.
+  @whitespace: none
+
+  // The v2 default. Every literal here is punctuation or a line break / space character, none
+  // of which ends in an identifier character, so the word boundary never applies.
+  @literalBoundary: word
+
+  token EOF         = END_OF_INPUT
+  token IDENT       = IDENTIFIER                  // [A-Za-z_][A-Za-z0-9_]*, as unlaxer IdentifierParser
+  token LINE_CHAR   = NEGATION('\r\n')           // any code point of a line body
+  token NOT_COLON   = NEGATION(':\r\n')
+  // A line-body code point that cannot start an identifier.
+  token NOT_ID_HEAD = NEGATION('\r\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_')
+  // unlaxer EmptyLineParser skips SpaceParser characters up to the line terminator:
+  // ' ' '\t' and VT/FF (U+000B, U+000C). See SpaceChar.
+  token VT_FF       = CHAR_RANGE('\u000B','\u000C')
+  token AT_CR       = LOOKAHEAD('\r')
+  token AT_LF       = LOOKAHEAD('\n')
+  token NOT_END     = NEGATIVE_LOOKAHEAD('---END_OF_PART---')
+
+  @root
+  @doc('A FormulaInfo document: blocks, each closed by the end mark line or by the end of input')
+  @mapping(FormulaInfoDocument, params=[blocks])
+  Document ::= { Block @blocks } EOF ;
+
+  // Java: FormulaInfoBlockParser = OneOrMore(element | comment | empty line) EndOfPart.
+  // Comment and blank lines can only precede the first entry: once an entry starts, its value
+  // runs up to the next entry, the end mark or the end of input, and takes such lines with it.
+  @doc('One FormulaInfo: leading comment/blank lines, then key:value entries, then ---END_OF_PART--- (or end of input)')
+  @mapping(FormulaInfoBlock, params=[leading, entries, end])
+  Block ::= ( Filler @leading { Filler @leading } { Entry @entries }
+            | Entry @entries { Entry @entries } )
+            ( EndOfPart @end | EOF ) ;
+
+  @doc('A comment or blank line before the first entry of a block')
+  Filler ::= CommentLine | BlankLine ;
+
+  // Java: LineCommentParser = StartOfLine '#' ... LineTerminator.
+  @doc('A # comment line at column 0')
+  @mapping(CommentLine, params=[text])
+  CommentLine ::= ( '#' { LINE_CHAR } ) @text ( LineBreak | EOF ) ;
+
+  // Java: EmptyLineParser = StartOfLine SPACE* LineTerminator (the terminator may be EOF).
+  @doc('A line of spaces, tabs, VT and FF only')
+  @mapping(BlankLine, params=[text])
+  BlankLine ::= ( { SpaceChar } ) @text LineBreak
+              | ( SpaceChar { SpaceChar } ) @text EOF ;
+
+  SpaceChar ::= ' ' | '\t' | VT_FF ;
+
+  // Java: FormulaInfoElementParser = header (StartOfLine JavaClassName ':') and a value that
+  // runs to the next header, the end mark line or the end of input.
+  @doc('key:value. The key is a Java class name (dotted identifiers); the value may span lines')
+  @mapping(FormulaInfoEntry, params=[key, value])
+  Entry ::= ( IDENT { '.' IDENT } ) @key ':' Value @value ;
+
+  // The node's span is the raw value slice, trailing line break included, exactly as the Java
+  // value token holds it; the loader reads the raw text from that span. `text` is the
+  // capture, which (like every UBNF text capture) has surrounding whitespace trimmed.
+  @doc('The value of an entry: the rest of the key line and its continuation lines')
+  @mapping(FormulaInfoValue, params=[text])
+  Value ::= ( { LINE_CHAR } { LineBreak ContinuationLine } [ LineBreak ] ) @text ;
+
+  // A line that neither starts a new entry nor is the end mark line.
+  @doc('A value line: not KEY: at column 0 and not the end mark line')
+  ContinuationLine ::= '---END_OF_PART---' LINE_CHAR { LINE_CHAR }
+                     | NOT_END PlainLine ;
+
+  PlainLine ::= NOT_ID_HEAD { LINE_CHAR }
+              | IDENT { '.' IDENT } ( NOT_COLON { LINE_CHAR } | AtLineEnd )
+              | AtLineEnd ;
+
+  AtLineEnd ::= AT_CR | AT_LF | EOF ;
+
+  // Java: EndOfPartLineParser = StartOfLine '---END_OF_PART---' LineTerminator.
+  @doc('The end mark line ---END_OF_PART---')
+  @mapping(EndOfPart, params=[mark])
+  EndOfPart ::= '---END_OF_PART---' @mark ( LineBreak | EOF ) ;
+
+  LineBreak ::= '\r\n' | '\r' | '\n' ;
+}

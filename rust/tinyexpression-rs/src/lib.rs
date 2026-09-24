@@ -9,6 +9,10 @@
 //! (variables, declarations, methods, host-supplied externals, clock and random), available as a
 //! tree walker and as a closure-compiled form; `tests/java_differential.rs` gates it against a
 //! golden produced by the Java implementation.
+//!
+//! [`formula_info`] loads FormulaInfo documents (the Java loader's block format) with a parser
+//! generated from `grammar/formula-info.ubnf` and builds each formula as a [`runtime::Program`];
+//! `tests/formula_info.rs` gates it against the Java loader.
 
 #![forbid(unsafe_code)]
 
@@ -16,6 +20,7 @@ pub mod generated;
 
 mod diagnostic;
 mod evaluator;
+pub mod formula_info;
 mod frontend;
 pub mod runtime;
 

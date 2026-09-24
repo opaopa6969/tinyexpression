@@ -1,0 +1,10 @@
+tags:a,b
+calculatorName:crlf
+# comment inside a value
+formula:
+
+1 + 2
+---END_OF_PART---
+calculatorName:crlf2
+formula:3
+---END_OF_PART---

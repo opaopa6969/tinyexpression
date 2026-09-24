@@ -1,0 +1,11 @@
+calculatorName:alias1
+BACKEND:dsl-javacode
+formula:
+1
+---END_OF_PART---
+calculatorName:alias2
+ExecutionBackend:legacy-astcreator
+backend:ast_evaluator
+formula:
+2
+---END_OF_PART---
