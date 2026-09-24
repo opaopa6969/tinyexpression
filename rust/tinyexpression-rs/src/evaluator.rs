@@ -7,12 +7,25 @@ use crate::generated::ast::{Ast, AstValue};
 use crate::generated::evaluator::{self as generated_evaluator, Semantics};
 use crate::{parse, FrontendError};
 
-/// A value produced by the context-free native evaluator.
+/// A value produced by the evaluators.
+///
+/// The context-free [`evaluate`] only produces `Number`, `Boolean` and `String`. The contextual
+/// runtime ([`crate::runtime`]) mirrors the Java boxed types a `CalculationContext` or a
+/// `numberType` can carry: `Number` is `java.lang.Float`, the other numeric variants are
+/// `Double`/`Integer`/`Long`/`Short`/`Byte`, `Null` is Java `null`, and `Object` is an opaque
+/// host value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Number(f32),
     Boolean(bool),
     String(String),
+    Double(f64),
+    Int(i32),
+    Long(i64),
+    Short(i16),
+    Byte(i8),
+    Null,
+    Object(crate::runtime::HostObject),
 }
 
 impl Value {
@@ -70,6 +83,20 @@ impl Value {
             Self::String(value) => format!(
                 "{{\"kind\":\"string\",\"value\":{}}}",
                 crate::json_string(value)
+            ),
+            Self::Double(value) => format!(
+                "{{\"kind\":\"double\",\"value\":{},\"f64Bits\":\"0x{:016x}\"}}",
+                crate::json_string(&crate::runtime::java::double_to_string(*value)),
+                value.to_bits()
+            ),
+            Self::Int(value) => format!("{{\"kind\":\"int\",\"value\":{value}}}"),
+            Self::Long(value) => format!("{{\"kind\":\"long\",\"value\":{value}}}"),
+            Self::Short(value) => format!("{{\"kind\":\"short\",\"value\":{value}}}"),
+            Self::Byte(value) => format!("{{\"kind\":\"byte\",\"value\":{value}}}"),
+            Self::Null => "{\"kind\":\"null\"}".to_owned(),
+            Self::Object(object) => format!(
+                "{{\"kind\":\"object\",\"class\":{}}}",
+                crate::json_string(object.class_name())
             ),
         }
     }
@@ -295,6 +322,8 @@ impl ScalarSemantics {
             Value::Number(_) => "number",
             Value::Boolean(_) => "boolean",
             Value::String(_) => "string",
+            // The context-free evaluator never produces the contextual runtime's values.
+            _ => "object",
         }
     }
 
@@ -311,6 +340,7 @@ impl ScalarSemantics {
             Value::Boolean(value) => *value,
             Value::Number(value) => value.to_string().trim().eq_ignore_ascii_case("true"),
             Value::String(value) => value.trim().eq_ignore_ascii_case("true"),
+            _ => false,
         }
     }
 
@@ -319,6 +349,7 @@ impl ScalarSemantics {
             Value::Number(value) => Self::java_float_string(value),
             Value::Boolean(value) => value.to_string(),
             Value::String(value) => value,
+            other => crate::runtime::java_string(&other),
         }
     }
 
