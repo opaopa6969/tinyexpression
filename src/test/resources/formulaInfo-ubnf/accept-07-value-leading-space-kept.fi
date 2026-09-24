@@ -1,0 +1,8 @@
+calculatorName:  spaced
+description:   three spaces kept   
+  # indented '#' line is kept
+# column-0 '#' line is dropped
+formula:
+   1 +
+ 2
+---END_OF_PART---

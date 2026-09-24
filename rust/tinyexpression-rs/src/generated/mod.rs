@@ -13,6 +13,13 @@
 #[path = "ubnfc/mod.rs"]
 pub mod ubnfc;
 
+// The FormulaInfo document parser (grammar/formula-info.ubnf, issue #180), vendored the same
+// way; `crate::formula_info` converts its typed AST.
+#[rustfmt::skip]
+#[allow(clippy::all)]
+#[path = "ubnfc_formula_info/mod.rs"]
+pub mod ubnfc_formula_info;
+
 #[rustfmt::skip]
 pub mod ast;
 #[rustfmt::skip]

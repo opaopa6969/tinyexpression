@@ -25,6 +25,7 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 | 4 | mapping失敗 |
 | 5 | evaluation失敗（未対応node・context依存構文を含む） |
 | 6 | I/O失敗 |
+| 7 | FormulaInfo の load 失敗（構文は通ったが Java loader も拒否する内容。構文エラーは 3） |
 
 ## 保証範囲
 
@@ -171,7 +172,8 @@ MVN_ARGS=-o bash rust/tinyexpression-rs/tests/java-diff/regenerate-java-golden.s
 | `src/generated/ubnfc/scanners.rs`, `scanners_tests.rs` | ubnfc `scanners/rust/` の extern token scanner（STRING / CODE_START / CODE_END）とその単体テスト |
 | `src/generated/compat.rs` | ubnfc AST → 公開 `Ast` の変換。`rust/scripts/generate-compat.py` が両 `ast.rs` から生成 |
 | `src/generated/ast.rs`, `evaluator.rs` | 公開 typed AST と `Semantics` trait。旧 unlaxer 生成物を引き継ぎ、以後は手で保守（node 集合は文法由来なので、文法を変えたら `generate-compat.py` が不一致で止まる） |
-| `rust/ubnfc-pin.txt` | ubnfc commit、文法・IR・scanner の SHA-256 |
+| `src/generated/ubnfc_formula_info/` | `grammar/formula-info.ubnf`（FormulaInfo 文書、issue #180）の `ubnfc ir` → `ubnfc-rust --no-emit-driver` の出力。extern token が無いので変更は (1) だけ。manifest は `rust/ubnfc-formula-info-vendored.sha256` |
+| `rust/ubnfc-pin.txt` | ubnfc commit（2 文法共通）、文法・IR・scanner の SHA-256 |
 
 再生成と検査:
 
@@ -187,6 +189,32 @@ bash rust/check-generated.sh                     # = regenerate-ubnfc.sh --check
 (3) `scanners.rs` 先頭の `//!` を `//` にする（`include!` で取り込むため）。
 ubnfc checkout は共有作業ツリーなので、HEAD が pin と違っても警告だけ出し、固定の実体は byte 比較と各 SHA-256 で担保する。
 旧 `rust/unlaxer-revision.txt` と unlaxer generator による検査は役目を終えたので削除した。
+
+## FormulaInfo loader（issue #180）
+
+`grammar/formula-info.ubnf` は Java loader（`org.unlaxer.tinyexpression.loader.FormulaInfo*Parser`）が読むブロック形式を UBNF v2 で書いた文法で、ubnfc の Rust backend 生成物を `src/generated/ubnfc_formula_info/` に vendoring している。`tinyexpression_rs::formula_info` がその typed AST を薄く変換する。
+
+```sh
+cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- load formulaInfo.txt
+cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run --default-backend P4_AST_EVALUATOR formulaInfo.txt
+```
+
+- `parse_document`（構文層）: ブロック分割、`key:value` の切り出し、`---END_OF_PART---`。受理範囲は `FormulaInfoSourceDocument.parse`（Java の `FormulaInfoBlocksParser` を全文消費で走らせたもの）と一致する。
+- `load`（変換層）: Java の `FormulaInfoParser.extractFormulaInfo` の後処理を同じ順序で行う。値の正規化（`stripTrailing`、`#` 行・空行の除去）、既知キーの写像、`executionBackend`/`backend` の解決、`hash` の MD5 更新（大文字 hex）、`Formula_<name>` のクラス名、formula 必須検査、`Program::new` による式の構築（Java の calculator 構築に当たる）、最後に `dependsOn` の配線。`LoadError::java_exception` は同じ文書で Java が投げる例外名を返す。
+- `load`/`run` の CLI は Java loader テストと同じ設定（`siteId` を multi-tenancy 属性、`checkKind` があればそれ・無ければ `calculatorName` を名前）で読み、`run` は各式を空の context で 1 回評価する（external は未登録扱い）。
+- 保持しないもの: `javaCode`・`byteCode`・`byteCode_<class>`・`hashByByteCode`。Java も load のたびに式から作り直し、保存値を実行しない。`byteCode` 系は Java と同じく hex として検査だけする。
+
+### Java loader とのパリティ（`tests/formula_info.rs`）
+
+`tests/formula-info/golden/java.jsonl` は Java loader が各 fixture（`src/test/resources/formulaInfo.fi`、`formulaInfo-test/*/formulaInfo.txt`、`formulaInfo-ubnf/*.fi` の受理・拒否ケース）から作るものを記録した golden で、`tests/formula-info/regenerate-formula-info-golden.sh`（JDK と Maven が要る）が作る。`cargo test` は JVM 不要でこれと突き合わせる: 構文の受理、各 entry の key・生の値・正規化後の値、読み込んだ全フィールド、load エラーの Java 例外名、各式の評価結果（P4_AST_EVALUATOR）。`rust/scripts/crosscheck-formula-info.sh` は ubnfc の Java backend も生成して、Rust/Java 生成物の canonical AST が全 fixture で一致することを確かめる（生成した Java は commit しない）。
+
+| 項目 | 差 | 理由 |
+|---|---|---|
+| 全文を消費できない文書 | Java `FormulaInfoList.parse` は読めた先頭ブロックだけ（または 0 件）を**黙って**返す。Rust は `LoadError::Syntax`（exit 3） | Java は全文消費を確かめていない。`FormulaInfoSourceDocument.parse` は拒否しており、文法はこちらに合わせた |
+| `resultType`/`numberType` の未知のクラス名 | Java は `Class.forName` で class path 上の任意のクラスを読む。Rust は loader の名前表と `java.lang.*`/`java.math.BigDecimal`/`java.math.BigInteger`/`java.sql.Timestamp` だけ | JVM が無い |
+| BigDecimal / BigInteger / Timestamp | Rust は `LoadError::UnsupportedType` | runtime が扱わない（依存ゼロ方針、#179） |
+| 式の構築 | Rust は常に P4 の意味論（`Program::new`）。Java はブロックの `executionBackend` の calculator で構築する | Rust の評価器は P4_AST_EVALUATOR だけ。golden は既定 backend を P4_AST_EVALUATOR にして採っている |
+| `key:` が入力末尾で値が 0 文字 | 両方拒否（Java は `NoSuchElementException`、Rust は `EmptyValueAtEnd`） | Java の値 token が空で `getToken()` が空になる挙動。2.x で生成 loader に置き換えるなら直す候補 |
 
 ## AST shape（2.0 で形を変えない）
 

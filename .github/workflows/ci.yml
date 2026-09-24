@@ -30,6 +30,7 @@ jobs:
           smoke_file=$(mktemp "$RUNNER_TEMP/tinyexpression-rs.XXXXXX")
           printf '%s\n' "var \$price as number set 3;" "\$price + 4" > "$smoke_file"
           rust/target/release/tinyexpression-rs parse "$smoke_file" | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
+          rust/target/release/tinyexpression-rs run src/test/resources/formulaInfo-ubnf/accept-18-depends-on.fi | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and [f["info"]["calculatorName"] for f in value["formulas"]] == ["base", "derived"]'
       - name: Package Linux x86_64 binary
         run: |
           package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-rs-package.XXXXXX")

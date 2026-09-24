@@ -1,0 +1,2 @@
+# CR / CRLF fixtures must keep their exact bytes.
+*.fi -text

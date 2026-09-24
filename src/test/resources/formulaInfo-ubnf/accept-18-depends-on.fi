@@ -1,0 +1,11 @@
+calculatorName:base
+formula:
+1 + 2
+---END_OF_PART---
+calculatorName:derived
+backend:P4_AST_EVALUATOR
+dependsOn:base
+formula:
+# FormulaInfo comment retained as whitespace for source mapping
+$score + 8
+---END_OF_PART---

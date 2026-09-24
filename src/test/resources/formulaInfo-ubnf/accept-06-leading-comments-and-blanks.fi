@@ -1,0 +1,13 @@
+# leading comment
+
+  	
+#
+calculatorName:leading
+
+# a comment line inside the calculatorName value is dropped
+formula:
+# dropped
+
+5
+   
+---END_OF_PART---

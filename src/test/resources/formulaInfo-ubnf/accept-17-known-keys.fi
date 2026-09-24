@@ -1,0 +1,18 @@
+tags:x,,y,x,
+description:all known keys
+periodStartInclusive:2018-05-01_00:00:00
+periodEndExclusive:2037-05-01_00:00:00
+siteId:17
+checkKind:KnownKeys
+calculatorName:knownKeys
+dependsOn:
+resultType:int
+numberType:long
+executionBackend:p4-ast-evaluator
+hash:00000000000000000000000000000000
+hashByByteCode:ignored
+javaCode:ignored
+var:extra
+formula:
+1+16
+---END_OF_PART---
