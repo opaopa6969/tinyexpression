@@ -25,7 +25,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 
 /**
- * Runs the same input through {@link P4PreferredAstMapper} under {@link P4ParserEngine#LEGACY}
+ * Runs the same input through {@link P4PreferredAstMapper} under {@link P4ParserEngine#CLASSIC}
  * and {@link P4ParserEngine#UBNFC} in one JVM and compares canonical JSON, selectionMode and
  * failures. Differences are recorded, never dropped.
  */
@@ -62,7 +62,7 @@ final class EngineComparison {
     }
   }
 
-  record Row(Case testCase, Outcome legacy, Outcome ubnfc, String verdict) {
+  record Row(Case testCase, Outcome classic, Outcome ubnfc, String verdict) {
     boolean agrees() {
       return verdict.equals("same") || verdict.equals("both-reject")
           || verdict.equals(PUBLISHED_MAPPER_VERDICT);
@@ -79,7 +79,7 @@ final class EngineComparison {
 
   /**
    * Verdict for an AST difference fully explained by the two known mapper bugs of the published
-   * unlaxer-dsl 3.0.15 generator, which the legacy engine inherits and ubnfc does not have
+   * unlaxer-dsl 3.0.15 generator, which the classic engine inherits and ubnfc does not have
    * (ubnfc returns what the fixed generator returns):
    * <ol>
    *   <li>{@code import X as alias}: published puts the alias into {@code method} and leaves
@@ -108,11 +108,11 @@ final class EngineComparison {
 
   /** Structural equality of canonical JSON trees, allowing only the published-mapper bugs. */
   @SuppressWarnings("unchecked")
-  static boolean explainedByPublishedMapper(Object legacy, Object ubnfc) {
-    if (Objects.equals(legacy, ubnfc)) {
+  static boolean explainedByPublishedMapper(Object classic, Object ubnfc) {
+    if (Objects.equals(classic, ubnfc)) {
       return true;
     }
-    if (legacy instanceof List<?> left && ubnfc instanceof List<?> right) {
+    if (classic instanceof List<?> left && ubnfc instanceof List<?> right) {
       if (left.size() != right.size()) {
         return false;
       }
@@ -123,7 +123,7 @@ final class EngineComparison {
       }
       return true;
     }
-    if (!(legacy instanceof Map<?, ?> left) || !(ubnfc instanceof Map<?, ?> right)) {
+    if (!(classic instanceof Map<?, ?> left) || !(ubnfc instanceof Map<?, ?> right)) {
       return false;
     }
     if (!Objects.equals(left.get("type"), right.get("type"))
@@ -207,26 +207,26 @@ final class EngineComparison {
   }
 
   static Row compare(Case testCase) {
-    Outcome legacy = run(testCase, P4ParserEngine.LEGACY);
+    Outcome classic = run(testCase, P4ParserEngine.CLASSIC);
     Outcome ubnfc = run(testCase, P4ParserEngine.UBNFC);
-    return new Row(testCase, legacy, ubnfc, verdict(legacy, ubnfc));
+    return new Row(testCase, classic, ubnfc, verdict(classic, ubnfc));
   }
 
-  static String verdict(Outcome legacy, Outcome ubnfc) {
-    if (!legacy.accepted() || !ubnfc.accepted()) {
-      if (!legacy.accepted() && !ubnfc.accepted()) {
-        return legacy.failure().equals(ubnfc.failure()) ? "both-reject" : "reject-message-differs";
+  static String verdict(Outcome classic, Outcome ubnfc) {
+    if (!classic.accepted() || !ubnfc.accepted()) {
+      if (!classic.accepted() && !ubnfc.accepted()) {
+        return classic.failure().equals(ubnfc.failure()) ? "both-reject" : "reject-message-differs";
       }
-      return legacy.accepted() ? "ubnfc-only-reject" : "legacy-only-reject";
+      return classic.accepted() ? "ubnfc-only-reject" : "classic-only-reject";
     }
-    if (!legacy.selectionMode().equals(ubnfc.selectionMode())) {
+    if (!classic.selectionMode().equals(ubnfc.selectionMode())) {
       return "mode-differs";
     }
-    if (legacy.json().equals(ubnfc.json())) {
+    if (classic.json().equals(ubnfc.json())) {
       return "same";
     }
     if (PUBLISHED_3_0_15_MAPPER
-        && explainedByPublishedMapper(Json.read(legacy.json()), Json.read(ubnfc.json()))) {
+        && explainedByPublishedMapper(Json.read(classic.json()), Json.read(ubnfc.json()))) {
       return PUBLISHED_MAPPER_VERDICT;
     }
     return "ast-differs";
@@ -264,11 +264,11 @@ final class EngineComparison {
   static void writeReport(List<Row> rows, Path out) {
     try {
       Files.createDirectories(out.getParent());
-      var text = new StringBuilder("verdict\torigin\tlegacy\tubnfc\tsource\n");
+      var text = new StringBuilder("verdict\torigin\tclassic\tubnfc\tsource\n");
       for (Row row : rows) {
         text.append(row.verdict()).append('\t')
             .append(row.testCase().origin()).append('\t')
-            .append(escape(describe(row.legacy()))).append('\t')
+            .append(escape(describe(row.classic()))).append('\t')
             .append(escape(describe(row.ubnfc()))).append('\t')
             .append(escape(row.testCase().source())).append('\n');
       }

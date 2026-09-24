@@ -38,28 +38,38 @@ public class P4ParserEngineTest {
 
   @Test
   public void propertyOverridesDefaultAndScopeOverridesProperty() {
-    System.setProperty(P4ParserEngine.SYSTEM_PROPERTY, " Legacy ");
-    assertEquals(P4ParserEngine.LEGACY, P4ParserEngine.current());
+    System.setProperty(P4ParserEngine.SYSTEM_PROPERTY, " Classic ");
+    assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.current());
     assertEquals(P4ParserEngine.UBNFC,
         P4ParserEngine.with(P4ParserEngine.UBNFC, P4ParserEngine::current));
-    assertEquals(P4ParserEngine.LEGACY, P4ParserEngine.with(null, P4ParserEngine::current));
-    assertEquals(P4ParserEngine.LEGACY, P4ParserEngine.configured());
+    assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.with(null, P4ParserEngine::current));
+    assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.configured());
   }
 
   @Test
   public void scopesNestAndRestore() {
-    P4ParserEngine.with(P4ParserEngine.LEGACY, () -> {
-      assertEquals(P4ParserEngine.LEGACY, P4ParserEngine.current());
+    P4ParserEngine.with(P4ParserEngine.CLASSIC, () -> {
+      assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.current());
       P4ParserEngine.with(P4ParserEngine.UBNFC,
           () -> assertEquals(P4ParserEngine.UBNFC, P4ParserEngine.current()));
-      assertEquals(P4ParserEngine.LEGACY, P4ParserEngine.current());
+      assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.current());
     });
     assertEquals(P4ParserEngine.UBNFC, P4ParserEngine.current());
-    assertThrows(IllegalStateException.class, () -> P4ParserEngine.with(P4ParserEngine.LEGACY,
+    assertThrows(IllegalStateException.class, () -> P4ParserEngine.with(P4ParserEngine.CLASSIC,
         (Runnable) () -> {
           throw new IllegalStateException("boom");
         }));
     assertEquals("scope restored after a failure", P4ParserEngine.UBNFC, P4ParserEngine.current());
+  }
+
+  @Test
+  public void deprecatedLegacyAliasResolvesToClassic() {
+    assertEquals(Optional.of(P4ParserEngine.CLASSIC), P4ParserEngine.parse("legacy"));
+    assertEquals(Optional.of(P4ParserEngine.CLASSIC), P4ParserEngine.parse(" LEGACY "));
+    assertEquals(Optional.of(P4ParserEngine.CLASSIC),
+        P4ParserEngine.parseStrict("legacy", "test"));
+    System.setProperty(P4ParserEngine.SYSTEM_PROPERTY, "legacy");
+    assertEquals(P4ParserEngine.CLASSIC, P4ParserEngine.current());
   }
 
   @Test
@@ -78,9 +88,9 @@ public class P4ParserEngineTest {
     String formula = "if($age >= 20){100}else{0}";
     P4PreferredAstMapper.ParsedAst ubnfc = P4ParserEngine.with(P4ParserEngine.UBNFC,
         () -> P4PreferredAstMapper.parseDetailed(formula));
-    P4PreferredAstMapper.ParsedAst legacy = P4ParserEngine.with(P4ParserEngine.LEGACY,
+    P4PreferredAstMapper.ParsedAst classic = P4ParserEngine.with(P4ParserEngine.CLASSIC,
         () -> P4PreferredAstMapper.parseDetailed(formula));
-    assertEquals(legacy.ast(), ubnfc.ast());
-    assertEquals(legacy.selectionMode(), ubnfc.selectionMode());
+    assertEquals(classic.ast(), ubnfc.ast());
+    assertEquals(classic.selectionMode(), ubnfc.selectionMode());
   }
 }

@@ -231,18 +231,21 @@ P4 grammar and vendored under `org.unlaxer.tinyexpression.p4.ubnfc.generated` (p
 `scripts/regenerate-ubnfc-parser.sh`). The AST, `selectionMode`, spans and failure types/messages are
 identical to the previous path; `UbnfcParityTest` (340+ cases) pins this.
 
-The previous combinator path stays selectable as **`legacy`** throughout 2.x (**removal planned for 3.0**).
+The previous combinator path stays selectable as **`classic`** (unlaxer Classic) throughout 2.x
+(**removal planned for 3.0**). The id `legacy` is accepted as a **deprecated alias** for `classic`
+(logs a one-time warning); it is removed together with the engine in 3.0.
 
 | How | Example | Precedence |
 |---|---|---|
-| FormulaInfo block field | `p4Engine:legacy` | 1 (highest) |
-| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.LEGACY` | 1 |
-| System property (JVM-wide escape hatch) | `-Dtinyexpression.p4.engine=legacy` | 2 |
+| FormulaInfo block field | `p4Engine:classic` | 1 (highest) |
+| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.CLASSIC` | 1 |
+| System property (JVM-wide escape hatch) | `-Dtinyexpression.p4.engine=classic` | 2 |
 | Default | `ubnfc` | 3 |
 
-Values are `ubnfc` / `legacy` (case-insensitive); anything else is an error, never a silent fallback.
+Values are `ubnfc` / `classic` (case-insensitive; the deprecated alias `legacy` also resolves to
+`classic`); anything else is an error, never a silent fallback.
 Calculators carry the engine that built them in the `_tinyP4ParserEngine` marker.
-`tinyexpression.p4.memoize` only affects `legacy`. `tinyexpression.p4.parse.timeout.millis` applies to
+`tinyexpression.p4.memoize` only affects `classic`. `tinyexpression.p4.parse.timeout.millis` applies to
 both, but ubnfc (packrat + depth limit, no exponential backtracking) checks it only before/after parsing.
 LSP/DAP syntax diagnostics (`tools/tinyexpression-p4-lsp-vscode`) keep the previous path in 2.0.
 

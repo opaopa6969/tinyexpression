@@ -24,9 +24,10 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
  * FormulaInfo -> P4 parse -> (Java emit -> javac ->) execute, under every way of selecting the P4
  * parser engine (issue #183), for every backend that parses with the P4 grammar.
  *
- * <p>Selections: none (default = ubnfc), {@code p4Engine:ubnfc}, {@code p4Engine:legacy},
- * {@code -Dtinyexpression.p4.engine=legacy}, and {@code -D...=legacy} overridden by
- * {@code p4Engine:ubnfc} (the block field is more specific than the JVM-wide property).
+ * <p>Selections: none (default = ubnfc), {@code p4Engine:ubnfc}, {@code p4Engine:classic},
+ * {@code -Dtinyexpression.p4.engine=classic}, {@code -D...=classic} overridden by
+ * {@code p4Engine:ubnfc} (the block field is more specific than the JVM-wide property), and both
+ * the block field and the property spelled with the deprecated {@code legacy} alias.
  * For each, every formula must evaluate to its expected value and the calculator must carry the
  * engine that built it. Non-BMP formulas are part of the matrix.
  */
@@ -52,9 +53,12 @@ public class P4EngineModeMatrixTest {
   enum Selection {
     DEFAULT(null, null, P4ParserEngine.UBNFC),
     FIELD_UBNFC("ubnfc", null, P4ParserEngine.UBNFC),
-    FIELD_LEGACY("legacy", null, P4ParserEngine.LEGACY),
-    PROPERTY_LEGACY(null, "legacy", P4ParserEngine.LEGACY),
-    FIELD_BEATS_PROPERTY("ubnfc", "legacy", P4ParserEngine.UBNFC);
+    FIELD_CLASSIC("classic", null, P4ParserEngine.CLASSIC),
+    PROPERTY_CLASSIC(null, "classic", P4ParserEngine.CLASSIC),
+    FIELD_BEATS_PROPERTY("ubnfc", "classic", P4ParserEngine.UBNFC),
+    /** The deprecated {@code legacy} alias must still resolve to {@link P4ParserEngine#CLASSIC}. */
+    FIELD_LEGACY_ALIAS("legacy", null, P4ParserEngine.CLASSIC),
+    PROPERTY_LEGACY_ALIAS(null, "legacy", P4ParserEngine.CLASSIC);
 
     final String field;
     final String property;
@@ -110,15 +114,15 @@ public class P4EngineModeMatrixTest {
   /** The emitted Java source must not depend on which engine parsed the formula. */
   @Test
   public void generatedJavaIsIdenticalAcrossEngines() {
-    if (selection != Selection.FIELD_LEGACY) {
+    if (selection != Selection.FIELD_CLASSIC) {
       return; // one comparison per backend is enough
     }
-    List<FormulaInfo> legacy = withProperty(null, () -> parse(document(backend, "legacy")));
+    List<FormulaInfo> classic = withProperty(null, () -> parse(document(backend, "classic")));
     List<FormulaInfo> ubnfc = withProperty(null, () -> parse(document(backend, "ubnfc")));
     for (int i = 0; i < CASES.size(); i++) {
       assertNotNull(ubnfc.get(i).javaCodeText);
       assertEquals(backend + ": " + CASES.get(i).formula(),
-          legacy.get(i).javaCodeText, ubnfc.get(i).javaCodeText);
+          classic.get(i).javaCodeText, ubnfc.get(i).javaCodeText);
     }
   }
 

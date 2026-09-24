@@ -16,13 +16,13 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 /**
  * Permanent parity gate for the 2.0.0 engine switch (issue #183): for every formula the test suite
  * feeds {@link P4PreferredAstMapper} (324, collected in ubnfc's facade work) plus ubnfc's 16 p4-java
- * fixtures plus the non-BMP cases below, {@code legacy} and {@code ubnfc} must return the same
+ * fixtures plus the non-BMP cases below, {@code classic} and {@code ubnfc} must return the same
  * {@code ParsedAst} (canonical JSON incl. code-point spans, and selectionMode), or both fail with
  * the same exception type and message. Every row is written to
  * {@code target/ubnfc-parity/report.tsv}.
  *
  * <p>When tinyexpression is built against the <b>published</b> unlaxer-dsl 3.0.15 (Java CI, the
- * release), the legacy AST carries two known mapper bugs of that generator (see
+ * release), the classic AST carries two known mapper bugs of that generator (see
  * {@link EngineComparison#PUBLISHED_MAPPER_VERDICT}); differences fully explained by them are
  * reported separately and nothing else is tolerated. Against the fixed generator there are none.
  */
@@ -47,24 +47,24 @@ public class UbnfcParityTest {
   }
 
   @Test
-  public void legacyAndUbnfcReturnTheSameParsedAstForEveryFormula() throws Exception {
+  public void classicAndUbnfcReturnTheSameParsedAstForEveryFormula() throws Exception {
     List<EngineComparison.Case> corpus = new ArrayList<>(EngineComparison.corpus());
     assertTrue("corpus not loaded: " + corpus.size(), corpus.size() >= 340);
     corpus.addAll(NON_BMP);
-    // legacy takes seconds on the deepest fixtures and would hit the 10 s default on a loaded
+    // classic takes seconds on the deepest fixtures and would hit the 10 s default on a loaded
     // machine; a deadline miss is not an implementation difference, so compare without one.
     List<EngineComparison.Row> rows = EngineComparison.withParseTimeout(0L,
         () -> corpus.stream().map(EngineComparison::compare).toList());
     EngineComparison.writeReport(rows, Path.of("target/ubnfc-parity/report.tsv"));
     System.out.println("ubnfc parity: " + rows.size() + " cases " + EngineComparison.tally(rows)
-        + (EngineComparison.PUBLISHED_3_0_15_MAPPER ? " (legacy AST from published unlaxer-dsl 3.0.15)" : ""));
+        + (EngineComparison.PUBLISHED_3_0_15_MAPPER ? " (classic AST from published unlaxer-dsl 3.0.15)" : ""));
 
     List<String> unexpected = rows.stream()
         .filter(row -> !row.agrees())
-        .map(row -> row.verdict() + " | " + row.testCase().origin() + " | legacy="
-            + row.legacy() + " | ubnfc=" + row.ubnfc())
+        .map(row -> row.verdict() + " | " + row.testCase().origin() + " | classic="
+            + row.classic() + " | ubnfc=" + row.ubnfc())
         .toList();
-    assertEquals("legacy and ubnfc disagree (see target/ubnfc-parity/report.tsv)",
+    assertEquals("classic and ubnfc disagree (see target/ubnfc-parity/report.tsv)",
         List.of(), unexpected);
 
     // The published-mapper allowance must stay narrow: only the formulas known to hit those bugs.

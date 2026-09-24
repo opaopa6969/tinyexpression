@@ -68,7 +68,7 @@ jobs:
       - name: Parity, differential fuzz and engine mode matrix
         run: >-
           mvn -B test -Dgpg.skip=true -Dtinyexpression.skipRailroad=true -Dmaven.repo.local="$MAVEN_REPO"
-          -Dtest=UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorLegacyEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorLegacyEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
+          -Dtest=UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
       - uses: actions/upload-artifact@v6
         if: always()
         with:

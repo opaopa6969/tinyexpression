@@ -22,14 +22,14 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
 /**
  * parse / Java コード生成 / javac / 実行 の 4 段を別々に測る（issue #183 の段別時間表）。
  * テストではなく手で走らせる計測器（surefire の対象外の名前）。エンジンは
- * {@code -Dtinyexpression.p4.engine=ubnfc|legacy} で選ぶ。移植元は ubnfc
+ * {@code -Dtinyexpression.p4.engine=ubnfc|classic} で選ぶ。移植元は ubnfc
  * {@code examples/p4-java-facade} の StageTimingRunner（classpath shadow の代わりにエンジン切替を使う）。
  *
  * <pre>
  * mvn -o -q test-compile -Dtinyexpression.skipRailroad=true
  * mvn -o -q dependency:build-classpath -Dmdep.outputFile=target/cp.txt
- * java -Xss16m -Dtinyexpression.p4.engine=legacy -cp target/classes:target/test-classes:$(cat target/cp.txt) \
- *   org.unlaxer.tinyexpression.evaluator.javacode.P4EngineStageTimingRunner target/timing/legacy.tsv
+ * java -Xss16m -Dtinyexpression.p4.engine=classic -cp target/classes:target/test-classes:$(cat target/cp.txt) \
+ *   org.unlaxer.tinyexpression.evaluator.javacode.P4EngineStageTimingRunner target/timing/classic.tsv
  * </pre>
  */
 public final class P4EngineStageTimingRunner {

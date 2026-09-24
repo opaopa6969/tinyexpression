@@ -152,8 +152,9 @@ public class FormulaInfo{
   }
 
   /**
-   * The P4 parser engine this block asks for with {@code p4Engine:ubnfc|legacy}; empty when the
-   * block does not say (then {@code -Dtinyexpression.p4.engine}, then the default applies).
+   * The P4 parser engine this block asks for with {@code p4Engine:ubnfc|classic} (the deprecated
+   * alias {@code legacy} is also accepted); empty when the block does not say (then
+   * {@code -Dtinyexpression.p4.engine}, then the default applies).
    */
   public Optional<P4ParserEngine> p4Engine() {
     return P4ParserEngine.parseStrict(
