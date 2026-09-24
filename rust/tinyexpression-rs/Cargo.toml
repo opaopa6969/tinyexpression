@@ -7,7 +7,6 @@ license.workspace = true
 publish = false
 
 [dependencies]
-unlaxer-runtime.workspace = true
 criterion = { version = "0.5", optional = true }
 
 [features]
@@ -25,3 +24,8 @@ path = "src/main.rs"
 name = "parser"
 harness = false
 required-features = ["benchmarks"]
+
+# The vendored ubnfc AST carries an optional `json` feature (serde) that this crate does not
+# enable; declare the cfg value so the dependency-free build stays warning-free.
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(feature, values("json"))'] }

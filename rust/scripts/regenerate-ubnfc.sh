@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+# Regenerate (or verify) the vendored ubnfc Rust parser under
+# rust/tinyexpression-rs/src/generated/ubnfc.
+#
+#   regenerate-ubnfc.sh --check    compare the vendored tree with a fresh generation (default)
+#   regenerate-ubnfc.sh --write    overwrite the vendored tree
+#
+# The pin lives in rust/ubnfc-pin.txt: the ubnfc commit, this repository's P4 grammar and
+# its SHA-256, and the SHA-256 of ubnfc's hand-written extern-token scanners.
+#
+# The pipeline is exactly ubnfc's own two steps:
+#   ubnfc      ir   --grammar <P4 grammar> --extern-first-chars <ubnfc>/scanners/first-chars.json
+#   ubnfc-rust      --ir <ir.json> --out <dir> --no-emit-driver
+# plus two mechanical, deterministic vendoring steps that are documented in
+# rust/tinyexpression-rs/README.md:
+#   1. the generator's own Cargo.toml is dropped (this crate has its own manifest);
+#   2. `parse_entry_with_scanner` is derived from the generated `parse_entry_with_options`
+#      by the same textual substitution ubnfc's examples/p4-rust/build.rs performs, so a
+#      caller-chosen entry rule can be parsed with the extern-token scanners registered.
+#      Without it the entry API falls back to `RejectExtern` and every STRING literal fails.
+#   3. ubnfc's hand-written extern-token scanners (`scanners/rust/scanners.rs`) are copied in
+#      and their leading `//!` header is turned into `//`: the file is `include!`d so that it
+#      can see the `ubnfc_generated` alias, and a macro expansion may not carry inner
+#      attributes. Nothing else in the file is touched. Its unit tests
+#      (`scanners_tests.rs`) are copied alongside it, unchanged.
+#
+# The ubnfc checkout is located with $UBNFC_DIR, else ../ubnfc next to this repository.
+# Nothing is written inside the ubnfc checkout: CARGO_TARGET_DIR is redirected to a temp dir.
+set -euo pipefail
+
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+rust_dir=$(cd -- "$script_dir/.." && pwd)
+repo_dir=$(cd -- "$rust_dir/.." && pwd)
+vendored="$rust_dir/tinyexpression-rs/src/generated/ubnfc"
+pin="$rust_dir/ubnfc-pin.txt"
+# SHA-256 of every vendored file, so environments without an ubnfc checkout (CI: the ubnfc
+# repository is private) can still detect hand edits via rust/check-generated.sh.
+manifest="$rust_dir/ubnfc-vendored.sha256"
+mode=${1:---check}
+
+value() { sed -n "s/^$1=//p" "$pin"; }
+
+ubnfc_commit=$(value ubnfc_commit)
+grammar_rel=$(value grammar)
+grammar_sha=$(value grammar_sha256)
+scanners_rel=$(value scanners)
+scanners_sha=$(value scanners_sha256)
+ubnfc_dir=${UBNFC_DIR:-"$repo_dir/../ubnfc"}
+
+test -d "$ubnfc_dir" || {
+  echo "ubnfc checkout not found at $ubnfc_dir (set UBNFC_DIR)" >&2
+  exit 2
+}
+
+# The ubnfc checkout is a shared working tree that other work moves, so a differing HEAD is
+# reported but not fatal: what actually pins the vendored tree is the byte comparison below,
+# plus the SHA-256 of the grammar, of the scanners and of the intermediate IR.
+actual_commit=$(git -C "$ubnfc_dir" rev-parse HEAD)
+test "$actual_commit" = "$ubnfc_commit" ||
+  echo "note: ubnfc is at $actual_commit; rust/ubnfc-pin.txt records $ubnfc_commit" >&2
+
+check_sha() {
+  local path=$1 expected=$2
+  local actual
+  actual=$(sha256sum "$path" | cut -d' ' -f1)
+  test "$actual" = "$expected" || {
+    echo "$path is $actual; rust/ubnfc-pin.txt pins $expected" >&2
+    exit 1
+  }
+}
+check_sha "$repo_dir/$grammar_rel" "$grammar_sha"
+check_sha "$ubnfc_dir/$scanners_rel" "$scanners_sha"
+check_sha "$ubnfc_dir/${scanners_rel%.rs}_tests.rs" "$(value scanners_tests_sha256)"
+
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+export CARGO_TARGET_DIR="$work/target"
+
+(cd "$ubnfc_dir" && cargo run -q --offline -p ubnfc-front --bin ubnfc -- \
+  ir --grammar "$repo_dir/$grammar_rel" \
+  --extern-first-chars "$ubnfc_dir/scanners/first-chars.json" \
+  --out "$work/p4.ir.json" >/dev/null)
+check_sha "$work/p4.ir.json" "$(value ir_sha256)"
+
+(cd "$ubnfc_dir" && cargo run -q --offline -p ubnfc-rust --bin ubnfc-rust -- \
+  --ir "$work/p4.ir.json" --out "$work/generated" --no-emit-driver >/dev/null)
+
+rm -f "$work/generated/Cargo.toml"
+sed 's|^//!|//|' "$ubnfc_dir/$scanners_rel" > "$work/generated/scanners.rs"
+cp "$ubnfc_dir/${scanners_rel%.rs}_tests.rs" "$work/generated/scanners_tests.rs"
+
+# Same derivation as ubnfc examples/p4-rust/build.rs `entry_with_scanner`.
+python3 - "$work/generated/parser.rs" <<'PY'
+import sys
+
+path = sys.argv[1]
+parser = open(path, encoding="utf-8").read()
+start = parser.index("pub fn parse_entry_with_options(")
+end = start + parser[start:].index("\nimpl<const DIAG: bool> Session")
+block = parser[start:end]
+block = block.replace("parse_entry_with_options(", "parse_entry_with_scanner(", 1)
+block = block.replace(
+    "options:ParseOptions)", "options:ParseOptions,scanner:&mut dyn TokenScanner)", 1
+)
+block = block.replace("let mut scanner=RejectExtern;\n", "", 1)
+block = block.replace("&mut scanner", "&mut *scanner")
+# An external scanner may carry state, so it cannot cross the escalation thread boundary
+# (ubnfc issue #35 / D-070). tinyexpression-rs escalates in its own frontend instead.
+block = block.replace(
+    "/*STACK_ESCALATION*/parse_entry_escalated(grammar,entry,text,options)/*STACK_ESCALATION*/",
+    "Ok(result)",
+    1,
+)
+banner = (
+    "\n// ---- vendored addition: rust/scripts/regenerate-ubnfc.sh ----\n"
+    "// Derived from parse_entry_with_options above by the same textual substitution\n"
+    "// ubnfc examples/p4-rust/build.rs performs. Do not edit by hand.\n"
+)
+open(path, "w", encoding="utf-8").write(parser + banner + block)
+
+mod_path = path.replace("parser.rs", "mod.rs")
+with open(mod_path, "a", encoding="utf-8") as handle:
+    handle.write(
+        "// ---- vendored addition: rust/scripts/regenerate-ubnfc.sh ----\n"
+        "#[allow(unused_imports)]\n"
+        "pub use parser::parse_entry_with_scanner;\n"
+    )
+PY
+
+case "$mode" in
+  --check)
+    diff -r "$work/generated" "$vendored" && echo "vendored ubnfc parser: byte-identical"
+    (cd "$vendored" && find . -type f | LC_ALL=C sort | xargs sha256sum) |
+      diff - "$manifest" && echo "vendored manifest: up to date"
+    ;;
+  --write)
+    rm -rf "$vendored"
+    cp -r "$work/generated" "$vendored"
+    (cd "$vendored" && find . -type f | LC_ALL=C sort | xargs sha256sum) > "$manifest"
+    echo "vendored ubnfc parser: updated"
+    ;;
+  *)
+    echo "usage: regenerate-ubnfc.sh [--check|--write]" >&2
+    exit 2
+    ;;
+esac

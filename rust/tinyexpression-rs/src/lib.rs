@@ -1,23 +1,23 @@
-//! Native parser frontend generated from the authoritative TinyExpression P4 grammar.
+//! Native parser frontend for the authoritative TinyExpression P4 grammar.
 //!
-//! Parsing, mapping, and the context-free f32 evaluator are strict: no Java parser,
-//! handwritten parser, or evaluator fallback is attempted.
+//! The parser is the vendored output of ubnfc's Rust backend (`generated::ubnfc`), which is
+//! dependency free and forbids unsafe code. Parsing, mapping, and the context-free f32
+//! evaluator are strict: no Java parser, handwritten parser, or evaluator fallback is
+//! attempted.
 
-#[rustfmt::skip]
 pub mod generated;
+
+mod diagnostic;
 mod evaluator;
+mod frontend;
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
+pub use diagnostic::{json_string, ParseDiagnostic, ParseError, Span};
 pub use evaluator::{evaluate, evaluate_ast, EvaluationError, Value};
 pub use generated::ast::Ast;
 use generated::ast::AstValue;
-use unlaxer_runtime::{
-    parse_detailed_shared_with_options, Memoization, ParseDiagnostic, ParseOptions, Span,
-};
-
-const PARSE_OPTIONS: ParseOptions = ParseOptions::with_memoization(Memoization::SafeFailures);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FrontendError {
@@ -38,13 +38,30 @@ impl Display for FrontendError {
 
 impl Error for FrontendError {}
 
+/// Parses the complete UTF-8 source from the grammar root only.
+///
+/// [`parse`] additionally retries the other result-family roots the way the Java facade does;
+/// this entry point is the primary `Formula` parse on its own.
+pub fn parse_formula_root(source: &str) -> Result<Ast, FrontendError> {
+    frontend::parse_entry(None, source)
+}
+
+/// [`parse_formula_root`] with explicit parser options (memoization, prediction, limits).
+pub fn parse_formula_root_with_options(
+    source: &str,
+    options: generated::ubnfc::ParseOptions,
+) -> Result<Ast, FrontendError> {
+    frontend::parse_entry_with_options(None, source, options)
+}
+
 /// Parses the complete UTF-8 source and returns an owned, source-preserving typed AST.
 pub fn parse(source: &str) -> Result<Ast, FrontendError> {
-    match generated::parser::parse_tree_detailed_with_options(source, PARSE_OPTIONS) {
-        Ok(tree) => generated::mapper::map(&tree)
-            .map_err(FrontendError::Mapping)
-            .and_then(|ast| select_explicit_result_family(source, ast)),
-        Err(primary) => parse_alternate_root(source).unwrap_or(Err(FrontendError::Parse(primary))),
+    match frontend::parse_entry(None, source) {
+        Ok(ast) => select_explicit_result_family(source, ast),
+        Err(primary @ FrontendError::Parse(_)) => {
+            parse_alternate_root(source).unwrap_or(Err(primary))
+        }
+        Err(other) => Err(other),
     }
 }
 
@@ -310,29 +327,8 @@ fn parse_family_root(
     rule_name: &str,
     clip_to: Option<Span>,
 ) -> Result<Ast, FrontendError> {
-    let grammar = generated::parser::grammar();
-    let root = grammar
-        .iter()
-        .position(|rule| rule.name == rule_name)
-        .ok_or_else(|| FrontendError::Mapping(format!("missing generated rule {rule_name}")))?;
-    let mut tree = parse_detailed_shared_with_options(grammar, root, true, source, PARSE_OPTIONS)
-        .map_err(FrontendError::Parse)?;
-    if let Some(bounds) = clip_to {
-        for node in &mut tree.nodes {
-            clip_span(&mut node.span, bounds);
-            for capture in &mut node.captures {
-                clip_span(&mut capture.span, bounds);
-            }
-        }
-    }
-    generated::mapper::map(&tree)
+    frontend::parse_entry_clipped(Some(rule_name), source, clip_to)
         .map(|value| wrap_expression_root(value, source.chars().count()))
-        .map_err(FrontendError::Mapping)
-}
-
-fn clip_span(span: &mut Span, bounds: Span) {
-    span.start = span.start.clamp(bounds.start, bounds.end);
-    span.end = span.end.clamp(span.start, bounds.end);
 }
 
 fn type_mismatch(source: &str) -> FrontendError {
@@ -484,17 +480,9 @@ fn direct_value_hint(value: &AstValue) -> Option<ResultFamily> {
 /// EOF. Retrying only after that failure keeps the successful numeric hot path unchanged while
 /// accepting the complete boolean expression.
 fn parse_alternate_root(source: &str) -> Option<Result<Ast, FrontendError>> {
-    let grammar = generated::parser::grammar();
     for rule_name in ["BooleanExpression", "StringExpression", "ObjectExpression"] {
-        let root = grammar.iter().position(|rule| rule.name == rule_name)?;
-        if let Ok(tree) =
-            parse_detailed_shared_with_options(grammar, root, true, source, PARSE_OPTIONS)
-        {
-            return Some(
-                generated::mapper::map(&tree)
-                    .map(|value| wrap_expression_root(value, source.chars().count()))
-                    .map_err(FrontendError::Mapping),
-            );
+        if let Ok(value) = frontend::parse_entry(Some(rule_name), source) {
+            return Some(Ok(wrap_expression_root(value, source.chars().count())));
         }
     }
     None

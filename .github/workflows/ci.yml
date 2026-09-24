@@ -12,17 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/checkout@v6
-        with:
-          repository: opaopa6969/unlaxer-parser
-          ref: 6a4187c73f748282524fac579415bcd092ae9c6e
-          path: unlaxer-parser
       - name: Set up Rust 1.85
         run: |
           rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
           rustup default 1.85.0
-      - name: Verify generated P4 sources and pinned runtime
-        run: bash rust/check-generated.sh "$GITHUB_WORKSPACE/unlaxer-parser"
+      - name: Verify vendored ubnfc parser and generated adapter
+        run: bash rust/check-generated.sh
       - name: Test and lint Rust parser
         run: |
           cargo fmt --all --manifest-path rust/Cargo.toml --check

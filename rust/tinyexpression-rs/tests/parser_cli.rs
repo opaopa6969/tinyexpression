@@ -4,9 +4,11 @@ use std::process::{Command, Output, Stdio};
 use std::sync::mpsc;
 use std::time::Duration;
 
-use tinyexpression_rs::generated::parser::CATALOGS;
-use tinyexpression_rs::{parse, Ast, FrontendError};
-use unlaxer_runtime::{Memoization, ParseOptions};
+use tinyexpression_rs::generated::ubnfc::metadata::CATALOGS;
+use tinyexpression_rs::generated::ubnfc::ParseOptions;
+use tinyexpression_rs::{
+    parse, parse_formula_root, parse_formula_root_with_options, Ast, FrontendError,
+};
 
 fn fixture(name: &str) -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -278,13 +280,20 @@ fn fallback_preserves_formula_and_expression_span_contract() {
 #[test]
 fn failed_boolean_retry_keeps_the_primary_formula_diagnostic() {
     let source = "1<";
-    let primary = tinyexpression_rs::generated::parser::parse_tree_detailed(source)
-        .expect_err("primary Formula parse must fail");
-    let memoized = tinyexpression_rs::generated::parser::parse_tree_detailed_with_options(
-        source,
-        ParseOptions::with_memoization(Memoization::SafeFailures),
-    )
-    .expect_err("memoized primary Formula parse must fail");
+    let unmemoized = ParseOptions {
+        memo: false,
+        ..ParseOptions::default()
+    };
+    let FrontendError::Parse(primary) =
+        parse_formula_root_with_options(source, unmemoized).expect_err("primary parse must fail")
+    else {
+        panic!("expected parse diagnostic");
+    };
+    let FrontendError::Parse(memoized) =
+        parse_formula_root(source).expect_err("memoized primary Formula parse must fail")
+    else {
+        panic!("expected parse diagnostic");
+    };
     let FrontendError::Parse(actual) = parse(source).expect_err("invalid comparison must fail")
     else {
         panic!("expected parse diagnostic");
