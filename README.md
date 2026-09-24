@@ -243,18 +243,21 @@ DAP/ランタイムエイリアス: `token`, `ast`, `dsl-javacode`, `p4-ast`, `p
 `scripts/regenerate-ubnfc-parser.sh`）。返す AST・`selectionMode`・span・失敗時の例外とメッセージは
 旧経路と同一で、`UbnfcParityTest`（340 件以上）が固定している。
 
-旧 combinator 経路は **`legacy`** として 2.x の間だけ選べる（**3.0 で削除予定**）。
+旧 combinator 経路は **`classic`**（unlaxer Classic）として 2.x の間だけ選べる（**3.0 で削除予定**）。
+`legacy` という id は **非推奨のエイリアス**として `classic` を指す（使うと一度だけ警告ログが出る）。
+エンジン本体と一緒に 3.0 で削除される。
 
 | 指定方法 | 例 | 優先 |
 |---|---|---|
-| FormulaInfo ブロックのフィールド | `p4Engine:legacy` | 1（最優先） |
-| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.LEGACY` | 1 |
-| システムプロパティ（JVM 全体の非常口） | `-Dtinyexpression.p4.engine=legacy` | 2 |
+| FormulaInfo ブロックのフィールド | `p4Engine:classic` | 1（最優先） |
+| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.CLASSIC` | 1 |
+| システムプロパティ（JVM 全体の非常口） | `-Dtinyexpression.p4.engine=classic` | 2 |
 | 既定 | `ubnfc` | 3 |
 
-値は `ubnfc` / `legacy`（大文字小文字は無視）。それ以外はエラーになる（黙って既定に戻さない）。
+値は `ubnfc` / `classic`（大文字小文字は無視。非推奨エイリアス `legacy` も `classic` として解釈される）。
+それ以外はエラーになる（黙って既定に戻さない）。
 構築した Calculator は `_tinyP4ParserEngine` マーカーに使ったエンジンを持つ。
-`tinyexpression.p4.memoize` は `legacy` でだけ効く。`tinyexpression.p4.parse.timeout.millis` は
+`tinyexpression.p4.memoize` は `classic` でだけ効く。`tinyexpression.p4.parse.timeout.millis` は
 両方で効くが、ubnfc は指数バックトラックを起こさない（packrat + 深さ上限）ので解析の前後でだけ見る。
 LSP/DAP（`tools/tinyexpression-p4-lsp-vscode`）の構文診断は 2.0 では旧経路のまま。
 

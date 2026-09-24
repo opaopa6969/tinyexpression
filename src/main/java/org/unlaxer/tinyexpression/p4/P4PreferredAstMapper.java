@@ -14,7 +14,8 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
  * {@code ExpressionExpr}.
  *
  * <p>Since 2.0.0 the implementation is chosen by {@link P4ParserEngine}: the ubnfc-generated
- * parser by default, or the pre-2.0 combinator path with {@code legacy}. Both return the same
+ * parser by default, or the pre-2.0 combinator path with {@code classic} (unlaxer Classic;
+ * deprecated alias {@code legacy}). Both return the same
  * {@link ParsedAst} (same {@link TinyExpressionP4AST} records, same {@code selectionMode}
  * strings, code-point {@link P4SourceText} spans) and fail with the same exception types and
  * messages; {@code UbnfcParityTest} pins this over every formula the test suite feeds here.
@@ -24,7 +25,7 @@ import org.unlaxer.tinyexpression.parser.ExpressionType;
  *   <li>{@code tinyexpression.p4.parse.timeout.millis}: the ubnfc parser is packrat with a depth
  *       limit and cannot backtrack exponentially (issues #19, #20), so the deadline is checked
  *       before and after parsing only. {@link ParseDeadlineExceededException} remains.</li>
- *   <li>{@code tinyexpression.p4.memoize} only affects {@code legacy} (ubnfc is always packrat).</li>
+ *   <li>{@code tinyexpression.p4.memoize} only affects {@code classic} (ubnfc is always packrat).</li>
  * </ul>
  */
 public final class P4PreferredAstMapper {
@@ -71,7 +72,7 @@ public final class P4PreferredAstMapper {
    */
   public static TinyExpressionP4AST parseByAstSimpleName(String formula, String preferredAstSimpleName) {
     return parseByAstSimpleNameDetailed(
-        formula, preferredAstSimpleName, LegacyP4PreferredAstMapper.defaultParseDeadlineNanos()).ast();
+        formula, preferredAstSimpleName, ClassicP4PreferredAstMapper.defaultParseDeadlineNanos()).ast();
   }
 
   /**
@@ -86,8 +87,8 @@ public final class P4PreferredAstMapper {
   /** Exact single-candidate mapping with its immutable owned source snapshot. */
   public static ParsedAst parseByAstSimpleNameDetailed(
       String formula, String preferredAstSimpleName, long deadlineNanos) {
-    if (engine() == P4ParserEngine.LEGACY) {
-      return LegacyP4PreferredAstMapper.parseByAstSimpleNameDetailed(
+    if (engine() == P4ParserEngine.CLASSIC) {
+      return ClassicP4PreferredAstMapper.parseByAstSimpleNameDetailed(
           formula, preferredAstSimpleName, deadlineNanos);
     }
     return ubnfc(() -> UbnfcP4Parse.parseByAstSimpleNameDetailed(
@@ -106,8 +107,8 @@ public final class P4PreferredAstMapper {
   /** Retains the selected AST's owned source resolver for delayed evaluation. */
   public static ParsedAst parseByAstSimpleNamesDetailed(
       String formula, List<String> candidates, long deadlineNanos) {
-    if (engine() == P4ParserEngine.LEGACY) {
-      return LegacyP4PreferredAstMapper.parseByAstSimpleNamesDetailed(
+    if (engine() == P4ParserEngine.CLASSIC) {
+      return ClassicP4PreferredAstMapper.parseByAstSimpleNamesDetailed(
           formula, candidates, deadlineNanos);
     }
     return ubnfc(() -> UbnfcP4Parse.parseByAstSimpleNamesDetailed(formula, candidates, deadlineNanos));
@@ -118,8 +119,8 @@ public final class P4PreferredAstMapper {
   }
 
   public static ParsedAst parseDetailed(String formula, ExpressionType preferredResultType) {
-    if (engine() == P4ParserEngine.LEGACY) {
-      return LegacyP4PreferredAstMapper.parseDetailed(formula, preferredResultType);
+    if (engine() == P4ParserEngine.CLASSIC) {
+      return ClassicP4PreferredAstMapper.parseDetailed(formula, preferredResultType);
     }
     return ubnfc(() -> UbnfcP4Parse.parseDetailed(formula, preferredResultType));
   }
@@ -147,29 +148,29 @@ public final class P4PreferredAstMapper {
    */
   public static List<String> preferredAstSimpleNames(
       String formula, ExpressionType preferredResultType) {
-    return engine() == P4ParserEngine.LEGACY
-        ? LegacyP4PreferredAstMapper.preferredAstSimpleNames(formula, preferredResultType)
+    return engine() == P4ParserEngine.CLASSIC
+        ? ClassicP4PreferredAstMapper.preferredAstSimpleNames(formula, preferredResultType)
         : UbnfcP4Parse.preferredAstSimpleNames(formula, preferredResultType);
   }
 
   public static List<String> astEvaluatorCandidateAstSimpleNames(
       String formula, ExpressionType preferredResultType) {
-    return engine() == P4ParserEngine.LEGACY
-        ? LegacyP4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(formula, preferredResultType)
+    return engine() == P4ParserEngine.CLASSIC
+        ? ClassicP4PreferredAstMapper.astEvaluatorCandidateAstSimpleNames(formula, preferredResultType)
         : UbnfcP4Parse.astEvaluatorCandidateAstSimpleNames(formula, preferredResultType);
   }
 
   public static List<String> generatedValueCandidateAstSimpleNames(
       String formula, ExpressionType preferredResultType) {
-    return engine() == P4ParserEngine.LEGACY
-        ? LegacyP4PreferredAstMapper.generatedValueCandidateAstSimpleNames(formula, preferredResultType)
+    return engine() == P4ParserEngine.CLASSIC
+        ? ClassicP4PreferredAstMapper.generatedValueCandidateAstSimpleNames(formula, preferredResultType)
         : UbnfcP4Parse.generatedValueCandidateAstSimpleNames(formula, preferredResultType);
   }
 
   public static List<String> declarationCandidateAstSimpleNames(
       String formula, ExpressionType preferredResultType) {
-    return engine() == P4ParserEngine.LEGACY
-        ? LegacyP4PreferredAstMapper.declarationCandidateAstSimpleNames(formula, preferredResultType)
+    return engine() == P4ParserEngine.CLASSIC
+        ? ClassicP4PreferredAstMapper.declarationCandidateAstSimpleNames(formula, preferredResultType)
         : UbnfcP4Parse.declarationCandidateAstSimpleNames(formula, preferredResultType);
   }
 

@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 import org.junit.Test;
 
 /**
- * Differential fuzz between the {@code legacy} and {@code ubnfc} engines (issue #183).
+ * Differential fuzz between the {@code classic} and {@code ubnfc} engines (issue #183).
  *
  * <p>Every accepted formula of the parity corpus is lightly mutated — one token dropped,
  * duplicated, swapped with its neighbour, or one token inserted — with a fixed seed, so the
@@ -25,7 +25,7 @@ import org.junit.Test;
  *
  * <p>Bounded for CI: sources over {@value #MAX_SOURCE_CHARS} chars are skipped, each formula
  * yields at most {@value #MUTANTS_PER_FORMULA} mutants and the total is capped at
- * {@value #MAX_MUTANTS}. A mutant on which {@code legacy} exceeds the per-parse deadline
+ * {@value #MAX_MUTANTS}. A mutant on which {@code classic} exceeds the per-parse deadline
  * (its exponential backtracking, issues #19/#20) is counted and excluded from the comparison;
  * the count is bounded. Results: {@code target/ubnfc-parity/fuzz.tsv}.
  */
@@ -35,7 +35,7 @@ public class UbnfcDifferentialFuzzTest {
   static final int MAX_SOURCE_CHARS = 240;
   static final int MUTANTS_PER_FORMULA = 4;
   static final int MAX_MUTANTS = 1200;
-  static final long LEGACY_DEADLINE_MILLIS = 3_000L;
+  static final long CLASSIC_DEADLINE_MILLIS = 3_000L;
 
   private static final Pattern TOKEN = Pattern.compile(
       "'(?:[^'\\\\]|\\\\.)*'|\"(?:[^\"\\\\]|\\\\.)*\"|\\$?[\\p{L}_][\\p{L}\\p{N}_]*|\\d+(?:\\.\\d+)?"
@@ -51,29 +51,29 @@ public class UbnfcDifferentialFuzzTest {
     List<EngineComparison.Case> mutants = mutants();
     assertTrue("too few mutants: " + mutants.size(), mutants.size() >= 500);
 
-    List<EngineComparison.Row> rows = EngineComparison.withParseTimeout(LEGACY_DEADLINE_MILLIS,
+    List<EngineComparison.Row> rows = EngineComparison.withParseTimeout(CLASSIC_DEADLINE_MILLIS,
         () -> mutants.stream().map(EngineComparison::compare).toList());
     EngineComparison.writeReport(rows, Path.of("target/ubnfc-parity/fuzz.tsv"));
 
     List<EngineComparison.Row> compared = rows.stream()
-        .filter(row -> !row.legacy().deadline() && !row.ubnfc().deadline())
+        .filter(row -> !row.classic().deadline() && !row.ubnfc().deadline())
         .toList();
     int skipped = rows.size() - compared.size();
     long accepted = compared.stream().filter(row -> row.verdict().equals("same")).count();
     long rejected = compared.stream().filter(row -> row.verdict().equals("both-reject")).count();
     System.out.println("ubnfc fuzz: " + rows.size() + " mutants, " + accepted + " both accept, "
-        + rejected + " both reject, " + skipped + " skipped on legacy deadline; "
+        + rejected + " both reject, " + skipped + " skipped on classic deadline; "
         + EngineComparison.tally(rows));
 
     List<String> disagreements = compared.stream()
         .filter(row -> !row.agrees())
         .map(row -> row.verdict() + " | " + row.testCase().origin() + " | "
-            + row.testCase().source().replace("\n", "\\n") + " | legacy=" + row.legacy()
+            + row.testCase().source().replace("\n", "\\n") + " | classic=" + row.classic()
             + " | ubnfc=" + row.ubnfc())
         .toList();
-    assertEquals("legacy and ubnfc disagree on mutants (see target/ubnfc-parity/fuzz.tsv)",
+    assertEquals("classic and ubnfc disagree on mutants (see target/ubnfc-parity/fuzz.tsv)",
         List.of(), disagreements);
-    assertTrue("legacy deadline skipped too many mutants: " + skipped, skipped <= rows.size() / 20);
+    assertTrue("classic deadline skipped too many mutants: " + skipped, skipped <= rows.size() / 20);
     // Both outcomes must actually be exercised, or the mutation is not probing anything.
     assertTrue("too few accepted mutants: " + accepted, accepted >= 50);
     assertTrue("too few rejected mutants: " + rejected, rejected >= 50);

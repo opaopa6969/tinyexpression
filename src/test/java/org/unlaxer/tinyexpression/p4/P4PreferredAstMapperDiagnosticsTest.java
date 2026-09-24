@@ -29,12 +29,13 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4Parsers;
 import org.unlaxer.tinyexpression.parser.StringLiteralParser;
 
 /**
- * Pins implementation details of the {@code legacy} engine ({@link LegacyP4PreferredAstMapper}):
- * deferred-diagnostics safety of the combinator root graphs, the in-parse deadline listener and
- * its retry budget. Scoped to {@code legacy} since 2.0.0 (issue #183): the default ubnfc engine
- * has no combinator graph and checks the deadline only before/after parsing, so these internals
- * do not exist there. The public-surface behaviour (messages, exception types) of both engines is
- * pinned by {@code UbnfcParityTest}. Remove together with {@code legacy} in 3.0.
+ * Pins implementation details of the {@code classic} engine (unlaxer Classic, deprecated alias
+ * {@code legacy}; {@link ClassicP4PreferredAstMapper}): deferred-diagnostics safety of the
+ * combinator root graphs, the in-parse deadline listener and its retry budget. Scoped to
+ * {@code classic} since 2.0.0 (issue #183): the default ubnfc engine has no combinator graph and
+ * checks the deadline only before/after parsing, so these internals do not exist there. The
+ * public-surface behaviour (messages, exception types) of both engines is pinned by
+ * {@code UbnfcParityTest}. Remove together with {@code classic} in 3.0.
  */
 public class P4PreferredAstMapperDiagnosticsTest {
   private static final String MEMOIZE = "tinyexpression.p4.memoize";
@@ -78,7 +79,7 @@ public class P4PreferredAstMapperDiagnosticsTest {
     assertFalse(isSafe(repeat));
   }
 
-  @Test public void legacyDetailedPathRunsOnceWithEitherMemoizationPolicy() throws Exception {
+  @Test public void classicDetailedPathRunsOnceWithEitherMemoizationPolicy() throws Exception {
     boolean available = compat() != null;
     if (System.getProperty("tinyexpression.expected.mapper.snapshot") != null) {
       assertEquals(Boolean.getBoolean("tinyexpression.expected.mapper.snapshot"), available);
@@ -90,8 +91,8 @@ public class P4PreferredAstMapperDiagnosticsTest {
         System.setProperty(MEMOIZE, Boolean.toString(memoize));
         for (String source : List.of("ok", "bad", "ok😀")) {
           var parser = new Probe();
-          // Force the legacy constructor on development too; on published exercise dispatch itself.
-          Object result = available ? attemptLegacy(parser, source) : attempt(parser, source, 0L);
+          // Force the classic constructor on development too; on published exercise dispatch itself.
+          Object result = available ? attemptClassic(parser, source) : attempt(parser, source, 0L);
           assertEquals(source.startsWith("ok"), field(result, "succeeded"));
           assertEquals(source.startsWith("ok") ? 2 : -1, field(result, "consumed"));
           assertEquals(1, parser.contexts.size());
@@ -101,14 +102,14 @@ public class P4PreferredAstMapperDiagnosticsTest {
         }
       }
       assertEquals("Parse failed: @", assertThrows(IllegalArgumentException.class,
-          () -> LegacyP4PreferredAstMapper.parseDetailed("@")).getMessage());
+          () -> ClassicP4PreferredAstMapper.parseDetailed("@")).getMessage());
     } finally {
       if (previous == null) System.clearProperty(MEMOIZE); else System.setProperty(MEMOIZE, previous);
     }
   }
 
-  private static Object attemptLegacy(Parser parser, String source) throws Exception {
-    return invoke(LegacyP4PreferredAstMapper.class.getDeclaredMethod(
+  private static Object attemptClassic(Parser parser, String source) throws Exception {
+    return invoke(ClassicP4PreferredAstMapper.class.getDeclaredMethod(
         "parseWithRoot", Parser.class, String.class, long.class, Object.class),
         parser, source, 0L, null);
   }
@@ -200,7 +201,7 @@ public class P4PreferredAstMapperDiagnosticsTest {
           assertThrows(IllegalArgumentException.class,
               () -> invoke(parse, source, options)).getMessage());
       assertEquals("Parse failed: " + source, assertThrows(IllegalArgumentException.class,
-          () -> LegacyP4PreferredAstMapper.parseDetailed(source)).getMessage());
+          () -> ClassicP4PreferredAstMapper.parseDetailed(source)).getMessage());
     }
   }
 
@@ -247,7 +248,7 @@ public class P4PreferredAstMapperDiagnosticsTest {
       ScopeStore.declare(context, "probe", 0);
       contexts.add(context);
       deadlineRegistered.add(context.getTransactionListenerByName().containsKey(
-          Name.of(LegacyP4PreferredAstMapper.class, "parseDeadline")));
+          Name.of(ClassicP4PreferredAstMapper.class, "parseDeadline")));
       addListener(context, new TransactionListener() {
         @Override public void setLevel(org.unlaxer.listener.OutputLevel level) {}
         @Override public void onOpen(ParseContext ignored) {}
@@ -279,18 +280,18 @@ public class P4PreferredAstMapperDiagnosticsTest {
 
   @SuppressWarnings("unchecked")
   private static Map<Parser, Boolean> safetyCache() throws Exception {
-    var field = LegacyP4PreferredAstMapper.class.getDeclaredField("DEFERRED_DIAGNOSTICS_SAFE");
+    var field = ClassicP4PreferredAstMapper.class.getDeclaredField("DEFERRED_DIAGNOSTICS_SAFE");
     field.setAccessible(true);
     return (Map<Parser, Boolean>) field.get(null);
   }
 
   private static boolean isSafe(Parser parser) throws Exception {
-    return (boolean) invoke(LegacyP4PreferredAstMapper.class.getDeclaredMethod(
+    return (boolean) invoke(ClassicP4PreferredAstMapper.class.getDeclaredMethod(
         "isDeferredDiagnosticsSafe", Parser.class), parser);
   }
 
   private static Object compat() throws Exception {
-    var field = LegacyP4PreferredAstMapper.class.getDeclaredField("DIAGNOSTICS_COMPAT");
+    var field = ClassicP4PreferredAstMapper.class.getDeclaredField("DIAGNOSTICS_COMPAT");
     field.setAccessible(true);
     return field.get(null);
   }
@@ -326,13 +327,13 @@ public class P4PreferredAstMapperDiagnosticsTest {
   }
 
   private static Object attempt(Parser parser, String source, long deadline) throws Exception {
-    Method method = LegacyP4PreferredAstMapper.class.getDeclaredMethod(
+    Method method = ClassicP4PreferredAstMapper.class.getDeclaredMethod(
         "parseWithRoot", Parser.class, String.class, long.class);
     return invoke(method, parser, source, deadline);
   }
 
   private static Object attemptDetailed(Parser parser, String source) throws Exception {
-    Method method = LegacyP4PreferredAstMapper.class.getDeclaredMethod(
+    Method method = ClassicP4PreferredAstMapper.class.getDeclaredMethod(
         "parseWithRoot", Parser.class, String.class, long.class, Object.class);
     return invoke(method, parser, source, 0L, compat() == null ? null : options(false));
   }

@@ -19,11 +19,12 @@ import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
  * Creates calculators per {@link ExecutionBackend}.
  *
  * <p>Since 2.0.0 the P4 parser engine is a second, orthogonal axis: {@link P4ParserEngine#UBNFC}
- * (default) or {@link P4ParserEngine#LEGACY}. {@link #forBackend(ExecutionBackend, P4ParserEngine)}
+ * (default) or {@link P4ParserEngine#CLASSIC} (unlaxer Classic; deprecated alias {@code legacy}).
+ * {@link #forBackend(ExecutionBackend, P4ParserEngine)}
  * pins it for the calculators a creator builds; {@code null} defers to
  * {@code -Dtinyexpression.p4.engine}, then to the default. Calculators of backends that parse
  * with the P4 grammar carry the engine that built them in {@value P4ParserEngine#CALCULATOR_MARKER}
- * ({@code "ubnfc"} / {@code "legacy"}); precompiled bytecode is not reparsed and keeps
+ * ({@code "ubnfc"} / {@code "classic"}); precompiled bytecode is not reparsed and keeps
  * {@code _tinyDslJavaEmitterMode = precompiled-bytecode}.
  */
 public final class CalculatorCreatorRegistry {

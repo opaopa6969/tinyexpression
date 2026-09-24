@@ -34,13 +34,14 @@ import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper.ParsedAst;
 /**
  * The pre-2.0 (combinator) implementation behind {@link P4PreferredAstMapper}: the
  * unlaxer-dsl generated {@code TinyExpressionP4Parsers} + {@code TinyExpressionP4Mapper}.
- * Selected with {@link P4ParserEngine#LEGACY}; retained through 2.x and scheduled for removal
- * in 3.0. The public surface lives on {@link P4PreferredAstMapper}.
+ * Selected with {@link P4ParserEngine#CLASSIC} (unlaxer Classic; deprecated alias
+ * {@code legacy}); retained through 2.x and scheduled for removal in 3.0. The public surface
+ * lives on {@link P4PreferredAstMapper}.
  *
  * <p>Selects a more specific generated AST root when the generic mapper would
  * otherwise settle on a shallow wrapper such as {@code ExpressionExpr}.
  */
-final class LegacyP4PreferredAstMapper {
+final class ClassicP4PreferredAstMapper {
 
   // Generated root graphs are fixed after preparation. Check each root only once, by identity.
   private static final Map<Parser, Boolean> DEFERRED_DIAGNOSTICS_SAFE =
@@ -55,7 +56,7 @@ final class LegacyP4PreferredAstMapper {
   // Published 3.0.15 lacks the options API. Resolve the entire capability once, without linking it.
   private static final DiagnosticsCompat DIAGNOSTICS_COMPAT = DiagnosticsCompat.resolve();
 
-  private LegacyP4PreferredAstMapper() {}
+  private ClassicP4PreferredAstMapper() {}
 
   public static TinyExpressionP4AST parse(String formula) {
     return parseDetailed(formula, null).ast();
@@ -145,7 +146,7 @@ final class LegacyP4PreferredAstMapper {
     ParsedAst parsed = parseMappedCandidates(source, candidates, false, deadlineNanos);
     int parsedIndex = candidates.indexOf(parsed.ast().getClass().getSimpleName());
     boolean earlierTypedFamily = parsedIndex > 0 && candidates.subList(0, parsedIndex).stream()
-        .anyMatch(LegacyP4PreferredAstMapper::isTypedFamilyRoot);
+        .anyMatch(ClassicP4PreferredAstMapper::isTypedFamilyRoot);
     if (!earlierTypedFamily) return parsed;
     ParsedAst selected = selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
     int selectedIndex = candidates.indexOf(selected.ast().getClass().getSimpleName());
@@ -689,7 +690,7 @@ final class LegacyP4PreferredAstMapper {
     }
     Object options = DIAGNOSTICS_COMPAT.options(memoizeEnabled(),
         DEFERRED_DIAGNOSTICS_SAFE.computeIfAbsent(
-            rootParser, LegacyP4PreferredAstMapper::isDeferredDiagnosticsSafe));
+            rootParser, ClassicP4PreferredAstMapper::isDeferredDiagnosticsSafe));
     long retryBudgetNanos = deadlineNanos > 0L ? deadlineNanos - System.nanoTime() : 0L;
     ParseResult result = parseWithRoot(rootParser, source, deadlineNanos, options);
     if (!result.fullyConsumed(source) && DIAGNOSTICS_COMPAT.isDeferred(options)) {
@@ -815,7 +816,7 @@ final class LegacyP4PreferredAstMapper {
    * 同一スレッドで巻き戻る (スレッド・割り込み不要)。
    */
   private static void registerDeadlineListener(ParseContext context, long deadlineNanos) {
-    org.unlaxer.Name name = org.unlaxer.Name.of(LegacyP4PreferredAstMapper.class, "parseDeadline");
+    org.unlaxer.Name name = org.unlaxer.Name.of(ClassicP4PreferredAstMapper.class, "parseDeadline");
     org.unlaxer.listener.TransactionListener listener =
         new org.unlaxer.listener.TransactionListener() {
           @Override public void setLevel(org.unlaxer.listener.OutputLevel level) {}

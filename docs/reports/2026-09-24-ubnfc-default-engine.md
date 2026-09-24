@@ -1,5 +1,10 @@
 # 2.0.0: ubnfc 生成パーサを既定エンジンにする（issue #183）
 
+> **注記（2026-09-25、issue #176）**: この報告時点では旧 combinator 経路のエンジン id は `legacy`、
+> クラス名は `LegacyP4PreferredAstMapper` だった。オーナー決定によりこの経路は **unlaxer Classic**
+> （エンジン id `classic`、クラス名 `ClassicP4PreferredAstMapper`）と改名し、`legacy` は 3.0 で削除予定の
+> 非推奨エイリアスとして残している。以下の本文は改名前の記録としてそのまま残す。
+
 2026-09-24。tinyexpression 2.0.0 で `P4PreferredAstMapper` の既定実装を ubnfc 生成パーサに切り替え、
 旧 combinator 経路を `legacy` として残した。ここは repo 内に残す根拠（パリティ表・段別時間・判断）。
 元になった計測と facade の設計は ubnfc の `docs/reports/2026-09-24-te-facade.md`（PR opaopa6969/ubnfc#72）。

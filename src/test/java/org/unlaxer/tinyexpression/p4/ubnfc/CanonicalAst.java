@@ -13,7 +13,7 @@ import org.unlaxer.tinyexpression.p4.ubnfc.generated.api.Json;
 
 /**
  * {@link TinyExpressionP4AST} を {@code {"type","span","fields"}} の canonical JSON にする。
- * span は {@link P4SourceText} から引く（legacy / ubnfc のどちらも同じ公開 API で引くので、
+ * span は {@link P4SourceText} から引く（classic / ubnfc のどちらも同じ公開 API で引くので、
  * 片側だけ別の情報源を使うことがない）。移植元: ubnfc examples/p4-java-facade（UBNFC_PIN）。
  */
 final class CanonicalAst {

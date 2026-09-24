@@ -282,10 +282,10 @@ public class P4SourceMappingTest {
   }
 
   private static void mapCandidates(Token root, List<String> candidates, boolean allowDefault) throws Exception {
-    Class<?> parsedRoot = Class.forName(LegacyP4PreferredAstMapper.class.getName() + "$ParsedRoot");
+    Class<?> parsedRoot = Class.forName(ClassicP4PreferredAstMapper.class.getName() + "$ParsedRoot");
     var constructor = parsedRoot.getDeclaredConstructor(Token.class, Token.class, P4SourceMapping.EntryPoint.class);
     constructor.setAccessible(true);
-    var method = LegacyP4PreferredAstMapper.class.getDeclaredMethod(
+    var method = ClassicP4PreferredAstMapper.class.getDeclaredMethod(
         "mapCandidates", String.class, List.class, boolean.class, parsedRoot);
     method.setAccessible(true);
     try {
