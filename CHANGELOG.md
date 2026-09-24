@@ -8,8 +8,50 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - `grammar/formula-info.ubnf`: the FormulaInfo block format as a UBNF v2 grammar (typed AST via `@mapping`), accepting exactly what `FormulaInfoSourceDocument.parse` accepts. `tinyexpression-rs` vendors its ubnfc Rust parser and gains a FormulaInfo loader (`formula_info::load`) plus `load` / `run` CLI subcommands; `tests/formula_info.rs` gates fields, load errors and evaluation against a golden taken from the Java loader (#180). The Java loader is unchanged.
 
+## [2.0.0] - 2026-09-25 (Central publish pending owner confirmation, #176)
+
+### Breaking
+- **The ubnfc-generated P4 parser is the default engine** (#183). Every backend that parses with the P4 grammar — `AST_EVALUATOR`, `DSL_JAVA_CODE`, `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` — now goes through a dependency-free Java parser that [ubnfc](https://github.com/opaopa6969/ubnfc) generates from the same grammar (`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`). `P4PreferredAstMapper` keeps its public surface (four entry points, `ParsedAst`, candidate-name API, `ParseDeadlineExceededException`, failure types and messages) and returns the same AST records, `selectionMode` strings and code-point spans; `UbnfcParityTest` pins this over 350 inputs with zero differences against the fixed generator (for the published 3.0.15 generator see Fixed).
+- **How to get the previous behaviour back (`legacy`)**, most specific first:
+  1. FormulaInfo block field `p4Engine:legacy`, or `CalculatorCreatorRegistry.forBackend(backend, P4ParserEngine.LEGACY)` / `P4ParserEngine.with(P4ParserEngine.LEGACY, ...)`;
+  2. JVM-wide escape hatch `-Dtinyexpression.p4.engine=legacy`;
+  3. default `ubnfc`.
+  Unknown values fail instead of falling back. Calculators record the engine in the `_tinyP4ParserEngine` marker.
+- **`legacy` is deprecated and scheduled for removal in 3.0** (the unlaxer combinator path `TinyExpressionP4Parsers` + `TinyExpressionP4Mapper` behind `P4PreferredAstMapper`).
+- `tinyexpression.p4.memoize` now only affects `legacy` (ubnfc is always packrat). `tinyexpression.p4.parse.timeout.millis` still applies, but the ubnfc engine checks it before/after parsing only: it is packrat with a depth limit and cannot backtrack exponentially (#19, #20).
+
+### Known issues
+- `legacy` engine only: `P4PackratFraudFormulaTest` fails (also on the pre-2.0.0 master `14af5ae2`, so not a regression of this release; green with the default `ubnfc` engine). Tracked for the `legacy` removal in 3.0.
+- CI verifies the vendored ubnfc parser by sha256 against `UBNFC_PIN`; the full grammar → IR → Java regeneration check needs read access to the private `ubnfc` repository and is run locally (report `docs/reports/2026-09-24-ubnfc-default-engine.md`).
+
+### Fixed (visible when built against the published unlaxer-dsl 3.0.15, i.e. the release)
+- The default engine does not inherit two AST bugs of the published 3.0.15 mapper generator that `legacy` keeps: `import X as alias` no longer yields `method="alias", alias=""` (now `method=null, alias="alias"`), and `receiver.contains/startsWith/endsWith(p...)` no longer repeats the receiver as an extra first pattern. With the fixed generator (unlaxer-parser source pin) both engines already agree; `UbnfcParityTest` tolerates exactly these two shapes, and only when the published generator is on the classpath.
+
+### Added
+- `org.unlaxer.tinyexpression.p4.P4ParserEngine` (engine selection and precedence) and `CalculatorCreatorRegistry.forBackend(ExecutionBackend, P4ParserEngine)` / `withP4ParserEngine(...)`.
+- Vendored generated parser under `org.unlaxer.tinyexpression.p4.ubnfc.generated` (22 files, JDK 21 only) plus its extern scanners (`P4Scanners`), the hand-maintained facade core `UbnfcP4Parse`, the machine-generated AST converter `UbnfcAstConverter` (86 records, 1:1) and `VariantShapes`, which adapts the 7 components whose declared type differs between the published 3.0.15 and the newer unlaxer-dsl generator (`External*InvocationExpr.className`, `SliceExpr.start/end/step`) at run time, so the same sources build against either. Pin: `src/main/java/org/unlaxer/tinyexpression/p4/ubnfc/UBNFC_PIN` (ubnfc commit, grammar/IR sha256, per-file sha256). `scripts/regenerate-ubnfc-parser.sh --check` verifies grammar and vendored files against the pin (CI) and, where the private ubnfc repository is readable, regenerates grammar → IR → Java byte-for-byte; `scripts/generate-ubnfc-converter.py --check` verifies the converter.
+- Tests: `UbnfcParityTest` (legacy vs ubnfc over 324 suite formulas + 16 ubnfc fixtures + 10 non-BMP inputs), `UbnfcDifferentialFuzzTest` (deterministic token-level mutants of the corpus; both engines must agree on accept/reject, AST and messages), `P4EngineModeMatrixTest` (FormulaInfo → parse → Java → javac → execute for 4 backends × 5 engine selections incl. non-BMP formulas, and identical generated Java across engines), `P4ParserEngineTest`, and `P4DslJavaCodeCalculatorLegacyEngineTest` / `P4AstEvaluatorCalculatorLegacyEngineTest` (the full `CalculatorImplTest` suite under `-Dtinyexpression.p4.engine=legacy`).
+
 ### Changed
+- `P4PreferredAstMapperDiagnosticsTest` and the reflective helper in `P4SourceMappingTest` now target `LegacyP4PreferredAstMapper`: they pin internals (combinator root graphs, in-parse deadline listener) that only the `legacy` engine has.
+- `tinyexpression-p4-lsp` builds against tinyExpression 2.0.0. Its own syntax diagnostics still use the generated `TinyExpressionP4Mapper` directly (unchanged in 2.0); calls it makes through `P4PreferredAstMapper` use the default engine.
 - Maven Central publication now defaults to bundle-only mode and requires the shared `org.unlaxer` monthly release guard to opt into upload. VSIX-only releases remain independent of the Central release train.
+- No unlaxer upgrade is needed: 2.0.0 stays on unlaxer-common / unlaxer-dsl **3.0.15** (the ubnfc parser does not depend on unlaxer; `legacy` and the `JAVA_CODE` backend keep using it). Java CI resolves the published 3.0.15 jars.
+
+### Performance
+Measured in ubnfc's facade report (`docs/reports/2026-09-24-te-facade.md` in ubnfc; same facade code, shared machine at load 15–18, so javac differences are noise). parse / Java generation / javac medians:
+
+| Input | parse share legacy | parse share ubnfc | parse+gen+javac legacy | ubnfc |
+|---|---:|---:|---:|---:|
+| `valid-basic.tiny` | 1% | 0.3% | 57.1 ms | 31.4 ms |
+| `complex.tiny` | 19% | 2.4% | 105.4 ms | 52.7 ms |
+| `large-match.tiny` | 80% | 17.5% | 181.2 ms | 38.0 ms |
+| fraud-alert #1 | 76% | 2.5% | 148.0 ms | 75.7 ms |
+| fraud-alert #4 | 68% | 3.6% | 232.6 ms | 38.2 ms |
+| fraud-alert #5 | 98% | 4.3% | 2179.3 ms | 33.4 ms |
+| `complex-x64.tiny` (20 KB) | 60% | 50.0% | 2398.5 ms | 154.5 ms |
+
+`FormulaInfoList.parse` of the five fraud-alert formulas (`backend:dsl-javacode`, load → Calculator): **2490.2 ms → 363.6 ms (6.8×)**. For small formulas javac dominates and parsing faster changes little; after the switch javac is the bottleneck on real formulas.
 
 ## [1.4.15] - 2026-08-27
 

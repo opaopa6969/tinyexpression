@@ -26,6 +26,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - [FormulaInfo 記法](#formulainfo-記法)
 - [Java コードブロック（セキュリティ注意）](#java-コードブロックセキュリティ注意)
 - [バックエンド設定](#バックエンド設定)
+- [P4 パーサエンジン（2.0.0〜）](#p4-パーサエンジン200)
 - [言語クイックリファレンス](#言語クイックリファレンス)
 - [LSP / DAP](#lsp--dap)
 - [開発](#開発)
@@ -47,7 +48,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.15</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -231,6 +232,38 @@ DAP/ランタイムエイリアス: `token`, `ast`, `dsl-javacode`, `p4-ast`, `p
 
 ---
 
+## P4 パーサエンジン（2.0.0〜）
+
+2.0.0 から、P4 文法を使うバックエンド（`AST_EVALUATOR` / `DSL_JAVA_CODE` / `P4_AST_EVALUATOR` /
+`P4_DSL_JAVA_CODE`）の**既定パーサは ubnfc 生成パーサ**になった。同じ P4 文法
+（`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`）から
+[ubnfc](https://github.com/opaopa6969/ubnfc) が生成した依存ゼロの Java パーサを
+`org.unlaxer.tinyexpression.p4.ubnfc.generated` に同梱している（pin は
+`src/main/java/org/unlaxer/tinyexpression/p4/ubnfc/UBNFC_PIN`、再生成は
+`scripts/regenerate-ubnfc-parser.sh`）。返す AST・`selectionMode`・span・失敗時の例外とメッセージは
+旧経路と同一で、`UbnfcParityTest`（340 件以上）が固定している。
+
+旧 combinator 経路は **`legacy`** として 2.x の間だけ選べる（**3.0 で削除予定**）。
+
+| 指定方法 | 例 | 優先 |
+|---|---|---|
+| FormulaInfo ブロックのフィールド | `p4Engine:legacy` | 1（最優先） |
+| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.LEGACY` | 1 |
+| システムプロパティ（JVM 全体の非常口） | `-Dtinyexpression.p4.engine=legacy` | 2 |
+| 既定 | `ubnfc` | 3 |
+
+値は `ubnfc` / `legacy`（大文字小文字は無視）。それ以外はエラーになる（黙って既定に戻さない）。
+構築した Calculator は `_tinyP4ParserEngine` マーカーに使ったエンジンを持つ。
+`tinyexpression.p4.memoize` は `legacy` でだけ効く。`tinyexpression.p4.parse.timeout.millis` は
+両方で効くが、ubnfc は指数バックトラックを起こさない（packrat + 深さ上限）ので解析の前後でだけ見る。
+LSP/DAP（`tools/tinyexpression-p4-lsp-vscode`）の構文診断は 2.0 では旧経路のまま。
+
+性能（ubnfc facade 報告の実測、parse / Java 生成 / javac の合計）: fraud-alert 式 #5 は 2179 → 33 ms、
+fraud-alert 5 式の `FormulaInfoList.parse` は 2490 → 364 ms（6.8 倍）。小さい式では javac が支配的で差は小さい。
+詳細は [CHANGELOG](CHANGELOG.md) の 2.0.0 と [docs/reports/2026-09-24-ubnfc-default-engine.md](docs/reports/2026-09-24-ubnfc-default-engine.md)。
+
+---
+
 ## 言語クイックリファレンス
 
 ```text
@@ -302,3 +335,33 @@ mvn -q test
 CI は `test-baseline.txt` で既知の失敗を管理し、新規失敗で落とす。運用と更新手順は [docs/test-baseline.md](docs/test-baseline.md) 参照。
 
 ドキュメント一覧: [docs/INDEX.ja.md](docs/INDEX.ja.md)
+
+### Maven Central への公開
+
+このマシンには Central 資格情報がないため、公開は GitHub Actions
+(`.github/workflows/release-central.yml`, `workflow_dispatch`) 経由で行う。
+月次上限は unlaxer-parser の `release/central-release-queue.yml`（org 共通の
+リリーストレイン台帳）から取得する。
+
+- **必要な repo secrets**（environment `release`）: `MAVEN_CENTRAL_USERNAME` /
+  `MAVEN_CENTRAL_PASSWORD` / `MAVEN_GPG_PRIVATE_KEY` / `MAVEN_GPG_PASSPHRASE`。
+  `guard` job はどれも使わず、`publish` job は不足時に `test -n` で即失敗する。
+- **ドライラン**（ガードの確認レポートのみ、公開しない）:
+  ```
+  gh workflow run release-central.yml -f version=2.0.0 -f confirm=org.unlaxer/2026-09 -f dry_run=true
+  ```
+- **本番公開**（枠に空きがあるとき）:
+  ```
+  gh workflow run release-central.yml -f version=2.0.0 -f confirm=org.unlaxer/2026-09 -f dry_run=false
+  ```
+  `version` は pom の `version` と完全一致、`confirm` は現在の UTC 月の
+  `org.unlaxer/YYYY-MM` と完全一致させる（`scripts/release-central.sh` と同じ規約）。
+- 既に Central に存在するバージョンなら `publish` job はアップロードを
+  スキップする（タグ付けは常に行う）。テストは `master` へのマージ時点で
+  CI (`.github/workflows/ci.yml`) が既にゲートしているため、deploy 時は
+  `-DskipTests` を明示する。
+- Central 資格情報を手元に持つ場合は `scripts/release-central.sh` がローカル代替手段。
+
+## エンジンの選び方
+
+2.0.0 の既定は **ubnfc parser**、旧コンビネータ実行系は **unlaxer Classic**（`classic` モード、3.0 で削除）。使い分けの目安: [unlaxer-parser/docs/engine-selection-guide-ja.md](https://github.com/opaopa6969/unlaxer-parser/blob/master/docs/engine-selection-guide-ja.md)

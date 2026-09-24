@@ -50,6 +50,16 @@ done
 
 repo_root=$(git rev-parse --show-toplevel)
 cd "$repo_root"
+# Central credentials live in a file the self-hosted runners never overwrite
+# (~/.m2/settings.xml is rewritten by actions/setup-java jobs). Override with MAVEN_SETTINGS.
+settings_file=${MAVEN_SETTINGS:-$HOME/.m2/settings-central.xml}
+mvn_settings=()
+if [ -f "$settings_file" ]; then
+  mvn_settings=(-s "$settings_file")
+  echo "Using Maven settings: $settings_file"
+else
+  echo "Note: $settings_file not found; falling back to ~/.m2/settings.xml (may lack the 'central' server)."
+fi
 month=$(date -u +%Y-%m)
 guard=(python3 scripts/central_release_guard.py --month "$month")
 
@@ -103,7 +113,15 @@ if curl -fsI "$published_url" >/dev/null; then
 fi
 
 if ! $emergency; then
-  "${guard[@]}" --max-releases 1
+  # Monthly cap comes from the canonical org queue (unlaxer-parser/release/central-release-queue.yml;
+  # owner decision 2026-09-24: publish count is a guideline, readiness is the gate). Override: CENTRAL_MAX_RELEASES.
+  limit=${CENTRAL_MAX_RELEASES:-}
+  if [ -z "$limit" ]; then
+    limit=$(gh api repos/opaopa6969/unlaxer-parser/contents/release/central-release-queue.yml -H 'Accept: application/vnd.github.raw' 2>/dev/null \
+      | sed -nE 's/^[[:space:]]*maxPublishOperationsPerCalendarMonth:[[:space:]]*([0-9]+).*/\1/p' | head -1)
+  fi
+  limit=${limit:-1}
+  "${guard[@]}" --max-releases "$limit"
 else
   echo "Emergency override: $reason"
 fi
