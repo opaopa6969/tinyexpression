@@ -475,7 +475,6 @@ name = "tinyexpression-rs"
 version = "0.1.0"
 dependencies = [
  "criterion",
- "unlaxer-runtime",
 ]
 
 [[package]]
@@ -493,11 +492,6 @@ name = "unicode-ident"
 version = "1.0.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d245f478577f809a851594d02313b640fb437e0bb33866753cff937863096954"
-
-[[package]]
-name = "unlaxer-runtime"
-version = "0.1.0"
-source = "git+https://github.com/opaopa6969/unlaxer-parser.git?rev=6a4187c73f748282524fac579415bcd092ae9c6e#6a4187c73f748282524fac579415bcd092ae9c6e"
 
 [[package]]
 name = "walkdir"

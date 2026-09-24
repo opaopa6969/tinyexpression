@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
 
-use unlaxer_runtime::{ParseDiagnostic, Span};
+use crate::{ParseDiagnostic, Span};
 
 use crate::generated::ast::{Ast, AstValue};
 use crate::generated::evaluator::{self as generated_evaluator, Semantics};
@@ -61,7 +61,7 @@ impl Value {
         match self {
             Self::Number(value) => format!(
                 "{{\"kind\":\"number\",\"value\":{},\"f32Bits\":\"0x{:08x}\"}}",
-                unlaxer_runtime::json_string(&value.to_string()),
+                crate::json_string(&value.to_string()),
                 value.to_bits()
             ),
             Self::Boolean(value) => {
@@ -69,7 +69,7 @@ impl Value {
             }
             Self::String(value) => format!(
                 "{{\"kind\":\"string\",\"value\":{}}}",
-                unlaxer_runtime::json_string(value)
+                crate::json_string(value)
             ),
         }
     }
@@ -140,13 +140,13 @@ impl EvaluationError {
             .unwrap_or_else(|| "null".to_owned());
         let details = match self {
             Self::ContextRequired { feature, .. } => {
-                format!(",\"feature\":{}", unlaxer_runtime::json_string(feature))
+                format!(",\"feature\":{}", crate::json_string(feature))
             }
             Self::UnsupportedNode { node, .. } => {
-                format!(",\"node\":{}", unlaxer_runtime::json_string(node))
+                format!(",\"node\":{}", crate::json_string(node))
             }
             Self::InvalidNumber { literal, .. } => {
-                format!(",\"literal\":{}", unlaxer_runtime::json_string(literal))
+                format!(",\"literal\":{}", crate::json_string(literal))
             }
             Self::InvalidBinaryShape {
                 operators,
@@ -154,23 +154,23 @@ impl EvaluationError {
                 ..
             } => format!(",\"operators\":{operators},\"rightOperands\":{operands}"),
             Self::UnsupportedOperator { operator, .. } => {
-                format!(",\"operator\":{}", unlaxer_runtime::json_string(operator))
+                format!(",\"operator\":{}", crate::json_string(operator))
             }
             Self::TypeMismatch {
                 expected, actual, ..
             } => format!(
                 ",\"expected\":{},\"actual\":{}",
-                unlaxer_runtime::json_string(expected),
-                unlaxer_runtime::json_string(actual)
+                crate::json_string(expected),
+                crate::json_string(actual)
             ),
             Self::Parse(_) | Self::Mapping(_) => String::new(),
         };
         format!(
             "{{\"kind\":{},\"span\":{}{},\"message\":{}}}",
-            unlaxer_runtime::json_string(self.kind()),
+            crate::json_string(self.kind()),
             span,
             details,
-            unlaxer_runtime::json_string(&self.to_string())
+            crate::json_string(&self.to_string())
         )
     }
 }

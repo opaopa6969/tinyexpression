@@ -1,0 +1,10 @@
+# Pin for the vendored ubnfc Rust parser (rust/tinyexpression-rs/src/generated/ubnfc).
+# rust/scripts/regenerate-ubnfc.sh reads this file; --check fails when the vendored
+# tree differs from what this pin regenerates.
+ubnfc_commit=103842ea528c0ad66b29a04a5af8d6980bf1e6c3
+grammar=tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf
+grammar_sha256=272b88c1f68ceb2ad8be70c018684735657afa67e54855b189881624adf7aced
+ir_sha256=173e218d671a25184aba2342aa1579c1a4f33e160629384a89a7208ed7cf8868
+scanners=scanners/rust/scanners.rs
+scanners_sha256=593a2736f7f20fa5d61456e25e7d961cefbd427d93b05a7ced46b41506e6a412
+scanners_tests_sha256=f33b0ec1173a2db55c9f3bf613b19112ec570e132c205fd7da203f9b09a81219
