@@ -272,7 +272,7 @@ public final class UbnfcP4Parse {
 
     private static ParsedRoot toParsedRoot(
             ParseResult<org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST> result, String parserSource) {
-        UbnfcAstConverter converter = new UbnfcAstConverter(result.nodeSpans());
+        UbnfcAstConverter converter = new UbnfcAstConverter(result.nodeSpans(), parserSource);
         TinyExpressionP4AST root = converter.convert(result.ast().orElseThrow());
         Map<Object, int[]> spans = converter.spans();
         return new ParsedRoot(root, snapshot(parserSource, spans), spans, converter.bestByName());

@@ -20,6 +20,11 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
  * {@code ParsedAst} (canonical JSON incl. code-point spans, and selectionMode), or both fail with
  * the same exception type and message. Every row is written to
  * {@code target/ubnfc-parity/report.tsv}.
+ *
+ * <p>When tinyexpression is built against the <b>published</b> unlaxer-dsl 3.0.15 (Java CI, the
+ * release), the legacy AST carries two known mapper bugs of that generator (see
+ * {@link EngineComparison#PUBLISHED_MAPPER_VERDICT}); differences fully explained by them are
+ * reported separately and nothing else is tolerated. Against the fixed generator there are none.
  */
 public class UbnfcParityTest {
 
@@ -51,7 +56,8 @@ public class UbnfcParityTest {
     List<EngineComparison.Row> rows = EngineComparison.withParseTimeout(0L,
         () -> corpus.stream().map(EngineComparison::compare).toList());
     EngineComparison.writeReport(rows, Path.of("target/ubnfc-parity/report.tsv"));
-    System.out.println("ubnfc parity: " + rows.size() + " cases " + EngineComparison.tally(rows));
+    System.out.println("ubnfc parity: " + rows.size() + " cases " + EngineComparison.tally(rows)
+        + (EngineComparison.PUBLISHED_3_0_15_MAPPER ? " (legacy AST from published unlaxer-dsl 3.0.15)" : ""));
 
     List<String> unexpected = rows.stream()
         .filter(row -> !row.agrees())
@@ -61,6 +67,10 @@ public class UbnfcParityTest {
     assertEquals("legacy and ubnfc disagree (see target/ubnfc-parity/report.tsv)",
         List.of(), unexpected);
 
+    // The published-mapper allowance must stay narrow: only the formulas known to hit those bugs.
+    assertTrue("published-mapper allowance used too widely: " + EngineComparison.tally(rows),
+        rows.stream().filter(row -> row.verdict().equals(EngineComparison.PUBLISHED_MAPPER_VERDICT))
+            .count() <= 10);
     long accepted = rows.stream().filter(row -> row.verdict().equals("same")).count();
     long nonBmpAccepted = rows.stream()
         .filter(row -> row.verdict().equals("same") && row.testCase().nonBmp()).count();

@@ -15,13 +15,27 @@ import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
  */
 final class UbnfcAstConverter {
     private final Map<Object, Span> sourceSpans;
+    private final String source;
     private final Map<Object, int[]> spans = new IdentityHashMap<>();
     private final Map<String, TinyExpressionP4AST> bestByName = new HashMap<>();
     private final Map<String, int[]> bestRank = new HashMap<>();
     private int depth;
 
-    UbnfcAstConverter(Map<Object, Span> sourceSpans) {
+    UbnfcAstConverter(Map<Object, Span> sourceSpans, String source) {
         this.sourceSpans = sourceSpans;
+        this.source = source;
+    }
+
+    /** 節点の字面（code point 区間、strip 済み）。公開 3.0.15 の {@code firstTokenText} + {@code stripQuotes} と同じ。 */
+    private String sourceText(org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST node) {
+        Span span = sourceSpans.get(node);
+        if (span == null) {
+            throw new IllegalStateException("no source span for " + node.getClass().getSimpleName());
+        }
+        String text = source.substring(source.offsetByCodePoints(0, span.start()),
+            source.offsetByCodePoints(0, span.end())).strip();
+        return text.length() >= 2 && text.charAt(0) == '\'' && text.charAt(text.length() - 1) == '\''
+            ? text.substring(1, text.length() - 1) : text;
     }
 
     /** 変換後ノード -> code point 半開区間。identity で引く。 */
@@ -66,10 +80,10 @@ final class UbnfcAstConverter {
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ObjectMethodDeclarationExpr n -> new TinyExpressionP4AST.ObjectMethodDeclarationExpr(n.methodName(), n.parameters().<TinyExpressionP4AST.MethodParametersExpr>map(v -> (TinyExpressionP4AST.MethodParametersExpr) convert(v)), (TinyExpressionP4AST.ObjectExpr) convert(n.expression()));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.MethodParametersExpr n -> new TinyExpressionP4AST.MethodParametersExpr(n.values().stream().map(v -> (TinyExpressionP4AST.MethodParameterExpr) convert(v)).toList());
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.MethodParameterExpr n -> new TinyExpressionP4AST.MethodParameterExpr(n.paramName(), n.type());
-            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalBooleanInvocationExpr n -> new TinyExpressionP4AST.ExternalBooleanInvocationExpr(n.className().<TinyExpressionP4AST.QualifiedNameExpr>map(v -> (TinyExpressionP4AST.QualifiedNameExpr) convert(v)), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
-            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalNumberInvocationExpr n -> new TinyExpressionP4AST.ExternalNumberInvocationExpr(n.className().<TinyExpressionP4AST.QualifiedNameExpr>map(v -> (TinyExpressionP4AST.QualifiedNameExpr) convert(v)), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
-            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalStringInvocationExpr n -> new TinyExpressionP4AST.ExternalStringInvocationExpr(n.className().<TinyExpressionP4AST.QualifiedNameExpr>map(v -> (TinyExpressionP4AST.QualifiedNameExpr) convert(v)), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
-            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalObjectInvocationExpr n -> new TinyExpressionP4AST.ExternalObjectInvocationExpr(n.className().<TinyExpressionP4AST.QualifiedNameExpr>map(v -> (TinyExpressionP4AST.QualifiedNameExpr) convert(v)), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
+            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalBooleanInvocationExpr n -> (TinyExpressionP4AST.ExternalBooleanInvocationExpr) VariantShapes.construct(TinyExpressionP4AST.ExternalBooleanInvocationExpr.class, new VariantShapes.OptionalNode(n.className().map(v -> (java.lang.Object) convert(v))), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
+            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalNumberInvocationExpr n -> (TinyExpressionP4AST.ExternalNumberInvocationExpr) VariantShapes.construct(TinyExpressionP4AST.ExternalNumberInvocationExpr.class, new VariantShapes.OptionalNode(n.className().map(v -> (java.lang.Object) convert(v))), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
+            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalStringInvocationExpr n -> (TinyExpressionP4AST.ExternalStringInvocationExpr) VariantShapes.construct(TinyExpressionP4AST.ExternalStringInvocationExpr.class, new VariantShapes.OptionalNode(n.className().map(v -> (java.lang.Object) convert(v))), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
+            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ExternalObjectInvocationExpr n -> (TinyExpressionP4AST.ExternalObjectInvocationExpr) VariantShapes.construct(TinyExpressionP4AST.ExternalObjectInvocationExpr.class, new VariantShapes.OptionalNode(n.className().map(v -> (java.lang.Object) convert(v))), n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.MethodInvocationExpr n -> new TinyExpressionP4AST.MethodInvocationExpr(n.name(), n.args().<TinyExpressionP4AST.ArgumentsExpr>map(v -> (TinyExpressionP4AST.ArgumentsExpr) convert(v)));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.TernaryExpr n -> new TinyExpressionP4AST.TernaryExpr((TinyExpressionP4AST.BooleanOrExpr) convert(n.condition()), (TinyExpressionP4AST.BranchExpressionExpr) convert(n.thenExpr()), (TinyExpressionP4AST.BranchExpressionExpr) convert(n.elseExpr()));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.ArgumentExpressionExpr n -> new TinyExpressionP4AST.ArgumentExpressionExpr(convertAny(n.value()));
@@ -108,7 +122,7 @@ final class UbnfcAstConverter {
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.IsPresentExpr n -> new TinyExpressionP4AST.IsPresentExpr((TinyExpressionP4AST.VariableRefExpr) convert(n.value()));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.InTimeRangeExpr n -> new TinyExpressionP4AST.InTimeRangeExpr((TinyExpressionP4AST.BinaryExpr) convert(n.startHour()), (TinyExpressionP4AST.BinaryExpr) convert(n.endHour()));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.InDayTimeRangeExpr n -> new TinyExpressionP4AST.InDayTimeRangeExpr(n.startDay(), (TinyExpressionP4AST.BinaryExpr) convert(n.startHour()), n.endDay(), (TinyExpressionP4AST.BinaryExpr) convert(n.endHour()));
-            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.SliceExpr n -> new TinyExpressionP4AST.SliceExpr(convertAny(n.value()), n.start().map(v -> (java.lang.Object) convert(v)), n.end().map(v -> (java.lang.Object) convert(v)), n.step().map(v -> (java.lang.Object) convert(v)));
+            case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.SliceExpr n -> (TinyExpressionP4AST.SliceExpr) VariantShapes.construct(TinyExpressionP4AST.SliceExpr.class, convertAny(n.value()), new VariantShapes.SliceIndex(n.start().map(v -> (java.lang.Object) convert(v)), n.start().map(this::sourceText)), new VariantShapes.SliceIndex(n.end().map(v -> (java.lang.Object) convert(v)), n.end().map(this::sourceText)), new VariantShapes.SliceIndex(n.step().map(v -> (java.lang.Object) convert(v)), n.step().map(this::sourceText)));
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.StringConcatExpr n -> new TinyExpressionP4AST.StringConcatExpr(convertAny(n.left()), n.op(), n.right().stream().map(this::convertAny).toList());
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.StringCastVariableRefExpr n -> new TinyExpressionP4AST.StringCastVariableRefExpr(n.name());
             case org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST.StringTypedVariableRefExpr n -> new TinyExpressionP4AST.StringTypedVariableRefExpr(n.name());

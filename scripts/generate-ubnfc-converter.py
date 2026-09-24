@@ -95,6 +95,28 @@ def convert_expr(ut, tt, accessor):
         return "(%s) convert(%s)" % (target, accessor)
     raise SystemExit("未対応の component 型: " + ut)
 
+# 公開 unlaxer-dsl 3.0.15 の生成器と、それ以降の生成器（unlaxer-parser の source pin）とで宣言型が
+# 違う component。tinyexpression はどちらの jar でもビルドされる（CI の mapper-compatibility が
+# published / source の両方を回す）ので、ここは宣言型に依らない形で出し、実行時に
+# VariantShapes が canonical constructor の型を見て合わせる。
+#   optionalNode: Optional<X>（新）/ X（公開 3.0.15、無ければ null）
+#   sliceIndex:   Optional<Object>（新）/ String（公開 3.0.15: 添字の字面を strip、無ければ ""）
+VARIANT = {
+    ("ExternalBooleanInvocationExpr", "className"): "optionalNode",
+    ("ExternalNumberInvocationExpr", "className"): "optionalNode",
+    ("ExternalStringInvocationExpr", "className"): "optionalNode",
+    ("ExternalObjectInvocationExpr", "className"): "optionalNode",
+    ("SliceExpr", "start"): "sliceIndex",
+    ("SliceExpr", "end"): "sliceIndex",
+    ("SliceExpr", "step"): "sliceIndex",
+}
+
+def variant_expr(kind, accessor):
+    if kind == "optionalNode":
+        return "new VariantShapes.OptionalNode(%s.map(v -> (java.lang.Object) convert(v)))" % accessor
+    return ("new VariantShapes.SliceIndex(%s.map(v -> (java.lang.Object) convert(v)), %s.map(this::sourceText))"
+            % (accessor, accessor))
+
 def generate(ub, te):
     lines = []
     a = lines.append
@@ -115,13 +137,27 @@ def generate(ub, te):
     a(" */")
     a("final class UbnfcAstConverter {")
     a("    private final Map<Object, Span> sourceSpans;")
+    a("    private final String source;")
     a("    private final Map<Object, int[]> spans = new IdentityHashMap<>();")
     a("    private final Map<String, %s> bestByName = new HashMap<>();" % TE)
     a("    private final Map<String, int[]> bestRank = new HashMap<>();")
     a("    private int depth;")
     a("")
-    a("    UbnfcAstConverter(Map<Object, Span> sourceSpans) {")
+    a("    UbnfcAstConverter(Map<Object, Span> sourceSpans, String source) {")
     a("        this.sourceSpans = sourceSpans;")
+    a("        this.source = source;")
+    a("    }")
+    a("")
+    a("    /** 節点の字面（code point 区間、strip 済み）。公開 3.0.15 の {@code firstTokenText} + {@code stripQuotes} と同じ。 */")
+    a("    private String sourceText(%s node) {" % UB)
+    a("        Span span = sourceSpans.get(node);")
+    a("        if (span == null) {")
+    a("            throw new IllegalStateException(\"no source span for \" + node.getClass().getSimpleName());")
+    a("        }")
+    a("        String text = source.substring(source.offsetByCodePoints(0, span.start()),")
+    a("            source.offsetByCodePoints(0, span.end())).strip();")
+    a("        return text.length() >= 2 && text.charAt(0) == '\\'' && text.charAt(text.length() - 1) == '\\''")
+    a("            ? text.substring(1, text.length() - 1) : text;")
     a("    }")
     a("")
     a("    /** 変換後ノード -> code point 半開区間。identity で引く。 */")
@@ -154,8 +190,16 @@ def generate(ub, te):
     for name in ub:
         comps = ub[name]
         tcomps = {n: t for t, n in te[name]}
-        args = ", ".join(convert_expr(ut, tcomps[un], "n." + un + "()") for ut, un in comps)
-        a("            case %s.%s n -> new %s.%s(%s);" % (UB, name, TE, name, args))
+        variant = any((name, un) in VARIANT for _, un in comps)
+        args = ", ".join(
+            variant_expr(VARIANT[(name, un)], "n." + un + "()") if (name, un) in VARIANT
+            else convert_expr(ut, tcomps[un], "n." + un + "()")
+            for ut, un in comps)
+        if variant:
+            a("            case %s.%s n -> (%s.%s) VariantShapes.construct(%s.%s.class, %s);"
+              % (UB, name, TE, name, TE, name, args))
+        else:
+            a("            case %s.%s n -> new %s.%s(%s);" % (UB, name, TE, name, args))
     a("        };")
     a("        depth = nodeDepth;")
     a("        Span span = sourceSpans.get(node);")
