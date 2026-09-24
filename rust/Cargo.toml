@@ -6,3 +6,10 @@ resolver = "2"
 edition = "2021"
 rust-version = "1.85"
 license = "MIT"
+
+# `cargo test` builds with light optimisation: the vendored parser's native-stack sentinel
+# (256 KiB on the calling thread, see generated/ubnfc/runtime.rs) is sized for optimised frames,
+# and the Java differential corpus contains the deeply nested fraud-alert formulas. Debug
+# assertions and overflow checks stay on.
+[profile.test]
+opt-level = 1

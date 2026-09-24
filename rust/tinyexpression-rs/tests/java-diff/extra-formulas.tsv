@@ -1,0 +1,124 @@
+# Targeted formulas for the Java differential (issue #179): inventory rows the repository's own
+# test literals touch only lightly. result type<TAB>formula (`\n` is a line break); "*" means float, boolean, string, object.
+# Formulas with variables also run under every context profile of build_corpus.py.
+*	1/3*3
+*	0.1+0.2
+*	16777217
+*	3.4028235e38*10
+*	-0.0
+*	0*-1
+*	(0/0)==(0/0)
+*	1e-45
+*	1.5e-39*1
+*	7/2
+*	-7/2
+*	10/0
+*	2147483647+1
+*	$a/$b
+*	$a+$b*$c
+*	$a-$missing
+float	sin(30)+cos(60)+tan(45)
+float	sin(0.5)
+float	cos(1e10)
+float	sqrt(2)
+float	sqrt(-1)
+float	log(0)
+float	log(10)
+float	exp(1)
+float	exp(710)
+float	pow(2,0.5)
+float	pow(1,0/0)
+float	pow(-8,1/3)
+float	round(2.5)+round(-2.5)+round(0.49999997)
+float	ceil(-0.5)
+float	floor(-0.5)
+float	abs(-0.0)
+float	min(0,-0.0)
+float	max(-0.0,0)
+float	min(1,0/0,3)
+float	max($a,$b,$c)
+float	min($a,'x')
+float	abs($s)
+*	toNum('12.5',0)
+*	toNum(' 7 ',1)
+*	toNum('1e3f',0)
+*	toNum('0x10',9)
+*	toNum('abc',$a)
+*	toNum($s,-1)
+*	toNum('NaN',0)
+string	toUpperCase('straße')
+string	toLowerCase('İSTANBUL')
+string	toUpperCase($s)
+string	trim('\t x 　')
+string	trim($s)
+*	len('😀a')
+*	len($s)
+*	$s.length()
+string	$s.toUpperCase()
+string	$s.trim()
+boolean	startsWith('abc','')
+boolean	startsWith('abc','x','ab')
+boolean	endsWith('abc','bc')
+boolean	contains('abc','')
+boolean	$s.contains('o','e')
+boolean	$s.endsWith('lo')
+boolean	'jp'.in('us','jp')
+boolean	$s.in('jp','opa','hello')
+string	'abcdef'[1:4]
+string	'abcdef'[-2:]
+string	'abcdef'[::-1]
+string	'abcdef'[::2]
+string	'abcdef'[5:1:-2]
+string	'abcdef'[10::-1]
+string	'abcdef'[::0]
+string	'😀a'[0:1]
+string	'😀a'[1:]
+string	$s[1:3]
+string	$s[::-1]
+boolean	isPresent($a)
+boolean	isPresent($missing)
+boolean	inTimeRange(9,17)
+boolean	inTimeRange(22,7)
+boolean	inDayTimeRange(MONDAY,9,FRIDAY,17)
+boolean	inDayTimeRange(FRIDAY,22,MONDAY,6)
+boolean	inDayTimeRange(WEDNESDAY,12,WEDNESDAY,13)
+boolean	not($b)
+boolean	$a==$b
+boolean	$s=='hello'
+boolean	$s!='jp'
+boolean	'a'=='a'&'b'!='c'
+boolean	true^$b
+*	($a>$b)?$a:$b
+*	if($s=='jp'){1}else{if($s=='opa'){2}else{3}}
+*	match{$a>10->1,$a>1->2,default->3}
+*	match{$s=='jp'->'J',$s=='opa'->'O',default->'?'}
+*	match{$b->true,default->false}
+*	var $x as number set 5;$x*2
+*	var $x as number set if not exists 5;$x*2
+*	var $s as string set if not exists 'dflt';'<'+$s+'>'
+*	var $b as boolean set if not exists true;if($b){1}else{0}
+*	var $o as object set 'obj';$o
+*	var $x as number set toNum('x',3);$x
+*	var $x as object set 'text';$x
+*	var $x as number set 1;var $y as number set $x+1;$y*10
+*	var $s as string set 'a';var $t as string set $s;if($s==$t){1}else{0}
+*	call twice(21)+call twice($a)\nfloat twice($v as number){$v*2}
+*	call twice('4')\nfloat twice($v as number){$v*2}
+*	call twice(1,2)\nfloat twice($v as number){$v*2}
+*	call fact(10)\nfloat fact($n as number){if($n<=1){1}else{$n*call fact($n-1)}}
+*	call loop(0)\nfloat loop($n as number){call loop($n+1)}
+*	call greet($s)\nstring greet($who as string){'hi '+$who}
+*	call flag('TRUE')\nboolean flag($v as boolean){$v}
+*	call undefined()
+*	import org.unlaxer.tinyexpression.Fee#calculate as fee; external returning as number fee($a,1000,0.1)
+*	import org.unlaxer.tinyexpression.Fee#calculate as fee; external returning as number fee(20,1000,0.1,false,'猫')
+*	import org.unlaxer.tinyexpression.Fee#calculate as fee; external returning as number fee(1,2)
+*	import org.unlaxer.tinyexpression.parser.TestSideEffector#getYear as year; external returning as string year('2026/09/24')
+*	import org.unlaxer.tinyexpression.parser.TestSideEffector#salary as salary; external returning as number salary(300,'Dr. X')
+*	import org.unlaxer.tinyexpression.parser.TestSideEffector#booleanToFloatMethod as b2f; external returning as number b2f($b)
+*	import a.b.Missing#m as missing; external returning as number missing(1)
+*	external returning as boolean notImported(1)
+*	1 /* comment */ + /* 😀 */ 2 // tail
+*	"it's"
+*	"double \" quoted"
+*	'back\\slash'

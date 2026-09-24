@@ -4,12 +4,20 @@
 //! dependency free and forbids unsafe code. Parsing, mapping, and the context-free f32
 //! evaluator are strict: no Java parser, handwritten parser, or evaluator fallback is
 //! attempted.
+//!
+//! [`runtime`] is the contextual evaluator with the Java `P4_AST_EVALUATOR` semantics
+//! (variables, declarations, methods, host-supplied externals, clock and random), available as a
+//! tree walker and as a closure-compiled form; `tests/java_differential.rs` gates it against a
+//! golden produced by the Java implementation.
+
+#![forbid(unsafe_code)]
 
 pub mod generated;
 
 mod diagnostic;
 mod evaluator;
 mod frontend;
+pub mod runtime;
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};
