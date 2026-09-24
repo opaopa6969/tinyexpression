@@ -103,7 +103,15 @@ if curl -fsI "$published_url" >/dev/null; then
 fi
 
 if ! $emergency; then
-  "${guard[@]}" --max-releases 1
+  # Monthly cap comes from the canonical org queue (unlaxer-parser/release/central-release-queue.yml;
+  # owner decision 2026-09-24: publish count is a guideline, readiness is the gate). Override: CENTRAL_MAX_RELEASES.
+  limit=${CENTRAL_MAX_RELEASES:-}
+  if [ -z "$limit" ]; then
+    limit=$(gh api repos/opaopa6969/unlaxer-parser/contents/release/central-release-queue.yml -H 'Accept: application/vnd.github.raw' 2>/dev/null \
+      | sed -nE 's/^[[:space:]]*maxPublishOperationsPerCalendarMonth:[[:space:]]*([0-9]+).*/\1/p' | head -1)
+  fi
+  limit=${limit:-1}
+  "${guard[@]}" --max-releases "$limit"
 else
   echo "Emergency override: $reason"
 fi
