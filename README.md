@@ -336,6 +336,32 @@ CI は `test-baseline.txt` で既知の失敗を管理し、新規失敗で落�
 
 ドキュメント一覧: [docs/INDEX.ja.md](docs/INDEX.ja.md)
 
+### Maven Central への公開
+
+このマシンには Central 資格情報がないため、公開は GitHub Actions
+(`.github/workflows/release-central.yml`, `workflow_dispatch`) 経由で行う。
+月次上限は unlaxer-parser の `release/central-release-queue.yml`（org 共通の
+リリーストレイン台帳）から取得する。
+
+- **必要な repo secrets**（environment `release`）: `MAVEN_CENTRAL_USERNAME` /
+  `MAVEN_CENTRAL_PASSWORD` / `MAVEN_GPG_PRIVATE_KEY` / `MAVEN_GPG_PASSPHRASE`。
+  `guard` job はどれも使わず、`publish` job は不足時に `test -n` で即失敗する。
+- **ドライラン**（ガードの確認レポートのみ、公開しない）:
+  ```
+  gh workflow run release-central.yml -f version=2.0.0 -f confirm=org.unlaxer/2026-09 -f dry_run=true
+  ```
+- **本番公開**（枠に空きがあるとき）:
+  ```
+  gh workflow run release-central.yml -f version=2.0.0 -f confirm=org.unlaxer/2026-09 -f dry_run=false
+  ```
+  `version` は pom の `version` と完全一致、`confirm` は現在の UTC 月の
+  `org.unlaxer/YYYY-MM` と完全一致させる（`scripts/release-central.sh` と同じ規約）。
+- 既に Central に存在するバージョンなら `publish` job はアップロードを
+  スキップする（タグ付けは常に行う）。テストは `master` へのマージ時点で
+  CI (`.github/workflows/ci.yml`) が既にゲートしているため、deploy 時は
+  `-DskipTests` を明示する。
+- Central 資格情報を手元に持つ場合は `scripts/release-central.sh` がローカル代替手段。
+
 ## エンジンの選び方
 
 2.0.0 の既定は **ubnfc parser**、旧コンビネータ実行系は **unlaxer Classic**（`classic` モード、3.0 で削除）。使い分けの目安: [unlaxer-parser/docs/engine-selection-guide-ja.md](https://github.com/opaopa6969/unlaxer-parser/blob/master/docs/engine-selection-guide-ja.md)
