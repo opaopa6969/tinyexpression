@@ -6,6 +6,3 @@ resolver = "2"
 edition = "2021"
 rust-version = "1.85"
 license = "MIT"
-
-[workspace.dependencies]
-unlaxer-runtime = { git = "https://github.com/opaopa6969/unlaxer-parser.git", rev = "6a4187c73f748282524fac579415bcd092ae9c6e" }

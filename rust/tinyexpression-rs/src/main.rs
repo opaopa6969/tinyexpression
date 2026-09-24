@@ -30,8 +30,8 @@ fn source(argument: Option<&str>) -> io::Result<String> {
 fn json_error(stage: &str, message: &str) -> String {
     format!(
         "{{\"ok\":false,\"stage\":{},\"message\":{}}}",
-        unlaxer_runtime::json_string(stage),
-        unlaxer_runtime::json_string(message)
+        tinyexpression_rs::json_string(stage),
+        tinyexpression_rs::json_string(message)
     )
 }
 
@@ -108,7 +108,7 @@ fn run() -> Result<(), u8> {
                 "{{\"ok\":false,\"stage\":\"type\",\"span\":[{},{}],\"message\":{}}}",
                 span.start,
                 span.end,
-                unlaxer_runtime::json_string(&message)
+                tinyexpression_rs::json_string(&message)
             );
             Err(EXIT_MAPPING)
         }

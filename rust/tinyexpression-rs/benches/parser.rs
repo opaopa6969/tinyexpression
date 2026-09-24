@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use tinyexpression_rs::generated::{mapper, parser};
-use unlaxer_runtime::{Diagnostics, Memoization, ParseOptions};
+use tinyexpression_rs::generated::ubnfc::{parse_with_scanner, ParseOptions, ParseResult};
+use tinyexpression_rs::generated::{compat, scanners};
 
 const FIXTURES: &[(&str, &str)] = &[
     ("complex", "complex.tiny"),
@@ -34,20 +34,27 @@ fn fixture_path(file_name: &str) -> PathBuf {
         .join(file_name)
 }
 
+fn parse(source: &str, options: ParseOptions) -> ParseResult {
+    let mut scanner = scanners::registry();
+    parse_with_scanner(source, options, &mut scanner)
+}
+
 fn parser_benchmarks(criterion: &mut Criterion) {
-    let off = ParseOptions::with_memoization(Memoization::Off);
-    let safe = ParseOptions::with_memoization(Memoization::SafeFailures);
-    // Diagnostics are recorded only when the parse fails (unlaxer-parser #257).
-    let deferred = safe.with_diagnostics(Diagnostics::DetailedOnFailure);
+    let recognize = ParseOptions {
+        build_ast: false,
+        ..ParseOptions::default()
+    };
+    let with_ast = ParseOptions::default();
     let fixtures = FIXTURES
         .iter()
         .map(|&(name, file_name)| {
             let path = fixture_path(file_name);
             let source = fs::read_to_string(&path)
                 .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()));
-            let tree = parser::parse_tree_detailed_with_options(&source, off)
-                .unwrap_or_else(|error| panic!("invalid fixture {}: {error}", path.display()));
-            mapper::map(&tree).unwrap_or_else(|error| {
+            let result = parse(&source, with_ast);
+            assert!(result.ok, "invalid fixture {}", path.display());
+            let ast = result.ast.expect("fixture AST");
+            compat::convert(&ast).unwrap_or_else(|error| {
                 panic!("fixture {} cannot be mapped: {error}", path.display())
             });
             tinyexpression_rs::parse(&source).unwrap_or_else(|error| {
@@ -56,92 +63,53 @@ fn parser_benchmarks(criterion: &mut Criterion) {
                     path.display()
                 )
             });
-            (name, source, tree)
+            (name, source, ast)
         })
         .collect::<Vec<_>>();
 
     let mut group = criterion.benchmark_group("tinyexpression");
 
-    for (fixture_name, source, tree) in &fixtures {
-        // This exercises the public generated path. The immutable grammar graph is
-        // initialized once and shared; ParseContext and all mutable parse state stay local.
+    for (fixture_name, source, ast) in &fixtures {
         group.bench_with_input(
-            BenchmarkId::new("parse-only-off", fixture_name),
+            BenchmarkId::new("recognize-only", fixture_name),
             source,
             |bencher, source| {
-                bencher.iter(|| {
-                    let tree =
-                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), off)
-                            .expect("fixture was validated before measurement");
-                    black_box(tree)
-                });
+                bencher.iter(|| black_box(parse(black_box(source.as_str()), recognize)));
             },
         );
 
         group.bench_with_input(
-            BenchmarkId::new("parse-only-safe", fixture_name),
+            BenchmarkId::new("parse-with-ast", fixture_name),
             source,
             |bencher, source| {
-                bencher.iter(|| {
-                    let tree =
-                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
-                            .expect("fixture was validated before measurement");
-                    black_box(tree)
-                });
-            },
-        );
-
-        group.bench_with_input(
-            BenchmarkId::new("parse-only-deferred", fixture_name),
-            source,
-            |bencher, source| {
-                bencher.iter(|| {
-                    let tree = parser::parse_tree_detailed_with_options(
-                        black_box(source.as_str()),
-                        deferred,
-                    )
-                    .expect("fixture was validated before measurement");
-                    black_box(tree)
-                });
+                bencher.iter(|| black_box(parse(black_box(source.as_str()), with_ast)));
             },
         );
 
         group.bench_with_input(
             BenchmarkId::new("map-only", fixture_name),
-            tree,
-            |bencher, tree| {
+            ast,
+            |bencher, ast| {
                 bencher.iter(|| {
-                    let ast = mapper::map(black_box(tree))
+                    let mapped = compat::convert(black_box(ast))
                         .expect("fixture was validated before measurement");
-                    black_box(ast)
+                    black_box(mapped)
                 });
             },
         );
 
         group.bench_with_input(
-            BenchmarkId::new("parse+map-off", fixture_name),
+            BenchmarkId::new("parse+map", fixture_name),
             source,
             |bencher, source| {
                 bencher.iter(|| {
-                    let tree =
-                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), off)
-                            .expect("fixture was validated before measurement");
-                    let ast = mapper::map(&tree).expect("fixture was validated before measurement");
-                    black_box(ast)
-                });
-            },
-        );
-
-        group.bench_with_input(
-            BenchmarkId::new("parse+map-safe", fixture_name),
-            source,
-            |bencher, source| {
-                bencher.iter(|| {
-                    let tree =
-                        parser::parse_tree_detailed_with_options(black_box(source.as_str()), safe)
-                            .expect("fixture was validated before measurement");
-                    let ast = mapper::map(&tree).expect("fixture was validated before measurement");
-                    black_box(ast)
+                    let result = parse(black_box(source.as_str()), with_ast);
+                    let ast = result
+                        .ast
+                        .expect("fixture was validated before measurement");
+                    let mapped =
+                        compat::convert(&ast).expect("fixture was validated before measurement");
+                    black_box(mapped)
                 });
             },
         );
