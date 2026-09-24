@@ -1,0 +1,200 @@
+package org.unlaxer.tinyexpression.p4.ubnfc.generated;
+
+public abstract class TinyExpressionP4Evaluator<T> {
+    private DebugStrategy debugStrategy = DebugStrategy.NOOP;
+    public void setDebugStrategy(DebugStrategy strategy) { debugStrategy = java.util.Objects.requireNonNull(strategy); }
+    public T eval(TinyExpressionP4AST node) {
+        debugStrategy.onEnter(node); T result = evalInternal(node); debugStrategy.onExit(node, result); return result;
+    }
+    private T evalInternal(TinyExpressionP4AST node) {
+        return switch (node) {
+            case TinyExpressionP4AST.FormulaExpr n -> evalFormulaExpr(n);
+            case TinyExpressionP4AST.CodeBlockExpr n -> evalCodeBlockExpr(n);
+            case TinyExpressionP4AST.ImportDeclarationExpr n -> evalImportDeclarationExpr(n);
+            case TinyExpressionP4AST.QualifiedNameExpr n -> evalQualifiedNameExpr(n);
+            case TinyExpressionP4AST.NumberVariableDeclarationExpr n -> evalNumberVariableDeclarationExpr(n);
+            case TinyExpressionP4AST.StringVariableDeclarationExpr n -> evalStringVariableDeclarationExpr(n);
+            case TinyExpressionP4AST.BooleanVariableDeclarationExpr n -> evalBooleanVariableDeclarationExpr(n);
+            case TinyExpressionP4AST.ObjectVariableDeclarationExpr n -> evalObjectVariableDeclarationExpr(n);
+            case TinyExpressionP4AST.OnlyIfAbsentExpr n -> evalOnlyIfAbsentExpr(n);
+            case TinyExpressionP4AST.NumberMethodDeclarationExpr n -> evalNumberMethodDeclarationExpr(n);
+            case TinyExpressionP4AST.StringMethodDeclarationExpr n -> evalStringMethodDeclarationExpr(n);
+            case TinyExpressionP4AST.BooleanMethodDeclarationExpr n -> evalBooleanMethodDeclarationExpr(n);
+            case TinyExpressionP4AST.ObjectMethodDeclarationExpr n -> evalObjectMethodDeclarationExpr(n);
+            case TinyExpressionP4AST.MethodParametersExpr n -> evalMethodParametersExpr(n);
+            case TinyExpressionP4AST.MethodParameterExpr n -> evalMethodParameterExpr(n);
+            case TinyExpressionP4AST.ExternalBooleanInvocationExpr n -> evalExternalBooleanInvocationExpr(n);
+            case TinyExpressionP4AST.ExternalNumberInvocationExpr n -> evalExternalNumberInvocationExpr(n);
+            case TinyExpressionP4AST.ExternalStringInvocationExpr n -> evalExternalStringInvocationExpr(n);
+            case TinyExpressionP4AST.ExternalObjectInvocationExpr n -> evalExternalObjectInvocationExpr(n);
+            case TinyExpressionP4AST.MethodInvocationExpr n -> evalMethodInvocationExpr(n);
+            case TinyExpressionP4AST.TernaryExpr n -> evalTernaryExpr(n);
+            case TinyExpressionP4AST.ArgumentExpressionExpr n -> evalArgumentExpressionExpr(n);
+            case TinyExpressionP4AST.ArgumentsExpr n -> evalArgumentsExpr(n);
+            case TinyExpressionP4AST.BinaryExpr n -> evalBinaryExpr(n);
+            case TinyExpressionP4AST.SinExpr n -> evalSinExpr(n);
+            case TinyExpressionP4AST.CosExpr n -> evalCosExpr(n);
+            case TinyExpressionP4AST.TanExpr n -> evalTanExpr(n);
+            case TinyExpressionP4AST.SqrtExpr n -> evalSqrtExpr(n);
+            case TinyExpressionP4AST.MinExpr n -> evalMinExpr(n);
+            case TinyExpressionP4AST.MaxExpr n -> evalMaxExpr(n);
+            case TinyExpressionP4AST.RandomExpr n -> evalRandomExpr(n);
+            case TinyExpressionP4AST.AbsExpr n -> evalAbsExpr(n);
+            case TinyExpressionP4AST.RoundExpr n -> evalRoundExpr(n);
+            case TinyExpressionP4AST.CeilExpr n -> evalCeilExpr(n);
+            case TinyExpressionP4AST.FloorExpr n -> evalFloorExpr(n);
+            case TinyExpressionP4AST.PowExpr n -> evalPowExpr(n);
+            case TinyExpressionP4AST.LogExpr n -> evalLogExpr(n);
+            case TinyExpressionP4AST.ExpExpr n -> evalExpExpr(n);
+            case TinyExpressionP4AST.ToNumExpr n -> evalToNumExpr(n);
+            case TinyExpressionP4AST.ToUpperCaseExpr n -> evalToUpperCaseExpr(n);
+            case TinyExpressionP4AST.ToLowerCaseExpr n -> evalToLowerCaseExpr(n);
+            case TinyExpressionP4AST.TrimExpr n -> evalTrimExpr(n);
+            case TinyExpressionP4AST.LengthExpr n -> evalLengthExpr(n);
+            case TinyExpressionP4AST.ToUpperCaseDotExpr n -> evalToUpperCaseDotExpr(n);
+            case TinyExpressionP4AST.ToLowerCaseDotExpr n -> evalToLowerCaseDotExpr(n);
+            case TinyExpressionP4AST.TrimDotExpr n -> evalTrimDotExpr(n);
+            case TinyExpressionP4AST.LengthDotExpr n -> evalLengthDotExpr(n);
+            case TinyExpressionP4AST.StartsWithExpr n -> evalStartsWithExpr(n);
+            case TinyExpressionP4AST.EndsWithExpr n -> evalEndsWithExpr(n);
+            case TinyExpressionP4AST.ContainsExpr n -> evalContainsExpr(n);
+            case TinyExpressionP4AST.InExpr n -> evalInExpr(n);
+            case TinyExpressionP4AST.StartsWithDotExpr n -> evalStartsWithDotExpr(n);
+            case TinyExpressionP4AST.EndsWithDotExpr n -> evalEndsWithDotExpr(n);
+            case TinyExpressionP4AST.ContainsDotExpr n -> evalContainsDotExpr(n);
+            case TinyExpressionP4AST.IsPresentExpr n -> evalIsPresentExpr(n);
+            case TinyExpressionP4AST.InTimeRangeExpr n -> evalInTimeRangeExpr(n);
+            case TinyExpressionP4AST.InDayTimeRangeExpr n -> evalInDayTimeRangeExpr(n);
+            case TinyExpressionP4AST.SliceExpr n -> evalSliceExpr(n);
+            case TinyExpressionP4AST.StringConcatExpr n -> evalStringConcatExpr(n);
+            case TinyExpressionP4AST.StringCastVariableRefExpr n -> evalStringCastVariableRefExpr(n);
+            case TinyExpressionP4AST.StringTypedVariableRefExpr n -> evalStringTypedVariableRefExpr(n);
+            case TinyExpressionP4AST.BooleanOrExpr n -> evalBooleanOrExpr(n);
+            case TinyExpressionP4AST.BooleanAndExpr n -> evalBooleanAndExpr(n);
+            case TinyExpressionP4AST.BooleanXorExpr n -> evalBooleanXorExpr(n);
+            case TinyExpressionP4AST.NotExpr n -> evalNotExpr(n);
+            case TinyExpressionP4AST.BooleanEqualityExpr n -> evalBooleanEqualityExpr(n);
+            case TinyExpressionP4AST.BooleanFactorExpr n -> evalBooleanFactorExpr(n);
+            case TinyExpressionP4AST.StringComparisonExpr n -> evalStringComparisonExpr(n);
+            case TinyExpressionP4AST.ComparisonExpr n -> evalComparisonExpr(n);
+            case TinyExpressionP4AST.ObjectExpr n -> evalObjectExpr(n);
+            case TinyExpressionP4AST.IfExpr n -> evalIfExpr(n);
+            case TinyExpressionP4AST.BranchExpressionExpr n -> evalBranchExpressionExpr(n);
+            case TinyExpressionP4AST.NumberMatchExpr n -> evalNumberMatchExpr(n);
+            case TinyExpressionP4AST.NumberCaseExpr n -> evalNumberCaseExpr(n);
+            case TinyExpressionP4AST.NumberDefaultCaseExpr n -> evalNumberDefaultCaseExpr(n);
+            case TinyExpressionP4AST.NumberCaseValueExpr n -> evalNumberCaseValueExpr(n);
+            case TinyExpressionP4AST.StringMatchExpr n -> evalStringMatchExpr(n);
+            case TinyExpressionP4AST.StringCaseExpr n -> evalStringCaseExpr(n);
+            case TinyExpressionP4AST.StringDefaultCaseExpr n -> evalStringDefaultCaseExpr(n);
+            case TinyExpressionP4AST.StringCaseValueExpr n -> evalStringCaseValueExpr(n);
+            case TinyExpressionP4AST.BooleanMatchExpr n -> evalBooleanMatchExpr(n);
+            case TinyExpressionP4AST.BooleanCaseExpr n -> evalBooleanCaseExpr(n);
+            case TinyExpressionP4AST.BooleanDefaultCaseExpr n -> evalBooleanDefaultCaseExpr(n);
+            case TinyExpressionP4AST.BooleanCaseValueExpr n -> evalBooleanCaseValueExpr(n);
+            case TinyExpressionP4AST.VariableRefExpr n -> evalVariableRefExpr(n);
+            case TinyExpressionP4AST.ExpressionExpr n -> evalExpressionExpr(n);
+        };
+    }
+    protected abstract T evalFormulaExpr(TinyExpressionP4AST.FormulaExpr node);
+    protected abstract T evalCodeBlockExpr(TinyExpressionP4AST.CodeBlockExpr node);
+    protected abstract T evalImportDeclarationExpr(TinyExpressionP4AST.ImportDeclarationExpr node);
+    protected abstract T evalQualifiedNameExpr(TinyExpressionP4AST.QualifiedNameExpr node);
+    protected abstract T evalNumberVariableDeclarationExpr(TinyExpressionP4AST.NumberVariableDeclarationExpr node);
+    protected abstract T evalStringVariableDeclarationExpr(TinyExpressionP4AST.StringVariableDeclarationExpr node);
+    protected abstract T evalBooleanVariableDeclarationExpr(TinyExpressionP4AST.BooleanVariableDeclarationExpr node);
+    protected abstract T evalObjectVariableDeclarationExpr(TinyExpressionP4AST.ObjectVariableDeclarationExpr node);
+    protected abstract T evalOnlyIfAbsentExpr(TinyExpressionP4AST.OnlyIfAbsentExpr node);
+    protected abstract T evalNumberMethodDeclarationExpr(TinyExpressionP4AST.NumberMethodDeclarationExpr node);
+    protected abstract T evalStringMethodDeclarationExpr(TinyExpressionP4AST.StringMethodDeclarationExpr node);
+    protected abstract T evalBooleanMethodDeclarationExpr(TinyExpressionP4AST.BooleanMethodDeclarationExpr node);
+    protected abstract T evalObjectMethodDeclarationExpr(TinyExpressionP4AST.ObjectMethodDeclarationExpr node);
+    protected abstract T evalMethodParametersExpr(TinyExpressionP4AST.MethodParametersExpr node);
+    protected abstract T evalMethodParameterExpr(TinyExpressionP4AST.MethodParameterExpr node);
+    protected abstract T evalExternalBooleanInvocationExpr(TinyExpressionP4AST.ExternalBooleanInvocationExpr node);
+    protected abstract T evalExternalNumberInvocationExpr(TinyExpressionP4AST.ExternalNumberInvocationExpr node);
+    protected abstract T evalExternalStringInvocationExpr(TinyExpressionP4AST.ExternalStringInvocationExpr node);
+    protected abstract T evalExternalObjectInvocationExpr(TinyExpressionP4AST.ExternalObjectInvocationExpr node);
+    protected abstract T evalMethodInvocationExpr(TinyExpressionP4AST.MethodInvocationExpr node);
+    protected abstract T evalTernaryExpr(TinyExpressionP4AST.TernaryExpr node);
+    protected abstract T evalArgumentExpressionExpr(TinyExpressionP4AST.ArgumentExpressionExpr node);
+    protected abstract T evalArgumentsExpr(TinyExpressionP4AST.ArgumentsExpr node);
+    protected abstract T evalBinaryExpr(TinyExpressionP4AST.BinaryExpr node);
+    protected abstract T evalSinExpr(TinyExpressionP4AST.SinExpr node);
+    protected abstract T evalCosExpr(TinyExpressionP4AST.CosExpr node);
+    protected abstract T evalTanExpr(TinyExpressionP4AST.TanExpr node);
+    protected abstract T evalSqrtExpr(TinyExpressionP4AST.SqrtExpr node);
+    protected abstract T evalMinExpr(TinyExpressionP4AST.MinExpr node);
+    protected abstract T evalMaxExpr(TinyExpressionP4AST.MaxExpr node);
+    protected abstract T evalRandomExpr(TinyExpressionP4AST.RandomExpr node);
+    protected abstract T evalAbsExpr(TinyExpressionP4AST.AbsExpr node);
+    protected abstract T evalRoundExpr(TinyExpressionP4AST.RoundExpr node);
+    protected abstract T evalCeilExpr(TinyExpressionP4AST.CeilExpr node);
+    protected abstract T evalFloorExpr(TinyExpressionP4AST.FloorExpr node);
+    protected abstract T evalPowExpr(TinyExpressionP4AST.PowExpr node);
+    protected abstract T evalLogExpr(TinyExpressionP4AST.LogExpr node);
+    protected abstract T evalExpExpr(TinyExpressionP4AST.ExpExpr node);
+    protected abstract T evalToNumExpr(TinyExpressionP4AST.ToNumExpr node);
+    protected abstract T evalToUpperCaseExpr(TinyExpressionP4AST.ToUpperCaseExpr node);
+    protected abstract T evalToLowerCaseExpr(TinyExpressionP4AST.ToLowerCaseExpr node);
+    protected abstract T evalTrimExpr(TinyExpressionP4AST.TrimExpr node);
+    protected abstract T evalLengthExpr(TinyExpressionP4AST.LengthExpr node);
+    protected abstract T evalToUpperCaseDotExpr(TinyExpressionP4AST.ToUpperCaseDotExpr node);
+    protected abstract T evalToLowerCaseDotExpr(TinyExpressionP4AST.ToLowerCaseDotExpr node);
+    protected abstract T evalTrimDotExpr(TinyExpressionP4AST.TrimDotExpr node);
+    protected abstract T evalLengthDotExpr(TinyExpressionP4AST.LengthDotExpr node);
+    protected abstract T evalStartsWithExpr(TinyExpressionP4AST.StartsWithExpr node);
+    protected abstract T evalEndsWithExpr(TinyExpressionP4AST.EndsWithExpr node);
+    protected abstract T evalContainsExpr(TinyExpressionP4AST.ContainsExpr node);
+    protected abstract T evalInExpr(TinyExpressionP4AST.InExpr node);
+    protected abstract T evalStartsWithDotExpr(TinyExpressionP4AST.StartsWithDotExpr node);
+    protected abstract T evalEndsWithDotExpr(TinyExpressionP4AST.EndsWithDotExpr node);
+    protected abstract T evalContainsDotExpr(TinyExpressionP4AST.ContainsDotExpr node);
+    protected abstract T evalIsPresentExpr(TinyExpressionP4AST.IsPresentExpr node);
+    protected abstract T evalInTimeRangeExpr(TinyExpressionP4AST.InTimeRangeExpr node);
+    protected abstract T evalInDayTimeRangeExpr(TinyExpressionP4AST.InDayTimeRangeExpr node);
+    protected abstract T evalSliceExpr(TinyExpressionP4AST.SliceExpr node);
+    protected abstract T evalStringConcatExpr(TinyExpressionP4AST.StringConcatExpr node);
+    protected abstract T evalStringCastVariableRefExpr(TinyExpressionP4AST.StringCastVariableRefExpr node);
+    protected abstract T evalStringTypedVariableRefExpr(TinyExpressionP4AST.StringTypedVariableRefExpr node);
+    protected abstract T evalBooleanOrExpr(TinyExpressionP4AST.BooleanOrExpr node);
+    protected abstract T evalBooleanAndExpr(TinyExpressionP4AST.BooleanAndExpr node);
+    protected abstract T evalBooleanXorExpr(TinyExpressionP4AST.BooleanXorExpr node);
+    protected abstract T evalNotExpr(TinyExpressionP4AST.NotExpr node);
+    protected abstract T evalBooleanEqualityExpr(TinyExpressionP4AST.BooleanEqualityExpr node);
+    protected abstract T evalBooleanFactorExpr(TinyExpressionP4AST.BooleanFactorExpr node);
+    protected abstract T evalStringComparisonExpr(TinyExpressionP4AST.StringComparisonExpr node);
+    protected abstract T evalComparisonExpr(TinyExpressionP4AST.ComparisonExpr node);
+    protected abstract T evalObjectExpr(TinyExpressionP4AST.ObjectExpr node);
+    protected abstract T evalIfExpr(TinyExpressionP4AST.IfExpr node);
+    protected abstract T evalBranchExpressionExpr(TinyExpressionP4AST.BranchExpressionExpr node);
+    protected abstract T evalNumberMatchExpr(TinyExpressionP4AST.NumberMatchExpr node);
+    protected abstract T evalNumberCaseExpr(TinyExpressionP4AST.NumberCaseExpr node);
+    protected abstract T evalNumberDefaultCaseExpr(TinyExpressionP4AST.NumberDefaultCaseExpr node);
+    protected abstract T evalNumberCaseValueExpr(TinyExpressionP4AST.NumberCaseValueExpr node);
+    protected abstract T evalStringMatchExpr(TinyExpressionP4AST.StringMatchExpr node);
+    protected abstract T evalStringCaseExpr(TinyExpressionP4AST.StringCaseExpr node);
+    protected abstract T evalStringDefaultCaseExpr(TinyExpressionP4AST.StringDefaultCaseExpr node);
+    protected abstract T evalStringCaseValueExpr(TinyExpressionP4AST.StringCaseValueExpr node);
+    protected abstract T evalBooleanMatchExpr(TinyExpressionP4AST.BooleanMatchExpr node);
+    protected abstract T evalBooleanCaseExpr(TinyExpressionP4AST.BooleanCaseExpr node);
+    protected abstract T evalBooleanDefaultCaseExpr(TinyExpressionP4AST.BooleanDefaultCaseExpr node);
+    protected abstract T evalBooleanCaseValueExpr(TinyExpressionP4AST.BooleanCaseValueExpr node);
+    protected abstract T evalVariableRefExpr(TinyExpressionP4AST.VariableRefExpr node);
+    protected abstract T evalExpressionExpr(TinyExpressionP4AST.ExpressionExpr node);
+    public interface DebugStrategy {
+        void onEnter(TinyExpressionP4AST node);
+        void onExit(TinyExpressionP4AST node, Object result);
+        DebugStrategy NOOP = new DebugStrategy() {
+            public void onEnter(TinyExpressionP4AST node) {}
+            public void onExit(TinyExpressionP4AST node, Object result) {}
+        };
+    }
+    public static class StepCounterStrategy implements DebugStrategy {
+        private int step;
+        private final java.util.function.BiConsumer<Integer, TinyExpressionP4AST> onStep;
+        public StepCounterStrategy(java.util.function.BiConsumer<Integer, TinyExpressionP4AST> onStep) { this.onStep = onStep; }
+        public void onEnter(TinyExpressionP4AST node) { onStep.accept(step++, node); }
+        public void onExit(TinyExpressionP4AST node, Object result) {}
+    }
+}

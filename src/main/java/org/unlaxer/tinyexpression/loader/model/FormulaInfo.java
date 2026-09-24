@@ -23,6 +23,7 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.evaluator.javacode.SpecifiedExpressionTypes;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.model.FormulaInfoField.StringsToString;
+import org.unlaxer.tinyexpression.p4.P4ParserEngine;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 import org.unlaxer.util.EpochPeriodForNavigable;
@@ -150,10 +151,28 @@ public class FormulaInfo{
     extraValueByKey.put(key, value);
   }
 
+  /**
+   * The P4 parser engine this block asks for with {@code p4Engine:ubnfc|legacy}; empty when the
+   * block does not say (then {@code -Dtinyexpression.p4.engine}, then the default applies).
+   */
+  public Optional<P4ParserEngine> p4Engine() {
+    return P4ParserEngine.parseStrict(
+        extraValueByKey.get(P4ParserEngine.FORMULA_INFO_KEY), "FormulaInfo " + P4ParserEngine.FORMULA_INFO_KEY);
+  }
+
+  /**
+   * The block field if present, else the JVM-wide setting. Resolved before construction so that an
+   * invalid {@code -Dtinyexpression.p4.engine} fails with its own message instead of surfacing as an
+   * unsupported formula (emitters treat any parse-time exception as "cannot emit").
+   */
+  private P4ParserEngine resolveP4Engine() {
+    return p4Engine().orElseGet(P4ParserEngine::current);
+  }
+
   public void updateCalculatorFromFormula(ClassLoader classLoader) {
 
-    calculator = calculatorCreator.create(
-        new Source(formulaText , this), className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader);
+    calculator = P4ParserEngine.with(resolveP4Engine(), () -> calculatorCreator.create(
+        new Source(formulaText , this), className, new SpecifiedExpressionTypes(resultType, numberType) , classLoader));
 
     if (calculator instanceof AstEvaluatorCalculator) {
       this.byteCode = new byte[0];
@@ -231,12 +250,12 @@ public class FormulaInfo{
   public void updateCalculatorWithByteCode(ClassLoader classLoader) {
 
     try {
-      calculator = calculatorCreator.create(
+      calculator = P4ParserEngine.with(resolveP4Engine(), () -> calculatorCreator.create(
           new Source(formulaText,this) , javaCodeText , classNameWithHash ,
           new SpecifiedExpressionTypes(resultType , numberType),
           byteCode, hashByByteCode,
           classNameAndByteCodeList,
-          Thread.currentThread().getContextClassLoader());
+          Thread.currentThread().getContextClassLoader()));
       calculator.setObject(FormulaInfo.class.getSimpleName(), this);
       state = FormulaInfoState.calculatorConstructed;
     }catch (Throwable e) {
