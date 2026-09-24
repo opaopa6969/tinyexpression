@@ -335,3 +335,7 @@ mvn -q test
 CI は `test-baseline.txt` で既知の失敗を管理し、新規失敗で落とす。運用と更新手順は [docs/test-baseline.md](docs/test-baseline.md) 参照。
 
 ドキュメント一覧: [docs/INDEX.ja.md](docs/INDEX.ja.md)
+
+## エンジンの選び方
+
+2.0.0 の既定は **ubnfc parser**、旧コンビネータ実行系は **unlaxer Classic**（`classic` モード、3.0 で削除）。使い分けの目安: [unlaxer-parser/docs/engine-selection-guide-ja.md](https://github.com/opaopa6969/unlaxer-parser/blob/master/docs/engine-selection-guide-ja.md)
