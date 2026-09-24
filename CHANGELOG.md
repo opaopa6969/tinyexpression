@@ -5,7 +5,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [2.0.0] - unreleased (Central publish pending owner confirmation, #176)
+## [2.0.0] - 2026-09-25 (Central publish pending owner confirmation, #176)
 
 ### Breaking
 - **The ubnfc-generated P4 parser is the default engine** (#183). Every backend that parses with the P4 grammar — `AST_EVALUATOR`, `DSL_JAVA_CODE`, `P4_AST_EVALUATOR`, `P4_DSL_JAVA_CODE` — now goes through a dependency-free Java parser that [ubnfc](https://github.com/opaopa6969/ubnfc) generates from the same grammar (`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`). `P4PreferredAstMapper` keeps its public surface (four entry points, `ParsedAst`, candidate-name API, `ParseDeadlineExceededException`, failure types and messages) and returns the same AST records, `selectionMode` strings and code-point spans; `UbnfcParityTest` pins this over 350 inputs with zero differences against the fixed generator (for the published 3.0.15 generator see Fixed).
@@ -16,6 +16,10 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
   Unknown values fail instead of falling back. Calculators record the engine in the `_tinyP4ParserEngine` marker.
 - **`legacy` is deprecated and scheduled for removal in 3.0** (the unlaxer combinator path `TinyExpressionP4Parsers` + `TinyExpressionP4Mapper` behind `P4PreferredAstMapper`).
 - `tinyexpression.p4.memoize` now only affects `legacy` (ubnfc is always packrat). `tinyexpression.p4.parse.timeout.millis` still applies, but the ubnfc engine checks it before/after parsing only: it is packrat with a depth limit and cannot backtrack exponentially (#19, #20).
+
+### Known issues
+- `legacy` engine only: `P4PackratFraudFormulaTest` fails (also on the pre-2.0.0 master `14af5ae2`, so not a regression of this release; green with the default `ubnfc` engine). Tracked for the `legacy` removal in 3.0.
+- CI verifies the vendored ubnfc parser by sha256 against `UBNFC_PIN`; the full grammar → IR → Java regeneration check needs read access to the private `ubnfc` repository and is run locally (report `docs/reports/2026-09-24-ubnfc-default-engine.md`).
 
 ### Fixed (visible when built against the published unlaxer-dsl 3.0.15, i.e. the release)
 - The default engine does not inherit two AST bugs of the published 3.0.15 mapper generator that `legacy` keeps: `import X as alias` no longer yields `method="alias", alias=""` (now `method=null, alias="alias"`), and `receiver.contains/startsWith/endsWith(p...)` no longer repeats the receiver as an extra first pattern. With the fixed generator (unlaxer-parser source pin) both engines already agree; `UbnfcParityTest` tolerates exactly these two shapes, and only when the published generator is on the classpath.
