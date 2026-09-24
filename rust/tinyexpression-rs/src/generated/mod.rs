@@ -5,7 +5,11 @@
 //! free and `#![forbid(unsafe_code)]`. `ast` is this crate's published typed AST and
 //! `compat` converts one into the other.
 
+// Generated code is verified byte-for-byte against the generator, not linted: older clippy
+// releases (the CI toolchain is 1.85) flag the generator's constant-folded guards such as
+// `(out.ok && true) || (!out.ok && true)`.
 #[rustfmt::skip]
+#[allow(clippy::all)]
 #[path = "ubnfc/mod.rs"]
 pub mod ubnfc;
 
