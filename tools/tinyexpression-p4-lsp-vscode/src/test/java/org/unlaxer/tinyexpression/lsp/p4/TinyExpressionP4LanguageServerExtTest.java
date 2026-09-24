@@ -622,6 +622,105 @@ public class TinyExpressionP4LanguageServerExtTest {
         assertFalse("Should find linked ranges", result.getRanges().isEmpty());
     }
 
+    // ── issue #175: UTF-16 vs code point, and duplicate scope diagnostics ──
+
+    /**
+     * A BMP-external character (U+1F600 😀, a surrogate pair in UTF-16) appearing earlier
+     * in the document must not shift the column of an unrelated scope diagnostic further
+     * down. The unlaxer parser reports offsets in code points; LSP {@code Position.character}
+     * is UTF-16 code units. Comparing against the same document with the emoji replaced by a
+     * single BMP character ('X') isolates the effect of the BMP-external character alone.
+     */
+    @Test
+    public void nonBmpCharacterDoesNotShiftScopeDiagnosticColumn() {
+        String withEmoji = """
+            var $price as number set 10;
+            var $label as string set '😀';
+            call bonus($price)
+            float bonus($x as number) { $x }
+            """;
+        String withPlaceholder = withEmoji.replace("😀", "X");
+
+        CapturingLanguageClient emojiClient = new CapturingLanguageClient();
+        server.connect(emojiClient);
+        server.parseDocument(TEST_URI, withEmoji);
+
+        TinyExpressionP4LanguageServerExt placeholderServer = new TinyExpressionP4LanguageServerExt();
+        CapturingLanguageClient placeholderClient = new CapturingLanguageClient();
+        placeholderServer.connect(placeholderClient);
+        placeholderServer.parseDocument(TEST_URI, withPlaceholder);
+
+        Diagnostic emojiDiag = emojiClient.firstDiagnosticWithMessage("未定義のシンボル: 'bonus'");
+        Diagnostic placeholderDiag = placeholderClient.firstDiagnosticWithMessage("未定義のシンボル: 'bonus'");
+        assertNotNull("expected an undefined-symbol scope diagnostic (emoji doc): " + emojiClient.lastDiagnostics,
+            emojiDiag);
+        assertNotNull("expected an undefined-symbol scope diagnostic (placeholder doc): " + placeholderClient.lastDiagnostics,
+            placeholderDiag);
+
+        // "call bonus(...)" is on line 2 (0-based) in both documents.
+        assertEquals(2, emojiDiag.getRange().getStart().getLine());
+        assertEquals("BMP-external char before the reference must not shift its UTF-16 column",
+            placeholderDiag.getRange().getStart().getCharacter(),
+            emojiDiag.getRange().getStart().getCharacter());
+        assertEquals(5, emojiDiag.getRange().getStart().getCharacter());
+        assertEquals(10, emojiDiag.getRange().getEnd().getCharacter());
+    }
+
+    /** Same UTF-16-vs-code-point defect, exercised through a syntax failure diagnostic
+     *  (org.unlaxer.context.ParseFailureDiagnostics#getFarthestOffset(), also code-point based)
+     *  rather than a scope diagnostic, with the BMP-external character inside a string literal. */
+    @Test
+    public void nonBmpCharacterInStringLiteralDoesNotShiftSyntaxDiagnosticColumn() {
+        String withEmoji = "var $label as string set '😀';\nif $x else $y";
+        String withPlaceholder = withEmoji.replace("😀", "X");
+
+        CapturingLanguageClient emojiClient = new CapturingLanguageClient();
+        server.connect(emojiClient);
+        server.parseDocument(TEST_URI, withEmoji);
+
+        TinyExpressionP4LanguageServerExt placeholderServer = new TinyExpressionP4LanguageServerExt();
+        CapturingLanguageClient placeholderClient = new CapturingLanguageClient();
+        placeholderServer.connect(placeholderClient);
+        placeholderServer.parseDocument(TEST_URI, withPlaceholder);
+
+        Diagnostic emojiDiag = emojiClient.firstDiagnosticWithCode("TE011");
+        Diagnostic placeholderDiag = placeholderClient.firstDiagnosticWithCode("TE011");
+        assertNotNull(emojiDiag);
+        assertNotNull(placeholderDiag);
+
+        assertEquals(1, emojiDiag.getRange().getStart().getLine());
+        assertEquals("BMP-external char earlier in the document must not shift the UTF-16 column"
+                + " of a later syntax diagnostic",
+            placeholderDiag.getRange().getStart().getCharacter(),
+            emojiDiag.getRange().getStart().getCharacter());
+    }
+
+    /**
+     * Scope diagnostics (from the generated {@code @backref} semantic action, via
+     * {@code ScopeStore.addDiagnostic}) must be published exactly once per distinct finding,
+     * even though the underlying packrat-memoized parser can, in principle, replay a
+     * {@code TransactionListener#onCommit} notification for what is logically a single match
+     * (see ScopeStore's own javadoc on why {@code registerDispatcher} became a no-op).
+     */
+    @Test
+    public void undefinedSymbolScopeDiagnosticIsPublishedExactlyOnce() {
+        String content = """
+            var $price as number set 10;
+            call bonus($price)
+            float bonus($x as number) { $x }
+            """;
+        CapturingLanguageClient client = new CapturingLanguageClient();
+        server.connect(client);
+
+        server.parseDocument(TEST_URI, content);
+
+        List<Diagnostic> matches = client.lastDiagnostics.stream()
+            .filter(d -> "未定義のシンボル: 'bonus'".equals(d.getMessage()))
+            .toList();
+        assertEquals("scope diagnostic must not be duplicated: " + client.lastDiagnostics,
+            1, matches.size());
+    }
+
     private static class DummyLanguageClient implements org.eclipse.lsp4j.services.LanguageClient {
         @Override public void telemetryEvent(Object object) {}
         @Override public void publishDiagnostics(PublishDiagnosticsParams diagnostics) {}
@@ -664,6 +763,13 @@ public class TinyExpressionP4LanguageServerExtTest {
                 .filter(diag -> diag.getCode().isLeft())
                 .filter(diag -> code.equals(diag.getCode().getLeft()))
                 .toList();
+        }
+
+        Diagnostic firstDiagnosticWithMessage(String message) {
+            return lastDiagnostics.stream()
+                .filter(diag -> message.equals(diag.getMessage()))
+                .findFirst()
+                .orElse(null);
         }
     }
 }
