@@ -26,6 +26,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - [FormulaInfo 記法](#formulainfo-記法)
 - [Java コードブロック（セキュリティ注意）](#java-コードブロックセキュリティ注意)
 - [バックエンド設定](#バックエンド設定)
+- [P4 パーサエンジン（2.0.0〜）](#p4-パーサエンジン200)
 - [言語クイックリファレンス](#言語クイックリファレンス)
 - [LSP / DAP](#lsp--dap)
 - [開発](#開発)
@@ -47,7 +48,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.15</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
@@ -228,6 +229,38 @@ if(external returning as boolean checkDigits($input)){1}else{0}
 DAP/ランタイムエイリアス: `token`, `ast`, `dsl-javacode`, `p4-ast`, `p4-dsl-javacode`
 
 詳細は [docs/backends.md](docs/backends.md) 参照。
+
+---
+
+## P4 パーサエンジン（2.0.0〜）
+
+2.0.0 から、P4 文法を使うバックエンド（`AST_EVALUATOR` / `DSL_JAVA_CODE` / `P4_AST_EVALUATOR` /
+`P4_DSL_JAVA_CODE`）の**既定パーサは ubnfc 生成パーサ**になった。同じ P4 文法
+（`tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf`）から
+[ubnfc](https://github.com/opaopa6969/ubnfc) が生成した依存ゼロの Java パーサを
+`org.unlaxer.tinyexpression.p4.ubnfc.generated` に同梱している（pin は
+`src/main/java/org/unlaxer/tinyexpression/p4/ubnfc/UBNFC_PIN`、再生成は
+`scripts/regenerate-ubnfc-parser.sh`）。返す AST・`selectionMode`・span・失敗時の例外とメッセージは
+旧経路と同一で、`UbnfcParityTest`（340 件以上）が固定している。
+
+旧 combinator 経路は **`legacy`** として 2.x の間だけ選べる（**3.0 で削除予定**）。
+
+| 指定方法 | 例 | 優先 |
+|---|---|---|
+| FormulaInfo ブロックのフィールド | `p4Engine:legacy` | 1（最優先） |
+| `CalculatorCreatorRegistry.forBackend(backend, engine)` / `P4ParserEngine.with(engine, ...)` | `P4ParserEngine.LEGACY` | 1 |
+| システムプロパティ（JVM 全体の非常口） | `-Dtinyexpression.p4.engine=legacy` | 2 |
+| 既定 | `ubnfc` | 3 |
+
+値は `ubnfc` / `legacy`（大文字小文字は無視）。それ以外はエラーになる（黙って既定に戻さない）。
+構築した Calculator は `_tinyP4ParserEngine` マーカーに使ったエンジンを持つ。
+`tinyexpression.p4.memoize` は `legacy` でだけ効く。`tinyexpression.p4.parse.timeout.millis` は
+両方で効くが、ubnfc は指数バックトラックを起こさない（packrat + 深さ上限）ので解析の前後でだけ見る。
+LSP/DAP（`tools/tinyexpression-p4-lsp-vscode`）の構文診断は 2.0 では旧経路のまま。
+
+性能（ubnfc facade 報告の実測、parse / Java 生成 / javac の合計）: fraud-alert 式 #5 は 2179 → 33 ms、
+fraud-alert 5 式の `FormulaInfoList.parse` は 2490 → 364 ms（6.8 倍）。小さい式では javac が支配的で差は小さい。
+詳細は [CHANGELOG](CHANGELOG.md) の 2.0.0 と [docs/reports/2026-09-24-ubnfc-default-engine.md](docs/reports/2026-09-24-ubnfc-default-engine.md)。
 
 ---
 

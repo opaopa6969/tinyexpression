@@ -1,0 +1,2 @@
+var $price as number set 10;
+$price + 2
