@@ -628,7 +628,11 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     }
 
     if (ctxDiag != null) {
-      int offset = ctxDiag.getFarthestOffset();
+      // ctxDiag.getFarthestOffset() is code-point based (org.unlaxer.context.ParseFailureDiagnostics,
+      // backed by the code-point-indexed StringSource); normalize to a UTF-16 offset here so that
+      // every consumer of ParseFailureDiagnostics.Present.failureOffset() — including the fallback
+      // branch below, which is already UTF-16 based (String.length()) — shares one unit.
+      int offset = codePointOffsetToUtf16Offset(content, ctxDiag.getFarthestOffset());
       List<String> hints = toDisplayHints(ctxDiag);
       return ParseFailureDiagnostics.present(offset, hints);
     }
@@ -723,12 +727,24 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       List<Diagnostic> catalogDiagnostics) {
     List<Diagnostic> diagnostics = new ArrayList<>(formulaInfoDiags);
     diagnostics.addAll(catalogDiagnostics);
-    // Semantic diagnostics from ScopeStore (@declares / @backref)
-    for (ScopeStore.SymbolDiagnostic sd : scopeDiagnostics) {
-      Position start = offsetToPositionWithOffset(content, sd.offset(), lineOffset);
-      Position end   = offsetToPositionWithOffset(content, sd.offset() + sd.length(), lineOffset);
+    // Semantic diagnostics from ScopeStore (@declares / @backref).
+    //
+    // De-duplicated defensively: the generated @backref semantic action registers via
+    // ScopeStore.addDiagnostic(...) from a TransactionListener#onCommit callback on a
+    // SafeFailureMemoizable (packrat-memoizable) parser. ScopeStore's own javadoc warns
+    // that the transaction container can self-notify a listener more than once for what
+    // is logically a single successful match (this is exactly why registerDispatcher()
+    // was turned into a no-op upstream — calling it used to double the notification).
+    // A stray duplicate notification here would surface as the exact same
+    // (offset, length, severity, message) diagnostic reported twice; collapsing on that
+    // identity keeps at most one LSP diagnostic per distinct scope finding regardless of
+    // how many times the underlying commit callback fired.
+    java.util.LinkedHashSet<ScopeStore.SymbolDiagnostic> dedupedScopeDiagnostics =
+        new java.util.LinkedHashSet<>(scopeDiagnostics);
+    for (ScopeStore.SymbolDiagnostic sd : dedupedScopeDiagnostics) {
+      Range range = codePointOffsetToRangeWithOffset(content, sd.offset(), sd.length(), lineOffset);
       Diagnostic d = new Diagnostic();
-      d.setRange(new Range(start, end));
+      d.setRange(range);
       d.setSeverity(switch (sd.severity()) {
         case ERROR   -> DiagnosticSeverity.Error;
         case WARNING -> DiagnosticSeverity.Warning;
@@ -848,6 +864,28 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     return new Range(start, end);
   }
 
+  /**
+   * Converts a single parser-native code-point offset into a UTF-16 char offset
+   * into {@code content}. The unlaxer parser runtime (see {@code StringSource})
+   * counts Unicode code points, while {@code String.charAt}/{@code Position.character}
+   * count UTF-16 code units — these differ by one per BMP-external character
+   * (e.g. U+1F600 😀) preceding the offset. Every conversion from a parser-reported
+   * offset to an LSP {@link Position}/{@link Range} must go through this helper
+   * (or {@link #codePointOffsetToPositionWithOffset} / {@link #codePointOffsetToRangeWithOffset}
+   * built on top of it) rather than being passed directly to
+   * {@link #offsetToPositionWithOffset}, which assumes its input is already a UTF-16 offset.
+   */
+  static int codePointOffsetToUtf16Offset(String content, int codePointOffset) {
+    int codePoints = content.codePointCount(0, content.length());
+    int clampedCodePoint = Math.max(0, Math.min(codePointOffset, codePoints));
+    return content.offsetByCodePoints(0, clampedCodePoint);
+  }
+
+  /** Convert a single parser-native code-point offset into an LSP {@link Position}. */
+  static Position codePointOffsetToPositionWithOffset(String content, int offset, int lineOffset) {
+    return offsetToPositionWithOffset(content, codePointOffsetToUtf16Offset(content, offset), lineOffset);
+  }
+
   /** Convert code-point offsets from owned AST spans into LSP UTF-16 positions. */
   static Range codePointOffsetToRangeWithOffset(
       String content, int offset, int length, int lineOffset) {
@@ -893,7 +931,9 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       String text = leaf.source.sourceAsString();
       if (text == null || text.isBlank()) continue;
 
-      int offset = leaf.source.offsetFromRoot().value();
+      // leaf.source.offsetFromRoot() is code-point based (unlaxer StringSource); convert to a
+      // UTF-16 offset before line/column counting, same as diagnostic ranges below.
+      int offset = codePointOffsetToUtf16Offset(content, leaf.source.offsetFromRoot().value());
       int[] lc = offsetToLineChar(content, offset);
       int line = lc[0] + lineOffset; // shift into full-document coordinates
       int col  = lc[1];
