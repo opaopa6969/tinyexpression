@@ -116,7 +116,7 @@ let closure = calculator_result(compiled.eval(&mut context, &mut host));      //
 - 比較: number は型と bit（float は `f32` bits、double は `f64` bits、整数は値）、boolean/string は値、エラーは Java の例外クラスと段（calculator 構築時か評価時か）。
 - 同じ全行で木の解釈と closure の結果（エラーメッセージまで）が一致することも検査する。
 
-結果（2026-09-24）: **953 式・12,609 行で Java と全件一致、説明のない差 0**。documented deviation は `random()` を含む 12 行（Java は `Math.random()` なので golden は型だけを持ち、型だけ比較）のみ。木の解釈と closure は 12,609 行すべてで一致。Java 側で全結果型が構築時に拒否し Rust の parser も拒否する 1,532 literal（式でない文字列）は golden に入れず件数だけ `rejected-count.txt` に残す。Rust だけ拒否・Java だけ受理の式は 0。
+結果（2026-09-24）: **953 式・12,609 行で Java と全件一致、説明のない差 0**。documented deviation は `random()` を含む 12 行（Java は `Math.random()` なので golden は型だけを持ち、型だけ比較）のみ。木の解釈と closure は 12,609 行すべてで一致。Java 側で全結果型が構築時に拒否し Rust の parser も拒否する 1,466 literal（式でない文字列）は golden に入れず件数だけ `rejected-count.txt` に残す。Rust だけ拒否・Java だけ受理の式は 0。
 
 golden の作り直し（JDK 21・Maven・python3・cargo が要る。Java の解析期限は外して回す）:
 
