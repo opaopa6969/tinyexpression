@@ -12,6 +12,7 @@
 | extern scanner | `.../p4/ubnfc/P4Scanners.java` | ubnfc `examples/p4-java/.../P4Scanners.java` を package 置換で複写 |
 | facade 本体 | `.../p4/ubnfc/UbnfcP4Parse.java` | ubnfc `examples/p4-java-facade` から移植（手で保守） |
 | AST 変換器（86 record、1:1） | `.../p4/ubnfc/UbnfcAstConverter.java` | `scripts/generate-ubnfc-converter.py` が両側の record 定義から機械生成 |
+| 生成器差の吸収 | `.../p4/ubnfc/VariantShapes.java` | 手書き（§3.1） |
 | 旧実装 | `.../p4/LegacyP4PreferredAstMapper.java` | 旧 `P4PreferredAstMapper` をそのまま改名（package private） |
 | pin | `.../p4/ubnfc/UBNFC_PIN` | ubnfc commit、文法と IR の sha256、vendored 全ファイルの sha256 |
 
@@ -67,6 +68,33 @@ p4-java fixture 16 件 + 非 BMP 10 件 = **350 件**。同一 JVM で `legacy` 
 
 非 BMP（`'こんにちは😀'`、`'😀a'[1:2]`、`/*😀*/ 'abcdef'[1:3]`、`match{'😀' == '😀' -> '𝄞', ...}` ほか）も span まで一致。
 全行は実行ごとに `target/ubnfc-parity/report.tsv`。
+
+### 3.1 公開 unlaxer-dsl 3.0.15 でビルドした場合
+
+上の表は、手元の `~/.m2` にある unlaxer-dsl 3.0.15（**9/21 に手元で install された開発版で、公開 jar とは
+別物**）で生成した AST を相手にした結果。Java CI と 2.0.0 のリリースは**公開 jar**でビルドする。
+公開 jar の生成器は 2 点で違う。
+
+1. **宣言型**: `External*InvocationExpr.className` が `QualifiedNameExpr`（開発版は `Optional<…>`）、
+   `SliceExpr.start/end/step` が `String`（添字の字面を strip したもの。開発版は `Optional<Object>`）。
+   変換器はこの 7 component を宣言型に依らない形で出し、`VariantShapes` が実行時に canonical constructor の
+   型へ合わせる。変換器のソースはどちらの jar でも同一（`--check` が両方で一致）。
+2. **mapper の不具合 2 件**（legacy はこれを引き継ぎ、ubnfc は引き継がない）:
+   `import X as alias` で alias が `method` に入り `alias` が空になる。
+   `receiver.contains/startsWith/endsWith(p…)`（`*DotExpr`）で `patterns` の先頭に receiver が重複する。
+
+公開 jar でビルドしたときのパリティ（2026-09-24、隔離した local repo に Central から取得）:
+
+| 判定 | 件数 |
+|---|---:|
+| `same` | 321 |
+| `same-modulo-published-3.0.15-mapper-bugs`（上の 2 件だけで完全に説明できる差） | 6（fraud-alert の `.contains` 2、`P4OptionalExternalQualifierTest` の import 4） |
+| `both-reject` | 23 |
+| それ以外の差 | **0** |
+
+ファジングは same 88 / 既知 2（import）/ both-reject 982 / 不一致 0。
+既知の差を許すのは公開生成器を検出したとき（`SliceExpr.start` が `String`）だけで、判定は木を歩いて
+「その 2 つの形以外は完全一致」を確かめる。件数には上限（10）を設けている。
 
 ## 4. 差分ファジング（`UbnfcDifferentialFuzzTest`）
 
