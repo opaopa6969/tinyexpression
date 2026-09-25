@@ -6,6 +6,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+- Language catalog `catalog/tinyexpression-catalog.json` (+ JSON schema) as the single source of variable / function / keyword descriptions, TE / FI error texts and the TE code rules; everything from the VSIX (`config/*.tecatalog`, the Ext's `ERROR_CATALOG` / snippet tables, `error-catalog.json`) migrated with matching counts. The LSP server reads it through `CatalogProvider` (hover, completion docs, diagnostics) and merges `tinyExpressionP4Lsp.catalog.overridePath` (#201).
+- Playground (`playground/`, GitHub Pages <https://opaopa6969.github.io/tinyexpression/>): CodeMirror 6 + `tinyexpression.wasm`, CalculationContext panel, completion / hover / TE diagnostics from the catalog, FormulaInfo load and run; a node parity smoke runs the Java differential golden through it in CI (#201).
+- Rust: evaluation with a caller-supplied CalculationContext and stubbed externals — `api::eval_context_json` / `formula_info_context_json`, CLI `eval-context` / `run-context`, C ABI and wasm `te_eval_context` / `te_formula_info_context` (#201). On wasm32 the default nested `call` depth is 48 (native 256) so deep recursion is a `StackOverflowError`, not an engine trap.
 - `grammar/formula-info.ubnf`: the FormulaInfo block format as a UBNF v2 grammar (typed AST via `@mapping`), accepting exactly what `FormulaInfoSourceDocument.parse` accepts. `tinyexpression-rs` vendors its ubnfc Rust parser and gains a FormulaInfo loader (`formula_info::load`) plus `load` / `run` CLI subcommands; `tests/formula_info.rs` gates fields, load errors and evaluation against a golden taken from the Java loader (#180). The Java loader is unchanged.
 
 ## [2.0.0] - 2026-09-25 (Central publish pending owner confirmation, #176)

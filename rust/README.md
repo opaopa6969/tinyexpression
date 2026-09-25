@@ -51,6 +51,34 @@ JSON（NUL 終端）、戻り値は CLI の exit code（境界で捕まえた pa
   利用側は未知のフィールドを無視すること）。exit code の意味も変えない。
 - 関数の signature を変えるときだけ `TE_ABI_VERSION`（`te_version()` の `"abi"`）を上げる。
 
+## CalculationContext 付き評価（issue #201）
+
+`eval` は context-free、`run` は空の context で評価する。変数を読む式は JSON リクエストで評価する:
+CLI `tinyexpression eval-context [FILE|-]` / `run-context`、C ABI・wasm `te_eval_context` /
+`te_formula_info_context`（`te_parse` と同じ呼び方、入力がリクエスト JSON）。playground が使う経路。
+
+```json
+{"formula": "if($member){$price * 2}else{$price}",
+ "resultType": "float", "numberType": "float", "angle": "degree", "seed": 7,
+ "variables": [{"name": "member", "type": "boolean", "value": true},
+               {"name": "price", "type": "float", "value": "1.5"},
+               {"name": "o", "map": "object", "type": "string", "value": "boxed"}],
+ "externals": [{"class": "sample.Fee", "method": "calculate", "arity": 3,
+                "registered": true, "result": {"type": "float", "value": "12.5"}}]}
+```
+
+- `variables[].type` は値の種類（`float`/`number`・`double`・`int`・`long`・`short`・`byte`・`boolean`・`string`）、
+  `map` は入れる `CalculationContext` の map（`number`・`string`・`boolean`・`object`、既定は種類に対応する map）。
+  数値は Java の `Float.parseFloat` 規則で読む。`nowHour` / `nowDayOfWeek` も普通の number 変数として渡す。
+- `externals[]` は Java のリフレクションの代わりの定数スタブ。どの行にも無いクラスは `Class.forName` 失敗
+  （`UnsupportedOperationException`）、`method` と `arity` が合わなければ method not found、`registered: false` は
+  インスタンス未登録（`CalculationException`）。`result` は `{"type": "null"}` も可。
+- 成功は `{"ok":true,"value":{...},"text":"<String.valueOf>"}`。失敗は `"stage":"create"`（計算機の生成、parse
+  失敗なら `diagnostic` 付き、exit 3/4）か `"apply"`（評価、exit 5）と `"error":{"kind":<Java 例外>,"message":...}`。
+  リクエスト自体の誤りは `"stage":"request"`（exit 2）。
+- wasm32 では method の入れ子 `call` の既定上限を 48 にしている（native は 256）。評価器がホストエンジンの
+  スタック（V8 で約 1 MB）上で動くため、深い再帰がインスタンスごと trap する前に `StackOverflowError` にする。
+
 ## wasm32
 
 ```sh

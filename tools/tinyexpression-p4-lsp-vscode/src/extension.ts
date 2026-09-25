@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import {
@@ -30,40 +29,24 @@ function getBundledJarPath(context: vscode.ExtensionContext): string {
 }
 
 /**
- * Returns a path-separator-delimited list of bundled .tecatalog files
- * from the extension's config/ directory, or an empty string if none exist.
+ * Language catalog (issue #201). The server bundles catalog/tinyexpression-catalog.json (the
+ * single source of variable / function descriptions and TE error texts). Settings:
+ * - catalog.path: legacy .tecatalog files/directories, or a catalog .json, for variables;
+ * - catalog.overridePath: a (partial) catalog .json merged over the bundled catalog, e.g. one
+ *   exported from the playground;
+ * - catalog.useBundledDefault: when catalog.path is empty, use the bundled catalog's variables.
  */
-function getBundledCatalogPaths(context: vscode.ExtensionContext): string {
-  const configDir = context.asAbsolutePath("config");
-  if (!fs.existsSync(configDir)) {
-    return "";
-  }
-  try {
-    const files = fs.readdirSync(configDir)
-      .filter(f => f.endsWith(".tecatalog"))
-      .map(f => path.join(configDir, f));
-    return files.join(path.delimiter);
-  } catch {
-    return "";
-  }
-}
-
-/**
- * Resolves the effective catalog path from VS Code configuration and bundled files.
- */
-function resolveEffectiveCatalogPath(
-  config: vscode.WorkspaceConfiguration,
-  context: vscode.ExtensionContext
-): string {
-  const userPath = config.get<string>("catalog.path", "").trim();
-  if (userPath.length > 0) {
-    return userPath;
-  }
+function resolveCatalogOptions(
+  config: vscode.WorkspaceConfiguration
+): { catalogPath: string; overridePath: string; useBundledVariables: boolean } {
+  const catalogPath = config.get<string>("catalog.path", "").trim();
+  const overridePath = config.get<string>("catalog.overridePath", "").trim();
   const useBundled = config.get<boolean>("catalog.useBundledDefault", true);
-  if (useBundled) {
-    return getBundledCatalogPaths(context);
-  }
-  return "";
+  return {
+    catalogPath,
+    overridePath,
+    useBundledVariables: catalogPath.length === 0 && useBundled
+  };
 }
 
 export async function activate(
@@ -80,8 +63,7 @@ export async function activate(
       ? configuredJar
       : getBundledJarPath(context);
 
-  // Resolve catalog path: user setting → bundled config/*.tecatalog → empty
-  const effectiveCatalogPath = resolveEffectiveCatalogPath(config, context);
+  const catalog = resolveCatalogOptions(config);
 
   outputChannel = vscode.window.createOutputChannel("TinyExpression P4 LSP");
 
@@ -89,13 +71,15 @@ export async function activate(
   outputChannel.appendLine("[TinyExpression P4 LSP] Starting server...");
   outputChannel.appendLine(`  java: ${javaPath}`);
   outputChannel.appendLine(`  jar:  ${jarPath}`);
-  if (effectiveCatalogPath.length > 0) {
-    outputChannel.appendLine(`  catalog: ${effectiveCatalogPath}`);
-  }
+  outputChannel.appendLine(
+    `  catalog: bundled${catalog.overridePath ? ` + override ${catalog.overridePath}` : ""}` +
+    (catalog.catalogPath ? `; variables from ${catalog.catalogPath}`
+      : catalog.useBundledVariables ? "; bundled variables" : "; no variables")
+  );
 
   // Build JVM args: add catalog path as system property if available
-  const catalogJvmArgs: string[] = effectiveCatalogPath.length > 0
-    ? [`-Dtinyexpressionp4.catalog.path=${effectiveCatalogPath}`]
+  const catalogJvmArgs: string[] = catalog.catalogPath.length > 0
+    ? [`-Dtinyexpressionp4.catalog.path=${catalog.catalogPath}`]
     : [];
 
   // ── LSP server ──
@@ -108,10 +92,15 @@ export async function activate(
 
   // Pass catalog path via initializationOptions so the server can use it
   // even if system property is not available (e.g. wrapped JVM)
-  const initializationOptions: Record<string, unknown> =
-    effectiveCatalogPath.length > 0
-      ? { catalogPath: effectiveCatalogPath }
-      : {};
+  const initializationOptions: Record<string, unknown> = {
+    useBundledVariables: catalog.useBundledVariables
+  };
+  if (catalog.catalogPath.length > 0) {
+    initializationOptions.catalogPath = catalog.catalogPath;
+  }
+  if (catalog.overridePath.length > 0) {
+    initializationOptions.catalogOverridePath = catalog.overridePath;
+  }
 
   const clientOptions: LanguageClientOptions = {
     documentSelector: [{ scheme: "file", language: "tinyexpressionP4" }],

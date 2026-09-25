@@ -104,6 +104,36 @@ pub unsafe extern "C" fn te_formula_info(
     })
 }
 
+/// `tinyexpression eval-context` (issue #201): `source` is a JSON request carrying the formula,
+/// the calculator settings, the `CalculationContext` variables and stubbed externals.
+///
+/// # Safety
+/// As [`te_parse`].
+#[no_mangle]
+pub unsafe extern "C" fn te_eval_context(
+    source: *const u8,
+    len: usize,
+    out: *mut *mut c_char,
+) -> i32 {
+    call(source, len, out, api::eval_context_json)
+}
+
+/// `tinyexpression run-context` (issue #201): `run` on the request's FormulaInfo `document`
+/// with the request's context and externals.
+///
+/// # Safety
+/// As [`te_parse`].
+#[no_mangle]
+pub unsafe extern "C" fn te_formula_info_context(
+    source: *const u8,
+    len: usize,
+    out: *mut *mut c_char,
+) -> i32 {
+    call(source, len, out, |text| {
+        api::formula_info_context_json(text, &LoaderOptions::java_tests())
+    })
+}
+
 /// `{"name":"tinyexpression","version":"2.0.0","ubnfc":"<commit>","abi":1}`, released with
 /// [`te_free`].
 #[no_mangle]
@@ -171,6 +201,18 @@ mod tests {
         assert_eq!(code, 3);
         assert!(json.starts_with("{\"ok\":false,\"stage\":\"parse\""));
         assert_eq!(api::eval_json("(1+2)*3").json, eval("(1+2)*3").1);
+    }
+
+    #[test]
+    fn eval_context_reads_variables_and_externals() {
+        let request = r#"{"formula":"if($member){external returning as number sample.Fee#calculate($price)}else{$price}","variables":[{"name":"member","type":"boolean","value":true},{"name":"price","type":"float","value":"100"}],"externals":[{"class":"sample.Fee","method":"calculate","result":{"type":"float","value":"12.5"}}]}"#;
+        let mut out = ptr::null_mut();
+        let code = unsafe { te_eval_context(request.as_ptr(), request.len(), &mut out) };
+        let json = unsafe { CStr::from_ptr(out) }.to_str().unwrap().to_owned();
+        unsafe { te_free(out) };
+        assert_eq!(code, 0, "{json}");
+        assert_eq!(json, api::eval_context_json(request).json);
+        assert!(json.contains("\"text\":\"12.5\""), "{json}");
     }
 
     #[test]

@@ -57,6 +57,40 @@ jobs:
           path: rust/target/tinyexpression-linux-x86_64.tar.gz
           if-no-files-found: error
 
+  # issue #201: the language catalog, and the playground's evaluation path (tinyexpression.wasm +
+  # the JS binding + the CalculationContext mapping) against the Java differential golden.
+  playground:
+    name: Catalog and playground (wasm parity smoke, build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Rust 1.85 with wasm32
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --target wasm32-unknown-unknown
+          rustup default 1.85.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: playground/package-lock.json
+      - name: Catalog derived files are up to date
+        run: node catalog/scripts/generate-derived.mjs --check
+      - name: Install playground dependencies
+        run: npm ci
+        working-directory: playground
+      - name: Build tinyexpression.wasm for the playground
+        run: npm run build:wasm
+        working-directory: playground
+      - name: Parity smoke (Java differential golden through the playground evaluation path)
+        run: npm run parity
+        working-directory: playground
+      - name: Playground checks (catalog schema, samples, TE diagnostics)
+        run: npm run check
+        working-directory: playground
+      - name: Build the static site
+        run: npm run build
+        working-directory: playground
+
   ubnfc-parser:
     name: ubnfc default engine (pin, converter, parity, both engines)
     runs-on: ubuntu-latest

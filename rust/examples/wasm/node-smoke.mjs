@@ -32,6 +32,18 @@ const run = te.run('calculatorName:base\nformula:\n1 + 2\n---END_OF_PART---\n');
 assert.equal(run.code, 0);
 assert.equal(run.result.formulas[0].value.value, '3');
 
+const contextual = te.evalContext({
+  formula: 'if($member){$price * 2}else{$price}',
+  variables: [{ name: 'member', type: 'boolean', value: true }, { name: 'price', type: 'float', value: '1.5' }],
+});
+assert.equal(contextual.code, 0);
+assert.equal(contextual.result.text, '3.0');
+const contextRun = te.runContext({
+  document: 'calculatorName:base\nformula:\n$x + 1\n---END_OF_PART---\n',
+  variables: [{ name: 'x', type: 'float', value: 2 }],
+});
+assert.equal(contextRun.result.formulas[0].value.value, '3');
+
 // Deep nesting has no stack escalation thread on wasm32: it fails with a diagnostic, not a trap.
 const deep = te.eval('('.repeat(3000) + '1' + ')'.repeat(3000));
 assert.ok(deep.code === 0 || deep.code === 3, `deep nesting: exit ${deep.code}`);

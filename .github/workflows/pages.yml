@@ -1,0 +1,58 @@
+name: Playground (GitHub Pages)
+
+# issue #201: builds playground/ (CodeMirror + tinyexpression.wasm + the language catalog) and
+# deploys it to https://opaopa6969.github.io/tinyexpression/ on every master push that touches it.
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - 'playground/**'
+      - 'catalog/**'
+      - 'rust/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Rust 1.85 with wasm32
+        run: |
+          rustup toolchain install 1.85.0 --profile minimal --target wasm32-unknown-unknown
+          rustup default 1.85.0
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: playground/package-lock.json
+      - name: Build
+        working-directory: playground
+        run: |
+          npm ci
+          npm run build:wasm
+          npm run check
+          npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: playground/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

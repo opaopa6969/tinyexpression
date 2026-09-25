@@ -47,6 +47,15 @@ int32_t te_eval(const uint8_t *source, size_t len, char **out);
 int32_t te_formula_info(const uint8_t *source, size_t len, int32_t run, uint64_t seed,
                         char **out);
 
+/* issue #201: source is a JSON request {"formula":..., "resultType", "numberType", "angle",
+ * "seed", "variables":[{"name","type","value","map"?}], "externals":[{"class","method",
+ * "arity"?,"registered"?,"result":{"type","value"}}]} (see rust/README.md). Evaluates with that
+ * CalculationContext: {"ok":true,"value":{...},"text":"<String.valueOf>"} or
+ * {"ok":false,"stage":"create"|"apply"|"request","error":{"kind":<Java exception>,...}}. */
+int32_t te_eval_context(const uint8_t *source, size_t len, char **out);
+/* The same request with a FormulaInfo "document" instead of "formula": run on that context. */
+int32_t te_formula_info_context(const uint8_t *source, size_t len, char **out);
+
 /* {"name":"tinyexpression","version":"2.0.0","ubnfc":"<commit>","abi":1}; free with te_free */
 char *te_version(void);
 /* Releases a JSON document returned above. NULL is ignored. */

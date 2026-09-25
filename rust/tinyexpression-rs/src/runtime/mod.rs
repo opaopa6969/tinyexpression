@@ -115,12 +115,20 @@ pub struct Options {
     pub max_call_depth: usize,
 }
 
+/// Default nested `call` depth. On wasm32 the evaluator runs on the host engine's call stack
+/// (about 1 MB in V8), which 256 levels of a recursive method exhaust before the depth check,
+/// trapping the whole instance; 48 keeps `StackOverflowError` a normal evaluation error there.
+#[cfg(not(target_arch = "wasm32"))]
+const DEFAULT_MAX_CALL_DEPTH: usize = 256;
+#[cfg(target_arch = "wasm32")]
+const DEFAULT_MAX_CALL_DEPTH: usize = 48;
+
 impl Default for Options {
     fn default() -> Self {
         Self {
             result_type: ResultType::Float,
             number_type: NumberType::Float,
-            max_call_depth: 256,
+            max_call_depth: DEFAULT_MAX_CALL_DEPTH,
         }
     }
 }

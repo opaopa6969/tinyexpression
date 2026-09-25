@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/opaopa6969/tinyexpression/catalog/tinyexpression-catalog.schema.json",
+  "title": "tinyexpression language catalog",
+  "description": "The single source of truth for user-facing language knowledge (issue #201): variables, functions/methods, keywords, externals, error codes and settings. Read by the LSP server (VSIX) and the playground.",
+  "type": "object",
+  "required": ["schemaVersion", "variableGroups", "variables", "functions", "keywords", "values", "externals", "errorCodes", "defaultErrorCode", "diagnosticRules", "runtimeErrors", "settings"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "const": 1 },
+    "description": { "$ref": "#/$defs/text" },
+    "variableGroups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+          "context": { "type": "string", "description": "Product / API context of the group (FA, NIM, ...)." },
+          "description": { "$ref": "#/$defs/text" },
+          "tecatalog": { "type": "string", "description": "Repository path of the derived legacy .tecatalog file (generate-derived.mjs)." },
+          "upstream": { "type": "string", "description": "Where the list originally came from." }
+        }
+      }
+    },
+    "variables": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "match", "description", "group"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "description": "Variable name without '$' (the prefix for prefixWithSuffix)." },
+          "match": { "enum": ["exact", "prefixWithSuffix"] },
+          "separator": { "type": "string", "description": "prefixWithSuffix: text between prefix and suffix." },
+          "minSuffixLength": { "type": "integer", "minimum": 0 },
+          "type": { "enum": ["float", "double", "int", "long", "boolean", "string", "object"] },
+          "description": { "$ref": "#/$defs/text" },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "context": { "type": "string" },
+          "group": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "if": { "properties": { "match": { "const": "prefixWithSuffix" } } },
+        "then": { "required": ["separator", "minSuffixLength"] }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "kind", "signature", "returns", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string", "description": "Function name, or '.name' for a dot-form method." },
+          "kind": { "enum": ["function", "method"] },
+          "signature": { "type": "string" },
+          "returns": { "enum": ["number", "string", "boolean", "object"] },
+          "snippet": { "type": "string", "description": "LSP snippet inserted on completion." },
+          "description": { "$ref": "#/$defs/text" },
+          "examples": { "type": "array", "items": { "type": "string" } },
+          "reads": { "type": "array", "items": { "type": "string" }, "description": "Context variables the function reads." },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "snippet": { "type": "string" },
+          "description": { "$ref": "#/$defs/text" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string" },
+          "value": {},
+          "description": { "$ref": "#/$defs/text" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "externals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["class", "method", "params", "returns", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "class": { "type": "string" },
+          "method": { "type": "string" },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "type"],
+              "additionalProperties": false,
+              "properties": { "name": { "type": "string" }, "type": { "type": "string" } }
+            }
+          },
+          "returns": { "type": "string" },
+          "description": { "$ref": "#/$defs/text" },
+          "example": { "type": "string" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "errorCodes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["code", "severity", "message", "fix"],
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string", "pattern": "^(TE|FI)[0-9]{3}$" },
+          "severity": { "enum": ["error", "warning", "information", "hint"] },
+          "message": { "$ref": "#/$defs/text" },
+          "fix": { "$ref": "#/$defs/text", "description": "Fix hint shown as '修正例'." },
+          "description": { "$ref": "#/$defs/text" },
+          "templates": {
+            "type": "object",
+            "description": "Full diagnostic texts by variant, with {placeholders} filled by the consumer.",
+            "additionalProperties": { "$ref": "#/$defs/text" }
+          },
+          "variants": {
+            "type": "array",
+            "description": "Older texts of the same code kept so that no migrated wording is lost.",
+            "items": {
+              "type": "object",
+              "required": ["source", "message"],
+              "additionalProperties": false,
+              "properties": {
+                "source": { "type": "string" },
+                "message": { "$ref": "#/$defs/text" },
+                "fix": { "$ref": "#/$defs/text" }
+              }
+            }
+          },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "defaultErrorCode": { "type": "string" },
+    "diagnosticRules": {
+      "type": "array",
+      "description": "Ordered rules mapping a parser failure to a TE code. The LSP matches `expected` as \"'tok'\" inside its first display hint; the playground matches it against the parser's expected set. `consumers` limits a rule to 'lsp' or 'playground'.",
+      "items": {
+        "type": "object",
+        "required": ["code"],
+        "additionalProperties": false,
+        "properties": {
+          "code": { "type": "string" },
+          "expected": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] },
+          "hintContains": { "type": "array", "items": { "type": "string" } },
+          "snippetStartsWith": { "type": "string" },
+          "leadingEndsWith": { "type": "string" },
+          "snippetMatches": { "type": "string" },
+          "onlyIfNoExpressionStart": { "type": "boolean" },
+          "consumers": { "type": "array", "items": { "enum": ["lsp", "playground"] } }
+        }
+      }
+    },
+    "runtimeErrors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["kind", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "kind": { "type": "string", "description": "Java exception simple name." },
+          "description": { "$ref": "#/$defs/text" },
+          "fix": { "$ref": "#/$defs/text" },
+          "source": { "type": "string" }
+        }
+      }
+    },
+    "settings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "scope", "type", "description"],
+        "additionalProperties": false,
+        "properties": {
+          "name": { "type": "string" },
+          "scope": { "enum": ["formulaInfo", "context", "calculator"] },
+          "type": { "enum": ["string", "number", "boolean", "enum"] },
+          "values": { "type": "array", "items": { "type": "string" } },
+          "default": { "type": "string" },
+          "description": { "$ref": "#/$defs/text" },
+          "note": { "$ref": "#/$defs/text" },
+          "source": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "text": {
+      "description": "Localized text: Japanese first, English where available.",
+      "type": "object",
+      "required": [],
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": { "ja": { "type": "string" }, "en": { "type": "string" } }
+    }
+  }
+}

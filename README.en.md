@@ -10,6 +10,7 @@ A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 - Multi-formula execution with dependency ordering
 - 6 execution backends (JavaCode / AST / P4 series)
 - LSP / DAP support (VS Code extension)
+- **Playground**: <https://opaopa6969.github.io/tinyexpression/> — write formulas, set a CalculationContext and evaluate them in the browser (wasm, no JVM). Completion, hover and error texts come from the language catalog [`catalog/tinyexpression-catalog.json`](catalog/README.md), which the VS Code extension's LSP server reads too.
 
 **Docs**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md) | [Rust parser frontend](rust/tinyexpression-rs/README.md)
 

@@ -54,6 +54,19 @@
     </dependencies>
 
     <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+            </resource>
+            <!-- issue #201: the language catalog (single source of truth at the repo root) is
+                 bundled into the server jar as /tinyexpression-catalog.json. -->
+            <resource>
+                <directory>${project.basedir}/../../catalog</directory>
+                <includes>
+                    <include>tinyexpression-catalog.json</include>
+                </includes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

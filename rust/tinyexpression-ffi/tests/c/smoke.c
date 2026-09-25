@@ -46,6 +46,19 @@ int main(void) {
   expect(code == TE_OK && strstr(json, "\"formulas\":[{\"info\""), "formula info", json);
   te_free(json);
 
+  code = call(te_eval_context,
+              "{\"formula\":\"$price * 2\",\"variables\":[{\"name\":\"price\",\"type\":\"float\",\"value\":\"1.5\"}]}",
+              &json);
+  printf("te_eval_context = %d %s\n", code, json);
+  expect(code == TE_OK && strstr(json, "\"text\":\"3.0\""), "eval context", json);
+  te_free(json);
+
+  code = call(te_formula_info_context,
+              "{\"document\":\"formula:\\n$x + 1\\n---END_OF_PART---\\n\",\"variables\":[{\"name\":\"x\",\"value\":2}]}",
+              &json);
+  expect(code == TE_OK && strstr(json, "\"value\":\"3\""), "formula info context", json);
+  te_free(json);
+
   const uint8_t invalid[] = {0xff, 0xfe};
   code = te_eval(invalid, sizeof invalid, &json);
   expect(code == TE_ERR_IO, "invalid UTF-8", json);

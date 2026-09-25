@@ -151,76 +151,41 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       "==", "!=", "<=", ">=", "<", ">",
       "->", "=");
 
-  // ── Completion keyword list (meaningful P4 keywords only) ──
+  // ── Completion vocabulary: read from the bundled language catalog (issue #201) ──
+  //
+  // catalog/tinyexpression-catalog.json is the single source of keywords, closed values,
+  // function snippets and block snippets. The static views below are the bundled catalog's;
+  // completion itself reads the instance catalog so an override catalog can add documentation.
 
-  private static final List<String> COMPLETION_KEYWORDS = List.of(
-      "if", "else", "match", "default",
-      "var", "variable", "as",
-      "number", "string", "boolean", "object", "float",
-      "set", "not", "exists", "description", "call",
-      "import", "external", "returning", "internal",
-      "true", "false");
+  /** Keywords offered as completions (catalog "keywords", in catalog order). */
+  private static final List<String> COMPLETION_KEYWORDS =
+      List.copyOf(CatalogProvider.bundled().keywords().keySet());
 
-  /** Closed grammar values that are useful as expression completions. */
-  private static final List<String> COMPLETION_VALUES = List.of(
-      "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY",
-      "FRIDAY", "SATURDAY", "SUNDAY");
+  /** Closed grammar values that are useful as expression completions (catalog "values"). */
+  private static final List<String> COMPLETION_VALUES = CatalogProvider.bundled().values().stream()
+      .map(CatalogProvider.NamedValue::name).toList();
 
   /**
-   * Snippet completions for callable functions. Accepting one of these inserts
-   * the function name with balanced parens and a tab-stop on the first argument
-   * (LSP InsertTextFormat.Snippet). Restores the paren-completion ergonomics
-   * that the old calculator-lsp had.
+   * Snippet completions for callable functions (catalog "functions" of kind function).
+   * Accepting one of these inserts the function name with balanced parens and a tab-stop on the
+   * first argument (LSP InsertTextFormat.Snippet).
    */
   private static final Map<String, String> FUNCTION_SNIPPETS = new LinkedHashMap<>();
 
-  static {
-    // Math / cast — single argument
-    for (String f : List.of("sin", "cos", "tan", "sqrt", "log", "exp", "abs",
-                             "floor", "ceil", "round", "isPresent")) {
-      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
-    }
-    // String — single argument (function form)
-    for (String f : List.of("len", "length", "toUpperCase", "toLowerCase", "trim")) {
-      FUNCTION_SNIPPETS.put(f, f + "($1)$0");
-    }
-    // Math / string — two arguments
-    for (String f : List.of("pow", "startsWith", "endsWith", "contains")) {
-      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
-    }
-    // Variadic — surface a 2-arg starter
-    for (String f : List.of("min", "max")) {
-      FUNCTION_SNIPPETS.put(f, f + "($1, $2)$0");
-    }
-    FUNCTION_SNIPPETS.put("toNum", "toNum($1, $2)$0");
-    FUNCTION_SNIPPETS.put("random", "random()$0");
-    FUNCTION_SNIPPETS.put("inTimeRange", "inTimeRange($1, $2)$0");
-    FUNCTION_SNIPPETS.put("inDayTimeRange",
-        "inDayTimeRange($1, $2, $3, $4)$0");
-  }
-
   /**
-   * Block / declaration keyword snippets. Accepting one of these inserts the
-   * canonical structure of the construct (semicolons, braces, $variable
-   * placeholder etc) so the user only fills in the holes. Surfaced alongside
-   * the plain keyword from COMPLETION_KEYWORDS so users can still pick the
-   * bare form. issue #11 §3 「セミコロン補完 / 括弧補完」を declaration 経由で
-   * 復元する。
+   * Block / declaration keyword snippets (catalog "keywords" that carry a snippet). Accepting
+   * one of these inserts the canonical structure of the construct. Surfaced alongside the plain
+   * keyword from COMPLETION_KEYWORDS so users can still pick the bare form.
    */
   private static final Map<String, String> BLOCK_SNIPPETS = new LinkedHashMap<>();
 
   static {
-    BLOCK_SNIPPETS.put("var",
-        "var \\$${1:name} as ${2:number} set ${3:0} description='${4:variable}';$0");
-    BLOCK_SNIPPETS.put("import",
-        "import ${1:Class}#${2:method} as ${3:alias};$0");
-    BLOCK_SNIPPETS.put("if",
-        "if (${1:cond}) {\n  ${2:0}\n} else {\n  ${3:0}\n}$0");
-    BLOCK_SNIPPETS.put("match",
-        "match {\n  ${1:cond} -> ${2:value},\n  default -> ${3:0}\n}$0");
-    BLOCK_SNIPPETS.put("call", "call ${1:method}($2)$0");
-    BLOCK_SNIPPETS.put("external",
-        "external returning as ${1:number} ${2:name}($3)$0");
+    for (CatalogProvider.FunctionDoc f : CatalogProvider.bundled().functions().values()) {
+      if ("function".equals(f.kind()) && f.snippet() != null) FUNCTION_SNIPPETS.put(f.name(), f.snippet());
+    }
+    for (CatalogProvider.Keyword k : CatalogProvider.bundled().keywords().values()) {
+      if (k.snippet() != null) BLOCK_SNIPPETS.put(k.name(), k.snippet());
+    }
   }
 
   /**
@@ -241,78 +206,30 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       Pattern.compile("\\$([a-zA-Z_][a-zA-Z0-9_]*)");
 
   // =========================================================================
-  // Error Catalog (TE0xx codes)
+  // Error Catalog (TE0xx codes) — texts and code rules come from the language catalog
   // =========================================================================
-
-  private record ErrorCatalogEntry(String code, String message, String fix) {
-    String fullMessage() { return "[" + code + "] " + message + " 修正例: " + fix; }
-  }
-
-  private static final Map<String, ErrorCatalogEntry> ERROR_CATALOG = new LinkedHashMap<>();
-
-  static {
-    // Ported from tiny-expression-validator docs/error-catalog.md
-    ERROR_CATALOG.put("TE001", new ErrorCatalogEntry("TE001", "else ブロックには数値式が必要です。", "else { 0 } / else { $someNumber } に修正"));
-    ERROR_CATALOG.put("TE002", new ErrorCatalogEntry("TE002", "識別子を式として解釈できません。", "変数は $abc、文字列は 'abc'"));
-    ERROR_CATALOG.put("TE003", new ErrorCatalogEntry("TE003", "文字列リテラルのクォートが不正です。", "'text' 形式に修正"));
-    ERROR_CATALOG.put("TE004", new ErrorCatalogEntry("TE004", "丸カッコが閉じられていません。", "対応する ) を追加"));
-    ERROR_CATALOG.put("TE005", new ErrorCatalogEntry("TE005", "波カッコが閉じられていません。", "対応する } を追加"));
-    ERROR_CATALOG.put("TE006", new ErrorCatalogEntry("TE006", "文末のセミコロンが必要です。", "文の末尾に ; を追加"));
-    ERROR_CATALOG.put("TE007", new ErrorCatalogEntry("TE007", "description の書式が不正です。", "description = '...' 形式に修正"));
-    ERROR_CATALOG.put("TE008", new ErrorCatalogEntry("TE008", "不正な文字が含まれています。", "半角文字に修正"));
-    ERROR_CATALOG.put("TE009", new ErrorCatalogEntry("TE009", "ここに不要なトークンがあります。", "余分な語句を削除"));
-    ERROR_CATALOG.put("TE010", new ErrorCatalogEntry("TE010", "構文の並びが想定と一致しません。", "直前の式と区切り記号を確認"));
-    ERROR_CATALOG.put("TE011", new ErrorCatalogEntry("TE011", "if 条件には booleanExpression が必要です。", "比較式や boolean 値を設定"));
-    ERROR_CATALOG.put("TE012", new ErrorCatalogEntry("TE012", "if の then ブロックには数値式が必要です。", "if (...) { 1 } 形式に修正"));
-    ERROR_CATALOG.put("TE013", new ErrorCatalogEntry("TE013", "match 構文が不正です。", "match { cond -> expr, default -> expr } を確認"));
-    ERROR_CATALOG.put("TE014", new ErrorCatalogEntry("TE014", "default ケースの記述が不正です。", "default -> expr を追加/修正"));
-    ERROR_CATALOG.put("TE015", new ErrorCatalogEntry("TE015", "関数引数の数が不正です。", "関数定義に合わせて引数数を修正"));
-    ERROR_CATALOG.put("TE016", new ErrorCatalogEntry("TE016", "import 宣言の形式が不正です。", "import ... as ...; を確認"));
-    ERROR_CATALOG.put("TE017", new ErrorCatalogEntry("TE017", "variable 宣言の形式が不正です。", "variable $name ... ; を確認"));
-    ERROR_CATALOG.put("TE018", new ErrorCatalogEntry("TE018", "型ヒントの位置が不正です。", "as number/string/boolean の位置を修正"));
-    ERROR_CATALOG.put("TE019", new ErrorCatalogEntry("TE019", "get/orElse 構文が不正です。", "get(...).orElse(...) 形式を確認"));
-    ERROR_CATALOG.put("TE020", new ErrorCatalogEntry("TE020", "構文エラーです。", "エラー行の直前トークンと括弧を確認"));
-    ERROR_CATALOG.put("TE021", new ErrorCatalogEntry("TE021", "利用可能なメソッド名ではありません。", "候補メソッド名へ修正"));
-    ERROR_CATALOG.put("TE022", new ErrorCatalogEntry("TE022", "利用可能な変数名ではありません。", "候補変数名へ修正"));
-    ERROR_CATALOG.put("TE023", new ErrorCatalogEntry("TE023", "演算子/記法不正です。", "&/| の追加、&& -> &、$ の除去など"));
-    ERROR_CATALOG.put("TE024", new ErrorCatalogEntry("TE024", "partialKey 変数のsuffix不足です。", "$prefix_<suffix> 形式に修正"));
-    ERROR_CATALOG.put("TE025", new ErrorCatalogEntry("TE025", "match case value の型が結果型と一致しないか、直接 method invocation が使われています。", "inline type hint を結果型へ合わせるか、method invocation を事前に変数化する"));
-  }
 
   private String resolveCatalogMessage(String hint, String snippet, String leading) {
     String code = resolveCode(hint, snippet, leading);
-    ErrorCatalogEntry entry = ERROR_CATALOG.getOrDefault(code, ERROR_CATALOG.get("TE020"));
-    return entry.fullMessage() + " (詳細: " + hint + ")";
+    return catalog().errorCode(code).fullMessage() + " (詳細: " + hint + ")";
   }
 
   private String resolveCode(String hint, String snippet, String leading) {
-    if (hint.contains("';'")) return "TE006";
-    if (hint.contains("')'")) return "TE004";
-    if (hint.contains("'}'")) return "TE005";
-    if (hint.contains("'description'")) return "TE007";
-    if (hint.contains("'if'")) return "TE011";
-    if (hint.contains("'match'")) return "TE013";
-    if (hint.contains("'default'")) return "TE014";
-    if (hint.contains("'import'")) return "TE016";
-    if (hint.contains("'variable'") || hint.contains("'var'")) return "TE017";
-    if (hint.contains("'as'")) return "TE018";
-    if (hint.contains("'orElse'")) return "TE019";
-    if (hint.contains("&&") || hint.contains("||")) return "TE023";
+    return catalog().resolveCode(hint, snippet, leading);
+  }
 
-    if (snippet.startsWith("if")) return "TE011";
-    if (leading.stripTrailing().endsWith("if")) return "TE011";
-    if (snippet.matches("[A-Za-z_][A-Za-z0-9_]*")) {
-        // Looks like a bare identifier used as expression
-        return "TE002";
-    }
-
-    return "TE020";
+  /** Fix hint of a TE/FI code from the catalog, or null. */
+  private String catalogFix(String code) {
+    CatalogProvider.ErrorCode entry = catalog().errorCodes().get(code);
+    return entry == null ? null : entry.fix().text();
   }
 
   // ── State ──
 
   private final DocumentFilter documentFilter;
   private LanguageClient extClient;
+  /** The language catalog: bundled, plus the override catalog configured at initialize. */
+  private volatile CatalogProvider catalogProvider = CatalogProvider.bundled();
   private final Map<String, ExtDocumentState> extDocuments = new HashMap<>();
   /** Per-document incremental parse cache keyed by document URI. */
   private final Map<String, IncrementalParseCache> incrementalCaches = new HashMap<>();
@@ -341,6 +258,95 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
    */
   public TinyExpressionP4LanguageServerExt(DocumentFilter documentFilter) {
     this.documentFilter = documentFilter;
+  }
+
+  // =========================================================================
+  // Language catalog (issue #201)
+  // =========================================================================
+
+  /** The catalog hover, completion documentation and diagnostic texts are read from. */
+  public CatalogProvider catalog() {
+    return catalogProvider;
+  }
+
+  /**
+   * Replaces the language catalog (tests, embedding hosts). Does not touch the variable
+   * resolver; call {@link #setCatalogResolver} with {@code provider.variableResolver()} to use
+   * its variables too.
+   */
+  public void setCatalogProvider(CatalogProvider provider) {
+    this.catalogProvider = provider == null ? CatalogProvider.bundled() : provider;
+  }
+
+  /**
+   * Initialization options (all optional):
+   * <ul>
+   *   <li>{@code catalogOverridePath}: a (partial) catalog JSON merged over the bundled one
+   *       (also {@code -Dtinyexpressionp4.catalog.override});</li>
+   *   <li>{@code catalogPath}: legacy {@code .tecatalog} files/directories for variables, as
+   *       before; a {@code .json} path is read as an override catalog instead;</li>
+   *   <li>{@code useBundledVariables}: when no {@code catalogPath} is given, use the catalog's
+   *       variables (hover, completion and TE022) — what the VSIX sends by default.</li>
+   * </ul>
+   */
+  @Override
+  protected void initCatalogResolver(InitializeParams params) {
+    Map<?, ?> options = params != null && params.getInitializationOptions() instanceof Map<?, ?> m
+        ? m : Map.of();
+    String overridePath = stringOption(options, "catalogOverridePath");
+    if (overridePath == null) overridePath = System.getProperty("tinyexpressionp4.catalog.override");
+    if (overridePath != null && !overridePath.isBlank()) {
+      applyOverride(overridePath);
+    }
+    String catalogPath = stringOption(options, "catalogPath");
+    if (catalogPath != null && catalogPath.strip().toLowerCase(java.util.Locale.ROOT).endsWith(".json")) {
+      applyOverride(catalogPath.strip());
+      if (catalogResolver == null) setCatalogResolver(catalogProvider.variableResolver());
+      return;
+    }
+    super.initCatalogResolver(params);
+    if (catalogResolver == null && Boolean.TRUE.equals(options.get("useBundledVariables"))) {
+      setCatalogResolver(catalogProvider.variableResolver());
+    }
+  }
+
+  private void applyOverride(String path) {
+    try {
+      catalogProvider = catalogProvider.withOverride(java.nio.file.Path.of(path));
+    } catch (Exception e) {
+      System.err.println("[tinyexpression-p4-lsp] catalog override " + path + " ignored: " + e);
+    }
+  }
+
+  private static String stringOption(Map<?, ?> options, String key) {
+    Object value = options.get(key);
+    return value instanceof String s && !s.isBlank() ? s : null;
+  }
+
+  /** Markdown hover for a catalog function / method name ({@code sqrt}, {@code .trim}), or null. */
+  String functionHover(String name) {
+    CatalogProvider.FunctionDoc f = catalogProvider.function(name);
+    if (f == null) f = catalogProvider.function("." + name);
+    if (f == null) return null;
+    StringBuilder out = new StringBuilder("```\n").append(f.signature()).append("\n```\n\n")
+        .append(f.description().text());
+    if (f.description().en() != null && f.description().ja() != null) {
+      out.append("\n\n*").append(f.description().en()).append("*");
+    }
+    if (!f.examples().isEmpty()) {
+      out.append("\n\n**例**: `").append(String.join("`, `", f.examples())).append("`");
+    }
+    return out.toString();
+  }
+
+  /** Markdown hover for a keyword or closed value from the catalog, or null. */
+  String keywordHover(String name) {
+    CatalogProvider.Keyword k = catalogProvider.keywords().get(name);
+    if (k != null) return "**" + name + "** (keyword)\n\n" + k.description().text();
+    for (CatalogProvider.NamedValue v : catalogProvider.values()) {
+      if (v.name().equals(name)) return "**" + name + "** (" + v.type() + ")\n\n" + v.description().text();
+    }
+    return null;
   }
 
   // =========================================================================
@@ -708,11 +714,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSeverity(DiagnosticSeverity.Warning);
       d.setSource("tinyexpression-p4-catalog");
       d.setCode(Either.forLeft("TE022"));
-      d.setMessage(ERROR_CATALOG.get("TE022").fullMessage()
-          + " (catalog 未登録の変数: " + dollarName + ")");
+      CatalogProvider.ErrorCode te022 = catalog().errorCode("TE022");
+      String message = te022.template("UNKNOWN_VARIABLE",
+          Map.of("fullMessage", te022.fullMessage(), "symbol", dollarName));
+      d.setMessage(message != null ? message
+          : te022.fullMessage() + " (catalog 未登録の変数: " + dollarName + ")");
       d.setData(diagnosticData(
           "TE022", "catalog", start,
-          Map.of("symbol", dollarName, "fix", ERROR_CATALOG.get("TE022").fix())));
+          Map.of("symbol", dollarName, "fix", te022.fix().text())));
       out.add(d);
     }
     return out;
@@ -763,10 +772,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSource("tinyexpression-p4-semantic");
       d.setCode(Either.forLeft(semanticIssue.code()));
       d.setMessage(semanticIssue.message());
-      ErrorCatalogEntry entry = ERROR_CATALOG.get(semanticIssue.code());
+      String semanticFix = catalogFix(semanticIssue.code());
       d.setData(diagnosticData(
           semanticIssue.code(), "semantic", d.getRange().getStart(),
-          entry == null ? Map.of() : Map.of("fix", entry.fix())));
+          semanticFix == null ? Map.of() : Map.of("fix", semanticFix)));
       diagnostics.add(d);
     }
     if (failures.hasFailure()) {
@@ -793,13 +802,13 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
       String message = resolveCatalogMessage(hint, snippet, leading);
       d.setMessage(message);
-      ErrorCatalogEntry entry = ERROR_CATALOG.get(code);
+      String fix = catalogFix(code);
       Map<String, Object> details = new LinkedHashMap<>();
       details.put("offset", offset);
       details.put("consumedLength", offset);
       details.put("totalLength", content.length());
       details.put("expectedHints", failures.expectedHints());
-      if (entry != null) details.put("fix", entry.fix());
+      if (fix != null) details.put("fix", fix);
       d.setData(diagnosticData(code, "syntax", start, details));
       diagnostics.add(d);
     }
@@ -829,16 +838,11 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   }
 
   private SemanticIssue toStrictMatchSemanticIssue(P4StrictMatchTypingValidator.Violation violation) {
-    String message = switch (violation.kind()) {
-      case DIRECT_VARIABLE_CASE_VALUE ->
-          "[TE025] match の case value の inline type hint が match の結果型と一致しません。"
-              + " 修正例: number match では $value as number のように結果型へ合わせてください"
-              + " (詳細: " + violation.snippet() + ")";
-      case DIRECT_METHOD_INVOCATION ->
-          "[TE025] match の case value で直接 method invocation は使えません。"
-              + " 修正例: 事前に変数化するか、型の確定する式へ分解してください"
-              + " (詳細: " + violation.snippet() + ")";
-    };
+    String message = catalog().errorCode("TE025").template(
+        violation.kind().name(), Map.of("snippet", String.valueOf(violation.snippet())));
+    if (message == null) {
+      message = catalog().errorCode("TE025").fullMessage() + " (詳細: " + violation.snippet() + ")";
+    }
     return new SemanticIssue("TE025", message, violation.startOffset(), violation.length());
   }
 
@@ -1445,7 +1449,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
         d.setSeverity(DiagnosticSeverity.Warning);
         d.setSource("formulainfo");
         d.setCode(Either.forLeft("FI001"));
-        d.setMessage("dependsOn: '" + depName + "' does not match any calculatorName in this document.");
+        d.setMessage(catalog().errorCode("FI001").template("DEFAULT", Map.of("value", depName)));
         d.setData(diagnosticData(
             "FI001", "metadata", start,
             Map.of("field", "dependsOn", "value", depName,
@@ -1471,8 +1475,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       diagnostic.setSeverity(DiagnosticSeverity.Error);
       diagnostic.setSource("formulainfo");
       diagnostic.setCode(Either.forLeft("FI002"));
-      diagnostic.setMessage("[FI002] Unknown execution backend '" + value
-          + "'. Choose one of: " + String.join(", ", EXECUTION_BACKEND_VALUES));
+      diagnostic.setMessage(catalog().errorCode("FI002").template("DEFAULT", Map.of(
+          "value", value, "allowed", String.join(", ", EXECUTION_BACKEND_VALUES))));
       diagnostic.setData(diagnosticData(
           "FI002", "metadata", start,
           Map.of("field", field, "value", value, "allowedValues", EXECUTION_BACKEND_VALUES)));
@@ -1583,43 +1587,53 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       // 1. Keywords with prefix filtering
-      for (String kw : COMPLETION_KEYWORDS) {
+      CatalogProvider catalog = server.catalog();
+      for (CatalogProvider.Keyword keyword : catalog.keywords().values()) {
+        String kw = keyword.name();
         if (kw.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(kw);
           item.setKind(CompletionItemKind.Keyword);
+          setDocumentation(item, keyword.description().text());
           items.add(item);
         }
       }
 
       // 1a. Closed grammar values (currently DayOfWeek).
-      for (String value : COMPLETION_VALUES) {
+      for (CatalogProvider.NamedValue namedValue : catalog.values()) {
+        String value = namedValue.name();
         if (value.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(value);
           item.setKind(CompletionItemKind.EnumMember);
+          setDocumentation(item, namedValue.description().text());
           items.add(item);
         }
       }
 
       // 1b. Function snippets — paren-balanced completions (issue #11 §3)
-      for (Map.Entry<String, String> e : FUNCTION_SNIPPETS.entrySet()) {
-        String fn = e.getKey();
+      for (CatalogProvider.FunctionDoc f : catalog.functions().values()) {
+        String fn = f.name();
+        if (!"function".equals(f.kind()) || f.snippet() == null) continue;
         if (fn.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(fn);
           item.setKind(CompletionItemKind.Function);
-          item.setInsertText(e.getValue());
+          item.setInsertText(f.snippet());
           item.setInsertTextFormat(InsertTextFormat.Snippet);
+          item.setDetail(f.signature());
+          setDocumentation(item, server.functionHover(fn));
           items.add(item);
         }
       }
 
       // 1c. Block / declaration keyword snippets (issue #11 §3)
-      for (Map.Entry<String, String> e : BLOCK_SNIPPETS.entrySet()) {
-        String kw = e.getKey();
+      for (CatalogProvider.Keyword keyword : catalog.keywords().values()) {
+        String kw = keyword.name();
+        if (keyword.snippet() == null) continue;
         if (kw.startsWith(prefix)) {
           CompletionItem item = new CompletionItem(kw);
           item.setKind(CompletionItemKind.Snippet);
-          item.setInsertText(e.getValue());
+          item.setInsertText(keyword.snippet());
           item.setInsertTextFormat(InsertTextFormat.Snippet);
+          setDocumentation(item, keyword.description().text());
           items.add(item);
         }
       }
@@ -1685,6 +1699,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       }
 
       return CompletableFuture.completedFuture(Either.forLeft(items));
+    }
+
+    private static void setDocumentation(CompletionItem item, String markdown) {
+      if (markdown == null || markdown.isBlank()) return;
+      MarkupContent mc = new MarkupContent();
+      mc.setKind("markdown");
+      mc.setValue(markdown);
+      item.setDocumentation(mc);
     }
 
     /** Get inferred type hint for variable. */
@@ -1790,8 +1812,16 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
           var declOpt = state.declarations().stream()
               .filter(d -> d.name().equals(word))
               .findFirst();
+          String functionDoc = server.functionHover(word);
+          String keywordDoc = functionDoc == null ? server.keywordHover(word) : null;
           if (declOpt.isPresent()) {
             markdownText = buildSymbolHover(word, state);
+          } else if (functionDoc != null) {
+            markdownText = functionDoc + "\n\n*catalog function*";
+          } else if (keywordDoc != null) {
+            // Keyword documentation plus the document status the hover always showed.
+            markdownText = keywordDoc + "\n\n---\n\n"
+                + buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
           } else {
             markdownText = buildParseStatusHover(state.ast(), state.failures(), state.semanticIssues());
           }

@@ -7,8 +7,12 @@
 //! Rust or C struct, is the stable interface: fields may be added, existing fields keep their
 //! meaning (see `rust/README.md`, "ABI stability").
 
-use crate::formula_info::{self, LoadError, LoaderOptions};
-use crate::runtime::{Context, ContextClock, Host, NoExternals, XorShiftRandom};
+use crate::formula_info::{self, LoadError, LoadedFormula, LoaderOptions};
+use crate::request::{self, Request};
+use crate::runtime::{
+    calculator_result, java_string, Context, ContextClock, ErrorKind, EvalError, ExternalHost,
+    Host, NoExternals, Options, Program, XorShiftRandom,
+};
 use crate::{evaluate, json_string, parse, EvaluationError, FrontendError};
 
 /// Success.
@@ -147,31 +151,32 @@ pub fn eval_json(source: &str) -> Response {
 pub fn formula_info_json(source: &str, options: &LoaderOptions, run: bool, seed: u64) -> Response {
     let formulas = match formula_info::load(source, options) {
         Ok(formulas) => formulas,
-        Err(error) => {
-            return Response::failure(
-                if matches!(error, LoadError::Syntax(_)) {
-                    EXIT_PARSE
-                } else {
-                    EXIT_LOAD
-                },
-                format!(
-                    "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
-                    error.canonical_json()
-                ),
-            )
-        }
+        Err(error) => return load_failure(error),
     };
-    let mut failed = false;
-    let mut items = Vec::with_capacity(formulas.len());
     if run {
         let mut external = NoExternals;
+        formulas_json(&formulas, Some((&Context::new(), &mut external, seed)))
+    } else {
+        formulas_json(&formulas, None)
+    }
+}
+
+/// The `formulas` response of `load` (no evaluation) and `run` (every formula once on its own
+/// copy of `context`).
+fn formulas_json(
+    formulas: &[LoadedFormula],
+    evaluation: Option<(&Context, &mut dyn ExternalHost, u64)>,
+) -> Response {
+    let mut failed = false;
+    let mut items = Vec::with_capacity(formulas.len());
+    if let Some((context, external, seed)) = evaluation {
         let mut random = XorShiftRandom::new(seed);
         let mut host = Host {
-            external: &mut external,
+            external,
             clock: &ContextClock,
             random: &mut random,
         };
-        let results = formula_info::evaluate_all(&formulas, &Context::new(), &mut host);
+        let results = formula_info::evaluate_all(formulas, context, &mut host);
         for (formula, result) in formulas.iter().zip(results) {
             let result = match result {
                 Ok(value) => format!("\"value\":{}", value.canonical_json()),
@@ -186,7 +191,7 @@ pub fn formula_info_json(source: &str, options: &LoaderOptions, run: bool, seed:
             ));
         }
     } else {
-        for formula in &formulas {
+        for formula in formulas {
             items.push(format!("{{\"info\":{}}}", formula.info.canonical_json()));
         }
     }
@@ -197,5 +202,101 @@ pub fn formula_info_json(source: &str, options: &LoaderOptions, run: bool, seed:
             EXIT_SUCCESS
         },
         format!("{{\"ok\":{},\"formulas\":[{}]}}", !failed, items.join(",")),
+    )
+}
+
+fn read_request(text: &str, source_field: &str) -> Result<(Request, String), Response> {
+    let usage = |message: String| Response::error(EXIT_USAGE, "request", &message);
+    let json = request::parse_json(text).map_err(|e| usage(format!("invalid JSON: {e}")))?;
+    let source = json
+        .str_field(source_field)
+        .ok_or_else(|| usage(format!("the request needs a string field {source_field:?}")))?
+        .to_owned();
+    let request = request::read_request(&json).map_err(usage)?;
+    Ok((request, source))
+}
+
+/// `{"kind":<Java exception>,"message":...}` plus the parser diagnostic when there is one.
+fn eval_error_json(stage: &str, error: &EvalError) -> String {
+    let diagnostic = error
+        .diagnostic
+        .as_ref()
+        .map(|d| format!(",\"diagnostic\":{}", d.canonical_json()))
+        .unwrap_or_default();
+    format!(
+        "{{\"ok\":false,\"stage\":{},\"error\":{}{diagnostic}}}",
+        json_string(stage),
+        error.canonical_json()
+    )
+}
+
+/// `eval-context` (issue #201): evaluates `formula` as the Java `P4_AST_EVALUATOR` calculator
+/// does, with the request's result type, number type, `CalculationContext` variables and
+/// stubbed externals (the request format is documented in `request.rs` and the crate README).
+///
+/// Success is `{"ok":true,"value":...,"text":<String.valueOf(result)>}`. A formula the
+/// calculator cannot be built from fails with `"stage":"create"` (exit 3 for a parse error,
+/// 4 otherwise), an evaluation failure with `"stage":"apply"` (exit 5); both carry
+/// `"error":{"kind":<Java exception>,"message":...}` and, for parse errors, `"diagnostic"`.
+pub fn eval_context_json(request_text: &str) -> Response {
+    let (mut request, formula) = match read_request(request_text, "formula") {
+        Ok(read) => read,
+        Err(response) => return response,
+    };
+    let options = Options::new(request.result_type).with_number_type(request.number_type);
+    let program = match Program::new(&formula, options) {
+        Ok(program) => program,
+        Err(error) => {
+            let exit = if error.kind == ErrorKind::Parse && error.diagnostic.is_some() {
+                EXIT_PARSE
+            } else {
+                EXIT_MAPPING
+            };
+            return Response::failure(exit, eval_error_json("create", &error));
+        }
+    };
+    let mut random = XorShiftRandom::new(request.seed);
+    let mut host = Host {
+        external: &mut request.externals,
+        clock: &ContextClock,
+        random: &mut random,
+    };
+    match calculator_result(program.eval_tree(&mut request.context, &mut host)) {
+        Ok(value) => Response::ok(format!(
+            "{{\"ok\":true,\"value\":{},\"text\":{}}}",
+            value.canonical_json(),
+            json_string(&java_string(&value))
+        )),
+        Err(error) => Response::failure(EXIT_EVALUATION, eval_error_json("apply", &error)),
+    }
+}
+
+/// `run-context` (issue #201): `run` on the FormulaInfo `document` of the request, every formula
+/// evaluated once on its own copy of the request's context with its stubbed externals.
+pub fn formula_info_context_json(request_text: &str, options: &LoaderOptions) -> Response {
+    let (mut request, document) = match read_request(request_text, "document") {
+        Ok(read) => read,
+        Err(response) => return response,
+    };
+    match formula_info::load(&document, options) {
+        Ok(formulas) => formulas_json(
+            &formulas,
+            Some((&request.context, &mut request.externals, request.seed)),
+        ),
+        Err(error) => load_failure(error),
+    }
+}
+
+fn load_failure(error: LoadError) -> Response {
+    Response::failure(
+        if matches!(error, LoadError::Syntax(_)) {
+            EXIT_PARSE
+        } else {
+            EXIT_LOAD
+        },
+        format!(
+            "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
+            error.canonical_json()
+        ),
     )
 }

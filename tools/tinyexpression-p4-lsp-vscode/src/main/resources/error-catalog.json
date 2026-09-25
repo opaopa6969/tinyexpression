@@ -1,18 +1,102 @@
 {
   "TE001": {
-    "message": "構文エラーです。P4の構文（if (cond) { ... } など）を確認してください。",
-    "fix": "P4構文への書き換え"
+    "message": "else ブロックには数値式が必要です。",
+    "fix": "else { 0 } / else { $someNumber } に修正"
+  },
+  "TE002": {
+    "message": "識別子を式として解釈できません。",
+    "fix": "変数は $abc、文字列は 'abc'"
+  },
+  "TE003": {
+    "message": "文字列リテラルのクォートが不正です。",
+    "fix": "'text' 形式に修正"
   },
   "TE004": {
     "message": "丸カッコが閉じられていません。",
-    "fix": "対応する ')' を追加"
+    "fix": "対応する ) を追加"
   },
   "TE005": {
     "message": "波カッコが閉じられていません。",
-    "fix": "対応する '}' を追加"
+    "fix": "対応する } を追加"
   },
   "TE006": {
     "message": "文末のセミコロンが必要です。",
-    "fix": "文の末尾に ';' を追加"
+    "fix": "文の末尾に ; を追加"
+  },
+  "TE007": {
+    "message": "description の書式が不正です。",
+    "fix": "description = '...' 形式に修正"
+  },
+  "TE008": {
+    "message": "不正な文字が含まれています。",
+    "fix": "半角文字に修正"
+  },
+  "TE009": {
+    "message": "ここに不要なトークンがあります。",
+    "fix": "余分な語句を削除"
+  },
+  "TE010": {
+    "message": "構文の並びが想定と一致しません。",
+    "fix": "直前の式と区切り記号を確認"
+  },
+  "TE011": {
+    "message": "if 条件には booleanExpression が必要です。",
+    "fix": "比較式や boolean 値を設定"
+  },
+  "TE012": {
+    "message": "if の then ブロックには数値式が必要です。",
+    "fix": "if (...) { 1 } 形式に修正"
+  },
+  "TE013": {
+    "message": "match 構文が不正です。",
+    "fix": "match { cond -> expr, default -> expr } を確認"
+  },
+  "TE014": {
+    "message": "default ケースの記述が不正です。",
+    "fix": "default -> expr を追加/修正"
+  },
+  "TE015": {
+    "message": "関数引数の数が不正です。",
+    "fix": "関数定義に合わせて引数数を修正"
+  },
+  "TE016": {
+    "message": "import 宣言の形式が不正です。",
+    "fix": "import ... as ...; を確認"
+  },
+  "TE017": {
+    "message": "variable 宣言の形式が不正です。",
+    "fix": "variable $name ... ; を確認"
+  },
+  "TE018": {
+    "message": "型ヒントの位置が不正です。",
+    "fix": "as number/string/boolean の位置を修正"
+  },
+  "TE019": {
+    "message": "get/orElse 構文が不正です。",
+    "fix": "get(...).orElse(...) 形式を確認"
+  },
+  "TE020": {
+    "message": "構文エラーです。",
+    "fix": "エラー行の直前トークンと括弧を確認"
+  },
+  "TE021": {
+    "message": "利用可能なメソッド名ではありません。",
+    "fix": "候補メソッド名へ修正"
+  },
+  "TE022": {
+    "message": "利用可能な変数名ではありません。",
+    "fix": "候補変数名へ修正"
+  },
+  "TE023": {
+    "message": "演算子/記法不正です。",
+    "fix": "&/| の追加、&& -> &、$ の除去など"
+  },
+  "TE024": {
+    "message": "partialKey 変数のsuffix不足です。",
+    "fix": "$prefix_<suffix> 形式に修正"
+  },
+  "TE025": {
+    "message": "match case value の型が結果型と一致しないか、直接 method invocation が使われています。",
+    "fix": "inline type hint を結果型へ合わせるか、method invocation を事前に変数化する"
   }
 }
