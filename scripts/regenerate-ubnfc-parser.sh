@@ -30,7 +30,7 @@ vendor_rel=src/main/java/org/unlaxer/tinyexpression/p4/ubnfc
 vendor="$repo/$vendor_rel"
 pin="$vendor/UBNFC_PIN"
 java_package=org.unlaxer.tinyexpression.p4.ubnfc.generated
-scanners_source=examples/p4-java/src/main/java/org/ubnfc/p4/P4Scanners.java
+scanners_source=examples/p4-java/src/main/java/org/unlaxer/ubnfc/examples/p4/P4Scanners.java
 first_chars=scanners/first-chars.json
 
 mode=--check
@@ -105,14 +105,14 @@ regenerate() {
   (cd "$repo" && "$scratch/ubnfc/target/release/ubnfc" ir --grammar "$grammar_rel" \
       --extern-first-chars "$scratch/ubnfc/$first_chars" --out "$scratch/out/grammar.ir.json" \
       2> "$scratch/front-warnings.txt")
-  java -cp "$scratch/ubnfc/ubnfc-java/target/ubnfc-java-0.1.0-SNAPSHOT.jar" org.ubnfc.java.Main \
+  java -cp "$scratch/ubnfc/ubnfc-java/target/ubnfc-java-0.1.0-SNAPSHOT.jar" org.unlaxer.ubnfc.java.Main \
     --ir "$scratch/out/grammar.ir.json" --out "$scratch/gen" --package "$java_package" > /dev/null
   mv "$scratch/gen/${java_package//.//}" "$scratch/out/generated"
   {
     echo "// Vendored from ubnfc $scanners_source by"
     echo "// scripts/regenerate-ubnfc-parser.sh (package renamed only). Do not edit by hand; see UBNFC_PIN."
-    sed -e 's/^package org\.ubnfc\.p4;/package org.unlaxer.tinyexpression.p4.ubnfc;/' \
-        -e "s/org\\.ubnfc\\.p4\\.generated/${java_package//./\\.}/g" \
+    sed -e 's/^package org\.unlaxer\.ubnfc\.examples\.p4;/package org.unlaxer.tinyexpression.p4.ubnfc;/' \
+        -e "s/org\\.unlaxer\\.ubnfc\\.examples\\.p4\\.generated/${java_package//./\\.}/g" \
         "$scratch/ubnfc/$scanners_source"
   } > "$scratch/out/P4Scanners.java"
 }

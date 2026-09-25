@@ -1,4 +1,4 @@
-// Vendored from ubnfc examples/p4-java/src/main/java/org/ubnfc/p4/P4Scanners.java by
+// Vendored from ubnfc examples/p4-java/src/main/java/org/unlaxer/ubnfc/examples/p4/P4Scanners.java by
 // scripts/regenerate-ubnfc-parser.sh (package renamed only). Do not edit by hand; see UBNFC_PIN.
 package org.unlaxer.tinyexpression.p4.ubnfc;
 
