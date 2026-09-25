@@ -15,8 +15,13 @@
 //!   the `runtime` module) and the `dependsOn` wiring — in the Java order, so the first error
 //!   is the one Java raises. [`LoadError::java_exception`] names that Java exception.
 //!
-//! Deliberate differences from `FormulaInfoList.parse` are listed in the crate README
-//! ("FormulaInfo loader"); the parity test is `tests/formula_info.rs`.
+//! Differences from `FormulaInfoList.parse` are listed in the crate README ("FormulaInfo
+//! loader"); the parity test is `tests/formula_info.rs`. Issue #195 fixed three bugs of the
+//! Java loader that this module used to deliberately mirror (an unconsumed document loading
+//! its parseable prefix silently, a bare `NoSuchElementException` for an empty value at the
+//! end of input, a bare `NullPointerException` for an unknown `dependsOn`): Java now raises an
+//! explicit `FormulaInfoParseException` in all three cases, which [`LoadError::java_exception`]
+//! reflects.
 
 use std::fmt::{self, Display, Formatter};
 
@@ -67,7 +72,8 @@ impl Entry {
     /// stripped, lines starting with `#` and blank lines dropped.
     ///
     /// `None` for a zero-length value (a `key:` at the very end of the input), where Java's
-    /// extraction fails with `NoSuchElementException`.
+    /// extraction fails with `FormulaInfoParseException` (issue #195; was a bare
+    /// `NoSuchElementException`).
     pub fn value(&self) -> Option<String> {
         if self.raw_value.is_empty() {
             return None;
@@ -384,9 +390,11 @@ impl LoadedFormula {
 /// [`LoadError::UnsupportedType`], which Java accepts.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum LoadError {
-    /// The document is not a FormulaInfo document.
+    /// The document is not a FormulaInfo document (not fully consumed by
+    /// `FormulaInfoBlocksParser`, or rejected outright). Java: `FormulaInfoParseException`.
     Syntax(Box<ParseDiagnostic>),
-    /// `key:` at the very end of the input (Java: `NoSuchElementException`).
+    /// `key:` at the very end of the input (Java: `FormulaInfoParseException`, issue #195; was
+    /// a bare `NoSuchElementException`).
     EmptyValueAtEnd { key: String },
     /// `executionBackend` / `backend` names no backend.
     UnknownExecutionBackend { value: String },
@@ -407,8 +415,9 @@ pub enum LoadError {
         calculator_name: Option<String>,
         error: Box<EvalError>,
     },
-    /// `dependsOn` names a calculator the document does not define (Java: a
-    /// `NullPointerException` while wiring the dependency).
+    /// `dependsOn` names a calculator the document does not define (Java:
+    /// `FormulaInfoParseException`, issue #195; was a bare `NullPointerException` while wiring
+    /// the dependency).
     UnknownDependsOn {
         calculator_name: Option<String>,
         depends_on: String,
@@ -419,8 +428,9 @@ impl LoadError {
     /// The simple name of the exception the Java loader throws for the same document.
     pub fn java_exception(&self) -> &'static str {
         match self {
-            Self::Syntax(_) => "(none: FormulaInfoList.parse drops the unparsed rest)",
-            Self::EmptyValueAtEnd { .. } => "NoSuchElementException",
+            Self::Syntax(_) | Self::EmptyValueAtEnd { .. } | Self::UnknownDependsOn { .. } => {
+                "FormulaInfoParseException"
+            }
             Self::UnknownExecutionBackend { .. } | Self::OddHexLength { .. } => {
                 "IllegalArgumentException"
             }
@@ -429,7 +439,6 @@ impl LoadError {
             Self::MissingFormula { .. } => "CompileError",
             Self::UnsupportedType { .. } => "(none: Java supports this type)",
             Self::Formula { error, .. } => error.kind.java_name(),
-            Self::UnknownDependsOn { .. } => "NullPointerException",
         }
     }
 

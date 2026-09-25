@@ -8,11 +8,13 @@
 //! formula. This test requires the Rust loader (`tinyexpression_rs::formula_info`, a parser
 //! generated from `grammar/formula-info.ubnf`) to agree on all three.
 //!
-//! The one deliberate difference: `FormulaInfoList.parse` does not check that the whole
-//! document was consumed, so a document with an unparsable line loads the blocks before it
-//! (or nothing) without an error. The Rust loader rejects such a document, as
-//! `FormulaInfoSourceDocument.parse` does. This test pins that the Java syntax layer rejects
-//! exactly those documents too.
+//! Issue #195 fixed three bugs where the Java loader used to accept a document (or fail with a
+//! bare JDK exception) that the Rust loader already rejected explicitly: a document not fully
+//! consumed by `FormulaInfoBlocksParser` (was silently truncated to the parseable prefix, or
+//! nothing), an entry with an empty value at the end of input (was `NoSuchElementException`),
+//! and an unknown `dependsOn` (was `NullPointerException`). All three now raise
+//! `FormulaInfoParseException` on the Java side, which `LoadError::java_exception()` matches;
+//! there is no longer a carve-out for them in this test.
 //!
 //! Regenerate the golden with `tests/formula-info/regenerate-formula-info-golden.sh` (needs a
 //! JDK and Maven); `cargo test` itself never needs a JVM.
@@ -492,7 +494,6 @@ fn loader_matches_java_loader() {
         let source = fixture_text(&row);
         let java = row.get("loader");
         let rust = formula_info::load(&source, &java_driver_options());
-        let java_syntax_accepts = row.get("syntax").get("accepted").bool();
 
         // File-name convention of the formulaInfo-ubnf fixtures.
         let expected_kind = if name.starts_with("accept-") {
@@ -515,18 +516,6 @@ fn loader_matches_java_loader() {
                     "{fixture}: expected {expected}, rust gave {rust:?}"
                 ));
             }
-        }
-
-        if !java_syntax_accepts {
-            // The deliberate difference: Java loads the prefix (or nothing) silently.
-            match &rust {
-                Err(LoadError::Syntax(_)) => table.push(format!(
-                    "{name}: rust=syntax error, java loader=ok with {} formula(s) (unparsed rest dropped)",
-                    java.get("infos").arr().len()
-                )),
-                other => failures.push(format!("{fixture}: expected a syntax error, got {other:?}")),
-            }
-            continue;
         }
 
         match (java.get("ok").bool(), &rust) {

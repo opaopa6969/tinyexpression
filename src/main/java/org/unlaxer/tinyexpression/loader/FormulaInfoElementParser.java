@@ -30,7 +30,13 @@ public class FormulaInfoElementParser extends LazyChain{
         thisParserParsed.getChildWithParserTyped(FormulaInfoElementHeaderParser.class);
     
     String key = childWithParserTyped.getParser().extractKey(childWithParserTyped);
-    String value = thisParserParsed.getChild(TokenPredicators.hasTag(Kind.value.tag())).getToken().orElseThrow().stripTrailing();
+    // Issue #195: a value token with zero length (a "key:" at the very end of the input) has
+    // no backing text, so getToken() is empty; orElseThrow() used to raise a bare
+    // NoSuchElementException with no indication of which key or where. Reject it explicitly.
+    String value = thisParserParsed.getChild(TokenPredicators.hasTag(Kind.value.tag())).getToken()
+        .orElseThrow(() -> new FormulaInfoParseException(
+            "'" + key + ":' has an empty value at the end of input"))
+        .stripTrailing();
     return new KeyValue(key, removeInvalids(value));
   }
   

@@ -212,11 +212,11 @@ cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run -
 
 | 項目 | 差 | 理由 |
 |---|---|---|
-| 全文を消費できない文書 | Java `FormulaInfoList.parse` は読めた先頭ブロックだけ（または 0 件）を**黙って**返す。Rust は `LoadError::Syntax`（exit 3） | Java は全文消費を確かめていない。`FormulaInfoSourceDocument.parse` は拒否しており、文法はこちらに合わせた |
 | `resultType`/`numberType` の未知のクラス名 | Java は `Class.forName` で class path 上の任意のクラスを読む。Rust は loader の名前表と `java.lang.*`/`java.math.BigDecimal`/`java.math.BigInteger`/`java.sql.Timestamp` だけ | JVM が無い |
 | BigDecimal / BigInteger / Timestamp | Rust は `LoadError::UnsupportedType` | runtime が扱わない（依存ゼロ方針、#179） |
 | 式の構築 | Rust は常に P4 の意味論（`Program::new`）。Java はブロックの `executionBackend` の calculator で構築する | Rust の評価器は P4_AST_EVALUATOR だけ。golden は既定 backend を P4_AST_EVALUATOR にして採っている |
-| `key:` が入力末尾で値が 0 文字 | 両方拒否（Java は `NoSuchElementException`、Rust は `EmptyValueAtEnd`） | Java の値 token が空で `getToken()` が空になる挙動。2.x で生成 loader に置き換えるなら直す候補 |
+
+かつて差だった 3 件（issue #195 で解消）: 全文を消費できない文書、`key:` が入力末尾で値が 0 文字、未知の `dependsOn`。いずれも Java は以前は黙って通す／JDK の生の例外（`NoSuchElementException`・`NullPointerException`）を投げるだけだったが、いまは明示的な `FormulaInfoParseException` を投げ、`LoadError::java_exception()` もこれに合わせて `FormulaInfoParseException` を返す。
 
 ## AST shape（2.0 で形を変えない）
 
