@@ -379,7 +379,7 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "npx --yes @vscode/vsce package --no-dependencies",
-    "test": "esbuild src/test/playground-support.test.ts --bundle --platform=node --format=cjs --outfile=out-test/playground-support.test.js && node --test out-test/"
+    "test": "esbuild src/test/playground-support.test.ts --bundle --platform=node --format=cjs --outfile=out-test/playground-support.test.js && node --test out-test/playground-support.test.js"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"
