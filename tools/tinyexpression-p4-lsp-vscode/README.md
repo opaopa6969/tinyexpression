@@ -9,6 +9,7 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
 - **Semantic tokens** — type-safe classification via Parser `instanceof` (no regex)
 - **Diagnostics** — rich `TE001`–`TE025` messages, catalog-aware `TE022`/`TE024`, stable `ULX-PARSE-001` machine data, and targeted Quick Fixes
 - **Completion** — P4 keywords, declarations, imports, methods, and bundled/external `.tecatalog` variables with context labels
+- **Language catalog** — variable / function descriptions, keyword docs and TE error texts come from [`catalog/tinyexpression-catalog.json`](../../catalog/README.md), bundled into the server jar and shared with the [playground](https://opaopa6969.github.io/tinyexpression/). `tinyExpressionP4Lsp.catalog.overridePath` merges a (partial) catalog JSON, e.g. one edited in the playground, over the bundled one
 - **Hover** — AST node type, preferred root, declarations, and catalog descriptions
 - **Debug (DAP)** — step execution with P4 runtime markers in Variables panel:
   - `_tinyP4ParserUsed` — whether the P4 grammar parsed the formula

@@ -1,0 +1,62 @@
+keyword	if
+keyword	else
+keyword	match
+keyword	default
+keyword	var
+keyword	variable
+keyword	as
+keyword	number
+keyword	string
+keyword	boolean
+keyword	object
+keyword	float
+keyword	set
+keyword	not
+keyword	exists
+keyword	description
+keyword	call
+keyword	import
+keyword	external
+keyword	returning
+keyword	internal
+keyword	true
+keyword	false
+value	MONDAY
+value	TUESDAY
+value	WEDNESDAY
+value	THURSDAY
+value	FRIDAY
+value	SATURDAY
+value	SUNDAY
+function	sin	sin($1)$0
+function	cos	cos($1)$0
+function	tan	tan($1)$0
+function	sqrt	sqrt($1)$0
+function	log	log($1)$0
+function	exp	exp($1)$0
+function	abs	abs($1)$0
+function	floor	floor($1)$0
+function	ceil	ceil($1)$0
+function	round	round($1)$0
+function	isPresent	isPresent($1)$0
+function	len	len($1)$0
+function	length	length($1)$0
+function	toUpperCase	toUpperCase($1)$0
+function	toLowerCase	toLowerCase($1)$0
+function	trim	trim($1)$0
+function	pow	pow($1, $2)$0
+function	startsWith	startsWith($1, $2)$0
+function	endsWith	endsWith($1, $2)$0
+function	contains	contains($1, $2)$0
+function	min	min($1, $2)$0
+function	max	max($1, $2)$0
+function	toNum	toNum($1, $2)$0
+function	random	random()$0
+function	inTimeRange	inTimeRange($1, $2)$0
+function	inDayTimeRange	inDayTimeRange($1, $2, $3, $4)$0
+block	var	var \\$${1:name} as ${2:number} set ${3:0} description='${4:variable}';$0
+block	import	import ${1:Class}#${2:method} as ${3:alias};$0
+block	if	if (${1:cond}) {\n  ${2:0}\n} else {\n  ${3:0}\n}$0
+block	match	match {\n  ${1:cond} -> ${2:value},\n  default -> ${3:0}\n}$0
+block	call	call ${1:method}($2)$0
+block	external	external returning as ${1:number} ${2:name}($3)$0

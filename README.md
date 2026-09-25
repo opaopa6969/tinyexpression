@@ -10,6 +10,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - 複数式の依存関係付き実行
 - 6 つの実行バックエンド（JavaCode / AST / P4 系列）
 - LSP / DAP サポート（VS Code 拡張）
+- **Playground**: <https://opaopa6969.github.io/tinyexpression/> — ブラウザだけで式を書き、CalculationContext を設定して評価（wasm、JVM 不要）
 
 **ドキュメント**: [getting-started](docs/getting-started.md) | [language-guide](docs/language-guide.md) | [backends](docs/backends.md) | [architecture](docs/architecture.md) | [Rust parser frontend](rust/tinyexpression-rs/README.md)
 
@@ -30,6 +31,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - [言語クイックリファレンス](#言語クイックリファレンス)
 - [LSP / DAP](#lsp--dap)
 - [JVM 不要（Rust 版: CLI・埋め込み・wasm）](#jvm-不要rust-版-cli埋め込みwasm)
+- [Playground と言語カタログ](#playground-と言語カタログ)
 - [開発](#開発)
 
 ---
@@ -371,6 +373,18 @@ Java は `java -jar` ではなく `target/classes` + 依存 jar の classpath �
 計測 driver は FormulaInfo を読み、先頭の式の calculator を `CalculationContext.newContext()` で 1 回 apply するだけのもの。
 
 配布（GitHub Release の CLI / C ライブラリ / wasm、crates.io）は [rust/README.md](rust/README.md#配布経路)。
+
+## Playground と言語カタログ
+
+**<https://opaopa6969.github.io/tinyexpression/>**（[`playground/`](playground/README.md)、GitHub Pages、issue #201）
+
+- CodeMirror 6 のエディタで式を書き、`tinyexpression.wasm` で parse / check / 評価（JVM もサーバも不要）
+- CalculationContext パネル: 変数（型・値）、`nowHour` / `nowDayOfWeek`、結果型・`numberType`、`external` のスタブ
+- 結果（値と型）とエラー（TE コード・カタログの説明・修正のヒント・エラー位置）、FormulaInfo の読み込みと実行
+- 補完・hover・診断文言は **言語カタログ** [`catalog/tinyexpression-catalog.json`](catalog/README.md) から。
+  VSIX の LSP サーバも同じカタログを読む（設定 `tinyExpressionP4Lsp.catalog.overridePath` で差し替え・追加可）
+
+評価経路は Java 差分 golden（#179）の全行と node で照合している（`playground/scripts/parity-smoke.mjs`、CI）。
 
 ---
 

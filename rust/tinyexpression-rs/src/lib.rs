@@ -23,6 +23,7 @@ mod diagnostic;
 mod evaluator;
 pub mod formula_info;
 mod frontend;
+mod request;
 pub mod runtime;
 
 use std::error::Error;

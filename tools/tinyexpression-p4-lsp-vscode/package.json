@@ -318,12 +318,17 @@
         "tinyExpressionP4Lsp.catalog.path": {
           "type": "string",
           "default": "",
-          "description": "Path (or OS path-separator-delimited list of paths) to .tecatalog files or directories. When empty, the bundled catalog under config/ is used if present."
+          "description": "Variables for completion, hover and TE022: a path (or OS path-separator-delimited list) of .tecatalog files or directories, or one tinyexpression-catalog .json file. When empty, the variables of the bundled language catalog are used (see catalog.useBundledDefault)."
+        },
+        "tinyExpressionP4Lsp.catalog.overridePath": {
+          "type": "string",
+          "default": "",
+          "description": "A tinyexpression-catalog .json file (e.g. exported from the playground) merged over the bundled language catalog: its variables, function descriptions, keywords and TE error texts replace or extend the bundled ones."
         },
         "tinyExpressionP4Lsp.catalog.useBundledDefault": {
           "type": "boolean",
           "default": true,
-          "description": "When true and catalog.path is empty, automatically include any .tecatalog files bundled in the extension's config/ directory."
+          "description": "When true and catalog.path is empty, use the variables of the bundled language catalog (catalog/tinyexpression-catalog.json)."
         }
       }
     }

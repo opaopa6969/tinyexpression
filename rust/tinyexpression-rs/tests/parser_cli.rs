@@ -375,7 +375,7 @@ fn cli_reports_usage_errors_on_stderr_and_exit_two() {
     assert!(stdout(&output).is_empty());
     assert_eq!(
         stderr(&output),
-        "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n"
+        "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression <eval-context|run-context> [FILE|-]\n"
     );
 }
 
@@ -398,4 +398,27 @@ fn generated_catalog_metadata_exposes_variable_context() {
     assert_eq!(CATALOGS[0].rule, "VariableRef");
     assert_eq!(CATALOGS[0].context, "variable");
     assert_eq!(CATALOGS[0].captures, &["name", "type"]);
+}
+
+#[test]
+fn cli_eval_context_reads_a_json_request() {
+    use std::io::Write;
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
+        .args(["eval-context", "-"])
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .spawn()
+        .expect("run eval-context");
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(br#"{"formula":"$a + 1","variables":[{"name":"a","type":"float","value":"2"}]}"#)
+        .unwrap();
+    let output = child.wait_with_output().unwrap();
+    assert_eq!(output.status.code(), Some(0));
+    assert_eq!(
+        stdout(&output),
+        "{\"ok\":true,\"value\":{\"kind\":\"number\",\"value\":\"3\",\"f32Bits\":\"0x40400000\"},\"text\":\"3.0\"}\n"
+    );
 }

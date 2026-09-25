@@ -11,7 +11,7 @@ use tinyexpression_rs::api::{self, Response, EXIT_IO, EXIT_USAGE};
 use tinyexpression_rs::formula_info::{ExecutionBackend, LoaderOptions};
 
 fn usage() -> &'static str {
-    "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]"
+    "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression <eval-context|run-context> [FILE|-]"
 }
 
 fn help() -> String {
@@ -29,6 +29,10 @@ Commands (input is FILE, or stdin when FILE is `-` or omitted):
   load    load a FormulaInfo document                    {{\"ok\":true,\"formulas\":[{{\"info\":...}}]}}
   run     load a FormulaInfo document and evaluate every formula once on an empty context
                                                          {{\"ok\":...,\"formulas\":[{{\"info\":...,\"value\"|\"error\":...}}]}}
+  eval-context  evaluate the request's \"formula\" with its resultType, numberType,
+          CalculationContext variables and stubbed externals (a JSON request, see README)
+                                                         {{\"ok\":true,\"value\":...,\"text\":...}}
+  run-context   run the request's FormulaInfo \"document\" on the request's context
 
 Options:
   --default-backend NAME   load/run: the backend for formulas without an explicit one
@@ -116,6 +120,13 @@ fn run(arguments: &[String]) -> Result<Response, u8> {
                 Ok(input) => {
                     api::formula_info_json(&input, &options, command == Some("run"), time_seed())
                 }
+                Err(response) => response,
+            })
+        }
+        Some("eval-context" | "run-context") if arguments.len() <= 2 => {
+            Ok(match source(arguments.get(1).map(String::as_str)) {
+                Ok(input) if command == Some("eval-context") => api::eval_context_json(&input),
+                Ok(input) => api::formula_info_context_json(&input, &LoaderOptions::java_tests()),
                 Err(response) => response,
             })
         }

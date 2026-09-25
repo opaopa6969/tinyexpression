@@ -39,6 +39,11 @@ export async function loadTinyExpression(bytesOrResponse) {
     eval: (formula) => call(te.te_eval, formula),
     load: (document) => call(te.te_formula_info, document, 0, 0n),
     run: (document, seed = 1n) => call(te.te_formula_info, document, 1, BigInt(seed)),
+    // issue #201: evaluation with a CalculationContext. `request` is the JSON request object
+    // documented in rust/README.md ({formula|document, resultType, numberType, variables,
+    // externals, seed}); it is serialized here.
+    evalContext: (request) => call(te.te_eval_context, JSON.stringify(request)),
+    runContext: (request) => call(te.te_formula_info_context, JSON.stringify(request)),
     version: () => readJson(te.te_version()),
   };
 }

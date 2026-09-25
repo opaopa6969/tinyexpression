@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>tinyexpression playground</title>
+  <meta name="description" content="Edit, check and evaluate tinyexpression formulas in the browser (wasm, no JVM).">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>ƒ</text></svg>">
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>tinyexpression playground</h1>
+      <p class="muted small" id="version" title="version of the wasm runtime">wasm を読み込み中…</p>
+    </div>
+    <label class="examples" title="load a sample formula with its CalculationContext">サンプル
+      <select id="examples"><option value="">選択…</option></select>
+    </label>
+  </header>
+
+  <main class="layout">
+    <section class="panel editor-panel" aria-labelledby="h-editor">
+      <h2 id="h-editor" title="Formula">式</h2>
+      <p class="muted small">Ctrl+Space で補完、変数・関数にカーソルを合わせると説明（カタログ）を表示します。</p>
+      <div id="editor"></div>
+      <h2 title="Result">結果</h2>
+      <div id="result" aria-live="polite"></div>
+    </section>
+
+    <section class="panel context-panel" aria-labelledby="h-context">
+      <h2 id="h-context" title="CalculationContext: the values the formula reads">CalculationContext</h2>
+      <div id="settings" class="settings"></div>
+      <h3 title="Variables ($name)">変数</h3>
+      <table class="grid">
+        <thead><tr><th title="name">名前</th><th title="type">型</th><th title="value">値</th><th></th></tr></thead>
+        <tbody id="variables"></tbody>
+      </table>
+      <div class="buttons">
+        <button id="add-variable" title="add a variable">変数を追加</button>
+        <button id="pick-variables" title="add every $variable the formula reads">式から変数を追加</button>
+      </div>
+      <h3 title="external invocations answered by stubs">external（スタブ）</h3>
+      <table class="grid externals">
+        <thead><tr><th title="class">クラス</th><th title="method">メソッド</th><th title="argument count">引数</th><th title="registered in the context">登録</th><th title="return type">戻り型</th><th title="return value">戻り値</th><th></th></tr></thead>
+        <tbody id="externals"></tbody>
+      </table>
+      <div class="buttons"><button id="add-external" title="add an external stub">スタブを追加</button></div>
+      <p class="muted small" id="catalog-counts"></p>
+    </section>
+
+    <section class="panel info-panel" aria-labelledby="h-info">
+      <h2 id="h-info" title="FormulaInfo document">FormulaInfo</h2>
+      <p class="muted small">FormulaInfo のブロックを貼り付けて、読み込み（load）または上の CalculationContext で実行（run）します。</p>
+      <textarea id="formula-info" spellcheck="false" rows="12" aria-label="FormulaInfo"></textarea>
+      <div class="buttons">
+        <button id="load-info" title="te_formula_info (load)">読み込み</button>
+        <button id="run-info" title="evaluate every formula with the CalculationContext">実行</button>
+        <button id="sample-info" class="link" title="restore the sample">サンプルに戻す</button>
+      </div>
+      <div id="formula-info-result"></div>
+    </section>
+  </main>
+
+  <footer class="muted small">
+    言語カタログ <a href="https://github.com/opaopa6969/tinyexpression/blob/master/catalog/tinyexpression-catalog.json">catalog/tinyexpression-catalog.json</a>
+    （VSIX の LSP と共通） · <a href="https://github.com/opaopa6969/tinyexpression">GitHub</a>
+  </footer>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
