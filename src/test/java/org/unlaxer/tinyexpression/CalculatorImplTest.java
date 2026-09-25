@@ -19,6 +19,7 @@ import org.unlaxer.TokenKind;
 import org.unlaxer.TokenPrinter;
 import org.unlaxer.listener.OutputLevel;
 import org.unlaxer.parser.ParseException;
+import org.unlaxer.parser.Parser;
 import org.unlaxer.tinyexpression.CalculationContext.Angle;
 import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 import org.unlaxer.tinyexpression.formatter.Formatter;
@@ -256,10 +257,37 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 	}
 
 
+	// issue #200: every calc()/calcWithResult()/compileOnly() call re-verifies the formula
+	// against the classic (legacy, hand-written) grammar via testAllMatch(calculator.getParser(), ...).
+	// calculator.getParser() is *always* Parser.get(FormulaParser.class) regardless of which
+	// backend (classic/ubnfc engine, AST/DSL-java-code calculator) this test class exercises, so
+	// the classic-grammar parse of a given formula is a pure function of the formula text alone.
+	// CalculatorImplTest has 6 concrete subclasses (Ast/P4Ast/P4Dsl, each in default+classic
+	// engine flavor, plus JavaCodeCalculatorV3Test) that all run the same ~150 formulas, so the
+	// same expensive parse - the classic grammar backtracks exponentially on the deep fraud-alert
+	// formulas - was being repeated up to 6x per `mvn test` run. Surefire reuses one fork across
+	// all test classes by default (reuseForks=true in pom.xml), so a JVM-static cache here
+	// verifies each distinct formula against the classic grammar at most once per test run, while
+	// still asserting it (and thus still catching a real grammar regression) the first time any
+	// suite sees it. Coverage is unchanged: nothing is skipped, only the redundant re-parses are.
+	private static final java.util.Set<String> CLASSIC_GRAMMAR_VERIFIED =
+	    java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+	private void verifyClassicGrammarAccepts(Parser parser, String formula) {
+	  String key = parser.getClass().getName() + '\u0000' + formula;
+	  if (CLASSIC_GRAMMAR_VERIFIED.contains(key)) {
+	    return;
+	  }
+	  testAllMatch(parser, formula);
+	  // only recorded after a successful verification, so a real failure is still reported
+	  // (and re-attempted) rather than silently cached away.
+	  CLASSIC_GRAMMAR_VERIFIED.add(key);
+	}
+
 	ResultAndMatch calcWithResult(CalculationContext calculateContext , String formula , BigDecimal expected){
 
 	    Calculator calculator = preConstructedCalculator(formula);
-	    testAllMatch(calculator.getParser(), formula);
+	    verifyClassicGrammarAccepts(calculator.getParser(), formula);
 	    CalculateResult calculateResult =
 	        calculator.calculate(calculateContext,formula,ExpressionTypes._float);
 	    calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
@@ -299,7 +327,7 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 	boolean calc(CalculationContext calculateContext , String formula , BigDecimal expected , boolean outputJavaCode){
 
 		Calculator calculator = preConstructedCalculator(formula);
-		testAllMatch(calculator.getParser(), formula);
+		verifyClassicGrammarAccepts(calculator.getParser(), formula);
 		CalculateResult calculateResult = calculator.calculate(calculateContext,formula , ExpressionTypes._float);
 		calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
 		if(calculateResult.errors.raisedException.isPresent()) {
@@ -324,7 +352,7 @@ public abstract class CalculatorImplTest extends ParserTestBase{
 	void compileOnly(CalculationContext calculateContext , String formula){
 
 	  Calculator calculator = preConstructedCalculator(formula);
-    testAllMatch(calculator.getParser(), formula);
+    verifyClassicGrammarAccepts(calculator.getParser(), formula);
     CalculateResult calculateResult = calculator.calculate(calculateContext,formula,ExpressionTypes._float);
     calculateResult.errors.raisedException.ifPresent(error->error.printStackTrace());
     BigDecimal x = new BigDecimal(calculateResult.get(Float.class));
