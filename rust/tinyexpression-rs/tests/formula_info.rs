@@ -608,7 +608,7 @@ fn formula_span_points_at_the_formula_value() {
 // ------------------------------------------------------------------ CLI
 
 fn cli(arguments: &[&str]) -> (i32, String) {
-    let output = std::process::Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = std::process::Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(arguments)
         .output()
         .expect("run the CLI");

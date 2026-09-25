@@ -1,4 +1,5 @@
 use super::api::*;
+use super::ast::tree::AstTree;
 use super::rt::{
     diag::{Diag, Diagnostics, DisplayDiagnostics, DisplaySnapshot},
     input::Input,
@@ -56,15 +57,11 @@ pub(crate) struct EventId(pub usize);
 #[derive(Clone, Copy, Debug)]
 pub(crate) enum Event {
     Empty,
+    /// 回復した領域。残りの観測（規則・mode・同期範囲・診断・公開候補）は
+    /// `Session::recovery_events[detail]` にある（event arena の要素を小さく保つため）。
     Recovery {
-        rule: usize,
-        mode: &'static str,
         span: Span,
-        sync_span: Option<Span>,
-        diag: Diag,
-        /// `Session::recovery_hints` の添字。回復した規則の frame に属する公開候補
-        /// （D-027 の表示語彙）を回復時に取っておく（診断は後段の走査で組み立てる）。
-        hints: u32,
+        detail: u32,
     },
     Join(EventId, EventId),
     Values {
@@ -94,6 +91,183 @@ pub(crate) enum Event {
         rule: usize,
         span: Span,
     },
+}
+/// 回復 event の本体（`Event::Recovery::detail` が索く）。
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct RecoveryEvent {
+    rule: usize,
+    mode: &'static str,
+    sync_span: Option<Span>,
+    diag: Diag,
+    /// `Session::recovery_hints` の添字。回復した規則の frame に属する公開候補
+    /// （D-027 の表示語彙）を回復時に取っておく（診断は後段の走査で組み立てる）。
+    hints: u32,
+}
+/// event arena の 1 要素（D-077、32 byte。`Event` のままだと 88 byte で、JSON 1 MB の
+/// typed AST では 156 万 event × 88 byte の arena とその伸長が確保の 7 割を占めていた）。
+/// 位置・event id・site / expr の番号は u32 に収まる（入力は `u32::MAX` byte 以下、arena は
+/// `u32::MAX` 要素以下で打ち切る）。Recovery の本体は別表（`RecoveryEvent`）。
+/// 読むときは `Session::ev` で `Event` に戻す（値の複製。書き換えは `set_ev`）。
+/// `unpack` の結果は scalar だけなので、`match self.ev(id)` は memory へ実体化されない。
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct PackedEvent {
+    tag: u8,
+    flags: u8,
+    /// Token の規則（`u16::MAX` は無し）。
+    rule: u16,
+    w: [u32; 7],
+}
+const EV_EMPTY: u8 = 0;
+const EV_RECOVERY: u8 = 1;
+const EV_JOIN: u8 = 2;
+const EV_VALUES: u8 = 3;
+const EV_CAPTURE: u8 = 4;
+const EV_RULE: u8 = 5;
+const EV_TOKEN: u8 = 6;
+const NO_RULE: u16 = u16::MAX;
+#[inline(always)]
+fn w32(value: usize) -> u32 {
+    debug_assert!(value <= u32::MAX as usize);
+    value as u32
+}
+#[inline(always)]
+fn wide(value: u32) -> usize {
+    if value == u32::MAX {
+        usize::MAX
+    } else {
+        value as usize
+    }
+}
+impl PackedEvent {
+    const EMPTY: Self = Self {
+        tag: EV_EMPTY,
+        flags: 0,
+        rule: 0,
+        w: [0; 7],
+    };
+    #[inline(always)]
+    fn pack(event: Event) -> Self {
+        let mut p = Self::EMPTY;
+        match event {
+            Event::Empty => {}
+            Event::Recovery { span, detail } => {
+                p.tag = EV_RECOVERY;
+                p.w[0] = w32(span[0]);
+                p.w[1] = w32(span[1]);
+                p.w[2] = detail;
+            }
+            Event::Join(a, b) => {
+                p.tag = EV_JOIN;
+                p.w[0] = w32(a.0);
+                p.w[1] = w32(b.0);
+            }
+            Event::Values { span, child, wrap } => {
+                p.tag = EV_VALUES;
+                p.flags = wrap as u8;
+                p.w[..3].copy_from_slice(&[w32(span[0]), w32(span[1]), w32(child.0)]);
+            }
+            Event::Capture {
+                token_extent,
+                site,
+                span,
+                child,
+            } => {
+                p.tag = EV_CAPTURE;
+                p.flags = token_extent as u8;
+                p.w[..4].copy_from_slice(&[w32(site), w32(span[0]), w32(span[1]), w32(child.0)]);
+            }
+            Event::Rule {
+                rule,
+                span,
+                child,
+                caps,
+            } => {
+                p.tag = EV_RULE;
+                p.w[..6].copy_from_slice(&[
+                    w32(rule),
+                    w32(span[0]),
+                    w32(span[1]),
+                    w32(child.0),
+                    caps.0,
+                    caps.1,
+                ]);
+            }
+            Event::Token {
+                text_span,
+                content_span,
+                expr,
+                rule,
+                span,
+            } => {
+                p.tag = EV_TOKEN;
+                p.rule = if rule == usize::MAX {
+                    NO_RULE
+                } else {
+                    debug_assert!(rule < NO_RULE as usize);
+                    rule as u16
+                };
+                p.w[0] = w32(span[0]);
+                p.w[1] = w32(span[1]);
+                if let Some(t) = text_span {
+                    p.flags |= 1;
+                    p.w[2] = w32(t[0]);
+                    p.w[3] = w32(t[1]);
+                }
+                if let Some(c) = content_span {
+                    p.flags |= 2;
+                    p.w[4] = w32(c[0]);
+                    p.w[5] = w32(c[1]);
+                }
+                p.w[6] = if expr == usize::MAX {
+                    u32::MAX
+                } else {
+                    w32(expr)
+                };
+            }
+        }
+        p
+    }
+    #[inline(always)]
+    fn unpack(self) -> Event {
+        let w = self.w;
+        let span = |i: usize| [w[i] as usize, w[i + 1] as usize];
+        match self.tag {
+            EV_JOIN => Event::Join(EventId(w[0] as usize), EventId(w[1] as usize)),
+            EV_VALUES => Event::Values {
+                span: span(0),
+                child: EventId(w[2] as usize),
+                wrap: self.flags != 0,
+            },
+            EV_CAPTURE => Event::Capture {
+                token_extent: self.flags != 0,
+                site: w[0] as usize,
+                span: span(1),
+                child: EventId(w[3] as usize),
+            },
+            EV_RULE => Event::Rule {
+                rule: w[0] as usize,
+                span: span(1),
+                child: EventId(w[3] as usize),
+                caps: (w[4], w[5]),
+            },
+            EV_TOKEN => Event::Token {
+                text_span: (self.flags & 1 != 0).then(|| span(2)),
+                content_span: (self.flags & 2 != 0).then(|| span(4)),
+                expr: wide(w[6]),
+                rule: if self.rule == NO_RULE {
+                    usize::MAX
+                } else {
+                    self.rule as usize
+                },
+                span: span(0),
+            },
+            EV_RECOVERY => Event::Recovery {
+                span: span(0),
+                detail: w[2],
+            },
+            _ => Event::Empty,
+        }
+    }
 }
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct Step {
@@ -155,25 +329,6 @@ impl Saved {
         }
     }
 }
-/// mapped text の識別子（String の先頭 pointer）から span を引く。乗算 hash で十分に散る。
-#[derive(Default)]
-pub(crate) struct PtrHasher(u64);
-impl std::hash::Hasher for PtrHasher {
-    fn finish(&self) -> u64 {
-        let h = self.0.wrapping_mul(0x9E37_79B9_7F4A_7C15);
-        h ^ (h >> 29)
-    }
-    fn write(&mut self, bytes: &[u8]) {
-        for &b in bytes {
-            self.0 = (self.0 << 8) | u64::from(b);
-        }
-    }
-    fn write_usize(&mut self, n: usize) {
-        self.0 = n as u64 >> 3;
-    }
-}
-pub(crate) type TextSpans =
-    std::collections::HashMap<usize, Span, std::hash::BuildHasherDefault<PtrHasher>>;
 /// capture の出現（site, span, 子 event）。
 pub(crate) type Cap = (usize, Span, EventId);
 #[derive(Clone, Copy)]
@@ -196,7 +351,7 @@ struct Effect {
 /// 内容は parse ごとに捨て、確保だけを thread ごとに 1 組保持する。大きな入力を扱った後は
 /// `POOL_RETAIN_BYTES` を超える組を捨てて、常駐量を抑える。結果には影響しない。
 pub(crate) struct Buffers {
-    arena: Vec<Event>,
+    arena: Vec<PackedEvent>,
     diag: Diagnostics,
     display: DisplayDiagnostics,
     memo: Memo<Saved>,
@@ -207,10 +362,10 @@ pub(crate) struct Buffers {
     saved_effects: Vec<Effect>,
     stacks: Vec<Vec<(EventId, bool)>>,
     captures_pool: Vec<Vec<Cap>>,
-    values_pool: Vec<Vec<Ast>>,
-    texts_pool: Vec<Vec<String>>,
+    values_pool: Vec<Vec<u32>>,
     scope_pool: Vec<Vec<(usize, Span)>>,
-    text_spans: TextSpans,
+    /// AST の構築先（D-077）。所有 `Ast` だけを返す parse では木を捨てずに再利用する。
+    tree: AstTree,
     caps_flat: Vec<Cap>,
     caps_pending: Vec<Cap>,
 }
@@ -222,7 +377,7 @@ thread_local! {
 }
 impl Buffers {
     fn bytes(&self) -> usize {
-        self.arena.capacity() * std::mem::size_of::<Event>()
+        self.arena.capacity() * std::mem::size_of::<PackedEvent>()
             + self.diag.capacity_bytes()
             + self.display.capacity_bytes()
             + self.memo.capacity_bytes()
@@ -243,7 +398,9 @@ pub(crate) struct Session<'a, const DIAG: bool> {
     pub input: Input<'a>,
     pub options: ParseOptions,
     pub scanner: &'a mut dyn TokenScanner,
-    pub arena: Vec<Event>,
+    pub arena: Vec<PackedEvent>,
+    /// `Event::Recovery` の本体（`Event::Recovery::detail` が索く）。
+    recovery_events: Vec<RecoveryEvent>,
     pub diag: Diagnostics,
     pub display: DisplayDiagnostics,
     pub memo: Memo<Saved>,
@@ -258,16 +415,13 @@ pub(crate) struct Session<'a, const DIAG: bool> {
     effects: Vec<Effect>,
     saved_effects: Vec<Effect>,
     pub statistics: Statistics,
-    pub node_spans: Vec<NodeSpan>,
-    // Allocation identity is used only while mapping. finish resolves it into
-    // owned AST paths, so ParseResult remains valid after moves and clones.
-    pub text_spans: TextSpans,
+    /// AST の構築先（D-077）。節点・Text はここへ積み、所有 `Ast` はここから写す。
+    pub tree: AstTree,
     /// AST 構築の走査用 stack の再利用 pool（再帰するので複数）。
     stacks: Vec<Vec<(EventId, bool)>>,
     /// AST 構築の作業 Vec の再利用 pool（capture 出現、field 値、field 文字列）。
     captures_pool: Vec<Vec<Cap>>,
-    values_pool: Vec<Vec<Ast>>,
-    texts_pool: Vec<Vec<String>>,
+    values_pool: Vec<Vec<u32>>,
     scope_pool: Vec<Vec<(usize, Span)>>,
     /// 出現収集で組み立てる「rule ごとの直下 capture」の並び。どの区間がどの rule のものかは
     /// `Event::Rule::caps`（開始, 個数）が持つ。AST 構築はその区間を写すだけで木を再走査しない。
@@ -412,9 +566,17 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
         } else {
             options.limits.arena_entries
         };
-        let arena_capacity = if options.build_ast || options.lexical || HAS_SCOPE || HAS_RECOVERY {
-            // P4 実測 約 4.4 event / byte。
-            text.len().saturating_mul(5).saturating_add(8).min(32768)
+        let arena_capacity = if options.wants_ast() || options.lexical || HAS_SCOPE || HAS_RECOVERY {
+            // P4 実測 約 4.4 event / byte（小さい入力はこの見積りで倍々伸長を避ける）。
+            // D-077: 大きい入力は 2 event / byte を下限に見積もる（JSON は D-072 後 1.56、
+            // P4 3.8、Operators 9.0）。以前は 32,768 で打ち切って倍々で伸ばしていたので、
+            // pool の無い最初の parse は JSON 1 MB で 210 万 event 分を 7 回確保し直していた。
+            text.len()
+                .saturating_mul(5)
+                .min(32768)
+                .max(text.len().saturating_mul(2))
+                .min(arena_limit)
+                .saturating_add(8)
         } else {
             1
         };
@@ -460,9 +622,8 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
                 b.trivia_skip.reset(skip_policies, lex_positions);
                 b.effects.clear();
                 b.saved_effects.clear();
-                b.text_spans.clear();
+                b.tree.clear();
                 b.values_pool.iter_mut().for_each(Vec::clear);
-                b.texts_pool.iter_mut().for_each(Vec::clear);
                 b
             }
             None => Buffers {
@@ -486,9 +647,8 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
                 stacks: vec![],
                 captures_pool: vec![],
                 values_pool: vec![],
-                texts_pool: vec![],
                 scope_pool: vec![],
-                text_spans: Default::default(),
+                tree: AstTree::default(),
                 caps_flat: vec![],
                 caps_pending: vec![],
             },
@@ -496,14 +656,7 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
         buffers.diag.enable(diag_on);
         buffers.display.enable(diag_on);
         let mut arena = buffers.arena;
-        arena.push(Event::Empty);
-        // AST node は入力 byte の約 1/2.5（P4 実測 332 byte / 131 node、20,923 byte / 8,195 node）。
-        // 結果へ移すので pool 化しない。
-        let node_capacity = if options.build_ast {
-            text.len() / 2
-        } else {
-            0
-        };
+        arena.push(PackedEvent::EMPTY);
         Self {
             text,
             input: Input::new(text),
@@ -521,12 +674,10 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
             effects: buffers.effects,
             saved_effects: buffers.saved_effects,
             statistics: Statistics::default(),
-            node_spans: Vec::with_capacity(node_capacity),
-            text_spans: buffers.text_spans,
+            tree: buffers.tree,
             stacks: buffers.stacks,
             captures_pool: buffers.captures_pool,
             values_pool: buffers.values_pool,
-            texts_pool: buffers.texts_pool,
             scope_pool: buffers.scope_pool,
             caps_flat: buffers.caps_flat,
             caps_pending: buffers.caps_pending,
@@ -542,6 +693,7 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
             mapping_depth: 0,
             mapping_anchor: None,
             recovery_hints: Vec::new(),
+            recovery_events: Vec::new(),
         }
     }
     /// 大きな buffer を thread の pool へ返す（`finish` の最後）。
@@ -549,7 +701,7 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
         if !self.options.reuse_buffers {
             return;
         }
-        let buffers = Buffers {
+        let mut buffers = Buffers {
             arena: std::mem::take(&mut self.arena),
             diag: std::mem::replace(&mut self.diag, Diagnostics::with_limit_and_capacity(0, 0)),
             display: std::mem::replace(&mut self.display, DisplayDiagnostics::new(0)),
@@ -562,12 +714,19 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
             stacks: std::mem::take(&mut self.stacks),
             captures_pool: std::mem::take(&mut self.captures_pool),
             values_pool: std::mem::take(&mut self.values_pool),
-            texts_pool: std::mem::take(&mut self.texts_pool),
             scope_pool: std::mem::take(&mut self.scope_pool),
-            text_spans: std::mem::take(&mut self.text_spans),
+            tree: std::mem::take(&mut self.tree),
             caps_flat: std::mem::take(&mut self.caps_flat),
             caps_pending: std::mem::take(&mut self.caps_pending),
         };
+        if buffers.bytes() > POOL_RETAIN_BYTES {
+            // 伸長の倍々で余った容量だけで上限を超えることがある（JSON 1 MB: event 156 万に
+            // 容量 210 万）。使った分へ縮めて収まるなら保持する。同じ規模の次の parse は
+            // 伸長しないので、縮めるのは規模が変わったときだけ。
+            buffers.arena.shrink_to_fit();
+            buffers.caps_flat.shrink_to_fit();
+            buffers.caps_pending.shrink_to_fit();
+        }
         if buffers.bytes() <= POOL_RETAIN_BYTES {
             POOL.with(|p| *p.borrow_mut() = Some(buffers));
         }
@@ -624,23 +783,22 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
     pub fn cp(&self, byte: usize) -> usize {
         self.input.byte_to_cp(byte).expect("parser UTF-8 boundary")
     }
-    /// `remember_text` へ渡す複製は識別用の 1 byte を最初から確保する
-    /// （`to_owned` は丁度 len で確保するので、直後の `reserve(1)` が必ず再確保になる）。
-    fn owned_text(text: &str) -> String {
-        let mut owned = String::with_capacity(text.len() + 1);
-        owned.push_str(text);
-        owned
-    }
-    fn text_for_identity(&self, span: Span) -> String {
-        Self::owned_text(self.trimmed(span))
-    }
     pub fn span(&self, span: Span) -> Span {
         [self.cp(span[0]), self.cp(span[1])]
     }
     fn trimmed(&self, span: Span) -> &str {
-        self.text[span[0]..span[1]].trim_matches(|c: char| {
+        let [start, end] = self.trimmed_range(span);
+        &self.text[start..end]
+    }
+    /// `trimmed` の byte 範囲（AST の Text 節点は値を複製せずこの範囲で持つ）。
+    fn trimmed_range(&self, span: Span) -> [usize; 2] {
+        let trim = |c: char| {
             c.is_whitespace() && !matches!(c, '\u{85}' | '\u{a0}' | '\u{2007}' | '\u{202f}')
-        })
+        };
+        let text = &self.text[span[0]..span[1]];
+        let head = text.trim_start_matches(trim);
+        let start = span[0] + (text.len() - head.len());
+        [start, start + head.trim_end_matches(trim).len()]
     }
     pub fn text(&self, span: Span) -> String {
         self.trimmed(span).to_owned()
@@ -826,18 +984,66 @@ if name.is_empty()
         let snapshot = self.display_snapshot();
         self.memo.insert(key, Saved::new(step, effects, snapshot));
     }
+    #[inline(always)]
     pub fn event(&mut self, event: Event) -> EventId {
-        if !self.options.build_ast && !self.options.lexical && !HAS_SCOPE && !HAS_RECOVERY {
+        // 認識だけの parse（scope / recovery の無い文法）は記録しない。判定だけを呼出し側へ inline する。
+        if !self.options.build_ast
+            && !self.options.ast_tree
+            && !self.options.lexical
+            && !HAS_SCOPE
+            && !HAS_RECOVERY
+        {
             return EventId(0);
         }
+        self.record_event(PackedEvent::pack(event))
+    }
+    #[inline]
+    fn record_event(&mut self, packed: PackedEvent) -> EventId {
         if self.arena.len() >= self.arena_limit.min(u32::MAX as usize) {
             self.resource_failure
                 .get_or_insert((0, "arena budget exceeded"));
             return EventId(0);
         }
         let id = EventId(self.arena.len());
-        self.arena.push(event);
+        self.arena.push(packed);
         id
+    }
+    /// event を読む（`PackedEvent` から戻した値）。
+    #[inline(always)]
+    pub fn ev(&self, id: EventId) -> Event {
+        self.arena[id.0].unpack()
+    }
+    /// literal / token 参照の結果の Token event を、expr と規則を付け替えて複製する
+    /// （`Event` に戻さず packed のまま写す。Token でなければ `id` をそのまま返す）。
+    #[inline(always)]
+    pub fn relabel_token(&mut self, id: EventId, expr: usize, rule: usize) -> EventId {
+        // 認識だけの parse では event を記録しない（`id` は 0 = Empty）ので、判定だけを inline にする。
+        if self.arena[id.0].tag != EV_TOKEN {
+            return id;
+        }
+        self.relabel_token_copy(id, expr, rule)
+    }
+    #[inline(never)]
+    fn relabel_token_copy(&mut self, id: EventId, expr: usize, rule: usize) -> EventId {
+        let mut packed = self.arena[id.0];
+        debug_assert!(rule < NO_RULE as usize);
+        packed.rule = rule as u16;
+        packed.w[6] = w32(expr);
+        self.record_event(packed)
+    }
+    /// Rule event の直下 capture 表の区間（出現収集が書く）。
+    #[inline]
+    pub fn set_rule_caps(&mut self, id: EventId, caps: (u32, u32)) {
+        let packed = &mut self.arena[id.0];
+        if packed.tag == EV_RULE {
+            packed.w[4] = caps.0;
+            packed.w[5] = caps.1;
+        }
+    }
+    /// event を書き換える（書き換える箇所は Token / Capture だけ）。
+    #[inline(always)]
+    pub fn set_ev(&mut self, id: EventId, event: Event) {
+        self.arena[id.0] = PackedEvent::pack(event);
     }
     pub fn join(&mut self, a: EventId, b: EventId) -> EventId {
         if a.0 == 0 {
@@ -1064,9 +1270,11 @@ if name.is_empty()
             p += n;
             if c == quote {
                 let step = self.primitive::<MATCH>(state, Some(p - start), label);
-                if let Event::Token { text_span, content_span, .. } = &mut self.arena[step.events.0] {
+                let mut event = self.ev(step.events);
+                if let Event::Token { text_span, content_span, .. } = &mut event {
                     *text_span = Some([start, p]);
                     *content_span = Some([start + 1, p - 1]);
+                    self.set_ev(step.events, event);
                 }
                 return step;
             }
@@ -1165,21 +1373,25 @@ if name.is_empty()
             return;
         }
         let mut target = id;
+        let mut event = self.ev(id);
         if let Event::Capture {
             site: current,
             child,
             ..
-        } = &mut self.arena[id.0]
+        } = &mut event
         {
             if let Some(site) = site {
                 *current = site;
+                target = *child;
+                self.set_ev(id, event);
+            } else {
+                target = *child;
             }
-            target = *child;
         }
-        if let (Some(expr), Event::Token { expr: current, .. }) =
-            (expr, &mut self.arena[target.0])
-        {
+        let mut event = self.ev(target);
+        if let (Some(expr), Event::Token { expr: current, .. }) = (expr, &mut event) {
             *current = expr;
+            self.set_ev(target, event);
         }
     }
     pub fn take_stack(&mut self) -> Vec<(EventId, bool)> {
@@ -1205,24 +1417,16 @@ if name.is_empty()
     pub fn give_captures(&mut self, v: Vec<Cap>) {
         self.captures_pool.push(v);
     }
-    pub fn take_values(&mut self) -> Vec<Ast> {
+    pub fn take_values(&mut self) -> Vec<u32> {
         let mut v = self.values_pool.pop().unwrap_or_default();
         v.clear();
         v
     }
-    pub fn give_values(&mut self, v: Vec<Ast>) {
+    pub fn give_values(&mut self, v: Vec<u32>) {
         self.values_pool.push(v);
     }
-    pub fn take_texts(&mut self) -> Vec<String> {
-        let mut v = self.texts_pool.pop().unwrap_or_default();
-        v.clear();
-        v
-    }
-    pub fn give_texts(&mut self, v: Vec<String>) {
-        self.texts_pool.push(v);
-    }
     /// text 変換の field 値（recovery で直接置換された出現は除く）。
-    pub fn text_values(&mut self, caps: &[Cap], sites: &[usize], out: &mut Vec<String>) {
+    pub fn text_values(&mut self, caps: &[Cap], sites: &[usize], out: &mut Vec<u32>) {
         for &(site, span, child) in caps {
             if sites.contains(&site) && !self.directly_recovered(child) {
                 let text = self.semantic_text(child, span);
@@ -1230,13 +1434,8 @@ if name.is_empty()
             }
         }
     }
-    pub fn text_nodes(&mut self, caps: &[Cap], sites: &[usize], out: &mut Vec<Ast>) {
-        for &(site, span, child) in caps {
-            if sites.contains(&site) && !self.directly_recovered(child) {
-                let text = self.semantic_text(child, span);
-                out.push(Ast::Text(text));
-            }
-        }
+    pub fn text_nodes(&mut self, caps: &[Cap], sites: &[usize], out: &mut Vec<u32>) {
+        self.text_values(caps, sites, out);
     }
     /// node 変換の field 値。出現ごとに子の値を構築し、値が無く空でない出現は字句 Text にする。
     /// `fallback` は leaf 型（Text を leaf node に昇格する recipe）。
@@ -1245,7 +1444,7 @@ if name.is_empty()
         caps: &[Cap],
         sites: &[usize],
         fallback: Option<usize>,
-        out: &mut Vec<Ast>,
+        out: &mut Vec<u32>,
     ) -> Result<(), String> {
         for &(site, span, child) in caps {
             if !sites.contains(&site) {
@@ -1259,14 +1458,13 @@ if name.is_empty()
                 && !self.has_value_group(child)
             {
                 let text = self.semantic_text(child, span);
-                out.push(Ast::Text(text));
+                out.push(text);
             }
             if let Some(ty) = fallback {
                 let mut i = start;
                 while i < out.len() {
-                    if let Ast::Text(text) = &mut out[i] {
-                        let text = std::mem::take(text);
-                        out[i] = self.leaf(ty, span, text)?;
+                    if self.tree.kind(out[i]) == super::ast::tree::KIND_TEXT {
+                        out[i] = self.leaf(ty, span, out[i])?;
                     }
                     i += 1;
                 }
@@ -1291,7 +1489,7 @@ if name.is_empty()
         stack.push((root, false));
         let mut span = None;
         while let Some((id, _)) = stack.pop() {
-            match self.arena[id.0] {
+            match self.ev(id) {
                 Event::Join(a, b) => {
                     stack.push((b, false));
                     stack.push((a, false));
@@ -1314,7 +1512,7 @@ if name.is_empty()
     pub fn significant_end(&self, root: EventId) -> Option<usize> {
         let mut stack = vec![root];
         while let Some(id) = stack.pop() {
-            match self.arena[id.0] {
+            match self.ev(id) {
                 Event::Join(a, b) => {
                     stack.push(a);
                     stack.push(b);
@@ -1337,7 +1535,7 @@ if name.is_empty()
         stack.push((root, false));
         let mut found = false;
         while let Some((id, _)) = stack.pop() {
-            match self.arena[id.0] {
+            match self.ev(id) {
                 Event::Recovery { .. } => {
                     found = true;
                     break;
@@ -1360,7 +1558,7 @@ if name.is_empty()
             return false;
         }
         loop {
-            match self.arena[root.0] {
+            match self.ev(root) {
                 Event::Recovery { .. } => return true,
                 Event::Capture { child, .. } | Event::Values { child, .. } => root = child,
                 _ => return false,
@@ -1441,13 +1639,17 @@ if name.is_empty()
         let hints = u32::try_from(self.recovery_hints.len()).unwrap_or(u32::MAX);
         self.recovery_hints
             .push(if DIAG { self.display.local_summary() } else { None });
-        let events = self.event(Event::Recovery {
+        let detail = u32::try_from(self.recovery_events.len()).unwrap_or(u32::MAX);
+        self.recovery_events.push(RecoveryEvent {
             rule,
             mode,
-            span: [start, end],
             sync_span,
             diag,
             hints,
+        });
+        let events = self.event(Event::Recovery {
+            span: [start, end],
+            detail,
         });
         Step {
             ok: true,
@@ -1461,7 +1663,7 @@ if name.is_empty()
         stack.push((root, false));
         let mut found = false;
         while let Some((id, _)) = stack.pop() {
-            match self.arena[id.0] {
+            match self.ev(id) {
                 Event::Values { .. } => {
                     found = true;
                     break;
@@ -1479,19 +1681,9 @@ if name.is_empty()
         self.give_stack(stack);
         found
     }
-    pub fn mapped_text(&mut self, span: Span) -> String {
-        self.remember_text(self.text_for_identity(span), span)
-    }
-    fn remember_text(&mut self, mut text: String, span: Span) -> String {
-        // Empty strings also need distinct identities until paths are resolved.
-        text.reserve(1);
-        self.text_spans
-            .insert(text.as_ptr() as usize, self.span(span));
-        text
-    }
     pub fn has_token_text(&self, mut root: EventId) -> bool {
         loop {
-            match self.arena[root.0] {
+            match self.ev(root) {
                 Event::Capture { child, .. }
                 | Event::Rule { child, .. }
                 | Event::Values { child, .. } => root = child,
@@ -1502,7 +1694,7 @@ if name.is_empty()
     }
     pub fn text_extent(&self, mut root: EventId, fallback: Span) -> Span {
         loop {
-            match self.arena[root.0] {
+            match self.ev(root) {
                 Event::Capture { child, .. }
                 | Event::Rule { child, .. }
                 | Event::Values { child, .. } => root = child,
@@ -1516,19 +1708,20 @@ if name.is_empty()
     }
     fn text_content_extent(&self, mut root: EventId, fallback: Span) -> Span {
         loop {
-            match self.arena[root.0] {
+            match self.ev(root) {
                 Event::Capture { child, .. } | Event::Rule { child, .. } | Event::Values { child, .. } => root = child,
                 Event::Token { content_span, text_span, .. } => return content_span.or(text_span).unwrap_or(fallback),
                 _ => return fallback,
             }
         }
     }
-    pub fn semantic_text(&mut self, root: EventId, span: Span) -> String {
+    /// capture の値となる Text 節点を作る（D-077: 値は複製せず入力の byte 範囲で持つ）。
+    pub fn semantic_text(&mut self, root: EventId, span: Span) -> u32 {
         // Token まで下って text_span / content_span を 1 回の走査で読む
         // （text_extent / text_content_extent / has_token_text と同じ規則）。
         let mut node = root;
         let token = loop {
-            match self.arena[node.0] {
+            match self.ev(node) {
                 Event::Capture { child, .. } | Event::Rule { child, .. } | Event::Values { child, .. } => node = child,
                 Event::Token { text_span, content_span, .. } => break Some((text_span, content_span)),
                 _ => break None,
@@ -1539,8 +1732,9 @@ if name.is_empty()
             Some((None, content)) => (span, content.unwrap_or(span), false),
             None => (span, span, false),
         };
-        let value = if token_text { Self::owned_text(&self.text[content[0]..content[1]]) } else { self.text_for_identity(content) };
-        self.remember_text(value, extent)
+        let value = if token_text { content } else { self.trimmed_range(content) };
+        let extent = self.span(extent);
+        self.tree.text(extent, value)
     }
     pub fn take_scope(&mut self) -> Vec<(usize, Span)> {
         let mut v = self.scope_pool.pop().unwrap_or_default();
@@ -1555,7 +1749,7 @@ if name.is_empty()
         let mut stack = self.take_stack();
         stack.push((root, false));
         while let Some((id, done)) = stack.pop() {
-            match self.arena[id.0] {
+            match self.ev(id) {
                 Event::Join(a, b) => {
                     stack.push((b, false));
                     stack.push((a, false));
@@ -1581,16 +1775,6 @@ if name.is_empty()
             }
         }
         self.give_stack(stack);
-    }
-    pub fn node(&mut self, rule: &'static str, name: &'static str, span: Span) -> usize {
-        let id = self.node_spans.len();
-        self.node_spans.push(NodeSpan {
-            node_id: id,
-            rule_id: rule,
-            node_type: name,
-            span,
-        });
-        id
     }
 }
 /// 統合 DFA の bitset 語数（literal 9 個）。0 なら cache を作らない。
@@ -1697,22 +1881,23 @@ const RULES:&[&str]=&["FormulaInfo::Document", "FormulaInfo::Block", "FormulaInf
 const EXPRESSIONS:&[&str]=&["expr:grammar/formula-info.ubnf:2613:2634:body/seq", "expr:grammar/formula-info.ubnf:2613:2630:body/0/repeat", "expr:grammar/formula-info.ubnf:2615:2620:body/0/0/ruleRef", "expr:grammar/formula-info.ubnf:2631:2634:body/1/tokenRef", "expr:grammar/formula-info.ubnf:3112:3255:body/seq", "expr:grammar/formula-info.ubnf:3112:3218:body/0/group", "expr:grammar/formula-info.ubnf:3114:3216:body/0/0/choice", "expr:grammar/formula-info.ubnf:3114:3168:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:3114:3120:body/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3130:3149:body/0/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3132:3138:body/0/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3150:3168:body/0/0/0/2/repeat", "expr:grammar/formula-info.ubnf:3152:3157:body/0/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:3183:3216:body/0/0/1/seq", "expr:grammar/formula-info.ubnf:3183:3188:body/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3198:3216:body/0/0/1/1/repeat", "expr:grammar/formula-info.ubnf:3200:3205:body/0/0/1/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3231:3255:body/1/group", "expr:grammar/formula-info.ubnf:3233:3253:body/1/0/choice", "expr:grammar/formula-info.ubnf:3233:3242:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3250:3253:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:3340:3363:body/choice", "expr:grammar/formula-info.ubnf:3340:3351:body/0/ruleRef", "expr:grammar/formula-info.ubnf:3354:3363:body/1/ruleRef", "expr:grammar/formula-info.ubnf:3530:3577:body/seq", "expr:grammar/formula-info.ubnf:3530:3551:body/0/group", "expr:grammar/formula-info.ubnf:3532:3549:body/0/0/seq", "expr:grammar/formula-info.ubnf:3532:3535:body/0/0/0/literal", "expr:grammar/formula-info.ubnf:3536:3549:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3538:3547:body/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:3558:3577:body/1/group", "expr:grammar/formula-info.ubnf:3560:3575:body/1/0/choice", "expr:grammar/formula-info.ubnf:3560:3569:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3572:3575:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:3775:3862:body/choice", "expr:grammar/formula-info.ubnf:3775:3808:body/0/seq", "expr:grammar/formula-info.ubnf:3775:3792:body/0/0/group", "expr:grammar/formula-info.ubnf:3777:3790:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:3777:3790:body/0/0/0/0/repeat", "expr:grammar/formula-info.ubnf:3779:3788:body/0/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3799:3808:body/0/1/ruleRef", "expr:grammar/formula-info.ubnf:3825:3862:body/1/seq", "expr:grammar/formula-info.ubnf:3825:3852:body/1/0/group", "expr:grammar/formula-info.ubnf:3827:3850:body/1/0/0/seq", "expr:grammar/formula-info.ubnf:3827:3836:body/1/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3837:3850:body/1/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3839:3848:body/1/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3859:3862:body/1/1/tokenRef", "expr:grammar/formula-info.ubnf:3882:3900:body/choice", "expr:grammar/formula-info.ubnf:3882:3885:body/0/literal", "expr:grammar/formula-info.ubnf:3888:3892:body/1/literal", "expr:grammar/formula-info.ubnf:3895:3900:body/2/tokenRef", "expr:grammar/formula-info.ubnf:4226:4264:body/seq", "expr:grammar/formula-info.ubnf:4226:4249:body/0/group", "expr:grammar/formula-info.ubnf:4228:4247:body/0/0/seq", "expr:grammar/formula-info.ubnf:4228:4233:body/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:4234:4247:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4236:4245:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:4236:4239:body/0/0/1/0/0/literal", "expr:grammar/formula-info.ubnf:4240:4245:body/0/0/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4255:4258:body/1/literal", "expr:grammar/formula-info.ubnf:4259:4264:body/2/ruleRef", "expr:grammar/formula-info.ubnf:4685:4747:body/seq", "expr:grammar/formula-info.ubnf:4685:4747:body/0/group", "expr:grammar/formula-info.ubnf:4687:4745:body/0/0/seq", "expr:grammar/formula-info.ubnf:4687:4700:body/0/0/0/repeat", "expr:grammar/formula-info.ubnf:4689:4698:body/0/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:4701:4731:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4703:4729:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:4703:4712:body/0/0/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:4713:4729:body/0/0/1/0/1/ruleRef", "expr:grammar/formula-info.ubnf:4732:4745:body/0/0/2/optional", "expr:grammar/formula-info.ubnf:4734:4743:body/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:4921:5005:body/choice", "expr:grammar/formula-info.ubnf:4921:4964:body/0/seq", "expr:grammar/formula-info.ubnf:4921:4940:body/0/0/literal", "expr:grammar/formula-info.ubnf:4941:4950:body/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4951:4964:body/0/2/repeat", "expr:grammar/formula-info.ubnf:4953:4962:body/0/2/0/tokenRef", "expr:grammar/formula-info.ubnf:4988:5005:body/1/seq", "expr:grammar/formula-info.ubnf:4988:4995:body/1/0/tokenRef", "expr:grammar/formula-info.ubnf:4996:5005:body/1/1/ruleRef", "expr:grammar/formula-info.ubnf:5025:5152:body/choice", "expr:grammar/formula-info.ubnf:5025:5050:body/0/seq", "expr:grammar/formula-info.ubnf:5025:5036:body/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5037:5050:body/0/1/repeat", "expr:grammar/formula-info.ubnf:5039:5048:body/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5067:5126:body/1/seq", "expr:grammar/formula-info.ubnf:5067:5072:body/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5073:5086:body/1/1/repeat", "expr:grammar/formula-info.ubnf:5075:5084:body/1/1/0/seq", "expr:grammar/formula-info.ubnf:5075:5078:body/1/1/0/0/literal", "expr:grammar/formula-info.ubnf:5079:5084:body/1/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5087:5126:body/1/2/group", "expr:grammar/formula-info.ubnf:5089:5124:body/1/2/0/choice", "expr:grammar/formula-info.ubnf:5089:5112:body/1/2/0/0/seq", "expr:grammar/formula-info.ubnf:5089:5098:body/1/2/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5099:5112:body/1/2/0/0/1/repeat", "expr:grammar/formula-info.ubnf:5101:5110:body/1/2/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5115:5124:body/1/2/0/1/ruleRef", "expr:grammar/formula-info.ubnf:5143:5152:body/2/ruleRef", "expr:grammar/formula-info.ubnf:5172:5191:body/choice", "expr:grammar/formula-info.ubnf:5172:5177:body/0/tokenRef", "expr:grammar/formula-info.ubnf:5180:5185:body/1/tokenRef", "expr:grammar/formula-info.ubnf:5188:5191:body/2/tokenRef", "expr:grammar/formula-info.ubnf:5375:5420:body/seq", "expr:grammar/formula-info.ubnf:5375:5394:body/0/literal", "expr:grammar/formula-info.ubnf:5401:5420:body/1/group", "expr:grammar/formula-info.ubnf:5403:5418:body/1/0/choice", "expr:grammar/formula-info.ubnf:5403:5412:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:5415:5418:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5440:5460:body/choice", "expr:grammar/formula-info.ubnf:5440:5446:body/0/literal", "expr:grammar/formula-info.ubnf:5449:5453:body/1/literal", "expr:grammar/formula-info.ubnf:5456:5460:body/2/literal"];
 const BODIES:&[&str]=&["expr:grammar/formula-info.ubnf:2613:2634:body/seq", "expr:grammar/formula-info.ubnf:3112:3255:body/seq", "expr:grammar/formula-info.ubnf:3340:3363:body/choice", "expr:grammar/formula-info.ubnf:3530:3577:body/seq", "expr:grammar/formula-info.ubnf:3775:3862:body/choice", "expr:grammar/formula-info.ubnf:3882:3900:body/choice", "expr:grammar/formula-info.ubnf:4226:4264:body/seq", "expr:grammar/formula-info.ubnf:4685:4747:body/seq", "expr:grammar/formula-info.ubnf:4921:5005:body/choice", "expr:grammar/formula-info.ubnf:5025:5152:body/choice", "expr:grammar/formula-info.ubnf:5172:5191:body/choice", "expr:grammar/formula-info.ubnf:5375:5420:body/seq", "expr:grammar/formula-info.ubnf:5440:5460:body/choice"];
 const RULE_NODE:&[bool]=&[true, true, false, true, true, false, true, true, false, false, false, true, false];
+const RULE_SLOTS:&[u32]=&[2, 5, 0, 1, 1, 0, 2, 1, 0, 0, 0, 1, 0];
 const SITES:&[(&str,&str)]=&[("expr:grammar/formula-info.ubnf:2615:2620:body/0/0/ruleRef/capture/0", "blocks"), ("expr:grammar/formula-info.ubnf:3114:3120:body/0/0/0/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3132:3138:body/0/0/0/1/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3152:3157:body/0/0/0/2/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3183:3188:body/0/0/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3200:3205:body/0/0/1/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3233:3242:body/1/0/0/ruleRef/capture/0", "end"), ("expr:grammar/formula-info.ubnf:3530:3551:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:3775:3792:body/0/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:3825:3852:body/1/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:4226:4249:body/0/group/capture/0", "key"), ("expr:grammar/formula-info.ubnf:4259:4264:body/2/ruleRef/capture/0", "value"), ("expr:grammar/formula-info.ubnf:4685:4747:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:5375:5394:body/0/literal/capture/0", "mark")];
 impl<const DIAG: bool> Session<'_, DIAG> {
-fn build_values(&mut self,root:EventId)->Result<Vec<Ast>,String> {let mut out=Vec::new();self.build_values_into(root,&mut out)?;Ok(out)}
-#[inline(never)] fn build_values_into(&mut self,root:EventId,out:&mut Vec<Ast>)->Result<(),String> {let frame=0u8;let address=std::ptr::addr_of!(frame) as usize;let anchor=*self.mapping_anchor.get_or_insert(address);if self.mapping_depth>=self.options.limits.mapping_depth || anchor.abs_diff(address)>256*1024 {return Err("maximum mapping depth exceeded".into());}self.mapping_depth+=1;let result=self.build_values_inner(root,out);self.mapping_depth-=1;result}
-fn build_values_inner(&mut self,mut root:EventId,out:&mut Vec<Ast>)->Result<(),String> {
+fn build_values(&mut self,root:EventId)->Result<Vec<u32>,String> {let mut out=Vec::new();self.build_values_into(root,&mut out)?;Ok(out)}
+#[inline(never)] fn build_values_into(&mut self,root:EventId,out:&mut Vec<u32>)->Result<(),String> {let frame=0u8;let address=std::ptr::addr_of!(frame) as usize;let anchor=*self.mapping_anchor.get_or_insert(address);if self.mapping_depth>=self.options.limits.mapping_depth || anchor.abs_diff(address)>256*1024 {return Err("maximum mapping depth exceeded".into());}self.mapping_depth+=1;let result=self.build_values_inner(root,out);self.mapping_depth-=1;result}
+fn build_values_inner(&mut self,mut root:EventId,out:&mut Vec<u32>)->Result<(),String> {
 // 大半の呼出しは Join を含まない 1 本の枝（P4 実測: complex-x64 で 10,883 回すべてが 1 event）。
 // その場合は pool から stack を借りずに降りる。
-loop {match self.arena[root.0] {
+loop {match self.ev(root) {
 Event::Capture{child,..}=>root=child,
-Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && (matches!(&out[start..],[Ast::Text(_)]) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(Ast::Text(text));}return Ok(());},
+Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}return Ok(());},
 Event::Rule{rule,span,child,caps}=>return self.build_rule(rule,caps,span,child,out),
 Event::Join(..)=>break,
 _=>return Ok(()),}}
-let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.arena[id.0] {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && (matches!(&out[start..],[Ast::Text(_)]) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(Ast::Text(text));}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
-fn leaf(&mut self,ty:usize,span:Span,text:String)->Result<Ast,String> {let text=self.remember_text(text,span);let span=self.span(span);let _=(span,text);Err(format!("unknown leaf type {ty}"))}
-fn build_rule(&mut self,rule:usize,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);match rule {
+let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.ev(id) {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
+fn leaf(&mut self,ty:usize,span:Span,text:u32)->Result<u32,String> {let span=self.span(span);self.tree.set_extent(text,span);let _=(span,text);Err(format!("unknown leaf type {ty}"))}
+fn build_rule(&mut self,rule:usize,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);match rule {
 0=>self.map_rule_0(caps,span,child,out),
 1=>self.map_rule_1(caps,span,child,out),
 2=>self.map_rule_2(caps,span,child,out),
@@ -1727,76 +1912,59 @@ fn build_rule(&mut self,rule:usize,caps:(u32,u32),span:Span,child:EventId,out:&m
 11=>self.map_rule_11(caps,span,child,out),
 12=>self.map_rule_12(caps,span,child,out),
 _=>Err(format!("unknown rule {rule}"))}}
-fn map_rule_0(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=Vec::new();self.node_values(&caps,&[0],None,&mut f0)?;
-if !f0.iter().all(|value|matches!(value,Ast::g_FormulaInfoAST_2e_FormulaInfoBlock(_))) {return Err("blocks: mapped value type mismatch".into());}
-let f0:Vec<Ast>=f0;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[0],"FormulaInfoDocument",span);out.push(Ast::g_FormulaInfoAST_2e_FormulaInfoDocument(g_FormulaInfoAST_2e_FormulaInfoDocument{span,node_id,
-g_blocks:f0,
-}));Ok(())}}
-fn map_rule_1(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=Vec::new();self.node_values(&caps,&[1, 2],None,&mut f0)?;
-if !f0.iter().all(|value|matches!(value,Ast::g_FormulaInfoAST_2e_BlankLine(_)) || matches!(value,Ast::g_FormulaInfoAST_2e_CommentLine(_))) {return Err("leading: mapped value type mismatch".into());}
-let f0:Vec<Ast>=f0;
-let mut f1=Vec::new();self.node_values(&caps,&[3, 4, 5],None,&mut f1)?;
-if !f1.iter().all(|value|matches!(value,Ast::g_FormulaInfoAST_2e_FormulaInfoEntry(_))) {return Err("entries: mapped value type mismatch".into());}
-let f1:Vec<Ast>=f1;
+fn map_rule_0(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut f0=self.take_values();self.node_values(&caps,&[0],None,&mut f0)?;
+if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoBlock}) {return Err("blocks: mapped value type mismatch".into());}
+let f0:Vec<u32>=f0;
+self.give_captures(caps);let span=self.span(span);let l0=self.tree.list(&f0);self.give_values(f0);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoDocument,0,span,&[l0[0],l0[1]]);out.push(node);Ok(())}}
+fn map_rule_1(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut f0=self.take_values();self.node_values(&caps,&[1, 2],None,&mut f0)?;
+if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_BlankLine || k==tree::K_g_FormulaInfoAST_2e_CommentLine}) {return Err("leading: mapped value type mismatch".into());}
+let f0:Vec<u32>=f0;
+let mut f1=self.take_values();self.node_values(&caps,&[3, 4, 5],None,&mut f1)?;
+if !f1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoEntry}) {return Err("entries: mapped value type mismatch".into());}
+let f1:Vec<u32>=f1;
 let mut v2=self.take_values();self.node_values(&caps,&[6],None,&mut v2)?;
-if !v2.iter().all(|value|matches!(value,Ast::g_FormulaInfoAST_2e_EndOfPart(_))) {return Err("end: mapped value type mismatch".into());}
-if v2.len()>1 {return Err("end requires at most one node".into());}let f2=v2.pop().map(Box::new);self.give_values(v2);
-let f2:Option<Box<Ast>>=f2;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[1],"FormulaInfoBlock",span);out.push(Ast::g_FormulaInfoAST_2e_FormulaInfoBlock(g_FormulaInfoAST_2e_FormulaInfoBlock{span,node_id,
-g_leading:f0,
-g_entries:f1,
-g_end:f2,
-}));Ok(())}}
-fn map_rule_2(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
-fn map_rule_3(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut t0=self.take_texts();self.text_values(&caps,&[7],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[7]) {return Ok(());}
-if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_texts(t0);
-let f0:String=f0;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[3],"CommentLine",span);out.push(Ast::g_FormulaInfoAST_2e_CommentLine(g_FormulaInfoAST_2e_CommentLine{span,node_id,
-g_text:f0,
-}));Ok(())}}
-fn map_rule_4(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut t0=self.take_texts();self.text_values(&caps,&[8, 9],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[8, 9]) {return Ok(());}
-if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_texts(t0);
-let f0:String=f0;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[4],"BlankLine",span);out.push(Ast::g_FormulaInfoAST_2e_BlankLine(g_FormulaInfoAST_2e_BlankLine{span,node_id,
-g_text:f0,
-}));Ok(())}}
-fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
-fn map_rule_6(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut t0=self.take_texts();self.text_values(&caps,&[10],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[10]) {return Ok(());}
-if t0.len()!=1 {return Err("key requires one value".into());}let f0=t0.pop().unwrap();self.give_texts(t0);
-let f0:String=f0;
+if !v2.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_EndOfPart}) {return Err("end: mapped value type mismatch".into());}
+if v2.len()>1 {return Err("end requires at most one node".into());}let f2=v2.pop();self.give_values(v2);
+let f2:Option<u32>=f2;
+self.give_captures(caps);let span=self.span(span);let l0=self.tree.list(&f0);self.give_values(f0);let l1=self.tree.list(&f1);self.give_values(f1);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoBlock,1,span,&[l0[0],l0[1],l1[0],l1[1],f2.unwrap_or(tree::NONE)]);out.push(node);Ok(())}}
+fn map_rule_2(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_3(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut t0=self.take_values();self.text_values(&caps,&[7],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[7]) {return Ok(());}
+if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
+let f0:u32=f0;
+self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_CommentLine,3,span,&[f0]);out.push(node);Ok(())}}
+fn map_rule_4(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut t0=self.take_values();self.text_values(&caps,&[8, 9],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[8, 9]) {return Ok(());}
+if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
+let f0:u32=f0;
+self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_BlankLine,4,span,&[f0]);out.push(node);Ok(())}}
+fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_6(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut t0=self.take_values();self.text_values(&caps,&[10],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[10]) {return Ok(());}
+if t0.len()!=1 {return Err("key requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
+let f0:u32=f0;
 let mut v1=self.take_values();self.node_values(&caps,&[11],None,&mut v1)?;
-if !v1.iter().all(|value|matches!(value,Ast::g_FormulaInfoAST_2e_FormulaInfoValue(_))) {return Err("value: mapped value type mismatch".into());}
+if !v1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoValue}) {return Err("value: mapped value type mismatch".into());}
 if v1.is_empty() && self.missing_field(&caps,&[11]) {return Ok(());}
-if v1.len()!=1 {return Err("value requires one node".into());}let f1=Box::new(v1.pop().unwrap());self.give_values(v1);
-let f1:Box<Ast>=f1;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[6],"FormulaInfoEntry",span);out.push(Ast::g_FormulaInfoAST_2e_FormulaInfoEntry(g_FormulaInfoAST_2e_FormulaInfoEntry{span,node_id,
-g_key:f0,
-g_value:f1,
-}));Ok(())}}
-fn map_rule_7(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut t0=self.take_texts();self.text_values(&caps,&[12],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[12]) {return Ok(());}
-if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_texts(t0);
-let f0:String=f0;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[7],"FormulaInfoValue",span);out.push(Ast::g_FormulaInfoAST_2e_FormulaInfoValue(g_FormulaInfoAST_2e_FormulaInfoValue{span,node_id,
-g_text:f0,
-}));Ok(())}}
-fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
-fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
-fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
-fn map_rule_11(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut t0=self.take_texts();self.text_values(&caps,&[13],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[13]) {return Ok(());}
-if t0.len()!=1 {return Err("mark requires one value".into());}let f0=t0.pop().unwrap();self.give_texts(t0);
-let f0:String=f0;
-self.give_captures(caps);let span=self.span(span);let node_id=self.node(RULES[11],"EndOfPart",span);out.push(Ast::g_FormulaInfoAST_2e_EndOfPart(g_FormulaInfoAST_2e_EndOfPart{span,node_id,
-g_mark:f0,
-}));Ok(())}}
-fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<Ast>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(Ast::Text(text));}Ok(())}}
+if v1.len()!=1 {return Err("value requires one node".into());}let f1=v1.pop().unwrap();self.give_values(v1);
+let f1:u32=f1;
+self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoEntry,6,span,&[f0,f1]);out.push(node);Ok(())}}
+fn map_rule_7(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut t0=self.take_values();self.text_values(&caps,&[12],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[12]) {return Ok(());}
+if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
+let f0:u32=f0;
+self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoValue,7,span,&[f0]);out.push(node);Ok(())}}
+fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_11(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
+let mut t0=self.take_values();self.text_values(&caps,&[13],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[13]) {return Ok(());}
+if t0.len()!=1 {return Err("mark requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
+let f0:u32=f0;
+self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_EndOfPart,11,span,&[f0]);out.push(node);Ok(())}}
+fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 /// 出現（capture / rule / token）の収集と、AST 構築が rule ごとに読む直下 capture 表を
 /// 1 回の走査で作る。以前は出現収集の後に AST 構築が rule ごとに `collect_captures` で
 /// 同じ木をもう一度下っていた。
@@ -1817,15 +1985,16 @@ fn occurrences(
     // complex-x64 9,731+10,824 / 80,246）。1/4 は 2 倍以上の過大確保で、x64 では
     // `Capture` 72 byte × 20,061 を確保して半分しか使っていなかった。
     let estimate = self.arena.len() / 6 + 8;
-    let mut captures = Vec::with_capacity(estimate);
+    let build_ast = self.options.wants_ast();
+    let want_lexical = self.options.lexical;
+    // 公開する出現表は opt-in（D-035）。見積りで確保するのは要求されたときだけ
+    // （AST だけのときに JSON 1 MB で 260,000 × 72 byte を確保して捨てていた）。
+    let want_occurrences = self.options.occurrences || want_lexical;
+    let mut captures = Vec::with_capacity(if want_occurrences { estimate } else { 0 });
     let mut lexical = Vec::new();
     let mut tokens = Vec::new();
-    let build_ast = self.options.build_ast;
-    let want_lexical = self.options.lexical;
-    // 公開する出現表は opt-in（D-035）。AST の直下 capture 表（`pending` / `caps_flat`）は
-    // `build_ast` のままで、こちらの flag には依らない。走査の骨組み（rule ごとの開始位置）は
-    // どちらかが要るときに積む。
-    let want_occurrences = self.options.occurrences || want_lexical;
+    // AST の直下 capture 表（`pending` / `caps_flat`）は `build_ast` のままで、出現表の flag には
+    // 依らない。走査の骨組み（rule ごとの開始位置）はどちらかが要るときに積む。
     let want_intervals = build_ast || want_occurrences;
     // 未完了の rule に属する capture の番号（完了順）。rule の完了時にその rule の
     // 完了順を直接書き込むので、所属表と後段の付け直しの走査は要らない。
@@ -1851,10 +2020,12 @@ fn occurrences(
     let mut stack: Vec<(u32, u32, bool, u32)> = Vec::with_capacity(64);
     stack.push((root.0 as u32, NONE, false, NONE));
     let mut lexical_order = 0;
+    // AST 木の見積り（D-077）: 完了した規則が作る record の slot 数の和。
+    let mut rule_slots = 0usize;
     while let Some((id, parent, done, current)) = stack.pop() {
         let parent_index = (parent != NONE).then_some(parent as usize);
         let id = EventId(id as usize);
-        match self.arena[id.0] {
+        match self.ev(id) {
             Event::Join(a, b) => {
                 stack.push((b.0 as u32, parent, false, NONE));
                 stack.push((a.0 as u32, parent, false, NONE));
@@ -1913,13 +2084,15 @@ if want_lexical && expr != usize::MAX => {
                     if want_intervals {
                         let (cap_start, id_start) = rule_starts.pop().unwrap_or((0, 0));
                         if build_ast {
+                            rule_slots += RULE_SLOTS[rule] as usize;
                             let start = cap_start as usize;
                             let offset = caps_flat.len();
                             caps_flat.extend_from_slice(&pending[start..]);
                             pending.truncate(start);
-                            if let Event::Rule { caps, .. } = &mut self.arena[id.0] {
-                                *caps = (offset as u32, (caps_flat.len() - offset) as u32);
-                            }
+                            self.set_rule_caps(
+                                id,
+                                (offset as u32, (caps_flat.len() - offset) as u32),
+                            );
                         }
                         if want_occurrences {
                             let start = id_start as usize;
@@ -1972,6 +2145,16 @@ if want_lexical && expr != usize::MAX => {
     for token in &mut tokens {
         token.occurrence_id += lexical.len();
     }
+    if build_ast {
+        // 木は所有 `Ast` だけの parse では pool に戻るので、既に足りていれば確保しない。
+        // 根以外の値はどれかの capture の値なので、節点数は capture 数でほぼ決まる
+        // （JSON 1 MB: capture 178,342 / 節点 178,343。P4 x64: capture 9,731 / 節点 10,434。
+        // P4 は leaf 型への昇格が節点を足す）。slot は record の field 分（`RULE_SLOTS`）と
+        // list の要素（capture 数が上限）。
+        let captured = caps_flat.len();
+        self.tree
+            .reserve(captured + captured / 8 + 1, rule_slots + captured);
+    }
     self.caps_flat = caps_flat;
     self.caps_pending = pending;
     (captures, lexical, tokens)
@@ -2002,7 +2185,7 @@ fn recovery_occurrences(&self, root: EventId) -> (Vec<Recovery>, Vec<Diagnostic>
             Visit::CaptureDone { start, depth: at } => {
                 // `capture_occurrence_ids` は出現表を返すかに依らない観測なので、
                 // 番号付けは AST / lexical のときそのまま数える（D-035 の対象外）。
-                if self.options.build_ast || self.options.lexical {
+                if self.options.wants_ast() || self.options.lexical {
                     for (r, recovery) in recoveries[start..].iter_mut().enumerate() {
                         if recovery_depth[start + r] == at {
                             recovery.capture_occurrence_ids.push(capture_order);
@@ -2014,7 +2197,7 @@ fn recovery_occurrences(&self, root: EventId) -> (Vec<Recovery>, Vec<Diagnostic>
             }
             Visit::Enter(id) => id,
         };
-        match self.arena[id.0] {
+        match self.ev(id) {
             Event::Join(a, b) => {
                 stack.push(Visit::Enter(b));
                 stack.push(Visit::Enter(a));
@@ -2034,14 +2217,14 @@ fn recovery_occurrences(&self, root: EventId) -> (Vec<Recovery>, Vec<Diagnostic>
                 });
                 stack.push(Visit::Enter(child));
             }
-            Event::Recovery {
-                rule,
-                mode,
-                span,
-                sync_span,
-                diag,
-                hints,
-            } => {
+            Event::Recovery { span, detail } => {
+                let RecoveryEvent {
+                    rule,
+                    mode,
+                    sync_span,
+                    diag,
+                    hints,
+                } = self.recovery_events[detail as usize];
                 // D-027: 公開する候補は表示語彙（`farthestExpected` と同じ蓄積）で、
                 // 範囲は回復した規則の frame。主診断 DAG の label は Rust 内部の語彙
                 // なので候補には使わず、規則経路の復元にだけ使う（D-020）。
@@ -2194,16 +2377,19 @@ pub(crate) fn finish_checked(mut self, mut step: Step) -> (ParseResult, bool) {
     // `occurrences` / `lexical` が決める（D-035）。認識だけで要求も無ければ走査ごと省く。
     let (captures, lexical, tokens) =
         if step.ok
-            && (self.options.build_ast || self.options.occurrences || self.options.lexical)
+            && (self.options.wants_ast() || self.options.occurrences || self.options.lexical)
         {
             self.occurrences(step.events)
         } else {
             (vec![], vec![], vec![])
         };
-    let ast = if ok && self.options.build_ast {
-        match self.build_values(step.events).and_then(|mut nodes| {
+    // D-077: AST は木（`self.tree`）へ作り、所有 `Ast` はそこから写す。
+    let mut root = None;
+    let mut mapped = false;
+    if ok && self.options.wants_ast() {
+        match self.build_values(step.events).and_then(|nodes| {
             if nodes.len() == 1 {
-                Ok(Some(nodes.remove(0)))
+                Ok(Some(nodes[0]))
             } else if nodes.is_empty() {
                 // D-028: entry が AST 値を作らないのは mapping 失敗ではない（ast=null / mappingError=null）。
                 Ok(None)
@@ -2211,9 +2397,11 @@ pub(crate) fn finish_checked(mut self, mut step: Step) -> (ParseResult, bool) {
                 Err("entry produced more than one AST value".into())
             }
         }) {
-            Ok(ast) => ast,
+            Ok(value) => {
+                root = value;
+                mapped = true;
+            }
             Err(message) => {
-                self.node_spans.clear();
                 diagnostics.push(Diagnostic {
                     kind: DiagnosticKind::Mapping,
                     offset_cp: consumed_cp,
@@ -2226,46 +2414,63 @@ pub(crate) fn finish_checked(mut self, mut step: Step) -> (ParseResult, bool) {
                     recovery_id: None,
                     length_cp: 0,
                 });
-                None
             }
         }
+    }
+    let ast = if self.options.build_ast {
+        root.map(|root| self.tree.project(self.text, root))
     } else {
         None
     };
+    let mut node_spans = Vec::new();
+    if mapped && self.options.build_ast {
+        node_spans.reserve_exact(self.tree.typed_node_count());
+        self.tree.push_node_spans(&mut node_spans);
+    }
     self.statistics.memo_entries = self.memo.len();
     self.statistics.memo_max_probe = self
         .memo
         .max_probe_len()
         .max(self.trivia_cache.max_probe_len());
     self.statistics.recipes = self.arena.len() - 1;
-    self.statistics.ast_nodes = self.node_spans.len();
+    self.statistics.ast_nodes = if mapped {
+        self.tree.typed_node_count()
+    } else {
+        0
+    };
     self.statistics.lexical_runs = self.lex.runs;
     self.statistics.lexical_probes = self.lex.probes;
     self.statistics.trivia_skip_hits = self.trivia_skip.hits.get();
     self.statistics.trivia_skip_misses = self.trivia_skip.misses.get();
     // value span は要求されたときだけ集める（D-035）。AST 自体は先に完成している。
-    let want_value_spans = self.options.value_spans && ast.is_some();
-    let mut value_spans = Vec::with_capacity(if want_value_spans {
-        self.node_spans.len() + self.text_spans.len()
-    } else {
-        0
-    });
-    if want_value_spans {
-        if let Some(ast) = &ast {
-            let mut path = String::with_capacity(128);
-            ast.collect(&mut path, &self.text_spans, &mut value_spans);
-        }
+    let mut value_spans = Vec::new();
+    if let (true, Some(root)) = (self.options.value_spans, root) {
+        value_spans.reserve(self.tree.node_count());
+        let mut path = String::with_capacity(128);
+        self.tree
+            .collect_value_spans(self.text, root, &mut path, &mut value_spans);
     }
+    // 木を返すときは結果へ移し（入力を 1 回複製する）、返さないときは pool へ戻す。
+    let tree = match root {
+        Some(root) if self.options.ast_tree => {
+            let mut tree = std::mem::take(&mut self.tree);
+            tree.set_root(root);
+            tree.set_source(self.text);
+            Some(tree)
+        }
+        _ => None,
+    };
     let result = ParseResult {
         value_spans,
         ok,
         consumed_cp,
         matched_cp,
         ast,
+        tree,
         captures,
         lexical,
         tokens,
-        node_spans: std::mem::take(&mut self.node_spans),
+        node_spans,
         diagnostics,
         hints,
         recoveries,
@@ -2341,93 +2546,3 @@ pub(crate) fn finish_checked(mut self, mut step: Step) -> (ParseResult, bool) {
     (result, escalate)
 }
 }
-// value span の path は共有バッファに push / truncate で組み立てる（field ごとの format! を避ける）。
-// 添字も `to_string` ではなく共有バッファへ直接書く（要素ごとの確保を避ける）。
-use std::fmt::Write as _;
-trait CollectValueSpans {
-    fn collect(
-        &self,
-        path: &mut String,
-        texts: &TextSpans,
-        out: &mut Vec<ValueSpan>,
-    );
-}
-impl CollectValueSpans for String {
-    fn collect(
-        &self,
-        path: &mut String,
-        texts: &TextSpans,
-        out: &mut Vec<ValueSpan>,
-    ) {
-        if let Some(span) = texts.get(&(self.as_ptr() as usize)) {
-            out.push(ValueSpan {
-                path: path.clone(),
-                span: *span,
-                text: None,
-            });
-        }
-    }
-}
-impl<T: CollectValueSpans> CollectValueSpans for Vec<T> {
-    fn collect(
-        &self,
-        path: &mut String,
-        texts: &TextSpans,
-        out: &mut Vec<ValueSpan>,
-    ) {
-        for (i, value) in self.iter().enumerate() {
-            let len = path.len();
-            let _ = write!(path, "/{i}");
-            value.collect(path, texts, out);
-            path.truncate(len);
-        }
-    }
-}
-impl<T: CollectValueSpans> CollectValueSpans for Option<T> {
-    fn collect(
-        &self,
-        path: &mut String,
-        texts: &TextSpans,
-        out: &mut Vec<ValueSpan>,
-    ) {
-        if let Some(value) = self {
-            value.collect(path, texts, out);
-        }
-    }
-}
-impl<T: CollectValueSpans> CollectValueSpans for Box<T> {
-    fn collect(
-        &self,
-        path: &mut String,
-        texts: &TextSpans,
-        out: &mut Vec<ValueSpan>,
-    ) {
-        self.as_ref().collect(path, texts, out);
-    }
-}
-impl CollectValueSpans for Ast { fn collect(&self,path:&mut String,texts:&TextSpans,out:&mut Vec<ValueSpan>) { match self { Self::Text(text)=>{if let Some(span)=texts.get(&(text.as_ptr() as usize)) {out.push(ValueSpan{path:path.clone(),span:*span,text:Some(text.clone())});}},Self::Null=>{},
-Self::g_FormulaInfoAST_2e_FormulaInfoDocument(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/blocks");node.g_blocks.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_FormulaInfoBlock(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/leading");node.g_leading.collect(path,texts,out);path.truncate(len);}
-{let len=path.len();path.push_str("/fields/entries");node.g_entries.collect(path,texts,out);path.truncate(len);}
-{let len=path.len();path.push_str("/fields/end");node.g_end.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_CommentLine(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/text");node.g_text.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_BlankLine(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/text");node.g_text.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_FormulaInfoEntry(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/key");node.g_key.collect(path,texts,out);path.truncate(len);}
-{let len=path.len();path.push_str("/fields/value");node.g_value.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_FormulaInfoValue(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/text");node.g_text.collect(path,texts,out);path.truncate(len);}
-},
-Self::g_FormulaInfoAST_2e_EndOfPart(node)=>{out.push(ValueSpan{path:path.clone(),span:node.span,text:None});
-{let len=path.len();path.push_str("/fields/mark");node.g_mark.collect(path,texts,out);path.truncate(len);}
-},
-}}}

@@ -437,6 +437,14 @@ impl XorShiftRandom {
 }
 
 impl Default for XorShiftRandom {
+    /// Seeded from the system clock; on `wasm32-unknown-unknown`, which has no clock (reading
+    /// it panics), from a fixed seed — pass a seed with [`XorShiftRandom::new`] there.
+    #[cfg(target_arch = "wasm32")]
+    fn default() -> Self {
+        Self::new(0x9e37_79b9_7f4a_7c15)
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
     fn default() -> Self {
         let seed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)

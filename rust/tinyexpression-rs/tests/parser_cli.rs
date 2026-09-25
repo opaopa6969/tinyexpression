@@ -18,7 +18,7 @@ fn fixture(name: &str) -> PathBuf {
 }
 
 fn run_with_stdin(arguments: &[&str], input: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -342,7 +342,7 @@ fn cli_accepts_explicit_stdin_marker() {
 
 #[test]
 fn cli_reads_multiline_formula_from_file() {
-    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(["parse", fixture("valid-multiline.tiny").to_str().unwrap()])
         .output()
         .expect("run parser with a file");
@@ -353,7 +353,7 @@ fn cli_reads_multiline_formula_from_file() {
 
 #[test]
 fn cli_reports_parse_failure_as_json_and_exit_three() {
-    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(["parse", fixture("invalid-syntax.tiny").to_str().unwrap()])
         .output()
         .expect("run parser with invalid input");
@@ -367,7 +367,7 @@ fn cli_reports_parse_failure_as_json_and_exit_three() {
 
 #[test]
 fn cli_reports_usage_errors_on_stderr_and_exit_two() {
-    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .output()
         .expect("run parser without arguments");
 
@@ -375,14 +375,14 @@ fn cli_reports_usage_errors_on_stderr_and_exit_two() {
     assert!(stdout(&output).is_empty());
     assert_eq!(
         stderr(&output),
-        "usage: tinyexpression-rs <parse|eval> [FILE|-]\n       tinyexpression-rs <load|run> [--default-backend NAME] [FILE|-]\n"
+        "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n"
     );
 }
 
 #[test]
 fn cli_reports_file_io_errors_as_json_and_exit_six() {
     let missing = fixture("does-not-exist.tiny");
-    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(["parse", missing.to_str().unwrap()])
         .output()
         .expect("run parser with missing file");

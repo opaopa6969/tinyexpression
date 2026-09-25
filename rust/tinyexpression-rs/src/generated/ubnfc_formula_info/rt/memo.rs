@@ -45,6 +45,9 @@ pub struct Memo<T> {
     slots: Vec<u32>,
     entries: Vec<(PackedKey, T)>,
     max_probe: Cell<usize>,
+    /// 最初の insert で確保する entry 数の見積り。memo を 1 度も使わない parse
+    /// （例: JSON は memo 対象の expression に再訪しない）では表を確保しない。
+    planned: usize,
 }
 impl<T: Copy> Default for Memo<T> {
     fn default() -> Self {
@@ -52,16 +55,16 @@ impl<T: Copy> Default for Memo<T> {
             slots: vec![],
             entries: vec![],
             max_probe: Cell::new(0),
+            planned: 0,
         }
     }
 }
 impl<T: Copy> Memo<T> {
+    /// `capacity` は見積り。表は最初の insert で確保する（それまで確保しない）。
     pub fn with_capacity(capacity: usize) -> Self {
-        let capacity = capacity.min(1_000_000);
         Self {
-            slots: vec![0; ((capacity + 1) * 2).next_power_of_two().max(64)],
-            entries: Vec::with_capacity(capacity),
-            max_probe: Cell::new(0),
+            planned: capacity.min(1_000_000),
+            ..Self::default()
         }
     }
     /// 内容を捨てて再利用する（確保は保持）。前回の表が今回の見積りより大きすぎるときは
@@ -70,8 +73,11 @@ impl<T: Copy> Memo<T> {
     pub fn reset(&mut self, capacity: usize) {
         let capacity = capacity.min(1_000_000);
         let wanted = ((capacity + 1) * 2).next_power_of_two().max(64);
+        self.planned = capacity;
         self.entries.clear();
-        if self.slots.len() > wanted.saturating_mul(8) {
+        if self.slots.is_empty() {
+            // まだ確保していない（最初の insert で見積りどおりに確保する）。
+        } else if self.slots.len() > wanted.saturating_mul(8) {
             self.slots = vec![0; wanted];
             self.entries.shrink_to(capacity);
         } else if self.slots.len() < wanted {
@@ -119,6 +125,10 @@ impl<T: Copy> Memo<T> {
     pub fn insert(&mut self, key: Key, value: T) {
         if self.entries.len() >= u32::MAX as usize - 1 {
             return;
+        }
+        if self.slots.is_empty() {
+            self.slots = vec![0; ((self.planned + 1) * 2).next_power_of_two().max(64)];
+            self.entries.reserve(self.planned);
         }
         if (self.entries.len() + 1) * 2 >= self.slots.len() {
             self.slots = vec![0; (self.slots.len() * 2).max(64)];

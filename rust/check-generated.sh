@@ -31,3 +31,10 @@ else
   echo "vendored FormulaInfo manifest: matches"
 fi
 python3 "$script_dir/scripts/generate-compat.py" --check
+# The pin that `tinyexpression --version` and te_version() report (issue #181).
+pin_commit=$(sed -n 's/^ubnfc_commit=//p' "$script_dir/ubnfc-pin.txt")
+grep -q "^pub const UBNFC_COMMIT: &str = \"$pin_commit\";" "$script_dir/tinyexpression-rs/src/api.rs" || {
+  echo "tinyexpression-rs/src/api.rs UBNFC_COMMIT differs from rust/ubnfc-pin.txt ($pin_commit)" >&2
+  exit 1
+}
+echo "api.rs UBNFC_COMMIT: matches the pin"

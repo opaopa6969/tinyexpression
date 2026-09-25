@@ -13,6 +13,8 @@ printf '%s' '(1 + 2) * 3' | cargo run --locked --manifest-path rust/Cargo.toml \
   -p tinyexpression-rs -- eval -
 ```
 
+binary 名は `tinyexpression`（issue #181 で `tinyexpression-rs` から改名）。`check` は parse・mapping・型検査だけ行い `{"ok":true}` を返す。全コマンド・exit code は `tinyexpression --help`、配布形（C ABI・wasm32・versioning）は [`rust/README.md`](../README.md) を参照。CLI・C ABI・wasm が共有する JSON 契約は `tinyexpression_rs::api` にある。
+
 `parse` の成功時は `{"ok":true,"ast":...}`、`eval` の成功時は `number`・`boolean`・`string` の型付き値を出力する。number は Java float と照合できる raw bits も含む。構文エラーは `{"ok":false,"stage":"parse","diagnostic":...}`、未対応 AST は source span 付きの `unsupported_node` 評価エラーになる。ASTはcapture文字列とspanを所有するためparse treeを破棄できるが、入力全文は保持しない。公開offsetはUnicode code point単位である。
 
 library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, EvaluationError>` と `evaluate_ast(&Ast)` を公開する。`Value` は `Number(f32)`・`Boolean(bool)`・`String(String)` を持ち、`number()`・`boolean()`・`string()` で型安全に参照できる。number の `f32_bits()` では Java float とビット単位で比較できる。

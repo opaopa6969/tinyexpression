@@ -18,7 +18,7 @@ fn cases() -> impl Iterator<Item = (&'static str, &'static str, u32)> {
 }
 
 fn run_with_stdin(arguments: &[&str], input: &str) -> Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(arguments)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -112,7 +112,7 @@ fn eval_cli_returns_value_and_f32_bits_from_stdin() {
 fn eval_cli_reads_a_formula_file() {
     let fixture =
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/valid-basic.tiny");
-    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let output = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .args(["eval", fixture.to_str().unwrap()])
         .output()
         .expect("run evaluator with file");

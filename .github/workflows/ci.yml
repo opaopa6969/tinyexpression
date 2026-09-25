@@ -8,13 +8,13 @@ on:
 
 jobs:
   rust-parser:
-    name: Rust P4 parser binary
+    name: Rust P4 parser binary, C ABI and wasm32
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
       - name: Set up Rust 1.85
         run: |
-          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy
+          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy --target wasm32-unknown-unknown
           rustup default 1.85.0
       - name: Verify vendored ubnfc parser and generated adapter
         run: bash rust/check-generated.sh
@@ -26,22 +26,35 @@ jobs:
       - name: Build and smoke-test release binary
         run: |
           cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs
-          printf '%s' '1 + 2' | rust/target/release/tinyexpression-rs parse - | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
-          smoke_file=$(mktemp "$RUNNER_TEMP/tinyexpression-rs.XXXXXX")
+          rust/target/release/tinyexpression --version | grep -q "^tinyexpression $(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml) (ubnfc $(sed -n 's/^ubnfc_commit=//p' rust/ubnfc-pin.txt))$"
+          rust/target/release/tinyexpression --help | grep -q '^Exit codes:'
+          printf '%s' '1 + 2' | rust/target/release/tinyexpression parse - | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
+          smoke_file=$(mktemp "$RUNNER_TEMP/tinyexpression.XXXXXX")
           printf '%s\n' "var \$price as number set 3;" "\$price + 4" > "$smoke_file"
-          rust/target/release/tinyexpression-rs parse "$smoke_file" | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
-          rust/target/release/tinyexpression-rs run src/test/resources/formulaInfo-ubnf/accept-18-depends-on.fi | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and [f["info"]["calculatorName"] for f in value["formulas"]] == ["base", "derived"]'
+          rust/target/release/tinyexpression parse "$smoke_file" | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
+          rust/target/release/tinyexpression run src/test/resources/formulaInfo-ubnf/accept-18-depends-on.fi | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and [f["info"]["calculatorName"] for f in value["formulas"]] == ["base", "derived"]'
+      # issue #181: the cdylib + C header, linked from C with gcc.
+      - name: C ABI (cdylib) smoke test
+        run: bash rust/tinyexpression-ffi/tests/c/run.sh release
+      # issue #181: the library and the wasm exports build for wasm32-unknown-unknown, and the
+      # browser demo's binding runs under node.
+      - name: wasm32 build and node smoke test
+        run: |
+          cargo build --release --locked --manifest-path rust/Cargo.toml --target wasm32-unknown-unknown -p tinyexpression-rs --lib
+          cargo build --profile release-small --locked --manifest-path rust/Cargo.toml --target wasm32-unknown-unknown -p tinyexpression-ffi
+          ls -l rust/target/wasm32-unknown-unknown/release-small/tinyexpression.wasm
+          node rust/examples/wasm/node-smoke.mjs
       - name: Package Linux x86_64 binary
         run: |
-          package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-rs-package.XXXXXX")
-          install -m 0755 rust/target/release/tinyexpression-rs "$package_dir/tinyexpression-rs"
+          package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-package.XXXXXX")
+          install -m 0755 rust/target/release/tinyexpression "$package_dir/tinyexpression"
           install -m 0644 LICENSE "$package_dir/LICENSE"
           install -m 0644 rust/tinyexpression-rs/README.md "$package_dir/README.md"
-          tar -czf rust/target/tinyexpression-rs-linux-x86_64.tar.gz -C "$package_dir" tinyexpression-rs LICENSE README.md
+          tar -czf rust/target/tinyexpression-linux-x86_64.tar.gz -C "$package_dir" tinyexpression LICENSE README.md
       - uses: actions/upload-artifact@v6
         with:
-          name: tinyexpression-rs-linux-x86_64
-          path: rust/target/tinyexpression-rs-linux-x86_64.tar.gz
+          name: tinyexpression-linux-x86_64
+          path: rust/target/tinyexpression-linux-x86_64.tar.gz
           if-no-files-found: error
 
   ubnfc-parser:

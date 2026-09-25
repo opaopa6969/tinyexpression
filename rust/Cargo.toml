@@ -1,11 +1,14 @@
 [workspace]
-members = ["tinyexpression-rs"]
+members = ["tinyexpression-rs", "tinyexpression-ffi"]
 resolver = "2"
 
 [workspace.package]
+version = "2.0.0"
 edition = "2021"
 rust-version = "1.85"
 license = "MIT"
+repository = "https://github.com/opaopa6969/tinyexpression"
+homepage = "https://github.com/opaopa6969/tinyexpression/tree/master/rust"
 
 # `cargo test` builds with light optimisation: the vendored parser's native-stack sentinel
 # (256 KiB on the calling thread, see generated/ubnfc/runtime.rs) is sized for optimised frames,
@@ -13,3 +16,13 @@ license = "MIT"
 # assertions and overflow checks stay on.
 [profile.test]
 opt-level = 1
+
+# Size-optimised build for the wasm32 module and the C library (issue #181):
+#   cargo build --profile release-small --target wasm32-unknown-unknown -p tinyexpression-ffi
+[profile.release-small]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

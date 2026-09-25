@@ -14,6 +14,16 @@ pub fn parse(text:&str)->ParseResult {parse_with_options(text,ParseOptions::defa
 pub fn parse_with_options(text:&str,options:ParseOptions)->ParseResult {
 let (result,stack_exhausted)=parse_with_options_budget(text,options,NATIVE_STACK_SENTINEL_BYTES);
 if result.ok || !stack_exhausted {return result;}
+parse_with_options_escalated(text,options)
+}
+// issue #65 / D-070 wasm: wasm32 には OS スレッドの stack size 制御が無く
+// （`wasm32-unknown-unknown` は既定で `std::thread` 自体を欠く）、この escalation は
+// コンパイルできない。生成物は依存ゼロ・std のみのままにするため wasm32 では
+// escalation を丸ごとコンパイル対象から外し、番兵budget（NATIVE_STACK_SENTINEL_BYTES）
+// の結果、つまり既に "maximum parse depth exceeded" が入った診断へそのまま fallback する
+// （crash しない。D-070 の契約どおり）。
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_with_options_escalated(text:&str,options:ParseOptions)->ParseResult {
 let budget=escalated_stack_budget(options.max_depth);
 let stack_bytes=escalated_thread_stack_bytes(options.max_depth);
 std::thread::scope(|scope| {
@@ -23,6 +33,10 @@ std::thread::Builder::new().stack_size(stack_bytes)
 .join()
 .unwrap_or_else(|payload| std::panic::resume_unwind(payload))
 })
+}
+#[cfg(target_arch = "wasm32")]
+fn parse_with_options_escalated(text:&str,options:ParseOptions)->ParseResult {
+parse_with_options_budget(text,options,NATIVE_STACK_SENTINEL_BYTES).0
 }
 fn parse_with_options_budget(text:&str,options:ParseOptions,budget:usize)->(ParseResult,bool) {
 parse_with_scanner_budget(text,options,&mut RejectExtern,budget)
@@ -92,6 +106,7 @@ Ok((parser.finish(step),stack_exhausted))
 // issue #35 / D-070: native stack 番兵に max_depth より先へ当たった（＝呼出し元 thread の
 // stack が小さいだけ）ときだけ、max_depth から見積もった十分な stack を持つ専用 thread で
 // 1 度だけ解析し直す。RejectExtern は状態を持たないので thread をまたいで再構築してよい。
+#[cfg(not(target_arch = "wasm32"))]
 fn parse_entry_escalated(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
 let budget=escalated_stack_budget(options.max_depth);
 let stack_bytes=escalated_thread_stack_bytes(options.max_depth);
@@ -105,6 +120,14 @@ parse_entry_budget(grammar,entry,text,options,&mut scanner,budget)
 .join()
 .unwrap_or_else(|payload| std::panic::resume_unwind(payload))
 }).map(|(result,_)| result)
+}
+// issue #65 / D-070 wasm: wasm32 では escalation を丸ごとコンパイル対象から外し、番兵
+// budget（NATIVE_STACK_SENTINEL_BYTES）での再解析結果、つまり既に "maximum parse depth
+// exceeded" が入った診断へそのまま fallback する（crash しない。D-070 の契約どおり）。
+#[cfg(target_arch = "wasm32")]
+fn parse_entry_escalated(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
+let mut scanner=RejectExtern;
+parse_entry_budget(grammar,entry,text,options,&mut scanner,NATIVE_STACK_SENTINEL_BYTES).map(|(result,_)| result)
 }
 pub fn parse_entry_with_options(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
 let mut scanner=RejectExtern;
@@ -487,7 +510,7 @@ out
 fn e3_c(&mut self,state:State)->Step {
 let mut out=self.b3_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:3,rule:0,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,3,0);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -740,7 +763,7 @@ out
 fn e20_c(&mut self,state:State)->Step {
 let mut out=self.b20_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:20,rule:1,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,20,1);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -848,7 +871,7 @@ out
 fn e27_c(&mut self,state:State)->Step {
 let mut out=self.b27_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:27,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,27,3);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -880,7 +903,7 @@ out
 fn e29_c(&mut self,state:State)->Step {
 let mut out=self.b29_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:29,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,29,3);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -932,7 +955,7 @@ out
 fn e33_c(&mut self,state:State)->Step {
 let mut out=self.b33_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:33,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,33,3);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -1146,7 +1169,7 @@ out
 fn e47_c(&mut self,state:State)->Step {
 let mut out=self.b47_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:47,rule:4,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,47,4);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -1177,7 +1200,7 @@ out
 fn e49_c(&mut self,state:State)->Step {
 let mut out=self.b49_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:49,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,49,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["' '"]);}
 out
 }
@@ -1190,7 +1213,7 @@ out
 fn e50_c(&mut self,state:State)->Step {
 let mut out=self.b50_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:50,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,50,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\t'"]);}
 out
 }
@@ -1203,7 +1226,7 @@ out
 fn e51_c(&mut self,state:State)->Step {
 let mut out=self.b51_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:51,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,51,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["VT_FFParser"]);}
 out
 }
@@ -1262,7 +1285,7 @@ out
 fn e55_c(&mut self,state:State)->Step {
 let mut out=self.b55_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:55,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,55,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -1308,7 +1331,7 @@ out
 fn e58_c(&mut self,state:State)->Step {
 let mut out=self.b58_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:58,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,58,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
 out
 }
@@ -1321,7 +1344,7 @@ out
 fn e59_c(&mut self,state:State)->Step {
 let mut out=self.b59_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:59,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,59,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -1333,7 +1356,7 @@ out
 fn e60_c(&mut self,state:State)->Step {
 let mut out=self.b60_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:60,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,60,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -1427,7 +1450,7 @@ out
 fn e66_c(&mut self,state:State)->Step {
 let mut out=self.b66_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:66,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,66,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -1568,7 +1591,7 @@ out
 fn e75_c(&mut self,state:State)->Step {
 let mut out=self.b75_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:75,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,75,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
 out
 }
@@ -1581,7 +1604,7 @@ out
 fn e76_c(&mut self,state:State)->Step {
 let mut out=self.b76_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:76,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,76,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -1612,7 +1635,7 @@ out
 fn e78_c(&mut self,state:State)->Step {
 let mut out=self.b78_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:78,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,78,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -1639,7 +1662,7 @@ out
 fn e80_c(&mut self,state:State)->Step {
 let mut out=self.b80_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:80,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,80,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
 out
 }
@@ -1705,7 +1728,7 @@ out
 fn e84_c(&mut self,state:State)->Step {
 let mut out=self.b84_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:84,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,84,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["NOT_ID_HEADParser"]);}
 out
 }
@@ -1736,7 +1759,7 @@ out
 fn e86_c(&mut self,state:State)->Step {
 let mut out=self.b86_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:86,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,86,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -1764,7 +1787,7 @@ out
 fn e88_c(&mut self,state:State)->Step {
 let mut out=self.b88_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:88,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,88,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -1810,7 +1833,7 @@ out
 fn e91_c(&mut self,state:State)->Step {
 let mut out=self.b91_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:91,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,91,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
 out
 }
@@ -1823,7 +1846,7 @@ out
 fn e92_c(&mut self,state:State)->Step {
 let mut out=self.b92_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:92,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,92,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -1886,7 +1909,7 @@ out
 fn e96_c(&mut self,state:State)->Step {
 let mut out=self.b96_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:96,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,96,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["NOT_COLONParser"]);}
 out
 }
@@ -1917,7 +1940,7 @@ out
 fn e98_c(&mut self,state:State)->Step {
 let mut out=self.b98_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:98,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,98,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
@@ -1970,7 +1993,7 @@ out
 fn e102_c(&mut self,state:State)->Step {
 let mut out=self.b102_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:102,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,102,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\r'"]);}
 out
 }
@@ -1982,7 +2005,7 @@ out
 fn e103_c(&mut self,state:State)->Step {
 let mut out=self.b103_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:103,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,103,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\n'"]);}
 out
 }
@@ -1994,7 +2017,7 @@ out
 fn e104_c(&mut self,state:State)->Step {
 let mut out=self.b104_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:104,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,104,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -2021,7 +2044,7 @@ out
 fn e106_c(&mut self,state:State)->Step {
 let mut out=self.b106_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:106,rule:11,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,106,11);
 out.events=self.event(Event::Capture {site:13,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
 out
@@ -2075,7 +2098,7 @@ out
 fn e110_c(&mut self,state:State)->Step {
 let mut out=self.b110_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:110,rule:11,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,110,11);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -2106,7 +2129,7 @@ out
 fn e112_c(&mut self,state:State)->Step {
 let mut out=self.b112_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:112,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,112,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\r\n'"]);}
 out
 }
@@ -2119,7 +2142,7 @@ out
 fn e113_c(&mut self,state:State)->Step {
 let mut out=self.b113_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:113,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,113,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\r'"]);}
 out
 }
@@ -2132,7 +2155,7 @@ out
 fn e114_c(&mut self,state:State)->Step {
 let mut out=self.b114_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:114,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,114,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\n'"]);}
 out
 }

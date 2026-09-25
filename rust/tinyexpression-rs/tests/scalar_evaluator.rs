@@ -70,7 +70,7 @@ fn library_matches_java_scalar_control_fixture() {
 }
 
 fn eval_cli(formula: &str) -> std::process::Output {
-    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression-rs"))
+    let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
         .arg("eval")
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
