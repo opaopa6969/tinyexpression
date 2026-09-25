@@ -3,7 +3,12 @@
 All notable changes to TinyExpression are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [Unreleased]
+## [2.0.1] - Unreleased
+
+### Dependencies
+- Bumped `unlaxer-common` / `unlaxer-dsl` (`unlaxer.version`) from 3.0.15 to [3.1.0](https://github.com/opaopa6969/unlaxer-parser/releases/tag/3.1.0) (#209). Only the `classic` engine (`p4Engine:classic`, alias `legacy`, or `-Dtinyexpression.p4.engine=classic`) links against it; the default `ubnfc` engine is unaffected.
+- `classic` parses now retain a smaller tree (-33% size / -40% object count on a 20 KB input, sub-sources are views over the root's code points) and the packrat memo table is windowed (default 1024 code points behind the parse frontier) instead of growing with input length, bounding memory to the grammar's backtracking distance.
+- `classic` also gains `SAFE_FAILURES` memoization replay for safe successes and `Source.sourceRange()` for reading a token's `[start, start+length)` extent without building a `CursorRange`; neither changes observable parse/evaluation results.
 
 ### Added
 - Language catalog `catalog/tinyexpression-catalog.json` (+ JSON schema) as the single source of variable / function / keyword descriptions, TE / FI error texts and the TE code rules; everything from the VSIX (`config/*.tecatalog`, the Ext's `ERROR_CATALOG` / snippet tables, `error-catalog.json`) migrated with matching counts. The LSP server reads it through `CatalogProvider` (hover, completion docs, diagnostics) and merges `tinyExpressionP4Lsp.catalog.overridePath` (#201).
