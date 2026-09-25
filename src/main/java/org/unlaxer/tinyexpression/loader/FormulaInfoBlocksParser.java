@@ -62,6 +62,14 @@ public class FormulaInfoBlocksParser extends LazyOneOrMore{
           continue;
         }
         Calculator dependsOncalculator = calculatorByName.get(dependsOnCalculatorName);
+        // Issue #195: an unknown dependsOn name used to reach Calculator.addDependsOn(null),
+        // which fails with a bare NullPointerException while wiring the dependency back
+        // (dependsOncalculator.setDependsOnBy(this)). Reject it explicitly instead.
+        if (dependsOncalculator == null) {
+          throw new FormulaInfoParseException(
+              formulaInfo.calculatorName + " dependsOn unknown calculator '"
+                  + dependsOnCalculatorName + "'");
+        }
         calculator.addDependsOn(dependsOncalculator);
       }
     });

@@ -17,6 +17,7 @@ import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
+import org.unlaxer.tinyexpression.loader.FormulaInfoParseException;
 import org.unlaxer.util.StringUtils;
 import org.unlaxer.util.Try;
 import org.unlaxer.util.Tuple2;
@@ -117,6 +118,21 @@ public class FormulaInfoList {
       StringSource stringSource = StringSource.createRootSource(text);
       ParseContext parseContext = new ParseContext(stringSource);
       Parsed parsed = formulaInfoBlocksParser.parse(parseContext);
+
+      // Issue #195: FormulaInfoBlocksParser is a OneOrMore of blocks with no terminator, so it
+      // can succeed having matched only a prefix of the input (or fail outright). Silently
+      // keeping that prefix (or, on outright failure, whatever the caller of getRootToken()
+      // happens to do with it) hides a malformed document instead of rejecting it, unlike the
+      // UBNF grammar's Document rule (blocks then EOF) and FormulaInfoSourceDocument.parse.
+      if (false == parsed.isSucceeded() || parsed.getConsumed() == null) {
+        throw new FormulaInfoParseException("Invalid FormulaInfo document");
+      }
+      int consumed = parsed.getConsumed().source.sourceAsString().length();
+      if (consumed != text.length()) {
+        throw new FormulaInfoParseException(
+            "FormulaInfo document was only partially parsed at offset " + consumed);
+      }
+
       TypedToken<FormulaInfoBlocksParser> typedToken =
           parsed.getRootToken().typed(FormulaInfoBlocksParser.class);
 
