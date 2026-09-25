@@ -55,6 +55,11 @@ int32_t te_formula_info(const uint8_t *source, size_t len, int32_t run, uint64_t
 int32_t te_eval_context(const uint8_t *source, size_t len, char **out);
 /* The same request with a FormulaInfo "document" instead of "formula": run on that context. */
 int32_t te_formula_info_context(const uint8_t *source, size_t len, char **out);
+/* te_eval_context plus the evaluation trace of the Java-compatible tree walker (issue #201):
+ * {...,"trace":{"steps":n,"recorded":n,"truncated":bool,"root":{"kind","span":[start,end],
+ * "leaf"?,"value"?|"error"?,"text"?,"children":[...]}}}; "trace":null when the formula could
+ * not be built. The value is the one te_eval_context returns. */
+int32_t te_eval_trace(const uint8_t *source, size_t len, char **out);
 
 /* {"name":"tinyexpression","version":"2.0.0","ubnfc":"<commit>","abi":1}; free with te_free */
 char *te_version(void);

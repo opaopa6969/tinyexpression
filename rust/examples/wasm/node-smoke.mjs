@@ -38,6 +38,14 @@ const contextual = te.evalContext({
 });
 assert.equal(contextual.code, 0);
 assert.equal(contextual.result.text, '3.0');
+const traced = te.evalTrace({
+  formula: 'if($member){$price * 2}else{$price}',
+  variables: [{ name: 'member', type: 'boolean', value: true }, { name: 'price', type: 'float', value: '1.5' }],
+});
+assert.equal(traced.code, 0);
+assert.equal(traced.result.text, '3.0');
+assert.equal(traced.result.trace.root.text, '3.0');
+assert.ok(traced.result.trace.steps > 3 && !traced.result.trace.truncated);
 const contextRun = te.runContext({
   document: 'calculatorName:base\nformula:\n$x + 1\n---END_OF_PART---\n',
   variables: [{ name: 'x', type: 'float', value: 2 }],

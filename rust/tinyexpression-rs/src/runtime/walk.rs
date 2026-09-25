@@ -6,6 +6,7 @@ use std::collections::HashMap;
 
 use super::java;
 use super::ops::{self, err, Cmp, Declared, Equality, Math1, Op, Pred, Scope, StrFn, R};
+use super::trace::{TraceHook, TraceSite};
 use super::{Context, ErrorKind, EvalError, ExternalCall, Host, Program, ResultType};
 use crate::generated::ast::{Ast, AstValue};
 use crate::Value;
@@ -18,6 +19,8 @@ pub(crate) struct Walker<'a, 'c, 'h, 'hh> {
     methods: HashMap<String, &'a Ast>,
     declared: HashMap<String, Declared>,
     depth: usize,
+    /// Observer of every step (issue #201 stage 3); `None` on the untraced path.
+    trace: Option<&'h mut dyn TraceHook>,
 }
 
 enum Unwrapped<'a> {
@@ -77,7 +80,13 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
             methods: HashMap::new(),
             declared: HashMap::new(),
             depth: 0,
+            trace: None,
         }
+    }
+
+    pub(crate) fn with_trace(mut self, hook: &'h mut dyn TraceHook) -> Self {
+        self.trace = Some(hook);
+        self
     }
 
     pub(crate) fn run(mut self, root: &'a Ast) -> R {
@@ -96,7 +105,30 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
         Ok(super::java_string(&self.eval(node)?))
     }
 
+    /// Evaluates a node; with a trace hook, reports the step around it.
     fn eval(&mut self, node: &'a Ast) -> R {
+        if self.trace.is_none() {
+            return self.eval_node(node);
+        }
+        self.traced(TraceSite::Node(node), |walker| walker.eval_node(node))
+    }
+
+    /// Runs `step` between the hook's `on_enter(site)` and `on_exit(result)`.
+    fn traced(&mut self, site: TraceSite<'_>, step: impl FnOnce(&mut Self) -> R) -> R {
+        match self.trace.as_deref_mut() {
+            None => step(self),
+            Some(hook) => {
+                hook.on_enter(site);
+                let result = step(self);
+                if let Some(hook) = self.trace.as_deref_mut() {
+                    hook.on_exit(result.as_ref());
+                }
+                result
+            }
+        }
+    }
+
+    fn eval_node(&mut self, node: &'a Ast) -> R {
         match node {
             Ast::FormulaExpr {
                 imports,
@@ -630,6 +662,20 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
 
     /// `evalOperandAsNumber`.
     fn operand(&mut self, value: &'a AstValue) -> R {
+        if self.trace.is_some() {
+            // Text operands and nested `BinaryExpr` operands are not `eval`uated as nodes, so the
+            // trace records them here; other nodes are recorded by `eval` (`coerce_number`).
+            return match value {
+                AstValue::Text { text, span } => self
+                    .traced(TraceSite::Leaf { text, span: *span }, |walker| {
+                        walker.leaf_literal(text)
+                    }),
+                AstValue::Node(node) if matches!(node.as_ref(), Ast::BinaryExpr { .. }) => {
+                    self.traced(TraceSite::Node(node), |walker| walker.number_of(node))
+                }
+                AstValue::Node(node) => self.number_of(node),
+            };
+        }
         match value {
             AstValue::Text { text, .. } => self.leaf_literal(text),
             AstValue::Node(node) => self.number_of(node),
@@ -649,19 +695,19 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
 
     /// `resolveStringLeaf`.
     fn string_leaf(&mut self, value: &'a AstValue) -> Result<String, EvalError> {
-        match value {
-            AstValue::Text { text, .. } => {
-                let stripped = java::strip(text);
-                if let Some(name) = ops::exact_variable(stripped) {
-                    let resolved = self.scope.any(name);
-                    return Ok(if resolved == Value::Null {
-                        String::new()
-                    } else {
-                        super::java_string(&resolved)
-                    });
-                }
-                Ok(ops::unquote(stripped).unwrap_or(text).to_owned())
+        if self.trace.is_some() {
+            if let AstValue::Text { text, span } = value {
+                let traced = self.traced(TraceSite::Leaf { text, span: *span }, |walker| {
+                    walker.string_text_leaf(text).map(Value::String)
+                });
+                return traced.map(|value| match value {
+                    Value::String(text) => text,
+                    _ => unreachable!("string leaves are strings"),
+                });
             }
+        }
+        match value {
+            AstValue::Text { text, .. } => self.string_text_leaf(text),
             AstValue::Node(node) => {
                 if let Some(name) = exact_variable_of_binary(node) {
                     let resolved = self.scope.any(&name);
@@ -677,6 +723,20 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
                 })
             }
         }
+    }
+
+    /// `resolveStringLeaf` on a text operand.
+    fn string_text_leaf(&mut self, text: &'a str) -> Result<String, EvalError> {
+        let stripped = java::strip(text);
+        if let Some(name) = ops::exact_variable(stripped) {
+            let resolved = self.scope.any(name);
+            return Ok(if resolved == Value::Null {
+                String::new()
+            } else {
+                super::java_string(&resolved)
+            });
+        }
+        Ok(ops::unquote(stripped).unwrap_or(text).to_owned())
     }
 
     fn math1(&mut self, function: Math1, arg: &'a Ast) -> R {

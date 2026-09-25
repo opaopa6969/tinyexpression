@@ -62,6 +62,48 @@ export function errorCatalogJsonOf(catalog) {
   return JSON.stringify(out, null, 2) + '\n';
 }
 
+/**
+ * Every file generated from the catalog, as repository-relative path -> text: the catalog's own
+ * canonical text, the `.tecatalog` files of the variable groups and `error-catalog.json`.
+ */
+export function derivedFiles(catalog) {
+  const files = new Map();
+  files.set('catalog/tinyexpression-catalog.json', formatCatalog(catalog));
+  for (const group of catalog.variableGroups) {
+    if (group.tecatalog) files.set(group.tecatalog, tecatalogOf(catalog, group.id));
+  }
+  files.set('tools/tinyexpression-p4-lsp-vscode/src/main/resources/error-catalog.json', errorCatalogJsonOf(catalog));
+  return files;
+}
+
+/** Consistency rules the JSON schema cannot express: unique keys, known groups and codes. */
+export function structuralProblems(catalog) {
+  const problems = [];
+  const seen = new Set();
+  for (const e of catalog.errorCodes ?? []) {
+    if (seen.has(e.code)) problems.push(`duplicate error code ${e.code}`);
+    seen.add(e.code);
+  }
+  for (const r of catalog.diagnosticRules ?? []) {
+    if (!seen.has(r.code)) problems.push(`diagnostic rule points to unknown code ${r.code}`);
+  }
+  if (!seen.has(catalog.defaultErrorCode)) problems.push(`defaultErrorCode ${catalog.defaultErrorCode} is not defined`);
+  const groupIds = new Set((catalog.variableGroups ?? []).map((g) => g.id));
+  const variableKeys = new Set();
+  for (const v of catalog.variables ?? []) {
+    if (!groupIds.has(v.group)) problems.push(`variable ${v.name}: unknown group ${v.group}`);
+    const key = `${v.group}/${v.match}/${v.name}`;
+    if (variableKeys.has(key)) problems.push(`duplicate variable ${key}`);
+    variableKeys.add(key);
+  }
+  const functionNames = new Set();
+  for (const f of catalog.functions ?? []) {
+    if (functionNames.has(f.name)) problems.push(`duplicate function ${f.name}`);
+    functionNames.add(f.name);
+  }
+  return problems;
+}
+
 /** Counts per section, printed by the generator and asserted by tests. */
 export function countsOf(catalog) {
   const counts = {};

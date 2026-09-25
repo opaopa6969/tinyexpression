@@ -1,8 +1,10 @@
 .vscode/**
 .vscode-test/**
 src/**
+scripts/**
 grammar/**
 node_modules/**
+out-test/**
 target/**
 *.vsix
 pom.xml

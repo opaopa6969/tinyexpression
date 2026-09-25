@@ -53,6 +53,13 @@ int main(void) {
   expect(code == TE_OK && strstr(json, "\"text\":\"3.0\""), "eval context", json);
   te_free(json);
 
+  code = call(te_eval_trace,
+              "{\"formula\":\"$price * 2\",\"variables\":[{\"name\":\"price\",\"type\":\"float\",\"value\":\"1.5\"}]}",
+              &json);
+  printf("te_eval_trace = %d %s\n", code, json);
+  expect(code == TE_OK && strstr(json, "\"text\":\"3.0\"") && strstr(json, "\"trace\":{\"steps\":"), "eval trace", json);
+  te_free(json);
+
   code = call(te_formula_info_context,
               "{\"document\":\"formula:\\n$x + 1\\n---END_OF_PART---\\n\",\"variables\":[{\"name\":\"x\",\"value\":2}]}",
               &json);

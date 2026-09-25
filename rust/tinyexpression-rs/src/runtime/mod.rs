@@ -17,6 +17,7 @@ pub(crate) mod compile;
 pub mod java;
 mod ops;
 mod select;
+pub mod trace;
 mod walk;
 
 use std::any::Any;
@@ -28,6 +29,7 @@ use crate::generated::ast::Ast;
 use crate::{FrontendError, ParseDiagnostic, Value};
 
 pub use compile::Compiled;
+pub use trace::{TraceHook, TraceNode, TraceRecorder, TraceSite};
 
 /// `ExpressionType` values a formula can be evaluated as (the result type of the calculator).
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Hash)]
@@ -624,6 +626,22 @@ impl Program {
     ) -> Result<Value, EvalError> {
         match &self.root {
             Some(root) => walk::Walker::new(self, context, host).run(root),
+            None => Ok(Value::Null),
+        }
+    }
+
+    /// [`Program::eval_tree`] with `hook` observing every step of the walker (issue #201): the
+    /// result is the same as without a hook. See [`trace`].
+    pub fn eval_tree_traced(
+        &self,
+        context: &mut Context,
+        host: &mut Host<'_>,
+        hook: &mut dyn TraceHook,
+    ) -> Result<Value, EvalError> {
+        match &self.root {
+            Some(root) => walk::Walker::new(self, context, host)
+                .with_trace(hook)
+                .run(root),
             None => Ok(Value::Null),
         }
     }

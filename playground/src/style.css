@@ -58,13 +58,16 @@ a { color: var(--accent); }
 .layout {
   display: grid; gap: 16px; padding: 0 16px 16px; max-width: 1400px; margin: 0 auto;
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
-  grid-template-areas: "editor context" "info info";
+  grid-template-areas: "editor context" "trace trace" "info info" "catalog catalog";
 }
 .editor-panel { grid-area: editor; }
 .context-panel { grid-area: context; }
 .info-panel { grid-area: info; }
+.trace-panel { grid-area: trace; }
+.catalog-panel { grid-area: catalog; }
 @media (max-width: 900px) {
-  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "editor" "context" "info"; }
+  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "editor" "context" "trace" "info" "catalog"; }
+  .trace-body, .catalog-body { grid-template-columns: minmax(0, 1fr) !important; }
 }
 .panel {
   background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; min-width: 0;
@@ -129,3 +132,62 @@ footer { max-width: 1400px; margin: 0 auto; padding: 0 16px 1.5rem; }
 #variables td:nth-child(2) select { min-width: 6.5rem; }
 #variables td:nth-child(1) { width: 45%; }
 .externals select { min-width: 5.5rem; }
+
+/* ── Trace panel (issue #201 stage 3) ── */
+.panel-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; }
+.panel-head h2 { margin-right: auto; }
+.panel-head label { display: inline-flex; gap: .3rem; align-items: center; color: var(--muted); }
+.trace-body { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; margin-top: .4rem; }
+.trace-tree-box { max-height: 28rem; overflow: auto; border: 1px solid var(--border); border-radius: 6px; padding: .3rem; min-height: 3rem; }
+.trace-step-box { min-width: 0; }
+.trace-tree, .trace-children { list-style: none; margin: 0; padding: 0; }
+.trace-children { padding-left: 1.1rem; border-left: 1px dotted var(--border); margin-left: .55rem; }
+.trace-row { display: flex; align-items: baseline; gap: .4rem; padding: .05rem .2rem; border-radius: 4px; cursor: pointer; font-size: .86rem; white-space: nowrap; }
+.trace-row:hover { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.trace-row.selected { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.trace-row.failing { outline: 1px solid var(--ng); }
+.trace-toggle { border: none; background: none; padding: 0 .15rem; width: 1.1rem; color: var(--muted); }
+.trace-toggle:disabled { cursor: default; }
+.trace-kind { color: var(--muted); font-size: .78rem; }
+.trace-src { font-family: ui-monospace, monospace; overflow: hidden; text-overflow: ellipsis; max-width: 22rem; background: var(--code-bg); padding: 0 .25rem; border-radius: 3px; }
+.trace-arrow { color: var(--muted); }
+.trace-val { font-family: ui-monospace, monospace; color: var(--ok); }
+.trace-type { font-size: .75rem; color: var(--muted); margin-left: .25rem; }
+.trace-err { color: var(--ng); font-family: ui-monospace, monospace; }
+.te-trace-mark { background: color-mix(in srgb, var(--accent) 25%, transparent); border-radius: 2px; }
+.te-trace-error { text-decoration: underline wavy var(--ng); background: color-mix(in srgb, var(--ng) 14%, transparent); }
+.step-nav { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; }
+.step-nav button { padding: .15rem .55rem; }
+.step-event { margin: .5rem 0; font-size: .9rem; }
+.step-event code, .step-stack code { background: var(--code-bg); padding: 0 .25rem; border-radius: 3px; font-size: .82rem; }
+.badge-soft { display: inline-block; font-size: .75rem; padding: 0 .35rem; border-radius: 4px; background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--text); }
+.step-stack { margin: .2rem 0 0; padding-left: 1.4rem; font-size: .86rem; max-height: 20rem; overflow: auto; }
+.step-stack li { margin: .2rem 0; }
+.step-done { display: flex; flex-wrap: wrap; gap: .2rem .8rem; font-size: .82rem; }
+.ok-text { color: var(--ok); }
+
+/* ── Catalog panel (issue #201 stage 4) ── */
+.catalog-toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.catalog-toolbar label { display: inline-flex; gap: .3rem; align-items: center; white-space: nowrap; }
+.catalog-toolbar select { width: auto; }
+.catalog-toolbar input[type="search"] { flex: 1 1 12rem; width: auto; }
+.catalog-summary, .catalog-validation { margin: .4rem 0; }
+.catalog-validation ul { margin: .2rem 0; padding-left: 1.2rem; }
+.catalog-body { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 16px; }
+.catalog-list { list-style: none; margin: 0; padding: .2rem; max-height: 30rem; overflow: auto; border: 1px solid var(--border); border-radius: 6px; }
+.catalog-item { display: flex; gap: .4rem; align-items: baseline; padding: .1rem .3rem; border-radius: 4px; cursor: pointer; font-size: .86rem; white-space: nowrap; }
+.catalog-item:hover, .catalog-item:focus { background: color-mix(in srgb, var(--accent) 8%, transparent); outline: none; }
+.catalog-item.selected { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+.catalog-item code { font-size: .82rem; }
+.catalog-sub { color: var(--muted); overflow: hidden; text-overflow: ellipsis; }
+.catalog-mark { width: .9rem; color: var(--accent); flex: none; }
+.catalog-editor h3 { margin-top: 0; }
+.catalog-field { border: 1px solid var(--border); border-radius: 6px; margin: 0 0 .5rem; padding: .3rem .6rem .5rem; display: block; font-size: .86rem; color: var(--muted); }
+.catalog-field label { display: grid; grid-template-columns: 1.6rem 1fr; gap: .3rem; align-items: start; margin: .2rem 0; }
+.catalog-field textarea { font: 13px/1.45 system-ui, sans-serif; color: var(--text); }
+.catalog-raw { font: 12px/1.45 ui-monospace, monospace !important; }
+.catalog-variant { border-top: 1px dotted var(--border); padding-top: .3rem; margin-top: .3rem; }
+.catalog-output-head { display: flex; gap: .6rem; align-items: baseline; margin-top: .6rem; flex-wrap: wrap; }
+.catalog-pre { max-height: 22rem; overflow: auto; background: var(--code-bg); padding: .5rem; border-radius: 6px; font-size: 12px; white-space: pre; }
+.catalog-pr .settings .wide { grid-column: 1 / -1; }
+html.in-vscode .top { padding-top: .5rem; }

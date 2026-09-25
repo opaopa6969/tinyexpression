@@ -28,6 +28,19 @@ jobs:
       with:
         node-version: '24'
 
+    # issue #201 stage 5: the VSIX embeds the playground (wasm + bundle).
+    - name: Set up Rust 1.85 with wasm32
+      run: |
+        rustup toolchain install 1.85.0 --profile minimal --target wasm32-unknown-unknown
+        rustup default 1.85.0
+
+    - name: Build the playground
+      working-directory: playground
+      run: |
+        npm ci
+        npm run build:wasm
+        npm run build
+
     - name: Install tinyexpression to local repo
       run: mvn -B install -DskipTests -Dgpg.skip=true
 
@@ -35,6 +48,7 @@ jobs:
       run: mvn -B verify -Dgpg.skip=true
       working-directory: tools/tinyexpression-p4-lsp-vscode
       env:
+        TE_REQUIRE_PLAYGROUND: '1'
         MAVEN_OPTS: >-
           --add-opens=java.base/java.util=ALL-UNNAMED
           --add-opens=java.base/java.lang=ALL-UNNAMED

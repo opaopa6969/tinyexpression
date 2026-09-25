@@ -12,6 +12,10 @@
 // are skipped: their results depend on the arguments, and a playground external is a constant
 // stub. Rows with unregistered externals are compared (the stubs model "class loadable, no
 // instance"). random() rows compare the result kind only, as the Rust gate does.
+//
+// Every compared row is also evaluated through `te_eval_trace` (the Trace panel's path, issue
+// #201 stage 3): apart from the added `trace`, its response must equal the untraced one, and
+// the trace root must carry the result.
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -85,6 +89,8 @@ let compared = 0;
 let skipped = 0;
 let kindOnly = 0;
 const mismatches = [];
+const traceMismatches = [];
+let traceSteps = 0;
 const started = performance.now();
 for (const row of rows) {
   const formula = formulas[row.f];
@@ -92,8 +98,16 @@ for (const row of rows) {
     skipped++;
     continue;
   }
-  const response = te.evalContext(toRequest(stateOf(row), { formula }));
+  const request = toRequest(stateOf(row), { formula });
+  const response = te.evalContext(request);
   const rust = outcomeOf(response);
+  const traced = te.evalTrace(request);
+  const { trace, ...tracedRest } = traced.result;
+  if (traced.code !== response.code || JSON.stringify(tracedRest) !== JSON.stringify(response.result)
+    || (response.result.ok && trace?.root && !trace.truncated && trace.root.text !== response.result.text && !formula.includes('random('))) {
+    traceMismatches.push(`${row.id} formula=${JSON.stringify(formula.slice(0, 120))}\n    plain=${JSON.stringify(response.result).slice(0, 200)}\n    traced=${JSON.stringify(tracedRest).slice(0, 200)}`);
+  }
+  traceSteps += trace?.steps ?? 0;
   const java = expectedOf(row.java);
   compared++;
   if (same(rust, java)) continue;
@@ -107,6 +121,11 @@ for (const row of rows) {
 const ms = performance.now() - started;
 console.log(`parity smoke: ${compared} rows compared over ${formulas.length} formulas in ${ms.toFixed(0)} ms; ` +
   `${skipped} rows skipped (registered externals); ${kindOnly} random() rows compared by kind`);
+console.log(`trace: every compared row also evaluated with te_eval_trace (${traceSteps} steps recorded)`);
+if (traceMismatches.length) {
+  console.error(`${traceMismatches.length} rows differ with tracing on:\n${traceMismatches.slice(0, 20).join('\n')}`);
+  process.exit(1);
+}
 if (mismatches.length) {
   console.error(`${mismatches.length} rows differ from the Java golden:\n${mismatches.slice(0, 40).join('\n')}`);
   process.exit(1);

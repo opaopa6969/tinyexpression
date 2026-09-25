@@ -27,6 +27,7 @@ export async function createRuntime(url) {
     parse: guard('parse'),
     load: guard('load'),
     evalContext: guard('evalContext'),
+    evalTrace: guard('evalTrace'),
     runContext: guard('runContext'),
     version: () => te.version(),
     ready: () => rebuilding ?? Promise.resolve(),

@@ -38,7 +38,8 @@ int32_t code = te_eval((const uint8_t *)"1 + 2", 5, &json);  /* 0, {"ok":true,"v
 te_free(json);
 ```
 
-`te_parse` / `te_check` / `te_eval` / `te_formula_info(src, len, run, seed, &out)` / `te_version` /
+`te_parse` / `te_check` / `te_eval` / `te_formula_info(src, len, run, seed, &out)` /
+`te_eval_context` / `te_formula_info_context` / `te_eval_trace`（issue #201） / `te_version` /
 `te_free`（wasm 用に `te_alloc` / `te_dealloc`）。入力は UTF-8 バイト列、出力は CLI と**同一の**
 JSON（NUL 終端）、戻り値は CLI の exit code（境界で捕まえた panic だけ 70）。
 `rust/tinyexpression-ffi/tests/c/run.sh` が gcc でリンクして往復する。
@@ -78,6 +79,29 @@ CLI `tinyexpression eval-context [FILE|-]` / `run-context`、C ABI・wasm `te_ev
   リクエスト自体の誤りは `"stage":"request"`（exit 2）。
 - wasm32 では method の入れ子 `call` の既定上限を 48 にしている（native は 256）。評価器がホストエンジンの
   スタック（V8 で約 1 MB）上で動くため、深い再帰がインスタンスごと trap する前に `StackOverflowError` にする。
+
+### 評価 trace（issue #201 段階 3）
+
+`tinyexpression eval --trace [FILE|-]`（式だけ、空の context）/ `eval-context --trace [FILE|-]`（上のリクエスト）、
+C ABI・wasm `te_eval_trace`（入力は `te_eval_context` と同じリクエスト JSON）。応答は `eval-context` の応答に
+`"trace"` を足したもの:
+
+```json
+{"ok":true,"value":{...},"text":"7.0",
+ "trace":{"steps":14,"recorded":14,"truncated":false,
+          "root":{"kind":"IfExpr","span":[0,33],"value":{...},"text":"7.0","children":[
+            {"kind":"ComparisonExpr","span":[3,9],"value":{"kind":"boolean","value":true},"text":"true","children":[...]},
+            {"kind":"Leaf","span":[8,9],"leaf":"1", ...}]}}}
+```
+
+- 1 ノード = tree walker（Java の `P4TypedAstEvaluator` 相当、`Program::eval_tree`）の 1 ステップ。`kind` は AST ノード名、
+  `BinaryExpr` の文字列オペランド（数値リテラル・`$変数`・文字列）は `"kind":"Leaf"` と `"leaf"`。`span` はソースの
+  code point 範囲、`value`/`text` は結果（`value` は `eval` と同じ形）、失敗したステップは `"error"`。
+  評価されなかった分岐は含まれない（評価順 = 子の順）。
+- 生成できない式は `"trace":null`。記録は 20,000 ステップまで（超えたら `"truncated":true`、`steps` は総数）。
+- trace は観測だけで結果を変えない（Java 差分 gate が全行を trace 有り・無しで評価して一致を要求する）。
+  closure 版（`Program::compile`）には hook が無く、trace を頼まない評価（`eval-context`）は従来どおり。
+- Rust API: `Program::eval_tree_traced(context, host, &mut dyn TraceHook)`、記録器は `runtime::TraceRecorder`。
 
 ## wasm32
 

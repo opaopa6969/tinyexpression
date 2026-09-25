@@ -375,7 +375,7 @@ fn cli_reports_usage_errors_on_stderr_and_exit_two() {
     assert!(stdout(&output).is_empty());
     assert_eq!(
         stderr(&output),
-        "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression <eval-context|run-context> [FILE|-]\n"
+        "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression eval --trace [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression eval-context [--trace] [FILE|-]\n       tinyexpression run-context [FILE|-]\n"
     );
 }
 

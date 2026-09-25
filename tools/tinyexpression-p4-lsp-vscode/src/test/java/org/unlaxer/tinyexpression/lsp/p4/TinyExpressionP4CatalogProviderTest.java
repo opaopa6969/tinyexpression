@@ -236,6 +236,55 @@ public class TinyExpressionP4CatalogProviderTest {
         }
     }
 
+    /**
+     * Stage 4 of issue #201: the override the playground's Catalog panel exports (the golden
+     * fixture is regenerated and checked by playground/scripts/catalog-roundtrip.mjs from the
+     * panel's own editing model), imported with "TinyExpression: Import catalog from playground
+     * export" (which sets catalog.overridePath), changes hover, completion and diagnostic texts.
+     */
+    @Test
+    public void anImportedPlaygroundOverrideChangesHover() throws Exception {
+        Path override = Path.of(getClass().getResource("/catalog-golden/playground-export.override.json").toURI());
+        server.initialize(initializeWith(Map.of(
+            "catalogOverridePath", override.toString(),
+            "useBundledVariables", true))).get();
+
+        String sqrt = hoverAt("sqrt(16)", 1);
+        assertTrue(sqrt, sqrt.contains("playground で編集した平方根の説明"));
+        assertTrue(sqrt, sqrt.contains("sqrt(81)"));
+        assertFalse(sqrt, sqrt.contains("平方根。負数は NaN になります。"));
+        String added = hoverAt("$riskScore", 3);
+        assertTrue(added, added.contains("playground で追加したリスクスコア"));
+        CompletionItem item = completionItem("sq", "sqrt");
+        assertTrue(item.getDocumentation().getRight().getValue().contains("playground で編集した平方根の説明"));
+        assertEquals("[TE006] 文末のセミコロンが必要です。 修正例: 行末に ; を付ける（playground で編集）",
+            server.catalog().errorCodes().get("TE006").fullMessage());
+        // Everything the export did not touch keeps the bundled text.
+        assertEquals(CatalogProvider.bundled().errorCodes().get("TE004").fullMessage(),
+            server.catalog().errorCodes().get("TE004").fullMessage());
+        assertTrue(server.catalog().origin(), server.catalog().origin().endsWith("playground-export.override.json"));
+    }
+
+    /** A full catalog exported from the playground works as an override too. */
+    @Test
+    public void anImportedFullPlaygroundExportChangesHover() throws Exception {
+        String bundled;
+        try (InputStream in = CatalogProvider.class.getResourceAsStream("/tinyexpression-catalog.json")) {
+            bundled = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+        }
+        assertTrue(bundled.contains("\"平方根。負数は NaN になります。\""));
+        Path full = Files.createTempFile("tinyexpression-catalog-full-export", ".json");
+        try {
+            Files.writeString(full, bundled.replace("\"平方根。負数は NaN になります。\"", "\"全体書き出しで編集した平方根\""));
+            server.initialize(initializeWith(Map.of("catalogOverridePath", full.toString(), "useBundledVariables", true))).get();
+            String sqrt = hoverAt("sqrt(16)", 1);
+            assertTrue(sqrt, sqrt.contains("全体書き出しで編集した平方根"));
+            assertEquals(CatalogProvider.bundled().variables().size(), server.catalog().variables().size());
+        } finally {
+            Files.deleteIfExists(full);
+        }
+    }
+
     @Test
     public void aJsonCatalogPathIsReadAsAnOverride() throws Exception {
         Path override = Files.createTempFile("tinyexpression-catalog-path", ".json");

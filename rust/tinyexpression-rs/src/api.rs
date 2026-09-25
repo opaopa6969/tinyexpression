@@ -11,7 +11,7 @@ use crate::formula_info::{self, LoadError, LoadedFormula, LoaderOptions};
 use crate::request::{self, Request};
 use crate::runtime::{
     calculator_result, java_string, Context, ContextClock, ErrorKind, EvalError, ExternalHost,
-    Host, NoExternals, Options, Program, XorShiftRandom,
+    Host, NoExternals, Options, Program, TraceRecorder, XorShiftRandom,
 };
 use crate::{evaluate, json_string, parse, EvaluationError, FrontendError};
 
@@ -239,6 +239,37 @@ fn eval_error_json(stage: &str, error: &EvalError) -> String {
 /// 4 otherwise), an evaluation failure with `"stage":"apply"` (exit 5); both carry
 /// `"error":{"kind":<Java exception>,"message":...}` and, for parse errors, `"diagnostic"`.
 pub fn eval_context_json(request_text: &str) -> Response {
+    eval_context_response(request_text, None)
+}
+
+/// `eval-context --trace` / `te_eval_trace` (issue #201, stage 3): [`eval_context_json`] with
+/// the tree walker's evaluation trace. The response is the `eval-context` response plus
+/// `"trace":{"steps","recorded","truncated","root"}` (see [`crate::runtime::trace`]); a
+/// formula that cannot be built has `"trace":null`. The value is the one `eval-context`
+/// returns: tracing only observes the walker.
+pub fn eval_trace_json(request_text: &str) -> Response {
+    let mut recorder = TraceRecorder::default();
+    eval_context_response(request_text, Some(&mut recorder))
+}
+
+/// `eval --trace`: a plain formula traced on an empty context (float result and numbers), the
+/// `eval-context` defaults.
+pub fn eval_formula_trace_json(source: &str) -> Response {
+    eval_trace_json(&format!("{{\"formula\":{}}}", json_string(source)))
+}
+
+fn with_trace(json: String, trace: Option<&TraceRecorder>) -> String {
+    match trace {
+        None => json,
+        Some(recorder) => format!(
+            "{},\"trace\":{}}}",
+            &json[..json.len() - 1],
+            recorder.to_json()
+        ),
+    }
+}
+
+fn eval_context_response(request_text: &str, mut trace: Option<&mut TraceRecorder>) -> Response {
     let (mut request, formula) = match read_request(request_text, "formula") {
         Ok(read) => read,
         Err(response) => return response,
@@ -252,7 +283,13 @@ pub fn eval_context_json(request_text: &str) -> Response {
             } else {
                 EXIT_MAPPING
             };
-            return Response::failure(exit, eval_error_json("create", &error));
+            let json = eval_error_json("create", &error);
+            let json = if trace.is_some() {
+                format!("{},\"trace\":null}}", &json[..json.len() - 1])
+            } else {
+                json
+            };
+            return Response::failure(exit, json);
         }
     };
     let mut random = XorShiftRandom::new(request.seed);
@@ -261,13 +298,24 @@ pub fn eval_context_json(request_text: &str) -> Response {
         clock: &ContextClock,
         random: &mut random,
     };
-    match calculator_result(program.eval_tree(&mut request.context, &mut host)) {
-        Ok(value) => Response::ok(format!(
-            "{{\"ok\":true,\"value\":{},\"text\":{}}}",
-            value.canonical_json(),
-            json_string(&java_string(&value))
+    let result = match trace.as_deref_mut() {
+        Some(recorder) => program.eval_tree_traced(&mut request.context, &mut host, recorder),
+        None => program.eval_tree(&mut request.context, &mut host),
+    };
+    let trace = trace.as_deref();
+    match calculator_result(result) {
+        Ok(value) => Response::ok(with_trace(
+            format!(
+                "{{\"ok\":true,\"value\":{},\"text\":{}}}",
+                value.canonical_json(),
+                json_string(&java_string(&value))
+            ),
+            trace,
         )),
-        Err(error) => Response::failure(EXIT_EVALUATION, eval_error_json("apply", &error)),
+        Err(error) => Response::failure(
+            EXIT_EVALUATION,
+            with_trace(eval_error_json("apply", &error), trace),
+        ),
     }
 }
 

@@ -118,6 +118,20 @@ pub unsafe extern "C" fn te_eval_context(
     call(source, len, out, api::eval_context_json)
 }
 
+/// `te_eval_trace` (issue #201, stage 3): `te_eval_context` plus the tree walker's evaluation
+/// trace, `{...,"trace":{"steps","recorded","truncated","root"}}` (CLI `eval-context --trace`).
+///
+/// # Safety
+/// As [`te_parse`].
+#[no_mangle]
+pub unsafe extern "C" fn te_eval_trace(
+    source: *const u8,
+    len: usize,
+    out: *mut *mut c_char,
+) -> i32 {
+    call(source, len, out, api::eval_trace_json)
+}
+
 /// `tinyexpression run-context` (issue #201): `run` on the request's FormulaInfo `document`
 /// with the request's context and externals.
 ///
@@ -213,6 +227,19 @@ mod tests {
         assert_eq!(code, 0, "{json}");
         assert_eq!(json, api::eval_context_json(request).json);
         assert!(json.contains("\"text\":\"12.5\""), "{json}");
+    }
+
+    #[test]
+    fn eval_trace_matches_the_api() {
+        let request =
+            r#"{"formula":"$x * 2","variables":[{"name":"x","type":"float","value":"4"}]}"#;
+        let mut out = ptr::null_mut();
+        let code = unsafe { te_eval_trace(request.as_ptr(), request.len(), &mut out) };
+        let json = unsafe { CStr::from_ptr(out) }.to_str().unwrap().to_owned();
+        unsafe { te_free(out) };
+        assert_eq!(code, 0, "{json}");
+        assert_eq!(json, api::eval_trace_json(request).json);
+        assert!(json.contains("\"text\":\"8.0\",\"trace\":{"), "{json}");
     }
 
     #[test]

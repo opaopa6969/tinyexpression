@@ -48,6 +48,22 @@
       <p class="muted small" id="catalog-counts"></p>
     </section>
 
+    <section class="panel trace-panel" aria-labelledby="h-trace">
+      <div class="panel-head">
+        <h2 id="h-trace" title="Evaluation trace and step debugging">評価トレース（Trace / Step）</h2>
+        <label class="small" title="record the evaluation trace on every evaluation (te_eval_trace)"><input type="checkbox" id="trace-enabled"> 評価ごとに記録</label>
+        <label class="small" title="merge wrapper nodes that cover the same source with the same value"><input type="checkbox" id="trace-collapse" checked> 同じ範囲のラッパーをまとめる</label>
+      </div>
+      <p class="muted small" id="trace-hint">部分式ごとの値と型を木で表示し、評価順に 1 ステップずつ進めます（tree walker の trace、結果は通常の評価と同じ）。
+        <button id="trace-once" class="link" title="evaluate once with the trace">トレースを取る</button></p>
+      <div id="trace-summary"></div>
+      <div id="trace-failure"></div>
+      <div class="trace-body">
+        <div id="trace-tree" class="trace-tree-box" aria-label="trace tree"></div>
+        <div id="trace-step" class="trace-step-box" aria-label="step"></div>
+      </div>
+    </section>
+
     <section class="panel info-panel" aria-labelledby="h-info">
       <h2 id="h-info" title="FormulaInfo document">FormulaInfo</h2>
       <p class="muted small">FormulaInfo のブロックを貼り付けて、読み込み（load）または上の CalculationContext で実行（run）します。</p>
@@ -58,6 +74,13 @@
         <button id="sample-info" class="link" title="restore the sample">サンプルに戻す</button>
       </div>
       <div id="formula-info-result"></div>
+    </section>
+    <section class="panel catalog-panel" aria-labelledby="h-catalog">
+      <h2 id="h-catalog" title="Language catalog: browse, edit, validate, export, PR">言語カタログ（編集）</h2>
+      <p class="muted small">変数・関数・キーワード・エラーコード・設定の説明、例、修正のヒントを編集できます。編集は補完・hover・診断にすぐ反映されます。
+        書き出した override JSON は VSIX の <code>tinyExpressionP4Lsp.catalog.overridePath</code>（コマンド「TinyExpression: Import catalog from playground export」）でそのまま読めます。</p>
+      <p class="small ok-text" id="host-status" aria-live="polite"></p>
+      <div id="catalog"></div>
     </section>
   </main>
 

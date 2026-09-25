@@ -71,6 +71,30 @@ While stopped, injected values can be edited from VS Code's Variables view. The 
 the original number/boolean/string type, refreshes the runtime result, and uses the new value for
 subsequent Debug Console evaluations.
 
+## Playground, evaluation trace and catalog editing (issue #201)
+
+- **TinyExpression: Open playground** (also the ▶ button in the editor title of a TinyExpression file, or the
+  `TE catalog` status bar item) opens the same playground as <https://opaopa6969.github.io/tinyexpression/> in a
+  webview, packaged in the VSIX (`playground-dist/`: the web build and `tinyexpression.wasm`, no JVM needed).
+  It is preloaded with the active document (the selection, the FormulaInfo block at the cursor, or the whole
+  formula) and the active catalog including the override.
+  - **Trace / Step**: every sub-expression with its value and type as a tree (click → the span is highlighted),
+    stepping in evaluation order with the stack of partial values, and the failing step with its catalog hint.
+  - **Catalog editing**: edit descriptions (ja/en), examples, fix hints; add variables, functions, error codes and
+    variants; the schema is validated in the page; edits apply to completion / hover / diagnostics at once.
+    "Save to workspace" writes the export to `.vscode/tinyexpression-catalog.override.json`, sets
+    `tinyExpressionP4Lsp.catalog.overridePath` and restarts the language server, so the LSP's hover and diagnostics
+    use the edited texts.
+- **TinyExpression: Import catalog from playground export** does the same for a file exported from the web
+  playground (override JSON or full catalog JSON; also in the Explorer context menu of `.json` files).
+- The status bar shows the active catalog (`TE catalog: bundled` or `bundled + <override file>`); click it to open
+  the playground, import, open the override file or go back to the bundled catalog
+  (**TinyExpression: Use the bundled catalog only**).
+
+The VSIX grows by about 0.6 MB with the playground (the wasm is 2.1 MB uncompressed). Build the playground before
+packaging (`cd playground && npm ci && npm run build:wasm && npm run build`); `npm run package` copies it
+(`scripts/copy-playground.mjs`), and CI sets `TE_REQUIRE_PLAYGROUND=1` so a VSIX without it fails.
+
 ## Extension settings
 
 | Setting | Default | Description |
@@ -79,6 +103,9 @@ subsequent Debug Console evaluations.
 | `tinyExpressionP4Lsp.server.jarPath` | *(bundled)* | Path to `tinyexpression-p4-lsp-server.jar` |
 | `tinyExpressionP4Lsp.server.jvmArgs` | `[]` | Extra JVM arguments (e.g. `-Xmx512m`) |
 | `tinyExpressionP4Lsp.runtimeMode` | `metadata` | Follow FormulaInfo metadata; plain formulas default to `p4-ast` |
+| `tinyExpressionP4Lsp.catalog.overridePath` | *(empty)* | A catalog JSON (e.g. a playground export) merged over the bundled catalog; relative to the workspace folder; a change restarts the server |
+| `tinyExpressionP4Lsp.catalog.path` | *(empty)* | Variables from `.tecatalog` files / a catalog `.json` instead of the bundled ones |
+| `tinyExpressionP4Lsp.catalog.useBundledDefault` | `true` | Use the bundled catalog's variables when `catalog.path` is empty |
 
 `runtimeMode` selects execution semantics. `steppingMode` selects the structural view and is
 normally `ast` for both P4 backends. AST mapping errors terminate the debug session explicitly;
@@ -107,8 +134,12 @@ mvn package -DskipTests
 npm install
 npm run compile
 
-# Package as VSIX
+# Build the playground that the VSIX embeds (Rust with wasm32 + Node)
+(cd ../../playground && npm ci && npm run build:wasm && npm run build)
+
+# Package as VSIX (copies playground/dist into playground-dist/)
 npm run package
+npm test   # webview / catalog import helpers
 ```
 
 ## Architecture

@@ -13,6 +13,14 @@ tinyexpression のユーザー向け言語知識（変数・関数・キーワ�
 
 編集したら `node catalog/scripts/generate-derived.mjs` を実行して派生ファイルとカタログの整形を更新する。
 
+playground の「言語カタログ（編集）」パネルでも編集できる（issue #201 段階 4）: 検証、全体 JSON / override JSON / diff /
+JSON Patch の書き出し、PR 作成（派生ファイル込み）。override JSON は VSIX のコマンド
+「TinyExpression: Import catalog from playground export」で `tinyExpressionP4Lsp.catalog.overridePath` に取り込める。
+override のマージ規則（LSP の `CatalogProvider.withOverride` と同じ）と diff は `scripts/catalog-edit.mjs`。
+CI の `playground/scripts/catalog-roundtrip.mjs` が、無編集の書き出しがこのファイルとバイト一致すること、
+派生ファイルが一致すること、VSIX テスト用の golden override（`tools/.../catalog-golden/playground-export.override.json`）が
+パネルの書き出しと一致することを検査する。
+
 ## 棚卸し（段階 1）: 移行前の出所と件数
 
 | 種類 | 移行前の定義場所 | VSIX での見え方 | カタログの節 | 件数 |

@@ -34,7 +34,10 @@
     "onCommand:tinyExpressionP4Lsp.showServerOutput",
     "onCommand:tinyExpressionP4Lsp.openLanguageGuide",
     "onCommand:tinyExpressionP4Lsp.openWalkthrough",
-    "onCommand:tinyExpressionP4Lsp.createFormulaInfoSample"
+    "onCommand:tinyExpressionP4Lsp.createFormulaInfoSample",
+    "onCommand:tinyExpressionP4Lsp.openPlayground",
+    "onCommand:tinyExpressionP4Lsp.importCatalog",
+    "onCommand:tinyExpressionP4Lsp.catalogActions"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -58,6 +61,27 @@
         "command": "tinyExpressionP4Lsp.createFormulaInfoSample",
         "title": "Create FormulaInfo Sample",
         "category": "TinyExpression P4"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.openPlayground",
+        "title": "Open playground",
+        "category": "TinyExpression",
+        "icon": "$(play)"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.importCatalog",
+        "title": "Import catalog from playground export",
+        "category": "TinyExpression"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.clearCatalogOverride",
+        "title": "Use the bundled catalog only (clear catalog override)",
+        "category": "TinyExpression"
+      },
+      {
+        "command": "tinyExpressionP4Lsp.catalogActions",
+        "title": "Catalog actions",
+        "category": "TinyExpression"
       }
     ],
     "walkthroughs": [
@@ -323,7 +347,7 @@
         "tinyExpressionP4Lsp.catalog.overridePath": {
           "type": "string",
           "default": "",
-          "description": "A tinyexpression-catalog .json file (e.g. exported from the playground) merged over the bundled language catalog: its variables, function descriptions, keywords and TE error texts replace or extend the bundled ones."
+          "description": "A tinyexpression-catalog .json file (e.g. exported from the playground; see the command \"TinyExpression: Import catalog from playground export\") merged over the bundled language catalog: its variables, function descriptions, keywords and TE error texts replace or extend the bundled ones. A relative path is relative to the first workspace folder. Changing it restarts the language server."
         },
         "tinyExpressionP4Lsp.catalog.useBundledDefault": {
           "type": "boolean",
@@ -331,14 +355,31 @@
           "description": "When true and catalog.path is empty, use the variables of the bundled language catalog (catalog/tinyexpression-catalog.json)."
         }
       }
+    },
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "tinyExpressionP4Lsp.importCatalog",
+          "when": "resourceExtname == .json",
+          "group": "navigation@90"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "tinyExpressionP4Lsp.openPlayground",
+          "when": "editorLangId == tinyexpressionP4",
+          "group": "navigation"
+        }
+      ]
     }
   },
   "scripts": {
-    "vscode:prepublish": "npm run bundle",
+    "vscode:prepublish": "node scripts/copy-playground.mjs && npm run bundle",
     "bundle": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --platform=node --format=cjs --sourcemap",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "package": "npx --yes @vscode/vsce package --no-dependencies"
+    "package": "npx --yes @vscode/vsce package --no-dependencies",
+    "test": "esbuild src/test/playground-support.test.ts --bundle --platform=node --format=cjs --outfile=out-test/playground-support.test.js && node --test out-test/"
   },
   "dependencies": {
     "vscode-languageclient": "^9.0.1"

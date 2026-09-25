@@ -88,6 +88,29 @@ $base + 2
 - F10で生成ASTの構造を進み、Variablesで入力、結果、依存式の値を確認できます。
 - ブレークポイントと停止位置はFormulaInfo内の元の行へ対応付けられます。
 
+## 3.5 playground で値を追う（評価トレース）
+
+コマンド **TinyExpression: Open playground**（エディタ右上の ▶、Web 版は <https://opaopa6969.github.io/tinyexpression/>）で、
+開いている式を playground に読み込めます。CalculationContext パネルに変数の値を入れ、「トレースを取る」を押すと:
+
+- 部分式ごとの値と型が木で並びます。行をクリックすると式の該当範囲が強調されます。
+- ◀ ▶（←/→ キー）で評価順に 1 ステップずつ進み、その時点の評価スタック（外側の式と、計算済みの子の値）が見えます。
+- 例外で失敗した式は、失敗したいちばん内側の部分式が赤で示され、例外名・説明・修正のヒントが出ます。
+
+trace は評価結果を変えません（trace 無しの評価と同じ値）。ブレークポイントを置いて止めたいときは DAP（3 章）を使います。
+
+## 3.6 説明文やエラーの文言を直す（言語カタログ）
+
+補完・ホバー・診断の文言は言語カタログ（`catalog/tinyexpression-catalog.json`）から来ます。playground の
+「言語カタログ（編集）」で説明（ja / en）、例、修正のヒントを直したり、変数・関数・エラーコードを追加したりすると、
+その場で補完・ホバー・診断に反映されます。
+
+- **VS Code 内の playground**: 「ワークスペースへ保存して適用」で `.vscode/tinyexpression-catalog.override.json` に書き、
+  設定 `tinyExpressionP4Lsp.catalog.overridePath` を自動で設定します（LSP が再起動し、ホバーも新しい文言になります）。
+- **Web の playground**: 「override JSON」をダウンロードし、コマンド **TinyExpression: Import catalog from playground export** で取り込みます。
+- ステータスバーの `TE catalog: …` で、今どのカタログが有効かを確認できます（クリックで元に戻す・override を開くなど）。
+- リポジトリの正本を直すときは「PR を作成…」（GitHub token が必要、ページのメモリにだけ保持）か、書き出した diff を使います。
+
 ## 4. Javaコードブロック
 
 FormulaInfo内にフェンス付きJavaコードを書けます。Javaとして色分けされますが、Java Language Serverによる完全な型検査や定義ジャンプはまだ提供していません。
