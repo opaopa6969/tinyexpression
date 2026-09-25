@@ -189,6 +189,19 @@ public final class Session {
      */
     public static boolean exclusive = !"false".equals(System.getProperty("ubnfc.exclusive"));
     /**
+     * D-075（認識専用経路の終端が {@code Match} を作らない）の無効化スイッチ。既定は有効で、
+     * 参照経路（成功のたびに区間付きの {@code Match} を作る経路）との差分検証と計測のためだけに
+     * false にする（{@code -Dubnfc.plainmatch=false}）。返り値の同一性しか変わらないので、
+     * 公開される観測は両経路で等しい。
+     */
+    public static boolean plainMatch = !"false".equals(System.getProperty("ubnfc.plainmatch"));
+    /**
+     * 認識専用経路の「成功したが情報を持たない」ことだけを表す共有実例（D-075）。
+     * 列は全て空・{@code text} と {@code values} は null で、{@code start} / {@code end} は
+     * 読まれない（読む側は {@link #plain} の条件で存在しないことが生成時に確かめてある）。
+     */
+    public static final Match OK = Match.empty(0, 0);
+    /**
      * 除外した候補が記録したはずの観測の静的な再生計画（生成時に畳み込む。emit/Prediction 参照）。
      * allowed は「候補が成功し得る先頭 code point」に trivia 区切りの先頭 code point を足した閉区間列で、
      * 呼出し位置の文字がここに無ければ候補は最初の significant token で失敗し、trivia も 1 文字も進まない。
@@ -271,6 +284,13 @@ public final class Session {
      */
     public final boolean tree, diag, occ;
     /**
+     * D-075: 認識専用経路の成功値が情報を持たなくてよい解析。{@code tree} が false で、かつ
+     * 文法が {@code @scope} 効果を 1 つも持たない（生成側が {@code plainRecognition} で渡す）とき、
+     * 終端も結合子も {@link #OK} 1 個を返す。この条件下で {@code Match} の区間を読む経路は
+     * {@link #applyEffects}（scope 効果）と {@link #wrap} の scoped site だけで、どちらも存在しない。
+     */
+    public final boolean plain;
+    /**
      * issue #35 / D-070: {@link #parse} が {@code DepthLimit} ではなく {@code StackOverflowError}
      * を捕まえたか（＝ {@code options.maxDepth()} にはまだ達していない、JVM stack がこの呼出しの
      * 上では小さいだけの失敗）。呼出し側はこれを見て、{@code maxDepth} から見積もった十分な
@@ -302,8 +322,9 @@ public final class Session {
      * 再解析されるので、公開される診断は参照経路のものと一致する。
      */
     public final boolean factor;
-    public Session(CharSequence source, ParseOptions options, String[] ruleNames) { this(source, options, ruleNames, false); }
-    public Session(CharSequence source, ParseOptions options, String[] ruleNames, boolean twoMode) {
+    public Session(CharSequence source, ParseOptions options, String[] ruleNames) { this(source, options, ruleNames, false, false); }
+    public Session(CharSequence source, ParseOptions options, String[] ruleNames, boolean twoMode) { this(source, options, ruleNames, twoMode, false); }
+    public Session(CharSequence source, ParseOptions options, String[] ruleNames, boolean twoMode, boolean plainRecognition) {
         this.tree = !twoMode || options.buildAst() || options.lexical() || options.occurrences();
         this.occ = !twoMode || options.occurrences();
         this.diag = !twoMode || options.diagnostics();
@@ -311,6 +332,7 @@ public final class Session {
         // 認識専用経路（!tree）の迂回は D-059 のまま常に有効。toggle は AST 経路だけを戻す。
         this.bypassWrap = !this.occ && !this.diag && !options.lexical() && (astBypass || !this.tree);
         this.factor = factoring && !this.diag && !options.lexical();
+        this.plain = plainMatch && plainRecognition && !this.tree;
         this.source = source.toString(); this.input = new Input(this.source); this.options = options; this.ruleNames = ruleNames.clone();
         // diag=false の経路は診断を 1 件も記録しない（書込みは全て diag で囲ってある）ので、
         // 読み出し専用の空実例を共有する。実例 1 個で 1 parse あたり約 9 KB の確保が消える。
@@ -403,6 +425,8 @@ public final class Session {
         int at = Math.max(f.c, f.m); if (at > reached) reached = at; if (diag) diagnostics.reach(at);
     }
     private void progressAt(int at) { if (at > reached) reached = at; if (diag) diagnostics.reach(at); }
+    /** 成功の返り値。認識専用経路（{@link #plain}）では区間が読まれないので共有実例を返す。 */
+    private Match success(int start, int end) { return plain ? OK : Match.empty(start, end); }
     private void fail(int at, String label) { if (!diag) { if (at > reached) reached = at; return; } fail(at, Label.of(label).id, at, at); }
     private void fail(int at, Label label) { fail(at, label.id, at, at); }
     private void fail(Frame frame, Label label) { fail(Math.max(frame.c, frame.m), label.id, frame.c, frame.m); }
@@ -530,7 +554,7 @@ public final class Session {
             }
             List<Occurrence> completed = result.local();
             for (int k = 0, n = completed.size(); k < n; k++) completed.get(k).completed = nextCaptureCompletion++;
-            if (!tree) result = Match.empty(c, f.c);
+            if (!tree) result = success(c, f.c);
             else {
                 List<Value> values = result.values();
                 if (skipped || nodes != result.nodes()) {
@@ -687,6 +711,15 @@ public final class Session {
         return new Match(result.nodes(), result.local(), result.captures(), result.traces(), result.start(), result.end(),
             result.mappingFailure(), result.recoveries(), result.items(), result.text(), values);
     }
+    /**
+     * D-078: 意味値を持つ選択の text だけの候補。values を plain text（null）に戻し、選択の射影が
+     * 一致範囲の字句 1 つを値にする。内側の空反復の「値なし」（空の values）で字句を消さない。
+     */
+    public Match textAlternative(Match result) {
+        if (result == null || !tree || result.values() == null) return result;
+        return new Match(result.nodes(), result.local(), result.captures(), result.traces(), result.start(), result.end(),
+            result.mappingFailure(), result.recoveries(), result.items(), result.text(), null);
+    }
     private Match captured(Match result, int start, int end, String site, String name, boolean skip) {
         if (skip) return result;
         var occurrence = new Occurrence(site, name, new Value(start, end, result.nodes(), result.text(), result.values()));
@@ -702,6 +735,7 @@ public final class Session {
     /** 意味値の射影。Match を包み直さず値列だけ返し、呼出し側が出現の追加と 1 度にまとめる。 */
     private static List<Value> projected(Match result, String kind, boolean many) {
         if (kind.equals("text")) return result.values();
+        if (kind.equals("textAlternative")) return null;
         List<Value> values = result.values();
         if (values == null) values = List.of(new Value(result.start(), result.end(), result.nodes(), result.text()));
         if (kind.equals("mixed") && !many && !values.isEmpty() && allLeaves(values))
@@ -720,14 +754,14 @@ public final class Session {
         accumulator.addAll(local); return accumulator;
     }
     private Match fast(ArrayList<Occurrence> local, int start, int end) {
-        return local == null ? Match.empty(start, end)
+        return local == null ? success(start, end)
             : new Match(List.of(), local, List.of(), List.of(), start, end);
     }
     private Match combine(List<Match> items, int start, int end) {
         if (!tree) {
             int localN = 0;
             for (int k = 0, n = items.size(); k < n; k++) localN += items.get(k).local().size();
-            return localN == 0 ? Match.empty(start, end)
+            return localN == 0 ? success(start, end)
                 : new Match(List.of(), join(items, LOCAL, localN), List.of(), List.of(), start, end);
         }
         if (items.size() == 1) {
@@ -875,7 +909,7 @@ public final class Session {
     public static final class Cap {
         final String[] sites, names, spanRules; final boolean[] skips, scoped;
         final String rule, expr, semanticKind; final boolean quantified, terminal, semanticMany, bypass;
-        final boolean treeBypass, textKind, mixedScalar;
+        final boolean treeBypass, textKind, textAlternative, mixedScalar;
         final Label[] failureHints;
         public Cap(String[] sites, String[] names, String[] spanRules, boolean[] skips, boolean[] scoped, String rule, String expr,
                    boolean quantified, boolean terminal, String semanticKind, boolean semanticMany, Label[] failureHints,
@@ -884,6 +918,7 @@ public final class Session {
             this.rule = rule; this.expr = expr; this.quantified = quantified; this.terminal = terminal;
             this.semanticKind = semanticKind; this.semanticMany = semanticMany; this.failureHints = failureHints; this.bypass = bypass;
             this.treeBypass = treeBypass; this.textKind = semanticKind.equals("text");
+            this.textAlternative = semanticKind.equals("textAlternative");
             this.mixedScalar = semanticKind.equals("mixed") && !semanticMany;
         }
     }
@@ -956,11 +991,11 @@ public final class Session {
         if (retag != null) for (int d = 0; d < b.from; d++) if (retag[2 * d] != null) retag(buf[d], retag[2 * d], retag[2 * d + 1]);
         int n = b.from + rest.length;
         Match seq;
-        if (n == 0) seq = Match.empty(start, f.c);
+        if (n == 0) seq = success(start, f.c);
         else { var items = new Match[n]; System.arraycopy(buf, 0, items, 0, n); seq = combine(Arrays.asList(items), start, f.c); }
         progress(f);
         Cap k = b.cap;
-        if (k.treeBypass && bypassWrap) return k.textKind || !tree ? seq : project(seq, k.mixedScalar);
+        if (k.treeBypass && bypassWrap) return k.textKind || !tree ? seq : k.textAlternative ? textAlternative(seq) : project(seq, k.mixedScalar);
         if (k.bypass && bypassCapture) return seq;
         return wrap(f, c, m, seq, k.sites, k.names, k.spanRules, k.skips, k.scoped, k.rule, k.expr,
             k.quantified, k.terminal, k.semanticKind, k.semanticMany, k.failureHints);
@@ -1106,10 +1141,10 @@ public final class Session {
             if (result != null) { fail(f, label); return null; }
             if (diagnosticMark != null) diagnostics.restore(diagnosticMark);
             reached = priorReached;
-            f.m = reset0 ? c0 : m0; return Match.empty(c0, c0);
+            f.m = reset0 ? c0 : m0; return success(c0, c0);
         }
         if (result == null) { f.c = c0; f.m = m0; return null; }
-        return Match.empty(f.c, f.c);
+        return success(f.c, f.c);
     }
     public Match literal(Frame f, String word, boolean sensitive, String label) { return literal(f, word, sensitive, false, Label.of(label)); }
     public Match literal(Frame f, String word, boolean sensitive, Label label) { return literal(f, word, sensitive, false, label); }
@@ -1120,7 +1155,7 @@ public final class Session {
         boolean ok = !word.isEmpty() && (sensitive ? input.startsWith(at, word) : input.startsWithIgnoreCase(at, word));
         if (ok && boundary && identifierChar(cp(at + word.length()))) ok = false;
         if (!ok) { fail(f, label); f.advance(0); return null; }
-        f.advance(word.length()); return Match.empty(at, at + word.length());
+        f.advance(word.length()); return success(at, at + word.length());
     }
     /** ASCII [A-Za-z0-9_]。組込み IdentifierParser の継続文字集合（D-040）。 */
     private static boolean identifierChar(int c) {
@@ -1129,7 +1164,7 @@ public final class Session {
     public Match any(Frame f, String label) { return any(f, Label.of(label)); }
     public Match any(Frame f, Label label) {
         int at = f.position(); if (cp(at) < 0) { fail(f, label); f.advance(0); return null; }
-        int length = Character.charCount(cp(at)); f.advance(length); return Match.empty(at, at + length);
+        int length = Character.charCount(cp(at)); f.advance(length); return success(at, at + length);
     }
     public Match empty(Frame f) { return optional(f, (s, p) -> s.look(p, (ss, pp) -> ss.any(pp, L_ANY), false, L_EMPTY)); }
     public Match eof(Frame f) { return repeat(f, (s, p) -> s.any(p, L_WILDCARD_CHAR), 0, 0, null, Trivia.NONE, L_EOS); }
@@ -1159,7 +1194,7 @@ public final class Session {
             fail(p, L_DIGIT);
             if (p == exponent) { fail(p, L_ONE_OR_MORE); p = mantissa; }
         } else { fail(p, L_E); fail(p, L_EXPONENT); }
-        f.advance(p - at); return Match.empty(at, p);
+        f.advance(p - at); return success(at, p);
     }
     public Match builtin(Frame f, String kind, int[] characters, String label) { return builtin(f, kind, characters, Label.of(label)); }
     public Match builtin(Frame f, String kind, int[] characters, Label label) {
@@ -1192,6 +1227,7 @@ public final class Session {
             if (!ok) return error(f, label); p += Character.charCount(ch);
         }
         f.advance(p - start);
+        if (plain) return OK;
         return new Match(List.of(), List.of(), List.of(), List.of(), start, p, false, List.of(), List.of(),
             kind.equals("Quoted") || kind.equals("SingleQuoted") ? source.substring(start + 1, p - 1) : null);
     }
@@ -1200,7 +1236,7 @@ public final class Session {
     public Match range(Frame f, int min, int max, String excluded, Label label) {
         int at = f.position(), ch = cp(at);
         if (ch < 0 || ch < min || ch > max || excluded != null && excluded.codePoints().anyMatch(v -> v == ch)) { Match failed = error(f, label); f.advance(0); return failed; }
-        f.advance(Character.charCount(ch)); return Match.empty(at, f.position());
+        f.advance(Character.charCount(ch)); return success(at, f.position());
     }
     public Match dfa(Frame f, int state, int[] accepting, int[][] transitions, String label) { return dfa(f, state, accepting, transitions, Label.of(label)); }
     public Match dfa(Frame f, int state, int[] accepting, int[][] transitions, Label label) {
@@ -1215,13 +1251,13 @@ public final class Session {
             for (int accepted : accepting) if (state == accepted) { candidate = at; break; }
         }
         if (candidate <= start) return error(f, label);
-        f.advance(candidate - start); return Match.empty(start, candidate);
+        f.advance(candidate - start); return success(start, candidate);
     }
     public Match regex(Frame f, Pattern pattern, String label) { return regex(f, pattern, Label.of(label)); }
     public Match regex(Frame f, Pattern pattern, Label label) {
         int at = f.position(); var matcher = pattern.matcher(source).region(at, source.length());
         if (!matcher.lookingAt() || matcher.end() == at) return error(f, label);
-        input.cpIndex(matcher.end()); f.advance(matcher.end() - at); return Match.empty(at, matcher.end());
+        input.cpIndex(matcher.end()); f.advance(matcher.end() - at); return success(at, matcher.end());
     }
     public Match until(Frame f, String terminator) {
         Label label = Label.of("'" + terminator + "'");
@@ -1246,7 +1282,9 @@ public final class Session {
         if (result.consumedEnd() < f.c || result.matchedEnd() < result.consumedEnd() || valueEnd < valueStart
             || f.matched && result.consumedEnd() != f.c) throw new IllegalArgumentException("Invalid TokenScanner cursors: " + id);
         if (f.matched) f.m = result.matchedEnd(); else { f.c = result.consumedEnd(); f.m = result.matchedEnd(); }
-        replay(result.effects()); return new Match(List.of(), List.of(), List.of(), List.of(), valueStart, valueEnd, false, List.of(), List.of(), source.substring(valueStart, valueEnd));
+        replay(result.effects());
+        if (plain) return OK;
+        return new Match(List.of(), List.of(), List.of(), List.of(), valueStart, valueEnd, false, List.of(), List.of(), source.substring(valueStart, valueEnd));
     }
     /**
      * Each failing round registers the hints of its failing delimiter prefix as one group id
