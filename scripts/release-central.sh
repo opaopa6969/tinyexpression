@@ -127,4 +127,7 @@ else
 fi
 
 echo "Publishing org.unlaxer:tinyExpression:$version"
-./mvnw "${mvn_settings[@]}" -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false
+# RELEASE_MVN_ARGS: extra Maven args for the deploy (e.g. -DskipTests when CI has already verified
+# this exact commit and the shared host is too loaded to re-run the full suite within the release window).
+# shellcheck disable=SC2086
+./mvnw "${mvn_settings[@]}" -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false ${RELEASE_MVN_ARGS:-}
