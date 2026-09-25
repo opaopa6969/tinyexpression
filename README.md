@@ -408,6 +408,14 @@ mvn -q test
 
 CI は `test-baseline.txt` で既知の失敗を管理し、新規失敗で落とす。運用と更新手順は [docs/test-baseline.md](docs/test-baseline.md) 参照。
 
+Java の CI は unlaxer の**公開版**（Maven Central）と**開発版**（unlaxer-parser master）の両方で走る。
+公開版は各ジョブが依存解決に使う既定経路（必須）。開発版は `unlaxer-dev` ジョブが
+`opaopa6969/unlaxer-parser` の master を job-local な isolated Maven repo へ install し、
+`-Dunlaxer.version=<そのビルドの pom revision>` でテストを走らせる。unlaxer-parser master は
+tinyexpression の Rust 側ピン（`rust/ubnfc-pin.txt` 等）より先行し得るため `continue-on-error: true`
+で非ブロッキング（issue #173）。落ちても merge は妨げないが、step summary に記録された revision を
+手がかりに unlaxer-parser 側の regression を早期発見する目的。
+
 ドキュメント一覧: [docs/INDEX.ja.md](docs/INDEX.ja.md)
 
 ### Maven Central への公開

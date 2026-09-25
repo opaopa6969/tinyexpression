@@ -51,6 +51,12 @@
 		     Opt into parallel speed with -Dte.forkCount=0.5C, but note some tests still
 		     share process-wide state and may fail under parallel forks (see findings §6). -->
 		<te.forkCount>1</te.forkCount>
+		<!-- Default points at the Maven Central published unlaxer release. CI overrides this
+		     with -Dunlaxer.version=<pom revision> when testing against an unlaxer-parser build
+		     installed into a job-local, isolated Maven repo (issue #173: unlaxer-parser master,
+		     non-blocking) so the GAV actually resolves from that isolated repo instead of
+		     silently falling back to the published artifact. -->
+		<unlaxer.version>3.0.15</unlaxer.version>
 	</properties>
 
 	<dependencies>
@@ -63,12 +69,12 @@
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-common</artifactId>
-			<version>3.0.15</version>
+			<version>${unlaxer.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
 			<artifactId>unlaxer-dsl</artifactId>
-			<version>3.0.15</version>
+			<version>${unlaxer.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jetbrains</groupId>

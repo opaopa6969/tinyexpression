@@ -203,6 +203,85 @@ jobs:
           path: tinyexpression/target/surefire-reports/
           if-no-files-found: warn
 
+  # issue #173: the Java CI above resolves org.unlaxer:unlaxer-* from Maven Central, so a
+  # regression on unlaxer-parser master (development) is invisible until it is published (it
+  # took 2 days to notice unlaxer-parser#269 this way). This job tracks unlaxer-parser's master
+  # branch directly instead of a pin, so it is deliberately non-blocking (continue-on-error):
+  # master can legitimately be ahead of what tinyexpression's Rust side is pinned to
+  # (rust/ubnfc-pin.txt), and hosted/self-hosted runner flakiness shouldn't gate merges either.
+  # Treat a red run here as an early warning to investigate, not a merge blocker.
+  unlaxer-dev:
+    name: Java against unlaxer-parser master (development)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: tinyexpression
+
+      - uses: actions/checkout@v6
+        with:
+          repository: opaopa6969/unlaxer-parser
+          ref: master
+          path: unlaxer-parser
+
+      - name: Set up Java 21 (Temurin)
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Create an empty Maven repository on the self-hosted runner
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-unlaxer-dev.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+
+      # Read the checked-out master's own <revision> so the job tracks whatever unlaxer-parser
+      # bumps it to, rather than a value hardcoded in this workflow.
+      - name: Record the unlaxer-parser master revision under test
+        id: unlaxer_rev
+        working-directory: unlaxer-parser
+        run: |
+          commit=$(git rev-parse --short HEAD)
+          version=$(sed -n 's/.*<revision>\(.*\)<\/revision>.*/\1/p' pom.xml | head -1)
+          if [ -z "$version" ]; then
+            echo "could not read <revision> from unlaxer-parser/pom.xml" >&2
+            exit 1
+          fi
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          {
+            echo "### unlaxer-parser master (development) under test"
+            echo ""
+            echo "- commit: \`$commit\`"
+            echo "- pom revision (used as -Dunlaxer.version): \`$version\`"
+            echo ""
+            echo "This job is \`continue-on-error: true\` and does not block merges; unlaxer-parser"
+            echo "master can legitimately be ahead of tinyexpression's Rust pin."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      # Do NOT pass -Dflatten.skip=true: the consumer POMs need flatten to resolve ${revision},
+      # and skipping it leaves ${revision} unresolved for the isolated repo install (see docs).
+      - name: Install unlaxer-parser master into its isolated repository
+        working-directory: unlaxer-parser
+        run: >-
+          mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
+          -Dmaven.repo.local="$MAVEN_REPO"
+
+      - name: Run the tinyexpression Java test suite against unlaxer-parser master
+        working-directory: tinyexpression
+        run: >-
+          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          -Dunlaxer.version=${{ steps.unlaxer_rev.outputs.version }}
+
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: unlaxer-dev-surefire-reports
+          path: tinyexpression/target/surefire-reports/
+          if-no-files-found: warn
+
   smoke:
     name: P4 smoke (targeted matrix)
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
