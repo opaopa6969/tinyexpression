@@ -1,6 +1,8 @@
-// tinyexpression playground (issue #201, stage 2): CodeMirror 6 editor, tinyexpression.wasm
-// (parse / check / eval with a CalculationContext, FormulaInfo), and the language catalog
-// (catalog/tinyexpression-catalog.json) for completion, hover and diagnostic texts.
+// tinyexpression playground (issue #201): CodeMirror 6 editor, tinyexpression.wasm
+// (parse / check / eval with a CalculationContext, FormulaInfo), the language catalog
+// (catalog/tinyexpression-catalog.json) for completion, hover and diagnostic texts (stage 2),
+// the evaluation trace and step mode (stage 3), catalog editing / export / PR (stage 4), and
+// the VS Code webview host (stage 5, src/host.js).
 import { EditorView, basicSetup } from 'codemirror';
 import { autocompletion } from '@codemirror/autocomplete';
 import { linter, lintGutter, forceLinting } from '@codemirror/lint';
@@ -14,10 +16,19 @@ import {
 import { diagnose, describeFailure } from './diagnostics.js';
 import { completionSource, hoverExtension } from './editor-support.js';
 import { EXAMPLES, FORMULA_INFO_SAMPLE } from './examples.js';
+import { highlightExtension } from './highlight.js';
+import { createTracePanel } from './trace-panel.js';
+import { createCatalogPanel } from './catalog-panel.js';
+import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
+import { inVsCode, connectHost } from './host.js';
 import './style.css';
 
 const STORAGE_KEY = 'tinyexpression-playground-v1';
-const catalog = catalogJson;
+const CATALOG_KEY = 'tinyexpression-playground-catalog-override-v1';
+/** The repository catalog: the base of every diff, export and PR. */
+const bundledCatalog = catalogJson;
+/** The catalog the editor uses: the repository catalog plus the edits (Catalog panel). */
+let catalog = mergeOverride(bundledCatalog, loadCatalogOverride());
 let te = null;
 let state = loadState();
 
@@ -32,6 +43,24 @@ function loadState() {
   } catch { /* storage unavailable */ }
   const example = EXAMPLES.find((e) => e.id === 'fraud-alert');
   return { formula: example.formula, formulaInfo: FORMULA_INFO_SAMPLE, context: contextOf(example) };
+}
+
+function loadCatalogOverride() {
+  if (inVsCode) return {}; // the extension sends the active override
+  try {
+    return JSON.parse(localStorage.getItem(CATALOG_KEY) ?? '{}') ?? {};
+  } catch {
+    return {};
+  }
+}
+
+function saveCatalogOverride() {
+  if (inVsCode) return;
+  try {
+    const override = overrideOf(bundledCatalog, catalog);
+    if (Object.keys(override).length) localStorage.setItem(CATALOG_KEY, formatOverride(override));
+    else localStorage.removeItem(CATALOG_KEY);
+  } catch { /* storage unavailable */ }
 }
 
 function saveState() {
@@ -73,6 +102,7 @@ function select(options, value, onChange, title) {
 // ── editor ──
 
 const contextVariables = () => state.context.variables;
+const currentCatalog = () => catalog;
 
 const view = new EditorView({
   doc: state.formula,
@@ -80,9 +110,10 @@ const view = new EditorView({
   extensions: [
     basicSetup,
     EditorView.lineWrapping,
-    autocompletion({ override: [completionSource(() => te, () => catalog, contextVariables)], activateOnTyping: true }),
-    hoverExtension(() => catalog, contextVariables),
+    autocompletion({ override: [completionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
+    hoverExtension(currentCatalog, contextVariables),
     lintGutter(),
+    highlightExtension,
     linter((v) => {
       if (!te) return [];
       return diagnose(te, catalog, v.state.doc.toString(), state.context.variables.map((x) => x.name)).map((d) => ({
@@ -127,11 +158,18 @@ async function evaluate() {
   out.replaceChildren();
   if (formula.trim() === '') {
     out.append(el('p', { class: 'muted' }, '式を入力してください。'));
+    tracePanel.clear();
     return;
   }
   const started = performance.now();
-  const { result } = te.evalContext(toRequest(state.context, { formula }));
+  const tracing = state.trace === true;
+  const response = tracing
+    ? te.evalTrace(toRequest(state.context, { formula }))
+    : te.evalContext(toRequest(state.context, { formula }));
+  const { result } = response;
   const ms = performance.now() - started;
+  if (tracing) tracePanel.show(response, formula);
+  else tracePanel.clear();
   if (result.ok) {
     const value = result.value;
     out.append(
@@ -141,7 +179,7 @@ async function evaluate() {
           el('dt', { title: 'result kind' }, '型'), el('dd', {}, kindLabel(value)),
           value.f32Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f32Bits)] : null,
           value.f64Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f64Bits)] : null,
-          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms`))));
+          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}`))));
     return;
   }
   const failure = describeFailure(catalog, formula, result);
@@ -312,10 +350,90 @@ $('sample-info').addEventListener('click', () => {
   saveState();
 });
 
+// ── Trace panel (stage 3) ──
+
+function describeStep(node) {
+  const runtime = (catalog.runtimeErrors ?? []).find((r) => r.kind === node.error.kind);
+  return {
+    code: node.error.kind,
+    title: runtime ? ja(runtime.description) : node.error.message,
+    fix: runtime?.fix ? ja(runtime.fix) : '',
+  };
+}
+
+const tracePanel = createTracePanel({
+  tree: $('trace-tree'), step: $('trace-step'), summary: $('trace-summary'), failure: $('trace-failure'),
+}, view, describeStep);
+
+const traceToggle = $('trace-enabled');
+traceToggle.checked = state.trace === true;
+traceToggle.addEventListener('change', () => {
+  state.trace = traceToggle.checked;
+  $('trace-hint').hidden = state.trace;
+  evaluate();
+});
+$('trace-hint').hidden = state.trace === true;
+$('trace-once').addEventListener('click', () => {
+  traceToggle.checked = true;
+  state.trace = true;
+  $('trace-hint').hidden = true;
+  evaluate();
+});
+$('trace-collapse').addEventListener('change', (e) => tracePanel.setCollapse(e.target.checked));
+
+// ── Catalog panel (stage 4) ──
+
+function renderCatalogCounts() {
+  $('catalog-counts').textContent = `カタログ: 変数 ${catalog.variables.length} / 関数 ${catalog.functions.length} / エラーコード ${catalog.errorCodes.length}`
+    + `${hostCatalogLabel ? ` · ${hostCatalogLabel}` : ''}`;
+}
+
+let hostCatalogLabel = '';
+const catalogPanel = createCatalogPanel($('catalog'), {
+  bundled: bundledCatalog,
+  edited: catalog,
+  onChange(edited) {
+    catalog = edited;
+    saveCatalogOverride();
+    renderCatalogCounts();
+    renderContext();
+    forceLinting(view);
+    scheduleEvaluate();
+  },
+});
+
+// ── VS Code webview host (stage 5) ──
+
+connectHost({
+  init(message) {
+    if (typeof message.formula === 'string' && message.formula.trim() !== '') {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: message.formula } });
+    }
+    if (typeof message.formulaInfo === 'string' && message.formulaInfo.trim() !== '') {
+      infoText.value = message.formulaInfo;
+      state.formulaInfo = message.formulaInfo;
+    }
+    $('host-status').textContent = message.documentName ? `VS Code: ${message.documentName} から読み込みました。` : '';
+    hostCatalogLabel = message.catalogLabel ?? '';
+    catalog = mergeOverride(bundledCatalog, message.catalogOverride ?? {});
+    catalogPanel.load(catalog);
+    renderCatalogCounts();
+    renderContext();
+    if (te) forceLinting(view);
+    scheduleEvaluate();
+  },
+  saved(message) {
+    hostCatalogLabel = message.catalogLabel ?? hostCatalogLabel;
+    renderCatalogCounts();
+    $('host-status').textContent = message.message ?? '';
+  },
+});
+if (inVsCode) document.documentElement.classList.add('in-vscode');
+
 // ── start ──
 
 renderContext();
-$('catalog-counts').textContent = `カタログ: 変数 ${catalog.variables.length} / 関数 ${catalog.functions.length} / エラーコード ${catalog.errorCodes.length}`;
+renderCatalogCounts();
 createRuntime(new URL('tinyexpression.wasm', document.baseURI).href).then((runtime) => {
   te = runtime;
   const version = te.version();

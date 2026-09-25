@@ -90,6 +90,30 @@ jobs:
       - name: Build the static site
         run: npm run build
         working-directory: playground
+      # issue #201 stage 4: the Catalog panel's editing model exports the repository catalog
+      # byte-identically, it validates, the derived .tecatalog / error-catalog.json regenerate
+      # byte-identically, and the VSIX golden override is what the panel exports.
+      - name: Catalog round trip (playground export -> validate -> derived files)
+        run: npm run roundtrip
+        working-directory: playground
+      # issue #201 stage 5: the VSIX embeds this build (playground-dist/) for the
+      # "TinyExpression: Open playground" webview.
+      - name: VSIX with the embedded playground (unit tests, vsce package, size)
+        working-directory: tools/tinyexpression-p4-lsp-vscode
+        env:
+          TE_REQUIRE_PLAYGROUND: '1'
+        run: |
+          npm ci
+          npm test
+          npx --yes @vscode/vsce package --no-dependencies --out "$RUNNER_TEMP/tinyexpression-p4-lsp-playground.vsix"
+          unzip -l "$RUNNER_TEMP/tinyexpression-p4-lsp-playground.vsix" | grep -E 'playground-dist/(index.html|tinyexpression.wasm|assets/)'
+          size=$(stat -c %s "$RUNNER_TEMP/tinyexpression-p4-lsp-playground.vsix")
+          echo "VSIX with the embedded playground: $size bytes" | tee -a "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: playground-dist
+          path: playground/dist
+          if-no-files-found: error
 
   ubnfc-parser:
     name: ubnfc default engine (pin, converter, parity, both engines)
@@ -224,7 +248,7 @@ jobs:
     name: Full verify
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
-    needs: smoke
+    needs: [smoke, playground]
 
     steps:
       - uses: actions/checkout@v6
@@ -261,10 +285,18 @@ jobs:
         with:
           node-version: '24'
 
+      # issue #201 stage 5: the playground build (wasm + bundle) from the playground job, packaged
+      # into the VSIX by the extension's vscode:prepublish (scripts/copy-playground.mjs).
+      - uses: actions/download-artifact@v7
+        with:
+          name: playground-dist
+          path: playground/dist
+
       - name: Build and verify tools/tinyexpression-p4-lsp-vscode
         run: mvn -B verify -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
         working-directory: tools/tinyexpression-p4-lsp-vscode
         env:
+          TE_REQUIRE_PLAYGROUND: '1'
           MAVEN_OPTS: >-
             --add-opens=java.base/java.util=ALL-UNNAMED
             --add-opens=java.base/java.lang=ALL-UNNAMED

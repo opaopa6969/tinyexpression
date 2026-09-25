@@ -6,7 +6,8 @@
 //! `build_corpus.py` generates. This test re-evaluates every row with the Rust runtime and
 //! requires the same outcome: type and bits for numbers, value for booleans/strings, and the
 //! Java exception class for errors. It also runs the closure-compiled form on every row and
-//! requires it to agree exactly with the tree walker.
+//! requires it to agree exactly with the tree walker, and the tree walker once more with an
+//! evaluation trace recorder attached (issue #201): tracing must not change any outcome.
 //!
 //! Regenerate the golden with `rust/tinyexpression-rs/tests/java-diff/regenerate-java-golden.sh`
 //! (needs a JDK and Maven); `cargo test` itself never needs a JVM.
@@ -17,8 +18,8 @@ use std::path::Path;
 
 use tinyexpression_rs::runtime::{
     calculator_result, java, Compiled, Context, ContextClock, EvalError, ExternalCall,
-    ExternalError, ExternalHost, Host, NumberType, Options, Program, ResultType, Variables,
-    XorShiftRandom,
+    ExternalError, ExternalHost, Host, NumberType, Options, Program, ResultType, TraceRecorder,
+    Variables, XorShiftRandom,
 };
 use tinyexpression_rs::Value;
 
@@ -486,6 +487,44 @@ fn with_stack<F: FnOnce() + Send + 'static>(body: F) {
         .unwrap_or_else(|panic| std::panic::resume_unwind(panic));
 }
 
+/// A trace is consistent with its evaluation: one root whose outcome is the result, every
+/// step closed, and an error propagates from a child that failed with the same error.
+fn trace_problem(recorder: &TraceRecorder, result: &Result<Value, EvalError>) -> Option<String> {
+    let nodes = recorder.nodes();
+    if recorder.truncated() {
+        return None;
+    }
+    let root = match recorder.roots() {
+        [root] => &nodes[*root],
+        [] => return Some(format!("no trace root for {result:?}")),
+        roots => return Some(format!("{} trace roots", roots.len())),
+    };
+    // Compared by `Debug` text: NaN results must match too (and 0.0 / -0.0 must not).
+    if format!("{:?}", root.outcome.as_ref()) != format!("{:?}", Some(result)) {
+        return Some(format!(
+            "root outcome {:?} != result {result:?}",
+            root.outcome
+        ));
+    }
+    for node in nodes {
+        match &node.outcome {
+            None => return Some(format!("unclosed step {}", node.kind)),
+            Some(Err(error)) if !node.children.is_empty() => {
+                let last = &nodes[*node.children.last().unwrap()];
+                // A failing child is the last step taken (the walker stops there), unless the
+                // node itself raised the error after its operands succeeded.
+                if let Some(Err(child)) = &last.outcome {
+                    if child != error {
+                        return Some(format!("{} error {error:?} != child {child:?}", node.kind));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    None
+}
+
 #[test]
 fn rust_runtime_matches_the_java_golden() {
     with_stack(java_golden);
@@ -498,6 +537,9 @@ fn java_golden() {
     let mut mismatches = Vec::new();
     let mut deviations: HashMap<&'static str, usize> = HashMap::new();
     let mut compared = 0usize;
+    let mut trace_mismatches = Vec::new();
+    let mut trace_problems: Vec<String> = Vec::new();
+    let mut traced_rows = 0usize;
     for row in &loaded.rows {
         let f = formula_index(row);
         let formula = &loaded.formulas[f];
@@ -518,7 +560,8 @@ fn java_golden() {
             Err(error) => outcome(&Err(error.clone()), true),
             Ok((program, compiled)) => {
                 let registered = matches!(row.get("ext"), Some(Json::Bool(true)));
-                let run = |closure: bool| {
+                // 0 = tree walker, 1 = closures, 2 = tree walker with a trace recorder.
+                let mut run = |form: u8| {
                     let mut context = context_of(row.get("vars").unwrap());
                     let mut external = TestHost { registered };
                     let mut random = XorShiftRandom::new(7);
@@ -527,15 +570,32 @@ fn java_golden() {
                         clock: &ContextClock,
                         random: &mut random,
                     };
-                    let result = if closure {
-                        compiled.eval(&mut context, &mut host)
-                    } else {
-                        program.eval_tree(&mut context, &mut host)
+                    let result = match form {
+                        1 => compiled.eval(&mut context, &mut host),
+                        2 => {
+                            let mut recorder = TraceRecorder::default();
+                            let result =
+                                program.eval_tree_traced(&mut context, &mut host, &mut recorder);
+                            trace_problems.extend(trace_problem(&recorder, &result));
+                            result
+                        }
+                        _ => program.eval_tree(&mut context, &mut host),
                     };
                     (calculator_result(result.clone()), result)
                 };
-                let (tree, tree_raw) = run(false);
-                let (closure, closure_raw) = run(true);
+                let (tree, tree_raw) = run(0);
+                let (closure, closure_raw) = run(1);
+                let (_, traced_raw) = run(2);
+                traced_rows += 1;
+                if outcome(&traced_raw, false) != outcome(&tree_raw, false)
+                    || traced_raw.as_ref().err().map(|e| &e.message)
+                        != tree_raw.as_ref().err().map(|e| &e.message)
+                {
+                    trace_mismatches.push(format!(
+                        "{} formula={formula:?}\n    tree={tree_raw:?}\n    traced={traced_raw:?}",
+                        row.str("id").unwrap()
+                    ));
+                }
                 // The two Rust forms must agree exactly, including error messages.
                 let same = outcome(&tree_raw, false) == outcome(&closure_raw, false)
                     && tree_raw.as_ref().err().map(|e| &e.message)
@@ -589,6 +649,25 @@ fn java_golden() {
             .join("\n")
     );
     eprintln!("tree walker and closure form agree on all {compared} rows");
+    assert!(
+        trace_mismatches.is_empty() && trace_problems.is_empty(),
+        "tracing changed {} outcomes, {} inconsistent traces:\n{}\n{}",
+        trace_mismatches.len(),
+        trace_problems.len(),
+        trace_mismatches
+            .iter()
+            .take(20)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n"),
+        trace_problems
+            .iter()
+            .take(20)
+            .cloned()
+            .collect::<Vec<_>>()
+            .join("\n")
+    );
+    eprintln!("the traced tree walker agrees with the untraced one on all {traced_rows} rows");
     if !mismatches.is_empty() {
         let shown: Vec<_> = mismatches.iter().take(60).cloned().collect();
         panic!(

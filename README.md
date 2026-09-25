@@ -384,7 +384,19 @@ Java は `java -jar` ではなく `target/classes` + 依存 jar の classpath �
 - 補完・hover・診断文言は **言語カタログ** [`catalog/tinyexpression-catalog.json`](catalog/README.md) から。
   VSIX の LSP サーバも同じカタログを読む（設定 `tinyExpressionP4Lsp.catalog.overridePath` で差し替え・追加可）
 
-評価経路は Java 差分 golden（#179）の全行と node で照合している（`playground/scripts/parity-smoke.mjs`、CI）。
+- **評価トレース（Trace / Step）**: 部分式ごとの値と型を木で表示（クリックでエディタの範囲を強調）、評価順に
+  1 ステップずつ進めて途中の値のスタックを見る。失敗したステップは TE コード / 例外名とカタログの修正のヒント付き。
+  wasm / C ABI の `te_eval_trace`、CLI `tinyexpression eval --trace`（[rust/README.md](rust/README.md#評価-traceissue-201-段階-3)）
+- **カタログ編集**: 説明（ja / en）・例・修正のヒントの編集、変数・関数・エラーコードと variant の追加、スキーマ検証、
+  全体 JSON / override JSON / unified diff / JSON Patch の書き出し、GitHub への PR 作成（token はメモリだけ）。
+  編集は playground の補完・hover・診断にすぐ反映
+- **VSIX への同梱**: コマンド「TinyExpression: Open playground」が同じ build を webview で開き（アクティブな式と
+  カタログを読み込む）、「TinyExpression: Import catalog from playground export」が書き出したカタログを
+  `.vscode/tinyexpression-catalog.override.json` に置いて `catalog.overridePath` に設定する（ステータスバーに有効なカタログ）
+
+評価経路は Java 差分 golden（#179）の全行と node で照合している（`playground/scripts/parity-smoke.mjs`、CI。
+trace 付きの経路も同じ全行で一致を確認）。カタログの書き出しは `playground/scripts/catalog-roundtrip.mjs` が
+「無編集で書き出すとバイト単位で同一・派生ファイルも同一」を CI で検査する。
 
 ---
 

@@ -11,7 +11,7 @@ use tinyexpression_rs::api::{self, Response, EXIT_IO, EXIT_USAGE};
 use tinyexpression_rs::formula_info::{ExecutionBackend, LoaderOptions};
 
 fn usage() -> &'static str {
-    "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression <eval-context|run-context> [FILE|-]"
+    "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression eval --trace [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]\n       tinyexpression eval-context [--trace] [FILE|-]\n       tinyexpression run-context [FILE|-]"
 }
 
 fn help() -> String {
@@ -33,9 +33,14 @@ Commands (input is FILE, or stdin when FILE is `-` or omitted):
           CalculationContext variables and stubbed externals (a JSON request, see README)
                                                          {{\"ok\":true,\"value\":...,\"text\":...}}
   run-context   run the request's FormulaInfo \"document\" on the request's context
+  eval --trace, eval-context --trace
+          evaluate with the Java-compatible tree walker and add its evaluation trace
+          (every step: node kind, source span, value or error)
+                                                         {{...,\"trace\":{{\"steps\":...,\"root\":...}}}}
 
 Options:
   --default-backend NAME   load/run: the backend for formulas without an explicit one
+  --trace                  eval/eval-context: include the evaluation trace
   --help                   print this help
   --version                print the version and the ubnfc commit of the vendored parsers
 
@@ -120,6 +125,15 @@ fn run(arguments: &[String]) -> Result<Response, u8> {
                 Ok(input) => {
                     api::formula_info_json(&input, &options, command == Some("run"), time_seed())
                 }
+                Err(response) => response,
+            })
+        }
+        Some("eval" | "eval-context")
+            if arguments.get(1).map(String::as_str) == Some("--trace") && arguments.len() <= 3 =>
+        {
+            Ok(match source(arguments.get(2).map(String::as_str)) {
+                Ok(input) if command == Some("eval") => api::eval_formula_trace_json(&input),
+                Ok(input) => api::eval_trace_json(&input),
                 Err(response) => response,
             })
         }

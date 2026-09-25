@@ -44,6 +44,8 @@ export async function loadTinyExpression(bytesOrResponse) {
     // externals, seed}); it is serialized here.
     evalContext: (request) => call(te.te_eval_context, JSON.stringify(request)),
     runContext: (request) => call(te.te_formula_info_context, JSON.stringify(request)),
+    // issue #201 stage 3: evalContext plus the tree walker's evaluation trace ({..., trace}).
+    evalTrace: (request) => call(te.te_eval_trace, JSON.stringify(request)),
     version: () => readJson(te.te_version()),
   };
 }

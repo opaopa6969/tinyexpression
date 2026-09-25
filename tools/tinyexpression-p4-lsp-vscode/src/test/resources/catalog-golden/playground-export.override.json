@@ -1,0 +1,87 @@
+{
+  "variables": [
+    {
+      "name": "riskScore",
+      "match": "exact",
+      "type": "float",
+      "description": {
+        "ja": "playground で追加したリスクスコア",
+        "en": "Risk score added in the playground"
+      },
+      "context": "FA",
+      "group": "fa-variables"
+    }
+  ],
+  "functions": [
+    {
+      "name": "sqrt",
+      "kind": "function",
+      "signature": "sqrt(x: number): number",
+      "returns": "number",
+      "snippet": "sqrt($1)$0",
+      "description": {
+        "ja": "playground で編集した平方根の説明",
+        "en": "Square root, edited in the playground"
+      },
+      "examples": [
+        "sqrt(81)"
+      ],
+      "source": "src/main/java/org/unlaxer/tinyexpression/evaluator/ast/P4TypedAstEvaluator.java"
+    }
+  ],
+  "errorCodes": [
+    {
+      "code": "TE004",
+      "severity": "error",
+      "message": {
+        "ja": "丸カッコが閉じられていません。"
+      },
+      "fix": {
+        "ja": "対応する ) を追加"
+      },
+      "variants": [
+        {
+          "source": "tools/tinyexpression-p4-lsp-vscode/src/main/resources/error-catalog.json (pre-#201)",
+          "message": {
+            "ja": "丸カッコが閉じられていません。"
+          },
+          "fix": {
+            "ja": "対応する ')' を追加"
+          }
+        },
+        {
+          "source": "playground",
+          "message": {
+            "ja": "閉じ括弧 ) が足りません。"
+          },
+          "fix": {
+            "ja": ") を追加"
+          }
+        }
+      ],
+      "source": "tools/tinyexpression-p4-lsp-vscode/src/main/java/org/unlaxer/tinyexpression/lsp/p4/TinyExpressionP4LanguageServerExt.java"
+    },
+    {
+      "code": "TE006",
+      "severity": "error",
+      "message": {
+        "ja": "文末のセミコロンが必要です。"
+      },
+      "fix": {
+        "ja": "行末に ; を付ける（playground で編集）"
+      },
+      "variants": [
+        {
+          "source": "tools/tinyexpression-p4-lsp-vscode/src/main/resources/error-catalog.json (pre-#201)",
+          "message": {
+            "ja": "文末のセミコロンが必要です。"
+          },
+          "fix": {
+            "ja": "文の末尾に ';' を追加"
+          }
+        }
+      ],
+      "source": "tools/tinyexpression-p4-lsp-vscode/src/main/java/org/unlaxer/tinyexpression/lsp/p4/TinyExpressionP4LanguageServerExt.java"
+    }
+  ]
+}

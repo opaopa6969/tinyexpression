@@ -6,11 +6,15 @@
   "type": "module",
   "scripts": {
     "build:wasm": "node scripts/build-wasm.mjs",
+    "validator": "node scripts/build-validator.mjs",
+    "predev": "node scripts/build-validator.mjs",
     "dev": "vite",
+    "prebuild": "node scripts/build-validator.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "parity": "node scripts/parity-smoke.mjs",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/build-validator.mjs && node scripts/check.mjs",
+    "roundtrip": "node scripts/build-validator.mjs && node scripts/catalog-roundtrip.mjs"
   },
   "license": "MIT",
   "dependencies": {
