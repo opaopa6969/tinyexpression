@@ -183,11 +183,16 @@ jobs:
           -Dmaven.repo.local="$MAVEN_REPO"
       - name: Verify public and snapshot APIs without shared Maven state
         working-directory: tinyexpression
+        # As of unlaxer 3.1.0 (#209) the published unlaxer-dsl jar already carries the
+        # snapshot / node-alias / optional-qualifier generator shapes that used to be
+        # source-pin-only (they landed on master at or before the 3.1.0 cut), so both
+        # matrix legs expect true here. The `source` leg's own commit pin still matters
+        # for later, still-unreleased generator changes (see the checkout step above).
         run: >-
           mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
-          -Dtinyexpression.expected.mapper.snapshot=${{ matrix.generator == 'source' }}
-          -Dtinyexpression.expected.mapper.nodeAlias=${{ matrix.generator == 'source' }}
-          -Dtinyexpression.expected.mapper.optionalQualifier=${{ matrix.generator == 'source' }}
+          -Dtinyexpression.expected.mapper.snapshot=true
+          -Dtinyexpression.expected.mapper.nodeAlias=true
+          -Dtinyexpression.expected.mapper.optionalQualifier=true
           -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
