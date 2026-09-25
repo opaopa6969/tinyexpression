@@ -1,0 +1,97 @@
+# JVM-free distribution of tinyexpression (issue #181): builds the Linux x86_64 CLI, the C
+# library (cdylib/staticlib + header) and the wasm32 module, and attaches them to the GitHub
+# Release of tag v<version> (the version in rust/Cargo.toml, shared with the Java release).
+# `cargo publish` of tinyexpression-rs runs only when the CARGO_REGISTRY_TOKEN secret exists.
+#
+#   gh workflow run release-rust.yml -f dry_run=true    # build + package + publish --dry-run only
+#   gh workflow run release-rust.yml -f dry_run=false   # upload to the release of tag v<version>
+#                                                       # (the tag must already exist; created by the owner)
+#
+# workflow_dispatch only runs a workflow file that exists on the default branch.
+name: Release Rust
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build and package only: no release upload, cargo publish --dry-run"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      DRY_RUN: ${{ inputs.dry_run }}
+    steps:
+      - uses: actions/checkout@v6
+      - name: Set up Rust
+        run: |
+          rustup toolchain install stable --profile minimal --target wasm32-unknown-unknown
+          rustup default stable
+      - name: Resolve version and tag
+        run: |
+          version=$(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml)
+          test -n "$version"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          echo "TAG=v$version" >> "$GITHUB_ENV"
+          echo "DIST=$RUNNER_TEMP/dist" >> "$GITHUB_ENV"
+      - name: Verify vendored parser and test
+        run: |
+          bash rust/check-generated.sh
+          cargo test --locked --manifest-path rust/Cargo.toml
+      - name: Build native CLI and C library (Linux x86_64)
+        run: |
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -p tinyexpression-ffi
+          bash rust/tinyexpression-ffi/tests/c/run.sh release
+      - name: Build wasm32 module
+        run: |
+          cargo build --profile release-small --locked --manifest-path rust/Cargo.toml --target wasm32-unknown-unknown -p tinyexpression-ffi
+          node rust/examples/wasm/node-smoke.mjs
+      - name: Package assets
+        run: |
+          mkdir -p "$DIST"
+          stage=$(mktemp -d)
+          mkdir -p "$stage/cli" "$stage/lib/include" "$stage/lib/lib" "$stage/wasm"
+          install -m 0755 rust/target/release/tinyexpression "$stage/cli/tinyexpression"
+          install -m 0644 LICENSE rust/tinyexpression-rs/README.md "$stage/cli/"
+          tar -czf "$DIST/tinyexpression-$VERSION-linux-x86_64.tar.gz" -C "$stage/cli" .
+          install -m 0644 rust/tinyexpression-ffi/include/tinyexpression.h "$stage/lib/include/"
+          install -m 0755 rust/target/release/libtinyexpression.so "$stage/lib/lib/"
+          install -m 0644 rust/target/release/libtinyexpression.a "$stage/lib/lib/"
+          install -m 0644 LICENSE "$stage/lib/"
+          tar -czf "$DIST/libtinyexpression-$VERSION-linux-x86_64.tar.gz" -C "$stage/lib" .
+          install -m 0644 rust/target/wasm32-unknown-unknown/release-small/tinyexpression.wasm "$stage/wasm/"
+          install -m 0644 rust/examples/wasm/tinyexpression.mjs rust/examples/wasm/index.html LICENSE "$stage/wasm/"
+          tar -czf "$DIST/tinyexpression-$VERSION-wasm32.tar.gz" -C "$stage/wasm" .
+          cp rust/target/wasm32-unknown-unknown/release-small/tinyexpression.wasm "$DIST/tinyexpression-$VERSION.wasm"
+          (cd "$DIST" && sha256sum * > SHA256SUMS)
+          ls -l "$DIST"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: tinyexpression-rust-${{ env.VERSION }}
+          path: ${{ env.DIST }}
+          if-no-files-found: error
+      - name: cargo publish --dry-run
+        run: cargo publish --dry-run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs
+      - name: Upload release assets
+        if: env.DRY_RUN != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$TAG" >/dev/null 2>&1 ||
+            gh release create "$TAG" --verify-tag --title "$TAG" --notes "tinyexpression $VERSION"
+          gh release upload "$TAG" "$DIST"/* --clobber
+      - name: cargo publish (only with CARGO_REGISTRY_TOKEN)
+        if: env.DRY_RUN != 'true'
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "::notice::CARGO_REGISTRY_TOKEN is not set; skipping cargo publish"
+            exit 0
+          fi
+          cargo publish --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs

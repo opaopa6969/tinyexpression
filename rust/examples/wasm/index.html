@@ -1,0 +1,18 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>tinyexpression wasm</title>
+<!-- Serve this directory with tinyexpression.wasm next to it, e.g.
+     cp ../../target/wasm32-unknown-unknown/release-small/tinyexpression.wasm . && python3 -m http.server -->
+<input id="formula" size="60" value="if(3 > 2){(1 + 2) * 3}else{0}">
+<button id="run">eval</button>
+<pre id="out"></pre>
+<script type="module">
+  import { loadTinyExpression } from './tinyexpression.mjs';
+  const te = await loadTinyExpression(await fetch('tinyexpression.wasm'));
+  const show = () => {
+    const { code, result } = te.eval(document.getElementById('formula').value);
+    document.getElementById('out').textContent = `exit ${code}\n` + JSON.stringify(result, null, 2);
+  };
+  document.getElementById('run').onclick = show;
+  document.getElementById('out').textContent = JSON.stringify(te.version());
+</script>

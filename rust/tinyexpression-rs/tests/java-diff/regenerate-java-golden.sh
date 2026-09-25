@@ -33,7 +33,7 @@ javac -nowarn -d "$scratch/driver" -cp "$cp" \
 echo "[3/5] collecting the corpus" >&2
 python3 "$here/build_corpus.py" > "$scratch/corpus.jsonl"
 cargo build --release --locked --manifest-path "$root/rust/Cargo.toml" -p tinyexpression-rs >&2
-python3 "$here/split_corpus.py" "$scratch/corpus.jsonl" "$root/rust/target/release/tinyexpression-rs" \
+python3 "$here/split_corpus.py" "$scratch/corpus.jsonl" "$root/rust/target/release/tinyexpression" \
   "$scratch/corpus-accepted.jsonl" "$scratch/corpus-probe.jsonl"
 
 echo "[4/5] evaluating on the Java side" >&2

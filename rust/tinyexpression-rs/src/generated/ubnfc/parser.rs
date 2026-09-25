@@ -14,6 +14,16 @@ pub fn parse(text:&str)->ParseResult {parse_with_options(text,ParseOptions::defa
 pub fn parse_with_options(text:&str,options:ParseOptions)->ParseResult {
 let (result,stack_exhausted)=parse_with_options_budget(text,options,NATIVE_STACK_SENTINEL_BYTES);
 if result.ok || !stack_exhausted {return result;}
+parse_with_options_escalated(text,options)
+}
+// issue #65 / D-070 wasm: wasm32 には OS スレッドの stack size 制御が無く
+// （`wasm32-unknown-unknown` は既定で `std::thread` 自体を欠く）、この escalation は
+// コンパイルできない。生成物は依存ゼロ・std のみのままにするため wasm32 では
+// escalation を丸ごとコンパイル対象から外し、番兵budget（NATIVE_STACK_SENTINEL_BYTES）
+// の結果、つまり既に "maximum parse depth exceeded" が入った診断へそのまま fallback する
+// （crash しない。D-070 の契約どおり）。
+#[cfg(not(target_arch = "wasm32"))]
+fn parse_with_options_escalated(text:&str,options:ParseOptions)->ParseResult {
 let budget=escalated_stack_budget(options.max_depth);
 let stack_bytes=escalated_thread_stack_bytes(options.max_depth);
 std::thread::scope(|scope| {
@@ -23,6 +33,10 @@ std::thread::Builder::new().stack_size(stack_bytes)
 .join()
 .unwrap_or_else(|payload| std::panic::resume_unwind(payload))
 })
+}
+#[cfg(target_arch = "wasm32")]
+fn parse_with_options_escalated(text:&str,options:ParseOptions)->ParseResult {
+parse_with_options_budget(text,options,NATIVE_STACK_SENTINEL_BYTES).0
 }
 fn parse_with_options_budget(text:&str,options:ParseOptions,budget:usize)->(ParseResult,bool) {
 parse_with_scanner_budget(text,options,&mut RejectExtern,budget)
@@ -203,6 +217,7 @@ Ok((parser.finish(step),stack_exhausted))
 // issue #35 / D-070: native stack 番兵に max_depth より先へ当たった（＝呼出し元 thread の
 // stack が小さいだけ）ときだけ、max_depth から見積もった十分な stack を持つ専用 thread で
 // 1 度だけ解析し直す。RejectExtern は状態を持たないので thread をまたいで再構築してよい。
+#[cfg(not(target_arch = "wasm32"))]
 fn parse_entry_escalated(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
 let budget=escalated_stack_budget(options.max_depth);
 let stack_bytes=escalated_thread_stack_bytes(options.max_depth);
@@ -216,6 +231,14 @@ parse_entry_budget(grammar,entry,text,options,&mut scanner,budget)
 .join()
 .unwrap_or_else(|payload| std::panic::resume_unwind(payload))
 }).map(|(result,_)| result)
+}
+// issue #65 / D-070 wasm: wasm32 では escalation を丸ごとコンパイル対象から外し、番兵
+// budget（NATIVE_STACK_SENTINEL_BYTES）での再解析結果、つまり既に "maximum parse depth
+// exceeded" が入った診断へそのまま fallback する（crash しない。D-070 の契約どおり）。
+#[cfg(target_arch = "wasm32")]
+fn parse_entry_escalated(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
+let mut scanner=RejectExtern;
+parse_entry_budget(grammar,entry,text,options,&mut scanner,NATIVE_STACK_SENTINEL_BYTES).map(|(result,_)| result)
 }
 pub fn parse_entry_with_options(grammar:&str,entry:Option<&str>,text:&str,options:ParseOptions)->Result<ParseResult,&'static str> {
 let mut scanner=RejectExtern;
@@ -1621,7 +1644,7 @@ out
 fn e12_c(&mut self,state:State)->Step {
 let mut out=self.b12_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:12,rule:0,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,12,0);
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -1656,7 +1679,7 @@ out
 fn e14_c(&mut self,state:State)->Step {
 let mut out=self.b14_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:14,rule:1,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,14,1);
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -1668,7 +1691,7 @@ out
 fn e15_c(&mut self,state:State)->Step {
 let mut out=self.b15_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:15,rule:1,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,15,1);
 } else {self.display_failures(state.consumed.max(state.matched),&["WildCardStringTerminatorParser"]);}
 out
 }
@@ -1680,7 +1703,7 @@ out
 fn e16_c(&mut self,state:State)->Step {
 let mut out=self.b16_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:16,rule:1,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,16,1);
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -1719,7 +1742,7 @@ out
 fn e18_c(&mut self,state:State)->Step {
 let mut out=self.b18_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:18,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,18,2);
 } else {self.display_failures(state.consumed.max(state.matched),&["'import'"]);}
 out
 }
@@ -1782,7 +1805,7 @@ out
 fn e22_c(&mut self,state:State)->Step {
 let mut out=self.b22_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:22,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,22,2);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -1795,7 +1818,7 @@ out
 fn e23_c(&mut self,state:State)->Step {
 let mut out=self.b23_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:23,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,23,2);
 out.events=self.event(Event::Capture {site:5,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -1808,7 +1831,7 @@ out
 fn e24_c(&mut self,state:State)->Step {
 let mut out=self.b24_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:24,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,24,2);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -1821,7 +1844,7 @@ out
 fn e25_c(&mut self,state:State)->Step {
 let mut out=self.b25_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:25,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,25,2);
 out.events=self.event(Event::Capture {site:6,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -1834,7 +1857,7 @@ out
 fn e26_c(&mut self,state:State)->Step {
 let mut out=self.b26_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:26,rule:2,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,26,2);
 } else {self.display_failures(state.consumed.max(state.matched),&["';'"]);}
 out
 }
@@ -1865,7 +1888,7 @@ out
 fn e28_c(&mut self,state:State)->Step {
 let mut out=self.b28_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:28,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,28,3);
 out.events=self.event(Event::Capture {site:7,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -1915,7 +1938,7 @@ out
 fn e31_c(&mut self,state:State)->Step {
 let mut out=self.b31_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:31,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,31,3);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
 out
 }
@@ -1928,7 +1951,7 @@ out
 fn e32_c(&mut self,state:State)->Step {
 let mut out=self.b32_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:32,rule:3,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,32,3);
 out.events=self.event(Event::Capture {site:8,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -2070,7 +2093,7 @@ out
 fn e41_c(&mut self,state:State)->Step {
 let mut out=self.b41_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:41,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,41,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["'variable'"]);}
 out
 }
@@ -2083,7 +2106,7 @@ out
 fn e42_c(&mut self,state:State)->Step {
 let mut out=self.b42_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:42,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,42,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["'var'"]);}
 out
 }
@@ -2096,7 +2119,7 @@ out
 fn e43_c(&mut self,state:State)->Step {
 let mut out=self.b43_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:43,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,43,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -2109,7 +2132,7 @@ out
 fn e44_c(&mut self,state:State)->Step {
 let mut out=self.b44_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:44,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,44,5);
 out.events=self.event(Event::Capture {site:9,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -2195,7 +2218,7 @@ out
 fn e49_c(&mut self,state:State)->Step {
 let mut out=self.b49_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:49,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,49,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2285,7 +2308,7 @@ out
 fn e55_c(&mut self,state:State)->Step {
 let mut out=self.b55_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:55,rule:5,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,55,5);
 } else {self.display_failures(state.consumed.max(state.matched),&["';'"]);}
 out
 }
@@ -2358,7 +2381,7 @@ out
 fn e59_c(&mut self,state:State)->Step {
 let mut out=self.b59_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:59,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,59,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["'variable'"]);}
 out
 }
@@ -2371,7 +2394,7 @@ out
 fn e60_c(&mut self,state:State)->Step {
 let mut out=self.b60_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:60,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,60,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["'var'"]);}
 out
 }
@@ -2384,7 +2407,7 @@ out
 fn e61_c(&mut self,state:State)->Step {
 let mut out=self.b61_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:61,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,61,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -2397,7 +2420,7 @@ out
 fn e62_c(&mut self,state:State)->Step {
 let mut out=self.b62_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:62,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,62,6);
 out.events=self.event(Event::Capture {site:13,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -2483,7 +2506,7 @@ out
 fn e67_c(&mut self,state:State)->Step {
 let mut out=self.b67_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:67,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,67,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2573,7 +2596,7 @@ out
 fn e73_c(&mut self,state:State)->Step {
 let mut out=self.b73_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:73,rule:6,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,73,6);
 } else {self.display_failures(state.consumed.max(state.matched),&["';'"]);}
 out
 }
@@ -2646,7 +2669,7 @@ out
 fn e77_c(&mut self,state:State)->Step {
 let mut out=self.b77_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:77,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,77,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["'variable'"]);}
 out
 }
@@ -2659,7 +2682,7 @@ out
 fn e78_c(&mut self,state:State)->Step {
 let mut out=self.b78_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:78,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,78,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["'var'"]);}
 out
 }
@@ -2672,7 +2695,7 @@ out
 fn e79_c(&mut self,state:State)->Step {
 let mut out=self.b79_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:79,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,79,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -2685,7 +2708,7 @@ out
 fn e80_c(&mut self,state:State)->Step {
 let mut out=self.b80_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:80,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,80,7);
 out.events=self.event(Event::Capture {site:17,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -2771,7 +2794,7 @@ out
 fn e85_c(&mut self,state:State)->Step {
 let mut out=self.b85_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:85,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,85,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2861,7 +2884,7 @@ out
 fn e91_c(&mut self,state:State)->Step {
 let mut out=self.b91_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:91,rule:7,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,91,7);
 } else {self.display_failures(state.consumed.max(state.matched),&["';'"]);}
 out
 }
@@ -2934,7 +2957,7 @@ out
 fn e95_c(&mut self,state:State)->Step {
 let mut out=self.b95_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:95,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,95,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'variable'"]);}
 out
 }
@@ -2947,7 +2970,7 @@ out
 fn e96_c(&mut self,state:State)->Step {
 let mut out=self.b96_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:96,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,96,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'var'"]);}
 out
 }
@@ -2960,7 +2983,7 @@ out
 fn e97_c(&mut self,state:State)->Step {
 let mut out=self.b97_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:97,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,97,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -2973,7 +2996,7 @@ out
 fn e98_c(&mut self,state:State)->Step {
 let mut out=self.b98_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:98,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,98,8);
 out.events=self.event(Event::Capture {site:21,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -3059,7 +3082,7 @@ out
 fn e103_c(&mut self,state:State)->Step {
 let mut out=self.b103_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:103,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,103,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -3149,7 +3172,7 @@ out
 fn e109_c(&mut self,state:State)->Step {
 let mut out=self.b109_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:109,rule:8,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,109,8);
 } else {self.display_failures(state.consumed.max(state.matched),&["';'"]);}
 out
 }
@@ -3200,7 +3223,7 @@ out
 fn e112_c(&mut self,state:State)->Step {
 let mut out=self.b112_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:112,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,112,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -3253,7 +3276,7 @@ out
 fn e115_c(&mut self,state:State)->Step {
 let mut out=self.b115_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:115,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,115,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'number'"]);}
 out
 }
@@ -3266,7 +3289,7 @@ out
 fn e116_c(&mut self,state:State)->Step {
 let mut out=self.b116_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:116,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,116,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Number'"]);}
 out
 }
@@ -3279,7 +3302,7 @@ out
 fn e117_c(&mut self,state:State)->Step {
 let mut out=self.b117_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:117,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,117,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -3292,7 +3315,7 @@ out
 fn e118_c(&mut self,state:State)->Step {
 let mut out=self.b118_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:118,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,118,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'String'"]);}
 out
 }
@@ -3305,7 +3328,7 @@ out
 fn e119_c(&mut self,state:State)->Step {
 let mut out=self.b119_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:119,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,119,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'boolean'"]);}
 out
 }
@@ -3318,7 +3341,7 @@ out
 fn e120_c(&mut self,state:State)->Step {
 let mut out=self.b120_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:120,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,120,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Boolean'"]);}
 out
 }
@@ -3331,7 +3354,7 @@ out
 fn e121_c(&mut self,state:State)->Step {
 let mut out=self.b121_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:121,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,121,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'object'"]);}
 out
 }
@@ -3344,7 +3367,7 @@ out
 fn e122_c(&mut self,state:State)->Step {
 let mut out=self.b122_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:122,rule:9,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,122,9);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Object'"]);}
 out
 }
@@ -3395,7 +3418,7 @@ out
 fn e125_c(&mut self,state:State)->Step {
 let mut out=self.b125_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:125,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,125,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -3440,7 +3463,7 @@ out
 fn e128_c(&mut self,state:State)->Step {
 let mut out=self.b128_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:128,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,128,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'number'"]);}
 out
 }
@@ -3453,7 +3476,7 @@ out
 fn e129_c(&mut self,state:State)->Step {
 let mut out=self.b129_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:129,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,129,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Number'"]);}
 out
 }
@@ -3466,7 +3489,7 @@ out
 fn e130_c(&mut self,state:State)->Step {
 let mut out=self.b130_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:130,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,130,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'float'"]);}
 out
 }
@@ -3479,7 +3502,7 @@ out
 fn e131_c(&mut self,state:State)->Step {
 let mut out=self.b131_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:131,rule:10,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,131,10);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Float'"]);}
 out
 }
@@ -3530,7 +3553,7 @@ out
 fn e134_c(&mut self,state:State)->Step {
 let mut out=self.b134_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:134,rule:11,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,134,11);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -3571,7 +3594,7 @@ out
 fn e137_c(&mut self,state:State)->Step {
 let mut out=self.b137_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:137,rule:11,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,137,11);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -3584,7 +3607,7 @@ out
 fn e138_c(&mut self,state:State)->Step {
 let mut out=self.b138_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:138,rule:11,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,138,11);
 } else {self.display_failures(state.consumed.max(state.matched),&["'String'"]);}
 out
 }
@@ -3635,7 +3658,7 @@ out
 fn e141_c(&mut self,state:State)->Step {
 let mut out=self.b141_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:141,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,141,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -3676,7 +3699,7 @@ out
 fn e144_c(&mut self,state:State)->Step {
 let mut out=self.b144_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:144,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,144,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'boolean'"]);}
 out
 }
@@ -3689,7 +3712,7 @@ out
 fn e145_c(&mut self,state:State)->Step {
 let mut out=self.b145_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:145,rule:12,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,145,12);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Boolean'"]);}
 out
 }
@@ -3740,7 +3763,7 @@ out
 fn e148_c(&mut self,state:State)->Step {
 let mut out=self.b148_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:148,rule:13,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,148,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -3781,7 +3804,7 @@ out
 fn e151_c(&mut self,state:State)->Step {
 let mut out=self.b151_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:151,rule:13,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,151,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'object'"]);}
 out
 }
@@ -3794,7 +3817,7 @@ out
 fn e152_c(&mut self,state:State)->Step {
 let mut out=self.b152_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:152,rule:13,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,152,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Object'"]);}
 out
 }
@@ -3827,7 +3850,7 @@ out
 fn e154_c(&mut self,state:State)->Step {
 let mut out=self.b154_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:154,rule:14,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,154,14);
 } else {self.display_failures(state.consumed.max(state.matched),&["'if'"]);}
 out
 }
@@ -3840,7 +3863,7 @@ out
 fn e155_c(&mut self,state:State)->Step {
 let mut out=self.b155_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:155,rule:14,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,155,14);
 } else {self.display_failures(state.consumed.max(state.matched),&["'not'"]);}
 out
 }
@@ -3853,7 +3876,7 @@ out
 fn e156_c(&mut self,state:State)->Step {
 let mut out=self.b156_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:156,rule:14,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,156,14);
 } else {self.display_failures(state.consumed.max(state.matched),&["'exists'"]);}
 out
 }
@@ -3889,7 +3912,7 @@ out
 fn e158_c(&mut self,state:State)->Step {
 let mut out=self.b158_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:158,rule:15,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,158,15);
 } else {self.display_failures(state.consumed.max(state.matched),&["'description'"]);}
 out
 }
@@ -3902,7 +3925,7 @@ out
 fn e159_c(&mut self,state:State)->Step {
 let mut out=self.b159_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:159,rule:15,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,159,15);
 } else {self.display_failures(state.consumed.max(state.matched),&["'='"]);}
 out
 }
@@ -3915,7 +3938,7 @@ out
 fn e160_c(&mut self,state:State)->Step {
 let mut out=self.b160_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:160,rule:15,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,160,15);
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -3955,7 +3978,7 @@ out
 fn e162_c(&mut self,state:State)->Step {
 let mut out=self.b162_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:162,rule:16,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,162,16);
 } else {self.display_failures(state.consumed.max(state.matched),&["'@'"]);}
 out
 }
@@ -3968,7 +3991,7 @@ out
 fn e163_c(&mut self,state:State)->Step {
 let mut out=self.b163_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:163,rule:16,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,163,16);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -3980,7 +4003,7 @@ out
 fn e164_c(&mut self,state:State)->Step {
 let mut out=self.b164_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:164,rule:16,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,164,16);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -4025,7 +4048,7 @@ out
 fn e167_c(&mut self,state:State)->Step {
 let mut out=self.b167_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:167,rule:16,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,167,16);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -4110,7 +4133,7 @@ out
 fn e172_c(&mut self,state:State)->Step {
 let mut out=self.b172_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:172,rule:17,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,172,17);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -4158,7 +4181,7 @@ out
 fn e175_c(&mut self,state:State)->Step {
 let mut out=self.b175_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:175,rule:18,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,175,18);
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
@@ -4170,7 +4193,7 @@ out
 fn e176_c(&mut self,state:State)->Step {
 let mut out=self.b176_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:176,rule:18,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,176,18);
 } else {self.display_failures(state.consumed.max(state.matched),&["'='"]);}
 out
 }
@@ -4307,7 +4330,7 @@ out
 fn e185_c(&mut self,state:State)->Step {
 let mut out=self.b185_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:185,rule:20,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,185,20);
 out.events=self.event(Event::Capture {site:25,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -4320,7 +4343,7 @@ out
 fn e186_c(&mut self,state:State)->Step {
 let mut out=self.b186_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:186,rule:20,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,186,20);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -4366,7 +4389,7 @@ out
 fn e189_c(&mut self,state:State)->Step {
 let mut out=self.b189_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:189,rule:20,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,189,20);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -4379,7 +4402,7 @@ out
 fn e190_c(&mut self,state:State)->Step {
 let mut out=self.b190_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:190,rule:20,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,190,20);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -4404,7 +4427,7 @@ out
 fn e192_c(&mut self,state:State)->Step {
 let mut out=self.b192_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:192,rule:20,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,192,20);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -4462,7 +4485,7 @@ out
 fn e195_c(&mut self,state:State)->Step {
 let mut out=self.b195_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:195,rule:21,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,195,21);
 out.events=self.event(Event::Capture {site:28,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -4475,7 +4498,7 @@ out
 fn e196_c(&mut self,state:State)->Step {
 let mut out=self.b196_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:196,rule:21,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,196,21);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -4521,7 +4544,7 @@ out
 fn e199_c(&mut self,state:State)->Step {
 let mut out=self.b199_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:199,rule:21,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,199,21);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -4534,7 +4557,7 @@ out
 fn e200_c(&mut self,state:State)->Step {
 let mut out=self.b200_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:200,rule:21,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,200,21);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -4559,7 +4582,7 @@ out
 fn e202_c(&mut self,state:State)->Step {
 let mut out=self.b202_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:202,rule:21,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,202,21);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -4617,7 +4640,7 @@ out
 fn e205_c(&mut self,state:State)->Step {
 let mut out=self.b205_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:205,rule:22,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,205,22);
 out.events=self.event(Event::Capture {site:31,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -4630,7 +4653,7 @@ out
 fn e206_c(&mut self,state:State)->Step {
 let mut out=self.b206_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:206,rule:22,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,206,22);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -4676,7 +4699,7 @@ out
 fn e209_c(&mut self,state:State)->Step {
 let mut out=self.b209_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:209,rule:22,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,209,22);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -4689,7 +4712,7 @@ out
 fn e210_c(&mut self,state:State)->Step {
 let mut out=self.b210_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:210,rule:22,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,210,22);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -4714,7 +4737,7 @@ out
 fn e212_c(&mut self,state:State)->Step {
 let mut out=self.b212_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:212,rule:22,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,212,22);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -4772,7 +4795,7 @@ out
 fn e215_c(&mut self,state:State)->Step {
 let mut out=self.b215_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:215,rule:23,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,215,23);
 out.events=self.event(Event::Capture {site:34,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -4785,7 +4808,7 @@ out
 fn e216_c(&mut self,state:State)->Step {
 let mut out=self.b216_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:216,rule:23,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,216,23);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -4831,7 +4854,7 @@ out
 fn e219_c(&mut self,state:State)->Step {
 let mut out=self.b219_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:219,rule:23,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,219,23);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -4844,7 +4867,7 @@ out
 fn e220_c(&mut self,state:State)->Step {
 let mut out=self.b220_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:220,rule:23,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,220,23);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -4869,7 +4892,7 @@ out
 fn e222_c(&mut self,state:State)->Step {
 let mut out=self.b222_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:222,rule:23,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,222,23);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -4955,7 +4978,7 @@ out
 fn e227_c(&mut self,state:State)->Step {
 let mut out=self.b227_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:227,rule:24,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,227,24);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -5003,7 +5026,7 @@ out
 fn e230_c(&mut self,state:State)->Step {
 let mut out=self.b230_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:230,rule:25,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,230,25);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -5016,7 +5039,7 @@ out
 fn e231_c(&mut self,state:State)->Step {
 let mut out=self.b231_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:231,rule:25,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,231,25);
 out.events=self.event(Event::Capture {site:39,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -5067,7 +5090,7 @@ out
 fn e234_c(&mut self,state:State)->Step {
 let mut out=self.b234_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:234,rule:25,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,234,25);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -5109,7 +5132,7 @@ out
 fn e237_c(&mut self,state:State)->Step {
 let mut out=self.b237_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:237,rule:26,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,237,26);
 } else {self.display_failures(state.consumed.max(state.matched),&["'number'"]);}
 out
 }
@@ -5122,7 +5145,7 @@ out
 fn e238_c(&mut self,state:State)->Step {
 let mut out=self.b238_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:238,rule:26,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,238,26);
 } else {self.display_failures(state.consumed.max(state.matched),&["'float'"]);}
 out
 }
@@ -5151,7 +5174,7 @@ out
 fn e240_c(&mut self,state:State)->Step {
 let mut out=self.b240_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:240,rule:27,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,240,27);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -5180,7 +5203,7 @@ out
 fn e242_c(&mut self,state:State)->Step {
 let mut out=self.b242_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:242,rule:28,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,242,28);
 } else {self.display_failures(state.consumed.max(state.matched),&["'boolean'"]);}
 out
 }
@@ -5209,7 +5232,7 @@ out
 fn e244_c(&mut self,state:State)->Step {
 let mut out=self.b244_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:244,rule:29,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,244,29);
 } else {self.display_failures(state.consumed.max(state.matched),&["'object'"]);}
 out
 }
@@ -5326,7 +5349,7 @@ out
 fn e251_c(&mut self,state:State)->Step {
 let mut out=self.b251_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:251,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,251,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["'external'"]);}
 out
 }
@@ -5377,7 +5400,7 @@ out
 fn e254_c(&mut self,state:State)->Step {
 let mut out=self.b254_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:254,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,254,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["'returning'"]);}
 out
 }
@@ -5410,7 +5433,7 @@ out
 fn e256_c(&mut self,state:State)->Step {
 let mut out=self.b256_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:256,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,256,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -5454,7 +5477,7 @@ out
 fn e259_c(&mut self,state:State)->Step {
 let mut out=self.b259_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:259,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,259,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -5530,7 +5553,7 @@ out
 fn e264_c(&mut self,state:State)->Step {
 let mut out=self.b264_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:264,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,264,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -5543,7 +5566,7 @@ out
 fn e265_c(&mut self,state:State)->Step {
 let mut out=self.b265_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:265,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,265,31);
 out.events=self.event(Event::Capture {site:42,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -5556,7 +5579,7 @@ out
 fn e266_c(&mut self,state:State)->Step {
 let mut out=self.b266_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:266,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,266,31);
 out.events=self.event(Event::Capture {site:43,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -5569,7 +5592,7 @@ out
 fn e267_c(&mut self,state:State)->Step {
 let mut out=self.b267_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:267,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,267,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -5615,7 +5638,7 @@ out
 fn e270_c(&mut self,state:State)->Step {
 let mut out=self.b270_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:270,rule:31,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,270,31);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -5658,7 +5681,7 @@ out
 fn e272_c(&mut self,state:State)->Step {
 let mut out=self.b272_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:272,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,272,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["'external'"]);}
 out
 }
@@ -5757,7 +5780,7 @@ out
 fn e278_c(&mut self,state:State)->Step {
 let mut out=self.b278_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:278,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,278,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["'returning'"]);}
 out
 }
@@ -5790,7 +5813,7 @@ out
 fn e280_c(&mut self,state:State)->Step {
 let mut out=self.b280_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:280,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,280,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -5834,7 +5857,7 @@ out
 fn e283_c(&mut self,state:State)->Step {
 let mut out=self.b283_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:283,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,283,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -5867,7 +5890,7 @@ out
 fn e285_c(&mut self,state:State)->Step {
 let mut out=self.b285_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:285,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,285,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -5943,7 +5966,7 @@ out
 fn e290_c(&mut self,state:State)->Step {
 let mut out=self.b290_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:290,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,290,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -5956,7 +5979,7 @@ out
 fn e291_c(&mut self,state:State)->Step {
 let mut out=self.b291_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:291,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,291,32);
 out.events=self.event(Event::Capture {site:46,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -5969,7 +5992,7 @@ out
 fn e292_c(&mut self,state:State)->Step {
 let mut out=self.b292_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:292,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,292,32);
 out.events=self.event(Event::Capture {site:47,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -5982,7 +6005,7 @@ out
 fn e293_c(&mut self,state:State)->Step {
 let mut out=self.b293_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:293,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,293,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -6028,7 +6051,7 @@ out
 fn e296_c(&mut self,state:State)->Step {
 let mut out=self.b296_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:296,rule:32,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,296,32);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -6075,7 +6098,7 @@ out
 fn e298_c(&mut self,state:State)->Step {
 let mut out=self.b298_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:298,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,298,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["'external'"]);}
 out
 }
@@ -6126,7 +6149,7 @@ out
 fn e301_c(&mut self,state:State)->Step {
 let mut out=self.b301_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:301,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,301,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["'returning'"]);}
 out
 }
@@ -6159,7 +6182,7 @@ out
 fn e303_c(&mut self,state:State)->Step {
 let mut out=self.b303_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:303,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,303,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -6203,7 +6226,7 @@ out
 fn e306_c(&mut self,state:State)->Step {
 let mut out=self.b306_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:306,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,306,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -6279,7 +6302,7 @@ out
 fn e311_c(&mut self,state:State)->Step {
 let mut out=self.b311_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:311,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,311,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6292,7 +6315,7 @@ out
 fn e312_c(&mut self,state:State)->Step {
 let mut out=self.b312_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:312,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,312,33);
 out.events=self.event(Event::Capture {site:50,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -6305,7 +6328,7 @@ out
 fn e313_c(&mut self,state:State)->Step {
 let mut out=self.b313_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:313,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,313,33);
 out.events=self.event(Event::Capture {site:51,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -6318,7 +6341,7 @@ out
 fn e314_c(&mut self,state:State)->Step {
 let mut out=self.b314_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:314,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,314,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -6364,7 +6387,7 @@ out
 fn e317_c(&mut self,state:State)->Step {
 let mut out=self.b317_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:317,rule:33,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,317,33);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -6411,7 +6434,7 @@ out
 fn e319_c(&mut self,state:State)->Step {
 let mut out=self.b319_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:319,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,319,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["'external'"]);}
 out
 }
@@ -6462,7 +6485,7 @@ out
 fn e322_c(&mut self,state:State)->Step {
 let mut out=self.b322_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:322,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,322,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["'returning'"]);}
 out
 }
@@ -6495,7 +6518,7 @@ out
 fn e324_c(&mut self,state:State)->Step {
 let mut out=self.b324_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:324,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,324,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -6539,7 +6562,7 @@ out
 fn e327_c(&mut self,state:State)->Step {
 let mut out=self.b327_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:327,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,327,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -6615,7 +6638,7 @@ out
 fn e332_c(&mut self,state:State)->Step {
 let mut out=self.b332_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:332,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,332,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6628,7 +6651,7 @@ out
 fn e333_c(&mut self,state:State)->Step {
 let mut out=self.b333_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:333,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,333,34);
 out.events=self.event(Event::Capture {site:54,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -6641,7 +6664,7 @@ out
 fn e334_c(&mut self,state:State)->Step {
 let mut out=self.b334_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:334,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,334,34);
 out.events=self.event(Event::Capture {site:55,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -6654,7 +6677,7 @@ out
 fn e335_c(&mut self,state:State)->Step {
 let mut out=self.b335_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:335,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,335,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -6700,7 +6723,7 @@ out
 fn e338_c(&mut self,state:State)->Step {
 let mut out=self.b338_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:338,rule:34,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,338,34);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -6749,7 +6772,7 @@ out
 fn e341_c(&mut self,state:State)->Step {
 let mut out=self.b341_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:341,rule:35,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,341,35);
 } else {self.display_failures(state.consumed.max(state.matched),&["'call'"]);}
 out
 }
@@ -6782,7 +6805,7 @@ out
 fn e343_c(&mut self,state:State)->Step {
 let mut out=self.b343_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:343,rule:35,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,343,35);
 } else {self.display_failures(state.consumed.max(state.matched),&["'internal'"]);}
 out
 }
@@ -6795,7 +6818,7 @@ out
 fn e344_c(&mut self,state:State)->Step {
 let mut out=self.b344_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:344,rule:35,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,344,35);
 } else {self.display_failures(state.consumed.max(state.matched),&["'internal'"]);}
 out
 }
@@ -6847,7 +6870,7 @@ out
 fn e347_c(&mut self,state:State)->Step {
 let mut out=self.b347_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:347,rule:36,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,347,36);
 out.events=self.event(Event::Capture {site:57,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -6860,7 +6883,7 @@ out
 fn e348_c(&mut self,state:State)->Step {
 let mut out=self.b348_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:348,rule:36,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,348,36);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -6906,7 +6929,7 @@ out
 fn e351_c(&mut self,state:State)->Step {
 let mut out=self.b351_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:351,rule:36,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,351,36);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -6959,7 +6982,7 @@ out
 fn e354_c(&mut self,state:State)->Step {
 let mut out=self.b354_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:354,rule:37,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,354,37);
 } else {self.display_failures(state.consumed.max(state.matched),&["'?'"]);}
 out
 }
@@ -6984,7 +7007,7 @@ out
 fn e356_c(&mut self,state:State)->Step {
 let mut out=self.b356_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:356,rule:37,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,356,37);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -7155,7 +7178,7 @@ out
 fn e367_c(&mut self,state:State)->Step {
 let mut out=self.b367_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:367,rule:39,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,367,39);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -7403,7 +7426,7 @@ out
 fn e382_c(&mut self,state:State)->Step {
 let mut out=self.b382_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:382,rule:42,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,382,42);
 } else {self.display_failures(state.consumed.max(state.matched),&["'+'"]);}
 out
 }
@@ -7416,7 +7439,7 @@ out
 fn e383_c(&mut self,state:State)->Step {
 let mut out=self.b383_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:383,rule:42,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,383,42);
 } else {self.display_failures(state.consumed.max(state.matched),&["'-'"]);}
 out
 }
@@ -7458,7 +7481,7 @@ out
 fn e385_c(&mut self,state:State)->Step {
 let mut out=self.b385_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:385,rule:43,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,385,43);
 } else {self.display_failures(state.consumed.max(state.matched),&["'*'"]);}
 out
 }
@@ -7471,7 +7494,7 @@ out
 fn e386_c(&mut self,state:State)->Step {
 let mut out=self.b386_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:386,rule:43,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,386,43);
 } else {self.display_failures(state.consumed.max(state.matched),&["'/'"]);}
 out
 }
@@ -7709,7 +7732,7 @@ out
 fn e403_c(&mut self,state:State)->Step {
 let mut out=self.b403_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:403,rule:45,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,403,45);
 } else {self.display_failures(state.consumed.max(state.matched),&["'sin'"]);}
 out
 }
@@ -7722,7 +7745,7 @@ out
 fn e404_c(&mut self,state:State)->Step {
 let mut out=self.b404_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:404,rule:45,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,404,45);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -7747,7 +7770,7 @@ out
 fn e406_c(&mut self,state:State)->Step {
 let mut out=self.b406_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:406,rule:45,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,406,45);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -7786,7 +7809,7 @@ out
 fn e408_c(&mut self,state:State)->Step {
 let mut out=self.b408_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:408,rule:46,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,408,46);
 } else {self.display_failures(state.consumed.max(state.matched),&["'cos'"]);}
 out
 }
@@ -7799,7 +7822,7 @@ out
 fn e409_c(&mut self,state:State)->Step {
 let mut out=self.b409_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:409,rule:46,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,409,46);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -7824,7 +7847,7 @@ out
 fn e411_c(&mut self,state:State)->Step {
 let mut out=self.b411_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:411,rule:46,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,411,46);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -7863,7 +7886,7 @@ out
 fn e413_c(&mut self,state:State)->Step {
 let mut out=self.b413_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:413,rule:47,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,413,47);
 } else {self.display_failures(state.consumed.max(state.matched),&["'tan'"]);}
 out
 }
@@ -7876,7 +7899,7 @@ out
 fn e414_c(&mut self,state:State)->Step {
 let mut out=self.b414_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:414,rule:47,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,414,47);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -7901,7 +7924,7 @@ out
 fn e416_c(&mut self,state:State)->Step {
 let mut out=self.b416_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:416,rule:47,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,416,47);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -7940,7 +7963,7 @@ out
 fn e418_c(&mut self,state:State)->Step {
 let mut out=self.b418_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:418,rule:48,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,418,48);
 } else {self.display_failures(state.consumed.max(state.matched),&["'sqrt'"]);}
 out
 }
@@ -7953,7 +7976,7 @@ out
 fn e419_c(&mut self,state:State)->Step {
 let mut out=self.b419_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:419,rule:48,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,419,48);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -7978,7 +8001,7 @@ out
 fn e421_c(&mut self,state:State)->Step {
 let mut out=self.b421_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:421,rule:48,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,421,48);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8019,7 +8042,7 @@ out
 fn e423_c(&mut self,state:State)->Step {
 let mut out=self.b423_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:423,rule:49,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,423,49);
 } else {self.display_failures(state.consumed.max(state.matched),&["'min'"]);}
 out
 }
@@ -8032,7 +8055,7 @@ out
 fn e424_c(&mut self,state:State)->Step {
 let mut out=self.b424_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:424,rule:49,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,424,49);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8096,7 +8119,7 @@ out
 fn e428_c(&mut self,state:State)->Step {
 let mut out=self.b428_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:428,rule:49,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,428,49);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8121,7 +8144,7 @@ out
 fn e430_c(&mut self,state:State)->Step {
 let mut out=self.b430_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:430,rule:49,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,430,49);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8162,7 +8185,7 @@ out
 fn e432_c(&mut self,state:State)->Step {
 let mut out=self.b432_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:432,rule:50,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,432,50);
 } else {self.display_failures(state.consumed.max(state.matched),&["'max'"]);}
 out
 }
@@ -8175,7 +8198,7 @@ out
 fn e433_c(&mut self,state:State)->Step {
 let mut out=self.b433_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:433,rule:50,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,433,50);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8239,7 +8262,7 @@ out
 fn e437_c(&mut self,state:State)->Step {
 let mut out=self.b437_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:437,rule:50,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,437,50);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8264,7 +8287,7 @@ out
 fn e439_c(&mut self,state:State)->Step {
 let mut out=self.b439_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:439,rule:50,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,439,50);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8297,7 +8320,7 @@ out
 fn e441_c(&mut self,state:State)->Step {
 let mut out=self.b441_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:441,rule:51,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,441,51);
 } else {self.display_failures(state.consumed.max(state.matched),&["'random'"]);}
 out
 }
@@ -8310,7 +8333,7 @@ out
 fn e442_c(&mut self,state:State)->Step {
 let mut out=self.b442_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:442,rule:51,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,442,51);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8323,7 +8346,7 @@ out
 fn e443_c(&mut self,state:State)->Step {
 let mut out=self.b443_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:443,rule:51,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,443,51);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8362,7 +8385,7 @@ out
 fn e445_c(&mut self,state:State)->Step {
 let mut out=self.b445_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:445,rule:52,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,445,52);
 } else {self.display_failures(state.consumed.max(state.matched),&["'abs'"]);}
 out
 }
@@ -8375,7 +8398,7 @@ out
 fn e446_c(&mut self,state:State)->Step {
 let mut out=self.b446_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:446,rule:52,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,446,52);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8400,7 +8423,7 @@ out
 fn e448_c(&mut self,state:State)->Step {
 let mut out=self.b448_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:448,rule:52,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,448,52);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8439,7 +8462,7 @@ out
 fn e450_c(&mut self,state:State)->Step {
 let mut out=self.b450_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:450,rule:53,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,450,53);
 } else {self.display_failures(state.consumed.max(state.matched),&["'round'"]);}
 out
 }
@@ -8452,7 +8475,7 @@ out
 fn e451_c(&mut self,state:State)->Step {
 let mut out=self.b451_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:451,rule:53,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,451,53);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8477,7 +8500,7 @@ out
 fn e453_c(&mut self,state:State)->Step {
 let mut out=self.b453_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:453,rule:53,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,453,53);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8516,7 +8539,7 @@ out
 fn e455_c(&mut self,state:State)->Step {
 let mut out=self.b455_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:455,rule:54,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,455,54);
 } else {self.display_failures(state.consumed.max(state.matched),&["'ceil'"]);}
 out
 }
@@ -8529,7 +8552,7 @@ out
 fn e456_c(&mut self,state:State)->Step {
 let mut out=self.b456_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:456,rule:54,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,456,54);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8554,7 +8577,7 @@ out
 fn e458_c(&mut self,state:State)->Step {
 let mut out=self.b458_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:458,rule:54,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,458,54);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8593,7 +8616,7 @@ out
 fn e460_c(&mut self,state:State)->Step {
 let mut out=self.b460_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:460,rule:55,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,460,55);
 } else {self.display_failures(state.consumed.max(state.matched),&["'floor'"]);}
 out
 }
@@ -8606,7 +8629,7 @@ out
 fn e461_c(&mut self,state:State)->Step {
 let mut out=self.b461_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:461,rule:55,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,461,55);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8631,7 +8654,7 @@ out
 fn e463_c(&mut self,state:State)->Step {
 let mut out=self.b463_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:463,rule:55,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,463,55);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8674,7 +8697,7 @@ out
 fn e465_c(&mut self,state:State)->Step {
 let mut out=self.b465_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:465,rule:56,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,465,56);
 } else {self.display_failures(state.consumed.max(state.matched),&["'pow'"]);}
 out
 }
@@ -8687,7 +8710,7 @@ out
 fn e466_c(&mut self,state:State)->Step {
 let mut out=self.b466_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:466,rule:56,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,466,56);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8712,7 +8735,7 @@ out
 fn e468_c(&mut self,state:State)->Step {
 let mut out=self.b468_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:468,rule:56,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,468,56);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8737,7 +8760,7 @@ out
 fn e470_c(&mut self,state:State)->Step {
 let mut out=self.b470_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:470,rule:56,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,470,56);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8776,7 +8799,7 @@ out
 fn e472_c(&mut self,state:State)->Step {
 let mut out=self.b472_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:472,rule:57,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,472,57);
 } else {self.display_failures(state.consumed.max(state.matched),&["'log'"]);}
 out
 }
@@ -8789,7 +8812,7 @@ out
 fn e473_c(&mut self,state:State)->Step {
 let mut out=self.b473_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:473,rule:57,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,473,57);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8814,7 +8837,7 @@ out
 fn e475_c(&mut self,state:State)->Step {
 let mut out=self.b475_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:475,rule:57,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,475,57);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8853,7 +8876,7 @@ out
 fn e477_c(&mut self,state:State)->Step {
 let mut out=self.b477_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:477,rule:58,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,477,58);
 } else {self.display_failures(state.consumed.max(state.matched),&["'exp'"]);}
 out
 }
@@ -8866,7 +8889,7 @@ out
 fn e478_c(&mut self,state:State)->Step {
 let mut out=self.b478_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:478,rule:58,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,478,58);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8891,7 +8914,7 @@ out
 fn e480_c(&mut self,state:State)->Step {
 let mut out=self.b480_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:480,rule:58,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,480,58);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -8934,7 +8957,7 @@ out
 fn e482_c(&mut self,state:State)->Step {
 let mut out=self.b482_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:482,rule:59,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,482,59);
 } else {self.display_failures(state.consumed.max(state.matched),&["'toNum'"]);}
 out
 }
@@ -8947,7 +8970,7 @@ out
 fn e483_c(&mut self,state:State)->Step {
 let mut out=self.b483_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:483,rule:59,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,483,59);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -8972,7 +8995,7 @@ out
 fn e485_c(&mut self,state:State)->Step {
 let mut out=self.b485_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:485,rule:59,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,485,59);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8997,7 +9020,7 @@ out
 fn e487_c(&mut self,state:State)->Step {
 let mut out=self.b487_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:487,rule:59,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,487,59);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9152,7 +9175,7 @@ out
 fn e498_c(&mut self,state:State)->Step {
 let mut out=self.b498_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:498,rule:60,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,498,60);
 } else {self.display_failures(state.consumed.max(state.matched),&["NumberParser"]);}
 out
 }
@@ -9207,7 +9230,7 @@ out
 fn e502_c(&mut self,state:State)->Step {
 let mut out=self.b502_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:502,rule:60,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,502,60);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9231,7 +9254,7 @@ out
 fn e504_c(&mut self,state:State)->Step {
 let mut out=self.b504_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:504,rule:60,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,504,60);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9270,7 +9293,7 @@ out
 fn e506_c(&mut self,state:State)->Step {
 let mut out=self.b506_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:506,rule:61,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,506,61);
 } else {self.display_failures(state.consumed.max(state.matched),&["'toUpperCase'"]);}
 out
 }
@@ -9283,7 +9306,7 @@ out
 fn e507_c(&mut self,state:State)->Step {
 let mut out=self.b507_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:507,rule:61,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,507,61);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9308,7 +9331,7 @@ out
 fn e509_c(&mut self,state:State)->Step {
 let mut out=self.b509_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:509,rule:61,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,509,61);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9347,7 +9370,7 @@ out
 fn e511_c(&mut self,state:State)->Step {
 let mut out=self.b511_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:511,rule:62,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,511,62);
 } else {self.display_failures(state.consumed.max(state.matched),&["'toLowerCase'"]);}
 out
 }
@@ -9360,7 +9383,7 @@ out
 fn e512_c(&mut self,state:State)->Step {
 let mut out=self.b512_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:512,rule:62,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,512,62);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9385,7 +9408,7 @@ out
 fn e514_c(&mut self,state:State)->Step {
 let mut out=self.b514_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:514,rule:62,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,514,62);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9424,7 +9447,7 @@ out
 fn e516_c(&mut self,state:State)->Step {
 let mut out=self.b516_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:516,rule:63,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,516,63);
 } else {self.display_failures(state.consumed.max(state.matched),&["'trim'"]);}
 out
 }
@@ -9437,7 +9460,7 @@ out
 fn e517_c(&mut self,state:State)->Step {
 let mut out=self.b517_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:517,rule:63,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,517,63);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9462,7 +9485,7 @@ out
 fn e519_c(&mut self,state:State)->Step {
 let mut out=self.b519_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:519,rule:63,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,519,63);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9501,7 +9524,7 @@ out
 fn e521_c(&mut self,state:State)->Step {
 let mut out=self.b521_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:521,rule:64,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,521,64);
 } else {self.display_failures(state.consumed.max(state.matched),&["'length'"]);}
 out
 }
@@ -9514,7 +9537,7 @@ out
 fn e522_c(&mut self,state:State)->Step {
 let mut out=self.b522_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:522,rule:64,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,522,64);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9539,7 +9562,7 @@ out
 fn e524_c(&mut self,state:State)->Step {
 let mut out=self.b524_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:524,rule:64,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,524,64);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9578,7 +9601,7 @@ out
 fn e526_c(&mut self,state:State)->Step {
 let mut out=self.b526_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:526,rule:65,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,526,65);
 } else {self.display_failures(state.consumed.max(state.matched),&["'len'"]);}
 out
 }
@@ -9591,7 +9614,7 @@ out
 fn e527_c(&mut self,state:State)->Step {
 let mut out=self.b527_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:527,rule:65,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,527,65);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9616,7 +9639,7 @@ out
 fn e529_c(&mut self,state:State)->Step {
 let mut out=self.b529_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:529,rule:65,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,529,65);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9667,7 +9690,7 @@ out
 fn e532_c(&mut self,state:State)->Step {
 let mut out=self.b532_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:532,rule:66,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,532,66);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.toUpperCase'"]);}
 out
 }
@@ -9680,7 +9703,7 @@ out
 fn e533_c(&mut self,state:State)->Step {
 let mut out=self.b533_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:533,rule:66,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,533,66);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9693,7 +9716,7 @@ out
 fn e534_c(&mut self,state:State)->Step {
 let mut out=self.b534_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:534,rule:66,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,534,66);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9744,7 +9767,7 @@ out
 fn e537_c(&mut self,state:State)->Step {
 let mut out=self.b537_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:537,rule:67,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,537,67);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.toLowerCase'"]);}
 out
 }
@@ -9757,7 +9780,7 @@ out
 fn e538_c(&mut self,state:State)->Step {
 let mut out=self.b538_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:538,rule:67,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,538,67);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9770,7 +9793,7 @@ out
 fn e539_c(&mut self,state:State)->Step {
 let mut out=self.b539_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:539,rule:67,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,539,67);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9821,7 +9844,7 @@ out
 fn e542_c(&mut self,state:State)->Step {
 let mut out=self.b542_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:542,rule:68,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,542,68);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.trim'"]);}
 out
 }
@@ -9834,7 +9857,7 @@ out
 fn e543_c(&mut self,state:State)->Step {
 let mut out=self.b543_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:543,rule:68,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,543,68);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9847,7 +9870,7 @@ out
 fn e544_c(&mut self,state:State)->Step {
 let mut out=self.b544_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:544,rule:68,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,544,68);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9898,7 +9921,7 @@ out
 fn e547_c(&mut self,state:State)->Step {
 let mut out=self.b547_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:547,rule:69,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,547,69);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.length'"]);}
 out
 }
@@ -9911,7 +9934,7 @@ out
 fn e548_c(&mut self,state:State)->Step {
 let mut out=self.b548_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:548,rule:69,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,548,69);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -9924,7 +9947,7 @@ out
 fn e549_c(&mut self,state:State)->Step {
 let mut out=self.b549_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:549,rule:69,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,549,69);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -9969,7 +9992,7 @@ out
 fn e551_c(&mut self,state:State)->Step {
 let mut out=self.b551_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:551,rule:70,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,551,70);
 } else {self.display_failures(state.consumed.max(state.matched),&["'startsWith'"]);}
 out
 }
@@ -9982,7 +10005,7 @@ out
 fn e552_c(&mut self,state:State)->Step {
 let mut out=self.b552_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:552,rule:70,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,552,70);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10007,7 +10030,7 @@ out
 fn e554_c(&mut self,state:State)->Step {
 let mut out=self.b554_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:554,rule:70,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,554,70);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10071,7 +10094,7 @@ out
 fn e558_c(&mut self,state:State)->Step {
 let mut out=self.b558_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:558,rule:70,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,558,70);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10096,7 +10119,7 @@ out
 fn e560_c(&mut self,state:State)->Step {
 let mut out=self.b560_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:560,rule:70,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,560,70);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10141,7 +10164,7 @@ out
 fn e562_c(&mut self,state:State)->Step {
 let mut out=self.b562_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:562,rule:71,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,562,71);
 } else {self.display_failures(state.consumed.max(state.matched),&["'endsWith'"]);}
 out
 }
@@ -10154,7 +10177,7 @@ out
 fn e563_c(&mut self,state:State)->Step {
 let mut out=self.b563_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:563,rule:71,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,563,71);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10179,7 +10202,7 @@ out
 fn e565_c(&mut self,state:State)->Step {
 let mut out=self.b565_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:565,rule:71,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,565,71);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10243,7 +10266,7 @@ out
 fn e569_c(&mut self,state:State)->Step {
 let mut out=self.b569_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:569,rule:71,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,569,71);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10268,7 +10291,7 @@ out
 fn e571_c(&mut self,state:State)->Step {
 let mut out=self.b571_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:571,rule:71,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,571,71);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10313,7 +10336,7 @@ out
 fn e573_c(&mut self,state:State)->Step {
 let mut out=self.b573_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:573,rule:72,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,573,72);
 } else {self.display_failures(state.consumed.max(state.matched),&["'contains'"]);}
 out
 }
@@ -10326,7 +10349,7 @@ out
 fn e574_c(&mut self,state:State)->Step {
 let mut out=self.b574_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:574,rule:72,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,574,72);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10351,7 +10374,7 @@ out
 fn e576_c(&mut self,state:State)->Step {
 let mut out=self.b576_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:576,rule:72,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,576,72);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10415,7 +10438,7 @@ out
 fn e580_c(&mut self,state:State)->Step {
 let mut out=self.b580_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:580,rule:72,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,580,72);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10440,7 +10463,7 @@ out
 fn e582_c(&mut self,state:State)->Step {
 let mut out=self.b582_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:582,rule:72,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,582,72);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10495,7 +10518,7 @@ out
 fn e585_c(&mut self,state:State)->Step {
 let mut out=self.b585_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:585,rule:73,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,585,73);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.in'"]);}
 out
 }
@@ -10508,7 +10531,7 @@ out
 fn e586_c(&mut self,state:State)->Step {
 let mut out=self.b586_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:586,rule:73,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,586,73);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10572,7 +10595,7 @@ out
 fn e590_c(&mut self,state:State)->Step {
 let mut out=self.b590_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:590,rule:73,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,590,73);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10597,7 +10620,7 @@ out
 fn e592_c(&mut self,state:State)->Step {
 let mut out=self.b592_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:592,rule:73,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,592,73);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10652,7 +10675,7 @@ out
 fn e595_c(&mut self,state:State)->Step {
 let mut out=self.b595_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:595,rule:74,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,595,74);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.startsWith'"]);}
 out
 }
@@ -10665,7 +10688,7 @@ out
 fn e596_c(&mut self,state:State)->Step {
 let mut out=self.b596_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:596,rule:74,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,596,74);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10729,7 +10752,7 @@ out
 fn e600_c(&mut self,state:State)->Step {
 let mut out=self.b600_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:600,rule:74,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,600,74);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10754,7 +10777,7 @@ out
 fn e602_c(&mut self,state:State)->Step {
 let mut out=self.b602_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:602,rule:74,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,602,74);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10809,7 +10832,7 @@ out
 fn e605_c(&mut self,state:State)->Step {
 let mut out=self.b605_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:605,rule:75,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,605,75);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.endsWith'"]);}
 out
 }
@@ -10822,7 +10845,7 @@ out
 fn e606_c(&mut self,state:State)->Step {
 let mut out=self.b606_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:606,rule:75,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,606,75);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -10886,7 +10909,7 @@ out
 fn e610_c(&mut self,state:State)->Step {
 let mut out=self.b610_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:610,rule:75,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,610,75);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10911,7 +10934,7 @@ out
 fn e612_c(&mut self,state:State)->Step {
 let mut out=self.b612_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:612,rule:75,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,612,75);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -10966,7 +10989,7 @@ out
 fn e615_c(&mut self,state:State)->Step {
 let mut out=self.b615_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:615,rule:76,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,615,76);
 } else {self.display_failures(state.consumed.max(state.matched),&["'.contains'"]);}
 out
 }
@@ -10979,7 +11002,7 @@ out
 fn e616_c(&mut self,state:State)->Step {
 let mut out=self.b616_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:616,rule:76,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,616,76);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -11043,7 +11066,7 @@ out
 fn e620_c(&mut self,state:State)->Step {
 let mut out=self.b620_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:620,rule:76,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,620,76);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11068,7 +11091,7 @@ out
 fn e622_c(&mut self,state:State)->Step {
 let mut out=self.b622_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:622,rule:76,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,622,76);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -11176,7 +11199,7 @@ out
 fn e629_c(&mut self,state:State)->Step {
 let mut out=self.b629_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:629,rule:78,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,629,78);
 } else {self.display_failures(state.consumed.max(state.matched),&["'isPresent'"]);}
 out
 }
@@ -11189,7 +11212,7 @@ out
 fn e630_c(&mut self,state:State)->Step {
 let mut out=self.b630_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:630,rule:78,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,630,78);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -11214,7 +11237,7 @@ out
 fn e632_c(&mut self,state:State)->Step {
 let mut out=self.b632_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:632,rule:78,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,632,78);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -11257,7 +11280,7 @@ out
 fn e634_c(&mut self,state:State)->Step {
 let mut out=self.b634_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:634,rule:79,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,634,79);
 } else {self.display_failures(state.consumed.max(state.matched),&["'inTimeRange'"]);}
 out
 }
@@ -11270,7 +11293,7 @@ out
 fn e635_c(&mut self,state:State)->Step {
 let mut out=self.b635_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:635,rule:79,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,635,79);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -11295,7 +11318,7 @@ out
 fn e637_c(&mut self,state:State)->Step {
 let mut out=self.b637_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:637,rule:79,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,637,79);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11320,7 +11343,7 @@ out
 fn e639_c(&mut self,state:State)->Step {
 let mut out=self.b639_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:639,rule:79,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,639,79);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -11371,7 +11394,7 @@ out
 fn e641_c(&mut self,state:State)->Step {
 let mut out=self.b641_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:641,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,641,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["'inDayTimeRange'"]);}
 out
 }
@@ -11384,7 +11407,7 @@ out
 fn e642_c(&mut self,state:State)->Step {
 let mut out=self.b642_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:642,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,642,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -11409,7 +11432,7 @@ out
 fn e644_c(&mut self,state:State)->Step {
 let mut out=self.b644_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:644,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,644,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11434,7 +11457,7 @@ out
 fn e646_c(&mut self,state:State)->Step {
 let mut out=self.b646_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:646,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,646,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11459,7 +11482,7 @@ out
 fn e648_c(&mut self,state:State)->Step {
 let mut out=self.b648_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:648,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,648,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11484,7 +11507,7 @@ out
 fn e650_c(&mut self,state:State)->Step {
 let mut out=self.b650_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:650,rule:80,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,650,80);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -11524,7 +11547,7 @@ out
 fn e652_c(&mut self,state:State)->Step {
 let mut out=self.b652_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:652,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,652,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'MONDAY'"]);}
 out
 }
@@ -11537,7 +11560,7 @@ out
 fn e653_c(&mut self,state:State)->Step {
 let mut out=self.b653_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:653,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,653,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'TUESDAY'"]);}
 out
 }
@@ -11550,7 +11573,7 @@ out
 fn e654_c(&mut self,state:State)->Step {
 let mut out=self.b654_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:654,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,654,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'WEDNESDAY'"]);}
 out
 }
@@ -11563,7 +11586,7 @@ out
 fn e655_c(&mut self,state:State)->Step {
 let mut out=self.b655_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:655,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,655,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'THURSDAY'"]);}
 out
 }
@@ -11576,7 +11599,7 @@ out
 fn e656_c(&mut self,state:State)->Step {
 let mut out=self.b656_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:656,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,656,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'FRIDAY'"]);}
 out
 }
@@ -11589,7 +11612,7 @@ out
 fn e657_c(&mut self,state:State)->Step {
 let mut out=self.b657_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:657,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,657,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'SATURDAY'"]);}
 out
 }
@@ -11602,7 +11625,7 @@ out
 fn e658_c(&mut self,state:State)->Step {
 let mut out=self.b658_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:658,rule:81,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,658,81);
 } else {self.display_failures(state.consumed.max(state.matched),&["'SUNDAY'"]);}
 out
 }
@@ -11688,7 +11711,7 @@ out
 fn e662_c(&mut self,state:State)->Step {
 let mut out=self.b662_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:662,rule:82,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,662,82);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -11712,7 +11735,7 @@ out
 fn e664_c(&mut self,state:State)->Step {
 let mut out=self.b664_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:664,rule:82,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,664,82);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -11802,7 +11825,7 @@ out
 fn e672_c(&mut self,state:State)->Step {
 let mut out=self.b672_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:672,rule:82,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,672,82);
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -12207,7 +12230,7 @@ out
 fn e684_c(&mut self,state:State)->Step {
 let mut out=self.b684_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:684,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,684,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12232,7 +12255,7 @@ out
 fn e686_c(&mut self,state:State)->Step {
 let mut out=self.b686_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:686,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,686,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12257,7 +12280,7 @@ out
 fn e688_c(&mut self,state:State)->Step {
 let mut out=self.b688_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:688,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,688,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12282,7 +12305,7 @@ out
 fn e690_c(&mut self,state:State)->Step {
 let mut out=self.b690_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:690,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,690,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12334,7 +12357,7 @@ out
 fn e693_c(&mut self,state:State)->Step {
 let mut out=self.b693_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:693,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,693,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12359,7 +12382,7 @@ out
 fn e695_c(&mut self,state:State)->Step {
 let mut out=self.b695_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:695,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,695,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12384,7 +12407,7 @@ out
 fn e697_c(&mut self,state:State)->Step {
 let mut out=self.b697_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:697,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,697,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12438,7 +12461,7 @@ out
 fn e700_c(&mut self,state:State)->Step {
 let mut out=self.b700_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:700,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,700,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12463,7 +12486,7 @@ out
 fn e702_c(&mut self,state:State)->Step {
 let mut out=self.b702_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:702,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,702,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12476,7 +12499,7 @@ out
 fn e703_c(&mut self,state:State)->Step {
 let mut out=self.b703_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:703,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,703,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12501,7 +12524,7 @@ out
 fn e705_c(&mut self,state:State)->Step {
 let mut out=self.b705_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:705,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,705,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12551,7 +12574,7 @@ out
 fn e708_c(&mut self,state:State)->Step {
 let mut out=self.b708_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:708,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,708,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12576,7 +12599,7 @@ out
 fn e710_c(&mut self,state:State)->Step {
 let mut out=self.b710_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:710,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,710,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12589,7 +12612,7 @@ out
 fn e711_c(&mut self,state:State)->Step {
 let mut out=self.b711_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:711,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,711,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12643,7 +12666,7 @@ out
 fn e714_c(&mut self,state:State)->Step {
 let mut out=self.b714_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:714,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,714,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12656,7 +12679,7 @@ out
 fn e715_c(&mut self,state:State)->Step {
 let mut out=self.b715_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:715,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,715,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12681,7 +12704,7 @@ out
 fn e717_c(&mut self,state:State)->Step {
 let mut out=self.b717_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:717,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,717,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12706,7 +12729,7 @@ out
 fn e719_c(&mut self,state:State)->Step {
 let mut out=self.b719_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:719,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,719,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12756,7 +12779,7 @@ out
 fn e722_c(&mut self,state:State)->Step {
 let mut out=self.b722_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:722,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,722,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12769,7 +12792,7 @@ out
 fn e723_c(&mut self,state:State)->Step {
 let mut out=self.b723_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:723,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,723,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12794,7 +12817,7 @@ out
 fn e725_c(&mut self,state:State)->Step {
 let mut out=self.b725_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:725,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,725,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12846,7 +12869,7 @@ out
 fn e728_c(&mut self,state:State)->Step {
 let mut out=self.b728_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:728,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,728,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12859,7 +12882,7 @@ out
 fn e729_c(&mut self,state:State)->Step {
 let mut out=self.b729_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:729,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,729,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12872,7 +12895,7 @@ out
 fn e730_c(&mut self,state:State)->Step {
 let mut out=self.b730_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:730,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,730,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12897,7 +12920,7 @@ out
 fn e732_c(&mut self,state:State)->Step {
 let mut out=self.b732_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:732,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,732,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -12945,7 +12968,7 @@ out
 fn e735_c(&mut self,state:State)->Step {
 let mut out=self.b735_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:735,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,735,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -12958,7 +12981,7 @@ out
 fn e736_c(&mut self,state:State)->Step {
 let mut out=self.b736_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:736,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,736,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -12971,7 +12994,7 @@ out
 fn e737_c(&mut self,state:State)->Step {
 let mut out=self.b737_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:737,rule:86,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,737,86);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13261,7 +13284,7 @@ out
 fn e741_c(&mut self,state:State)->Step {
 let mut out=self.b741_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:741,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,741,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13286,7 +13309,7 @@ out
 fn e743_c(&mut self,state:State)->Step {
 let mut out=self.b743_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:743,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,743,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13311,7 +13334,7 @@ out
 fn e745_c(&mut self,state:State)->Step {
 let mut out=self.b745_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:745,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,745,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13336,7 +13359,7 @@ out
 fn e747_c(&mut self,state:State)->Step {
 let mut out=self.b747_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:747,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,747,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13388,7 +13411,7 @@ out
 fn e750_c(&mut self,state:State)->Step {
 let mut out=self.b750_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:750,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,750,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13413,7 +13436,7 @@ out
 fn e752_c(&mut self,state:State)->Step {
 let mut out=self.b752_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:752,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,752,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13438,7 +13461,7 @@ out
 fn e754_c(&mut self,state:State)->Step {
 let mut out=self.b754_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:754,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,754,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13492,7 +13515,7 @@ out
 fn e757_c(&mut self,state:State)->Step {
 let mut out=self.b757_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:757,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,757,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13517,7 +13540,7 @@ out
 fn e759_c(&mut self,state:State)->Step {
 let mut out=self.b759_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:759,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,759,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13530,7 +13553,7 @@ out
 fn e760_c(&mut self,state:State)->Step {
 let mut out=self.b760_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:760,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,760,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13555,7 +13578,7 @@ out
 fn e762_c(&mut self,state:State)->Step {
 let mut out=self.b762_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:762,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,762,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13605,7 +13628,7 @@ out
 fn e765_c(&mut self,state:State)->Step {
 let mut out=self.b765_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:765,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,765,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13630,7 +13653,7 @@ out
 fn e767_c(&mut self,state:State)->Step {
 let mut out=self.b767_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:767,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,767,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13643,7 +13666,7 @@ out
 fn e768_c(&mut self,state:State)->Step {
 let mut out=self.b768_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:768,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,768,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13697,7 +13720,7 @@ out
 fn e771_c(&mut self,state:State)->Step {
 let mut out=self.b771_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:771,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,771,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13710,7 +13733,7 @@ out
 fn e772_c(&mut self,state:State)->Step {
 let mut out=self.b772_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:772,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,772,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13735,7 +13758,7 @@ out
 fn e774_c(&mut self,state:State)->Step {
 let mut out=self.b774_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:774,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,774,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13760,7 +13783,7 @@ out
 fn e776_c(&mut self,state:State)->Step {
 let mut out=self.b776_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:776,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,776,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13810,7 +13833,7 @@ out
 fn e779_c(&mut self,state:State)->Step {
 let mut out=self.b779_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:779,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,779,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13823,7 +13846,7 @@ out
 fn e780_c(&mut self,state:State)->Step {
 let mut out=self.b780_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:780,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,780,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13848,7 +13871,7 @@ out
 fn e782_c(&mut self,state:State)->Step {
 let mut out=self.b782_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:782,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,782,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13900,7 +13923,7 @@ out
 fn e785_c(&mut self,state:State)->Step {
 let mut out=self.b785_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:785,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,785,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -13913,7 +13936,7 @@ out
 fn e786_c(&mut self,state:State)->Step {
 let mut out=self.b786_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:786,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,786,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13926,7 +13949,7 @@ out
 fn e787_c(&mut self,state:State)->Step {
 let mut out=self.b787_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:787,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,787,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -13951,7 +13974,7 @@ out
 fn e789_c(&mut self,state:State)->Step {
 let mut out=self.b789_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:789,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,789,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -13999,7 +14022,7 @@ out
 fn e792_c(&mut self,state:State)->Step {
 let mut out=self.b792_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:792,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,792,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["'['"]);}
 out
 }
@@ -14012,7 +14035,7 @@ out
 fn e793_c(&mut self,state:State)->Step {
 let mut out=self.b793_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:793,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,793,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -14025,7 +14048,7 @@ out
 fn e794_c(&mut self,state:State)->Step {
 let mut out=self.b794_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:794,rule:87,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,794,87);
 } else {self.display_failures(state.consumed.max(state.matched),&["']'"]);}
 out
 }
@@ -14153,7 +14176,7 @@ out
 fn e802_c(&mut self,state:State)->Step {
 let mut out=self.b802_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:802,rule:89,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,802,89);
 out.events=self.event(Event::Capture {site:170,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'+'"]);}
 out
@@ -14203,7 +14226,7 @@ out
 fn e805_c(&mut self,state:State)->Step {
 let mut out=self.b805_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:805,rule:90,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,805,90);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -14227,7 +14250,7 @@ out
 fn e807_c(&mut self,state:State)->Step {
 let mut out=self.b807_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:807,rule:90,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,807,90);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -14432,7 +14455,7 @@ out
 fn e822_c(&mut self,state:State)->Step {
 let mut out=self.b822_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:822,rule:91,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,822,91);
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -14490,7 +14513,7 @@ out
 fn e826_c(&mut self,state:State)->Step {
 let mut out=self.b826_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:826,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,826,92);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -14531,7 +14554,7 @@ out
 fn e829_c(&mut self,state:State)->Step {
 let mut out=self.b829_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:829,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,829,92);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -14544,7 +14567,7 @@ out
 fn e830_c(&mut self,state:State)->Step {
 let mut out=self.b830_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:830,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,830,92);
 } else {self.display_failures(state.consumed.max(state.matched),&["'String'"]);}
 out
 }
@@ -14557,7 +14580,7 @@ out
 fn e831_c(&mut self,state:State)->Step {
 let mut out=self.b831_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:831,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,831,92);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -14570,7 +14593,7 @@ out
 fn e832_c(&mut self,state:State)->Step {
 let mut out=self.b832_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:832,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,832,92);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -14583,7 +14606,7 @@ out
 fn e833_c(&mut self,state:State)->Step {
 let mut out=self.b833_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:833,rule:92,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,833,92);
 out.events=self.event(Event::Capture {site:172,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -14618,7 +14641,7 @@ out
 fn e835_c(&mut self,state:State)->Step {
 let mut out=self.b835_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:835,rule:93,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,835,93);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -14631,7 +14654,7 @@ out
 fn e836_c(&mut self,state:State)->Step {
 let mut out=self.b836_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:836,rule:93,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,836,93);
 out.events=self.event(Event::Capture {site:173,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -14644,7 +14667,7 @@ out
 fn e837_c(&mut self,state:State)->Step {
 let mut out=self.b837_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:837,rule:93,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,837,93);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -14685,7 +14708,7 @@ out
 fn e840_c(&mut self,state:State)->Step {
 let mut out=self.b840_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:840,rule:93,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,840,93);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -14698,7 +14721,7 @@ out
 fn e841_c(&mut self,state:State)->Step {
 let mut out=self.b841_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:841,rule:93,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,841,93);
 } else {self.display_failures(state.consumed.max(state.matched),&["'String'"]);}
 out
 }
@@ -14784,7 +14807,7 @@ out
 fn e846_c(&mut self,state:State)->Step {
 let mut out=self.b846_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:846,rule:94,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,846,94);
 out.events=self.event(Event::Capture {site:175,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'|'"]);}
 out
@@ -14883,7 +14906,7 @@ out
 fn e852_c(&mut self,state:State)->Step {
 let mut out=self.b852_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:852,rule:95,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,852,95);
 out.events=self.event(Event::Capture {site:178,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'&'"]);}
 out
@@ -14982,7 +15005,7 @@ out
 fn e858_c(&mut self,state:State)->Step {
 let mut out=self.b858_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:858,rule:96,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,858,96);
 out.events=self.event(Event::Capture {site:181,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'^'"]);}
 out
@@ -15034,7 +15057,7 @@ out
 fn e861_c(&mut self,state:State)->Step {
 let mut out=self.b861_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:861,rule:97,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,861,97);
 } else {self.display_failures(state.consumed.max(state.matched),&["'not'"]);}
 out
 }
@@ -15047,7 +15070,7 @@ out
 fn e862_c(&mut self,state:State)->Step {
 let mut out=self.b862_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:862,rule:97,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,862,97);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -15072,7 +15095,7 @@ out
 fn e864_c(&mut self,state:State)->Step {
 let mut out=self.b864_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:864,rule:97,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,864,97);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -15294,7 +15317,7 @@ out
 fn e880_c(&mut self,state:State)->Step {
 let mut out=self.b880_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:880,rule:98,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,880,98);
 } else {self.display_failures(state.consumed.max(state.matched),&["'true'"]);}
 out
 }
@@ -15307,7 +15330,7 @@ out
 fn e881_c(&mut self,state:State)->Step {
 let mut out=self.b881_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:881,rule:98,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,881,98);
 } else {self.display_failures(state.consumed.max(state.matched),&["'false'"]);}
 out
 }
@@ -15363,7 +15386,7 @@ out
 fn e885_c(&mut self,state:State)->Step {
 let mut out=self.b885_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:885,rule:98,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,885,98);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -15387,7 +15410,7 @@ out
 fn e887_c(&mut self,state:State)->Step {
 let mut out=self.b887_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:887,rule:98,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,887,98);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -15610,7 +15633,7 @@ out
 fn e902_c(&mut self,state:State)->Step {
 let mut out=self.b902_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:902,rule:102,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,902,102);
 } else {self.display_failures(state.consumed.max(state.matched),&["'=='"]);}
 out
 }
@@ -15623,7 +15646,7 @@ out
 fn e903_c(&mut self,state:State)->Step {
 let mut out=self.b903_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:903,rule:102,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,903,102);
 } else {self.display_failures(state.consumed.max(state.matched),&["'!='"]);}
 out
 }
@@ -15721,7 +15744,7 @@ out
 fn e909_c(&mut self,state:State)->Step {
 let mut out=self.b909_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:909,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,909,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'=='"]);}
 out
 }
@@ -15734,7 +15757,7 @@ out
 fn e910_c(&mut self,state:State)->Step {
 let mut out=self.b910_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:910,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,910,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'!='"]);}
 out
 }
@@ -15747,7 +15770,7 @@ out
 fn e911_c(&mut self,state:State)->Step {
 let mut out=self.b911_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:911,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,911,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'<='"]);}
 out
 }
@@ -15760,7 +15783,7 @@ out
 fn e912_c(&mut self,state:State)->Step {
 let mut out=self.b912_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:912,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,912,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'>='"]);}
 out
 }
@@ -15773,7 +15796,7 @@ out
 fn e913_c(&mut self,state:State)->Step {
 let mut out=self.b913_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:913,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,913,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'<'"]);}
 out
 }
@@ -15786,7 +15809,7 @@ out
 fn e914_c(&mut self,state:State)->Step {
 let mut out=self.b914_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:914,rule:104,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,914,104);
 } else {self.display_failures(state.consumed.max(state.matched),&["'>'"]);}
 out
 }
@@ -15940,7 +15963,7 @@ out
 fn e923_c(&mut self,state:State)->Step {
 let mut out=self.b923_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:923,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,923,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'if'"]);}
 out
 }
@@ -15953,7 +15976,7 @@ out
 fn e924_c(&mut self,state:State)->Step {
 let mut out=self.b924_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:924,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,924,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -15978,7 +16001,7 @@ out
 fn e926_c(&mut self,state:State)->Step {
 let mut out=self.b926_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:926,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,926,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -15991,7 +16014,7 @@ out
 fn e927_c(&mut self,state:State)->Step {
 let mut out=self.b927_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:927,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,927,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -16016,7 +16039,7 @@ out
 fn e929_c(&mut self,state:State)->Step {
 let mut out=self.b929_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:929,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,929,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -16029,7 +16052,7 @@ out
 fn e930_c(&mut self,state:State)->Step {
 let mut out=self.b930_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:930,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,930,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'else'"]);}
 out
 }
@@ -16042,7 +16065,7 @@ out
 fn e931_c(&mut self,state:State)->Step {
 let mut out=self.b931_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:931,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,931,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -16067,7 +16090,7 @@ out
 fn e933_c(&mut self,state:State)->Step {
 let mut out=self.b933_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:933,rule:106,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,933,106);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -16241,7 +16264,7 @@ out
 fn e944_c(&mut self,state:State)->Step {
 let mut out=self.b944_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:944,rule:108,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,944,108);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -16266,7 +16289,7 @@ out
 fn e946_c(&mut self,state:State)->Step {
 let mut out=self.b946_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:946,rule:108,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,946,108);
 } else {self.display_failures(state.consumed.max(state.matched),&["'?'"]);}
 out
 }
@@ -16291,7 +16314,7 @@ out
 fn e948_c(&mut self,state:State)->Step {
 let mut out=self.b948_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:948,rule:108,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,948,108);
 } else {self.display_failures(state.consumed.max(state.matched),&["':'"]);}
 out
 }
@@ -16316,7 +16339,7 @@ out
 fn e950_c(&mut self,state:State)->Step {
 let mut out=self.b950_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:950,rule:108,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,950,108);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }
@@ -16361,7 +16384,7 @@ out
 fn e952_c(&mut self,state:State)->Step {
 let mut out=self.b952_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:952,rule:109,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,952,109);
 } else {self.display_failures(state.consumed.max(state.matched),&["'match'"]);}
 out
 }
@@ -16374,7 +16397,7 @@ out
 fn e953_c(&mut self,state:State)->Step {
 let mut out=self.b953_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:953,rule:109,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,953,109);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -16438,7 +16461,7 @@ out
 fn e957_c(&mut self,state:State)->Step {
 let mut out=self.b957_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:957,rule:109,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,957,109);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16463,7 +16486,7 @@ out
 fn e959_c(&mut self,state:State)->Step {
 let mut out=self.b959_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:959,rule:109,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,959,109);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16488,7 +16511,7 @@ out
 fn e961_c(&mut self,state:State)->Step {
 let mut out=self.b961_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:961,rule:109,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,961,109);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -16537,7 +16560,7 @@ out
 fn e964_c(&mut self,state:State)->Step {
 let mut out=self.b964_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:964,rule:110,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,964,110);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -16586,7 +16609,7 @@ out
 fn e967_c(&mut self,state:State)->Step {
 let mut out=self.b967_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:967,rule:111,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,967,111);
 } else {self.display_failures(state.consumed.max(state.matched),&["'default'"]);}
 out
 }
@@ -16599,7 +16622,7 @@ out
 fn e968_c(&mut self,state:State)->Step {
 let mut out=self.b968_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:968,rule:111,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,968,111);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -16688,7 +16711,7 @@ out
 fn e973_c(&mut self,state:State)->Step {
 let mut out=self.b973_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:973,rule:113,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,973,113);
 } else {self.display_failures(state.consumed.max(state.matched),&["'match'"]);}
 out
 }
@@ -16701,7 +16724,7 @@ out
 fn e974_c(&mut self,state:State)->Step {
 let mut out=self.b974_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:974,rule:113,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,974,113);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -16765,7 +16788,7 @@ out
 fn e978_c(&mut self,state:State)->Step {
 let mut out=self.b978_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:978,rule:113,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,978,113);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16790,7 +16813,7 @@ out
 fn e980_c(&mut self,state:State)->Step {
 let mut out=self.b980_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:980,rule:113,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,980,113);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16815,7 +16838,7 @@ out
 fn e982_c(&mut self,state:State)->Step {
 let mut out=self.b982_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:982,rule:113,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,982,113);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -16864,7 +16887,7 @@ out
 fn e985_c(&mut self,state:State)->Step {
 let mut out=self.b985_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:985,rule:114,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,985,114);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -16913,7 +16936,7 @@ out
 fn e988_c(&mut self,state:State)->Step {
 let mut out=self.b988_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:988,rule:115,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,988,115);
 } else {self.display_failures(state.consumed.max(state.matched),&["'default'"]);}
 out
 }
@@ -16926,7 +16949,7 @@ out
 fn e989_c(&mut self,state:State)->Step {
 let mut out=self.b989_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:989,rule:115,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,989,115);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -17015,7 +17038,7 @@ out
 fn e994_c(&mut self,state:State)->Step {
 let mut out=self.b994_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:994,rule:117,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,994,117);
 } else {self.display_failures(state.consumed.max(state.matched),&["'match'"]);}
 out
 }
@@ -17028,7 +17051,7 @@ out
 fn e995_c(&mut self,state:State)->Step {
 let mut out=self.b995_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:995,rule:117,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,995,117);
 } else {self.display_failures(state.consumed.max(state.matched),&["'{'"]);}
 out
 }
@@ -17092,7 +17115,7 @@ out
 fn e999_c(&mut self,state:State)->Step {
 let mut out=self.b999_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:999,rule:117,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,999,117);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -17117,7 +17140,7 @@ out
 fn e1001_c(&mut self,state:State)->Step {
 let mut out=self.b1001_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1001,rule:117,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1001,117);
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -17142,7 +17165,7 @@ out
 fn e1003_c(&mut self,state:State)->Step {
 let mut out=self.b1003_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1003,rule:117,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1003,117);
 } else {self.display_failures(state.consumed.max(state.matched),&["'}'"]);}
 out
 }
@@ -17191,7 +17214,7 @@ out
 fn e1006_c(&mut self,state:State)->Step {
 let mut out=self.b1006_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1006,rule:118,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1006,118);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -17240,7 +17263,7 @@ out
 fn e1009_c(&mut self,state:State)->Step {
 let mut out=self.b1009_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1009,rule:119,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1009,119);
 } else {self.display_failures(state.consumed.max(state.matched),&["'default'"]);}
 out
 }
@@ -17253,7 +17276,7 @@ out
 fn e1010_c(&mut self,state:State)->Step {
 let mut out=self.b1010_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1010,rule:119,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1010,119);
 } else {self.display_failures(state.consumed.max(state.matched),&["'->'"]);}
 out
 }
@@ -17333,7 +17356,7 @@ out
 fn e1015_c(&mut self,state:State)->Step {
 let mut out=self.b1015_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1015,rule:121,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1015,121);
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'"]);}
 out
 }
@@ -17346,7 +17369,7 @@ out
 fn e1016_c(&mut self,state:State)->Step {
 let mut out=self.b1016_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1016,rule:121,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1016,121);
 out.events=self.event(Event::Capture {site:238,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
 out
@@ -17417,7 +17440,7 @@ out
 fn e1020_c(&mut self,state:State)->Step {
 let mut out=self.b1020_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1020,rule:121,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1020,121);
 } else {self.display_failures(state.consumed.max(state.matched),&["'as'"]);}
 out
 }
@@ -17475,7 +17498,7 @@ out
 fn e1023_c(&mut self,state:State)->Step {
 let mut out=self.b1023_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1023,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1023,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'number'"]);}
 out
 }
@@ -17488,7 +17511,7 @@ out
 fn e1024_c(&mut self,state:State)->Step {
 let mut out=self.b1024_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1024,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1024,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Number'"]);}
 out
 }
@@ -17501,7 +17524,7 @@ out
 fn e1025_c(&mut self,state:State)->Step {
 let mut out=self.b1025_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1025,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1025,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'float'"]);}
 out
 }
@@ -17514,7 +17537,7 @@ out
 fn e1026_c(&mut self,state:State)->Step {
 let mut out=self.b1026_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1026,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1026,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Float'"]);}
 out
 }
@@ -17527,7 +17550,7 @@ out
 fn e1027_c(&mut self,state:State)->Step {
 let mut out=self.b1027_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1027,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1027,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'string'"]);}
 out
 }
@@ -17540,7 +17563,7 @@ out
 fn e1028_c(&mut self,state:State)->Step {
 let mut out=self.b1028_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1028,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1028,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'String'"]);}
 out
 }
@@ -17553,7 +17576,7 @@ out
 fn e1029_c(&mut self,state:State)->Step {
 let mut out=self.b1029_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1029,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1029,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'boolean'"]);}
 out
 }
@@ -17566,7 +17589,7 @@ out
 fn e1030_c(&mut self,state:State)->Step {
 let mut out=self.b1030_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1030,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1030,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Boolean'"]);}
 out
 }
@@ -17579,7 +17602,7 @@ out
 fn e1031_c(&mut self,state:State)->Step {
 let mut out=self.b1031_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1031,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1031,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'object'"]);}
 out
 }
@@ -17592,7 +17615,7 @@ out
 fn e1032_c(&mut self,state:State)->Step {
 let mut out=self.b1032_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1032,rule:122,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1032,122);
 } else {self.display_failures(state.consumed.max(state.matched),&["'Object'"]);}
 out
 }
@@ -17715,7 +17738,7 @@ out
 fn e1040_c(&mut self,state:State)->Step {
 let mut out=self.b1040_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1040,rule:123,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1040,123);
 } else {self.display_failures(state.consumed.max(state.matched),&["'('"]);}
 out
 }
@@ -17740,7 +17763,7 @@ out
 fn e1042_c(&mut self,state:State)->Step {
 let mut out=self.b1042_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-if let Event::Token{span,text_span,content_span,..}=self.arena[out.events.0] {out.events=self.event(Event::Token{expr:1042,rule:123,span,text_span,content_span});}
+out.events=self.relabel_token(out.events,1042,123);
 } else {self.display_failures(state.consumed.max(state.matched),&["')'"]);}
 out
 }

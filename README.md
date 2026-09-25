@@ -29,6 +29,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - [P4 パーサエンジン（2.0.0〜）](#p4-パーサエンジン200)
 - [言語クイックリファレンス](#言語クイックリファレンス)
 - [LSP / DAP](#lsp--dap)
+- [JVM 不要（Rust 版: CLI・埋め込み・wasm）](#jvm-不要rust-版-cli埋め込みwasm)
 - [開発](#開発)
 
 ---
@@ -326,6 +327,50 @@ Variablesビューへ式ごとの結果を表示します。埋め込みJavaは�
 安全のため既定で無効です。
 
 外部リポジトリ: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
+
+## JVM 不要（Rust 版: CLI・埋め込み・wasm）
+
+[`rust/`](rust/README.md) に同じ P4 文法・同じ意味論の Rust 実装がある（Java との差分 golden で恒久検査、
+issue #177）。version は Java 版と共通（2.0.0）。JVM を起動しないので、1 式だけ評価するプロセスの
+起動〜初回評価が桁で速い（下表）。
+
+**CLI**
+
+```bash
+cargo build --release --manifest-path rust/Cargo.toml -p tinyexpression-rs
+printf '%s' '(1 + 2) * 3' | rust/target/release/tinyexpression eval -
+rust/target/release/tinyexpression run formulaInfo.fi      # FormulaInfo を読み込んで全式を評価
+rust/target/release/tinyexpression --help                   # parse/check/eval/load/run と exit code
+```
+
+**埋め込み**
+
+- Rust: crate `tinyexpression-rs`（`tinyexpression_rs::runtime::Program` が Java の
+  `P4_AST_EVALUATOR` と同じ意味論、変数・外部呼出しは host trait）。
+- C / 他言語: `rust/tinyexpression-ffi`（`libtinyexpression.so` + `include/tinyexpression.h`）。
+  `te_eval(src, len, &json)` のように UTF-8 を渡して CLI と同一の JSON を受け取る。安定面は JSON 契約。
+
+**wasm**
+
+`cargo build --profile release-small --target wasm32-unknown-unknown --manifest-path rust/Cargo.toml -p tinyexpression-ffi`
+で import ゼロの `tinyexpression.wasm` ができる。ブラウザ demo と node 用 binding は
+[`rust/examples/wasm/`](rust/examples/wasm/)。
+
+**起動〜初回評価**（プロセス起動込み、FormulaInfo 1 式 `if(3 > 2){(1 + 2) * 3 + 4.5}else{0}` を load して 1 回評価、
+hyperfine 15 回の中央値。2026-09-25、WSL2 32 core、他ジョブで load average 9〜20 の共有機なので絶対値は参考）
+
+| 経路 | 中央値 | 最小 |
+|---|---:|---:|
+| Rust CLI `tinyexpression eval`（式のみ） | 2.9 ms | 2.2 ms |
+| Rust CLI `tinyexpression run`（FormulaInfo load + 評価） | 3.5 ms | 1.6 ms |
+| wasm（node 20 で 2 MB module を compile・instantiate + `run`。`node -e 0` 単体が約 105 ms） | 1104 ms | 926 ms |
+| Java 21 `FormulaInfoList.parse` + `apply`、`P4_AST_EVALUATOR` | 3501 ms | 3120 ms |
+| Java 21 同上、`JAVA_CODE`（bytecode 生成込み） | 5541 ms | 1309 ms |
+
+Java は `java -jar` ではなく `target/classes` + 依存 jar の classpath で起動した（fat jar が無いため。起動コストは同等）。
+計測 driver は FormulaInfo を読み、先頭の式の calculator を `CalculationContext.newContext()` で 1 回 apply するだけのもの。
+
+配布（GitHub Release の CLI / C ライブラリ / wasm、crates.io）は [rust/README.md](rust/README.md#配布経路)。
 
 ---
 

@@ -1,9 +1,11 @@
+use super::ast::tree::AstTree;
 use super::ast::Ast;
 pub use super::rt::cursor::State;
 pub use super::rt::scope::{Decl, Diagnostic as ScopeDiagnostic, Reference, Severity};
 pub type Span = [usize; 2];
 #[derive(Clone, Copy, Debug)]
 pub struct ParseOptions {
+    /// Build the owned typed AST (`ParseResult::ast`, `node_spans`).
     pub build_ast: bool,
     pub require_eof: bool,
     pub lexical: bool,
@@ -75,8 +77,19 @@ pub struct ParseOptions {
     ///
     /// `false` (the default) skips the third walk over the built AST. The AST,
     /// `node_spans` and every diagnostic are unaffected; only `value_spans` is empty.
-    /// Requires `build_ast` — without an AST there is nothing to address.
+    /// Requires `build_ast` or `ast_tree` — without an AST there is nothing to address.
     pub value_spans: bool,
+    /// Return the AST in arena form, `ParseResult::tree` (D-077).
+    ///
+    /// The mapping always builds this arena (`Vec` of 24-byte nodes plus `u32` child
+    /// slots; text values are byte ranges of the input, never copied). `build_ast`
+    /// projects the owned `Ast` from it; `ast_tree` hands the arena itself over,
+    /// together with one copy of the input so that text values can be borrowed from it.
+    /// With `build_ast: false, ast_tree: true` nothing per node is allocated: the owned
+    /// `Ast` and `node_spans` are not built (`AstTree::node_spans` / `AstTree::to_ast`
+    /// derive them on demand). Both may be set; the owned AST is then the projection of
+    /// the returned tree. `false` (the default) keeps the result as before.
+    pub ast_tree: bool,
     pub limits: ResourceLimits,
 }
 /// `ResourceLimits::default()` の `arena_entries`（issue #35 / D-071）。`Session::new` は
@@ -112,6 +125,12 @@ impl Default for ResourceLimits {
         }
     }
 }
+impl ParseOptions {
+    /// AST をどちらかの形で作るか（event の記録と AST 構築の要否）。
+    pub fn wants_ast(&self) -> bool {
+        self.build_ast || self.ast_tree
+    }
+}
 impl Default for ParseOptions {
     fn default() -> Self {
         Self {
@@ -128,6 +147,7 @@ impl Default for ParseOptions {
             diagnostics: false,
             occurrences: false,
             value_spans: false,
+            ast_tree: false,
             limits: ResourceLimits::default(),
         }
     }
@@ -207,6 +227,9 @@ pub struct ParseResult {
     pub consumed_cp: usize,
     pub matched_cp: usize,
     pub ast: Option<Ast>,
+    /// The AST in arena form (`ParseOptions::ast_tree`); `Some` exactly when an AST was
+    /// built and the option was set.
+    pub tree: Option<AstTree>,
     pub captures: Vec<Capture>,
     /// Rule occurrences, retained for frontend projection compatibility.
     pub lexical: Vec<LexicalOccurrence>,

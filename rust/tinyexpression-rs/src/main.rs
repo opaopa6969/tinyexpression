@@ -1,208 +1,147 @@
+//! The `tinyexpression` command-line tool. Every command prints one line of JSON on stdout
+//! (the contract in `tinyexpression_rs::api`, shared with the C ABI and wasm32) and exits
+//! with the code listed in `--help`.
+
 use std::env;
 use std::fs;
 use std::io::{self, Read};
 use std::process::ExitCode;
 
-use tinyexpression_rs::formula_info::{self, ExecutionBackend, LoadError, LoaderOptions};
-use tinyexpression_rs::runtime::{Context, ContextClock, Host, NoExternals, XorShiftRandom};
-use tinyexpression_rs::{evaluate, parse, EvaluationError, FrontendError};
-
-const EXIT_SUCCESS: u8 = 0;
-const EXIT_USAGE: u8 = 2;
-const EXIT_PARSE: u8 = 3;
-const EXIT_MAPPING: u8 = 4;
-const EXIT_EVALUATION: u8 = 5;
-const EXIT_IO: u8 = 6;
-const EXIT_LOAD: u8 = 7;
+use tinyexpression_rs::api::{self, Response, EXIT_IO, EXIT_USAGE};
+use tinyexpression_rs::formula_info::{ExecutionBackend, LoaderOptions};
 
 fn usage() -> &'static str {
-    "usage: tinyexpression-rs <parse|eval> [FILE|-]\n       tinyexpression-rs <load|run> [--default-backend NAME] [FILE|-]"
+    "usage: tinyexpression <parse|check|eval> [FILE|-]\n       tinyexpression <load|run> [--default-backend NAME] [FILE|-]"
 }
 
-fn source(argument: Option<&str>) -> io::Result<String> {
-    match argument {
-        Some(path) if path != "-" => fs::read_to_string(path),
-        _ => {
-            let mut source = String::new();
-            io::stdin().read_to_string(&mut source)?;
-            Ok(source)
-        }
-    }
-}
-
-fn json_error(stage: &str, message: &str) -> String {
+fn help() -> String {
     format!(
-        "{{\"ok\":false,\"stage\":{},\"message\":{}}}",
-        tinyexpression_rs::json_string(stage),
-        tinyexpression_rs::json_string(message)
+        "tinyexpression {version} (ubnfc {ubnfc}) - TinyExpression without a JVM
+
+{usage}
+       tinyexpression --help | --version
+
+Commands (input is FILE, or stdin when FILE is `-` or omitted):
+  parse   parse a formula and print its typed AST        {{\"ok\":true,\"ast\":...}}
+  check   parse, map and type-check a formula            {{\"ok\":true}}
+  eval    evaluate a formula with the context-free evaluator
+                                                         {{\"ok\":true,\"value\":...}}
+  load    load a FormulaInfo document                    {{\"ok\":true,\"formulas\":[{{\"info\":...}}]}}
+  run     load a FormulaInfo document and evaluate every formula once on an empty context
+                                                         {{\"ok\":...,\"formulas\":[{{\"info\":...,\"value\"|\"error\":...}}]}}
+
+Options:
+  --default-backend NAME   load/run: the backend for formulas without an explicit one
+  --help                   print this help
+  --version                print the version and the ubnfc commit of the vendored parsers
+
+Failures are printed as {{\"ok\":false,\"stage\":...}} on stdout (usage errors on stderr).
+
+Exit codes:
+  0  success
+  2  invalid arguments
+  3  parse failure (including trailing input and FormulaInfo syntax errors)
+  4  mapping or type failure
+  5  evaluation failure (run: at least one formula failed)
+  6  I/O failure
+  7  FormulaInfo load failure that is not a syntax error",
+        version = api::VERSION,
+        ubnfc = api::UBNFC_COMMIT,
+        usage = usage(),
     )
 }
 
-fn run() -> Result<(), u8> {
-    let arguments: Vec<String> = env::args().skip(1).collect();
-    if arguments.first().map(String::as_str) == Some("--help") {
-        println!("{}", usage());
-        return Ok(());
-    }
-    let command = arguments.first().map(String::as_str);
-    if matches!(command, Some("load" | "run")) {
-        return formula_info_command(command == Some("run"), &arguments[1..]);
-    }
-    if arguments.is_empty() || !matches!(command, Some("parse" | "eval")) || arguments.len() > 2 {
-        eprintln!("{}", usage());
-        return Err(EXIT_USAGE);
-    }
-    let input = match source(arguments.get(1).map(String::as_str)) {
-        Ok(source) => source,
-        Err(error) => {
-            println!("{}", json_error("io", &error.to_string()));
-            return Err(EXIT_IO);
+fn source(argument: Option<&str>) -> Result<String, Response> {
+    let result = match argument {
+        Some(path) if path != "-" => fs::read_to_string(path),
+        _ => {
+            let mut source = String::new();
+            io::stdin().read_to_string(&mut source).map(|_| source)
         }
     };
-    if command == Some("eval") {
-        return match evaluate(&input) {
-            Ok(value) => {
-                println!("{{\"ok\":true,\"value\":{}}}", value.canonical_json());
-                Ok(())
-            }
-            Err(EvaluationError::Parse(error)) => {
-                println!(
-                    "{{\"ok\":false,\"stage\":\"parse\",\"diagnostic\":{}}}",
-                    error.canonical_json()
-                );
-                Err(EXIT_PARSE)
-            }
-            Err(EvaluationError::Mapping(error)) => {
-                println!("{}", json_error("mapping", &error));
-                Err(EXIT_MAPPING)
-            }
-            Err(error @ EvaluationError::TypeMismatch { .. }) => {
-                println!(
-                    "{{\"ok\":false,\"stage\":\"type\",\"error\":{}}}",
-                    error.canonical_json()
-                );
-                Err(EXIT_MAPPING)
-            }
-            Err(error) => {
-                println!(
-                    "{{\"ok\":false,\"stage\":\"evaluation\",\"error\":{}}}",
-                    error.canonical_json()
-                );
-                Err(EXIT_EVALUATION)
-            }
-        };
-    }
-
-    match parse(&input) {
-        Ok(ast) => {
-            println!("{{\"ok\":true,\"ast\":{}}}", ast.canonical_json());
-            Ok(())
-        }
-        Err(FrontendError::Parse(error)) => {
-            println!(
-                "{{\"ok\":false,\"stage\":\"parse\",\"diagnostic\":{}}}",
-                error.canonical_json()
-            );
-            Err(EXIT_PARSE)
-        }
-        Err(FrontendError::Mapping(error)) => {
-            println!("{}", json_error("mapping", &error));
-            Err(EXIT_MAPPING)
-        }
-        Err(FrontendError::TypeMismatch { message, span }) => {
-            println!(
-                "{{\"ok\":false,\"stage\":\"type\",\"span\":[{},{}],\"message\":{}}}",
-                span.start,
-                span.end,
-                tinyexpression_rs::json_string(&message)
-            );
-            Err(EXIT_MAPPING)
-        }
-    }
+    result.map_err(|error| Response::error(EXIT_IO, "io", &error.to_string()))
 }
 
-/// `load` / `run`: a FormulaInfo document (issue #180). The loader is configured as the Java
-/// loader tests configure it (`siteId` multi-tenancy attribute, `checkKind` else
-/// `calculatorName` as the name); `run` also evaluates every formula once on an empty context.
-fn formula_info_command(run: bool, arguments: &[String]) -> Result<(), u8> {
-    let mut options = LoaderOptions::java_tests();
-    let mut path = None;
-    let mut rest = arguments.iter();
-    while let Some(argument) = rest.next() {
-        if argument == "--default-backend" {
-            let Some(backend) = rest.next().and_then(|name| ExecutionBackend::parse(name)) else {
-                eprintln!("{}", usage());
-                return Err(EXIT_USAGE);
-            };
-            options.default_backend = backend;
-        } else if path.is_none() {
-            path = Some(argument.as_str());
-        } else {
-            eprintln!("{}", usage());
-            return Err(EXIT_USAGE);
+fn time_seed() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0x9e37_79b9_7f4a_7c15)
+}
+
+fn usage_error() -> Result<Response, u8> {
+    eprintln!("{}", usage());
+    Err(EXIT_USAGE)
+}
+
+fn run(arguments: &[String]) -> Result<Response, u8> {
+    let command = arguments.first().map(String::as_str);
+    match command {
+        Some("--help" | "-h" | "help") if arguments.len() == 1 => {
+            println!("{}", help());
+            Ok(Response {
+                exit_code: 0,
+                json: String::new(),
+            })
         }
-    }
-    let input = match source(path) {
-        Ok(source) => source,
-        Err(error) => {
-            println!("{}", json_error("io", &error.to_string()));
-            return Err(EXIT_IO);
-        }
-    };
-    let formulas = match formula_info::load(&input, &options) {
-        Ok(formulas) => formulas,
-        Err(error) => {
+        Some("--version" | "-V") if arguments.len() == 1 => {
             println!(
-                "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
-                error.canonical_json()
+                "tinyexpression {} (ubnfc {})",
+                api::VERSION,
+                api::UBNFC_COMMIT
             );
-            return Err(if matches!(error, LoadError::Syntax(_)) {
-                EXIT_PARSE
-            } else {
-                EXIT_LOAD
-            });
+            Ok(Response {
+                exit_code: 0,
+                json: String::new(),
+            })
         }
-    };
-    let mut failed = false;
-    let mut items = Vec::with_capacity(formulas.len());
-    if run {
-        let mut external = NoExternals;
-        let mut random = XorShiftRandom::default();
-        let mut host = Host {
-            external: &mut external,
-            clock: &ContextClock,
-            random: &mut random,
-        };
-        let results = formula_info::evaluate_all(&formulas, &Context::new(), &mut host);
-        for (formula, result) in formulas.iter().zip(results) {
-            let result = match result {
-                Ok(value) => format!("\"value\":{}", value.canonical_json()),
-                Err(error) => {
-                    failed = true;
-                    format!("\"error\":{}", error.canonical_json())
+        Some("load" | "run") => {
+            let mut options = LoaderOptions::java_tests();
+            let mut path = None;
+            let mut rest = arguments[1..].iter();
+            while let Some(argument) = rest.next() {
+                if argument == "--default-backend" {
+                    let Some(backend) = rest.next().and_then(|name| ExecutionBackend::parse(name))
+                    else {
+                        return usage_error();
+                    };
+                    options.default_backend = backend;
+                } else if path.is_none() {
+                    path = Some(argument.as_str());
+                } else {
+                    return usage_error();
                 }
-            };
-            items.push(format!(
-                "{{\"info\":{},{result}}}",
-                formula.info.canonical_json()
-            ));
+            }
+            Ok(match source(path) {
+                Ok(input) => {
+                    api::formula_info_json(&input, &options, command == Some("run"), time_seed())
+                }
+                Err(response) => response,
+            })
         }
-    } else {
-        for formula in &formulas {
-            items.push(format!("{{\"info\":{}}}", formula.info.canonical_json()));
+        Some("parse" | "check" | "eval") if arguments.len() <= 2 => {
+            Ok(match source(arguments.get(1).map(String::as_str)) {
+                Ok(input) => match command {
+                    Some("parse") => api::parse_json(&input),
+                    Some("check") => api::check_json(&input),
+                    _ => api::eval_json(&input),
+                },
+                Err(response) => response,
+            })
         }
-    }
-    println!("{{\"ok\":{},\"formulas\":[{}]}}", !failed, items.join(","));
-    if failed {
-        Err(EXIT_EVALUATION)
-    } else {
-        Ok(())
+        _ => usage_error(),
     }
 }
 
 fn main() -> ExitCode {
-    match run() {
-        Ok(()) => ExitCode::from(EXIT_SUCCESS),
+    let arguments: Vec<String> = env::args().skip(1).collect();
+    match run(&arguments) {
+        Ok(response) => {
+            if !response.json.is_empty() {
+                println!("{}", response.json);
+            }
+            ExitCode::from(response.exit_code)
+        }
         Err(code) => ExitCode::from(code),
     }
 }

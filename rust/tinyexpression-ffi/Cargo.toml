@@ -1,0 +1,21 @@
+[package]
+name = "tinyexpression-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "C ABI and wasm32 exports of tinyexpression-rs (JSON in/out)"
+# Distributed as GitHub Release assets (libtinyexpression.so, tinyexpression.h,
+# tinyexpression.wasm), not as a crate.
+publish = false
+
+[lib]
+# `libtinyexpression.so` / `libtinyexpression.a` natively, `tinyexpression.wasm` on
+# wasm32-unknown-unknown. The unsafe boundary code lives here so that tinyexpression-rs keeps
+# `#![forbid(unsafe_code)]` and its default build does not link a cdylib.
+name = "tinyexpression"
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+[dependencies]
+tinyexpression-rs = { path = "../tinyexpression-rs", version = "=2.0.0" }
