@@ -101,7 +101,7 @@ if [[ $(git rev-parse HEAD) != $(git rev-parse origin/master) ]]; then
   exit 2
 fi
 
-version=$(./mvnw -q help:evaluate -Dexpression=project.version -DforceStdout)
+version=$(./mvnw "${mvn_settings[@]}" -q help:evaluate -Dexpression=project.version -DforceStdout)
 if [[ -z "$version" || "$version" == *SNAPSHOT* ]]; then
   echo "Refusing publish: project.version must be a non-SNAPSHOT version." >&2
   exit 2
@@ -127,4 +127,4 @@ else
 fi
 
 echo "Publishing org.unlaxer:tinyExpression:$version"
-./mvnw -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false
+./mvnw "${mvn_settings[@]}" -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false
