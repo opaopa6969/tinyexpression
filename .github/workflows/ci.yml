@@ -199,6 +199,11 @@ jobs:
             echo "unlaxer $version is not on Maven Central; the published leg uses $UNLAXER_PUBLISHED_FALLBACK" | tee -a "$GITHUB_STEP_SUMMARY"
             version=$UNLAXER_PUBLISHED_FALLBACK
           fi
+          # The `source` leg tests the pinned unlaxer-parser checkout it installed: use its own revision.
+          if [ "${{ matrix.generator }}" = source ]; then
+            version=$(sed -n 's:.*<revision>\(.*\)</revision>.*:\1:p' ../unlaxer-parser/pom.xml | head -1)
+            echo "source leg: unlaxer $version from the pinned unlaxer-parser checkout" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
           echo "UNLAXER_VERSION=$version" >> "$GITHUB_ENV"
       - name: Verify public and snapshot APIs without shared Maven state
         working-directory: tinyexpression
