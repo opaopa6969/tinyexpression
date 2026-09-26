@@ -86,6 +86,10 @@ CLI `tinyexpression eval-context [FILE|-]` / `run-context`、C ABI・wasm `te_ev
 - 成功は `{"ok":true,"value":{...},"text":"<String.valueOf>"}`。失敗は `"stage":"create"`（計算機の生成、parse
   失敗なら `diagnostic` 付き、exit 3/4）か `"apply"`（評価、exit 5）と `"error":{"kind":<Java 例外>,"message":...}`。
   リクエスト自体の誤りは `"stage":"request"`（exit 2）。
+- 同じリクエスト/応答を本物の Java 評価器で処理する Java 実装が `org.unlaxer.tinyexpression.service.EvalContextService`
+  （issue #221、ルートの [README](../README.md#サーバ評価evalcontextservice)）。契約一致は
+  `tests/eval_context_contract.rs`（Rust の応答を `src/test/resources/eval-context-contract/rust-responses.tsv` に記録、
+  更新は `TE_CONTRACT_UPDATE=1 cargo test --test eval_context_contract`）と Java の `EvalContextContractTest` で検査する。
 - wasm32 では method の入れ子 `call` の既定上限を 48 にしている（native は 256）。評価器がホストエンジンの
   スタック（V8 で約 1 MB）上で動くため、深い再帰がインスタンスごと trap する前に `StackOverflowError` にする。
 

@@ -29,6 +29,7 @@ import { inVsCode, connectHost, openExternal, hostState, saveHostState } from '.
 import { externalCandidates, addExternalCandidates, stubsUsedBy, stubLabel, isMissingStubFailure } from './externals.js';
 import { createTour } from './tour.js';
 import { createHelp } from './help.js';
+import { configuredServerUrl, probeServer, createServerRuntime, withWasmDiagnostic, realClassesOf, targetLabel } from './eval-target.js';
 import './style.css';
 
 const STORAGE_KEY = 'tinyexpression-playground-v1';
@@ -38,6 +39,8 @@ const bundledCatalog = catalogJson;
 /** The catalog the editor uses: the repository catalog plus the edits (Catalog panel). */
 let catalog = mergeOverride(bundledCatalog, loadCatalogOverride());
 let te = null;
+/** The server runtime (issue #221) when the host answers as the Java service, else null. */
+let server = null;
 let state = loadState();
 
 // ── persistence (per-viewer convenience only) ──
@@ -165,48 +168,71 @@ function kindLabel(value) {
   return ({ number: 'float', double: 'double', int: 'int', long: 'long', short: 'short', byte: 'byte', boolean: 'boolean', string: 'string', object: 'object', null: 'null' })[value.kind] ?? value.kind;
 }
 
+/** The evaluation target in effect: the server only while the host answers (#221). */
+const target = () => (server && state.target === 'server' ? 'server' : 'wasm');
+
+let evaluationSequence = 0;
 async function evaluate() {
   saveState();
   if (!te) return;
   await te.ready();
+  const run = ++evaluationSequence;
   const formula = view.state.doc.toString();
   const out = $('result');
-  out.replaceChildren();
   if (formula.trim() === '') {
-    out.append(el('p', { class: 'muted' }, '式を入力してください。'));
+    out.replaceChildren(el('p', { class: 'muted' }, '式を入力してください。'));
     tracePanel.clear();
     return;
   }
   const started = performance.now();
-  const tracing = state.trace === true;
-  const response = tracing
-    ? te.evalTrace(toRequest(state.context, { formula }))
-    : te.evalContext(toRequest(state.context, { formula }));
+  const onServer = target() === 'server';
+  const tracing = state.trace === true && !onServer;
+  const request = toRequest(state.context, { formula });
+  let response;
+  if (onServer) {
+    response = await server.evalContext(request);
+    if (run !== evaluationSequence) return; // a newer evaluation has started
+    response = { ...response, result: withWasmDiagnostic(response.result, te, formula) };
+  } else {
+    response = tracing ? te.evalTrace(request) : te.evalContext(request);
+  }
   const { result } = response;
   const ms = performance.now() - started;
+  out.replaceChildren();
   if (tracing) tracePanel.show(response, formula);
   else tracePanel.clear();
+  if (onServer && state.trace === true) {
+    $('trace-summary').textContent = 'サーバ評価（Java）では trace を記録しません。評価先を wasm にすると取れます。';
+  }
   if (result.ok) {
     const value = result.value;
+    const real = realClassesOf(result);
     out.append(
       el('div', { class: 'result-ok' },
-        el('div', { class: 'result-value', title: 'String.valueOf(result)' }, result.text),
+        el('div', { class: 'result-value', title: 'String.valueOf(result)' }, result.text,
+          onServer ? [' ', el('span', { class: 'target-tag', title: 'evaluated by the real Java evaluator on the server' }, targetLabel('server'))] : null),
         el('dl', {},
           el('dt', { title: 'result kind' }, '型'), el('dd', {}, kindLabel(value)),
           value.f32Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f32Bits)] : null,
           value.f64Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f64Bits)] : null,
-          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}`)),
-        stubNote(stubsUsedBy([formula], state.context.externals))));
+          el('dt', { title: `evaluation time (${onServer ? 'server round trip' : 'wasm'})` }, '時間'),
+          el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}${onServer ? '（サーバ往復）' : ''}`)),
+        stubNote(stubsUsedBy([formula], state.context.externals).filter((stub) => !real.includes(stub.class)), onServer),
+        onServer && result.codeBlocks && !result.codeBlocks.executed
+          ? el('p', { class: 'muted small' }, 'サーバはコードブロックを実行しない設定です（ホストのポリシー、ADR-003）。')
+          : null));
     return;
   }
   const failure = describeFailure(catalog, formula, result);
-  const stageLabel = { create: '生成（parse）', apply: '評価', request: 'リクエスト', internal: '内部' }[result.stage] ?? result.stage;
+  const stageLabel = { create: '生成（parse）', apply: '評価', request: 'リクエスト', internal: '内部', timeout: 'タイムアウト', server: 'サーバ接続' }[result.stage] ?? result.stage;
   out.append(el('div', { class: 'result-error' },
-    el('div', { class: 'error-head' }, el('span', { class: 'badge' }, failure.code), ` ${stageLabel}で失敗`),
+    el('div', { class: 'error-head' }, el('span', { class: 'badge' }, failure.code), ` ${stageLabel}で失敗`,
+      onServer ? [' ', el('span', { class: 'target-tag' }, targetLabel('server'))] : null),
     el('p', {}, failure.title),
     failure.fix ? el('p', { class: 'fix' }, `修正のヒント: ${failure.fix}`) : null,
     result.error?.message ? el('p', { class: 'muted small', title: 'Java exception message' }, `${result.error.kind}: ${result.error.message}`) : null,
     isMissingStubFailure(result.error) ? missingStubHelp() : null,
+    onServer ? el('button', { class: 'link', title: 'evaluate in the browser (wasm, stub values) instead', onclick: () => setTarget('wasm') }, 'wasm（仮の値）で評価し直す') : null,
     failure.from != null ? el('button', { class: 'link', onclick: () => {
       view.dispatch({ selection: { anchor: failure.from, head: Math.max(failure.from, Math.min(failure.to, failure.from + 1)) }, scrollIntoView: true });
       view.focus();
@@ -231,11 +257,44 @@ function pickExternals() {
 }
 
 /** The "仮の値" mark of a result that used stubs. */
-function stubNote(used) {
+function stubNote(used, onServer = false) {
   if (!used.length) return null;
-  return el('p', { class: 'stub-note', title: 'external calls answered by the CalculationContext stubs (code blocks are not run in the playground)' },
+  return el('p', { class: 'stub-note', title: onServer ? 'external calls answered by the CalculationContext stubs (the server reaches no host class)' : 'external calls answered by the CalculationContext stubs (code blocks are not run in the playground)' },
     el('span', { class: 'stub-tag' }, '仮の値'),
-    ` external（コードブロック含む）は実行されず、仮の値で代用: ${used.map(stubLabel).join('、')}`);
+    onServer
+      ? ` external はサーバでも仮の値で代用: ${used.map(stubLabel).join('、')}`
+      : ` external（コードブロック含む）は実行されず、仮の値で代用: ${used.map(stubLabel).join('、')}`);
+}
+
+// ── evaluation target: wasm（仮の値） / サーバ（本物の Java） (#221) ──
+
+function setTarget(value) {
+  state.target = value === 'server' ? 'server' : 'wasm';
+  $('eval-target-select').value = target();
+  renderTargetNote();
+  saveState();
+  evaluate();
+}
+
+function renderTargetNote() {
+  $('eval-target-note').textContent = target() === 'server'
+    ? '本物の Java（サーバ）で評価中。external は仮の値、コードブロックはサーバの設定で実行。'
+    : 'ブラウザ内の wasm で評価（external・コードブロックは仮の値）。';
+}
+
+$('eval-target-select').addEventListener('change', (e) => setTarget(e.target.value));
+
+async function connectServer() {
+  if (inVsCode) return; // the VSIX evaluates through its own host (#217)
+  const setting = configuredServerUrl(import.meta.env?.VITE_TE_SERVER_EVAL_URL);
+  if (!setting) return;
+  const url = new URL(setting, document.baseURI).href;
+  if (!(await probeServer(url))) return; // GitHub Pages / vite dev: no host answers
+  server = createServerRuntime(url);
+  $('eval-target').hidden = false;
+  $('eval-target-select').value = target();
+  renderTargetNote();
+  if (target() === 'server') evaluate();
 }
 
 /** Help for the missing-stub error of a code-block class. */
@@ -425,9 +484,14 @@ $('load-info').addEventListener('click', () => {
   if (!te) return;
   renderFormulaInfo(te.load(infoText()).result, false);
 });
-$('run-info').addEventListener('click', () => {
+$('run-info').addEventListener('click', async () => {
   if (!te) return;
-  renderFormulaInfo(te.runContext(toRequest(state.context, { document: infoText() })).result, true);
+  const request = toRequest(state.context, { document: infoText() });
+  if (target() === 'server') {
+    renderFormulaInfo((await server.runContext(request)).result, true);
+    return;
+  }
+  renderFormulaInfo(te.runContext(request).result, true);
 });
 $('sample-info').addEventListener('click', () => {
   setInfoText(FORMULA_INFO_SAMPLE);
@@ -601,6 +665,7 @@ createRuntime(new URL('tinyexpression.wasm', document.baseURI).href).then((runti
   forceLinting(view);
   forceLinting(infoView);
   evaluate();
+  connectServer();
 }).catch((error) => {
   $('result').replaceChildren(el('div', { class: 'result-error' }, `tinyexpression.wasm を読み込めませんでした: ${error.message}`));
 });

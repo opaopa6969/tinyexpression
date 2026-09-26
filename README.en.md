@@ -30,6 +30,7 @@ A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 - [P4 Parser Engine (2.0.0+)](#p4-parser-engine-200)
 - [Language Quick Reference](#language-quick-reference)
 - [LSP / DAP](#lsp--dap)
+- [Server-side evaluation (EvalContextService)](#server-side-evaluation-evalcontextservice)
 - [Development](#development)
 
 ---
@@ -319,6 +320,24 @@ The [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode/README.md)
 - DAP debugging with 6-backend parity comparison
 
 External repository: [tinyexpression-group/tinyexpression-ide](https://github.com/tinyexpression-group/tinyexpression-ide)
+
+---
+
+## Server-side evaluation (EvalContextService)
+
+`org.unlaxer.tinyexpression.service.EvalContextService` (issue #221) answers the request/response JSON of the Rust
+`te_eval_context` / `te_eval_trace` / `te_formula_info_context` with the real Java evaluator (`P4_AST_EVALUATOR`):
+JSON string in, JSON string out, no HTTP dependency (also in the `tinyExpression-jdk17` artifact). `external` calls go to
+the request's `externals[]` stubs only (no host class is reachable); Java code blocks run only when the host's
+`CodeBlockExecutionPolicy` allows it (default `DENY`, like `JavaCodeBlockPolicy`; a compiled class wins over a stub);
+each request has a timeout (default 5 s, `"stage":"timeout"`), and an `EvalAuditHook` sees every request and response.
+`EvalContextContractTest` checks 64 requests against the recorded Rust responses; the documented differences (error
+messages, no parser diagnostic, no trace, `seed`, FormulaInfo `formulaSpan`/`declaredHash`/load error kinds) and how a
+host (e.g. fraud-alert on Grizzly, behind its own login, feature flag default off) embeds it and the playground's
+"wasm / サーバ（本物の Java）" switch are described in the Japanese [README](README.md#サーバ評価evalcontextservice).
+
+> **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when formula
+> authors are fully trusted. Do not expose this capability to untrusted users.
 
 ---
 

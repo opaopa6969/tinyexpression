@@ -32,6 +32,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 - [LSP / DAP](#lsp--dap)
 - [JVM 不要（Rust 版: CLI・埋め込み・wasm）](#jvm-不要rust-版-cli埋め込みwasm)
 - [Playground と言語カタログ](#playground-と言語カタログ)
+- [サーバ評価（EvalContextService）](#サーバ評価evalcontextservice)
 - [開発](#開発)
 
 ---
@@ -412,6 +413,117 @@ Java は `java -jar` ではなく `target/classes` + 依存 jar の classpath �
 評価経路は Java 差分 golden（#179）の全行と node で照合している（`playground/scripts/parity-smoke.mjs`、CI。
 trace 付きの経路も同じ全行で一致を確認）。カタログの書き出しは `playground/scripts/catalog-roundtrip.mjs` が
 「無編集で書き出すとバイト単位で同一・派生ファイルも同一」を CI で検査する。
+
+---
+
+## サーバ評価（EvalContextService）
+
+playground の wasm は Java コードブロックを実行せず、`external` は仮の値（スタブ）で代用する。社内向けサーバ
+などで **本物の Java 評価** を行うための共通部品が `org.unlaxer.tinyexpression.service.EvalContextService`
+（issue #221）。Rust の `te_eval_context` / `te_eval_trace` / `te_formula_info_context`
+（[rust/README.md](rust/README.md#calculationcontext-付き評価issue-201)）と **同じリクエスト/応答 JSON** を
+Java（`P4_AST_EVALUATOR`）で処理する。入力 JSON 文字列 → 応答 JSON 文字列で、HTTP サーバには依存しない。
+Java 17 版（`tinyExpression-jdk17`）にも入る。
+
+```java
+EvalContextService service = EvalContextService.builder()
+    .codeBlockPolicy(CodeBlockExecutionPolicy.DENY)   // 既定。ALLOW / FOLLOW_GLOBAL / 独自の判定
+    .timeout(Duration.ofSeconds(5))                   // 既定 5 秒。0 以下 = 無制限（呼び出しスレッドで実行）
+    .auditHook(new EvalAuditHook() {                  // 既定は何もしない
+      @Override public void afterEvaluation(String requestJson, Outcome outcome) {
+        auditLog.info("playground eval {} -> {}", requestJson, outcome.response().json());
+      }
+    })
+    .build();
+
+String json = service.evalContext(requestJson);          // te_eval_context
+String traced = service.evalTrace(requestJson);          // te_eval_trace（"trace":null、下記）
+String run = service.formulaInfoContext(requestJson);    // te_formula_info_context
+EvalContextResponse r = service.dispatch(requestJson);   // "operation": evalContext | evalTrace | runContext
+```
+
+規則:
+
+- **external**: リクエストの `externals[]` のスタブだけで解決する（Rust と同じ。スタブに無いクラスは
+  `Class.forName` 失敗）。ホストの classpath のクラスはリクエストから呼べない。
+- **Java コードブロック**: 実行するかはホストが渡す `CodeBlockExecutionPolicy` が決める。既定は `DENY`
+  （`JavaCodeBlockPolicy` と同じく secure by default）。不許可ならブロックはクラスを宣言するだけで、呼び出しは
+  スタブで解決する（Rust / playground と同じ。スタブが無ければ案内付きのエラー）。許可なら各 ```` ```java ````
+  ブロックをメモリ上でコンパイルして実行し、**同名のスタブより本物を優先** する（要 JDK）。
+  `FOLLOW_GLOBAL` はリクエストごとに `JavaCodeBlockPolicy.isEnabled()` に従う。
+  > **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when
+  > formula authors are fully trusted. Do not expose this capability to untrusted users.
+  > （[ADR-003](docs/decisions/ADR-003-java-codeblock-safety.md)）
+- **タイムアウト**: 1 リクエスト（コードブロックのコンパイル込み）の上限。超えたら
+  `{"ok":false,"stage":"timeout","error":{"kind":"TimeoutException",...}}`。作業スレッドには割り込みを
+  かけるが、割り込みを無視する計算は終わるまでスレッドを占有するので、**同時実行数はホスト側で絞る**。
+- **監査 hook**: `beforeEvaluation(Event)`（評価前: 操作・リクエスト・式・コードブロックのクラス・実行可否）と
+  `afterEvaluation(requestJson, Outcome)`（応答・所要時間・タイムアウト。不正リクエストでも呼ぶ）。
+  hook の例外は呼び出し側に伝わる（監査できない評価は答えない）。
+- 応答には Rust に無い `"evaluator":"java"` と、コードブロックがあれば `"codeBlocks":{"classes":[...],"executed":bool}` が付く。
+
+Rust との契約一致: `src/test/resources/eval-context-contract/requests.tsv` の 64 リクエスト（算術・型・変数の各 map・
+文字列・match・角度・`nowHour`・parse 失敗・評価失敗・スタブの各失敗・不許可のコードブロック・リクエスト誤り・trace・
+FormulaInfo）で、Rust の応答（`rust-responses.tsv`、`cargo test --test eval_context_contract` が最新であることを検査）と
+Java の応答の ok / stage / 終了コード / 値の型とビット（数値）または値 / `text` / 例外名 / リクエスト誤りのメッセージ /
+FormulaInfo の各フィールドと結果が一致することを `EvalContextContractTest` が検査する。わかっている差:
+
+| 項目 | Rust / wasm | Java（EvalContextService） |
+|---|---|---|
+| コードブロックを実行した結果 | 実行しない（スタブ必須） | 許可時は本物を実行（スタブより優先）。契約テストの対象外 |
+| 評価失敗・parse 失敗の `error.message` | Rust の文言 | Java の例外メッセージ（例外名 `error.kind` は一致） |
+| parse 失敗の `diagnostic` | あり | なし（playground は wasm の `te_check` で補う） |
+| `te_eval_trace` の `trace` | 記録する | `"trace":null` と `"traceUnavailable"`（Java の評価器は trace を持たない） |
+| `random()` と `seed` | `seed` で決まる | `seed` は検査のみ、`Math.random()` |
+| 不正 JSON のメッセージ | 自前 reader | Jackson の文言 |
+| FormulaInfo `info` | `formulaSpan`・`declaredHash` あり、既定 backend `JAVA_CODE` | その 2 つは無し、読み込みは `P4_AST_EVALUATOR` 既定（`executionBackend` の表示が異なる） |
+| FormulaInfo load 失敗の `error.kind` | 細分類（`unknown_type` 等）と `span` | `syntax` / `formula` / `load` の 3 種、`span` なし（`javaException` は一致） |
+
+### playground の評価先切り替え
+
+playground は起動時に `../api/playground/eval`（playground のページからの相対 URL。ビルド時の環境変数
+`VITE_TE_SERVER_EVAL_URL` で変更、`off` で無効）へ `{"operation":"evalContext","formula":"1"}` を POST し、
+`"evaluator":"java"` が返ったときだけ「評価先: wasm（仮の値） / サーバ（本物の Java）」を表示する。
+GitHub Pages や `vite dev` では何も表示されず従来どおり。サーバ評価中の結果には「Java（本物）」が付き、
+サーバに届かないときは「wasm（仮の値）で評価し直す」で戻せる。診断・補完は常に wasm、trace はサーバ評価では出ない。
+リクエストは同一オリジンの cookie（`credentials: 'same-origin'`）・JSON 本文・`X-Requested-With: tinyexpression-playground`
+付きで送り、**認証・CSRF 対策はホスト側** が行う（playground はトークンを持たない）。
+
+### ホストへの組み込み（例: fraud-alert の Grizzly）
+
+fraud-alert への実装は fraud-alert 側で行う（本リポジトリは部品と手順だけ）。想定: 社内向けサーバの manage API と
+同じ Google 認証の内側、feature flag（既定 off）、まず dev/stg のみ。
+
+1. `playground/` を `npm run build:wasm && npm run build` し、`dist/` をホストの静的リソース（例: classpath の
+   `playground/`）に置く。Vite の `base: './'` なので `/s/playground/` の下でそのまま動き、既定の評価 URL は
+   `/s/api/playground/eval` になる。
+2. 静的ファイルと評価 endpoint を、flag が on で環境が dev/stg のときだけ登録する:
+
+```java
+if (featureFlags.isEnabled("tinyexpression.playground") && env.isDevOrStg()) {   // 既定 off
+  ServerConfiguration config = httpServer.getServerConfiguration();
+  config.addHttpHandler(new CLStaticHttpHandler(Main.class.getClassLoader(), "/playground/"),
+      "/s/playground/");
+  config.addHttpHandler(new HttpHandler() {
+    @Override public void service(Request request, Response response) throws Exception {
+      if (!Method.POST.equals(request.getMethod())) { response.sendError(405); return; }
+      if (!googleAuth.isAuthenticated(request)) { response.sendError(401); return; }  // manage API と同じ認証
+      if (!"tinyexpression-playground".equals(request.getHeader("X-Requested-With"))) {
+        response.sendError(403); return;                                             // CSRF: 独自ヘッダ必須
+      }
+      String body = readAtMost(request.getInputStream(), 256 * 1024);               // 本文サイズの上限
+      EvalContextResponse result = service.dispatch(body);                         // 成否は JSON の "ok"
+      response.setContentType("application/json; charset=utf-8");
+      response.getWriter().write(result.json());
+    }
+  }, "/s/api/playground/eval");
+}
+```
+
+- `service` は上の builder で 1 つ作って共有する（スレッドセーフ）。コードブロックは既定の `DENY` のまま始め、
+  許可するなら式の作者が全員信頼できる環境に限る（ADR-003）。同時実行数（セマフォ等）と監査ログはホストで持つ。
+- 独自ヘッダ付きの JSON POST は別オリジンからは preflight が要るので、CORS を許可しなければ CSRF はこれで防げる。
+  cookie の `SameSite` と `Origin` の検査を併用してよい。
 
 ---
 

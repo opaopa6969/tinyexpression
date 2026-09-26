@@ -291,3 +291,8 @@ html.in-vscode .top { padding-top: .5rem; }
 .help-section:last-child { border-bottom: none; }
 .help-section h3 { margin-bottom: .1rem; }
 .help-section p { margin: .3rem 0; }
+
+/* evaluation target switch (#221): shown only when the host server answers */
+.eval-target { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: 0 0 .4rem; }
+.eval-target[hidden] { display: none; }
+.target-tag { display: inline-block; font-size: .72rem; font-weight: 600; color: var(--ok, #1a7f37); border: 1px solid currentColor; border-radius: 3px; padding: 0 .3rem; margin-left: .25rem; vertical-align: middle; white-space: nowrap; }

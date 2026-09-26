@@ -1,0 +1,64 @@
+arith-float	evalContext	{"formula":"1 + 2 * 3"}
+arith-float-fraction	evalContext	{"formula":"1 / 3"}
+arith-double	evalContext	{"formula":"1 / 3","resultType":"double","numberType":"double"}
+arith-int	evalContext	{"formula":"7 / 2","resultType":"int","numberType":"int"}
+arith-long	evalContext	{"formula":"2147483647 + 1","resultType":"long","numberType":"long"}
+int-division-by-zero	evalContext	{"formula":"1 / 0","resultType":"int","numberType":"int"}
+float-division-by-zero	evalContext	{"formula":"1 / 0"}
+variables-every-map	evalContext	{"formula":"if($member & $name == 'alice'){$price * 2}else{0}","variables":[{"name":"member","type":"boolean","value":true},{"name":"name","type":"string","value":"alice"},{"name":"price","type":"float","value":"1.5"}]}
+variable-dollar-prefix	evalContext	{"formula":"$price * 1.1","variables":[{"name":"$price","type":"float","value":100}]}
+variable-json-number	evalContext	{"formula":"$x + 0.5","variables":[{"name":"x","type":"float","value":2.25}]}
+variable-int-map-number	evalContext	{"formula":"$n + 1","variables":[{"name":"n","type":"int","value":"41"}]}
+variable-double	evalContext	{"formula":"$d * 2","resultType":"double","numberType":"double","variables":[{"name":"d","type":"double","value":"0.1"}]}
+variable-missing	evalContext	{"formula":"$missing + 1"}
+string-concat	evalContext	{"formula":"$s + '!'","resultType":"string","variables":[{"name":"s","type":"string","value":"hi"}]}
+string-unicode	evalContext	{"formula":"'𠮷野家' + $s","resultType":"string","variables":[{"name":"s","type":"string","value":"🍙"}]}
+boolean-result	evalContext	{"formula":"$a > 3","resultType":"boolean","variables":[{"name":"a","type":"float","value":"4"}]}
+object-map	evalContext	{"formula":"$o","resultType":"object","variables":[{"name":"o","type":"string","value":"boxed","map":"object"}]}
+match	evalContext	{"formula":"match{$x == 1 -> 10, $x == 2 -> 20, default -> 0}","variables":[{"name":"x","type":"float","value":"2"}]}
+sin-degree	evalContext	{"formula":"sin(30)","resultType":"double","numberType":"double"}
+sin-radian	evalContext	{"formula":"sin(30)","resultType":"double","numberType":"double","angle":"radian"}
+in-time-range	evalContext	{"formula":"if(inTimeRange(9,17)){1}else{0}","variables":[{"name":"nowHour","type":"float","value":"13"}]}
+in-time-range-outside	evalContext	{"formula":"if(inTimeRange(9,17)){1}else{0}","variables":[{"name":"nowHour","type":"float","value":"20"}]}
+parse-error	evalContext	{"formula":"1 +"}
+parse-error-unclosed	evalContext	{"formula":"if($a){1"}
+blank-formula	evalContext	{"formula":"   "}
+var-declaration	evalContext	{"formula":"var $x as number set if not exists 5 description='x';\n$x * 2"}
+external-stub	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1, 2, 3)","externals":[{"class":"sample.Fee","method":"calculate","registered":true,"result":{"type":"float","value":"12.5"},"arity":3}]}
+external-stub-any-arity	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)","externals":[{"class":"sample.Fee","method":"calculate","registered":true,"result":{"type":"float","value":"2"}}]}
+external-missing-class	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)"}
+external-method-not-found	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)","externals":[{"class":"sample.Fee","method":"other","registered":true,"result":{"type":"float","value":"2"}}]}
+external-arity-mismatch	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)","externals":[{"class":"sample.Fee","method":"calculate","registered":true,"result":{"type":"float","value":"2"},"arity":2}]}
+external-unregistered	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)","externals":[{"class":"sample.Fee","method":"calculate","registered":false,"result":{"type":"float","value":"2"}}]}
+external-null	evalContext	{"formula":"import sample.Fee#calculate as fee;\nexternal returning as string fee(1)","resultType":"string","externals":[{"class":"sample.Fee","method":"calculate","registered":true,"result":{"type":"null"}}]}
+external-boolean	evalContext	{"formula":"import sample.Rule#hit as hit;\nif(external returning as boolean hit($x)){1}else{2}","variables":[{"name":"x","type":"float","value":"1"}],"externals":[{"class":"sample.Rule","method":"hit","registered":true,"result":{"type":"boolean","value":"true"}}]}
+external-not-imported	evalContext	{"formula":"external returning as number nope(1)"}
+code-block-stub	evalContext	{"formula":"```java:CheckDigits\nimport org.unlaxer.tinyexpression.CalculationContext;\n\npublic class CheckDigits{\n\tpublic boolean check(CalculationContext calculationContext,String target){\n\t\treturn !target.isEmpty();\n\t}\n}\n```\nimport CheckDigits#check as checkDigits;\nif(external returning as boolean checkDigits($input)){\n  1\n}else{\n  0\n}","variables":[{"name":"input","type":"string","value":"123"}],"externals":[{"class":"CheckDigits","method":"check","registered":true,"result":{"type":"boolean","value":"false"},"arity":1}]}
+code-block-missing-stub	evalContext	{"formula":"```java:CheckDigits\nimport org.unlaxer.tinyexpression.CalculationContext;\n\npublic class CheckDigits{\n\tpublic boolean check(CalculationContext calculationContext,String target){\n\t\treturn !target.isEmpty();\n\t}\n}\n```\nimport CheckDigits#check as checkDigits;\nif(external returning as boolean checkDigits($input)){\n  1\n}else{\n  0\n}","variables":[{"name":"input","type":"string","value":"123"}]}
+request-invalid-json	evalContext	{"formula":
+request-not-object	evalContext	[1]
+request-missing-formula	evalContext	{"variables":[]}
+request-unknown-result-type	evalContext	{"formula":"1","resultType":"date"}
+request-unknown-number-type	evalContext	{"formula":"1","numberType":"boolean"}
+request-unknown-angle	evalContext	{"formula":"1","angle":"grad"}
+request-variables-not-array	evalContext	{"formula":"1","variables":{}}
+request-variable-no-name	evalContext	{"formula":"1","variables":[{"type":"float","value":1}]}
+request-variable-bad-value	evalContext	{"formula":"1","variables":[{"name":"x","type":"int","value":"1.5"}]}
+request-variable-bad-map	evalContext	{"formula":"1","variables":[{"name":"b","type":"boolean","value":true,"map":"string"}]}
+request-variable-unknown-type	evalContext	{"formula":"1","variables":[{"name":"b","type":"date","value":"x"}]}
+request-externals-not-array	evalContext	{"formula":"1","externals":1}
+request-external-no-class	evalContext	{"formula":"1","externals":[{"method":"m"}]}
+request-external-bad-arity	evalContext	{"formula":"1","externals":[{"class":"a.B","arity":-1}]}
+request-seed-negative	evalContext	{"formula":"1","seed":-1}
+request-seed-string	evalContext	{"formula":"1","seed":"1"}
+trace-ok	evalTrace	{"formula":"if($x > 1){$x * 2}else{0}","variables":[{"name":"x","type":"float","value":"3"}]}
+trace-create-failure	evalTrace	{"formula":"1 +"}
+trace-apply-failure	evalTrace	{"formula":"1 / 0","resultType":"int","numberType":"int"}
+run-ok	runContext	{"document":"tags:NORMAL\ndescription:first\nsiteId:1\ncheckKind:First\ncalculatorName:first\nresultType:float\nformula:$x + 1\n---END_OF_PART---\ncalculatorName:second\nresultType:string\nformula:'a' + $s\n---END_OF_PART---\n","variables":[{"name":"x","type":"float","value":"2"},{"name":"s","type":"string","value":"b"}]}
+run-apply-failure	runContext	{"document":"calculatorName:div\nresultType:int\nnumberType:int\nformula:1 / 0\n---END_OF_PART---\n"}
+run-stub	runContext	{"document":"calculatorName:fee\nformula:import sample.Fee#calculate as fee;\nexternal returning as number fee(1)\n---END_OF_PART---\n","externals":[{"class":"sample.Fee","method":"calculate","registered":true,"result":{"type":"float","value":"3"}}]}
+run-missing-document	runContext	{"formula":"1"}
+run-not-a-document	runContext	{"document":"this is not a formula info"}
+run-parse-error	runContext	{"document":"calculatorName:x\nformula:1 +\n---END_OF_PART---\n"}
+run-unknown-backend	runContext	{"document":"calculatorName:x\nexecutionBackend:NOPE\nformula:1\n---END_OF_PART---\n"}
+run-missing-formula	runContext	{"document":"calculatorName:x\nresultType:float\n---END_OF_PART---\n"}
