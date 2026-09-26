@@ -23,7 +23,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - CI: the main jar and the `-jdk17` jar must not contain a class whose FQCN is also in the unlaxer
   (`-jdk17`) jars they depend on (`scripts/ci/check_no_duplicate_classes.py`).
 
-## [2.0.1] - Unreleased
+## [2.0.1] - 2026-09-26
 
 ### Java 17
 - **New artifact `org.unlaxer:tinyExpression-jdk17`** (#220): the same sources, packages and classes as
