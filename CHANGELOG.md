@@ -3,7 +3,7 @@
 All notable changes to TinyExpression are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.0.1] - Unreleased
+## [2.0.1] - 2026-09-26
 
 ### Java 17
 - **New artifact `org.unlaxer:tinyExpression-jdk17`** (#220): the same sources, packages and classes as
