@@ -79,7 +79,8 @@ Ok(match (grammar,entry) {
 ("FormulaInfo",Some("PlainLine"))=>parser.r9_c(State::default()),
 ("FormulaInfo",Some("AtLineEnd"))=>parser.r10_c(State::default()),
 ("FormulaInfo",Some("EndOfPart"))=>parser.r11_c(State::default()),
-("FormulaInfo",Some("LineBreak"))=>parser.r12_c(State::default()),
+("FormulaInfo",Some("BlankChar"))=>parser.r12_c(State::default()),
+("FormulaInfo",Some("LineBreak"))=>parser.r13_c(State::default()),
 _=>return Err("unsupported grammar or entry"),})}
 // D-070: `parse_entry_budget` / `parse_entry_escalated` は `parse_entry_with_options` より
 // 前に置く。driver.rs の scanner_hook / examples/p4-rust の build.rs はこの関数を
@@ -254,54 +255,20 @@ match self.input.cp_at(p) {Some((c,n)) if {!"\r\n".contains(c)}=>Some(n),_=>None
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s74(&self,mut p:usize)->Option<usize> {
-let start=p;
-p+=self.s75(p)?;
-p+=self.s76(p)?;
-p+=self.s77(p)?;
-Some(p-start)
-}
-/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
-#[allow(unused_mut)]
-fn s75(&self,mut p:usize)->Option<usize> {
-if self.input.starts_with(p,"---END_OF_PART---") {Some(17)} else {None}
-}
-/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
-#[allow(unused_mut)]
-fn s76(&self,mut p:usize)->Option<usize> {
-match self.input.cp_at(p) {Some((c,n)) if {!"\r\n".contains(c)}=>Some(n),_=>None}
-}
-/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
-#[allow(unused_mut)]
 fn s77(&self,mut p:usize)->Option<usize> {
 let start=p;
-let bytes=self.text.as_bytes();while let Some(&b)=bytes.get(p) {
-if b<0x80 {if (if b<64 {0xffffffffffffdbffu64>>b} else {0xffffffffffffffffu64>>(b-64)})&1==0 {break;}p+=1;}
-else {let Some((c,n))=self.input.cp_at(p) else {break;};if !{let cp=c as u32;if cp<64 {(0xffffffffffffdbffu64>>cp)&1!=0} else if cp<128 {(0xffffffffffffffffu64>>(cp-64))&1!=0} else {matches!(cp,128..=1114111)}} {break;}p+=n;}
-}
+p+=self.s78(p)?;
+p+=self.s79(p)?;
 Some(p-start)
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
 fn s78(&self,mut p:usize)->Option<usize> {
-match self.input.cp_at(p) {Some((c,n)) if {!"\r\n".contains(c)}=>Some(n),_=>None}
-}
-/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
-#[allow(unused_mut)]
-fn s83(&self,mut p:usize)->Option<usize> {
-let start=p;
-p+=self.s84(p)?;
-p+=self.s85(p)?;
-Some(p-start)
-}
-/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
-#[allow(unused_mut)]
-fn s84(&self,mut p:usize)->Option<usize> {
 match self.input.cp_at(p) {Some((c,n)) if {!"\r\nABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_".contains(c)}=>Some(n),_=>None}
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s85(&self,mut p:usize)->Option<usize> {
+fn s79(&self,mut p:usize)->Option<usize> {
 let start=p;
 let bytes=self.text.as_bytes();while let Some(&b)=bytes.get(p) {
 if b<0x80 {if (if b<64 {0xffffffffffffdbffu64>>b} else {0xffffffffffffffffu64>>(b-64)})&1==0 {break;}p+=1;}
@@ -311,25 +278,25 @@ Some(p-start)
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s86(&self,mut p:usize)->Option<usize> {
+fn s80(&self,mut p:usize)->Option<usize> {
 match self.input.cp_at(p) {Some((c,n)) if {!"\r\n".contains(c)}=>Some(n),_=>None}
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s95(&self,mut p:usize)->Option<usize> {
+fn s89(&self,mut p:usize)->Option<usize> {
 let start=p;
-p+=self.s96(p)?;
-p+=self.s97(p)?;
+p+=self.s90(p)?;
+p+=self.s91(p)?;
 Some(p-start)
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s96(&self,mut p:usize)->Option<usize> {
+fn s90(&self,mut p:usize)->Option<usize> {
 match self.input.cp_at(p) {Some((c,n)) if {!":\r\n".contains(c)}=>Some(n),_=>None}
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s97(&self,mut p:usize)->Option<usize> {
+fn s91(&self,mut p:usize)->Option<usize> {
 let start=p;
 let bytes=self.text.as_bytes();while let Some(&b)=bytes.get(p) {
 if b<0x80 {if (if b<64 {0xffffffffffffdbffu64>>b} else {0xffffffffffffffffu64>>(b-64)})&1==0 {break;}p+=1;}
@@ -339,8 +306,40 @@ Some(p-start)
 }
 /// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
 #[allow(unused_mut)]
-fn s98(&self,mut p:usize)->Option<usize> {
+fn s92(&self,mut p:usize)->Option<usize> {
 match self.input.cp_at(p) {Some((c,n)) if {!"\r\n".contains(c)}=>Some(n),_=>None}
+}
+/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
+#[allow(unused_mut)]
+fn s101(&self,mut p:usize)->Option<usize> {
+let start=p;
+let bytes=self.text.as_bytes();while let Some(&b)=bytes.get(p) {
+if b<0x80 {if (if b<64 {0x100000200u64>>b} else {0x0u64>>(b-64)})&1==0 {break;}p+=1;}
+else {let Some((c,n))=self.input.cp_at(p) else {break;};if !{let cp=c as u32;if cp<64 {(0x100000200u64>>cp)&1!=0} else if cp<128 {(0x0u64>>(cp-64))&1!=0} else {false}} {break;}p+=n;}
+}
+Some(p-start)
+}
+/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
+#[allow(unused_mut)]
+fn s102(&self,mut p:usize)->Option<usize> {
+self.s107(p)
+}
+/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
+#[allow(unused_mut)]
+fn s107(&self,mut p:usize)->Option<usize> {
+if let Some(n)=self.s108(p) {return Some(n);}
+if let Some(n)=self.s109(p) {return Some(n);}
+None
+}
+/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
+#[allow(unused_mut)]
+fn s108(&self,mut p:usize)->Option<usize> {
+if self.input.starts_with(p," ") {Some(1)} else {None}
+}
+/// D-072: 観測を残さない終端領域の走査。消費 byte 数を返す。
+#[allow(unused_mut)]
+fn s109(&self,mut p:usize)->Option<usize> {
+if self.input.starts_with(p,"\t") {Some(1)} else {None}
 }
 fn r0_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
 let mut out=self.e0_c(state);
@@ -424,7 +423,7 @@ if !out.ok {self.display_failures(state.consumed.max(state.matched),&["'---END_O
 self.depth-=1;out.diag=self.diag_rule(8,out.diag);out
 }
 fn r9_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
-let mut out=self.e82_c(state);
+let mut out=self.e76_c(state);
 if out.ok {
 let end=out.state.consumed;
 out.events=self.event(Event::Rule {rule:9,span:[state.consumed,end],child:out.events,caps:(0,0)});
@@ -433,7 +432,7 @@ if !out.ok {self.display_failures(state.consumed.max(state.matched),&["PlainLine
 self.depth-=1;out.diag=self.diag_rule(9,out.diag);out
 }
 fn r10_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
-let mut out=self.e101_c(state);
+let mut out=self.e95_c(state);
 if out.ok {
 let end=out.state.consumed;
 out.events=self.event(Event::Rule {rule:10,span:[state.consumed,end],child:out.events,caps:(0,0)});
@@ -442,7 +441,7 @@ if !out.ok {self.display_failures(state.consumed.max(state.matched),&["'\r'", "'
 self.depth-=1;out.diag=self.diag_rule(10,out.diag);out
 }
 fn r11_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
-let mut out=self.e105_c(state);
+let mut out=self.e99_c(state);
 if out.ok {
 let end=out.state.consumed;
 out.events=self.event(Event::Rule {rule:11,span:[state.consumed,end],child:out.events,caps:(0,0)});
@@ -451,13 +450,22 @@ if !out.ok {self.display_failures(state.consumed.max(state.matched),&["'---END_O
 self.depth-=1;out.diag=self.diag_rule(11,out.diag);out
 }
 fn r12_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
-let mut out=self.e111_c(state);
+let mut out=self.e107_c(state);
 if out.ok {
 let end=out.state.consumed;
 out.events=self.event(Event::Rule {rule:12,span:[state.consumed,end],child:out.events,caps:(0,0)});
 } else { self.restore(mark); }
-if !out.ok {self.display_failures(state.consumed.max(state.matched),&["'\r\n'", "'\r'", "'\n'"]);}
+if !out.ok {self.display_failures(state.consumed.max(state.matched),&["' '", "'\t'"]);}
 self.depth-=1;out.diag=self.diag_rule(12,out.diag);out
+}
+fn r13_c(&mut self,state:State)->Step { if let Some(limit)=self.enter_rule(state) {return limit;}self.statistics.rule_evaluations+=1;let mark=self.mark();
+let mut out=self.e110_c(state);
+if out.ok {
+let end=out.state.consumed;
+out.events=self.event(Event::Rule {rule:13,span:[state.consumed,end],child:out.events,caps:(0,0)});
+} else { self.restore(mark); }
+if !out.ok {self.display_failures(state.consumed.max(state.matched),&["'\r\n'", "'\r'", "'\n'"]);}
+self.depth-=1;out.diag=self.diag_rule(13,out.diag);out
 }
 fn e0_c(&mut self,state:State)->Step {
 let mut out=self.b0_c(state);
@@ -949,7 +957,7 @@ out
 }
 fn b32_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r12_c(out.state);
+out=self.r13_c(out.state);
 out
 }
 fn e33_c(&mut self,state:State)->Step {
@@ -1072,7 +1080,7 @@ out
 }
 fn b40_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r12_c(out.state);
+out=self.r13_c(out.state);
 out
 }
 fn e41_c(&mut self,state:State)->Step {
@@ -1501,7 +1509,7 @@ out
 }
 fn b69_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r12_c(out.state);
+out=self.r13_c(out.state);
 out
 }
 fn e70_c(&mut self,state:State)->Step {
@@ -1543,7 +1551,7 @@ out
 }
 fn b72_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r12_c(out.state);
+out=self.r13_c(out.state);
 out
 }
 fn e73_c(&mut self,state:State)->Step {
@@ -1553,77 +1561,103 @@ if out.ok {
 out
 }
 fn b73_c(&mut self,mut state:State)->Step {
+state.reset=false;
+let mut out=Step::yes(state);
+out.state=state.begin();
+let child=self.e74_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e75_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+out.state=if out.ok {state.commit(out.state)} else {state};
+out
+}
+fn e74_c(&mut self,state:State)->Step {
+let mut out=self.b74_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+if out.ok {
+out.events=self.relabel_token(out.events,74,8);
+} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
+out
+}
+fn b74_c(&mut self,mut state:State)->Step {
+let mut out=Step::yes(state);
+out=self.token_8::<false>(out.state,"NOT_END","'---END_OF_PART---'");
+out
+}
+fn e75_c(&mut self,state:State)->Step {
+let mut out=self.b75_c(state);
+if out.ok {
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out
+}
+fn b75_c(&mut self,mut state:State)->Step {
+let mut out=Step::yes(state);
+out=self.r9_c(out.state);
+out
+}
+fn e76_c(&mut self,state:State)->Step {
+let mut out=self.b76_c(state);
+if out.ok {
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out
+}
+fn b76_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
 let c0=self.input.cp_at(out.state.begin().position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(c0.is_some_and(|c| matches!(c as u32,45))) {self.guard_e74_c(out.state.begin())} else {self.e74_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e77_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e79_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(c0.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e81_c(out.state.begin())} else {self.e81_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e94_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
 };
 out
 }
-fn e74_c(&mut self,state:State)->Step {
-let mut out=self.b74_c(state);
+fn e77_c(&mut self,state:State)->Step {
+let mut out=self.b77_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
-fn b74_c(&mut self,mut state:State)->Step {
+fn b77_c(&mut self,mut state:State)->Step {
 state.reset=false;
 let mut out=Step::yes(state);
 out.state=state.begin();
 if self.options.scan && !DIAG && !self.options.lexical && !self.options.occurrences && !out.state.invert {
 let start=out.state.consumed;
-match self.s74(start) {
+match self.s77(start) {
 Some(n)=>{out.state.advance::<false>(n);if n>0 {out.events=self.event(Event::Token{text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,start+n]});}}
 None=>{out.ok=false;out.state=state;out.diag=self.diag_fail(start,"expression");}
 }
 } else {
-let child=self.e75_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e76_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e77_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e78_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e79_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
 }
 out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
-fn e75_c(&mut self,state:State)->Step {
-let mut out=self.b75_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+fn e78_c(&mut self,state:State)->Step {
+let mut out=self.b78_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,75,8);
-} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
+out.events=self.relabel_token(out.events,78,9);
+} else {self.display_failures(state.consumed.max(state.matched),&["NOT_ID_HEADParser"]);}
 out
 }
-fn b75_c(&mut self,mut state:State)->Step {
+fn b78_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.literal::<false>(out.state,"---END_OF_PART---",true,6,false,"---END_OF_PART---");
-if !out.ok {self.display_fail(state.consumed.max(state.matched),"'---END_OF_PART---'");}
+out=self.token_4::<false>(out.state,"NOT_ID_HEAD","NOT_ID_HEADParser");
 out
 }
-fn e76_c(&mut self,state:State)->Step {
-let mut out=self.b76_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
-if out.ok {
-out.events=self.relabel_token(out.events,76,8);
-} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
-out
-}
-fn b76_c(&mut self,mut state:State)->Step {
-let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
-out
-}
-fn e77_c(&mut self,state:State)->Step {
-let mut out=self.b77_c(state);
+fn e79_c(&mut self,state:State)->Step {
+let mut out=self.b79_c(state);
 if out.ok {
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
-fn b77_c(&mut self,mut state:State)->Step {
+fn b79_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out.state=state.begin();
 let mut count=0usize;loop {let mark=self.mark();let before=out.state;
-let mut child=self.e78_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
+let mut child=self.e80_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
 out.events=self.join(out.events,child.events);count+=1;
 if before.position::<false>()==out.state.position::<false>() {break;}
 }
@@ -1632,43 +1666,16 @@ if false {out.ok=false;out.state=state;let d=self.diag_fail(state.position::<fal
 out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
-fn e78_c(&mut self,state:State)->Step {
-let mut out=self.b78_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
-if out.ok {
-out.events=self.relabel_token(out.events,78,8);
-} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
-out
-}
-fn b78_c(&mut self,mut state:State)->Step {
-let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
-out
-}
-fn e79_c(&mut self,state:State)->Step {
-let mut out=self.b79_c(state);
-if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
-out
-}
-fn b79_c(&mut self,mut state:State)->Step {
-state.reset=false;
-let mut out=Step::yes(state);
-out.state=state.begin();
-let child=self.e80_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e81_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-out.state=if out.ok {state.commit(out.state)} else {state};
-out
-}
 fn e80_c(&mut self,state:State)->Step {
 let mut out=self.b80_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,80,8);
-} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
+out.events=self.relabel_token(out.events,80,9);
+} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
 fn b80_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_8::<false>(out.state,"NOT_END","'---END_OF_PART---'");
+out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
 out
 }
 fn e81_c(&mut self,state:State)->Step {
@@ -1678,135 +1685,160 @@ if out.ok {
 out
 }
 fn b81_c(&mut self,mut state:State)->Step {
+state.reset=false;
 let mut out=Step::yes(state);
-out=self.r9_c(out.state);
+out.state=state.begin();
+let child=self.e82_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e83_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e87_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
 fn e82_c(&mut self,state:State)->Step {
-let mut out=self.b82_c(state);
+let mut out=self.b82_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out.events=self.relabel_token(out.events,82,9);
+} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
 fn b82_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let c0=self.input.cp_at(out.state.begin().position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=self.e83_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(c0.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e87_c(out.state.begin())} else {self.e87_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e100_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
-};
+out=self.token_1::<false>(out.state,"IDENT","IdentifierParser");
 out
 }
 fn e83_c(&mut self,state:State)->Step {
 let mut out=self.b83_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
 out
 }
 fn b83_c(&mut self,mut state:State)->Step {
-state.reset=false;
-let mut out=Step::yes(state);
-out.state=state.begin();
-if self.options.scan && !DIAG && !self.options.lexical && !self.options.occurrences && !out.state.invert {
-let start=out.state.consumed;
-match self.s83(start) {
-Some(n)=>{out.state.advance::<false>(n);if n>0 {out.events=self.event(Event::Token{text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,start+n]});}}
-None=>{out.ok=false;out.state=state;out.diag=self.diag_fail(start,"expression");}
-}
-} else {
-let child=self.e84_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e85_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-}
-out.state=if out.ok {state.commit(out.state)} else {state};
-out
-}
-fn e84_c(&mut self,state:State)->Step {
-let mut out=self.b84_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
-if out.ok {
-out.events=self.relabel_token(out.events,84,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["NOT_ID_HEADParser"]);}
-out
-}
-fn b84_c(&mut self,mut state:State)->Step {
-let mut out=Step::yes(state);
-out=self.token_4::<false>(out.state,"NOT_ID_HEAD","NOT_ID_HEADParser");
-out
-}
-fn e85_c(&mut self,state:State)->Step {
-let mut out=self.b85_c(state);
-if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
-out
-}
-fn b85_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out.state=state.begin();
 let mut count=0usize;loop {let mark=self.mark();let before=out.state;
-let mut child=self.e86_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
+let mut child=self.e84_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
 out.events=self.join(out.events,child.events);count+=1;
 if before.position::<false>()==out.state.position::<false>() {break;}
 }
 let _=count;
 if false {out.ok=false;out.state=state;let d=self.diag_fail(state.position::<false>(),"expression");out.diag=self.diag_join(out.diag,d);}
 out.state=if out.ok {state.commit(out.state)} else {state};
+out
+}
+fn e84_c(&mut self,state:State)->Step {
+let mut out=self.b84_c(state);
+if out.ok {
+} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
+out
+}
+fn b84_c(&mut self,mut state:State)->Step {
+state.reset=false;
+let mut out=Step::yes(state);
+out.state=state.begin();
+let child=self.e85_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e86_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+out.state=if out.ok {state.commit(out.state)} else {state};
+out
+}
+fn e85_c(&mut self,state:State)->Step {
+let mut out=self.b85_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+if out.ok {
+out.events=self.relabel_token(out.events,85,9);
+} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
+out
+}
+fn b85_c(&mut self,mut state:State)->Step {
+let mut out=Step::yes(state);
+out=self.literal::<false>(out.state,".",true,7,false,".");
+if !out.ok {self.display_fail(state.consumed.max(state.matched),"'.'");}
 out
 }
 fn e86_c(&mut self,state:State)->Step {
 let mut out=self.b86_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,86,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
 out
 }
 fn b86_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
+out=self.token_1::<false>(out.state,"IDENT","IdentifierParser");
 out
 }
 fn e87_c(&mut self,state:State)->Step {
 let mut out=self.b87_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["PlainLineGroup0Parser"]);}
 out
 }
 fn b87_c(&mut self,mut state:State)->Step {
-state.reset=false;
 let mut out=Step::yes(state);
-out.state=state.begin();
-let child=self.e88_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e89_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e93_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-out.state=if out.ok {state.commit(out.state)} else {state};
+out=self.e88_c(out.state);
 out
 }
 fn e88_c(&mut self,state:State)->Step {
-let mut out=self.b88_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b88_c(state);
 if out.ok {
-out.events=self.relabel_token(out.events,88,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["PlainLineGroup0Parser"]);}
 out
 }
 fn b88_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENT","IdentifierParser");
+out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
+self.restore(mark);let mut child=self.e89_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e93_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
+};
 out
 }
 fn e89_c(&mut self,state:State)->Step {
 let mut out=self.b89_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b89_c(&mut self,mut state:State)->Step {
+state.reset=false;
+let mut out=Step::yes(state);
+out.state=state.begin();
+if self.options.scan && !DIAG && !self.options.lexical && !self.options.occurrences && !out.state.invert {
+let start=out.state.consumed;
+match self.s89(start) {
+Some(n)=>{out.state.advance::<false>(n);if n>0 {out.events=self.event(Event::Token{text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,start+n]});}}
+None=>{out.ok=false;out.state=state;out.diag=self.diag_fail(start,"expression");}
+}
+} else {
+let child=self.e90_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e91_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+}
+out.state=if out.ok {state.commit(out.state)} else {state};
+out
+}
+fn e90_c(&mut self,state:State)->Step {
+let mut out=self.b90_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+if out.ok {
+out.events=self.relabel_token(out.events,90,9);
+} else {self.display_failures(state.consumed.max(state.matched),&["NOT_COLONParser"]);}
+out
+}
+fn b90_c(&mut self,mut state:State)->Step {
+let mut out=Step::yes(state);
+out=self.token_3::<false>(out.state,"NOT_COLON","NOT_COLONParser");
+out
+}
+fn e91_c(&mut self,state:State)->Step {
+let mut out=self.b91_c(state);
+if out.ok {
+} else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
+out
+}
+fn b91_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out.state=state.begin();
 let mut count=0usize;loop {let mark=self.mark();let before=out.state;
-let mut child=self.e90_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
+let mut child=self.e92_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
 out.events=self.join(out.events,child.events);count+=1;
 if before.position::<false>()==out.state.position::<false>() {break;}
 }
@@ -1815,72 +1847,38 @@ if false {out.ok=false;out.state=state;let d=self.diag_fail(state.position::<fal
 out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
-fn e90_c(&mut self,state:State)->Step {
-let mut out=self.b90_c(state);
-if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
-out
-}
-fn b90_c(&mut self,mut state:State)->Step {
-state.reset=false;
-let mut out=Step::yes(state);
-out.state=state.begin();
-let child=self.e91_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e92_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-out.state=if out.ok {state.commit(out.state)} else {state};
-out
-}
-fn e91_c(&mut self,state:State)->Step {
-let mut out=self.b91_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
-if out.ok {
-out.events=self.relabel_token(out.events,91,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["'.'"]);}
-out
-}
-fn b91_c(&mut self,mut state:State)->Step {
-let mut out=Step::yes(state);
-out=self.literal::<false>(out.state,".",true,7,false,".");
-if !out.ok {self.display_fail(state.consumed.max(state.matched),"'.'");}
-out
-}
 fn e92_c(&mut self,state:State)->Step {
 let mut out=self.b92_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,92,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
 out
 }
 fn b92_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENT","IdentifierParser");
+out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
 out
 }
 fn e93_c(&mut self,state:State)->Step {
 let mut out=self.b93_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["PlainLineGroup0Parser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b93_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.e94_c(out.state);
+out=self.r10_c(out.state);
 out
 }
 fn e94_c(&mut self,state:State)->Step {
 let mut out=self.b94_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["PlainLineGroup0Parser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b94_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-self.restore(mark);let mut child=self.e95_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e99_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
-};
+out=self.r10_c(out.state);
 out
 }
 fn e95_c(&mut self,state:State)->Step {
@@ -1890,63 +1888,52 @@ if out.ok {
 out
 }
 fn b95_c(&mut self,mut state:State)->Step {
-state.reset=false;
 let mut out=Step::yes(state);
-out.state=state.begin();
-if self.options.scan && !DIAG && !self.options.lexical && !self.options.occurrences && !out.state.invert {
-let start=out.state.consumed;
-match self.s95(start) {
-Some(n)=>{out.state.advance::<false>(n);if n>0 {out.events=self.event(Event::Token{text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,start+n]});}}
-None=>{out.ok=false;out.state=state;out.diag=self.diag_fail(start,"expression");}
-}
-} else {
-let child=self.e96_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e97_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-}
-out.state=if out.ok {state.commit(out.state)} else {state};
+out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
+self.restore(mark);let mut child=self.e96_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e97_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e98_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
+};
 out
 }
 fn e96_c(&mut self,state:State)->Step {
 let mut out=self.b96_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,96,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["NOT_COLONParser"]);}
+out.events=self.relabel_token(out.events,96,10);
+} else {self.display_failures(state.consumed.max(state.matched),&["'\r'"]);}
 out
 }
 fn b96_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_3::<false>(out.state,"NOT_COLON","NOT_COLONParser");
+out=self.token_6::<false>(out.state,"AT_CR","'\r'");
 out
 }
 fn e97_c(&mut self,state:State)->Step {
-let mut out=self.b97_c(state);
+let mut out=self.b97_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
+out.events=self.relabel_token(out.events,97,10);
+} else {self.display_failures(state.consumed.max(state.matched),&["'\n'"]);}
 out
 }
 fn b97_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out.state=state.begin();
-let mut count=0usize;loop {let mark=self.mark();let before=out.state;
-let mut child=self.e98_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
-out.events=self.join(out.events,child.events);count+=1;
-if before.position::<false>()==out.state.position::<false>() {break;}
-}
-let _=count;
-if false {out.ok=false;out.state=state;let d=self.diag_fail(state.position::<false>(),"expression");out.diag=self.diag_join(out.diag,d);}
-out.state=if out.ok {state.commit(out.state)} else {state};
+out=self.token_7::<false>(out.state,"AT_LF","'\n'");
 out
 }
 fn e98_c(&mut self,state:State)->Step {
 let mut out=self.b98_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,98,9);
-} else {self.display_failures(state.consumed.max(state.matched),&["LINE_CHARParser"]);}
+out.events=self.relabel_token(out.events,98,10);
+} else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
 fn b98_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"LINE_CHAR","LINE_CHARParser");
+out=self.token_0::<false>(out.state,"EOF","EndOfSourceParser");
 out
 }
 fn e99_c(&mut self,state:State)->Step {
@@ -1956,74 +1943,94 @@ if out.ok {
 out
 }
 fn b99_c(&mut self,mut state:State)->Step {
+state.reset=false;
 let mut out=Step::yes(state);
-out=self.r10_c(out.state);
+out.state=state.begin();
+let child=self.e100_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e101_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+let child=self.e103_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
+out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
 fn e100_c(&mut self,state:State)->Step {
-let mut out=self.b100_c(state);
+let mut out=self.b100_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out.events=self.relabel_token(out.events,100,11);
+out.events=self.event(Event::Capture {site:13,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
+} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
 out
 }
 fn b100_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r10_c(out.state);
+out=self.literal::<false>(out.state,"---END_OF_PART---",true,6,false,"---END_OF_PART---");
+if !out.ok {self.display_fail(state.consumed.max(state.matched),"'---END_OF_PART---'");}
 out
 }
 fn e101_c(&mut self,state:State)->Step {
 let mut out=self.b101_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["'\t'", "' '"]);}
 out
 }
 fn b101_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-self.restore(mark);let mut child=self.e102_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e103_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e104_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
-};
+out.state=state.begin();
+if self.options.scan && !DIAG && !self.options.lexical && !self.options.occurrences && !out.state.invert {
+let start=out.state.consumed;
+match self.s101(start) {
+Some(n)=>{out.state.advance::<false>(n);if n>0 {out.events=self.event(Event::Token{text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,start+n]});}}
+None=>{out.ok=false;out.state=state;out.diag=self.diag_fail(start,"expression");}
+}
+} else {
+let mut count=0usize;loop {let mark=self.mark();let before=out.state;
+let mut child=self.e102_c(out.state);out.diag=self.diag_join(out.diag,child.diag);out.state=child.state;if !child.ok {self.restore(mark);break;}
+out.events=self.join(out.events,child.events);count+=1;
+if before.position::<false>()==out.state.position::<false>() {break;}
+}
+let _=count;
+if false {out.ok=false;out.state=state;let d=self.diag_fail(state.position::<false>(),"expression");out.diag=self.diag_join(out.diag,d);}
+}
+out.state=if out.ok {state.commit(out.state)} else {state};
 out
 }
 fn e102_c(&mut self,state:State)->Step {
-let mut out=self.b102_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b102_c(state);
 if out.ok {
-out.events=self.relabel_token(out.events,102,10);
-} else {self.display_failures(state.consumed.max(state.matched),&["'\r'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b102_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_6::<false>(out.state,"AT_CR","'\r'");
+out=self.r12_c(out.state);
 out
 }
 fn e103_c(&mut self,state:State)->Step {
-let mut out=self.b103_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b103_c(state);
 if out.ok {
-out.events=self.relabel_token(out.events,103,10);
-} else {self.display_failures(state.consumed.max(state.matched),&["'\n'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["'\n'", "'\r\n'", "'\r'"]);}
 out
 }
 fn b103_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_7::<false>(out.state,"AT_LF","'\n'");
+out=self.e104_c(out.state);
 out
 }
 fn e104_c(&mut self,state:State)->Step {
-let mut out=self.b104_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b104_c(state);
 if out.ok {
-out.events=self.relabel_token(out.events,104,10);
-} else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["'\n'", "'\r\n'", "'\r'"]);}
 out
 }
 fn b104_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_0::<false>(out.state,"EOF","EndOfSourceParser");
+out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
+let c0=self.input.cp_at(out.state.begin().position::<false>()).map(|(c,_)|c);
+self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(c0.is_some_and(|c| matches!(c as u32,10|13))) {self.guard_e105_c(out.state.begin())} else {self.e105_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e106_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
+};
 out
 }
 fn e105_c(&mut self,state:State)->Step {
@@ -2033,133 +2040,130 @@ if out.ok {
 out
 }
 fn b105_c(&mut self,mut state:State)->Step {
-state.reset=false;
 let mut out=Step::yes(state);
-out.state=state.begin();
-let child=self.e106_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-let child=self.e107_c(out.state);out=self.combine(out,child);if !out.ok {out.state=state;return out;}
-out.state=if out.ok {state.commit(out.state)} else {state};
+out=self.r13_c(out.state);
 out
 }
 fn e106_c(&mut self,state:State)->Step {
 let mut out=self.b106_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,106,11);
-out.events=self.event(Event::Capture {site:13,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
 fn b106_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.literal::<false>(out.state,"---END_OF_PART---",true,6,false,"---END_OF_PART---");
-if !out.ok {self.display_fail(state.consumed.max(state.matched),"'---END_OF_PART---'");}
+out=self.token_0::<false>(out.state,"EOF","EndOfSourceParser");
 out
 }
 fn e107_c(&mut self,state:State)->Step {
 let mut out=self.b107_c(state);
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'\n'", "'\r\n'", "'\r'"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b107_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.e108_c(out.state);
+out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
+if !out.state.invert {let predicted=match self.input.cp_at(out.state.begin().position::<false>()).map(|(c,_)|c) {
+Some(' ')=>0usize,
+Some('\t')=>1usize,
+_=>usize::MAX,};let candidate=match predicted {
+0=>Some(self.e108_c(out.state.begin())),
+1=>Some(self.e109_c(out.state.begin())),
+_=>None,};
+if !DIAG && self.options.predict && predicted==usize::MAX {self.restore(mark);out.ok=false;out.diag=diagnostic;break 'choice out;}
+if let Some(mut child)=candidate {if child.ok {
+if predicted>0 {let d=self.diag_fail(out.state.begin().position::<false>()," ");diagnostic=self.diag_join(diagnostic,d);}
+if predicted>1 {let d=self.diag_fail(out.state.begin().position::<false>(),"\t");diagnostic=self.diag_join(diagnostic,d);}
+child.state=out.state.commit(child.state);child.diag=self.diag_join(diagnostic,child.diag);break 'choice child;}}self.restore(mark); }
+self.restore(mark);let mut child=self.e108_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);let mut child=self.e109_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
+self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
+};
 out
 }
 fn e108_c(&mut self,state:State)->Step {
-let mut out=self.b108_c(state);
+let mut out=self.b108_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&["'\n'", "'\r\n'", "'\r'"]);}
+out.events=self.relabel_token(out.events,108,12);
+} else {self.display_failures(state.consumed.max(state.matched),&["' '"]);}
 out
 }
 fn b108_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let c0=self.input.cp_at(out.state.begin().position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(c0.is_some_and(|c| matches!(c as u32,10|13))) {self.guard_e109_c(out.state.begin())} else {self.e109_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e110_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
-};
+out=self.literal::<false>(out.state," ",true,4,false," ");
+if !out.ok {self.display_fail(state.consumed.max(state.matched),"' '");}
 out
 }
 fn e109_c(&mut self,state:State)->Step {
-let mut out=self.b109_c(state);
+let mut out=self.b109_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out.events=self.relabel_token(out.events,109,12);
+} else {self.display_failures(state.consumed.max(state.matched),&["'\t'"]);}
 out
 }
 fn b109_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.r12_c(out.state);
+out=self.literal::<false>(out.state,"\t",true,0,false,"\t");
+if !out.ok {self.display_fail(state.consumed.max(state.matched),"'\t'");}
 out
 }
 fn e110_c(&mut self,state:State)->Step {
-let mut out=self.b110_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
-if out.ok {
-out.events=self.relabel_token(out.events,110,11);
-} else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
-out
-}
-fn b110_c(&mut self,mut state:State)->Step {
-let mut out=Step::yes(state);
-out=self.token_0::<false>(out.state,"EOF","EndOfSourceParser");
-out
-}
-fn e111_c(&mut self,state:State)->Step {
-let mut out=self.b111_c(state);
+let mut out=self.b110_c(state);
 if out.ok {
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
-fn b111_c(&mut self,mut state:State)->Step {
+fn b110_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
+self.restore(mark);let mut child=self.e111_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
+if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e112_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e113_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
-if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=self.e114_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
 };
 out
 }
-fn e112_c(&mut self,state:State)->Step {
-let mut out=self.b112_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+fn e111_c(&mut self,state:State)->Step {
+let mut out=self.b111_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,112,12);
+out.events=self.relabel_token(out.events,111,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\r\n'"]);}
 out
 }
-fn b112_c(&mut self,mut state:State)->Step {
+fn b111_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out=self.literal::<false>(out.state,"\r\n",true,3,false,"\r\n");
 if !out.ok {self.display_fail(state.consumed.max(state.matched),"'\r\n'");}
 out
 }
-fn e113_c(&mut self,state:State)->Step {
-let mut out=self.b113_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+fn e112_c(&mut self,state:State)->Step {
+let mut out=self.b112_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,113,12);
+out.events=self.relabel_token(out.events,112,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\r'"]);}
 out
 }
-fn b113_c(&mut self,mut state:State)->Step {
+fn b112_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out=self.literal::<false>(out.state,"\r",true,2,false,"\r");
 if !out.ok {self.display_fail(state.consumed.max(state.matched),"'\r'");}
 out
 }
-fn e114_c(&mut self,state:State)->Step {
-let mut out=self.b114_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+fn e113_c(&mut self,state:State)->Step {
+let mut out=self.b113_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.relabel_token(out.events,114,12);
+out.events=self.relabel_token(out.events,113,13);
 } else {self.display_failures(state.consumed.max(state.matched),&["'\n'"]);}
 out
 }
-fn b114_c(&mut self,mut state:State)->Step {
+fn b113_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out=self.literal::<false>(out.state,"\n",true,1,false,"\n");
 if !out.ok {self.display_fail(state.consumed.max(state.matched),"'\n'");}
@@ -2208,7 +2212,7 @@ d1=self.diag_join(d1,d3);
 let d4=self.diag_fail(state.begin().position::<false>(),"\n");
 d1=self.diag_join(d1,d4);
 self.display_failures(state.begin().consumed.max(state.begin().matched),&["'\r\n'", "'\r\n'", "'\r'", "'\r'", "'\n'", "'\n'"]);
-let d5=self.diag_rule(12,d1);
+let d5=self.diag_rule(13,d1);
 self.display_failures(state.consumed.max(state.matched),&["'\r\n'", "'\r'", "'\n'"]);
 Step {ok:false,state,events:EventId(0),diag:d5}
 }
@@ -2229,24 +2233,15 @@ self.display_failures(state.entered(true,true).entered(true,true).consumed.max(s
 self.display_failures(state.entered(true,true).consumed.max(state.entered(true,true).matched),&["'\t'", "' '", "'\t'", "' '", "__CaptureSite"]);
 Step {ok:false,state,events:EventId(0),diag:d5}
 }
-fn guard_e74_c(&mut self,state:State)->Step {
-if !self.can_replay(0) {return self.e74_c(state);}
+fn guard_e81_c(&mut self,state:State)->Step {
+if !self.can_replay(0) {return self.e81_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
 self.display_reach(state.consumed.max(state.matched));
-let d1=self.diag_fail(state.entered(true,true).position::<false>(),"---END_OF_PART---");
-self.display_failures(state.entered(true,true).consumed.max(state.entered(true,true).matched),&["'---END_OF_PART---'", "'---END_OF_PART---'"]);
-self.display_failures(state.consumed.max(state.matched),&["'---END_OF_PART---'"]);
+let d1=self.e82_c(state.entered(true,true)).diag;
 Step {ok:false,state,events:EventId(0),diag:d1}
 }
-fn guard_e87_c(&mut self,state:State)->Step {
-if !self.can_replay(0) {return self.e87_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let d1=self.e88_c(state.entered(true,true)).diag;
-Step {ok:false,state,events:EventId(0),diag:d1}
-}
-fn guard_e109_c(&mut self,state:State)->Step {
-if !self.can_replay(1) {return self.e109_c(state);}
+fn guard_e105_c(&mut self,state:State)->Step {
+if !self.can_replay(1) {return self.e105_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
 self.display_reach(state.consumed.max(state.matched));
 let mut d1=Diag::NONE;
@@ -2257,7 +2252,7 @@ d1=self.diag_join(d1,d3);
 let d4=self.diag_fail(state.begin().position::<false>(),"\n");
 d1=self.diag_join(d1,d4);
 self.display_failures(state.begin().consumed.max(state.begin().matched),&["'\r\n'", "'\r\n'", "'\r'", "'\r'", "'\n'", "'\n'"]);
-let d5=self.diag_rule(12,d1);
+let d5=self.diag_rule(13,d1);
 self.display_failures(state.consumed.max(state.matched),&["'\r\n'", "'\r'", "'\n'"]);
 Step {ok:false,state,events:EventId(0),diag:d5}
 }

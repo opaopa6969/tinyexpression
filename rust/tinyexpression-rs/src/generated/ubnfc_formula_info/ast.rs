@@ -457,7 +457,7 @@ pub const K_g_FormulaInfoAST_2e_FormulaInfoValue: u16 = 7;
 pub const K_g_FormulaInfoAST_2e_EndOfPart: u16 = 8;
 pub(crate) const TYPE_IDS: &[&str] = &["text","null","FormulaInfoAST.FormulaInfoDocument","FormulaInfoAST.FormulaInfoBlock","FormulaInfoAST.CommentLine","FormulaInfoAST.BlankLine","FormulaInfoAST.FormulaInfoEntry","FormulaInfoAST.FormulaInfoValue","FormulaInfoAST.EndOfPart"];
 pub(crate) const TYPE_NAMES: &[&str] = &["text","null","FormulaInfoDocument","FormulaInfoBlock","CommentLine","BlankLine","FormulaInfoEntry","FormulaInfoValue","EndOfPart"];
-pub(crate) const RULE_IDS: &[&str] = &["FormulaInfo::Document", "FormulaInfo::Block", "FormulaInfo::Filler", "FormulaInfo::CommentLine", "FormulaInfo::BlankLine", "FormulaInfo::SpaceChar", "FormulaInfo::Entry", "FormulaInfo::Value", "FormulaInfo::ContinuationLine", "FormulaInfo::PlainLine", "FormulaInfo::AtLineEnd", "FormulaInfo::EndOfPart", "FormulaInfo::LineBreak"];
+pub(crate) const RULE_IDS: &[&str] = &["FormulaInfo::Document", "FormulaInfo::Block", "FormulaInfo::Filler", "FormulaInfo::CommentLine", "FormulaInfo::BlankLine", "FormulaInfo::SpaceChar", "FormulaInfo::Entry", "FormulaInfo::Value", "FormulaInfo::ContinuationLine", "FormulaInfo::PlainLine", "FormulaInfo::AtLineEnd", "FormulaInfo::EndOfPart", "FormulaInfo::BlankChar", "FormulaInfo::LineBreak"];
 /// `super::Ast` と同じ形の、木への参照。
 #[derive(Clone, Copy, Debug)]
 pub enum Node<'t> { Text(&'t str), Null,

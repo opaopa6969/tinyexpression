@@ -226,6 +226,8 @@ cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run -
 | BigDecimal / BigInteger / Timestamp | Rust は `LoadError::UnsupportedType` | runtime が扱わない（依存ゼロ方針、#179） |
 | 式の構築 | Rust は常に P4 の意味論（`Program::new`）。Java はブロックの `executionBackend` の calculator で構築する | Rust の評価器は P4_AST_EVALUATOR だけ。golden は既定 backend を P4_AST_EVALUATOR にして採っている |
 
+区切り行（issue #211）は Java loader・文法・Rust loader を同時に変えた: `---END_OF_PART---` の後ろの空白・タブは許し、それ以外の文字が続く行は構文エラー（`LoadError::Syntax`、以前は値の続きの行になり次のブロックが合流していた）、1 ブロックに `calculatorName` が 2 回以上あれば `LoadError::DuplicateCalculatorName`（Java は `FormulaInfoParseException`）。
+
 かつて差だった 3 件（issue #195 で解消）: 全文を消費できない文書、`key:` が入力末尾で値が 0 文字、未知の `dependsOn`。いずれも Java は以前は黙って通す／JDK の生の例外（`NoSuchElementException`・`NullPointerException`）を投げるだけだったが、いまは明示的な `FormulaInfoParseException` を投げ、`LoadError::java_exception()` もこれに合わせて `FormulaInfoParseException` を返す。
 
 ## AST shape（2.0 で形を変えない）
