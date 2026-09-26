@@ -25,6 +25,9 @@
 //!   the context; `result` is the constant the stub returns (`{"type":"null"}` for `null`).
 //!   The Java differential rows are evaluated through exactly this mapping by the playground's
 //!   parity smoke (`playground/scripts/parity-smoke.mjs`).
+//! - A ```` ```java:ClassName ```` code block only declares its class (issue #216): calls to it
+//!   are answered by these stubs too, and without one the `Class.forName` failure says so
+//!   (`runtime::code_block`). Java compiles and runs the block, so a stub is Rust-only.
 //!
 //! The JSON reader below is deliberately small (the crate has no dependencies): it accepts
 //! standard JSON and reports the first syntax error.

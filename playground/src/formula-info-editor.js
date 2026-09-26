@@ -7,7 +7,8 @@ import { CompletionContext, snippetCompletion } from '@codemirror/autocomplete';
 import { EditorState } from '@codemirror/state';
 import { hoverTooltip } from '@codemirror/view';
 import { ja, en } from '../../catalog/scripts/catalog-lib.mjs';
-import { completionSource, hoverContent, wordAround, renderHover } from './editor-support.js';
+import { completionSource, formulaHoverAt, renderHover } from './editor-support.js';
+import { codeBlocksOf, codeBlockAt } from './code-block.js';
 import {
   END_MARK, parseFormulaInfo, normalizedValue, docToValue, valueToDoc, entryAt, valuesOf, linesOf,
 } from './formula-info-syntax.js';
@@ -87,6 +88,13 @@ export function formulaInfoCompletionSource(getRuntime, getCatalog, getContextVa
     const options = [];
     let from = pos;
 
+    // Issue #216: nothing inside a ```java block of a formula (it is Java, not keys or formula).
+    if (entry?.key === 'formula') {
+      const value = normalizedValue(text, entry);
+      const at = value ? docToValue(value, pos) : null;
+      if (at != null && codeBlockAt(codeBlocksOf(value.text), at)) return null;
+    }
+
     // At the start of a line: keys and the end mark (also inside a value: a key line starts a
     // new entry there).
     const prefix = keyPrefix(text, line.from, pos);
@@ -142,7 +150,7 @@ function lineNumber(text, pos) {
 }
 
 /** Hover content at `pos` of a FormulaInfo document ({title, rows}) or null. */
-export function formulaInfoHoverAt(catalog, contextVariables, text, pos) {
+export function formulaInfoHoverAt(catalog, contextVariables, text, pos, externals = []) {
   const doc = parseFormulaInfo(text);
   const keys = formulaInfoKeys(catalog);
   for (const block of doc.blocks) {
@@ -172,10 +180,12 @@ export function formulaInfoHoverAt(catalog, contextVariables, text, pos) {
     const value = normalizedValue(text, entry);
     const at = value ? docToValue(value, pos) : null;
     if (at == null) return null;
-    const { start, end, word } = wordAround(value.text, at);
-    if (!word || word === '$' || word === '.') return null;
-    const content = hoverContent(catalog, contextVariables, value.text, word);
-    return content ? { from: valueToDoc(value, start), to: valueToDoc(value, end), content } : null;
+    const found = formulaHoverAt(catalog, contextVariables, value.text, at, externals);
+    if (!found) return null;
+    return {
+      from: valueToDoc(value, found.from), to: valueToDoc(value, found.to),
+      anchor: found.anchor == null ? undefined : valueToDoc(value, found.anchor), content: found.content,
+    };
   }
   if (entry.key === 'dependsOn') {
     const value = normalizedValue(text, entry);
@@ -195,10 +205,10 @@ export function formulaInfoHoverAt(catalog, contextVariables, text, pos) {
   return null;
 }
 
-export function formulaInfoHover(getCatalog, getContextVariables) {
+export function formulaInfoHover(getCatalog, getContextVariables, getExternals = () => []) {
   return hoverTooltip((view, pos) => {
-    const found = formulaInfoHoverAt(getCatalog(), getContextVariables(), view.state.doc.toString(), pos);
+    const found = formulaInfoHoverAt(getCatalog(), getContextVariables(), view.state.doc.toString(), pos, getExternals());
     if (!found) return null;
-    return { pos: found.from, end: found.to, above: true, create: () => ({ dom: renderHover(found.content) }) };
+    return { pos: found.anchor ?? found.from, end: found.to, above: true, create: () => ({ dom: renderHover(found.content) }) };
   });
 }

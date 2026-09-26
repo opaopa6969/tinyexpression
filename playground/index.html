@@ -46,12 +46,20 @@
         <button id="add-variable" title="add a variable">変数を追加</button>
         <button id="pick-variables" title="add every $variable the formula reads">式から変数を追加</button>
       </div>
-      <h3 title="external invocations answered by stubs">external（スタブ）</h3>
+      <h3 id="h-externals" title="external invocations (and ```java code-block classes) answered by constant stub values">external（仮の値）</h3>
+      <p class="muted small">playground は Java を実行しません。<code>external</code> 呼び出しと <code>```java:クラス名</code> のコードブロックのクラスは、ここに入れた仮の値（定数）で代用します。
+        本物の実行は VS Code 拡張（VSIX、launch 設定で <code>allowJavaCodeBlocks: true</code>、<a href="https://github.com/opaopa6969/tinyexpression/blob/master/docs/decisions/ADR-003-java-codeblock-safety.md" target="_blank" rel="noopener" data-external>ADR-003</a>）か
+        <a href="https://code.unlaxer.org/" target="_blank" rel="noopener" data-external title="code-server (login required)">code-server（要ログイン）</a>で。
+        <a href="#help-java-code-block" data-help="help-java-code-block">ヘルプ</a></p>
       <table class="grid externals">
         <thead><tr><th title="class">クラス</th><th title="method">メソッド</th><th title="argument count">引数</th><th title="registered in the context">登録</th><th title="return type">戻り型</th><th title="return value">戻り値</th><th></th></tr></thead>
         <tbody id="externals"></tbody>
       </table>
-      <div class="buttons"><button id="add-external" title="add an external stub">スタブを追加</button></div>
+      <div class="buttons">
+        <button id="add-external" title="add an external stub">仮の値を追加</button>
+        <button id="pick-externals" title="add a stub for every external call / import / ```java code-block class of the formula and the FormulaInfo that has none">式から external を追加</button>
+      </div>
+      <p class="muted small" id="externals-status" aria-live="polite"></p>
       <p class="muted small" id="catalog-counts"></p>
     </section>
 

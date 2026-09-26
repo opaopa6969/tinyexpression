@@ -5,6 +5,7 @@ import { snippetCompletion } from '@codemirror/autocomplete';
 import { hoverTooltip } from '@codemirror/view';
 import { ja, en, lookupVariable } from '../../catalog/scripts/catalog-lib.mjs';
 import { codePointToIndex, declaredVariables } from './context.js';
+import { codeBlocksOf, codeBlockAt, codeBlockHoverContent, helpFallbackUrl } from './code-block.js';
 
 /** LSP snippet syntax (`$1`, `${1:x}`, `$0`, `\$`) -> CodeMirror snippet syntax. */
 export function toCodeMirrorSnippet(snippet) {
@@ -55,6 +56,8 @@ function doc(description, extra = '') {
  */
 export function completionSource(getRuntime, getCatalog, getContextVariables) {
   return (context) => {
+    // Issue #216: no tinyexpression completion inside a ```java block (fences included).
+    if (codeBlockAt(codeBlocksOf(context.state.doc.toString()), context.pos)) return null;
     const catalog = getCatalog();
     const te = getRuntime();
     const word = context.matchBefore(/\$[A-Za-z0-9_]*|\.[A-Za-z]*|[A-Za-z_][A-Za-z0-9_]*/);
@@ -178,6 +181,73 @@ export function hoverContent(catalog, contextVariables, formula, word) {
   return null;
 }
 
+/**
+ * Hover content at `pos` of a formula: the code block's (#216) when `pos` is inside a ```java
+ * block (anchored at `pos`), else the word's (`hoverContent`). {from, to, anchor?, content} or null.
+ */
+export function formulaHoverAt(catalog, contextVariables, text, pos, externals = []) {
+  const block = codeBlockAt(codeBlocksOf(text), pos);
+  if (block) return { from: block.from, to: block.to, anchor: pos, content: codeBlockHoverContent(block, externals) };
+  const { start, end, word } = wordAround(text, pos);
+  if (!word || word === '$' || word === '.') return null;
+  const content = hoverContent(catalog, contextVariables, text, word);
+  return content ? { from: start, to: end, content } : null;
+}
+
+/** A hover row value: a string, or {links: [{text, href} | {text, help: id}]} (#216). */
+function hoverValue(value) {
+  const v = document.createElement('span');
+  if (typeof value === 'string') {
+    v.textContent = value;
+    return v;
+  }
+  (value.links ?? []).forEach((link, index) => {
+    if (index) v.append(' · ');
+    const a = document.createElement('a');
+    a.textContent = link.text;
+    if (link.help) {
+      a.href = `#${link.help}`;
+      a.addEventListener('click', (event) => {
+        event.preventDefault();
+        openHelp(link.help);
+      });
+    } else {
+      a.href = link.href;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.dataset.external = '';
+    }
+    v.append(a);
+  });
+  return v;
+}
+
+/**
+ * Opens the help section `id` (#214's help page / panel). The help implementation can listen
+ * for the `te:open-help` event (detail {id}) to open its panel; closed <details> around the
+ * target are opened and it is scrolled into view. Without such an element (help not there yet)
+ * the README section with the same anchor opens instead.
+ */
+export function openHelp(id) {
+  const target = document.getElementById(id);
+  if (!target) {
+    const link = document.createElement('a');
+    link.href = helpFallbackUrl(id);
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.dataset.external = '';
+    link.hidden = true;
+    document.body.append(link);
+    link.click(); // the page's data-external handler opens it through the extension in VS Code
+    link.remove();
+    return false;
+  }
+  window.dispatchEvent(new CustomEvent('te:open-help', { detail: { id } }));
+  for (let p = target.parentElement; p; p = p.parentElement) if (p.tagName === 'DETAILS') p.open = true;
+  target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  return true;
+}
+
 /** The hover DOM of a `hoverContent` result ({title, rows: [[label, value]]}). */
 export function renderHover(content) {
   const dom = document.createElement('div');
@@ -195,21 +265,16 @@ export function renderHover(content) {
       l.textContent = label;
       row.append(l);
     }
-    const v = document.createElement('span');
-    v.textContent = value;
-    row.append(v);
+    row.append(hoverValue(value));
     dom.append(row);
   }
   return dom;
 }
 
-export function hoverExtension(getCatalog, getContextVariables) {
+export function hoverExtension(getCatalog, getContextVariables, getExternals = () => []) {
   return hoverTooltip((view, pos) => {
-    const text = view.state.doc.toString();
-    const { start, end, word } = wordAround(text, pos);
-    if (!word || word === '$' || word === '.') return null;
-    const content = hoverContent(getCatalog(), getContextVariables(), text, word);
-    if (!content) return null;
-    return { pos: start, end, above: true, create: () => ({ dom: renderHover(content) }) };
+    const found = formulaHoverAt(getCatalog(), getContextVariables(), view.state.doc.toString(), pos, getExternals());
+    if (!found) return null;
+    return { pos: found.anchor ?? found.from, end: found.to, above: true, create: () => ({ dom: renderHover(found.content) }) };
   });
 }

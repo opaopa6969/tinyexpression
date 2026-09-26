@@ -13,6 +13,7 @@
 //! [`RandomSource`] (`random()`). The defaults behave like a Java host with nothing registered.
 
 mod ast_meta;
+pub mod code_block;
 pub(crate) mod compile;
 pub mod java;
 mod ops;
@@ -586,6 +587,8 @@ pub struct Program {
     /// used for slice index text exactly as Java's `P4SourceText` reads it.
     source: Vec<char>,
     options: Options,
+    /// Classes the source's ```` ```java:Class ```` blocks declare (issue #216, [`code_block`]).
+    code_block_classes: Vec<String>,
 }
 
 impl Program {
@@ -598,6 +601,7 @@ impl Program {
                 root: None,
                 source: stripped,
                 options,
+                code_block_classes: Vec::new(),
             });
         }
         let root = select::select_root(source, &stripped, options.result_type)?;
@@ -605,7 +609,30 @@ impl Program {
             root: Some(root),
             source: stripped,
             options,
+            code_block_classes: code_block::code_block_classes(source),
         })
+    }
+
+    /// Classes declared by the formula's ```` ```java:Class ```` code blocks (issue #216). The
+    /// blocks are never compiled or run here: calls to these classes go through the
+    /// [`ExternalHost`] like any other external class.
+    pub fn code_block_classes(&self) -> &[String] {
+        &self.code_block_classes
+    }
+
+    /// The error of an external call that failed with `error`: [`ExternalError`]'s Java
+    /// exception, and for a code-block class the host cannot load, a hint to stub it.
+    pub(crate) fn external_error(
+        &self,
+        error: ExternalError,
+        class: &str,
+        method: &str,
+    ) -> EvalError {
+        code_block::external_error(error, class, method, self.declares_code_block(class))
+    }
+
+    pub(crate) fn declares_code_block(&self, class: &str) -> bool {
+        self.code_block_classes.iter().any(|c| c == class)
     }
 
     pub fn options(&self) -> &Options {

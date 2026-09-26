@@ -3,10 +3,14 @@
 // for the formula editor, formula-info-syntax.js for the FormulaInfo editor); this plugin only
 // turns them into CodeMirror mark decorations (CSS classes in style.css, readable in the light
 // and the dark theme).
+//
+// Issue #216: the lines of a ```java code block (analysis.codeBlocks) get a background
+// (`te-code-line`), and the blocks fold (fold gutter / Ctrl+Shift+[) in both editors.
 import { RangeSetBuilder, StateEffect } from '@codemirror/state';
-import { Decoration, ViewPlugin } from '@codemirror/view';
-import { bracketMatching } from '@codemirror/language';
+import { Decoration, EditorView, ViewPlugin } from '@codemirror/view';
+import { bracketMatching, foldService } from '@codemirror/language';
 import { bracketAtCursor, BRACKET_COLOURS } from './te-lexer.js';
+import { codeBlocksOf } from './code-block.js';
 
 const refreshEffect = StateEffect.define();
 
@@ -52,8 +56,38 @@ function build(view, analysis) {
   return builder.finish();
 }
 
+/** Line decorations of the code blocks' lines (fences included). */
+function codeLines(view, analysis) {
+  const builder = new RangeSetBuilder();
+  const doc = view.state.doc;
+  for (const block of analysis.codeBlocks ?? []) {
+    const first = doc.lineAt(Math.min(block.from, doc.length)).number;
+    const last = doc.lineAt(Math.min(block.to, doc.length)).number;
+    for (let n = first; n <= last; n++) {
+      const classes = ['te-code-line'];
+      if (n === first) classes.push('te-code-first');
+      if (n === last) classes.push('te-code-last');
+      builder.add(doc.line(n).from, doc.line(n).from, Decoration.line({ class: classes.join(' ') }));
+    }
+  }
+  return builder.finish();
+}
+
+const blocksOfDoc = new WeakMap();
+/** Folds a code block from the end of its opening fence line to the end of the block. */
+export const codeBlockFolding = foldService.of((state, lineStart, lineEnd) => {
+  let blocks = blocksOfDoc.get(state.doc);
+  if (!blocks) {
+    blocks = codeBlocksOf(state.doc.toString());
+    blocksOfDoc.set(state.doc, blocks);
+  }
+  const block = blocks.find((b) => b.from === lineStart);
+  if (!block || block.to <= lineEnd) return null;
+  return { from: lineEnd, to: block.to };
+});
+
 /**
- * @param analyze (text) => {tokens (sorted, non-overlapping), brackets}
+ * @param analyze (text) => {tokens (sorted, non-overlapping), brackets, codeBlocks?}
  * @returns the extension, and `refresh(view)` to recolour after the analysis inputs changed
  *          (e.g. the catalog's keywords)
  */
@@ -63,6 +97,7 @@ export function syntaxView(analyze) {
       this.text = view.state.doc.toString();
       this.analysis = analyze(this.text);
       this.decorations = build(view, this.analysis);
+      this.lines = codeLines(view, this.analysis);
     }
 
     update(update) {
@@ -72,11 +107,13 @@ export function syntaxView(analyze) {
         this.analysis = analyze(this.text);
       }
       if (update.docChanged || update.selectionSet || forced) this.decorations = build(update.view, this.analysis);
+      if (update.docChanged || forced) this.lines = codeLines(update.view, this.analysis);
     }
   }, { decorations: (v) => v.decorations });
+  const lines = EditorView.decorations.of((view) => view.plugin(plugin)?.lines ?? Decoration.none);
   // The built-in bracket matching scans raw characters (brackets in strings, across
   // FormulaInfo lines); these editors mark the pair from their own scan instead.
-  return [plugin, bracketMatching({ renderMatch: () => [] })];
+  return [plugin, lines, codeBlockFolding, bracketMatching({ renderMatch: () => [] })];
 }
 
 

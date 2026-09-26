@@ -943,7 +943,7 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
             ));
         }
         if !self.host.external.class_exists(&class_name) {
-            return Err(ops::external_error(
+            return Err(self.program.external_error(
                 super::ExternalError::ClassNotFound,
                 &class_name,
                 &method_name,
@@ -961,7 +961,9 @@ impl<'a, 'c, 'h, 'hh> Walker<'a, 'c, 'h, 'hh> {
         match self.host.external.invoke(&call, &self.scope) {
             Ok(Value::Null) => Ok(Value::Null),
             Ok(value) => Ok(ops::coerce(value, expected, self.number_type())),
-            Err(error) => Err(ops::external_error(error, &class_name, &method_name)),
+            Err(error) => Err(self
+                .program
+                .external_error(error, &class_name, &method_name)),
         }
     }
 }

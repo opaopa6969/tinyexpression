@@ -2,6 +2,7 @@
 // Pure (no DOM): the editor's linter and scripts/check.mjs both call it.
 import { resolveErrorCode, lookupVariable, ja } from '../../catalog/scripts/catalog-lib.mjs';
 import { codePointToIndex, declaredVariables } from './context.js';
+import { blankCodeBlocks } from './code-block.js';
 
 const ALWAYS_KNOWN = new Set(['nowHour', 'nowDayOfWeek']);
 
@@ -62,7 +63,8 @@ export function diagnose(te, catalog, formula, contextNames = []) {
   const known = new Set([...contextNames, ...declaredVariables(formula), ...ALWAYS_KNOWN]);
   const te022 = errorEntry(catalog, 'TE022');
   const template = te022.templates?.UNKNOWN_VARIABLE ? ja(te022.templates.UNKNOWN_VARIABLE) : '{fullMessage} ({symbol})';
-  for (const m of formula.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)) {
+  // Issue #216: a ```java block is Java, not tinyexpression (no TE022 for `$` in its strings).
+  for (const m of blankCodeBlocks(formula).matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)) {
     const name = m[1];
     if (known.has(name) || lookupVariable(catalog, name)) continue;
     out.push({

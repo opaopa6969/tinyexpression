@@ -1071,12 +1071,14 @@ impl Compiler<'_> {
             )));
         }
         let arguments = self.arguments(args);
+        let code_block = self.program.declares_code_block(&class_name);
         Box::new(move |x, env| {
             if !x.host.external.class_exists(&class_name) {
-                return Err(ops::external_error(
+                return Err(super::code_block::external_error(
                     ExternalError::ClassNotFound,
                     &class_name,
                     &method_name,
+                    code_block,
                 ));
             }
             let mut values = Vec::with_capacity(arguments.len());
@@ -1091,7 +1093,12 @@ impl Compiler<'_> {
             match x.host.external.invoke(&call, &x.scope) {
                 Ok(Value::Null) => Ok(Value::Null),
                 Ok(value) => Ok(ops::coerce(value, expected, nt)),
-                Err(error) => Err(ops::external_error(error, &class_name, &method_name)),
+                Err(error) => Err(super::code_block::external_error(
+                    error,
+                    &class_name,
+                    &method_name,
+                    code_block,
+                )),
             }
         })
     }

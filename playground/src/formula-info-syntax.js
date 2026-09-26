@@ -265,12 +265,14 @@ export function valuesOf(text, doc, key) {
  * Colouring and brackets of a FormulaInfo document: tokens [{from, to, type}] with types
  * fi-key, fi-key-unknown, fi-colon, fi-comment, fi-end, fi-end-bad, fi-junk, fi-value and the
  * formula token types (te-lexer.js) inside `formula:` values; brackets (te-lexer.js
- * `bracketsOf`, one bracket set per formula, positions in the document).
+ * `bracketsOf`, one bracket set per formula, positions in the document); codeBlocks (the
+ * ```java blocks of the formulas, code-block.js `codeBlocksOf` in document positions, #216).
  */
 export function analyzeFormulaInfo(text, { lexicon, isKnownKey = () => true } = {}) {
   const doc = parseFormulaInfo(text);
   const tokens = [];
   const brackets = [];
+  const codeBlocks = [];
   for (const block of doc.blocks) {
     for (const filler of block.fillers) {
       if (filler.comment) tokens.push({ from: filler.from, to: filler.to, type: 'fi-comment' });
@@ -298,6 +300,13 @@ export function analyzeFormulaInfo(text, { lexicon, isKnownKey = () => true } = 
         for (const b of analysis.brackets) {
           brackets.push({ ...b, from: valueToDoc(value, b.from), partner: b.partner >= 0 ? b.partner + offset : -1 });
         }
+        // Issue #216: the ```java blocks of the formula, in document positions.
+        for (const c of analysis.codeBlocks) {
+          const mapped = { ...c };
+          for (const key of ['from', 'to', 'openTo', 'classFrom', 'classTo', 'bodyFrom', 'bodyTo']) mapped[key] = valueToDoc(value, c[key]);
+          mapped.closeFrom = c.closeFrom < 0 ? -1 : valueToDoc(value, c.closeFrom);
+          codeBlocks.push(mapped);
+        }
       } else {
         for (const line of entry.lines) {
           if (line.comment) tokens.push({ from: line.from, to: line.to, type: 'fi-comment' });
@@ -322,7 +331,7 @@ export function analyzeFormulaInfo(text, { lexicon, isKnownKey = () => true } = 
   tokens.sort((a, b) => a.from - b.from || a.to - b.to);
   for (const b of brackets) tokens.push({ from: b.from, to: b.from + 1, type: 'bracket' });
   tokens.sort((a, b) => a.from - b.from || a.to - b.to);
-  return { doc, tokens, brackets };
+  return { doc, tokens, brackets, codeBlocks };
 }
 
 function removeOverlapping(tokens, from, to) {
