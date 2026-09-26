@@ -16,6 +16,11 @@
 //! `FormulaInfoParseException` on the Java side, which `LoadError::java_exception()` matches;
 //! there is no longer a carve-out for them in this test.
 //!
+//! Issue #211 changed the end mark line on the Java loader, the grammar and the Rust loader
+//! together (`end_mark_line_variants_issue_211` below; the fixtures are in the golden too):
+//! trailing spaces/tabs after `---END_OF_PART---` are allowed, any other trailing character
+//! is a syntax error, and `calculatorName` twice in one block is a load error.
+//!
 //! Regenerate the golden with `tests/formula-info/regenerate-formula-info-golden.sh` (needs a
 //! JDK and Maven); `cargo test` itself never needs a JVM.
 
@@ -592,6 +597,50 @@ fn formula_span_points_at_the_formula_value() {
         formulas[0].info.execution_backend,
         ExecutionBackend::JavaCode
     );
+}
+
+/// Issue #211: the end mark line variants that used to merge two blocks silently.
+#[test]
+fn end_mark_line_variants_issue_211() {
+    let load = |name: &str| {
+        let source = fs::read_to_string(fixture_path(name)).unwrap();
+        formula_info::load(&source, &LoaderOptions::default())
+    };
+    let names = |name: &str| -> Vec<Option<String>> {
+        load(name)
+            .unwrap_or_else(|error| panic!("{name}: {error}"))
+            .iter()
+            .map(|f| f.info.calculator_name.clone())
+            .collect()
+    };
+    let a_b = vec![Some("a".to_owned()), Some("b".to_owned())];
+    // Trailing spaces / tabs after the mark (LF, CRLF, end of input) close the block.
+    assert_eq!(names("accept-26-end-mark-trailing-blanks.fi"), a_b);
+    assert_eq!(names("accept-27-end-mark-trailing-blanks-crlf.fi"), a_b);
+    // Anything else after the mark is a syntax error, not a value line.
+    for name in [
+        "reject-syntax-12-end-mark-trailing-chars.fi",
+        "reject-syntax-13-end-mark-blank-then-chars.fi",
+        "reject-syntax-14-end-mark-trailing-chars-in-value.fi",
+        "reject-syntax-15-end-mark-trailing-vt.fi",
+    ] {
+        let error = load(name).err();
+        assert!(
+            matches!(error, Some(LoadError::Syntax(_))),
+            "{name}: {error:?}"
+        );
+    }
+    // Two calculatorName in one block: the end mark between two FormulaInfo is missing.
+    match load("reject-load-10-missing-end-mark-merges-blocks.fi") {
+        Err(error @ LoadError::DuplicateCalculatorName { .. }) => {
+            assert_eq!(error.java_exception(), "FormulaInfoParseException");
+            assert_eq!(
+                error.to_string(),
+                "calculatorName appears 2 times in one block ('a', 'b'); is the ---END_OF_PART--- line between two FormulaInfo missing?"
+            );
+        }
+        other => panic!("expected DuplicateCalculatorName, got {other:?}"),
+    }
 }
 
 // ------------------------------------------------------------------ CLI
