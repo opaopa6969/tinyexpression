@@ -12,11 +12,13 @@ import org.unlaxer.Token;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.loader.EndOfPartLineParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlockParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementOrCommentParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoElementParser.KeyValue;
+import org.unlaxer.tinyexpression.loader.FormulaInfoParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoParser.Kind;
 import org.unlaxer.tinyexpression.runtime.ExecutionBackend;
 
@@ -68,6 +70,9 @@ public final class FormulaInfoSourceDocument {
   /** Parse the entire document exactly, without compiling or instantiating calculators. */
   public static FormulaInfoSourceDocument parse(String text) {
     String sourceText = text == null ? "" : text;
+    // Issue #211: the same checks as FormulaInfoList.parse (FormulaInfoParseException is an
+    // IllegalArgumentException, this method's failure contract).
+    EndOfPartLineParser.rejectMalformedEndMarkLines(sourceText);
     FormulaInfoBlocksParser parser = new FormulaInfoBlocksParser();
     ParseContext context = new ParseContext(StringSource.createRootSource(sourceText));
     Parsed parsed;
@@ -94,7 +99,9 @@ public final class FormulaInfoSourceDocument {
       Token formulaValue = null;
       String normalizedFormula = null;
 
-      for (Token token : FormulaInfoElementOrCommentParser.elements(block)) {
+      List<Token> elements = FormulaInfoElementOrCommentParser.elements(block);
+      FormulaInfoParser.rejectDuplicateCalculatorName(elements);
+      for (Token token : elements) {
         if (!(token.parser instanceof FormulaInfoElementParser)) {
           continue;
         }

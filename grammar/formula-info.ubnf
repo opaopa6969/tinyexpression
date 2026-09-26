@@ -1,17 +1,21 @@
 // FormulaInfo document — the block format read by the Java loader
 // (src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfo*Parser.java), in UBNF v2.
 //
-// Accepts exactly the documents FormulaInfoSourceDocument.parse accepts: the Java
-// FormulaInfoBlocksParser run over the whole input (full consumption). FormulaInfoList.parse
-// does not check full consumption and silently keeps only the blocks before the first
-// unparsable line; this grammar rejects such documents. Issue #180; accept/reject fixtures
-// are src/test/resources/formulaInfo-ubnf/*.fi.
+// Accepts exactly the documents FormulaInfoSourceDocument.parse and FormulaInfoList.parse
+// accept at the syntax level: the Java FormulaInfoBlocksParser run over the whole input (full
+// consumption; FormulaInfoList.parse checks it too since issue #195). Issue #180; accept/reject
+// fixtures are src/test/resources/formulaInfo-ubnf/*.fi.
+//
+// The end mark line (issue #211) is '---END_OF_PART---' followed only by spaces and tabs up to
+// the line break or the end of input. A line that starts with '---END_OF_PART---' and goes on
+// with anything else is a syntax error: it is not a value line (before 2.0.1 it was, and the
+// next block silently merged into the entry above it).
 //
 //   tags:NORMAL                <- entry: key at column 0, ':' , value
 //   # a comment                <- '#' / blank lines before the first entry of a block
 //   formula:                   <- a value runs over the following lines ...
 //   1 + 2                      <-   ... until a line that starts a new entry (KEY ':'),
-//   ---END_OF_PART---          <-   ... the end mark line, or the end of input.
+//   ---END_OF_PART---          <-   ... the end mark line (trailing ' '/'\t' allowed), or the end of input.
 //
 // The grammar owns only the syntax layer: block split, key/value slicing, the end mark.
 // Everything the Java loader does afterwards stays in the host (Rust: formula_info.rs):
@@ -85,10 +89,11 @@ grammar FormulaInfo {
   @mapping(FormulaInfoValue, params=[text])
   Value ::= ( { LINE_CHAR } { LineBreak ContinuationLine } [ LineBreak ] ) @text ;
 
-  // A line that neither starts a new entry nor is the end mark line.
-  @doc('A value line: not KEY: at column 0 and not the end mark line')
-  ContinuationLine ::= '---END_OF_PART---' LINE_CHAR { LINE_CHAR }
-                     | NOT_END PlainLine ;
+  // A line that neither starts a new entry nor starts with the end mark. Issue #211: a line
+  // starting with '---END_OF_PART---' is never a value line; it is the end mark line or an
+  // error (Java: EndOfPartMarkParser stops the value in front of it).
+  @doc('A value line: not KEY: at column 0 and not starting with ---END_OF_PART---')
+  ContinuationLine ::= NOT_END PlainLine ;
 
   PlainLine ::= NOT_ID_HEAD { LINE_CHAR }
               | IDENT { '.' IDENT } ( NOT_COLON { LINE_CHAR } | AtLineEnd )
@@ -96,10 +101,13 @@ grammar FormulaInfo {
 
   AtLineEnd ::= AT_CR | AT_LF | EOF ;
 
-  // Java: EndOfPartLineParser = StartOfLine '---END_OF_PART---' LineTerminator.
-  @doc('The end mark line ---END_OF_PART---')
+  // Java: EndOfPartLineParser = StartOfLine '---END_OF_PART---' Blank* LineTerminator
+  // (unlaxer BlankParser: ' ' and '\t'; issue #211).
+  @doc('The end mark line ---END_OF_PART---, optionally followed by spaces and tabs')
   @mapping(EndOfPart, params=[mark])
-  EndOfPart ::= '---END_OF_PART---' @mark ( LineBreak | EOF ) ;
+  EndOfPart ::= '---END_OF_PART---' @mark { BlankChar } ( LineBreak | EOF ) ;
+
+  BlankChar ::= ' ' | '\t' ;
 
   LineBreak ::= '\r\n' | '\r' | '\n' ;
 }
