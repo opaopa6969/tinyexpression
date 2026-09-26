@@ -186,7 +186,10 @@ def generate(ub, te):
     a("            return null;")
     a("        }")
     a("        int nodeDepth = depth++;")
-    a("        %s converted = switch (node) {" % TE)
+    # tinyexpression #220: the Java 17 build (tinyExpression-jdk17) compiles this file with
+    # --release 17, so dispatch with an ordered instanceof chain instead of a pattern switch.
+    a("        final %s converted;" % TE)
+    first = True
     for name in ub:
         comps = ub[name]
         tcomps = {n: t for t, n in te[name]}
@@ -195,12 +198,14 @@ def generate(ub, te):
             variant_expr(VARIANT[(name, un)], "n." + un + "()") if (name, un) in VARIANT
             else convert_expr(ut, tcomps[un], "n." + un + "()")
             for ut, un in comps)
+        test = ("        if (node instanceof %s.%s n)" if first else "        else if (node instanceof %s.%s n)") % (UB, name)
+        first = False
         if variant:
-            a("            case %s.%s n -> (%s.%s) VariantShapes.construct(%s.%s.class, %s);"
-              % (UB, name, TE, name, TE, name, args))
+            a("%s converted = (%s.%s) VariantShapes.construct(%s.%s.class, %s);"
+              % (test, TE, name, TE, name, args))
         else:
-            a("            case %s.%s n -> new %s.%s(%s);" % (UB, name, TE, name, args))
-    a("        };")
+            a("%s converted = new %s.%s(%s);" % (test, TE, name, args))
+    a("        else throw new IllegalStateException(\"unhandled node: \" + node);")
     a("        depth = nodeDepth;")
     a("        Span span = sourceSpans.get(node);")
     a("        int start = span == null ? Integer.MIN_VALUE : span.start();")

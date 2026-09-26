@@ -38,7 +38,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 
 ## 要件
 
-- Java 21+
+- Java 21+（Java 17 では下記の `tinyExpression-jdk17` を使う。2.0.1 以降）
 - Maven 3.8+
 
 テスト/ランタイムで反射アクセスを使うため `add-opens` が必要（[`pom.xml`](pom.xml) 設定済み）。
@@ -54,6 +54,21 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
   <version>2.0.0</version>
 </dependency>
 ```
+
+**Java 17 の利用者**（例: Corretto 17）は、2.0.1 以降の `tinyExpression-jdk17` に依存してください。
+同じソース・package・クラスを `--release 17`（class file major 61）でコンパイルした差し替え版で、
+依存も `unlaxer-common-jdk17` / `unlaxer-dsl-jdk17` だけです（Java 21 版の unlaxer を引き込まない）。
+
+```xml
+<dependency>
+  <groupId>org.unlaxer</groupId>
+  <artifactId>tinyExpression-jdk17</artifactId>
+  <version>2.0.1</version>
+</dependency>
+```
+
+`tinyExpression` と `tinyExpression-jdk17` を同時に依存させないでください（同じクラスを持ちます）。
+ビルドは `mvn -f tinyexpression-jdk17/pom.xml package`（JDK 17 上ではテストも走る）。
 
 ---
 

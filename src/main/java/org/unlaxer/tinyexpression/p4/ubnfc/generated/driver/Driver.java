@@ -265,7 +265,10 @@ public final class Driver {
         return null;
     }
     private static void collectTexts(Object value, Map<Object, Span> spans, List<Object> texts) {
-        if (value instanceof String text && spans.get(value) instanceof Span span) texts.add(List.of(span.start(), span.end(), text));
+        if (value instanceof String text) {
+            Span span = spans.get(value);
+            if (span != null) texts.add(List.of(span.start(), span.end(), text));
+        }
         else if (value instanceof java.util.Optional<?> optional) optional.ifPresent(v -> collectTexts(v, spans, texts));
         else if (value instanceof List<?> list) { for (Object child : list) collectTexts(child, spans, texts); }
         else if (value != null && value.getClass().isRecord()) {
@@ -314,7 +317,7 @@ public final class Driver {
         if (fields.size() != 3 || !fields.containsKey("left") || !fields.containsKey("op") || !fields.containsKey("right")) return null;
         List<?> ops = values(fields.get("op")), rights = values(fields.get("right"));
         // assocLists leafFallback stores its numeric leaf in the single op slot.
-        if (fields.get("left") == null && rights.isEmpty() && ops.size() == 1) return numeric(ops.getFirst());
+        if (fields.get("left") == null && rights.isEmpty() && ops.size() == 1) return numeric(ops.get(0));
         if (ops.size() != rights.size()) return null;
         Double left = numeric(fields.get("left"));
         if (left == null) return null;

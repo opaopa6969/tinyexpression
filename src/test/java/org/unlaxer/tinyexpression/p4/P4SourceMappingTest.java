@@ -448,7 +448,9 @@ public class P4SourceMappingTest {
         .<Callable<P4PreferredAstMapper.ParsedAst>>map(formula ->
             () -> P4PreferredAstMapper.parseDetailed(formula)).toList();
     List<P4PreferredAstMapper.ParsedAst> parsed;
-    try (var executor = Executors.newFixedThreadPool(formulas.size())) {
+    // Java 17: ExecutorService is not AutoCloseable (close() is Java 19+), tinyexpression #220.
+    var executor = Executors.newFixedThreadPool(formulas.size());
+    try {
       parsed = executor.invokeAll(jobs).stream().map(future -> {
         try {
           return future.get(30, TimeUnit.SECONDS);
@@ -456,6 +458,9 @@ public class P4SourceMappingTest {
           throw new AssertionError(failure);
         }
       }).toList();
+    } finally {
+      executor.shutdown();
+      executor.awaitTermination(30, TimeUnit.SECONDS);
     }
     P4PreferredAstMapper.parseDetailed("999");
     for (int i = 0; i < formulas.size(); i++) {
@@ -494,7 +499,8 @@ public class P4SourceMappingTest {
         .map(row -> P4PreferredAstMapper.parseDetailed(row[1]))
         .toList();
     P4PreferredAstMapper.parseDetailed("match{true->1,default->0}");
-    try (var executor = Executors.newFixedThreadPool(fixture.size())) {
+    var executor = Executors.newFixedThreadPool(fixture.size());
+    try {
       var violations = executor.invokeAll(java.util.stream.IntStream.range(0, fixture.size())
           .<Callable<P4StrictMatchTypingValidator.Violation>>mapToObj(i -> () ->
               P4StrictMatchTypingValidator.firstViolationDetail(
@@ -516,6 +522,9 @@ public class P4SourceMappingTest {
         assertEquals(row[0], expectedStart, violation.startOffset());
         assertEquals(row[0], row[2].codePointCount(0, row[2].length()), violation.length());
       }
+    } finally {
+      executor.shutdown();
+      executor.awaitTermination(30, TimeUnit.SECONDS);
     }
   }
 }

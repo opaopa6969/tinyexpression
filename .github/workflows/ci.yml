@@ -128,6 +128,10 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/ubnfc-parser.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
+      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
       # Grammar sha256 + every vendored file against UBNFC_PIN. ubnfc is private, so the full
       # grammar -> IR -> Java regeneration runs where it is readable (UBNFC_DIR); see the script.
       - name: Verify vendored ubnfc parser against its pin
@@ -181,6 +185,26 @@ jobs:
         run: >-
           mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
           -Dmaven.repo.local="$MAVEN_REPO"
+      # tinyexpression #220: the `published` leg checks the generator that is on Maven Central. While
+      # pom.xml's unlaxer.version (3.1.1) is not published yet, that is the previous release
+      # (UNLAXER_PUBLISHED_FALLBACK); the main artifact's default generator output is the same.
+      - name: Choose the unlaxer version under test
+        working-directory: tinyexpression
+        env:
+          UNLAXER_PUBLISHED_FALLBACK: 3.1.0
+        run: |
+          version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' pom.xml | head -1)
+          if [ "${{ matrix.generator }}" = published ] \
+            && ! curl -fsI "https://repo1.maven.org/maven2/org/unlaxer/unlaxer-dsl/$version/unlaxer-dsl-$version.pom" > /dev/null; then
+            echo "unlaxer $version is not on Maven Central; the published leg uses $UNLAXER_PUBLISHED_FALLBACK" | tee -a "$GITHUB_STEP_SUMMARY"
+            version=$UNLAXER_PUBLISHED_FALLBACK
+          fi
+          # The `source` leg tests the pinned unlaxer-parser checkout it installed: use its own revision.
+          if [ "${{ matrix.generator }}" = source ]; then
+            version=$(sed -n 's:.*<revision>\(.*\)</revision>.*:\1:p' ../unlaxer-parser/pom.xml | head -1)
+            echo "source leg: unlaxer $version from the pinned unlaxer-parser checkout" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "UNLAXER_VERSION=$version" >> "$GITHUB_ENV"
       - name: Verify public and snapshot APIs without shared Maven state
         working-directory: tinyexpression
         # As of unlaxer 3.1.0 (#209) the published unlaxer-dsl jar already carries the
@@ -189,7 +213,7 @@ jobs:
         # matrix legs expect true here. The `source` leg's own commit pin still matters
         # for later, still-unreleased generator changes (see the checkout step above).
         run: >-
-          mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.expected.mapper.snapshot=true
           -Dtinyexpression.expected.mapper.nodeAlias=true
           -Dtinyexpression.expected.mapper.optionalQualifier=true
@@ -198,7 +222,7 @@ jobs:
         if: matrix.generator == 'source'
         working-directory: tinyexpression
         run: >-
-          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.skipRailroad=true -Dtinyexpression.rust.shared=true
           -Dtest=P4RustSharedFixtureAcceptanceTest
       - uses: actions/upload-artifact@v6
@@ -206,6 +230,54 @@ jobs:
         with:
           name: mapper-compatibility-${{ matrix.generator }}
           path: tinyexpression/target/surefire-reports/
+          if-no-files-found: warn
+
+  # tinyexpression #220: tinyExpression-jdk17 (tinyexpression-jdk17/pom.xml) recompiles the same
+  # sources with release 17 against unlaxer-*-jdk17. Build and run the whole test suite on a Java 17
+  # JVM and require class file major 61 in every class of the jar.
+  jdk17:
+    name: tinyExpression-jdk17 on JDK 17 (full tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      # JDK 21 only builds unlaxer from source when it is not on Central (its main modules are release 21).
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Create an empty Maven repository on the assigned runner
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-jdk17.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
+      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Build and test tinyExpression-jdk17 on JDK 17
+        run: >-
+          java -version 2>&1 | head -1 &&
+          mvn -B -f tinyexpression-jdk17/pom.xml clean package -Dgpg.skip=true
+          -Dmaven.repo.local="$MAVEN_REPO"
+      - name: Require class file major 61 (Java 17) in the tinyExpression-jdk17 jar
+        run: python3 scripts/ci/check_class_major.py 61 tinyexpression-jdk17/target/tinyExpression-jdk17-*[0-9].jar
+      - name: The jar must not depend on the release-21 unlaxer artifacts
+        run: |
+          mvn -B -q -f tinyexpression-jdk17/pom.xml dependency:list -DincludeGroupIds=org.unlaxer \
+            -DoutputFile="$RUNNER_TEMP/unlaxer-deps.txt" -Dmaven.repo.local="$MAVEN_REPO"
+          cat "$RUNNER_TEMP/unlaxer-deps.txt"
+          if grep -E 'org\.unlaxer:unlaxer-(common|dsl):' "$RUNNER_TEMP/unlaxer-deps.txt"; then
+            echo "tinyExpression-jdk17 pulls a release-21 unlaxer artifact" >&2
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: jdk17-surefire-reports
+          path: tinyexpression-jdk17/target/surefire-reports/
           if-no-files-found: warn
 
   # issue #173: the Java CI above resolves org.unlaxer:unlaxer-* from Maven Central, so a
@@ -308,6 +380,10 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-smoke.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
+      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 
       - name: Validate Central release guard
         run: |
@@ -350,6 +426,10 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-build.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
+      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 
       # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
       # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
@@ -363,6 +443,10 @@ jobs:
 
       - name: Install main artifact to local repo
         run: mvn -B install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+
+      # tinyexpression #220: the main artifact stays Java 21 (class file major 65).
+      - name: Require class file major 65 (Java 21) in the main jar
+        run: python3 scripts/ci/check_class_major.py 65 target/tinyExpression-*[0-9].jar
 
       - name: Set up Node.js (for vsce packaging in tools)
         uses: actions/setup-node@v6

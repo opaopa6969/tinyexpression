@@ -4,13 +4,23 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
+	<!--
+	  Java 17 build of tinyExpression (#220), published as org.unlaxer:tinyExpression-jdk17.
+	  Same sources, resources and tests as the root project (../src, one source tree), compiled with
+	  release 17 (class file major 61). Drop-in replacement for Java 17 JVMs: same packages and classes.
+	  Depends on unlaxer-common-jdk17 / unlaxer-dsl-jdk17 only (never on the release-21 unlaxer
+	  artifacts). The P4 runtime sources are generated for Java 17 (CodegenMain java-release 17).
+	  This is a standalone POM because the root tinyExpression POM has jar packaging and cannot
+	  aggregate modules: build it with  mvn -f tinyexpression-jdk17/pom.xml  (tests run
+	  automatically on a Java 17 JVM, profile jdk17-tests).
+	-->
 	<groupId>org.unlaxer</groupId>
-	<artifactId>tinyExpression</artifactId>
+	<artifactId>tinyExpression-jdk17</artifactId>
 	<version>2.0.1</version>
-	<name>tinyExpression</name>
+	<name>tinyExpression-jdk17</name>
 	<packaging>jar</packaging>
 
-	<description>TinyExpression implemented with Unlaxer</description>
+	<description>TinyExpression implemented with Unlaxer (Java 17 build of tinyExpression)</description>
 	<url>https://github.com/opaopa6969/tinyexpression</url>
 
 	<licenses>
@@ -37,26 +47,17 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.source>21</maven.compiler.source>
-		<maven.compiler.target>21</maven.compiler.target>
+		<maven.compiler.release>17</maven.compiler.release>
 		<argLine>--add-opens=java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED</argLine>
-		<tinyexpression.p4.grammar>${project.basedir}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
-		<tinyexpression.p4.generated.runtime>${project.basedir}/target/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
-		<tinyexpression.p4.railroad.output>${project.basedir}/docs/railroad</tinyexpression.p4.railroad.output>
+		<tinyexpression.root>${project.basedir}/..</tinyexpression.root>
+		<tinyexpression.p4.grammar>${tinyexpression.root}/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf</tinyexpression.p4.grammar>
+		<tinyexpression.p4.generated.runtime>${project.build.directory}/generated-sources/tinyexpression-p4/runtime</tinyexpression.p4.generated.runtime>
 		<!-- Central upload is opt-in through scripts/release-central.sh. -->
 		<skipPublishing>true</skipPublishing>
-		<!-- Railroad SVG generation is documentation-only; skip with -Dtinyexpression.skipRailroad=true -->
-		<tinyexpression.skipRailroad>false</tinyexpression.skipRailroad>
-		<!-- Forked JVMs surefire uses to run test classes. Default 1 (serial, stable).
-		     Opt into parallel speed with -Dte.forkCount=0.5C, but note some tests still
-		     share process-wide state and may fail under parallel forks (see findings §6). -->
 		<te.forkCount>1</te.forkCount>
-		<!-- Default points at the Maven Central published unlaxer release. CI overrides this
-		     with -Dunlaxer.version=<pom revision> when testing against an unlaxer-parser build
-		     installed into a job-local, isolated Maven repo (issue #173: unlaxer-parser master,
-		     non-blocking) so the GAV actually resolves from that isolated repo instead of
-		     silently falling back to the published artifact. -->
+		<!-- Keep in step with unlaxer.version in ../pom.xml (the -jdk17 artifacts share its version). -->
 		<unlaxer.version>3.1.1</unlaxer.version>
+		<tinyexpression.jdk17.skipTests>true</tinyexpression.jdk17.skipTests>
 	</properties>
 
 	<dependencies>
@@ -68,12 +69,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
-			<artifactId>unlaxer-common</artifactId>
+			<artifactId>unlaxer-common-jdk17</artifactId>
 			<version>${unlaxer.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.unlaxer</groupId>
-			<artifactId>unlaxer-dsl</artifactId>
+			<artifactId>unlaxer-dsl-jdk17</artifactId>
 			<version>${unlaxer.version}</version>
 		</dependency>
 		<dependency>
@@ -94,15 +95,18 @@
 	</dependencies>
 
 	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>3.2.5</version>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+		<sourceDirectory>${tinyexpression.root}/src/main/java</sourceDirectory>
+		<testSourceDirectory>${tinyexpression.root}/src/test/java</testSourceDirectory>
+		<resources>
+			<resource>
+				<directory>${tinyexpression.root}/src/main/resources</directory>
+			</resource>
+		</resources>
+		<testResources>
+			<testResource>
+				<directory>${tinyexpression.root}/src/test/resources</directory>
+			</testResource>
+		</testResources>
 		<plugins>
 			<plugin>
 				<groupId>org.sonatype.central</groupId>
@@ -127,6 +131,9 @@
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
+				<configuration>
+					<release>17</release>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
@@ -148,25 +155,8 @@
 								<argument>${tinyexpression.p4.generated.runtime}</argument>
 								<argument>--generators</argument>
 								<argument>Parser,AST,Mapper,Evaluator</argument>
-							</arguments>
-							<includeProjectDependencies>true</includeProjectDependencies>
-							<includePluginDependencies>false</includePluginDependencies>
-						</configuration>
-					</execution>
-					<execution>
-						<id>generate-tinyexpression-p4-railroad</id>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>java</goal>
-						</goals>
-						<configuration>
-							<skip>${tinyexpression.skipRailroad}</skip>
-							<mainClass>org.unlaxer.dsl.tools.railroad.RailroadMain</mainClass>
-							<arguments>
-								<argument>${tinyexpression.p4.grammar}</argument>
-								<argument>${tinyexpression.p4.railroad.output}</argument>
-								<argument>--format</argument>
-								<argument>svg</argument>
+								<argument>--java-release</argument>
+								<argument>17</argument>
 							</arguments>
 							<includeProjectDependencies>true</includeProjectDependencies>
 							<includePluginDependencies>false</includePluginDependencies>
@@ -198,14 +188,13 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.2.5</version>
 				<configuration>
-					<!-- ハング時の安全弁 (issue #19): フォークが45分応答しなければ kill して fail にする -->
+					<skip>${tinyexpression.jdk17.skipTests}</skip>
+					<!-- tests resolve fixtures (src/test/resources, tools/, docs/) relative to the repository root -->
+					<workingDirectory>${tinyexpression.root}</workingDirectory>
 					<forkCount>${te.forkCount}</forkCount>
-						<reuseForks>true</reuseForks>
-						<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
+					<reuseForks>true</reuseForks>
+					<forkedProcessTimeoutInSeconds>5400</forkedProcessTimeoutInSeconds>
 					<excludes>
-						<!-- issue #20: legacy パーサーの指数バックトラックを意図的に繰り返す
-						     ベンチマーク。unlaxer のメモ化 (unlaxer-parser#40) 導入まで除外。
-						     手動実行: mvn test -Dtest=BackendSpeedComparisonTest -Dsurefire.excludes= -->
 						<exclude>**/BackendSpeedComparisonTest.java</exclude>
 					</excludes>
 				</configuration>
@@ -272,68 +261,13 @@
 
 	<profiles>
 		<profile>
-			<!--
-				Parser microbenchmarks are deliberately opt-in: JMH dependencies and
-				src/jmh/java are absent from the normal build unless this profile is active.
-			-->
-			<id>parser-benchmark</id>
+			<id>jdk17-tests</id>
+			<activation>
+				<jdk>[17,18)</jdk>
+			</activation>
 			<properties>
-				<jmh.version>1.37</jmh.version>
+				<tinyexpression.jdk17.skipTests>false</tinyexpression.jdk17.skipTests>
 			</properties>
-			<dependencies>
-				<dependency>
-					<groupId>org.openjdk.jmh</groupId>
-					<artifactId>jmh-core</artifactId>
-					<version>${jmh.version}</version>
-					<scope>test</scope>
-				</dependency>
-				<dependency>
-					<groupId>org.openjdk.jmh</groupId>
-					<artifactId>jmh-generator-annprocess</artifactId>
-					<version>${jmh.version}</version>
-					<scope>test</scope>
-				</dependency>
-			</dependencies>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>build-helper-maven-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>add-jmh-source</id>
-								<phase>generate-test-sources</phase>
-								<goals>
-									<goal>add-test-source</goal>
-								</goals>
-								<configuration>
-									<sources>
-										<source>${project.basedir}/src/jmh/java</source>
-									</sources>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<executions>
-							<execution>
-								<id>default-testCompile</id>
-								<configuration>
-									<annotationProcessorPaths>
-										<path>
-											<groupId>org.openjdk.jmh</groupId>
-											<artifactId>jmh-generator-annprocess</artifactId>
-											<version>${jmh.version}</version>
-										</path>
-									</annotationProcessorPaths>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
 		</profile>
 		<profile>
 			<id>p4-smoke</id>
@@ -351,5 +285,4 @@
 			</build>
 		</profile>
 	</profiles>
-
 </project>
