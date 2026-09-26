@@ -103,9 +103,10 @@ playground は wasm の Rust 評価器で動き JVM が無いので、**コー�
 - Java との差: Java はコードブロックを実際にコンパイル・実行するので、仮の値（定数）での結果は一致しない。
   `npm run parity` はコードブロックを含む行を「Rust はスタブ必須」として別に扱う（スタブ無しで明示エラーになることを
   全行で確認、登録済み external の行は Java と比べない）。本物の実行（VSIX の中だけ）は別 issue。
-- ヘルプへのリンク（#214 との取り決め）: リンク先は id `help-java-code-block` の要素。#214 のヘルプはその id を
-  コードブロックの説明の節に付け、必要なら `te:open-help` イベント（`detail.id`）でパネルを開く。閉じた `<details>` の
-  中にあれば開いてスクロールする。その要素がまだ無い間は、この README の同じ anchor（この節）を開く。
+- ヘルプへのリンク（#214 との取り決め）: リンク先は id `help-java-code-block` の要素（#214 のヘルプ `<dialog>` の
+  「Java コードブロック」節）。リンクは `te:open-help` イベント（`detail.id`）を投げてヘルプを開き、その節へスクロールする。
+  その要素が無い build では、この README の同じ anchor（この節）を開く。ツアーの「Java コードブロック」手順は
+  「external（仮の値）」欄（`data-tour="java-code-block"`）を指す。
 
 ## 文法へのリンク
 
@@ -141,6 +142,28 @@ playground は wasm の Rust 評価器で動き JVM が無いので、**コー�
 - PR: GitHub token（このページのメモリにだけ置く）で、カタログと派生ファイル（`.tecatalog`、`error-catalog.json`）を
   新しいブランチに commit して PR を作る。token 無しなら全体 JSON をコピーして GitHub の Web エディタを開く。
 - 編集は補完・hover・診断にすぐ反映し、ブラウザの localStorage に override として保存する（自分のブラウザだけ）。
+
+## ガイドツアーとヘルプ（issue #214）
+
+ヘッダーの「ツアー」「ヘルプ」は `src/guide-content.js` の 1 つの配列（`GUIDE`）だけを内容源にする。
+tour（`src/tour.js`）は要素を 1 つずつハイライト＋吹き出し（日本語＋英語）で進み、help（`src/help.js`）は
+同じ配列をすべて `<dialog>` の節として並べる（節の見出しには `id="help-<id>"`。issue #216 の Java
+コードブロックの hover と「external（仮の値）」欄のヘルプリンクは `help-java-code-block` を開く）。
+
+- 手順: ①サンプル → ②式エディタ → ③CalculationContext → ④評価と結果 → ⑤評価トレース →
+  ⑥FormulaInfo エディタ → ⑦カタログ編集 → Java コードブロック（issue #216: サンプル「Java コードブロック」を
+  読み込んで CalculationContext の「external（仮の値）」欄を指す。必須の手順） → ⑧文法（UBNF）と鉄道図 → code-server（ブラウザで VS Code）。
+- 対象要素が見つからない手順は（`optional: true` かどうかによらず）自動でスキップする。
+  `npm run check` が全手順の対象を `index.html` に対して検証し、無ければ `optional: true` を要求する。
+- 操作が要る手順（評価トレース）は自動でサンプル入力を読み込み、「トレースを取る」相当の処理を実行してから
+  説明する（`autoAction`、ツアー終了時は開始前の式・CalculationContext・FormulaInfo に復元する）。
+- 初回訪問時だけ「ツアーを見ますか」を出す（localStorage）。キーボード（←/→/Enter/Esc）で操作でき、
+  外部リンクは `data-external` を付けて VS Code の webview からも開ける。CDN 依存・`eval`/`new Function` は無い。
+- code-server（<https://code.unlaxer.org/>）はログインが要り常時起動ではない。VSIX
+  （`opaopa6969.tinyexpression-p4-lsp`）はインフラ上の TinyExpression 専用 code-server コンテナには導入済みを
+  確認済み。手元で入れる場合は Extensions ビューの「Install from VSIX…」、または
+  `code-server --install-extension <file>.vsix`。VSIX 自体は
+  `tools/tinyexpression-p4-lsp-vscode/`（`npm run package`）でビルドされ、タグ push (`v*`) で GitHub Release に添付される。
 
 ## VS Code の webview（段階 5）
 

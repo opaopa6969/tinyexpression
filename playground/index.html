@@ -20,6 +20,10 @@
     <label class="examples" title="load a sample formula with its CalculationContext">サンプル
       <select id="examples"><option value="">選択…</option></select>
     </label>
+    <div class="header-buttons">
+      <button id="tour-button" title="guided tour of the playground">ツアー</button>
+      <button id="help-button" title="help: the same content as the tour, to read without following it">ヘルプ</button>
+    </div>
   </header>
 
   <main class="layout">
@@ -46,6 +50,7 @@
         <button id="add-variable" title="add a variable">変数を追加</button>
         <button id="pick-variables" title="add every $variable the formula reads">式から変数を追加</button>
       </div>
+      <div data-tour="java-code-block">
       <h3 id="h-externals" title="external invocations (and ```java code-block classes) answered by constant stub values">external（仮の値）</h3>
       <p class="muted small">playground は Java を実行しません。<code>external</code> 呼び出しと <code>```java:クラス名</code> のコードブロックのクラスは、ここに入れた仮の値（定数）で代用します。
         本物の実行は VS Code 拡張（VSIX、launch 設定で <code>allowJavaCodeBlocks: true</code>、<a href="https://github.com/opaopa6969/tinyexpression/blob/master/docs/decisions/ADR-003-java-codeblock-safety.md" target="_blank" rel="noopener" data-external>ADR-003</a>）か
@@ -60,6 +65,7 @@
         <button id="pick-externals" title="add a stub for every external call / import / ```java code-block class of the formula and the FormulaInfo that has none">式から external を追加</button>
       </div>
       <p class="muted small" id="externals-status" aria-live="polite"></p>
+      </div>
       <p class="muted small" id="catalog-counts"></p>
     </section>
 
@@ -105,6 +111,7 @@
   <footer class="muted small">
     言語カタログ <a href="https://github.com/opaopa6969/tinyexpression/blob/master/catalog/tinyexpression-catalog.json">catalog/tinyexpression-catalog.json</a>
     （VSIX の LSP と共通） · <a href="https://github.com/opaopa6969/tinyexpression">GitHub</a>
+    · <a id="code-server-link" href="https://code.unlaxer.org/" target="_blank" rel="noopener" data-external title="requires login; not always running — the VSIX pre-installed, browser entry point to VS Code">code-server で VS Code を開く（要ログイン）</a>
   </footer>
   <script type="module" src="./src/main.js"></script>
 </body>

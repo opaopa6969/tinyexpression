@@ -27,6 +27,8 @@ import { createCatalogPanel } from './catalog-panel.js';
 import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
 import { inVsCode, connectHost, openExternal, hostState, saveHostState } from './host.js';
 import { externalCandidates, addExternalCandidates, stubsUsedBy, stubLabel, isMissingStubFailure } from './externals.js';
+import { createTour } from './tour.js';
+import { createHelp } from './help.js';
 import './style.css';
 
 const STORAGE_KEY = 'tinyexpression-playground-v1';
@@ -536,6 +538,53 @@ document.addEventListener('click', (event) => {
   event.preventDefault();
   openExternal(link.href);
 });
+
+// ── guided tour and help (issue #214) ──
+
+const tour = createTour({
+  hooks: {
+    snapshotState: () => ({
+      formula: view.state.doc.toString(),
+      formulaInfo: infoText(),
+      trace: state.trace === true,
+      context: JSON.parse(JSON.stringify(state.context)),
+    }),
+    restoreState: (snapshot) => {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: snapshot.formula } });
+      setInfoText(snapshot.formulaInfo);
+      state.context = snapshot.context;
+      traceToggle.checked = snapshot.trace;
+      state.trace = snapshot.trace;
+      $('trace-hint').hidden = state.trace;
+      contextChanged();
+    },
+    loadSampleForTour: () => {
+      const example = EXAMPLES.find((e) => e.id === 'fraud-alert');
+      state.context = contextOf(example);
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: example.formula } });
+      setInfoText(FORMULA_INFO_SAMPLE);
+      contextChanged();
+    },
+    actions: {
+      'trace-once': () => $('trace-once').click(),
+      // #216: the Java code-block sample (colouring in the editor, its stub in external（仮の値）).
+      'java-code-block-sample': () => {
+        const example = EXAMPLES.find((e) => e.id === 'java-code-block');
+        state.context = contextOf(example);
+        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: example.formula } });
+        contextChanged();
+      },
+    },
+  },
+});
+$('tour-button').addEventListener('click', () => tour.start());
+
+const help = createHelp({ onReplayTour: () => tour.start() });
+$('help-button').addEventListener('click', () => help.open());
+// #216: code-block hovers / the external section link to #help-java-code-block (editor-support.js openHelp).
+window.addEventListener('te:open-help', () => help.open());
+
+tour.maybeAutoPrompt();
 
 // ── start ──
 
