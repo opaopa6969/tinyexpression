@@ -3,6 +3,26 @@
 All notable changes to TinyExpression are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [Unreleased]
+
+### Fixed
+- **The jars no longer ship copies of unlaxer-common classes (#224).** `tinyExpression` and
+  `tinyExpression-jdk17` (2.0.0 / 2.0.1) contained `org.unlaxer.parser.Parser`,
+  `org.unlaxer.parser.AbstractParser`, `org.unlaxer.ParserFinderToChild` and `org.unlaxer.ParserTaggable`
+  with the same FQCN as unlaxer-common(-jdk17) but different content (restored WIP from v1.5.0), so a
+  consumer got whichever copy came first on its classpath. The copies are removed and the unlaxer-common
+  classes are used. What the copies added was only reachable from dead code, also removed:
+  `Parser` extended `ASTNodeContainer` (`setOperator` / `setOperand` / `opecode()` / `targetOpecodes()`
+  with `Opecode`) and had a per-parser object map (`objectByName` / `getObject` / `putObject` /
+  `removeObject`), `ParserFinderToChild` had an accumulator `flatten(RecursiveMode, Parsers)`, and
+  `ParserTaggable` defaulted `setASTNodeKind` / `astNodeKind`; their only user was the unused
+  `org.unlaxer.parser.ParentHolderParser` (removed together with `org.unlaxer.ASTNodeContainer`).
+  Behaviour when tinyExpression's copy used to win: `AbstractParser` now takes part in the opt-in packrat
+  memoization of unlaxer-common (off by default) and `setASTNodeKind(kind)` records the kind and its tag
+  as in unlaxer-common instead of being a no-op. No unlaxer-common change is needed.
+- CI: the main jar and the `-jdk17` jar must not contain a class whose FQCN is also in the unlaxer
+  (`-jdk17`) jars they depend on (`scripts/ci/check_no_duplicate_classes.py`).
+
 ## [2.0.1] - 2026-09-26
 
 ### Java 17

@@ -264,6 +264,14 @@ jobs:
           -Dmaven.repo.local="$MAVEN_REPO"
       - name: Require class file major 61 (Java 17) in the tinyExpression-jdk17 jar
         run: python3 scripts/ci/check_class_major.py 61 tinyexpression-jdk17/target/tinyExpression-jdk17-*[0-9].jar
+      # tinyexpression #224: no class in the jar may share its FQCN with unlaxer-common-jdk17 /
+      # unlaxer-dsl-jdk17 (a shadowing copy wins or loses depending on the consumer's classpath order).
+      - name: No class of the tinyExpression-jdk17 jar duplicates an unlaxer-*-jdk17 class
+        run: |
+          mvn -B -q -f tinyexpression-jdk17/pom.xml dependency:build-classpath -DincludeGroupIds=org.unlaxer \
+            -Dmdep.outputFile="$RUNNER_TEMP/unlaxer-jdk17-classpath.txt" -Dmaven.repo.local="$MAVEN_REPO"
+          python3 scripts/ci/check_no_duplicate_classes.py tinyexpression-jdk17/target/tinyExpression-jdk17-*[0-9].jar \
+            "$RUNNER_TEMP/unlaxer-jdk17-classpath.txt"
       - name: The jar must not depend on the release-21 unlaxer artifacts
         run: |
           mvn -B -q -f tinyexpression-jdk17/pom.xml dependency:list -DincludeGroupIds=org.unlaxer \
@@ -447,6 +455,15 @@ jobs:
       # tinyexpression #220: the main artifact stays Java 21 (class file major 65).
       - name: Require class file major 65 (Java 21) in the main jar
         run: python3 scripts/ci/check_class_major.py 65 target/tinyExpression-*[0-9].jar
+
+      # tinyexpression #224: no class in the jar may share its FQCN with unlaxer-common / unlaxer-dsl
+      # (a shadowing copy wins or loses depending on the consumer's classpath order).
+      - name: No class of the main jar duplicates an unlaxer-common / unlaxer-dsl class
+        run: |
+          mvn -B -q dependency:build-classpath -DincludeGroupIds=org.unlaxer \
+            -Dmdep.outputFile="$RUNNER_TEMP/unlaxer-classpath.txt" -Dmaven.repo.local="$MAVEN_REPO"
+          python3 scripts/ci/check_no_duplicate_classes.py target/tinyExpression-*[0-9].jar \
+            "$RUNNER_TEMP/unlaxer-classpath.txt"
 
       - name: Set up Node.js (for vsce packaging in tools)
         uses: actions/setup-node@v6
