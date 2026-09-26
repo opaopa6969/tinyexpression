@@ -3,6 +3,7 @@ package org.unlaxer.tinyexpression.evaluator.p4;
 import java.lang.reflect.RecordComponent;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -74,15 +75,16 @@ public final class P4StrictMatchTypingValidator {
     if (node == null || visited.add(node) == false) {
       return Optional.empty();
     }
-    Optional<Violation> directViolation = switch (node) {
-      case NumberCaseValueExpr numberCaseValue ->
-          validateDirectCaseValue(formula, sourceText, numberCaseValue, ExpectedType.NUMBER);
-      case StringCaseValueExpr stringCaseValue ->
-          validateDirectCaseValue(formula, sourceText, stringCaseValue, ExpectedType.STRING);
-      case BooleanCaseValueExpr booleanCaseValue ->
-          validateDirectCaseValue(formula, sourceText, booleanCaseValue, ExpectedType.BOOLEAN);
-      default -> Optional.empty();
-    };
+    final Optional<Violation> directViolation;
+    if (node instanceof NumberCaseValueExpr numberCaseValue) {
+      directViolation = validateDirectCaseValue(formula, sourceText, numberCaseValue, ExpectedType.NUMBER);
+    } else if (node instanceof StringCaseValueExpr stringCaseValue) {
+      directViolation = validateDirectCaseValue(formula, sourceText, stringCaseValue, ExpectedType.STRING);
+    } else if (node instanceof BooleanCaseValueExpr booleanCaseValue) {
+      directViolation = validateDirectCaseValue(formula, sourceText, booleanCaseValue, ExpectedType.BOOLEAN);
+    } else {
+      directViolation = Optional.empty();
+    }
     if (directViolation.isPresent()) {
       return directViolation;
     }
@@ -156,31 +158,46 @@ public final class P4StrictMatchTypingValidator {
   }
 
   private static TinyExpressionP4AST directCaseValueNode(Object caseValueNode) {
-    return switch (caseValueNode) {
-      case NumberCaseValueExpr numberValue -> directValueNode(numberValue.value());
-      case StringCaseValueExpr stringValue -> directValueNode(stringValue.value());
-      case BooleanCaseValueExpr booleanValue -> directValueNode(booleanValue.value());
-      default -> null;
-    };
+    Objects.requireNonNull(caseValueNode); // a pattern switch rejects null (kept for Java 17, #220)
+    if (caseValueNode instanceof NumberCaseValueExpr numberValue) {
+      return directValueNode(numberValue.value());
+    }
+    if (caseValueNode instanceof StringCaseValueExpr stringValue) {
+      return directValueNode(stringValue.value());
+    }
+    if (caseValueNode instanceof BooleanCaseValueExpr booleanValue) {
+      return directValueNode(booleanValue.value());
+    }
+    return null;
   }
 
   private static TinyExpressionP4AST directValueNode(Object value) {
-    return switch (value) {
-      case VariableRefExpr variable -> variable;
-      case MethodInvocationExpr invocation -> invocation;
-      case BinaryExpr binary when binary.left() != null
-          && binary.op().isEmpty() && binary.right().isEmpty() -> directValueNode(binary.left());
-      case StringConcatExpr string when string.left() != null
-          && string.op().isEmpty() && string.right().isEmpty() -> directValueNode(string.left());
-      case BooleanOrExpr expression when expression.op().isEmpty()
-          && expression.right().isEmpty() -> directValueNode(expression.left());
-      case BooleanAndExpr expression when expression.op().isEmpty()
-          && expression.right().isEmpty() -> directValueNode(expression.left());
-      case BooleanXorExpr expression when expression.op().isEmpty()
-          && expression.right().isEmpty() -> directValueNode(expression.left());
-      case BooleanFactorExpr factor -> directValueNode(factor.value());
-      default -> null;
-    };
+    Objects.requireNonNull(value); // a pattern switch rejects null (kept for Java 17, #220)
+    if (value instanceof VariableRefExpr variable) {
+      return variable;
+    }
+    if (value instanceof MethodInvocationExpr invocation) {
+      return invocation;
+    }
+    if (value instanceof BinaryExpr binary && binary.left() != null && binary.op().isEmpty() && binary.right().isEmpty()) {
+      return directValueNode(binary.left());
+    }
+    if (value instanceof StringConcatExpr string && string.left() != null && string.op().isEmpty() && string.right().isEmpty()) {
+      return directValueNode(string.left());
+    }
+    if (value instanceof BooleanOrExpr expression && expression.op().isEmpty() && expression.right().isEmpty()) {
+      return directValueNode(expression.left());
+    }
+    if (value instanceof BooleanAndExpr expression && expression.op().isEmpty() && expression.right().isEmpty()) {
+      return directValueNode(expression.left());
+    }
+    if (value instanceof BooleanXorExpr expression && expression.op().isEmpty() && expression.right().isEmpty()) {
+      return directValueNode(expression.left());
+    }
+    if (value instanceof BooleanFactorExpr factor) {
+      return directValueNode(factor.value());
+    }
+    return null;
   }
 
   private enum ExpectedType {

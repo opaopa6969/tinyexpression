@@ -1,0 +1,3 @@
+# unlaxer-parser commit CI builds while pom.xml's unlaxer.version is not on Maven Central
+# (scripts/ci/install-unlaxer-if-unpublished.sh, tinyexpression #220). Delete once 3.1.1 is published.
+commit=4d228196f1e701b4ca39c8a3cb710afb0b73112f

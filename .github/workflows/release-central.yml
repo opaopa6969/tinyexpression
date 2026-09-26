@@ -132,6 +132,8 @@ jobs:
           # deploy step re-runs the build only to produce and upload artifacts,
           # so tests are explicitly skipped here.
           ./mvnw -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false -DskipTests
+          # tinyexpression #220: the Java 17 build of the same sources (tinyExpression-jdk17).
+          ./mvnw -B -f tinyexpression-jdk17/pom.xml clean deploy -DskipPublishing=false -DskipTests
 
       - name: Tag the release
         run: |

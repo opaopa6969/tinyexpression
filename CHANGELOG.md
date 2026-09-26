@@ -5,7 +5,33 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [2.0.1] - Unreleased
 
+### Java 17
+- **New artifact `org.unlaxer:tinyExpression-jdk17`** (#220): the same sources, packages and classes as
+  `tinyExpression`, compiled with `--release 17` (class file major 61) — **Java 17 users (e.g. Corretto 17)
+  depend on `tinyExpression-jdk17`** instead of `tinyExpression`. It depends on `unlaxer-common-jdk17` /
+  `unlaxer-dsl-jdk17` only (never on the release-21 unlaxer artifacts), generates its P4 runtime sources
+  with `CodegenMain --java-release 17`, and ships sources/javadoc jars. Built from
+  `tinyexpression-jdk17/pom.xml` (a standalone POM over `../src`, because the root POM has jar packaging);
+  `scripts/release-central.sh` / `release-central.yml` deploy it right after `tinyExpression`.
+  `tinyExpression` itself is unchanged: still Java 21 (major 65).
+- The shared sources compile with `--release 17`: pattern-matching `switch` → ordered `instanceof`
+  (`P4StrictMatchTypingValidator`, keeping the pattern switch's NPE on `null`; the generated
+  `UbnfcAstConverter`, with `scripts/generate-ubnfc-converter.py` emitting the new form), and
+  `McpServer` uses one virtual thread per request on Java 21+ as before but a cached thread pool on
+  Java 17 (virtual threads do not exist there). Test-only: `List#getFirst` / `ExecutorService#close`.
+- The vendored ubnfc parser is regenerated at ubnfc `15c4cbb` (ubnfc D-081: generated Java compiles with
+  `--release 17`; only the Java 18–21 constructs changed, IR and observations unchanged).
+- Runtime `javac` (JavaCode evaluation / Java code blocks) passes no `--release` / `-source` / `-target`,
+  so it compiles for the running JVM (17 on Java 17); the emitted Java is Java 17 compatible and the
+  whole suite, including the Java code block tests, passes on JDK 17 against `tinyExpression-jdk17`.
+- CI: a JDK 17 job builds `tinyExpression-jdk17`, runs the full test suite on Java 17, requires major 61
+  and that no release-21 unlaxer artifact is on its classpath; the main jar is required to stay major 65.
+
 ### Dependencies
+- Bumped `unlaxer-common` / `unlaxer-dsl` (`unlaxer.version`) to 3.1.1 (adds the `-jdk17` artifacts and
+  `CodegenMain --java-release`; default generator output unchanged). Until 3.1.1 is on Maven Central, CI
+  builds it from the pinned unlaxer-parser commit (`.github/unlaxer-source-pin`,
+  `scripts/ci/install-unlaxer-if-unpublished.sh`).
 - Bumped `unlaxer-common` / `unlaxer-dsl` (`unlaxer.version`) from 3.0.15 to [3.1.0](https://github.com/opaopa6969/unlaxer-parser/releases/tag/3.1.0) (#209). Only the `classic` engine (`p4Engine:classic`, alias `legacy`, or `-Dtinyexpression.p4.engine=classic`) links against it; the default `ubnfc` engine is unaffected.
 - `classic` parses now retain a smaller tree (-33% size / -40% object count on a 20 KB input, sub-sources are views over the root's code points) and the packrat memo table is windowed (default 1024 code points behind the parse frontier) instead of growing with input length, bounding memory to the grammar's backtracking distance.
 - `classic` also gains `SAFE_FAILURES` memoization replay for safe successes and `Source.sourceRange()` for reading a token's `[start, start+length)` extent without building a `CursorRange`; neither changes observable parse/evaluation results.
