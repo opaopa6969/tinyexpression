@@ -35,6 +35,14 @@
       <p class="muted small">Ctrl+Space で補完、変数・関数にカーソルを合わせると説明（カタログ）を表示します。</p>
       <div id="editor" class="code-editor"></div>
       <h2 title="Result">結果</h2>
+      <div id="eval-target" class="eval-target small" hidden>
+        <label title="evaluation target: wasm in the browser (stub values) or the real Java evaluator of the host server (issue #221)">評価先
+          <select id="eval-target-select">
+            <option value="wasm">wasm（仮の値）</option>
+            <option value="server">サーバ（本物の Java）</option>
+          </select></label>
+        <span id="eval-target-note" class="muted"></span>
+      </div>
       <div id="result" aria-live="polite"></div>
     </section>
 

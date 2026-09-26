@@ -30,6 +30,7 @@ import { externalCandidates, addExternalCandidates, stubsUsedBy, isMissingStubFa
 import { codeBlockFolding } from '../src/syntax-view.js';
 import { foldable } from '@codemirror/language';
 import { tourSteps, helpSections, selectorPresentInHtml } from '../src/guide-content.js';
+import { configuredServerUrl, DEFAULT_SERVER_EVAL_URL, probeServer, createServerRuntime, withWasmDiagnostic, realClassesOf, REQUESTED_WITH } from '../src/eval-target.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
@@ -522,6 +523,81 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   assert.ok(ids.indexOf('grammar') < ids.indexOf('code-server'), 'grammar recap should come before the code-server entry');
 }
 
+// evaluation target switch (#221): the server runtime against a mocked Java service
+{
+  assert.equal(configuredServerUrl(undefined), DEFAULT_SERVER_EVAL_URL);
+  assert.equal(configuredServerUrl('/api/eval'), '/api/eval');
+  for (const off of ['', 'off', 'none', 'false', ' OFF ']) assert.equal(configuredServerUrl(off), null, off);
+
+  const calls = [];
+  // What EvalContextService answers (org.unlaxer.tinyexpression.service), by operation.
+  const javaService = async (url, init) => {
+    calls.push({ url, init, body: JSON.parse(init.body) });
+    const body = JSON.parse(init.body);
+    if (body.formula === '1 +') {
+      return { ok: true, json: async () => ({ ok: false, stage: 'create', error: { kind: 'ParseException', message: 'generated P4 grammar rejected formula: 1 +' }, evaluator: 'java' }) };
+    }
+    if (body.operation === 'runContext') {
+      return { ok: true, json: async () => ({ ok: true, formulas: [{ info: { calculatorName: 'a', formulaText: '1' }, value: { kind: 'number', value: '1', f32Bits: '0x3f800000' } }], evaluator: 'java' }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, value: { kind: 'number', value: '3', f32Bits: '0x40400000' }, text: '3.0', evaluator: 'java', codeBlocks: { classes: ['CheckDigits'], executed: true } }) };
+  };
+  assert.equal(await probeServer('https://host/s/api/playground/eval', javaService), true);
+  assert.equal(calls[0].init.method, 'POST');
+  assert.equal(calls[0].init.credentials, 'same-origin', 'auth stays with the host (same-origin cookies)');
+  assert.equal(calls[0].init.headers['X-Requested-With'], REQUESTED_WITH);
+  assert.equal(calls[0].init.headers['Content-Type'], 'application/json');
+  assert.deepEqual(calls[0].body, { operation: 'evalContext', formula: '1' });
+
+  // GitHub Pages / vite dev: 404, 405, HTML, a JSON that is not the Java service, no network
+  const notFound = async () => ({ ok: false, status: 404, json: async () => ({}) });
+  const html = async () => ({ ok: true, json: async () => { throw new SyntaxError('Unexpected token <'); } });
+  const wasmLike = async () => ({ ok: true, json: async () => ({ ok: true, value: { kind: 'number' }, text: '1.0' }) });
+  const offline = async () => { throw new TypeError('Failed to fetch'); };
+  for (const fetchImpl of [notFound, html, wasmLike, offline]) assert.equal(await probeServer('../api/playground/eval', fetchImpl), false);
+  assert.equal(await probeServer(null, javaService), false);
+
+  const serverRuntime = createServerRuntime('https://host/s/api/playground/eval', javaService);
+  const request = toRequest({ ...emptyState(), variables: [{ name: 'x', type: 'float', value: '2' }] }, { formula: '$x + 1' });
+  const evaluated = await serverRuntime.evalContext(request);
+  assert.equal(evaluated.code, 0);
+  assert.equal(evaluated.result.text, '3.0');
+  const sent = calls.at(-1).body;
+  assert.equal(sent.operation, 'evalContext');
+  assert.equal(sent.formula, '$x + 1');
+  assert.deepEqual(sent.variables, request.variables, 'the server gets the wasm request unchanged');
+  assert.deepEqual(realClassesOf(evaluated.result), ['CheckDigits'], 'executed code blocks do not use their stubs');
+  assert.deepEqual(realClassesOf({ ok: true, codeBlocks: { classes: ['X'], executed: false } }), []);
+  assert.equal((await serverRuntime.runContext(toRequest(emptyState(), { document: 'x' }))).result.formulas.length, 1);
+  assert.equal(calls.at(-1).body.operation, 'runContext');
+  await serverRuntime.evalTrace(request);
+  assert.equal(calls.at(-1).body.operation, 'evalTrace');
+
+  // parse failures: the position / TE code comes from wasm check (Java has no diagnostic)
+  const parseFailure = (await serverRuntime.evalContext(toRequest(emptyState(), { formula: '1 +' }))).result;
+  assert.equal(parseFailure.diagnostic, undefined);
+  const merged = withWasmDiagnostic(parseFailure, te, '1 +');
+  assert.ok(merged.diagnostic, 'wasm check supplies the diagnostic');
+  assert.equal(merged.error.kind, 'ParseException');
+  assert.ok(describeFailure(catalog, '1 +', merged).code.startsWith('TE'), JSON.stringify(describeFailure(catalog, '1 +', merged)));
+  assert.equal(withWasmDiagnostic(evaluated.result, te, '$x + 1'), evaluated.result);
+
+  // the server stops answering: a 'server' failure the UI offers to re-run on wasm
+  const down = createServerRuntime('https://host/s/api/playground/eval', offline);
+  const failed = await down.evalContext(request);
+  assert.equal(failed.code, 70);
+  assert.equal(failed.result.ok, false);
+  assert.equal(failed.result.stage, 'server');
+  assert.equal(describeFailure(catalog, '$x + 1', failed.result).code, 'ServerUnavailable');
+  const http500 = createServerRuntime('u', async () => ({ ok: false, status: 500, json: async () => ({}) }));
+  assert.match((await http500.evalContext(request)).result.message, /HTTP 500/);
+
+  // the switch exists but stays hidden until the probe succeeds (GitHub Pages: never shown)
+  const indexHtml = await readFile(join(here, '..', 'index.html'), 'utf8');
+  assert.ok(/<div id="eval-target"[^>]*\bhidden\b/.test(indexHtml), 'eval-target starts hidden');
+  assert.ok(indexHtml.includes('サーバ（本物の Java）') && indexHtml.includes('wasm（仮の値）'));
+}
+
 console.log(`playground check OK: catalog valid (${catalog.variables.length} variables, ${catalog.errorCodes.length} codes), ` +
   `${EXAMPLES.length} samples, diagnostics, FormulaInfo, trace, catalog editing, PR helper, editors (tokens, brackets, FormulaInfo completion / diagnostics / hover), ` +
-  `java code blocks and external stubs (#216), guided tour + help (${tourSteps().length} steps, ${helpSections().length} help sections)`);
+  `java code blocks and external stubs (#216), evaluation target switch (#221), guided tour + help (${tourSteps().length} steps, ${helpSections().length} help sections)`);

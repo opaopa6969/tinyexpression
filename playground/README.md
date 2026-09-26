@@ -9,7 +9,7 @@ npm ci
 npm run build:wasm   # rust/ から tinyexpression.wasm（release-small）を作って public/ へコピー
 npm run dev          # http://localhost:5173/
 npm run parity       # Java 差分 golden を playground の評価経路で照合（node）
-npm run check        # カタログのスキーマ検証、サンプル、TE コード付き診断、trace、カタログ編集、エディタ（色分け・かっこ・FormulaInfo の補完/診断/hover）、Java コードブロックと external の仮の値（#216）
+npm run check        # カタログのスキーマ検証、サンプル、TE コード付き診断、trace、カタログ編集、エディタ（色分け・かっこ・FormulaInfo の補完/診断/hover）、Java コードブロックと external の仮の値（#216）、評価先の切り替え（#221、サーバ応答のモック）
 npm run roundtrip    # カタログの無編集書き出しがバイト一致、派生ファイル一致、VSIX 用 golden override
 npm run build        # dist/（GitHub Pages に置くもの、VSIX の playground-dist/ にもなる）
 ```
@@ -107,6 +107,21 @@ playground は wasm の Rust 評価器で動き JVM が無いので、**コー�
   「Java コードブロック」節）。リンクは `te:open-help` イベント（`detail.id`）を投げてヘルプを開き、その節へスクロールする。
   その要素が無い build では、この README の同じ anchor（この節）を開く。ツアーの「Java コードブロック」手順は
   「external（仮の値）」欄（`data-tour="java-code-block"`）を指す。
+
+## 評価先の切り替え（issue #221）
+
+ホスト（社内向けサーバ等）が playground を配信し、同じリクエスト JSON を Java の `EvalContextService` で答える
+endpoint を持つときだけ、結果の上に「評価先: wasm（仮の値） / サーバ（本物の Java）」が出る（`src/eval-target.js`）。
+
+- URL: ビルド時の `VITE_TE_SERVER_EVAL_URL`、無ければページからの相対 `../api/playground/eval`（`/s/playground/` なら
+  `/s/api/playground/eval`）。`off` で無効。起動時に `{"operation":"evalContext","formula":"1"}` を POST し、
+  `"evaluator":"java"` が返ったときだけ切り替えを表示する（GitHub Pages・`vite dev`・VS Code の webview では出ない）。
+- リクエストは wasm と同じ（`toRequest`）に `"operation"`（`evalContext` / `evalTrace` / `runContext`）を足したもの。
+  同一オリジンの cookie・`X-Requested-With: tinyexpression-playground` 付き。認証・CSRF はホスト側（playground はトークンを持たない）。
+- サーバ評価の結果には「Java（本物）」、コードブロックを実行したかどうか、仮の値を使った external を表示する。
+  サーバに届かなければ「wasm（仮の値）で評価し直す」。parse 失敗の位置と TE コードは wasm の `te_check` で補う。
+  診断・補完は常に wasm、trace はサーバ評価では記録しない。FormulaInfo の「実行」も評価先に従う。
+- ホスト側の組み込み手順はルートの [README](../README.md#ホストへの組み込み例-fraud-alert-の-grizzly)。
 
 ## 文法へのリンク
 
