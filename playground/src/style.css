@@ -231,3 +231,5 @@ html.in-vscode .top { padding-top: .5rem; }
 .te-bracket-unmatched { color: var(--ng); font-weight: 700; background: var(--ng-bg); text-decoration: underline wavy var(--ng); }
 .te-bracket-match { outline: 1px solid currentColor; border-radius: 2px; background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .te-bracket-match-none { outline: 1px solid var(--ng); border-radius: 2px; }
+.grammar-links { margin: .1rem 0 0; }
+.grammar-links a, .panel-head a { color: var(--accent); }

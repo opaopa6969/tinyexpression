@@ -260,6 +260,17 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   assert.ok(diagnoseFormulaInfo(te, catalog, trailing, [], analyzeInfo(trailing)).length > 0);
   const spaced = 'calculatorName:a\nformula:\n1\n---END_OF_PART---  \n';
   assert.equal(parseFormulaInfo(spaced).blocks[0].end != null, spaceEnds);
+  assert.ok(spaceEnds, 'this wasm has the #211 loader: trailing spaces end the block');
+  assert.deepEqual(diagnoseFormulaInfo(te, catalog, spaced, [], analyzeInfo(spaced)), []);
+  const [trailingError] = diagnoseFormulaInfo(te, catalog, trailing, [], analyzeInfo(trailing));
+  assert.equal(trailing.slice(trailingError.from, trailingError.to), '---END_OF_PART---x');
+  assert.equal(trailingError.kind, 'syntax');
+  // #211: a missing end mark merges two blocks; the duplicate calculatorName is marked.
+  const merged = 'calculatorName:a\nformula:\n1\ncalculatorName:b\nformula:\n2\n---END_OF_PART---\n';
+  const [duplicate] = diagnoseFormulaInfo(te, catalog, merged, [], analyzeInfo(merged));
+  assert.equal(duplicate.kind, 'duplicate_calculator_name');
+  assert.equal(duplicate.from, merged.indexOf('calculatorName:b'));
+  assert.match(duplicate.message, /calculatorName が重複しています/);
 
   // Completion.
   const vars = [{ name: 'bonus', type: 'float', value: '1' }];

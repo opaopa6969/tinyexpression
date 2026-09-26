@@ -99,7 +99,12 @@ export function loaderDiagnostic(catalog, text, result) {
   if (result.ok || result.stage !== 'load' || !result.error) return null;
   const error = result.error;
   const span = Array.isArray(result.span) ? result.span : [0, 0];
-  const { from, to } = spanToRange(text, span);
+  let { from, to } = spanToRange(text, span);
+  // The parser's offset is where it gave up inside the rejected line: mark the whole line.
+  if (error.kind === 'syntax' && span[0] === span[1]) {
+    from = lineStartOf(text, from);
+    to = Math.max(lineEndOf(text, from), Math.min(from + 1, text.length));
+  }
   const label = LOAD_KIND[error.kind] ?? error.kind;
   let code = error.javaException ?? error.kind;
   let fix = '';
@@ -202,7 +207,7 @@ export function diagnoseFormulaInfo(te, catalog, text, contextNames, analysis, k
     if (out.some((d) => d.severity === 'error' && d.from <= line.to && d.to >= line.from && d.origin === 'loader')) continue;
     out.push({
       from: line.from, to: line.to, severity: 'warning', code: 'end-mark', origin: 'end',
-      message: `${END_MARK} の後ろに文字があるため、この行はブロックを閉じません（前の値の続きとして読まれます）`,
+      message: `${END_MARK} の後ろに空白以外の文字があるため、この行はブロックを閉じません（issue #211 以降の loader は構文エラー、以前の loader は前の値の続きとして読みます）`,
       fix: `行を ${END_MARK} だけにする`, detail: '',
     });
   }

@@ -66,6 +66,14 @@ fn block_errors_point_at_the_block() {
 }
 
 #[test]
+fn duplicate_calculator_name_points_at_the_second_one() {
+    // Issue #211: the end mark line between two FormulaInfo is missing.
+    let doc = "calculatorName:a\nformula:\n1\ncalculatorName:b\nformula:\n2\n---END_OF_PART---\n";
+    let (text, start, _) = located(doc);
+    assert_eq!((text.as_str(), start), ("calculatorName:", 28));
+}
+
+#[test]
 fn spans_count_code_points() {
     // U+1F600 is two UTF-16 units and four UTF-8 bytes, one code point.
     let doc = "description:😀😀\ncalculatorName:a\nresultType:Nope\nformula:\n1\n";

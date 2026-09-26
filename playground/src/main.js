@@ -25,7 +25,7 @@ import { formulaInfoCompletionSource, formulaInfoHover } from './formula-info-ed
 import { createTracePanel } from './trace-panel.js';
 import { createCatalogPanel } from './catalog-panel.js';
 import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
-import { inVsCode, connectHost } from './host.js';
+import { inVsCode, connectHost, openExternal } from './host.js';
 import './style.css';
 
 const STORAGE_KEY = 'tinyexpression-playground-v1';
@@ -470,6 +470,14 @@ connectHost({
   },
 });
 if (inVsCode) document.documentElement.classList.add('in-vscode');
+// Grammar links (UBNF, railroad diagrams): a new tab on the web; the webview blocks plain
+// navigation, so the extension opens them (vscode.env.openExternal).
+document.addEventListener('click', (event) => {
+  const link = event.target.closest?.('a[data-external]');
+  if (!link || !inVsCode) return;
+  event.preventDefault();
+  openExternal(link.href);
+});
 
 // ── start ──
 

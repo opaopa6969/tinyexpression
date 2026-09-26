@@ -55,8 +55,23 @@ FormulaInfo パネルは式エディタと同じ CodeMirror 6 のエディタ（
 - 純粋関数は `src/formula-info-syntax.js`（行・ブロック・キー・値の走査、loader と同じ値の正規化と位置の対応）と
   `src/formula-info-diagnostics.js`、CodeMirror 部分は `src/formula-info-editor.js`。`npm run check` が node で補完・
   診断位置・かっこの深さ・hover を確かめる。
-- `---END_OF_PART---` の後ろの空白（issue #211）: 起動時に wasm の loader に 1 回問い合わせ、終端として扱うかを
-  loader に合わせる（#211 前の loader では値の続き、後の loader では終端）。
+- `---END_OF_PART---` 行（issue #211）: 後ろが空白・タブだけなら終端（起動時に wasm の loader に 1 回問い合わせて
+  loader に合わせる）。空白以外の文字が続く行は赤で、loader の構文エラーを行全体に出す。1 ブロックに `calculatorName` が
+  2 つ（区切り行の書き忘れ）は 2 つ目の `calculatorName:` に loader のエラー。
+- キーの説明・型・列挙値はカタログ `settings`（`scope: formulaInfo`）が正本。Java loader
+  （`FormulaInfoParser.extractFormulaInfo`）が読むキーはすべて載せてある（`formula`・`hash`・`hashByByteCode`・`javaCode`・
+  `byteCode`・`byteCode_<className>`（接頭辞で判定）・`siteId`・`checkKind` を #212 で追加）。カタログパネルの「設定」の編集は
+  FormulaInfo エディタの補完・hover・未知キー判定にすぐ反映され、VSIX の override にも従来どおり書き出される。
+
+## 文法へのリンク
+
+ヘッダと各パネルの見出しの横に UBNF の文法定義へのリンクがある（ブラウザでは新しいタブ、VS Code の webview では
+拡張の `openExternal` 経由でシステムのブラウザ）。
+
+- tinyexpression（既定の ubnfc パーサの生成元）:
+  [tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf](../tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf)
+- FormulaInfo: [grammar/formula-info.ubnf](../grammar/formula-info.ubnf)
+- 鉄道図（railroad、tinyexpression の文法）: [docs/railroad/](../docs/railroad/)（GitHub Pages には載せていないので GitHub のページへリンク）
 
 ## 評価トレース（段階 3）
 

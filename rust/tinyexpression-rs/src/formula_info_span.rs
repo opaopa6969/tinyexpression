@@ -111,6 +111,11 @@ fn entry_span(block: &Block, error: &LoadError) -> Option<Span> {
                 None => value_text_span(formula),
             })
         }
+        // Issue #211: the second calculatorName of the block (typically where the end mark
+        // line between two FormulaInfo is missing).
+        LoadError::DuplicateCalculatorName { .. } => {
+            with_key("calculatorName").nth(1).map(key_span)
+        }
         _ => None,
     }
 }

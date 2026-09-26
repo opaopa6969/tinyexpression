@@ -92,7 +92,8 @@ export function endMarkKind(line) {
   const rest = line.slice(END_MARK.length);
   if (rest === '') return 'end';
   let blank = true;
-  for (const ch of rest) if (!isBlankChar(ch.codePointAt(0))) blank = false;
+  // Spaces and tabs only (issue #211: VT / FF after the mark are rejected).
+  for (const ch of rest) if (ch !== ' ' && ch !== '\t') blank = false;
   return blank ? 'end-trailing-space' : 'end-trailing';
 }
 
@@ -101,7 +102,7 @@ export function endMarkKind(line) {
  * trailing spaces after the mark (and reject other trailing characters); before #211 only the
  * exact mark closed a block. Set by `setEndMarkTrailingSpace` from what the wasm loader does.
  */
-let trailingSpaceEnds = false;
+let trailingSpaceEnds = true;
 export function setEndMarkTrailingSpace(accepted) {
   trailingSpaceEnds = accepted;
 }
