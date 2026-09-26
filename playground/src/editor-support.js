@@ -121,7 +121,8 @@ export function completionSource(getRuntime, getCatalog, getContextVariables) {
   };
 }
 
-function wordAround(text, pos) {
+/** The `$name` / `.method` / word around `pos`: {start, end, word}. */
+export function wordAround(text, pos) {
   let start = pos;
   let end = pos;
   const isWord = (c) => /[A-Za-z0-9_$.]/.test(c);
@@ -177,6 +178,31 @@ export function hoverContent(catalog, contextVariables, formula, word) {
   return null;
 }
 
+/** The hover DOM of a `hoverContent` result ({title, rows: [[label, value]]}). */
+export function renderHover(content) {
+  const dom = document.createElement('div');
+  dom.className = 'cm-hover-doc';
+  const title = document.createElement('div');
+  title.className = 'cm-hover-title';
+  title.textContent = content.title;
+  dom.append(title);
+  for (const [label, value] of content.rows) {
+    const row = document.createElement('div');
+    row.className = 'cm-hover-row';
+    if (label) {
+      const l = document.createElement('span');
+      l.className = 'cm-hover-label';
+      l.textContent = label;
+      row.append(l);
+    }
+    const v = document.createElement('span');
+    v.textContent = value;
+    row.append(v);
+    dom.append(row);
+  }
+  return dom;
+}
+
 export function hoverExtension(getCatalog, getContextVariables) {
   return hoverTooltip((view, pos) => {
     const text = view.state.doc.toString();
@@ -184,33 +210,6 @@ export function hoverExtension(getCatalog, getContextVariables) {
     if (!word || word === '$' || word === '.') return null;
     const content = hoverContent(getCatalog(), getContextVariables(), text, word);
     if (!content) return null;
-    return {
-      pos: start,
-      end,
-      above: true,
-      create() {
-        const dom = document.createElement('div');
-        dom.className = 'cm-hover-doc';
-        const title = document.createElement('div');
-        title.className = 'cm-hover-title';
-        title.textContent = content.title;
-        dom.append(title);
-        for (const [label, value] of content.rows) {
-          const row = document.createElement('div');
-          row.className = 'cm-hover-row';
-          if (label) {
-            const l = document.createElement('span');
-            l.className = 'cm-hover-label';
-            l.textContent = label;
-            row.append(l);
-          }
-          const v = document.createElement('span');
-          v.textContent = value;
-          row.append(v);
-          dom.append(row);
-        }
-        return { dom };
-      },
-    };
+    return { pos: start, end, above: true, create: () => ({ dom: renderHover(content) }) };
   });
 }

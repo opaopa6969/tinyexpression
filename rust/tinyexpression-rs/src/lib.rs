@@ -22,6 +22,7 @@ pub mod generated;
 mod diagnostic;
 mod evaluator;
 pub mod formula_info;
+pub mod formula_info_span;
 mod frontend;
 mod request;
 pub mod runtime;

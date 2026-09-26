@@ -3018,6 +3018,98 @@
       "source": "src/main/java/org/unlaxer/tinyexpression/p4/P4ParserEngine.java"
     },
     {
+      "name": "formula",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "式の本文。次のキー行・---END_OF_PART--- 行・入力の終わりまでの行で、# 行と空行は除かれる。",
+        "en": "The formula text: the following lines up to the next key line, the ---END_OF_PART--- line or the end of input; # lines and blank lines are dropped."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "hash",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "式の MD5（大文字 hex）。読み込みのたびに式から作り直すので、書いた値は使われない。",
+        "en": "MD5 of the formula (upper-case hex); recomputed from the formula on every load, the written value is not used."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "hashByByteCode",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "保存された bytecode の hash。読み込みでは使わない。",
+        "en": "Hash of the stored bytecode; not used on load."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "javaCode",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "保存された生成 Java コード。読み込みでは使わない（式から作り直す）。",
+        "en": "Stored generated Java code; not used on load (rebuilt from the formula)."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "byteCode",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "保存された bytecode（hex）。hex として検査するだけで実行しない。",
+        "en": "Stored bytecode (hex); only checked as hex, never executed."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "byteCode_<className>",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "クラスごとに保存された bytecode（hex、キーは byteCode_ + クラス名）。hex として検査するだけで実行しない。",
+        "en": "Stored bytecode of one class (hex; the key is byteCode_ + the class name); only checked as hex, never executed."
+      },
+      "note": {
+        "ja": "キー名の接頭辞 byteCode_ で判定する。",
+        "en": "Recognised by the key prefix byteCode_."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoParser.java"
+    },
+    {
+      "name": "siteId",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "multi-tenancy 属性（FormulaInfoAdditionalFields の multiTenancyAttributeName。Java loader テストと Rust loader の既定設定が siteId）。",
+        "en": "The multi-tenancy attribute (FormulaInfoAdditionalFields.multiTenancyAttributeName; siteId in the Java loader tests and the Rust loader default)."
+      },
+      "note": {
+        "ja": "属性名は loader の設定で決まる。",
+        "en": "The attribute name is loader configuration."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java"
+    },
+    {
+      "name": "checkKind",
+      "scope": "formulaInfo",
+      "type": "string",
+      "description": {
+        "ja": "名前属性: あれば calculatorName の代わりに式の名前（クラス名 Formula_<名前>）になる（Java loader テストと Rust loader の既定設定）。",
+        "en": "The name attribute: when present it names the formula (class Formula_<name>) instead of calculatorName (Java loader tests and the Rust loader default)."
+      },
+      "note": {
+        "ja": "属性名は loader の設定（nameExtractor）で決まる。",
+        "en": "The attribute name is loader configuration (nameExtractor)."
+      },
+      "source": "src/main/java/org/unlaxer/tinyexpression/loader/FormulaInfoAdditionalFields.java"
+    },
+    {
       "name": "nowHour",
       "scope": "context",
       "type": "number",

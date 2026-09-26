@@ -12,6 +12,10 @@
     <div>
       <h1>tinyexpression playground</h1>
       <p class="muted small" id="version" title="version of the wasm runtime">wasm を読み込み中…</p>
+      <p class="muted small grammar-links">文法（UBNF）:
+        <a href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="the P4 grammar the default ubnfc parser is generated from">tinyexpression</a> ·
+        <a href="https://github.com/opaopa6969/tinyexpression/blob/master/grammar/formula-info.ubnf" target="_blank" rel="noopener" data-external title="the FormulaInfo block format">FormulaInfo</a> ·
+        <a href="https://github.com/opaopa6969/tinyexpression/tree/master/docs/railroad" target="_blank" rel="noopener" data-external title="railroad diagrams of the tinyexpression grammar">鉄道図（railroad）</a></p>
     </div>
     <label class="examples" title="load a sample formula with its CalculationContext">サンプル
       <select id="examples"><option value="">選択…</option></select>
@@ -20,9 +24,12 @@
 
   <main class="layout">
     <section class="panel editor-panel" aria-labelledby="h-editor">
-      <h2 id="h-editor" title="Formula">式</h2>
+      <div class="panel-head">
+        <h2 id="h-editor" title="Formula">式</h2>
+        <a class="small" href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf">文法（tinyexpression-p4.ubnf）</a>
+      </div>
       <p class="muted small">Ctrl+Space で補完、変数・関数にカーソルを合わせると説明（カタログ）を表示します。</p>
-      <div id="editor"></div>
+      <div id="editor" class="code-editor"></div>
       <h2 title="Result">結果</h2>
       <div id="result" aria-live="polite"></div>
     </section>
@@ -65,9 +72,12 @@
     </section>
 
     <section class="panel info-panel" aria-labelledby="h-info">
-      <h2 id="h-info" title="FormulaInfo document">FormulaInfo</h2>
-      <p class="muted small">FormulaInfo のブロックを貼り付けて、読み込み（load）または上の CalculationContext で実行（run）します。</p>
-      <textarea id="formula-info" spellcheck="false" rows="12" aria-label="FormulaInfo"></textarea>
+      <div class="panel-head">
+        <h2 id="h-info" title="FormulaInfo document">FormulaInfo</h2>
+        <a class="small" href="https://github.com/opaopa6969/tinyexpression/blob/master/grammar/formula-info.ubnf" target="_blank" rel="noopener" data-external title="grammar/formula-info.ubnf">文法（formula-info.ubnf）</a>
+      </div>
+      <p class="muted small">FormulaInfo のブロックを貼り付けて、読み込み（load）または上の CalculationContext で実行（run）します。書きながら loader のエラー・各 <code>formula:</code> の構文診断・未知のキーを波線で表示し、行頭でキーと <code>---END_OF_PART---</code> を補完します（Ctrl+Space）。</p>
+      <div id="formula-info" class="code-editor info-editor"></div>
       <div class="buttons">
         <button id="load-info" title="te_formula_info (load)">読み込み</button>
         <button id="run-info" title="evaluate every formula with the CalculationContext">実行</button>
