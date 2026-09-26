@@ -14,18 +14,19 @@ import {
   VARIABLE_TYPES, RESULT_TYPES, NUMBER_TYPES, DAYS, RETURN_TYPES,
 } from './context.js';
 import { diagnose, describeFailure } from './diagnostics.js';
-import { completionSource, hoverExtension } from './editor-support.js';
+import { completionSource, hoverExtension, openHelp } from './editor-support.js';
 import { EXAMPLES, FORMULA_INFO_SAMPLE } from './examples.js';
 import { highlightExtension } from './highlight.js';
 import { analyzeFormula, lexiconOf } from './te-lexer.js';
 import { syntaxView, refreshSyntax } from './syntax-view.js';
-import { analyzeFormulaInfo, setEndMarkTrailingSpace } from './formula-info-syntax.js';
+import { analyzeFormulaInfo, setEndMarkTrailingSpace, parseFormulaInfo, valuesOf } from './formula-info-syntax.js';
 import { diagnoseFormulaInfo, formulaInfoKeys, isKnownKey } from './formula-info-diagnostics.js';
 import { formulaInfoCompletionSource, formulaInfoHover } from './formula-info-editor.js';
 import { createTracePanel } from './trace-panel.js';
 import { createCatalogPanel } from './catalog-panel.js';
 import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
-import { inVsCode, connectHost, openExternal } from './host.js';
+import { inVsCode, connectHost, openExternal, hostState, saveHostState } from './host.js';
+import { externalCandidates, addExternalCandidates, stubsUsedBy, stubLabel, isMissingStubFailure } from './externals.js';
 import { createTour } from './tour.js';
 import { createHelp } from './help.js';
 import './style.css';
@@ -43,7 +44,9 @@ let state = loadState();
 
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+    // The VS Code webview keeps the state with the extension (vscode.setState, #216): its
+    // localStorage does not survive reopening the panel.
+    const saved = hostState() ?? JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
     if (saved?.context && typeof saved.formula === 'string') {
       return { ...saved, context: { ...emptyState(), ...saved.context } };
     }
@@ -71,8 +74,10 @@ function saveCatalogOverride() {
 }
 
 function saveState() {
+  const saved = { ...state, formula: view.state.doc.toString() };
+  saveHostState(saved);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, formula: view.state.doc.toString() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
   } catch { /* storage unavailable */ }
 }
 
@@ -109,6 +114,7 @@ function select(options, value, onChange, title) {
 // ── editor ──
 
 const contextVariables = () => state.context.variables;
+const contextExternals = () => state.context.externals;
 const currentCatalog = () => catalog;
 const toLint = (d) => ({
   from: d.from,
@@ -125,7 +131,7 @@ const view = new EditorView({
     basicSetup,
     EditorView.lineWrapping,
     autocompletion({ override: [completionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
-    hoverExtension(currentCatalog, contextVariables),
+    hoverExtension(currentCatalog, contextVariables, contextExternals),
     lintGutter(),
     highlightExtension,
     syntaxView((text) => analyzeFormula(text, lexiconOf(catalog))),
@@ -189,7 +195,8 @@ async function evaluate() {
           el('dt', { title: 'result kind' }, '型'), el('dd', {}, kindLabel(value)),
           value.f32Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f32Bits)] : null,
           value.f64Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f64Bits)] : null,
-          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}`))));
+          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}`)),
+        stubNote(stubsUsedBy([formula], state.context.externals))));
     return;
   }
   const failure = describeFailure(catalog, formula, result);
@@ -199,10 +206,43 @@ async function evaluate() {
     el('p', {}, failure.title),
     failure.fix ? el('p', { class: 'fix' }, `修正のヒント: ${failure.fix}`) : null,
     result.error?.message ? el('p', { class: 'muted small', title: 'Java exception message' }, `${result.error.kind}: ${result.error.message}`) : null,
+    isMissingStubFailure(result.error) ? missingStubHelp() : null,
     failure.from != null ? el('button', { class: 'link', onclick: () => {
       view.dispatch({ selection: { anchor: failure.from, head: Math.max(failure.from, Math.min(failure.to, failure.from + 1)) }, scrollIntoView: true });
       view.focus();
     } }, 'エラー位置へ移動') : null));
+}
+
+// ── external stubs: "external（仮の値）" (#216) ──
+
+/** The formula texts the stubs are for: the formula editor and every FormulaInfo `formula:`. */
+function formulaTexts() {
+  const info = infoText();
+  const texts = [view.state.doc.toString()];
+  for (const { value } of valuesOf(info, parseFormulaInfo(info), 'formula')) if (value?.text) texts.push(value.text);
+  return texts;
+}
+
+/** "式から external を追加": a stub row for every external call / code-block class without one. */
+function pickExternals() {
+  const added = addExternalCandidates(state.context.externals, externalCandidates(formulaTexts()));
+  contextChanged();
+  return added;
+}
+
+/** The "仮の値" mark of a result that used stubs. */
+function stubNote(used) {
+  if (!used.length) return null;
+  return el('p', { class: 'stub-note', title: 'external calls answered by the CalculationContext stubs (code blocks are not run in the playground)' },
+    el('span', { class: 'stub-tag' }, '仮の値'),
+    ` external（コードブロック含む）は実行されず、仮の値で代用: ${used.map(stubLabel).join('、')}`);
+}
+
+/** Help for the missing-stub error of a code-block class. */
+function missingStubHelp() {
+  return el('p', { class: 'fix' },
+    'コードブロックの Java は playground では実行されません。CalculationContext の「external（仮の値）」に戻り値を入れてください。 ',
+    el('button', { class: 'link', onclick: () => pickExternals() }, '式から external を追加'));
 }
 
 // ── CalculationContext panel ──
@@ -270,6 +310,10 @@ $('add-external').addEventListener('click', () => {
   state.context.externals.push({ class: '', method: '', arity: '', registered: true, returnType: 'float', value: '0' });
   contextChanged();
 });
+$('pick-externals').addEventListener('click', () => {
+  const added = pickExternals();
+  $('externals-status').textContent = added.length ? `${added.length} 件追加しました。` : '追加する候補はありません（全部の external に仮の値があります）。';
+});
 $('pick-variables').addEventListener('click', () => {
   const formula = view.state.doc.toString();
   const declared = declaredVariables(formula);
@@ -308,7 +352,7 @@ const infoView = new EditorView({
     basicSetup,
     EditorView.lineWrapping,
     autocompletion({ override: [formulaInfoCompletionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
-    formulaInfoHover(currentCatalog, contextVariables),
+    formulaInfoHover(currentCatalog, contextVariables, contextExternals),
     lintGutter(),
     syntaxView(analyzeInfo),
     linter((v) => {
@@ -352,9 +396,12 @@ function renderFormulaInfo(result, evaluated) {
       const info = f.info;
       let cell = null;
       if (evaluated) {
+        const used = f.value ? stubsUsedBy([info.formulaText], state.context.externals) : [];
         cell = f.value
-          ? el('td', { class: 'ok' }, f.value.value === undefined ? kindLabel(f.value) : String(f.value.value))
-          : el('td', { class: 'ng', title: f.error?.message ?? '' }, `${f.error?.kind ?? 'error'}`);
+          ? el('td', { class: 'ok' }, f.value.value === undefined ? kindLabel(f.value) : String(f.value.value),
+            used.length ? [' ', el('span', { class: 'stub-tag', title: `仮の値で代用: ${used.map(stubLabel).join('、')}` }, '仮の値')] : null)
+          : el('td', { class: 'ng', title: f.error?.message ?? '' }, `${f.error?.kind ?? 'error'}`,
+            isMissingStubFailure(f.error) ? [' ', el('button', { class: 'link', title: f.error.message, onclick: () => pickExternals() }, '仮の値を追加')] : null);
       }
       return el('tr', {},
         el('td', {}, info.calculatorName ?? info.name ?? ''),
@@ -451,6 +498,10 @@ connectHost({
     if (typeof message.formulaInfo === 'string' && message.formulaInfo.trim() !== '') {
       setInfoText(message.formulaInfo);
     }
+    // #216: the external stubs stay (saved state); calls / code-block classes of the opened
+    // document that have none get a row to fill in.
+    addExternalCandidates(state.context.externals, externalCandidates(formulaTexts()));
+    saveState();
     $('host-status').textContent = message.documentName ? `VS Code: ${message.documentName} から読み込みました。` : '';
     hostCatalogLabel = message.catalogLabel ?? '';
     catalog = mergeOverride(bundledCatalog, message.catalogOverride ?? {});
@@ -475,6 +526,13 @@ if (inVsCode) document.documentElement.classList.add('in-vscode');
 // Grammar links (UBNF, railroad diagrams): a new tab on the web; the webview blocks plain
 // navigation, so the extension opens them (vscode.env.openExternal).
 document.addEventListener('click', (event) => {
+  // #216: help links (#help-java-code-block) open #214's help, or the README before it exists.
+  const help = event.target.closest?.('a[data-help]');
+  if (help) {
+    event.preventDefault();
+    openHelp(help.dataset.help);
+    return;
+  }
   const link = event.target.closest?.('a[data-external]');
   if (!link || !inVsCode) return;
   event.preventDefault();
@@ -509,6 +567,13 @@ const tour = createTour({
     },
     actions: {
       'trace-once': () => $('trace-once').click(),
+      // #216: the Java code-block sample (colouring in the editor, its stub in external（仮の値）).
+      'java-code-block-sample': () => {
+        const example = EXAMPLES.find((e) => e.id === 'java-code-block');
+        state.context = contextOf(example);
+        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: example.formula } });
+        contextChanged();
+      },
     },
   },
 });
@@ -516,6 +581,8 @@ $('tour-button').addEventListener('click', () => tour.start());
 
 const help = createHelp({ onReplayTour: () => tour.start() });
 $('help-button').addEventListener('click', () => help.open());
+// #216: code-block hovers / the external section link to #help-java-code-block (editor-support.js openHelp).
+window.addEventListener('te:open-help', () => help.open());
 
 tour.maybeAutoPrompt();
 

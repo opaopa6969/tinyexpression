@@ -115,3 +115,97 @@ fn run_context_evaluates_formula_info_with_the_context() {
         response.json
     );
 }
+
+// ------------------------------------------------------------------ java code blocks (#216)
+
+const CODE_BLOCK_FORMULA: &str = "```java:CheckDigits\\npublic class CheckDigits{\\n  public boolean check(CalculationContext c, String target){ return target.matches(\\\"\\\\\\\\d+\\\"); }\\n}\\n```\\nimport CheckDigits#check as checkDigits;\\nvar $input as string set if not exists 'not number';\\nif(external returning as boolean checkDigits($input)){1}else{0}";
+
+const MISSING_STUB_HINT: &str = "コードブロックのクラスは externals で値を指定してください";
+
+#[test]
+fn code_block_classes_resolve_through_the_externals_stubs() {
+    // The block only declares the class; the call is answered by the stub (not by running the
+    // Java code, which would say `false` for 'not number').
+    let request = |value: bool| {
+        format!(
+            r#"{{"formula":"{CODE_BLOCK_FORMULA}","externals":[{{"class":"CheckDigits","method":"check","arity":1,"result":{{"type":"boolean","value":{value}}}}}]}}"#
+        )
+    };
+    let (code, json) = eval(&request(true));
+    assert_eq!(code, 0, "{json}");
+    assert!(json.contains(r#""text":"1.0""#), "{json}");
+    let (code, json) = eval(&request(false));
+    assert_eq!(code, 0, "{json}");
+    assert!(json.contains(r#""text":"0.0""#), "{json}");
+}
+
+#[test]
+fn code_block_classes_without_a_stub_fail_like_class_for_name_with_a_hint() {
+    let (code, json) = eval(&format!(r#"{{"formula":"{CODE_BLOCK_FORMULA}"}}"#));
+    assert_eq!(code, 5, "{json}");
+    assert!(
+        json.contains(r#""kind":"UnsupportedOperationException","message":"External invocation failed: CheckDigits#check (the class is declared by a ```java:CheckDigits code block"#),
+        "{json}"
+    );
+    assert!(json.contains(MISSING_STUB_HINT), "{json}");
+    // A stub of another class does not load this one.
+    let (code, json) = eval(&format!(
+        r#"{{"formula":"{CODE_BLOCK_FORMULA}","externals":[{{"class":"Other","method":"check"}}]}}"#
+    ));
+    assert_eq!(code, 5, "{json}");
+    assert!(json.contains(MISSING_STUB_HINT), "{json}");
+    // A class no code block declares keeps the plain Java message.
+    let (code, json) = eval(
+        r#"{"formula":"import sample.Fee#calculate as fee;\nexternal returning as number fee(1)"}"#,
+    );
+    assert_eq!(code, 5, "{json}");
+    assert!(
+        json.contains(r#""message":"External invocation failed: sample.Fee#calculate"}"#),
+        "{json}"
+    );
+}
+
+fn json_escape(text: &str) -> String {
+    let mut out = String::new();
+    for c in text.chars() {
+        match c {
+            '"' => out.push_str("\\\""),
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
+/// The acceptance example of issue #216: every block of `formulaInfo-test/69` evaluates once
+/// its two code-block classes have stub values; without them, only those two blocks fail.
+#[test]
+fn formula_info_with_code_blocks_runs_with_stub_values() {
+    let document = json_escape(include_str!(
+        "../../../src/test/resources/formulaInfo-test/69/formulaInfo.txt"
+    ));
+    let stubs = r#"[{"class":"CheckDigits","method":"check","arity":1,"result":{"type":"boolean","value":true}},
+                    {"class":"sample.v1.CheckAlphabets","method":"check","arity":1,"result":{"type":"boolean","value":false}}]"#;
+    let response = formula_info_context_json(
+        &format!(r#"{{"document":"{document}","externals":{stubs}}}"#),
+        &LoaderOptions::java_tests(),
+    );
+    assert_eq!(response.exit_code, 0, "{}", response.json);
+    assert!(!response.json.contains(r#""error""#), "{}", response.json);
+
+    let response = formula_info_context_json(
+        &format!(r#"{{"document":"{document}"}}"#),
+        &LoaderOptions::java_tests(),
+    );
+    assert_eq!(response.exit_code, 5, "{}", response.json);
+    assert_eq!(
+        response.json.matches(MISSING_STUB_HINT).count(),
+        2,
+        "{}",
+        response.json
+    );
+}

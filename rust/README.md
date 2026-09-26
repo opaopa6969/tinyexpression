@@ -74,6 +74,15 @@ CLI `tinyexpression eval-context [FILE|-]` / `run-context`、C ABI・wasm `te_ev
 - `externals[]` は Java のリフレクションの代わりの定数スタブ。どの行にも無いクラスは `Class.forName` 失敗
   （`UnsupportedOperationException`）、`method` と `arity` が合わなければ method not found、`registered: false` は
   インスタンス未登録（`CalculationException`）。`result` は `{"type": "null"}` も可。
+- Java コードブロック（```` ```java:ClassName ````、issue #216）: Rust はコンパイルも実行もせず、「クラスを宣言するだけ」として
+  扱う（評価はエラーにならない）。そのクラスへの `external` 呼び出しは他のクラスと同じく `externals[]` のスタブで解決する
+  （`arity` はメソッドの引数から `CalculationContext` を除いた個数）。スタブが無ければ上と同じ `Class.forName` 失敗で、
+  メッセージに案内が付く:
+  `External invocation failed: CheckDigits#check (the class is declared by a ```java:CheckDigits code block, which this evaluator does not compile or run; コードブロックのクラスは externals で値を指定してください: add {"class":"CheckDigits","method":"check","result":{"type":...,"value":...}} to the request's externals[])`。
+  Java は実際にコンパイル・実行するので、スタブ（定数）での結果は Java と一致しない（**Rust はスタブ必須**、Java の挙動は
+  変えていない）。playground の parity smoke はコードブロックを含む行をこの前提で別に扱い、Rust の差分ゲート
+  （`tests/java_differential.rs`）は `TestHost` がコードブロックのクラスを Java と同じ動作で実装したものを使う。
+  Rust API: `Program::code_block_classes()`、ブロックの走査は `runtime::code_block`。
 - 成功は `{"ok":true,"value":{...},"text":"<String.valueOf>"}`。失敗は `"stage":"create"`（計算機の生成、parse
   失敗なら `diagnostic` 付き、exit 3/4）か `"apply"`（評価、exit 5）と `"error":{"kind":<Java 例外>,"message":...}`。
   リクエスト自体の誤りは `"stage":"request"`（exit 2）。

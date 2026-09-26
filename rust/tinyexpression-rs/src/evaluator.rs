@@ -917,8 +917,14 @@ impl Semantics for ScalarSemantics {
         Ok(Value::Boolean(Self::to_boolean(&value)))
     }
 
+    /// A ```` ```java:Class ```` block only declares a class (issue #216): nothing to evaluate,
+    /// and it is never compiled or run here. (The parser keeps blocks out of `FormulaExpr`, so
+    /// this is reached only by a hand-built AST.)
+    fn eval_code_block_expr(&mut self, _span: Span) -> Self::Output {
+        Ok(Value::Null)
+    }
+
     unsupported_semantics! {
-        fn eval_code_block_expr();
         fn eval_import_declaration_expr(className: &Ast, method: Option<&str>, alias: &str);
         fn eval_qualified_name_expr(head: &str, tail: &[String]);
         fn eval_number_variable_declaration_expr(varName: &str, onlyIfAbsent: Option<&Ast>, value: Option<&Ast>, desc: Option<&str>);

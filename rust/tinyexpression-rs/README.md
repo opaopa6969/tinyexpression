@@ -42,7 +42,7 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 - `tests/fixtures/numeric-f32.tsv` は独立した期待 f32 bits を保持し、Rust library/CLIとJava `P4TypedAstEvaluator` の `p4-typed` runtimeが共有する。
 - `tests/fixtures/scalar-control.tsv` はboolean/string/比較/制御構文について、値・評価順序・Java/Rust parityを共有する。
 - `tests/fixtures/root-expression.tsv` はroot dispatchの全文消費、Java/Rustそれぞれの厳密なsemantic root、必要な子nodeを共有検証する。
-- `javacodeblock` の内容を実行しない。`rustcodeblock` は未実装で、将来も既定無効・明示許可付きとする。
+- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。`rustcodeblock` は未実装で、将来も既定無効・明示許可付きとする。
 - CI artifactはUbuntuのLinux x86_64用であり、完全static binaryや全OS対応を意味しない。
 
 ## 文脈つき runtime（issue #179）
@@ -93,6 +93,7 @@ let closure = calculator_result(compiled.eval(&mut context, &mut host));      //
 | メソッド宣言・呼び出し | 実装 | 引数個数不一致・未定義は `UnsupportedOperationException`。引数は `coerceToType` |
 | 〃 再帰の深さ | **差異** | Java は thread stack 枯渇で `StackOverflowError`。Rust は `Options::max_call_depth`（既定 256）で同じ種別を返す。無限再帰は一致、256 段を超える有限再帰は Rust だけ失敗する |
 | `ExternalInvocation` | 実装（host 経由） | 上記 `ExternalHost` |
+| Java コードブロック（```` ```java:Class ````） | **差異（スタブ必須）** | Java はブロックをコンパイルしてクラスを読み、呼び出しで実行する。Rust は実行しない: ブロックは評価しても何も起きない（クラスの宣言だけ、`Program::code_block_classes()`）、呼び出しは `ExternalHost` が答える（JSON リクエストでは `externals[]` の定数スタブ）。host がそのクラスを読めなければ `ExternalError::ClassNotFound` と同じ `UnsupportedOperationException` で、メッセージに「コードブロックのクラスは externals で値を指定してください」（`runtime::code_block::missing_stub_hint`）。差分ゲートは `TestHost` が `CheckDigits`/`CheckAlphabets` を Java と同じ動作で持つので一致する |
 | `match` | 実装 | case が真でも値が `null` なら次の case へ進む Java の挙動も同じ |
 | slice | 実装 | UTF-16 code unit 単位（負 index・逆順 step・範囲外 `StringIndexOutOfBoundsException`・step 0 は `IllegalArgumentException`） |
 | 〃 孤立サロゲート | **差異** | Java の結果文字列は孤立サロゲートを持てるが Rust の `String` は持てないので U+FFFD に置き換える（golden も同じ置換で比較） |

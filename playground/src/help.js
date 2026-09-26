@@ -70,7 +70,7 @@ export function createHelp({ onReplayTour } = {}) {
   document.body.append(dialog);
 
   return {
-    open() { dialog.showModal(); },
+    open() { if (!dialog.open) dialog.showModal(); },
     destroy() { dialog.remove(); },
   };
 }

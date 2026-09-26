@@ -71,8 +71,8 @@ export function createTour({ hooks = {} } = {}) {
 
   function onKey(event) {
     if (event.key === 'Escape') { event.preventDefault(); stop(); }
-    else if (event.key === 'ArrowRight' || event.key === 'Enter') { event.preventDefault(); next(); }
-    else if (event.key === 'ArrowLeft') { event.preventDefault(); back(); }
+    else if (event.key === 'ArrowRight' || event.key === 'Enter') { event.preventDefault(); goNext(); }
+    else if (event.key === 'ArrowLeft') { event.preventDefault(); goBack(); }
   }
 
   // Called after the bubble's content for the step is already in the DOM (render() appends it

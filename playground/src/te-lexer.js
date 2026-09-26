@@ -7,6 +7,10 @@
 // uses). The token classes follow the VS Code grammar (tools/tinyexpression-p4-lsp-vscode/
 // syntaxes/tinyexpression.tmLanguage.json): `//` and `/* */` comments, '…' / "…" strings with
 // `\` escapes, numbers, `$variables`, keywords, `name(` / `.name` calls, ```java blocks.
+// Issue #216: a ```java:ClassName block (code-block.js) is coloured as Java — the fences
+// (`code-fence`, the class `type`) and the body's Java tokens, whose brackets pair among
+// themselves (`group`); a stray ``` that opens no block keeps the plain `code` colour.
+import { codeBlocksOf, codeBlockTokens } from './code-block.js';
 
 /** The opening bracket of each closing one. */
 const PAIRS = { ')': '(', ']': '[', '}': '{' };
@@ -55,15 +59,22 @@ function startsWith(text, i, literal) {
  * @param keywords names coloured as keywords (the catalog's keywords); `true`/`false` are constants
  * @param values names coloured as constants (the catalog's values: MONDAY …)
  */
-export function tokenize(text, { keywords = new Set(), values = new Set() } = {}) {
+export function tokenize(text, { keywords = new Set(), values = new Set() } = {}, blocks = codeBlocksOf(text)) {
   const tokens = [];
   const push = (from, to, type) => { if (to > from) tokens.push({ from, to, type }); };
+  const blockAt = new Map(blocks.map((b, index) => [b.from, index]));
   let i = 0;
   while (i < text.length) {
     const c = text.codePointAt(i);
     const w = width(text, i);
     if (isSpace(c)) {
       i += w;
+      continue;
+    }
+    if (blockAt.has(i)) {
+      const index = blockAt.get(i);
+      for (const t of codeBlockTokens(text, blocks[index], index)) if (t.to > t.from) tokens.push(t);
+      i = blocks[index].to;
       continue;
     }
     if (startsWith(text, i, '```')) {
@@ -143,14 +154,18 @@ export function tokenize(text, { keywords = new Set(), values = new Set() } = {}
  * [{from, char, depth, partner (index into the result) | -1}]. A closing bracket pairs with the
  * innermost open bracket of its kind (brackets opened after that one stay unmatched); with
  * none open it is unmatched (partner -1). Opening brackets left open at the end are unmatched.
+ * Tokens with a `group` (a Java code block's) nest and pair only within their group.
  */
 export function bracketsOf(text, tokens) {
   const brackets = [];
-  const stack = [];
+  const stacks = new Map();
   for (const token of tokens) {
     if (token.type !== 'bracket') continue;
     const char = text[token.from];
     const index = brackets.length;
+    const group = token.group ?? '';
+    if (!stacks.has(group)) stacks.set(group, []);
+    const stack = stacks.get(group);
     if (OPENING.has(char)) {
       brackets.push({ from: token.from, char, depth: stack.length, partner: -1 });
       stack.push(index);
@@ -191,8 +206,9 @@ export function lexiconOf(catalog) {
   };
 }
 
-/** Tokens and brackets of a whole formula (the formula editor). */
+/** Tokens, brackets and code blocks (code-block.js) of a whole formula (the formula editor). */
 export function analyzeFormula(text, lexicon) {
-  const tokens = tokenize(text, lexicon);
-  return { tokens, brackets: bracketsOf(text, tokens) };
+  const codeBlocks = codeBlocksOf(text);
+  const tokens = tokenize(text, lexicon, codeBlocks);
+  return { tokens, brackets: bracketsOf(text, tokens), codeBlocks };
 }

@@ -14,6 +14,7 @@
   --t-comment: #6e7068; --t-string: #116329; --t-number: #0550ae; --t-variable: #8250df;
   --t-keyword: #b3261e; --t-function: #953800; --t-constant: #0550ae; --t-operator: #57606a;
   --fi-key: #0a4f9e; --fi-key-unknown: #8a5a00; --fi-end: #6639ba;
+  --t-type: #1b6f86; --code-line-bg: #f4f1e6; --stub: #8a5a00;
   --br-0: #0969da; --br-1: #8250df; --br-2: #bf3989; --br-3: #8a5a00; --br-4: #1a7f37; --br-5: #0e7490;
   color-scheme: light;
 }
@@ -33,6 +34,7 @@
     --t-comment: #9d9d95; --t-string: #7ee787; --t-number: #79c0ff; --t-variable: #d2a8ff;
     --t-keyword: #ff8f86; --t-function: #ffa657; --t-constant: #79c0ff; --t-operator: #b1b1a9;
     --fi-key: #8cc4ff; --fi-key-unknown: #e3b341; --fi-end: #c9a7ff;
+    --t-type: #4ec9b0; --code-line-bg: #262521; --stub: #e3b341;
     --br-0: #79c0ff; --br-1: #d2a8ff; --br-2: #ff9bce; --br-3: #e3b341; --br-4: #7ee787; --br-5: #56d4dd;
     color-scheme: dark;
   }
@@ -43,6 +45,7 @@
   --t-comment: #9d9d95; --t-string: #7ee787; --t-number: #79c0ff; --t-variable: #d2a8ff;
   --t-keyword: #ff8f86; --t-function: #ffa657; --t-constant: #79c0ff; --t-operator: #b1b1a9;
   --fi-key: #8cc4ff; --fi-key-unknown: #e3b341; --fi-end: #c9a7ff;
+  --t-type: #4ec9b0; --code-line-bg: #262521; --stub: #e3b341;
   --br-0: #79c0ff; --br-1: #d2a8ff; --br-2: #ff9bce; --br-3: #e3b341; --br-4: #7ee787; --br-5: #56d4dd;
   color-scheme: dark;
 }
@@ -216,6 +219,13 @@ html.in-vscode .top { padding-top: .5rem; }
 .te-t-constant { color: var(--t-constant); font-weight: 600; }
 .te-t-operator { color: var(--t-operator); }
 .te-t-code { background: var(--code-bg); }
+/* issue #216: ```java code blocks (Java colouring, fences, line background) and stub marks */
+.te-t-type { color: var(--t-type); }
+.te-t-code-fence { color: var(--t-comment); font-weight: 600; }
+.cm-line.te-code-line { background: var(--code-line-bg); box-shadow: inset 3px 0 0 color-mix(in srgb, var(--t-type) 45%, transparent); }
+.stub-tag { display: inline-block; font-size: .72rem; font-weight: 600; color: var(--stub); border: 1px solid var(--stub); border-radius: 3px; padding: 0 .3rem; margin-left: .25rem; white-space: nowrap; }
+.stub-note { color: var(--muted); font-size: .85rem; margin: .4rem 0 0; }
+.stub-note .stub-tag { margin: 0 .25rem 0 0; }
 .te-t-fi-key { color: var(--fi-key); font-weight: 600; }
 .te-t-fi-key-unknown { color: var(--fi-key-unknown); font-weight: 600; text-decoration: underline dotted; }
 .te-t-fi-colon { color: var(--t-operator); }

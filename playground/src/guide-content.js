@@ -7,8 +7,7 @@
 //     `id="help-<id>"` heading, so both surfaces read from exactly one list and never drift.
 //
 // `selector` is only meaningful for tour steps. `optional: true` means the target may not
-// exist yet (e.g. issue #216's Java code-block UI, still in progress at the time of writing) —
-// the tour skips a step whose target is missing instead of breaking, and the build-time check
+// exist (in some host / build) — the tour skips a step whose target is missing instead of breaking, and the build-time check
 // (scripts/check.mjs) only requires non-optional selectors to resolve against the shipped
 // index.html.
 //
@@ -134,19 +133,23 @@ export const GUIDE = [
   {
     id: 'java-code-block',
     tour: true,
-    optional: true,
+    // Issue #216: the "external（仮の値）" section of the CalculationContext panel, with the
+    // Java code-block sample loaded so the formula editor shows the Java colouring.
     selector: '[data-tour="java-code-block"]',
+    autoAction: 'java-code-block-sample',
     title: { ja: 'Java コードブロック', en: 'Java code blocks' },
     body: {
       ja: [
         'FormulaInfo の formula: に ```java:ClassName でクラスを書き、式から import ClassName#method as alias; と external returning as T alias(...) で呼び出せます（例: src/test/resources/formulaInfo-test/69/formulaInfo.txt）。',
         'この playground（ブラウザ・wasm）には JVM が無いため実際には実行されません。色分けと、external を「仮の値」で代用する表示までです（issue #216）。',
+        '式エディタ・FormulaInfo エディタではコードブロックの中身が Java として色分けされ、折りたためます（hover で説明）。CalculationContext の「external（仮の値）」で「式から external を追加」を押すと、import とコードブロックのクラスから行ができます。戻り値を入れると「実行」で評価でき、結果とトレースには「仮の値」の印が付きます。値が無ければ「コードブロックのクラスは externals で値を指定してください」という明示エラーになります。',
         '本物の実行が必要なら VSIX（VS Code 拡張）を使います。実行は既定 off で、launch.json / DAP に allowJavaCodeBlocks: true を明示したときだけ動きます（ADR-003 のセキュリティモデル）。VSIX 内の playground から本物実行する経路は issue #217 で計画中です。',
         'Rust のコードブロックはありません。実行するには rustc によるその場コンパイルが要り、ADR-003 が Java コードブロックに課しているのと同じリスク（任意コード実行）を増やすだけだからです。',
       ],
       en: [
         'Write a class in FormulaInfo\'s formula: with ```java:ClassName, then call it from the expression with import ClassName#method as alias; and external returning as T alias(...) (example: src/test/resources/formulaInfo-test/69/formulaInfo.txt).',
         'This playground (browser, wasm) has no JVM, so it is never executed here — only highlighted, with externals answered by stub values (issue #216).',
+        'Both editors colour the block body as Java and fold it (hover explains it). In the CalculationContext panel, "external（仮の値）" → "式から external を追加" adds a row per import / code-block class; enter a return value and "実行" evaluates, with results and the trace marked "仮の値". Without a value the evaluation fails with an explicit "supply an externals value for the code-block class" error.',
         'Real execution needs the VSIX (VS Code extension). It is off by default and only runs when launch.json / the DAP sets allowJavaCodeBlocks: true (ADR-003\'s safety model). Real execution from the playground inside the VSIX is planned in issue #217.',
         'There is no Rust code block: running one would need compiling with rustc on the spot, adding the same arbitrary-code-execution risk ADR-003 already restricts for Java.',
       ],
