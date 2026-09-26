@@ -98,6 +98,28 @@ FormulaInfo パネルは式エディタと同じ CodeMirror 6 のエディタ（
   新しいブランチに commit して PR を作る。token 無しなら全体 JSON をコピーして GitHub の Web エディタを開く。
 - 編集は補完・hover・診断にすぐ反映し、ブラウザの localStorage に override として保存する（自分のブラウザだけ）。
 
+## ガイドツアーとヘルプ（issue #214）
+
+ヘッダーの「ツアー」「ヘルプ」は `src/guide-content.js` の 1 つの配列（`GUIDE`）だけを内容源にする。
+tour（`src/tour.js`）は要素を 1 つずつハイライト＋吹き出し（日本語＋英語）で進み、help（`src/help.js`）は
+同じ配列をすべて `<dialog>` の節として並べる（節の見出しには `id="help-<id>"`。issue #216 の Java
+コードブロック UI はこの `help-java-code-block` にリンクする予定）。
+
+- 手順: ①サンプル → ②式エディタ → ③CalculationContext → ④評価と結果 → ⑤評価トレース →
+  ⑥FormulaInfo エディタ → ⑦カタログ編集 → Java コードブロック（issue #216 の UI 待ち、対象が無ければ
+  スキップ） → ⑧文法（UBNF）と鉄道図 → code-server（ブラウザで VS Code）。
+- 対象要素が見つからない手順は（`optional: true` かどうかによらず）自動でスキップする。
+  `npm run check` が全手順の対象を `index.html` に対して検証し、無ければ `optional: true` を要求する。
+- 操作が要る手順（評価トレース）は自動でサンプル入力を読み込み、「トレースを取る」相当の処理を実行してから
+  説明する（`autoAction`、ツアー終了時は開始前の式・CalculationContext・FormulaInfo に復元する）。
+- 初回訪問時だけ「ツアーを見ますか」を出す（localStorage）。キーボード（←/→/Enter/Esc）で操作でき、
+  外部リンクは `data-external` を付けて VS Code の webview からも開ける。CDN 依存・`eval`/`new Function` は無い。
+- code-server（<https://code.unlaxer.org/>）はログインが要り常時起動ではない。VSIX
+  （`opaopa6969.tinyexpression-p4-lsp`）はインフラ上の TinyExpression 専用 code-server コンテナには導入済みを
+  確認済み。手元で入れる場合は Extensions ビューの「Install from VSIX…」、または
+  `code-server --install-extension <file>.vsix`。VSIX 自体は
+  `tools/tinyexpression-p4-lsp-vscode/`（`npm run package`）でビルドされ、タグ push (`v*`) で GitHub Release に添付される。
+
 ## VS Code の webview（段階 5）
 
 VSIX は `npm run build` の出力（`dist/`）を `playground-dist/` として同梱し、コマンド「TinyExpression: Open playground」で

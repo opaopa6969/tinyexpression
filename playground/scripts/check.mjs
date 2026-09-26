@@ -23,6 +23,7 @@ import { analyzeFormula, lexiconOf, bracketAtCursor } from '../src/te-lexer.js';
 import { analyzeFormulaInfo, parseFormulaInfo, normalizedValue, setEndMarkTrailingSpace } from '../src/formula-info-syntax.js';
 import { diagnoseFormulaInfo, formulaInfoKeys, isKnownKey } from '../src/formula-info-diagnostics.js';
 import { formulaInfoCompletionSource, formulaInfoHoverAt } from '../src/formula-info-editor.js';
+import { tourSteps, helpSections, selectorPresentInHtml } from '../src/guide-content.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
@@ -332,5 +333,40 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   assert.deepEqual(ownerValues.options.map((o) => o.label), ['alice', 'bob']);
 }
 
+// 10. guided tour + help (issue #214): src/guide-content.js is the one content source both
+//    read. tour.js and help.js do real DOM work (dialogs, highlight boxes) that needs a
+//    browser, so this Node check instead verifies the shape they render from: every entry has
+//    non-empty ja/en text, every tour step's target either exists in the shipped index.html or
+//    is explicitly `optional` (so the tour can skip it gracefully — e.g. issue #216's Java
+//    code-block UI, not built yet), and the two fixed contracts other issues depend on: a help
+//    section id of `java-code-block` (issue #216 links hovers to `#help-java-code-block`) and
+//    a `code-server` step pointing at the code.unlaxer.org entry point.
+{
+  const indexHtml = await readFile(join(root, 'playground', 'index.html'), 'utf8');
+  const steps = tourSteps();
+  const sections = helpSections();
+  assert.ok(steps.length >= 7, `expected at least the 7 guided-tour steps, got ${steps.length}`);
+  for (const entry of sections) {
+    assert.ok(entry.id && entry.title?.ja && entry.title?.en, `entry ${entry.id ?? '?'} needs ja/en titles`);
+    assert.ok(entry.body?.ja?.length && entry.body?.en?.length, `entry ${entry.id} needs ja/en body text`);
+    for (const link of entry.links ?? []) assert.match(link.href, /^https:\/\//, `entry ${entry.id} link`);
+  }
+  for (const step of steps) {
+    assert.ok(step.selector, `tour step ${step.id} needs a selector`);
+    const present = selectorPresentInHtml(indexHtml, step.selector);
+    assert.ok(present || step.optional === true, `tour step ${step.id}: ${step.selector} is missing from index.html and not marked optional`);
+  }
+  assert.ok(sections.some((s) => s.id === 'java-code-block'), 'help needs the java-code-block section (id="help-java-code-block", issue #216 links to it)');
+  const codeServer = sections.find((s) => s.id === 'code-server');
+  assert.ok(codeServer, 'help/tour need the code-server entry point');
+  assert.ok(selectorPresentInHtml(indexHtml, codeServer.selector), 'code-server tour target must exist (it is not optional)');
+  assert.equal(codeServer.links[0].href, 'https://code.unlaxer.org/');
+  // The grammar (UBNF/railroad) recap is the tour's closing step before code-server (issue #214
+  // comment: "ツアーの最後に UBNF 定義と railroad 図へのリンクを紹介する手順").
+  const ids = steps.map((s) => s.id);
+  assert.ok(ids.indexOf('grammar') < ids.indexOf('code-server'), 'grammar recap should come before the code-server entry');
+}
+
 console.log(`playground check OK: catalog valid (${catalog.variables.length} variables, ${catalog.errorCodes.length} codes), ` +
-  `${EXAMPLES.length} samples, diagnostics, FormulaInfo, trace, catalog editing, PR helper, editors (tokens, brackets, FormulaInfo completion / diagnostics / hover)`);
+  `${EXAMPLES.length} samples, diagnostics, FormulaInfo, trace, catalog editing, PR helper, editors (tokens, brackets, FormulaInfo completion / diagnostics / hover), ` +
+  `guided tour + help (${tourSteps().length} steps, ${helpSections().length} help sections)`);
