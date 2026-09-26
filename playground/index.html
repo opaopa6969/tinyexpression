@@ -20,6 +20,10 @@
     <label class="examples" title="load a sample formula with its CalculationContext">サンプル
       <select id="examples"><option value="">選択…</option></select>
     </label>
+    <div class="header-buttons">
+      <button id="tour-button" title="guided tour of the playground">ツアー</button>
+      <button id="help-button" title="help: the same content as the tour, to read without following it">ヘルプ</button>
+    </div>
   </header>
 
   <main class="layout">
@@ -97,6 +101,7 @@
   <footer class="muted small">
     言語カタログ <a href="https://github.com/opaopa6969/tinyexpression/blob/master/catalog/tinyexpression-catalog.json">catalog/tinyexpression-catalog.json</a>
     （VSIX の LSP と共通） · <a href="https://github.com/opaopa6969/tinyexpression">GitHub</a>
+    · <a id="code-server-link" href="https://code.unlaxer.org/" target="_blank" rel="noopener" data-external title="requires login; not always running — the VSIX pre-installed, browser entry point to VS Code">code-server で VS Code を開く（要ログイン）</a>
   </footer>
   <script type="module" src="./src/main.js"></script>
 </body>
