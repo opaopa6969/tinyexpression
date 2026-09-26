@@ -205,6 +205,16 @@ cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run -
 - `load`（変換層）: Java の `FormulaInfoParser.extractFormulaInfo` の後処理を同じ順序で行う。値の正規化（`stripTrailing`、`#` 行・空行の除去）、既知キーの写像、`executionBackend`/`backend` の解決、`hash` の MD5 更新（大文字 hex）、`Formula_<name>` のクラス名、formula 必須検査、`Program::new` による式の構築（Java の calculator 構築に当たる）、最後に `dependsOn` の配線。`LoadError::java_exception` は同じ文書で Java が投げる例外名を返す。
 - `load`/`run` の CLI は Java loader テストと同じ設定（`siteId` を multi-tenancy 属性、`checkKind` があればそれ・無ければ `calculatorName` を名前）で読み、`run` は各式を空の context で 1 回評価する（external は未登録扱い）。
 - 保持しないもの: `javaCode`・`byteCode`・`byteCode_<class>`・`hashByByteCode`。Java も load のたびに式から作り直し、保存値を実行しない。`byteCode` 系は Java と同じく hex として検査だけする。
+- エラー位置（issue #212）: `load`/`run`（CLI・`te_formula_info`・`te_formula_info_context`）の失敗応答
+  `{"ok":false,"stage":"load","error":{...}}` に `"span":[start,end]`（文書の code point 位置）が付く。
+  `formula_info_span::load_error_span` が求める: 構文エラーは parser の診断 offset（1 点）、それ以外は各ブロックを単独で
+  load して最初に失敗するブロックを特定し（ブロックは `dependsOn` の配線まで互いに独立なので `load` が止まったブロックと
+  一致する）、エラーのキー・値からエントリを選ぶ（値のエラーは正規化後の値の範囲、式の parse エラーは `#` 行・空行の除去を
+  戻した文書上の 1 点、未知の `dependsOn` はその名前、formula なしは `formula:` 行かブロック先頭のキー行）。
+  playground の FormulaInfo エディタが波線を引く位置。loader の受理範囲・エラーの種類は変えない。
+  Java との対称性: Java の `FormulaInfoParseException` は全文を消費できない文書（部分 parse）でだけメッセージに offset を
+  含み、ほかの loader 例外は位置を持たない。`span` は JSON API の追加情報で、パリティ（`tests/formula_info.rs`、Java 例外名の
+  一致）には影響しない。テストは `tests/formula_info_span.rs`。
 
 ### Java loader とのパリティ（`tests/formula_info.rs`）
 

@@ -17,6 +17,11 @@ import { diagnose, describeFailure } from './diagnostics.js';
 import { completionSource, hoverExtension } from './editor-support.js';
 import { EXAMPLES, FORMULA_INFO_SAMPLE } from './examples.js';
 import { highlightExtension } from './highlight.js';
+import { analyzeFormula, lexiconOf } from './te-lexer.js';
+import { syntaxView, refreshSyntax } from './syntax-view.js';
+import { analyzeFormulaInfo, setEndMarkTrailingSpace } from './formula-info-syntax.js';
+import { diagnoseFormulaInfo, formulaInfoKeys, isKnownKey } from './formula-info-diagnostics.js';
+import { formulaInfoCompletionSource, formulaInfoHover } from './formula-info-editor.js';
 import { createTracePanel } from './trace-panel.js';
 import { createCatalogPanel } from './catalog-panel.js';
 import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
@@ -103,6 +108,13 @@ function select(options, value, onChange, title) {
 
 const contextVariables = () => state.context.variables;
 const currentCatalog = () => catalog;
+const toLint = (d) => ({
+  from: d.from,
+  to: d.to,
+  severity: d.severity,
+  source: d.code,
+  message: [d.message, d.fix && !d.message.includes(d.fix) ? `修正のヒント: ${d.fix}` : '', d.detail].filter(Boolean).join('\n'),
+});
 
 const view = new EditorView({
   doc: state.formula,
@@ -114,15 +126,10 @@ const view = new EditorView({
     hoverExtension(currentCatalog, contextVariables),
     lintGutter(),
     highlightExtension,
+    syntaxView((text) => analyzeFormula(text, lexiconOf(catalog))),
     linter((v) => {
       if (!te) return [];
-      return diagnose(te, catalog, v.state.doc.toString(), state.context.variables.map((x) => x.name)).map((d) => ({
-        from: d.from,
-        to: d.to,
-        severity: d.severity,
-        source: d.code,
-        message: [d.message, d.detail].filter(Boolean).join('\n'),
-      }));
+      return diagnose(te, catalog, v.state.doc.toString(), state.context.variables.map((x) => x.name)).map(toLint);
     }, { delay: 250 }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) scheduleEvaluate();
@@ -142,6 +149,7 @@ function scheduleEvaluate() {
 function contextChanged() {
   renderContext();
   forceLinting(view);
+  forceLinting(infoView);
   scheduleEvaluate();
 }
 
@@ -287,9 +295,37 @@ exampleSelect.addEventListener('change', () => {
 
 // ── FormulaInfo panel ──
 
-const infoText = $('formula-info');
-infoText.value = state.formulaInfo ?? FORMULA_INFO_SAMPLE;
-infoText.addEventListener('input', () => { state.formulaInfo = infoText.value; saveState(); });
+const analyzeInfo = (text) => {
+  const keys = formulaInfoKeys(catalog);
+  return analyzeFormulaInfo(text, { lexicon: lexiconOf(catalog), isKnownKey: (key) => isKnownKey(keys, key) });
+};
+const infoView = new EditorView({
+  doc: state.formulaInfo ?? FORMULA_INFO_SAMPLE,
+  parent: $('formula-info'),
+  extensions: [
+    basicSetup,
+    EditorView.lineWrapping,
+    autocompletion({ override: [formulaInfoCompletionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
+    formulaInfoHover(currentCatalog, contextVariables),
+    lintGutter(),
+    syntaxView(analyzeInfo),
+    linter((v) => {
+      if (!te) return [];
+      const text = v.state.doc.toString();
+      return diagnoseFormulaInfo(te, catalog, text, state.context.variables.map((x) => x.name), analyzeInfo(text)).map(toLint);
+    }, { delay: 300 }),
+    EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return;
+      state.formulaInfo = update.state.doc.toString();
+      saveState();
+    }),
+    EditorView.contentAttributes.of({ 'aria-label': 'FormulaInfo' }),
+  ],
+});
+const infoText = () => infoView.state.doc.toString();
+function setInfoText(text) {
+  infoView.dispatch({ changes: { from: 0, to: infoView.state.doc.length, insert: text } });
+}
 
 function simpleType(javaName) {
   if (!javaName) return null;
@@ -338,16 +374,14 @@ function renderFormulaInfo(result, evaluated) {
 
 $('load-info').addEventListener('click', () => {
   if (!te) return;
-  renderFormulaInfo(te.load(infoText.value).result, false);
+  renderFormulaInfo(te.load(infoText()).result, false);
 });
 $('run-info').addEventListener('click', () => {
   if (!te) return;
-  renderFormulaInfo(te.runContext(toRequest(state.context, { document: infoText.value })).result, true);
+  renderFormulaInfo(te.runContext(toRequest(state.context, { document: infoText() })).result, true);
 });
 $('sample-info').addEventListener('click', () => {
-  infoText.value = FORMULA_INFO_SAMPLE;
-  state.formulaInfo = infoText.value;
-  saveState();
+  setInfoText(FORMULA_INFO_SAMPLE);
 });
 
 // ── Trace panel (stage 3) ──
@@ -398,6 +432,9 @@ const catalogPanel = createCatalogPanel($('catalog'), {
     renderCatalogCounts();
     renderContext();
     forceLinting(view);
+    forceLinting(infoView);
+    refreshSyntax(view);
+    refreshSyntax(infoView);
     scheduleEvaluate();
   },
 });
@@ -410,8 +447,7 @@ connectHost({
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: message.formula } });
     }
     if (typeof message.formulaInfo === 'string' && message.formulaInfo.trim() !== '') {
-      infoText.value = message.formulaInfo;
-      state.formulaInfo = message.formulaInfo;
+      setInfoText(message.formulaInfo);
     }
     $('host-status').textContent = message.documentName ? `VS Code: ${message.documentName} から読み込みました。` : '';
     hostCatalogLabel = message.catalogLabel ?? '';
@@ -419,7 +455,12 @@ connectHost({
     catalogPanel.load(catalog);
     renderCatalogCounts();
     renderContext();
-    if (te) forceLinting(view);
+    refreshSyntax(view);
+    refreshSyntax(infoView);
+    if (te) {
+      forceLinting(view);
+      forceLinting(infoView);
+    }
     scheduleEvaluate();
   },
   saved(message) {
@@ -438,7 +479,12 @@ createRuntime(new URL('tinyexpression.wasm', document.baseURI).href).then((runti
   te = runtime;
   const version = te.version();
   $('version').textContent = `tinyexpression ${version.version} (wasm ${(te.size / 1024 / 1024).toFixed(1)} MB, ubnfc ${version.ubnfc.slice(0, 7)})`;
+  // Issue #211: whether this loader closes a block at `---END_OF_PART---` + trailing spaces.
+  const probe = te.load('calculatorName:a\nformula:\n1\n---END_OF_PART--- \n').result;
+  setEndMarkTrailingSpace(probe.ok === true && probe.formulas?.[0]?.info?.formulaText === '1');
+  refreshSyntax(infoView);
   forceLinting(view);
+  forceLinting(infoView);
   evaluate();
 }).catch((error) => {
   $('result').replaceChildren(el('div', { class: 'result-error' }, `tinyexpression.wasm を読み込めませんでした: ${error.message}`));

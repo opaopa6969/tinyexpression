@@ -8,6 +8,7 @@
 //! meaning (see `rust/README.md`, "ABI stability").
 
 use crate::formula_info::{self, LoadError, LoadedFormula, LoaderOptions};
+use crate::formula_info_span;
 use crate::request::{self, Request};
 use crate::runtime::{
     calculator_result, java_string, Context, ContextClock, ErrorKind, EvalError, ExternalHost,
@@ -151,7 +152,7 @@ pub fn eval_json(source: &str) -> Response {
 pub fn formula_info_json(source: &str, options: &LoaderOptions, run: bool, seed: u64) -> Response {
     let formulas = match formula_info::load(source, options) {
         Ok(formulas) => formulas,
-        Err(error) => return load_failure(error),
+        Err(error) => return load_failure(source, options, error),
     };
     if run {
         let mut external = NoExternals;
@@ -331,11 +332,16 @@ pub fn formula_info_context_json(request_text: &str, options: &LoaderOptions) ->
             &formulas,
             Some((&request.context, &mut request.externals, request.seed)),
         ),
-        Err(error) => load_failure(error),
+        Err(error) => load_failure(&document, options, error),
     }
 }
 
-fn load_failure(error: LoadError) -> Response {
+/// `{"ok":false,"stage":"load","error":...,"span":[start,end]}`: `span` (issue #212) is where in
+/// the document the error is, in code points (`formula_info_span`); absent when not found.
+fn load_failure(source: &str, options: &LoaderOptions, error: LoadError) -> Response {
+    let span = formula_info_span::load_error_span(source, options, &error)
+        .map(|span| format!(",\"span\":[{},{}]", span.start, span.end))
+        .unwrap_or_default();
     Response::failure(
         if matches!(error, LoadError::Syntax(_)) {
             EXIT_PARSE
@@ -343,7 +349,7 @@ fn load_failure(error: LoadError) -> Response {
             EXIT_LOAD
         },
         format!(
-            "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
+            "{{\"ok\":false,\"stage\":\"load\",\"error\":{}{span}}}",
             error.canonical_json()
         ),
     )

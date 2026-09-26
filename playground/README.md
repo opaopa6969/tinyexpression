@@ -9,7 +9,7 @@ npm ci
 npm run build:wasm   # rust/ から tinyexpression.wasm（release-small）を作って public/ へコピー
 npm run dev          # http://localhost:5173/
 npm run parity       # Java 差分 golden を playground の評価経路で照合（node）
-npm run check        # カタログのスキーマ検証、サンプル、TE コード付き診断、trace、カタログ編集
+npm run check        # カタログのスキーマ検証、サンプル、TE コード付き診断、trace、カタログ編集、エディタ（色分け・かっこ・FormulaInfo の補完/診断/hover）
 npm run roundtrip    # カタログの無編集書き出しがバイト一致、派生ファイル一致、VSIX 用 golden override
 npm run build        # dist/（GitHub Pages に置くもの、VSIX の playground-dist/ にもなる）
 ```
@@ -23,6 +23,40 @@ npm run build        # dist/（GitHub Pages に置くもの、VSIX の playgroun
 - 診断: `te_check` の parse 失敗をカタログの `diagnosticRules` で TE コードにし、文言・修正のヒントもカタログから。
   CalculationContext にもカタログにも無い `$変数` は TE022（警告）。
 - 状態（式・CalculationContext・FormulaInfo）はブラウザの localStorage にだけ保存する。
+- 色分け（issue #212）: キーワード・関数・`$変数`・文字列・数値・コメント・```java ブロック。かっこは入れ子の深さごとに
+  6 色（rainbow brackets）、対応しないかっこは赤の波線、カーソル位置のかっこと相手を枠で強調する。字句は
+  `src/te-lexer.js`（code point 単位の走査、正規表現なし。文字列・コメント内のかっこは数えない）、装飾は
+  `src/syntax-view.js`（FormulaInfo エディタと共通）。色は明暗どちらのテーマでも本文色とのコントラスト比 4.5 以上。
+
+## FormulaInfo エディタ（issue #212）
+
+FormulaInfo パネルは式エディタと同じ CodeMirror 6 のエディタ（VSIX の webview でも同じ build、`new Function`/eval なし）。
+「読み込み」「実行」と localStorage 保存は従来どおり。
+
+- 色分け: 既知のキー（カタログ `settings` の `scope: formulaInfo` と loader が読む `formula`・`hash`・`byteCode` 系・
+  `siteId`・`checkKind`）と未知のキー（別の色＋点線）、`:`、`#` コメント行、`---END_OF_PART---` 行、値。
+  `formula:` の値には式エディタと同じ tinyexpression の色分けとかっこの深さ色（式ごとに独立）。
+  ブロックの外のゴミ行・閉じない終端行（`---END_OF_PART---` の後ろに文字がある行）は赤。
+- 補完: 行頭でキー（`key:`）と `---END_OF_PART---`、`dependsOn:` の値で文書内の他ブロックの `calculatorName`、
+  `executionBackend:` / `backend:` / `resultType:` / `numberType:` / `p4Engine:` でカタログの列挙値、
+  `formula:` の値の中では式エディタと同じ補完（関数・キーワード・CalculationContext／カタログの `$変数`）。
+- 診断（波線と gutter）:
+  - loader（`te_formula_info` の Rust loader）の失敗を、loader が返す `span`（文書の code point 位置、下記）に出す。
+    構文エラー（ブロック間のゴミ行など）、入力末尾の `key:` の空値、未知の `dependsOn`（FI001）、未知の
+    executionBackend（FI002）、未知の型、formula なし、bytecode の hex など。位置が 1 点のエラーはその行の残り、
+    位置が取れないエラーは該当ブロックの先頭のキー行。
+  - 各ブロックの `formula:` を loader と同じ正規化（`#` 行・空行を除いて連結）で `te_check` し、式エディタと同じ
+    TE コード・文言・修正のヒント（カタログ `diagnosticRules`）を文書上の位置に戻して出す。同じ式の loader エラーは
+    重ねて出さない。
+  - 未知のキーは警告、`dependsOn` の未知の名前は（loader が最初の 1 つで止まっても）すべて FI001。
+- hover: キー（カタログの説明・型・値の候補）、`---END_OF_PART---`、`formula:` の中の変数・関数・キーワード
+  （式エディタと同じ）、`dependsOn:` の名前（どのブロックの `calculatorName` か）。
+- 位置: Rust の `span` は code point、JS の文字列位置への変換は `src/trace.js` の `codePointIndexMap`。
+- 純粋関数は `src/formula-info-syntax.js`（行・ブロック・キー・値の走査、loader と同じ値の正規化と位置の対応）と
+  `src/formula-info-diagnostics.js`、CodeMirror 部分は `src/formula-info-editor.js`。`npm run check` が node で補完・
+  診断位置・かっこの深さ・hover を確かめる。
+- `---END_OF_PART---` の後ろの空白（issue #211）: 起動時に wasm の loader に 1 回問い合わせ、終端として扱うかを
+  loader に合わせる（#211 前の loader では値の続き、後の loader では終端）。
 
 ## 評価トレース（段階 3）
 
