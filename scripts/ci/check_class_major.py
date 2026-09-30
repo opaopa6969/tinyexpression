@@ -2,7 +2,7 @@
 """Require that every .class file in the given jars has one class-file major version.
 
 Usage: check_class_major.py <major> <jar> [<jar> ...]
-  61 = Java 17 (tinyExpression-jdk17), 65 = Java 21 (tinyExpression). tinyexpression #220
+  65 = Java 21 (tinyExpression). tinyexpression #220
 """
 
 import struct

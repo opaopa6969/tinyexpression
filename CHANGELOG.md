@@ -5,10 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-### Changed
-- `tinyExpression-jdk17` is no longer released; 2.0.1 is its last version. `scripts/release-central.sh`
-  and the Release Central workflow deploy only the Java 21 `tinyExpression`. The `tinyexpression-jdk17/`
-  build and its CI job are kept.
+### Removed
+- **`tinyExpression-jdk17` is discontinued** (owner decision); 2.0.1 is its last release. The
+  `tinyexpression-jdk17/` module, its CI job (JDK 17 full tests, class major 61, no release-21 unlaxer)
+  and its deploy in `scripts/release-central.sh` / the Release Central workflow are removed.
+  `install-unlaxer-if-unpublished.sh` no longer checks the `-jdk17` unlaxer artifacts. Sources keep
+  their release-17-compatible forms (e.g. the reflective virtual-thread lookup in `McpServer`).
 
 ## [2.1.0] - 2026-09-30
 

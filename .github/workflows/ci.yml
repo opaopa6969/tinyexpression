@@ -237,62 +237,6 @@ jobs:
           path: tinyexpression/target/surefire-reports/
           if-no-files-found: warn
 
-  # tinyexpression #220: tinyExpression-jdk17 (tinyexpression-jdk17/pom.xml) recompiles the same
-  # sources with release 17 against unlaxer-*-jdk17. Build and run the whole test suite on a Java 17
-  # JVM and require class file major 61 in every class of the jar.
-  jdk17:
-    name: tinyExpression-jdk17 on JDK 17 (full tests)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      # JDK 21 only builds unlaxer from source when it is not on Central (its main modules are release 21).
-      - uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-      - name: Create an empty Maven repository on the assigned runner
-        run: |
-          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-jdk17.XXXXXX")
-          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
-      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
-      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
-      - name: Install unlaxer from source if it is not on Maven Central yet
-        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
-      - uses: actions/setup-java@v5
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-      - name: Build and test tinyExpression-jdk17 on JDK 17
-        run: >-
-          java -version 2>&1 | head -1 &&
-          mvn -B -f tinyexpression-jdk17/pom.xml clean package -Dgpg.skip=true
-          -Dmaven.repo.local="$MAVEN_REPO"
-      - name: Require class file major 61 (Java 17) in the tinyExpression-jdk17 jar
-        run: python3 scripts/ci/check_class_major.py 61 tinyexpression-jdk17/target/tinyExpression-jdk17-*[0-9].jar
-      # tinyexpression #224: no class in the jar may share its FQCN with unlaxer-common-jdk17 /
-      # unlaxer-dsl-jdk17 (a shadowing copy wins or loses depending on the consumer's classpath order).
-      - name: No class of the tinyExpression-jdk17 jar duplicates an unlaxer-*-jdk17 class
-        run: |
-          mvn -B -q -f tinyexpression-jdk17/pom.xml dependency:build-classpath -DincludeGroupIds=org.unlaxer \
-            -Dmdep.outputFile="$RUNNER_TEMP/unlaxer-jdk17-classpath.txt" -Dmaven.repo.local="$MAVEN_REPO"
-          python3 scripts/ci/check_no_duplicate_classes.py tinyexpression-jdk17/target/tinyExpression-jdk17-*[0-9].jar \
-            "$RUNNER_TEMP/unlaxer-jdk17-classpath.txt"
-      - name: The jar must not depend on the release-21 unlaxer artifacts
-        run: |
-          mvn -B -q -f tinyexpression-jdk17/pom.xml dependency:list -DincludeGroupIds=org.unlaxer \
-            -DoutputFile="$RUNNER_TEMP/unlaxer-deps.txt" -Dmaven.repo.local="$MAVEN_REPO"
-          cat "$RUNNER_TEMP/unlaxer-deps.txt"
-          if grep -E 'org\.unlaxer:unlaxer-(common|dsl):' "$RUNNER_TEMP/unlaxer-deps.txt"; then
-            echo "tinyExpression-jdk17 pulls a release-21 unlaxer artifact" >&2
-            exit 1
-          fi
-      - uses: actions/upload-artifact@v6
-        if: always()
-        with:
-          name: jdk17-surefire-reports
-          path: tinyexpression-jdk17/target/surefire-reports/
-          if-no-files-found: warn
-
   # issue #173: the Java CI above resolves org.unlaxer:unlaxer-* from Maven Central, so a
   # regression on unlaxer-parser master (development) is invisible until it is published (it
   # took 2 days to notice unlaxer-parser#269 this way). This job tracks unlaxer-parser's master

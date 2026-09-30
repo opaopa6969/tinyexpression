@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs org.unlaxer:unlaxer-{common,dsl}[-jdk17]:<unlaxer.version> into the job-local Maven
+# Installs org.unlaxer:unlaxer-{common,dsl}:<unlaxer.version> into the job-local Maven
 # repository from unlaxer-parser sources when that version is not on Maven Central yet.
 #
 #   MAVEN_REPO=/path/to/repo scripts/ci/install-unlaxer-if-unpublished.sh
@@ -14,21 +14,20 @@ repo=$(cd "$(dirname "$0")/../.." && pwd)
 : "${MAVEN_REPO:?set MAVEN_REPO to the job-local Maven repository}"
 
 version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' "$repo/pom.xml" | head -1)
-jdk17_version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' "$repo/tinyexpression-jdk17/pom.xml" | head -1)
-if [[ -z "$version" || "$version" != "$jdk17_version" ]]; then
-  echo "unlaxer.version differs: pom.xml '$version' vs tinyexpression-jdk17/pom.xml '$jdk17_version'" >&2
+if [[ -z "$version" ]]; then
+  echo "pom.xml has no unlaxer.version" >&2
   exit 1
 fi
 
 central=https://repo1.maven.org/maven2/org/unlaxer
 published=true
-for artifact in unlaxer-common unlaxer-dsl unlaxer-common-jdk17 unlaxer-dsl-jdk17; do
+for artifact in unlaxer-common unlaxer-dsl; do
   if ! curl -fsI "$central/$artifact/$version/$artifact-$version.pom" > /dev/null; then
     published=false
   fi
 done
 if $published; then
-  echo "unlaxer $version (with -jdk17) is on Maven Central; nothing to install."
+  echo "unlaxer $version is on Maven Central; nothing to install."
   exit 0
 fi
 
@@ -49,7 +48,7 @@ if [[ "$revision" != "$version" ]]; then
   exit 1
 fi
 echo "unlaxer $version is not on Maven Central; installing it from unlaxer-parser $commit"
-mvn -B -q -f "$work/pom.xml" -pl .,unlaxer-common,unlaxer-dsl,unlaxer-common-jdk17,unlaxer-dsl-jdk17 \
+mvn -B -q -f "$work/pom.xml" -pl .,unlaxer-common,unlaxer-dsl \
   install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   echo "unlaxer $version: not on Maven Central yet, built from unlaxer-parser \`$commit\`" >> "$GITHUB_STEP_SUMMARY"

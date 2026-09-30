@@ -132,7 +132,7 @@ jobs:
           # deploy step re-runs the build only to produce and upload artifacts,
           # so tests are explicitly skipped here.
           ./mvnw -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false -DskipTests
-          # tinyExpression-jdk17 (#220) is no longer released; 2.0.1 is its last version.
+          # tinyExpression-jdk17 (#220) was removed; 2.0.1 is its last release.
 
       - name: Tag the release
         run: |

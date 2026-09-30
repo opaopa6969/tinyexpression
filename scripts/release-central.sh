@@ -132,5 +132,4 @@ echo "Publishing org.unlaxer:tinyExpression:$version"
 # shellcheck disable=SC2086
 ./mvnw "${mvn_settings[@]}" -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false ${RELEASE_MVN_ARGS:-}
 
-# tinyExpression-jdk17 (#220) is no longer released: 2.0.1 is its last version (owner decision,
-# 2026-09-30). tinyexpression-jdk17/ stays buildable but is not deployed from here.
+# tinyExpression-jdk17 (#220) was removed on 2026-09-30 (owner decision); 2.0.1 is its last release.
