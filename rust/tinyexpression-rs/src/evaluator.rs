@@ -271,6 +271,15 @@ impl From<FrontendError> for EvaluationError {
 /// return [`EvaluationError::UnsupportedNode`] instead of being interpreted by another path.
 pub fn evaluate(source: &str) -> Result<Value, EvaluationError> {
     let ast = parse(source)?;
+    if source.contains("```") {
+        let blocks = crate::code_blocks::parse(source)?;
+        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&blocks) {
+            return Err(EvaluationError::UnsupportedNode {
+                node: diagnostic.to_string(),
+                span: diagnostic.span,
+            });
+        }
+    }
     evaluate_ast(&ast)
 }
 

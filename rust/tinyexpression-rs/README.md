@@ -42,10 +42,12 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 - `tests/fixtures/numeric-f32.tsv` は独立した期待 f32 bits を保持し、Rust library/CLIとJava `P4TypedAstEvaluator` の `p4-typed` runtimeが共有する。
 - `tests/fixtures/scalar-control.tsv` はboolean/string/比較/制御構文について、値・評価順序・Java/Rust parityを共有する。
 - `tests/fixtures/root-expression.tsv` はroot dispatchの全文消費、Java/Rustそれぞれの厳密なsemantic root、必要な子nodeを共有検証する。
-- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。`rustcodeblock` は未実装で、将来も既定無効・明示許可付きとする。
+- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。`rustcodeblock` は本文と位置の保持・副作用のないビルド前検査まで対応（#228）。通常の source-aware 評価では `CB005` で拒否する。AOT コンパイル・実行は未実装で、将来も既定無効・明示許可付きとする。Java と共通の API、AST-only API の限界は [CodeBlock 準備契約](../../docs/code-block-source-contract.md) を参照。
 - CI artifactはUbuntuのLinux x86_64用であり、完全static binaryや全OS対応を意味しない。
 
 ## 文脈つき runtime（issue #179）
+
+> **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when formula authors are fully trusted. Do not expose this capability to untrusted users.
 
 `tinyexpression_rs::runtime` は Java の `P4_AST_EVALUATOR` 経路（`AstEvaluatorCalculator` → `P4TypedAstEvaluator`）と同じ意味論を持つ評価器である。通常依存ゼロのまま。`#![forbid(unsafe_code)]` は vendored parser だけでなく crate ルート（`lib.rs`）にも付け、runtime を含む全体に効かせた。
 

@@ -14,7 +14,7 @@ categories = ["parser-implementations", "command-line-utilities"]
 # The Java differential corpus and golden (3 MB), the Java parity drivers and the criterion
 # bench (it reads benchmarks/fixtures at the repository root) need the rest of the
 # repository; they stay in git and out of the published crate.
-exclude = ["benches/", "tests/java-diff/", "tests/formula-info/", "tests/java_differential.rs", "tests/formula_info.rs"]
+exclude = ["benches/", "tests/java-diff/", "tests/formula-info/", "tests/java_differential.rs", "tests/formula_info.rs", "tests/code_blocks_shared.rs"]
 
 [dependencies]
 criterion = { version = "0.5", optional = true }

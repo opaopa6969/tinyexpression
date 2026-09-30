@@ -589,6 +589,7 @@ pub struct Program {
     options: Options,
     /// Classes the source's ```` ```java:Class ```` blocks declare (issue #216, [`code_block`]).
     code_block_classes: Vec<String>,
+    code_blocks: Vec<crate::code_blocks::CodeBlock>,
 }
 
 impl Program {
@@ -602,14 +603,27 @@ impl Program {
                 source: stripped,
                 options,
                 code_block_classes: Vec::new(),
+                code_blocks: Vec::new(),
             });
         }
         let root = select::select_root(source, &stripped, options.result_type)?;
+        let code_blocks = if source.contains("```") {
+            crate::code_blocks::parse(source)?
+        } else {
+            Vec::new()
+        };
+        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&code_blocks) {
+            return Err(EvalError::new(
+                ErrorKind::UnsupportedOperation,
+                diagnostic.to_string(),
+            ));
+        }
         Ok(Self {
             root: Some(root),
             source: stripped,
             options,
             code_block_classes: code_block::code_block_classes(source),
+            code_blocks,
         })
     }
 
@@ -618,6 +632,11 @@ impl Program {
     /// [`ExternalHost`] like any other external class.
     pub fn code_block_classes(&self) -> &[String] {
         &self.code_block_classes
+    }
+
+    /// Source-preserving metadata. No code is compiled or executed while parsing.
+    pub fn code_blocks(&self) -> &[crate::code_blocks::CodeBlock] {
+        &self.code_blocks
     }
 
     /// The error of an external call that failed with `error`: [`ExternalError`]'s Java

@@ -294,6 +294,11 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
   static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
 
     List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
+    // Rust bindings require the explicit native AOT path; never ignore them or
+    // treat Java's global permission as permission to compile Rust.
+    if (codeBlocks.stream().anyMatch(cb -> "rust".equalsIgnoreCase(cb.schemeAndIdentifier.scheme))) {
+      throw new UnsupportedOperationException("CB005: Rust code blocks require an explicit AOT build");
+    }
 
     // Opt-in check: if JavaCodeBlockPolicy disables code block execution and the formula
     // contains at least one Java code block, reject with a diagnostic error so callers

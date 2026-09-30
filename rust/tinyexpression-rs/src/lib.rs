@@ -17,6 +17,7 @@
 #![forbid(unsafe_code)]
 
 pub mod api;
+pub mod code_blocks;
 pub mod generated;
 
 mod diagnostic;

@@ -1,0 +1,11 @@
+# id\tsource(escaped)\ttarget\tallow\tdiagnostics(code:start:end;...)
+deny	```rust:demo\nx\n```\n1	rust	false	CB004:8:12
+allow	```rust:demo\nx\n```\n1	rust	true	ok
+wrong_java	```rust:demo\nx\n```\n1	java	true	CB003:8:12
+wrong_rust	```java:Demo\nx\n```\n1	rust	true	CB003:8:12
+allow_java	```java:Demo\nx\n```\n1	java	true	ok
+unknown	```python:demo\nx\n```\n1	rust	true	CB001:10:14
+duplicate	```rust:demo\nx\n```\n```rust:demo\nx\n```\n1	rust	true	CB002:27:31
+mixed_duplicate	```rust:demo\nx\n```\n```java:demo\nx\n```\n1	rust	true	CB002:27:31
+multiple	```python:demo\nx\n```\n```java:Other\nx\n```\n```rust:demo\nx\n```\n1	rust	false	CB001:10:14;CB003:29:34;CB002:49:53
+empty	1	rust	false	ok

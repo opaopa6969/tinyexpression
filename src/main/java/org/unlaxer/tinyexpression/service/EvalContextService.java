@@ -219,7 +219,7 @@ public final class EvalContextService implements AutoCloseable {
       throws Exception {
     Map<String, CodeBlocks.Block> blocks = CodeBlocks.blocks(request.source);
     CalculationContext context = request.newContext();
-    try (Compiled compiled = compileBlocks(blocks, execute, context)) {
+    try (Compiled compiled = compileBlocks(request.source, blocks, execute, context)) {
       Calculator calculator;
       try {
         compiled.check();
@@ -271,7 +271,7 @@ public final class EvalContextService implements AutoCloseable {
       Map<String, CodeBlocks.Block> blocks = CodeBlocks.blocks(formula);
       CalculationContext context = request.newContext();
       String result;
-      try (Compiled compiled = compileBlocks(blocks, execute, context)) {
+      try (Compiled compiled = compileBlocks(formula, blocks, execute, context)) {
         try {
           compiled.check();
           Calculator calculator = creator.create(new Source(formula), nextClassName(),
@@ -403,8 +403,15 @@ public final class EvalContextService implements AutoCloseable {
    * Compiles the {@code java} blocks in memory when {@code execute}, registering an instance of
    * each class in the context under its class name (where the evaluator looks it up).
    */
-  private Compiled compileBlocks(Map<String, CodeBlocks.Block> blocks, boolean execute,
+  private Compiled compileBlocks(String source, Map<String, CodeBlocks.Block> blocks, boolean execute,
       CalculationContext context) {
+    try {
+      // Check the original source, not the class-name map which coalesces duplicates.
+      // Do this even when Java execution is denied, and before compiling any Java block.
+      org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(source);
+    } catch (RuntimeException failure) {
+      return new Compiled(classLoader, Set.of(), null, failure);
+    }
     if (!execute || blocks.isEmpty()) {
       return new Compiled(classLoader, Set.of(), null, null);
     }
