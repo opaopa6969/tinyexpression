@@ -10,6 +10,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Java `CodeBlockSource` and Rust `code_blocks`: source-preserving code-block projection from committed P4 occurrences (raw body and code-point block/body/name spans), plus pure AOT preflight with shared `CB001`–`CB004` diagnostics (#228). The projection/preflight APIs never compile or execute code. See `docs/code-block-source-contract.md`.
 
 ### Fixed
+- **Security: string literals could escape into the generated Java source** in the `JAVA_CODE` and
+  `JAVA_CODE_LEGACY_ASTCREATOR` backends. The contents of a literal were pasted between double quotes
+  unescaped, so a `"` inside `'...'` closed the Java literal and the rest of the formula was compiled and
+  run as Java code, even with `JavaCodeBlockPolicy` disabled. Literal values now reach generated source
+  only through `JavaStringLiterals.quote` (full escaping, printable ASCII only). Backslash sequences keep
+  the meaning javac gave them (`\n`, `\'`, `\\`, `A`, octal), so every formula that compiled before
+  evaluates to the same string; a literal with an escape javac rejects (`'\q'`) is still rejected.
+  Literals that used to fail to compile now evaluate as data (`'q"q'` → `q"q`, a raw line break, `'"'`).
+  The P4 backends already escaped their literals and are unchanged.
 - Rust-block rejection in JavaCode backends happens before Java compiler initialization, including when `jdk.compiler` is unavailable (#228 follow-up). The existing `CompileError` wrapper is unchanged.
 - Source-aware Java calculators and Rust evaluators now reject uncompiled Rust code blocks with `CB005` instead of silently ignoring them (#228). Java code-generation backends retain their existing `CompileError` wrapper. Java code-block permissions and Rust's Java stub behaviour are unchanged; AST-only evaluation cannot inspect blocks already discarded by the existing AST shape.
 - **The jars no longer ship copies of unlaxer-common classes (#224).** `tinyExpression` and

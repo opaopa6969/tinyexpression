@@ -29,7 +29,7 @@ public class ExpressionOrLiteral extends Either<String, String> {
 	}
 
 	public String toString() {
-		return apply(Function.identity(), word -> "\"" + word + "\"");
+		return apply(Function.identity(), JavaStringLiterals::quote);
 //		return apply(Function.identity(),Function.identity());
 	}
 	
