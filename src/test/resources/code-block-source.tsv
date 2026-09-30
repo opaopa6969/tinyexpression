@@ -1,0 +1,15 @@
+# id	source(escaped)	kind	scheme	identifier	body(escaped)	blockStart	blockEnd	bodyStart	bodyEnd	nameStart	nameEnd
+lf	```rust:demo\npub fn value() -> i32 { 7 }\n```\n1	block	rust	demo	pub fn value() -> i32 { 7 }\n	0	45	13	41	8	12
+crlf_unicode	// 😀\n```rust:demo\r\n  // keep\r\nlet s = "😀";\r\n```\r\n1	block	rust	demo	  // keep\r\nlet s = "😀";\r\n	5	49	19	44	13	17
+cr_only	```rust:demo\rnot even valid Rust!\r```\r1	block	rust	demo	not even valid Rust!\r	0	38	13	34	8	12
+java	```java:p.Demo\npublic class Demo{}\n```\n1	block	java	p.Demo	public class Demo{}\n	0	39	15	35	8	14
+empty	```rust:empty\n```\n1	block	rust	empty		0	18	14	14	8	13
+case	```RuSt:sample.v1.Demo\nx\n```\n1	block	RuSt	sample.v1.Demo	x\n	0	29	23	25	8	22
+none	1+2	none
+comparison_comment	/* ```rust:fake */ 1<2	none
+comparison_string	'```rust:fake' == '```rust:fake'	none
+comment	/*\n```rust:fake\nx\n```\n*/\n1	none
+string	'hello\n```rust:fake\nbody\n```\nworld'	none
+unclosed	```rust:demo\nbody\n1	invalid
+bad_name	```rust:../escape\nbody\n```\n1	invalid
+inline_delimiter	```rust:demo\nlet s = "```";\n```\n1	invalid

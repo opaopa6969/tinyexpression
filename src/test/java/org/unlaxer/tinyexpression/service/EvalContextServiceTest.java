@@ -206,6 +206,24 @@ public class EvalContextServiceTest {
   }
 
   @Test
+  public void rustBlocksRejectBeforeAnyJavaCompilationEvenWithPermission() throws Exception {
+    EvalContextService service = service(EvalContextService.builder()
+        .codeBlockPolicy(CodeBlockExecutionPolicy.ALLOW));
+    // Same label on purpose: the legacy Java block map drops the Rust entry.
+    // Invalid Java would fail compilation if the guard ran after compiling it.
+    String source = "```rust:Demo\nnot valid Rust\n```\n"
+        + "```java:Demo\nnot valid Java\n```\n1";
+    for (EvalOperation operation : List.of(EvalOperation.EVAL_CONTEXT, EvalOperation.EVAL_TRACE)) {
+      EvalContextResponse response = service.execute(operation, request(source).toString());
+      JsonNode result = json(response.json());
+      assertFalse(result.toString(), result.get("ok").asBoolean());
+      assertEquals("create", result.get("stage").asText());
+      assertEquals("UnsupportedOperationException", result.at("/error/kind").asText());
+      assertTrue(result.toString(), result.at("/error/message").asText().contains("CB005"));
+    }
+  }
+
+  @Test
   public void allowedCodeBlocksRunAndWinOverStubs() throws Exception {
     List<CodeBlockExecutionPolicy.Request> asked = new ArrayList<>();
     EvalContextService service = service(EvalContextService.builder().codeBlockPolicy(request -> {

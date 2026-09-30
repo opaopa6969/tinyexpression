@@ -226,6 +226,10 @@ if(external returning as boolean checkDigits($input)){1}else{0}
 
 詳細は [docs/language-guide.md#java-コードブロック](docs/language-guide.md) 参照。
 
+Java / Rust 共通の本文・位置保存 API と `rustcodeblock` のビルド前検査は
+[CodeBlock 準備契約](docs/code-block-source-contract.md) を参照。Rust 本文の AOT 実行は未実装であり、
+通常評価へ渡した Rust ブロックは `CB005` で明示的に拒否する。
+
 ---
 
 ## バックエンド設定

@@ -234,6 +234,7 @@ public class AstEvaluatorCalculator implements Calculator {
     if (formula == null || formula.isBlank()) {
       return null;
     }
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(formula);
     if (!generatedAstRuntimeAvailable) {
       throw new ParseException("generated P4 runtime is unavailable");
     }
