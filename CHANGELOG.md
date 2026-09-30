@@ -9,6 +9,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Java `CodeBlockSource` and Rust `code_blocks`: source-preserving code-block projection from committed P4 occurrences (raw body and code-point block/body/name spans), plus pure AOT preflight with shared `CB001`–`CB004` diagnostics (#228). No compiler or generated files; Rust AOT compilation/execution is still pending. See `docs/code-block-source-contract.md`.
 
 ### Fixed
+- Rust-block rejection in JavaCode backends happens before Java compiler initialization, including when `jdk.compiler` is unavailable (#228 follow-up). The existing `CompileError` wrapper is unchanged.
 - Source-aware Java calculators and Rust evaluators now reject uncompiled Rust code blocks with `CB005` instead of silently ignoring them (#228). Java code-generation backends retain their existing `CompileError` wrapper. Java code-block permissions and Rust's Java stub behaviour are unchanged; AST-only evaluation cannot inspect blocks already discarded by the existing AST shape.
 - **The jars no longer ship copies of unlaxer-common classes (#224).** `tinyExpression` and
   `tinyExpression-jdk17` (2.0.0 / 2.0.1) contained `org.unlaxer.parser.Parser`,

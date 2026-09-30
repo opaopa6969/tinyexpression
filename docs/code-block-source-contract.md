@@ -92,6 +92,8 @@ evaluator へ渡す許可証でもない。
   AST 系は `UnsupportedOperationException`、JavaCode 系は従来のエラーラップ契約に従い
   `CompileError` の cause に同例外を持つ。後者は code のみ、前者と Rust は name span を
   メッセージにも含める。preflight の code / span は両言語で一致する。
+  JavaCode 系でも拒否は `CompileContext` の構築前に行い、`jdk.compiler` のない JVM で
+  `CB005` を返せることを `CodeBlockNoCompilerTest` で検査する。
 - `EvalContextService` は Java 実行が許可されていても、Rust が混在すれば Java ブロックの
   コンパイル前に拒否する。クラス名でまとめた Map ではなく元ソースを検査するため、同名の
   Java ブロックで Rust の存在を隠せない。既存の応答 `codeBlocks.executed` / audit のフラグは
@@ -131,7 +133,7 @@ Rust は不正な Rust 本文で parse / preflight の成功、通常評価の�
 
 ```sh
 ./mvnw test -Dtinyexpression.skipRailroad=true \
-  -Dtest=CodeBlockSourceTest,EvalContextServiceTest,JavaCodeBlockPolicyTest
+  -Dtest=CodeBlockSourceTest,CodeBlockNoCompilerTest,EvalContextServiceTest,JavaCodeBlockPolicyTest
 cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs \
   --test code_blocks --test code_blocks_shared
 ```
