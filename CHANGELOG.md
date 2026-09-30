@@ -5,6 +5,11 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- `tinyExpression-jdk17` is no longer released; 2.0.1 is its last version. `scripts/release-central.sh`
+  and the Release Central workflow deploy only the Java 21 `tinyExpression`. The `tinyexpression-jdk17/`
+  build and its CI job are kept.
+
 ## [2.1.0] - 2026-09-30
 
 Java 21 artifact (`tinyExpression`) only. `tinyExpression-jdk17` is not published for 2.1.0; its latest

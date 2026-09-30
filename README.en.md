@@ -37,7 +37,7 @@ A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 
 ## Requirements
 
-- Java 21+ (on Java 17 use `tinyExpression-jdk17` below, 2.0.1 and later)
+- Java 21+ (`tinyExpression-jdk17` for Java 17 was last published as 2.0.1)
 - Maven 3.8+
 
 Note: tests/runtime use reflective access and require `add-opens` options (configured in [`pom.xml`](pom.xml)).
@@ -54,7 +54,7 @@ Note: tests/runtime use reflective access and require `add-opens` options (confi
 </dependency>
 ```
 
-**Java 17 users** (for example Corretto 17): from 2.0.1 on, depend on `tinyExpression-jdk17` instead —
+**Java 17 users** (for example Corretto 17): `tinyExpression-jdk17` **2.0.1 is its last release** (from 2.1.0 on only the Java 21 `tinyExpression` is published) —
 the same sources, packages and classes compiled with `--release 17` (class file major 61), depending
 only on `unlaxer-common-jdk17` / `unlaxer-dsl-jdk17` (never on the Java 21 unlaxer artifacts):
 
