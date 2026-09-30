@@ -23,7 +23,8 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Match CI's GNU binary baseline; ubuntu-latest can require a newer glibc.
+    runs-on: ubuntu-22.04
     env:
       DRY_RUN: ${{ inputs.dry_run }}
     steps:

@@ -21,6 +21,8 @@ printf '%s' '{"resultType":"string","variables":[{"name":"prefix","type":"string
 結果は `Hello, Rust`。同じ context JSON を読み、`formula` は省略可能（指定するなら
 ビルド時の全文と完全一致が必要）。空 stdin は `{}`。生成物は Java / Cargo / rustc の
 ない PATH でも動くが、対象 OS の通常の動的ライブラリまで不要になるわけではない。
+Linux GNU 配布物は Ubuntu 22.04（glibc 2.35）の環境でビルドする。
+生成した式バイナリには、その build に使った target / linker / libc の要件が適用される。
 
 配布された `tinyexpression-aot` 自体は runtime のソースを内蔵しているため、式の build に
 Cargo や Java、リポジトリ checkout は不要。`rustc` と linker は build 時だけ使う。
