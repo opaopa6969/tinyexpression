@@ -21,11 +21,6 @@ on:
         required: true
         default: true
         type: boolean
-      jdk17:
-        description: true なら Java 17 版 tinyExpression-jdk17 も公開する（false なら Java 21 版だけ）
-        required: true
-        default: true
-        type: boolean
 
 concurrency:
   group: release-central-${{ inputs.version }}
@@ -137,12 +132,7 @@ jobs:
           # deploy step re-runs the build only to produce and upload artifacts,
           # so tests are explicitly skipped here.
           ./mvnw -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false -DskipTests
-          # tinyexpression #220: the Java 17 build of the same sources (tinyExpression-jdk17).
-          if [[ "${{ inputs.jdk17 }}" == "true" ]]; then
-            ./mvnw -B -f tinyexpression-jdk17/pom.xml clean deploy -DskipPublishing=false -DskipTests
-          else
-            echo "jdk17=false: skipping tinyExpression-jdk17"
-          fi
+          # tinyExpression-jdk17 (#220) was removed; 2.0.1 is its last release.
 
       - name: Tag the release
         run: |

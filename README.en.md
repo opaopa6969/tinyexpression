@@ -37,7 +37,7 @@ A Java-embedded expression engine (UDF style) for runtime formula evaluation.
 
 ## Requirements
 
-- Java 21+ (on Java 17 use `tinyExpression-jdk17` below, 2.0.1 and later)
+- Java 21+
 - Maven 3.8+
 
 Note: tests/runtime use reflective access and require `add-opens` options (configured in [`pom.xml`](pom.xml)).
@@ -50,24 +50,11 @@ Note: tests/runtime use reflective access and require `add-opens` options (confi
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>1.4.11</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
-**Java 17 users** (for example Corretto 17): from 2.0.1 on, depend on `tinyExpression-jdk17` instead —
-the same sources, packages and classes compiled with `--release 17` (class file major 61), depending
-only on `unlaxer-common-jdk17` / `unlaxer-dsl-jdk17` (never on the Java 21 unlaxer artifacts):
-
-```xml
-<dependency>
-  <groupId>org.unlaxer</groupId>
-  <artifactId>tinyExpression-jdk17</artifactId>
-  <version>2.0.1</version>
-</dependency>
-```
-
-Do not depend on both `tinyExpression` and `tinyExpression-jdk17` (they contain the same classes).
-Build it with `mvn -f tinyexpression-jdk17/pom.xml package` (tests run on a JDK 17).
+`tinyExpression-jdk17` (Java 17) was discontinued in 2.1.0; 2.0.1 is its last release.
 
 ---
 
@@ -327,7 +314,7 @@ External repository: [tinyexpression-group/tinyexpression-ide](https://github.co
 
 `org.unlaxer.tinyexpression.service.EvalContextService` (issue #221) answers the request/response JSON of the Rust
 `te_eval_context` / `te_eval_trace` / `te_formula_info_context` with the real Java evaluator (`P4_AST_EVALUATOR`):
-JSON string in, JSON string out, no HTTP dependency (also in the `tinyExpression-jdk17` artifact). `external` calls go to
+JSON string in, JSON string out, no HTTP dependency. `external` calls go to
 the request's `externals[]` stubs only (no host class is reachable); Java code blocks run only when the host's
 `CodeBlockExecutionPolicy` allows it (default `DENY`, like `JavaCodeBlockPolicy`; a compiled class wins over a stub);
 each request has a timeout (default 5 s, `"stage":"timeout"`), and an `EvalAuditHook` sees every request and response.

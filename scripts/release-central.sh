@@ -132,8 +132,4 @@ echo "Publishing org.unlaxer:tinyExpression:$version"
 # shellcheck disable=SC2086
 ./mvnw "${mvn_settings[@]}" -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false ${RELEASE_MVN_ARGS:-}
 
-# tinyexpression #220: the Java 17 build of the same sources, same version, published as
-# org.unlaxer:tinyExpression-jdk17 (depends on unlaxer-*-jdk17 only). Part of the same release.
-echo "Publishing org.unlaxer:tinyExpression-jdk17:$version"
-# shellcheck disable=SC2086
-./mvnw "${mvn_settings[@]}" -B -f tinyexpression-jdk17/pom.xml clean deploy -DskipPublishing=false ${RELEASE_MVN_ARGS:-}
+# tinyExpression-jdk17 (#220) was removed on 2026-09-30 (owner decision); 2.0.1 is its last release.

@@ -39,7 +39,7 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 
 ## 要件
 
-- Java 21+（Java 17 では下記の `tinyExpression-jdk17` を使う。2.0.1 以降）
+- Java 21+
 - Maven 3.8+
 
 テスト/ランタイムで反射アクセスを使うため `add-opens` が必要（[`pom.xml`](pom.xml) 設定済み）。
@@ -52,24 +52,11 @@ Java アプリケーションに組み込み可能な式評価エンジン（UDF
 <dependency>
   <groupId>org.unlaxer</groupId>
   <artifactId>tinyExpression</artifactId>
-  <version>2.0.0</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
-**Java 17 の利用者**（例: Corretto 17）は、2.0.1 以降の `tinyExpression-jdk17` に依存してください。
-同じソース・package・クラスを `--release 17`（class file major 61）でコンパイルした差し替え版で、
-依存も `unlaxer-common-jdk17` / `unlaxer-dsl-jdk17` だけです（Java 21 版の unlaxer を引き込まない）。
-
-```xml
-<dependency>
-  <groupId>org.unlaxer</groupId>
-  <artifactId>tinyExpression-jdk17</artifactId>
-  <version>2.0.1</version>
-</dependency>
-```
-
-`tinyExpression` と `tinyExpression-jdk17` を同時に依存させないでください（同じクラスを持ちます）。
-ビルドは `mvn -f tinyexpression-jdk17/pom.xml package`（JDK 17 上ではテストも走る）。
+Java 17 向けの `tinyExpression-jdk17` は 2.0.1 が最後の版です（2.1.0 で廃止）。
 
 ---
 
@@ -429,7 +416,6 @@ playground の wasm は Java コードブロックを実行せず、`external` �
 （issue #221）。Rust の `te_eval_context` / `te_eval_trace` / `te_formula_info_context`
 （[rust/README.md](rust/README.md#calculationcontext-付き評価issue-201)）と **同じリクエスト/応答 JSON** を
 Java（`P4_AST_EVALUATOR`）で処理する。入力 JSON 文字列 → 応答 JSON 文字列で、HTTP サーバには依存しない。
-Java 17 版（`tinyExpression-jdk17`）にも入る。
 
 ```java
 EvalContextService service = EvalContextService.builder()
