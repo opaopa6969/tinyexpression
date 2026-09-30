@@ -117,7 +117,9 @@ header は既存の英数字・underscore の識別子 / dotted name 規則に�
 
 ## 検証
 
-Java `CodeBlockSourceTest` と Rust `tests/code_blocks.rs` は次の同一 oracle を読む。
+Java `CodeBlockSourceTest` と Rust `tests/code_blocks_shared.rs` は次の同一 oracle を読む。
+共有 corpus テストはリポジトリ全体を要するため公開 crate からは除外する。
+単独 crate でも動く API / CLI テストは `tests/code_blocks.rs` に分けて残す。
 
 - `src/test/resources/code-block-source.tsv`: 元本文・全 span、LF / CRLF / CR、Unicode、
   空本文、qualified name、文字列 / コメント内の偽 fence、未閉鎖、不正 label、終端衝突。
@@ -130,7 +132,8 @@ Rust は不正な Rust 本文で parse / preflight の成功、通常評価の�
 ```sh
 ./mvnw test -Dtinyexpression.skipRailroad=true \
   -Dtest=CodeBlockSourceTest,EvalContextServiceTest,JavaCodeBlockPolicyTest
-cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs --test code_blocks
+cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs \
+  --test code_blocks --test code_blocks_shared
 ```
 
 ## full-spec までの後続
