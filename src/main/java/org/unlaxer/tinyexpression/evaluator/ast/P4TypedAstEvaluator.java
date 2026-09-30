@@ -103,6 +103,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalFormulaExpr(FormulaExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     CalculationContext scoped = new ScopedCalculationContext(
         context, Map.of());
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
@@ -1480,6 +1481,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalCodeBlockExpr(CodeBlockExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     return null;
   }
 

@@ -20,16 +20,18 @@ grammar TinyExpressionP4 {
   @root
   @interleave(profile=javaStyle)
   @scopeTree(mode=lexical)
-  @mapping(FormulaExpr, params=[imports, declarations, expression, methods])
-  Formula ::= { CodeBlock } { ImportDeclaration @imports } { VariableDeclaration @declarations }
+  @mapping(FormulaExpr, params=[imports, declarations, expression, methods, codeBlocks])
+  Formula ::= { CodeBlock @codeBlocks } { ImportDeclaration @imports } { VariableDeclaration @declarations }
     { Annotation } Expression @expression { MethodDeclaration @methods } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
   // Syntax: ```scheme:JavaClassName\n...\n```
   // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
 
-  @mapping(CodeBlockExpr)
-  CodeBlock ::= CODE_START CODE_BODY CODE_END ;
+  // Capture the complete fenced source: text normalization cannot strip whitespace or
+  // quotes inside the body. CodeBlock metadata is derived from this retained text.
+  @mapping(CodeBlockExpr, params=[source])
+  CodeBlock ::= ( CODE_START CODE_BODY CODE_END ) @source ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName [#methodName] as alias;

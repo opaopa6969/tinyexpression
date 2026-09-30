@@ -81,3 +81,63 @@ fn retains_body_and_spans() {
         "CB003"
     );
 }
+
+#[test]
+fn detached_ast_keeps_body_and_rejects_uncompiled_rust() {
+    use tinyexpression_rs::generated::ast::Ast;
+    let ast = {
+        let source = String::from("// 😀\n```rust:demo\r\n  // keep\r\n'\"\t \r\n```\r\n1");
+        tinyexpression_rs::parse(&source).unwrap()
+    };
+    let blocks = code_blocks::from_ast(&ast).unwrap();
+    assert_eq!(blocks[0].body, "  // keep\r\n'\"\t \r\n");
+    let Ast::FormulaExpr { codeBlocks, .. } = &ast else {
+        panic!("not a document")
+    };
+    for node in [&ast, &codeBlocks[0]] {
+        let error = tinyexpression_rs::evaluate_ast(node).unwrap_err();
+        assert!(error.to_string().contains("CB005"));
+        assert_eq!(error.span(), Some(blocks[0].name_span));
+    }
+    let java = "```java:Demo\r\n// keep\r\n'\"\r\n```\r\n1";
+    let program = tinyexpression_rs::runtime::Program::new(java, Default::default()).unwrap();
+    assert_eq!(program.code_blocks()[0].body, "// keep\r\n'\"\r\n");
+}
+
+#[test]
+fn document_reselection_keeps_every_block() {
+    let source =
+        "// 😀\n```java:One\n// one\n```\n```rust:Two\r\n'\r\n```\r\nvar $s as string;$s as string";
+    let blocks = code_blocks::from_ast(&tinyexpression_rs::parse(source).unwrap()).unwrap();
+    assert_eq!(
+        blocks
+            .iter()
+            .map(|b| b.identifier.as_str())
+            .collect::<Vec<_>>(),
+        ["One", "Two"]
+    );
+    assert_eq!(
+        blocks.iter().map(|b| b.body.as_str()).collect::<Vec<_>>(),
+        ["// one\n", "'\r\n"]
+    );
+    assert!(
+        tinyexpression_rs::runtime::Program::new(source, Default::default())
+            .unwrap_err()
+            .message
+            .contains("CB005")
+    );
+}
+
+#[test]
+fn program_class_metadata_comes_from_committed_ast_not_line_scanning() {
+    use tinyexpression_rs::runtime::{Options, Program};
+    let false_block = "/*\n```java:Fake\nbody\n```\n*/\n1";
+    assert!(Program::new(false_block, Options::default())
+        .unwrap()
+        .code_block_classes()
+        .is_empty());
+    let real = "```java:One\r// keep\r```\r```java:One\nagain\n```\n1";
+    let program = Program::new(real, Options::default()).unwrap();
+    assert_eq!(program.code_block_classes(), ["One"]);
+    assert_eq!(program.code_blocks().len(), 2);
+}

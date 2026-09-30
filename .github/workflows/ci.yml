@@ -222,7 +222,7 @@ jobs:
           -Dtinyexpression.expected.mapper.snapshot=true
           -Dtinyexpression.expected.mapper.nodeAlias=true
           -Dtinyexpression.expected.mapper.optionalQualifier=true
-          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest
+          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
         working-directory: tinyexpression

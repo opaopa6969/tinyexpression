@@ -29,8 +29,8 @@ impl AstValue {
 #[allow(non_snake_case, non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Ast {
-    r#FormulaExpr { span: Span, r#imports: Vec<Ast>, r#declarations: Vec<Ast>, r#expression: Box<Ast>, r#methods: Vec<Ast> },
-    r#CodeBlockExpr { span: Span },
+    r#FormulaExpr { span: Span, r#imports: Vec<Ast>, r#declarations: Vec<Ast>, r#expression: Box<Ast>, r#methods: Vec<Ast>, r#codeBlocks: Vec<Ast> },
+    r#CodeBlockExpr { span: Span, r#source: String },
     r#ImportDeclarationExpr { span: Span, r#className: Box<Ast>, r#method: Option<String>, r#alias: String },
     r#QualifiedNameExpr { span: Span, r#head: String, r#tail: Vec<String> },
     r#NumberVariableDeclarationExpr { span: Span, r#varName: String, r#onlyIfAbsent: Option<Box<Ast>>, r#value: Option<Box<Ast>>, r#desc: Option<String> },
@@ -212,17 +212,19 @@ impl Ast {
 
     pub fn canonical_json(&self) -> String {
         match self {
-            Self::r#FormulaExpr { span, r#imports, r#declarations, r#expression, r#methods } => {
+            Self::r#FormulaExpr { span, r#imports, r#declarations, r#expression, r#methods, r#codeBlocks } => {
                 let fields: Vec<String> = vec![
                     format!("{}:{}", json_string("imports"), format!("[{}]", r#imports.iter().map(|value| value.canonical_json()).collect::<Vec<_>>().join(","))),
                     format!("{}:{}", json_string("declarations"), format!("[{}]", r#declarations.iter().map(|value| value.canonical_json()).collect::<Vec<_>>().join(","))),
                     format!("{}:{}", json_string("expression"), r#expression.canonical_json()),
                     format!("{}:{}", json_string("methods"), format!("[{}]", r#methods.iter().map(|value| value.canonical_json()).collect::<Vec<_>>().join(","))),
+                    format!("{}:{}", json_string("codeBlocks"), format!("[{}]", r#codeBlocks.iter().map(|value| value.canonical_json()).collect::<Vec<_>>().join(","))),
                 ];
                 format!("{{\"type\":{},\"span\":[{},{}],\"fields\":{{{}}}}}", json_string("FormulaExpr"), span.start, span.end, fields.join(","))
             },
-            Self::r#CodeBlockExpr { span } => {
+            Self::r#CodeBlockExpr { span, r#source } => {
                 let fields: Vec<String> = vec![
+                    format!("{}:{}", json_string("source"), json_string(r#source)),
                 ];
                 format!("{{\"type\":{},\"span\":[{},{}],\"fields\":{{{}}}}}", json_string("CodeBlockExpr"), span.start, span.end, fields.join(","))
             },

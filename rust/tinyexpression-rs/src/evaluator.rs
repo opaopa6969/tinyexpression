@@ -271,15 +271,6 @@ impl From<FrontendError> for EvaluationError {
 /// return [`EvaluationError::UnsupportedNode`] instead of being interpreted by another path.
 pub fn evaluate(source: &str) -> Result<Value, EvaluationError> {
     let ast = parse(source)?;
-    if source.contains("```") {
-        let blocks = crate::code_blocks::parse(source)?;
-        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&blocks) {
-            return Err(EvaluationError::UnsupportedNode {
-                node: diagnostic.to_string(),
-                span: diagnostic.span,
-            });
-        }
-    }
     evaluate_ast(&ast)
 }
 
@@ -559,8 +550,17 @@ impl Semantics for ScalarSemantics {
         declarations: &[Ast],
         expression: &Ast,
         methods: &[Ast],
+        code_blocks: &[Ast],
         span: Span,
     ) -> Self::Output {
+        for block in code_blocks {
+            let Ast::CodeBlockExpr { source, span } = block else {
+                return Err(EvaluationError::Mapping(
+                    "expected CodeBlockExpr in codeBlocks".into(),
+                ));
+            };
+            self.eval_code_block_expr(source, *span)?;
+        }
         let feature = if !imports.is_empty() {
             Some("imports")
         } else if !declarations.is_empty() {
@@ -926,10 +926,15 @@ impl Semantics for ScalarSemantics {
         Ok(Value::Boolean(Self::to_boolean(&value)))
     }
 
-    /// A ```` ```java:Class ```` block only declares a class (issue #216): nothing to evaluate,
-    /// and it is never compiled or run here. (The parser keeps blocks out of `FormulaExpr`, so
-    /// this is reached only by a hand-built AST.)
-    fn eval_code_block_expr(&mut self, _span: Span) -> Self::Output {
+    /// Java declarations remain inert; Rust blocks require the separate linked AOT path.
+    fn eval_code_block_expr(&mut self, source: &str, span: Span) -> Self::Output {
+        let blocks = [crate::code_blocks::from_source(source, span)?];
+        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&blocks) {
+            return Err(EvaluationError::UnsupportedNode {
+                node: diagnostic.to_string(),
+                span: diagnostic.span,
+            });
+        }
         Ok(Value::Null)
     }
 

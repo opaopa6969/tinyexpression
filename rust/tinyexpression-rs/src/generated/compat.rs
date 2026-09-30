@@ -114,9 +114,11 @@ impl Converter {
                 r#declarations: self.list(&source.g_declarations)?,
                 r#expression: self.node(&source.g_expression)?,
                 r#methods: self.list(&source.g_methods)?,
+                r#codeBlocks: self.list(&source.g_codeBlocks)?,
             },
             U::g_TinyExpressionP4AST_2e_CodeBlockExpr(source) => Ast::r#CodeBlockExpr {
                 span: self.span(source.span),
+                r#source: source.g_source.clone(),
             },
             U::g_TinyExpressionP4AST_2e_ImportDeclarationExpr(source) => Ast::r#ImportDeclarationExpr {
                 span: self.span(source.span),

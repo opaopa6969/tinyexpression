@@ -33,6 +33,8 @@ fn shared_source_corpus() {
             continue;
         }
         let blocks = parsed.unwrap_or_else(|e| panic!("{}: {e}", f[0]));
+        let ast = tinyexpression_rs::parse(&source).unwrap();
+        assert_eq!(blocks, code_blocks::from_ast(&ast).unwrap(), "{}", f[0]);
         if f[2] == "none" {
             assert!(blocks.is_empty(), "{}", f[0]);
             continue;

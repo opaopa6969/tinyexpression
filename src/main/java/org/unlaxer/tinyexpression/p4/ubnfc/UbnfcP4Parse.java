@@ -426,7 +426,8 @@ public final class UbnfcP4Parse {
         TinyExpressionP4AST.ExpressionExpr expression =
             new TinyExpressionP4AST.ExpressionExpr(selected.ast());
         TinyExpressionP4AST.FormulaExpr formula = new TinyExpressionP4AST.FormulaExpr(
-            documentRoot.imports(), documentRoot.declarations(), expression, documentRoot.methods());
+            documentRoot.imports(), documentRoot.declarations(), expression, documentRoot.methods(),
+            documentRoot.codeBlocks());
         P4SourceText sourceText = withOverlay(documentSource, parsed.sourceText(),
             selected.sourceText(), documentExpressionOffset,
             formula, documentRoot, expression, documentRoot.expression());

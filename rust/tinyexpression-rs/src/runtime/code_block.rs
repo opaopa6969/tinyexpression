@@ -10,10 +10,9 @@
 //! (`UnsupportedOperationException("External invocation failed: ...")`) carries a hint saying
 //! so (see [`missing_stub_hint`]).
 //!
-//! The parser keeps the block out of the AST (`Formula ::= { CodeBlock } ...`, the grammar's
-//! `CODE_BLOCK` token), so the classes are read from the source here, with the rules of the
-//! Java `CodeStartParser` / `CodeEndParser`: a line that is exactly
-//! ```` ```scheme:Class.Name ```` opens a block, a line that is exactly ```` ``` ```` closes it.
+//! `Program` gets declarations from its retained AST (`code_blocks::from_ast`), not from a
+//! second source scan. `code_block_classes` below is a legacy text-inspection helper only;
+//! it does not validate a formula and must not be used for execution/authorization decisions.
 
 use super::{EvalError, ExternalError};
 
