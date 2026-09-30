@@ -25,7 +25,8 @@ jobs:
           cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets -- -D warnings
       - name: Build and smoke-test release binary
         run: |
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -p tinyexpression-aot
+          rust/target/release/tinyexpression-aot --help
           rust/target/release/tinyexpression --version | grep -q "^tinyexpression $(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml) (ubnfc $(sed -n 's/^ubnfc_commit=//p' rust/ubnfc-pin.txt))$"
           rust/target/release/tinyexpression --help | grep -q '^Exit codes:'
           printf '%s' '1 + 2' | rust/target/release/tinyexpression parse - | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
@@ -48,9 +49,12 @@ jobs:
         run: |
           package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-package.XXXXXX")
           install -m 0755 rust/target/release/tinyexpression "$package_dir/tinyexpression"
+          install -m 0755 rust/target/release/tinyexpression-aot "$package_dir/tinyexpression-aot"
+          install -m 0644 rust/tinyexpression-aot/README.md "$package_dir/AOT-README.md"
+          install -m 0644 rust/tinyexpression-aot/examples/greeting.tiny "$package_dir/greeting.tiny"
           install -m 0644 LICENSE "$package_dir/LICENSE"
           install -m 0644 rust/tinyexpression-rs/README.md "$package_dir/README.md"
-          tar -czf rust/target/tinyexpression-linux-x86_64.tar.gz -C "$package_dir" tinyexpression LICENSE README.md
+          tar -czf rust/target/tinyexpression-linux-x86_64.tar.gz -C "$package_dir" tinyexpression tinyexpression-aot LICENSE README.md AOT-README.md greeting.tiny
       - uses: actions/upload-artifact@v6
         with:
           name: tinyexpression-linux-x86_64

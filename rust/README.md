@@ -1,16 +1,17 @@
 # tinyexpression (Rust) — JVM 不要の配布物
 
-`rust/` は Cargo workspace で、次の 2 crate からなる（issue #177 の段階 1〜5）。
+`rust/` は Cargo workspace で、次の 3 crate からなる。
 
 | crate | 中身 | 配布 |
 |---|---|---|
 | [`tinyexpression-rs`](tinyexpression-rs/README.md) | ubnfc 生成の P4 parser、typed AST、Java 互換の評価器（`runtime`）、FormulaInfo loader、CLI `tinyexpression`。通常依存ゼロ、`#![forbid(unsafe_code)]` | crates.io（owner の token 待ち）＋ GitHub Release の CLI バイナリ |
 | `tinyexpression-ffi` | C ABI（`include/tinyexpression.h`）と wasm32 export。unsafe な境界コードはこちらだけに置く | GitHub Release の `libtinyexpression.{so,a}` ＋ header、`tinyexpression.wasm` |
+| [`tinyexpression-aot`](tinyexpression-aot/README.md) | 信頼された Rust code block の明示許可付き native build。parse / eval とは別の操作 | workspace / CI / GitHub Release binary（crates.io 公開は未対応） |
 
 ## Versioning
 
 - **Rust 版は Java 版と同じ version 番号を使う**（owner 決定、issue #181）。`rust/Cargo.toml` の
-  `[workspace.package] version` が唯一の定義で、両 crate がこれを継承する。現在 `2.0.0`
+  `[workspace.package] version` が唯一の定義で、各 crate がこれを継承する。現在 `2.0.0`
   （Java `org.unlaxer:tinyExpression:2.0.0` と同じ言語仕様・同じ P4 文法）。
 - Java と Rust は同じ tag `v<version>` から出す。Java が patch だけ出す場合も Rust は同じ番号へ
   追随してよい（変更が無くても番号は揃える）。片側だけの破壊的変更で major を分けることはしない。

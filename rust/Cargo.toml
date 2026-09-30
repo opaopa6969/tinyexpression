@@ -1,5 +1,5 @@
 [workspace]
-members = ["tinyexpression-rs", "tinyexpression-ffi"]
+members = ["tinyexpression-rs", "tinyexpression-ffi", "tinyexpression-aot"]
 resolver = "2"
 
 [workspace.package]

@@ -42,7 +42,7 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 - `tests/fixtures/numeric-f32.tsv` は独立した期待 f32 bits を保持し、Rust library/CLIとJava `P4TypedAstEvaluator` の `p4-typed` runtimeが共有する。
 - `tests/fixtures/scalar-control.tsv` はboolean/string/比較/制御構文について、値・評価順序・Java/Rust parityを共有する。
 - `tests/fixtures/root-expression.tsv` はroot dispatchの全文消費、Java/Rustそれぞれの厳密なsemantic root、必要な子nodeを共有検証する。
-- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。`rustcodeblock` は本文と位置の保持・副作用のないビルド前検査まで対応（#228）。通常の source-aware 評価では `CB005` で拒否する。AOT コンパイル・実行は未実装で、将来も既定無効・明示許可付きとする。Java と共通の API、AST-only API の限界は [CodeBlock 準備契約](../../docs/code-block-source-contract.md) を参照。
+- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。通常の source-aware 評価では未リンクの `rustcodeblock` を `CB005` で拒否する。別ツールの [tinyexpression-aot](../tinyexpression-aot/README.md) で明示許可すると、Rust 本文をコンパイル・リンクしたネイティブ実行物を作れる（#229）。信頼された作者専用で sandbox ではない。Java と共通の API、AST-only API の限界は [CodeBlock 準備契約](../../docs/code-block-source-contract.md) を参照。
 - CI artifactはUbuntuのLinux x86_64用であり、完全static binaryや全OS対応を意味しない。
 
 ## 文脈つき runtime（issue #179）
