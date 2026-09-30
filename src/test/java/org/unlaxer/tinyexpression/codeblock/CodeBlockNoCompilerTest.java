@@ -35,7 +35,8 @@ public class CodeBlockNoCompilerTest {
     public static void main(String[] args) throws Exception {
       assertNull("probe must not have jdk.compiler", ToolProvider.getSystemJavaCompiler());
       String rust = "```rust:Demo\nnot valid Rust\n```\n";
-      for (String source : new String[] {rust + "1", rust + "```java:Other\nnot valid Java\n```\n1"}) {
+      for (String source : new String[] {rust + "1", rust + "```java:Other\nnot valid Java\n```\n1",
+          "````rust:Demo\nnot valid ``` Rust\n```\n````\n1"}) {
         var blocks = CodeBlockSource.parse(source);
         assertEquals("CB004", CodeBlockSource.preflight(blocks, CodeBlockSource.Target.RUST, false).get(0).code());
         for (var backend : ExecutionBackend.values()) {

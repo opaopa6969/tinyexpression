@@ -65,6 +65,77 @@ fn shared_source_corpus() {
 }
 
 #[test]
+fn extended_scanner_states_and_failures_are_atomic() {
+    use tinyexpression_rs::generated::{
+        scanners,
+        ubnfc::{rt::scope::ScopeStore, State, TokenScanner},
+    };
+    for row in include_str!("../../../src/test/resources/code-block-source.tsv")
+        .lines()
+        .filter(|r| r.starts_with("long_"))
+    {
+        let f: Vec<_> = row.split('\t').collect();
+        if f[2] == "none" {
+            continue;
+        }
+        let source = unescape(f[1]);
+        let valid = f[2] == "block";
+        let byte = |cp: usize| {
+            source
+                .char_indices()
+                .nth(cp)
+                .map_or(source.len(), |(b, _)| b)
+        };
+        let start = if valid {
+            byte(f[6].parse().unwrap())
+        } else {
+            0
+        };
+        let end = if valid {
+            byte(f[7].parse().unwrap())
+        } else {
+            start
+        };
+        for match_only in [false, true] {
+            for invert in [false, true] {
+                for reset in [false, true] {
+                    let state = State {
+                        consumed: if match_only { 0 } else { start },
+                        matched: if match_only { start } else { 0 },
+                        invert,
+                        reset,
+                    };
+                    let result = scanners::registry().scan(
+                        "TinyExpressionP4::LONG_CODE_BLOCK",
+                        &source,
+                        state,
+                        match_only,
+                        &ScopeStore::new(),
+                    );
+                    let ok = valid && !invert;
+                    assert_eq!(result.ok, ok, "{}", f[0]);
+                    assert_eq!(
+                        result.consumed_end,
+                        if ok && !match_only {
+                            end
+                        } else {
+                            state.consumed
+                        }
+                    );
+                    assert_eq!(result.matched_end, if ok { end } else { state.matched });
+                    assert!(result.effects.is_empty());
+                    if !ok {
+                        assert_eq!(result.diagnostics.len(), 1);
+                        assert_eq!(result.diagnostics[0].offset, start);
+                        assert_eq!(result.diagnostics[0].expected, "long code block");
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[test]
 fn shared_preflight_corpus() {
     for row in include_str!("../../../src/test/resources/code-block-preflight.tsv")
         .lines()

@@ -25,7 +25,7 @@ public class NativeBindingConformanceTest {
 
   @Test
   public void realJavaCodeMatchesSharedNativeOracle() throws Exception {
-    String blocks = "```java:NativeDemo\n" + resource("NativeDemo.java") + "```\n"
+    String blocks = "````java:NativeDemo\n" + resource("NativeDemo.java") + "````\n"
         + "```java:NativeSecond\n" + resource("NativeSecond.java") + "```\n";
     var failures = new java.util.ArrayList<String>();
     try (var service = EvalContextService.builder().codeBlockPolicy(CodeBlockExecutionPolicy.ALLOW).build()) {

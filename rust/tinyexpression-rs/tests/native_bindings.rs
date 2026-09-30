@@ -165,11 +165,11 @@ fn all_source_bindings_are_verified_before_any_hook_and_normal_eval_stays_denied
         CALLED.fetch_add(1, Ordering::SeqCst);
         c.bind::<(), f32, _>("answer", |_, ()| Ok(42.0))
     }
-    let source = "```rust:Demo\n// first\n```\n```rust:Second\n// second\n```\nimport Demo#answer as answer; external returning as number answer()";
+    let source = "````rust:Demo\n// first ```\n````\n`````rust:Second\n// second\n`````\nimport Demo#answer as answer; external returning as number answer()";
     let mut blocks = [
         CompiledBlock {
             identifier: "Demo",
-            body: "// first\n",
+            body: "// first ```\n",
             register,
         },
         CompiledBlock {

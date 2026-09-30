@@ -23,16 +23,23 @@ pub(crate) fn strip_comments(source: &str) -> Vec<char> {
         let next = chars.get(i + 1).copied().unwrap_or('\0');
         let prev = if i > 0 { chars[i - 1] } else { '\0' };
         // Host-language bodies are opaque. The grammar, not this layout pass,
-        // validates the header and the first triple-backtick terminator.
+        // validates the header and the legacy-first-triple / extended-exact-line terminator.
         if !single
             && !double
             && (i == 0 || matches!(prev, '\r' | '\n'))
             && chars[i..].starts_with(&['`', '`', '`'])
         {
-            let end = chars[i + 3..]
-                .windows(3)
-                .position(|s| s == ['`', '`', '`'])
-                .map_or(chars.len(), |at| i + 3 + at + 3);
+            let end = if chars[i..].starts_with(&['`'; 4]) {
+                let tail: String = chars[i..].iter().collect();
+                i + tail[..crate::code_blocks::fence::opaque_end(&tail)]
+                    .chars()
+                    .count()
+            } else {
+                chars[i + 3..]
+                    .windows(3)
+                    .position(|s| s == ['`', '`', '`'])
+                    .map_or(chars.len(), |at| i + 3 + at + 3)
+            };
             out.extend_from_slice(&chars[i..end]);
             i = end;
             continue;

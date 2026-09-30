@@ -9,6 +9,50 @@ import org.unlaxer.tinyexpression.p4.P4ParserEngine;
 import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
 
 public class CodeBlockSourceTest {
+  @Test public void extendedScannerStatesAndFailuresAreAtomic() throws Exception {
+    for (String row : fixture("code-block-source").lines().filter(r -> r.startsWith("long_")).toList()) {
+      String[] f = row.split("\t", -1);
+      if (f[2].equals("none")) continue;
+      String source = unescape(f[1]);
+      boolean valid = f[2].equals("block");
+      int startCp = valid ? Integer.parseInt(f[6]) : 0;
+      int endCp = valid ? Integer.parseInt(f[7]) : startCp;
+      int start = source.offsetByCodePoints(0, startCp);
+      int end = source.offsetByCodePoints(0, endCp);
+      var input = new org.unlaxer.tinyexpression.p4.ubnfc.generated.rt.Input(source);
+      var scanner = org.unlaxer.tinyexpression.p4.ubnfc.TinyExpressionScanners.ALL.get("TinyExpressionP4::LONG_CODE_BLOCK");
+      var parser = new org.unlaxer.tinyexpression.parser.javalang.LongCodeBlockParser();
+      for (boolean matchOnly : new boolean[] {false, true})
+        for (boolean inverted : new boolean[] {false, true})
+          for (boolean reset : new boolean[] {false, true}) {
+            int consumed = matchOnly ? 0 : start, matched = matchOnly ? start : 0;
+            var mode = matchOnly ? org.unlaxer.tinyexpression.p4.ubnfc.generated.api.TokenScanner.Mode.matchOnly
+                : org.unlaxer.tinyexpression.p4.ubnfc.generated.api.TokenScanner.Mode.consumed;
+            var state = new org.unlaxer.tinyexpression.p4.ubnfc.generated.api.TokenScanner.ScanState(consumed, matched, mode, inverted, reset);
+            var scanned = scanner.scan(input, state);
+            boolean ok = valid && !inverted;
+            assertEquals(f[0], ok, scanned.ok());
+            assertEquals(ok && !matchOnly ? end : consumed, scanned.consumedEnd());
+            assertEquals(ok ? end : matched, scanned.matchedEnd());
+            assertTrue(scanned.effects().isEmpty());
+            if (!ok) {
+              assertEquals(1, scanned.diagnostics().size());
+              assertEquals(start, scanned.diagnostics().get(0).offsetUtf16());
+              assertEquals("long code block", scanned.diagnostics().get(0).expected());
+            }
+            try (var context = new org.unlaxer.context.ParseContext(org.unlaxer.StringSource.createRootSource(source))) {
+              context.getCursor(org.unlaxer.TokenKind.consumed).setPosition(new org.unlaxer.CodePointIndex(input.cpIndex(consumed)));
+              context.getCursor(org.unlaxer.TokenKind.matchOnly).setPosition(new org.unlaxer.CodePointIndex(input.cpIndex(matched)));
+              context.getCurrent().setResetMatchedWithConsumed(reset);
+              var result = parser.parse(context, matchOnly ? org.unlaxer.TokenKind.matchOnly : org.unlaxer.TokenKind.consumed, inverted);
+              assertEquals(f[0], ok, result.isSucceeded());
+              assertEquals(input.cpIndex(scanned.consumedEnd()), context.getConsumedPosition().value());
+              assertEquals(input.cpIndex(scanned.matchedEnd()), context.getMatchedPosition().value());
+            }
+          }
+    }
+  }
+
   private String fixture(String name) throws Exception {
     try (var input = getClass().getResourceAsStream("/" + name + ".tsv")) {
       assertNotNull(input);

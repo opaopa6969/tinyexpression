@@ -17,3 +17,19 @@ string	'hello\n```rust:fake\nbody\n```\nworld'	none
 unclosed	```rust:demo\nbody\n1	invalid
 bad_name	```rust:../escape\nbody\n```\n1	invalid
 inline_delimiter	```rust:demo\nlet s = "```";\n```\n1	invalid
+long_inline	````rust:raw\nlet s = r#"```"#;\n````\n1	block	rust	raw	let s = r#"```"#;\n	0	36	13	31	9	12
+long_short_long	````rust:raw\n```\n`````\n // ```\n```` \n'"/* // 😀\n````\n1	block	rust	raw	```\n`````\n // ```\n```` \n'"/* // 😀\n	0	52	13	47	9	12
+long_five	`````java:p.Demo\nString s = "````";\n````\n```\n`````\n1	block	java	p.Demo	String s = "````";\n````\n```\n	0	51	17	45	10	16
+long_crlf	// 😀\r\n````rust:Demo\r\n// 😀 日本語\r\nr#"```"#\r\n````\r\n1	block	rust	Demo	// 😀 日本語\r\nr#"```"#\r\n	6	47	21	41	15	19
+long_cr	````rust:Demo\r/* ``` */\r````\r1	block	rust	Demo	/* ``` */\r	0	29	14	24	9	13
+long_empty	````rust:empty\n````\n1	block	rust	empty		0	20	15	15	9	14
+long_many	````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````rust:many\n````\n````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````````\n1	block	rust	many	````\n	0	272	138	143	133	137
+long_typed	````java:Demo\n// ```\nclass Demo{}\n````\nvar $s as string;$s as string	block	java	Demo	// ```\nclass Demo{}\n	0	39	14	34	9	13
+long_unclosed	````rust:Demo\n'"/*\n1	invalid
+long_wrong_width	````rust:Demo\nx\n```\n1	invalid
+long_longer_close	````rust:Demo\nx\n`````\n1	invalid
+long_trailing_close	````rust:Demo\nx\n```` \n1	invalid
+long_inline_close	````rust:Demo\nx ````\n1	invalid
+long_bad_header	````rust:../bad\nx\n````\n1	invalid
+long_false_comment	/*\n````rust:fake\n```\n````\n*/\n1	none
+long_false_string	'hello\n````rust:fake\n```\n````\nworld'	none

@@ -7,6 +7,7 @@ grammar TinyExpressionP4 {
   @memoSafeToken: STRING
   @memoSafeToken: CODE_START
   @memoSafeToken: CODE_END
+  @memoSafeToken: LONG_CODE_BLOCK
   @memoSafeToken: EOF
 
   token NUMBER     = org.unlaxer.parser.elementary.NumberParser
@@ -15,6 +16,7 @@ grammar TinyExpressionP4 {
   token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
   token CODE_BODY  = UNTIL('```')
   token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
+  token LONG_CODE_BLOCK = org.unlaxer.tinyexpression.parser.javalang.LongCodeBlockParser
   token EOF        = org.unlaxer.parser.elementary.EndOfSourceParser
 
   @root
@@ -31,7 +33,7 @@ grammar TinyExpressionP4 {
   // Capture the complete fenced source: text normalization cannot strip whitespace or
   // quotes inside the body. CodeBlock metadata is derived from this retained text.
   @mapping(CodeBlockExpr, params=[source])
-  CodeBlock ::= ( CODE_START CODE_BODY CODE_END ) @source ;
+  CodeBlock ::= ( LONG_CODE_BLOCK | CODE_START CODE_BODY CODE_END ) @source ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName [#methodName] as alias;

@@ -1,6 +1,7 @@
 //! Source-preserving code blocks and side-effect-free AOT preflight.
 //! No compiler, process, filesystem or host code is invoked by this module.
 use crate::{generated::ast::Ast, FrontendError, Span};
+pub(crate) mod fence;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CodeBlock {
@@ -58,9 +59,16 @@ pub(crate) fn from_source(source: &str, span: Span) -> Result<CodeBlock, Fronten
         .position(|c| matches!(c, '\r' | '\n'))
         .ok_or_else(invalid)?;
     let body_start = after_line(&chars, header_end);
-    let close = chars.len().checked_sub(3).ok_or_else(invalid)?;
-    if !source.starts_with("```")
-        || !source.ends_with("```")
+    let width = chars.iter().take_while(|&&c| c == '`').count();
+    let close = chars.len().checked_sub(width).ok_or_else(invalid)?;
+    if width < 3
+        || !source.ends_with(&"`".repeat(width))
+        || (width > 3
+            && fence::scan(source, 0).is_none_or(|layout| {
+                layout.end != source.len()
+                    || source[..layout.body_start].chars().count() != body_start
+                    || source[..layout.body_end].chars().count() != close
+            }))
         || close < body_start
         || !matches!(chars.get(close.wrapping_sub(1)), Some('\r' | '\n'))
         || span.end < span.start
@@ -68,12 +76,12 @@ pub(crate) fn from_source(source: &str, span: Span) -> Result<CodeBlock, Fronten
     {
         return Err(invalid());
     }
-    let header: String = chars[3..header_end].iter().collect();
+    let header: String = chars[width..header_end].iter().collect();
     let (scheme, identifier) = header.split_once(':').ok_or_else(invalid)?;
     if scheme.is_empty() || identifier.is_empty() {
         return Err(invalid());
     }
-    let name_start = span.start + 3 + scheme.chars().count() + 1;
+    let name_start = span.start + width + scheme.chars().count() + 1;
     Ok(CodeBlock {
         scheme: scheme.into(),
         identifier: identifier.into(),

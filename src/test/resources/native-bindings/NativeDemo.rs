@@ -2,6 +2,11 @@ use tinyexpression_rs::runtime::bindings::{BindingError, ClassBindings};
 use tinyexpression_rs::runtime::{ExternalError, HostObject};
 use tinyexpression_rs::Value;
 
+const _FENCES: &str = r###"
+```
+`````
+"###;
+
 pub fn register(class: &mut ClassBindings) -> Result<(), BindingError> {
     class.bind::<(f32, f32), f32, _>("add", |_, (a, b)| Ok(a + b))?;
     class.bind::<(String,), String, _>("greet", |vars, (s,)| {
