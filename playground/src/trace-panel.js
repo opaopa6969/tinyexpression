@@ -2,7 +2,7 @@
 // → value / type, click → highlight in the editor) and a step mode that walks the steps in
 // evaluation order with the partial stack of values.
 import { prepareTrace, stepEvents, stackAt, outcomeLabel } from './trace.js';
-import { highlight } from './highlight.js';
+import { highlight, scrollWithin } from './highlight.js';
 import { isExternalTraceNode } from './externals.js';
 
 const SNIPPET = 48;
@@ -73,7 +73,8 @@ export function createTracePanel(parts, view, describe) {
     if (topmost) renderChildren(topmost);
     const row = rows.get(node.id);
     row?.classList.add('selected');
-    row?.scrollIntoView({ block: 'nearest' });
+    // Only the tree box scrolls; row.scrollIntoView also scrolled the page.
+    if (row) scrollWithin(parts.tree, row.getBoundingClientRect(), { horizontal: false });
     if (!fromStep) {
       index = events.findIndex((e) => e.type === 'exit' && e.node === node);
       renderStep();
@@ -136,6 +137,9 @@ export function createTracePanel(parts, view, describe) {
   }
 
   function renderStep() {
+    // The buttons are rebuilt on every step; keep the focus on the one that was pressed so that
+    // repeated clicks and the arrow keys keep working, without scrolling to it.
+    const focused = parts.step.contains(document.activeElement) ? document.activeElement.getAttribute('aria-label') : null;
     parts.step.replaceChildren();
     if (!events.length) return;
     const event = events[index] ?? null;
@@ -159,6 +163,7 @@ export function createTracePanel(parts, view, describe) {
       if (e.key === 'End') { go(events.length - 1); e.preventDefault(); }
     });
     parts.step.append(nav);
+    if (focused) nav.querySelector(`[aria-label="${focused}"]`)?.focus({ preventScroll: true });
     if (!event) {
       parts.step.append(el('p', { class: 'muted small' }, '▶ で最初のステップへ。評価順（子 → 親）に 1 ステップずつ進みます。'));
       return;
