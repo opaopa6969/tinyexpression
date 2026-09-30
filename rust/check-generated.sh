@@ -38,3 +38,9 @@ grep -q "^pub const UBNFC_COMMIT: &str = \"$pin_commit\";" "$script_dir/tinyexpr
   exit 1
 }
 echo "api.rs UBNFC_COMMIT: matches the pin"
+pin_grammar=$(sed -n 's/^grammar_sha256=//p' "$script_dir/ubnfc-pin.txt")
+grep -q "^pub const GRAMMAR_SHA256: &str = \"$pin_grammar\";" "$script_dir/tinyexpression-rs/src/api.rs" || {
+  echo "tinyexpression-rs/src/api.rs GRAMMAR_SHA256 differs from rust/ubnfc-pin.txt" >&2
+  exit 1
+}
+echo "api.rs GRAMMAR_SHA256: matches the pin"

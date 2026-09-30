@@ -27,6 +27,8 @@ pub mod formula_info_span;
 mod frontend;
 mod request;
 pub mod runtime;
+#[cfg(feature = "runtime-bundle")]
+pub mod runtime_bundle;
 
 use std::error::Error;
 use std::fmt::{self, Display, Formatter};

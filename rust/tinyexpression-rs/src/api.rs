@@ -38,6 +38,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The ubnfc commit the vendored parsers were generated from. `rust/check-generated.sh`
 /// fails when it differs from `ubnfc_commit` in `rust/ubnfc-pin.txt`.
 pub const UBNFC_COMMIT: &str = "cefdbd7be262c9ea7c58a56b28fa0319c354e446";
+/// Exact P4 grammar source identity; checked against `rust/ubnfc-pin.txt` in CI.
+pub const GRAMMAR_SHA256: &str = "272b88c1f68ceb2ad8be70c018684735657afa67e54855b189881624adf7aced";
 
 /// One JSON response and the exit code that goes with it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -270,13 +272,73 @@ fn with_trace(json: String, trace: Option<&TraceRecorder>) -> String {
     }
 }
 
-fn eval_context_response(request_text: &str, mut trace: Option<&mut TraceRecorder>) -> Response {
-    let (mut request, formula) = match read_request(request_text, "formula") {
+fn eval_context_response(request_text: &str, trace: Option<&mut TraceRecorder>) -> Response {
+    let (request, formula) = match read_request(request_text, "formula") {
         Ok(read) => read,
         Err(response) => return response,
     };
+    evaluate_request(request, &formula, trace, None)
+}
+
+pub(crate) fn eval_linked_context_json(
+    text: &str,
+    linked: &mut crate::runtime::bindings::LinkedCode,
+) -> Response {
+    let json = match request::parse_json(text) {
+        Ok(json) => json,
+        Err(e) => return Response::error(EXIT_USAGE, "request", &format!("invalid JSON: {e}")),
+    };
+    if json.get("formula").is_some() && json.str_field("formula") != Some(linked.source()) {
+        return Response::error(
+            EXIT_MAPPING,
+            "link",
+            "CB007: request formula differs from compiled source",
+        );
+    }
+    let request = match request::read_request(&json) {
+        Ok(request) => request,
+        Err(e) => return Response::error(EXIT_USAGE, "request", &e),
+    };
+    let source = linked.source().to_owned();
+    evaluate_request(request, &source, None, Some(linked))
+}
+
+struct LinkedExternals<'a> {
+    linked: Option<&'a mut crate::runtime::bindings::Registry>,
+    stubs: &'a mut request::StubExternals,
+}
+impl crate::runtime::ExternalHost for LinkedExternals<'_> {
+    fn class_exists(&self, name: &str) -> bool {
+        self.linked.as_ref().is_some_and(|r| r.class_exists(name)) || self.stubs.class_exists(name)
+    }
+    fn invoke(
+        &mut self,
+        call: &crate::runtime::ExternalCall<'_>,
+        vars: &dyn crate::runtime::Variables,
+    ) -> Result<crate::Value, crate::runtime::ExternalError> {
+        if let Some(registry) = self
+            .linked
+            .as_mut()
+            .filter(|r| r.class_exists(call.class_name))
+        {
+            registry.invoke(call, vars)
+        } else {
+            self.stubs.invoke(call, vars)
+        }
+    }
+}
+
+fn evaluate_request(
+    mut request: Request,
+    formula: &str,
+    mut trace: Option<&mut TraceRecorder>,
+    linked: Option<&mut crate::runtime::bindings::LinkedCode>,
+) -> Response {
     let options = Options::new(request.result_type).with_number_type(request.number_type);
-    let program = match Program::new(&formula, options) {
+    let program = match linked
+        .as_ref()
+        .map_or_else(|| Program::new(formula, options), |l| l.program(options))
+    {
         Ok(program) => program,
         Err(error) => {
             let exit = if error.kind == ErrorKind::Parse && error.diagnostic.is_some() {
@@ -294,8 +356,12 @@ fn eval_context_response(request_text: &str, mut trace: Option<&mut TraceRecorde
         }
     };
     let mut random = XorShiftRandom::new(request.seed);
+    let mut external = LinkedExternals {
+        linked: linked.map(|l| &mut l.registry),
+        stubs: &mut request.externals,
+    };
     let mut host = Host {
-        external: &mut request.externals,
+        external: &mut external,
         clock: &ContextClock,
         random: &mut random,
     };

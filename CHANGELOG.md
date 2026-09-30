@@ -6,7 +6,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
-- Java `CodeBlockSource` and Rust `code_blocks`: source-preserving code-block projection from committed P4 occurrences (raw body and code-point block/body/name spans), plus pure AOT preflight with shared `CB001`–`CB004` diagnostics (#228). No compiler or generated files; Rust AOT compilation/execution is still pending. See `docs/code-block-source-contract.md`.
+- `tinyexpression-aot`: explicit trusted Rust code-block compilation/linking into a native executable, typed `runtime::bindings`, source-verified linkage, compiler diagnostics mapped back to code-point spans, content-identified build manifests, and Java/Rust real-body conformance tests (#229). Requires rustc at build time only; the embedded DSL still uses the typed-AST runtime. Not a sandbox. See `docs/rust-codeblock-aot.md`.
+- Java `CodeBlockSource` and Rust `code_blocks`: source-preserving code-block projection from committed P4 occurrences (raw body and code-point block/body/name spans), plus pure AOT preflight with shared `CB001`–`CB004` diagnostics (#228). The projection/preflight APIs never compile or execute code. See `docs/code-block-source-contract.md`.
 
 ### Fixed
 - Rust-block rejection in JavaCode backends happens before Java compiler initialization, including when `jdk.compiler` is unavailable (#228 follow-up). The existing `CompileError` wrapper is unchanged.

@@ -13,6 +13,7 @@
 //! [`RandomSource`] (`random()`). The defaults behave like a Java host with nothing registered.
 
 mod ast_meta;
+pub mod bindings;
 pub mod code_block;
 pub(crate) mod compile;
 pub mod java;
@@ -596,6 +597,14 @@ impl Program {
     /// Parses `source` and selects the evaluation root (Java: the `AstEvaluatorCalculator`
     /// constructor). A rejection is an [`ErrorKind::Parse`] error.
     pub fn new(source: &str, options: Options) -> Result<Self, EvalError> {
+        Self::new_inner(source, options, false)
+    }
+
+    fn new_linked(source: &str, options: Options) -> Result<Self, EvalError> {
+        Self::new_inner(source, options, true)
+    }
+
+    fn new_inner(source: &str, options: Options, linked: bool) -> Result<Self, EvalError> {
         let stripped = select::strip_comments(source);
         if source.chars().all(java::is_whitespace) {
             return Ok(Self {
@@ -612,7 +621,9 @@ impl Program {
         } else {
             Vec::new()
         };
-        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&code_blocks) {
+        if let Some(diagnostic) =
+            crate::code_blocks::uncompiled_rust(&code_blocks).filter(|_| !linked)
+        {
             return Err(EvalError::new(
                 ErrorKind::UnsupportedOperation,
                 diagnostic.to_string(),

@@ -23,7 +23,8 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Match CI's GNU binary baseline; ubuntu-latest can require a newer glibc.
+    runs-on: ubuntu-22.04
     env:
       DRY_RUN: ${{ inputs.dry_run }}
     steps:
@@ -45,7 +46,7 @@ jobs:
           cargo test --locked --manifest-path rust/Cargo.toml
       - name: Build native CLI and C library (Linux x86_64)
         run: |
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -p tinyexpression-ffi
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -p tinyexpression-ffi -p tinyexpression-aot
           bash rust/tinyexpression-ffi/tests/c/run.sh release
       - name: Build wasm32 module
         run: |
@@ -57,6 +58,9 @@ jobs:
           stage=$(mktemp -d)
           mkdir -p "$stage/cli" "$stage/lib/include" "$stage/lib/lib" "$stage/wasm"
           install -m 0755 rust/target/release/tinyexpression "$stage/cli/tinyexpression"
+          install -m 0755 rust/target/release/tinyexpression-aot "$stage/cli/tinyexpression-aot"
+          install -m 0644 rust/tinyexpression-aot/README.md "$stage/cli/AOT-README.md"
+          install -m 0644 rust/tinyexpression-aot/examples/greeting.tiny "$stage/cli/greeting.tiny"
           install -m 0644 LICENSE rust/tinyexpression-rs/README.md "$stage/cli/"
           tar -czf "$DIST/tinyexpression-$VERSION-linux-x86_64.tar.gz" -C "$stage/cli" .
           install -m 0644 rust/tinyexpression-ffi/include/tinyexpression.h "$stage/lib/include/"

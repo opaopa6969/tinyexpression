@@ -1,14 +1,15 @@
 # CodeBlock のソース保持と AOT 準備契約
 
 tinyexpression #228。Rust full-spec のうち、信頼された `rustcodeblock` を明示許可して
-ネイティブバイナリに組み込むための準備段階である。**この段階では Rust の本文を
-コンパイル・実行できない。** パーサが本文を失わず取り出せることと、許可・対象言語を
+ネイティブバイナリに組み込むためのソース保持契約である。**この API 自体は Rust の本文を
+コンパイル・実行しない。** パーサが本文を失わず取り出せることと、許可・対象言語を
 副作用なしで検査できることを Java / Rust の両方で固定する。
 
 > **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when formula authors are fully trusted. Do not expose this capability to untrusted users.
 
 既存 Java 実行の信頼境界は [ADR-003](decisions/ADR-003-java-codeblock-safety.md) のまま。
-将来の Rust ビルド・実行にも同様の信頼が必要であり、AOT 化は sandbox 化ではない。
+Rust ビルド・実行にも同様の信頼が必要であり、AOT 化は sandbox 化ではない。
+実行対応は別 API / CLI の [Rust CodeBlock AOT](rust-codeblock-aot.md) を参照。
 
 ## ソースを失わない API
 
@@ -142,7 +143,7 @@ cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs \
 
 この段階だけで Rust full-spec や rustcodeblock の実行対応を完了扱いにしない。
 後続の受け入れ条件は [tinyexpression #229](https://github.com/opaopa6969/tinyexpression/issues/229) に固定する。
-次に実装・検証するのは、既存 `ExternalHost` に結ぶ型付き Rust binding、明示許可付きの
-AOT 生成・build、生成物と toolchain / dependency の固定、元ソースへのコンパイラ診断写像、
-生成バイナリの実行である。build と execute は別の操作とし、parse / IDE は今後も実行しない。
-number / string / boolean、変数 context、外部呼び出しの失敗条件を Java と共通入力で照合する。
+型付き Rust binding・AOT build・コンパイラ診断の写像・ネイティブ実行は
+[Rust CodeBlock AOT](rust-codeblock-aot.md) とその共通 oracle に進んだ。
+build と execute は別の操作であり、parse / IDE は実行しない。
+AST-only API と fence 終端衝突の制約はこの追加後も残る。
