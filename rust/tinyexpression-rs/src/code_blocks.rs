@@ -1,6 +1,6 @@
 //! Source-preserving code blocks and side-effect-free AOT preflight.
 //! No compiler, process, filesystem or host code is invoked by this module.
-use crate::{frontend, FrontendError, Span};
+use crate::{generated::ast::Ast, FrontendError, Span};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct CodeBlock {
@@ -25,91 +25,69 @@ pub struct BlockDiagnostic {
     pub span: Span,
 }
 
-/// Parse the complete formula, then project only committed code-block occurrences.
-/// Fences inside comments, strings or failed alternatives are not blocks.
+/// Parse the complete formula and project its retained AST blocks.
+/// Use [`from_ast`] to reuse an existing parse without reparsing or collecting token traces.
 pub fn parse(source: &str) -> Result<Vec<CodeBlock>, FrontendError> {
-    let mut result = frontend::run(
-        None,
-        source,
-        crate::generated::ubnfc::ParseOptions {
-            build_ast: false,
-            lexical: true,
-            ..Default::default()
-        },
-    );
-    if !result.ok {
-        // Same result-family retry as the public facade, including fence text
-        // in comments/strings of a bare comparison. These roots have no blocks.
-        for entry in ["BooleanExpression", "StringExpression", "ObjectExpression"] {
-            let alternate = frontend::run(
-                Some(entry),
-                source,
-                crate::generated::ubnfc::ParseOptions {
-                    build_ast: false,
-                    lexical: true,
-                    ..Default::default()
-                },
-            );
-            if alternate.ok {
-                result = alternate;
-                break;
-            }
-        }
-    }
-    if !result.ok {
-        return Err(FrontendError::Parse(frontend::diagnostic(&result, source)));
-    }
-    let chars: Vec<char> = source.chars().collect();
-    let mut blocks = vec![];
-    for rule in result
-        .lexical
-        .iter()
-        .filter(|r| r.rule_id == "TinyExpressionP4::CodeBlock")
-    {
-        let token = |suffix| {
-            result.tokens.iter().find(|t| {
-                t.parent_occurrence_id == Some(rule.occurrence_id) && t.expr_id.ends_with(suffix)
+    from_ast(&crate::parse(source)?)
+}
+
+/// Scheme, label, exact body and absolute code-point spans, from the same owned AST.
+pub fn from_ast(ast: &Ast) -> Result<Vec<CodeBlock>, FrontendError> {
+    match ast {
+        Ast::FormulaExpr { codeBlocks, .. } => codeBlocks
+            .iter()
+            .map(|node| match node {
+                Ast::CodeBlockExpr { source, span } => from_source(source, *span),
+                _ => Err(FrontendError::Mapping(
+                    "expected CodeBlockExpr in codeBlocks".into(),
+                )),
             })
-        };
-        let open = token("body/0/tokenRef")
-            .ok_or_else(|| FrontendError::Mapping("missing opening fence token".into()))?
-            .span;
-        let close = token("body/2/tokenRef")
-            .ok_or_else(|| FrontendError::Mapping("missing closing fence token".into()))?
-            .span;
-        // Scanner value spans exclude line terminators in Rust, while Java trace
-        // spans can include them. Derive these boundaries from the original source.
-        let header_end = (open[0]..chars.len())
-            .find(|&i| matches!(chars[i], '\r' | '\n'))
-            .unwrap_or(chars.len());
-        let body_start = after_line(&chars, header_end);
-        let block_end = after_line(&chars, close[0] + 3);
-        let header: String = chars[open[0]..header_end].iter().collect();
-        let (scheme, identifier) = header
-            .strip_prefix("```")
-            .and_then(|h| h.split_once(':'))
-            .ok_or_else(|| FrontendError::Mapping("invalid code block header projection".into()))?;
-        let name_start = open[0] + 3 + scheme.chars().count() + 1;
-        blocks.push(CodeBlock {
-            scheme: scheme.into(),
-            identifier: identifier.into(),
-            body: chars[body_start..close[0]].iter().collect(),
-            span: Span {
-                start: open[0],
-                end: block_end,
-            },
-            body_span: Span {
-                start: body_start,
-                end: close[0],
-            },
-            name_span: Span {
-                start: name_start,
-                end: name_start + identifier.chars().count(),
-            },
-        });
+            .collect(),
+        Ast::CodeBlockExpr { source, span } => Ok(vec![from_source(source, *span)?]),
+        _ => Ok(Vec::new()),
     }
-    blocks.sort_by_key(|block| block.span.start);
-    Ok(blocks)
+}
+
+/// Project a retained fenced capture. Its outer trailing line ending may be trimmed by
+/// the mapper; the node span retains the consumed ending. Body text is never normalized.
+pub(crate) fn from_source(source: &str, span: Span) -> Result<CodeBlock, FrontendError> {
+    let chars: Vec<char> = source.chars().collect();
+    let invalid = || FrontendError::Mapping("invalid retained code block source/span".into());
+    let header_end = chars
+        .iter()
+        .position(|c| matches!(c, '\r' | '\n'))
+        .ok_or_else(invalid)?;
+    let body_start = after_line(&chars, header_end);
+    let close = chars.len().checked_sub(3).ok_or_else(invalid)?;
+    if !source.starts_with("```")
+        || !source.ends_with("```")
+        || close < body_start
+        || !matches!(chars.get(close.wrapping_sub(1)), Some('\r' | '\n'))
+        || span.end < span.start
+        || chars.len() > span.end - span.start
+    {
+        return Err(invalid());
+    }
+    let header: String = chars[3..header_end].iter().collect();
+    let (scheme, identifier) = header.split_once(':').ok_or_else(invalid)?;
+    if scheme.is_empty() || identifier.is_empty() {
+        return Err(invalid());
+    }
+    let name_start = span.start + 3 + scheme.chars().count() + 1;
+    Ok(CodeBlock {
+        scheme: scheme.into(),
+        identifier: identifier.into(),
+        body: chars[body_start..close].iter().collect(),
+        span,
+        body_span: Span {
+            start: span.start + body_start,
+            end: span.start + close,
+        },
+        name_span: Span {
+            start: name_start,
+            end: name_start + identifier.chars().count(),
+        },
+    })
 }
 
 fn after_line(chars: &[char], mut at: usize) -> usize {

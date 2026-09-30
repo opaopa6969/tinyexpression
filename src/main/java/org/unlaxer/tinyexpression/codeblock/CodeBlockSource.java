@@ -1,13 +1,12 @@
 package org.unlaxer.tinyexpression.codeblock;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import org.unlaxer.tinyexpression.p4.ubnfc.P4Scanners;
-import org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4Parser;
-import org.unlaxer.tinyexpression.p4.ubnfc.generated.api.ParseOptions;
+import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
+import org.unlaxer.tinyexpression.p4.P4PreferredAstMapper;
+import org.unlaxer.tinyexpression.p4.P4SourceText;
 
 /** Source-preserving, non-executing projection of committed P4 code-block tokens.
  * Java code execution remains trusted-author-only, explicitly opt-in (ADR-003); no sandbox.
@@ -35,45 +34,57 @@ public final class CodeBlockSource {
     }
   }
 
-  /** Validates the complete formula; only successful parser occurrences become blocks. */
+  /** Parses once; use fromAst to reuse a parse and its owned position snapshot. */
   public static List<Block> parse(String source) {
-    var options = new ParseOptions(false, true, true, true, P4Scanners.ALL);
-    var result = TinyExpressionP4Parser.parse(source, options);
-    if (!result.ok()) {
-      // Match the public facade's result-family retries. These roots contain no
-      // CodeBlock rule, but can contain fence text inside comments/strings.
-      for (String entry : List.of("BooleanExpression", "StringExpression", "ObjectExpression")) {
-        var alternate = TinyExpressionP4Parser.parseEntry("TinyExpressionP4", entry, source, options);
-        if (alternate.ok()) { result = alternate; break; }
-      }
-    }
-    if (!result.ok()) throw new IllegalArgumentException("code block formula rejected: " + result.diagnostics());
+    return fromAst(P4PreferredAstMapper.parseDetailed(source, null));
+  }
+
+  public static List<Block> fromAst(P4PreferredAstMapper.ParsedAst parsed) {
+    return fromAst(parsed.ast(), parsed.sourceText());
+  }
+
+  /** AST plus its existing, identity-based code-point snapshot; never reparses the source. */
+  public static List<Block> fromAst(TinyExpressionP4AST ast, P4SourceText positions) {
+    return nodes(ast).stream().map(node -> {
+      int[] span = positions.spanOf(node).orElseThrow(() ->
+          new IllegalArgumentException("CodeBlock metadata requires its owned source span"));
+      return fromSource(retainedSource(node), new Span(span[0], span[1]));
+    }).toList();
+  }
+
+  private static List<TinyExpressionP4AST.CodeBlockExpr> nodes(TinyExpressionP4AST ast) {
+    if (ast instanceof TinyExpressionP4AST.FormulaExpr formula) return formula.codeBlocks();
+    if (ast instanceof TinyExpressionP4AST.CodeBlockExpr block) return List.of(block);
+    return List.of();
+  }
+
+  private static String retainedSource(TinyExpressionP4AST.CodeBlockExpr node) {
+    Object value = node.source(); // Classic generators may declare Object or String.
+    if (!(value instanceof String source))
+      throw new IllegalArgumentException("CodeBlock source must be retained text");
+    return source;
+  }
+
+  private static Block fromSource(String source, Span span) {
     int[] chars = source.codePoints().toArray();
-    List<Block> blocks = new ArrayList<>();
-    for (var rule : result.lexical()) {
-      if (!rule.ruleId().equals("TinyExpressionP4::CodeBlock") || !rule.exprId().endsWith("body/seq")) continue;
-      var tokens = result.lexical().stream()
-          .filter(t -> t.parentOccurrenceId() == rule.occurrenceId() && t.token() != null)
-          .sorted(Comparator.comparingLong(t -> t.completionOrder())).toList();
-      if (tokens.size() != 3) throw new IllegalStateException("code block token contract changed");
-      var open = tokens.get(0).span();
-      var close = tokens.get(2).span();
-      int headerEnd = open.start();
-      while (headerEnd < chars.length && chars[headerEnd] != '\r' && chars[headerEnd] != '\n') headerEnd++;
-      int bodyStart = afterLine(chars, headerEnd);
-      int blockEnd = afterLine(chars, close.start() + 3);
-      String header = slice(chars, open.start(), headerEnd);
-      int colon = header.indexOf(':');
-      if (!header.startsWith("```") || colon < 3) throw new IllegalStateException("invalid code block header projection");
-      String scheme = header.substring(3, colon);
-      String identifier = header.substring(colon + 1);
-      int nameStart = open.start() + header.codePointCount(0, colon + 1);
-      blocks.add(new Block(scheme, identifier, slice(chars, bodyStart, close.start()),
-          new Span(open.start(), blockEnd), new Span(bodyStart, close.start()),
-          new Span(nameStart, nameStart + identifier.codePointCount(0, identifier.length()))));
-    }
-    blocks.sort(Comparator.comparingInt(b -> b.span().start()));
-    return List.copyOf(blocks);
+    int headerEnd = 0;
+    while (headerEnd < chars.length && chars[headerEnd] != '\r' && chars[headerEnd] != '\n') headerEnd++;
+    int bodyStart = afterLine(chars, headerEnd);
+    int close = chars.length - 3;
+    if (!source.startsWith("```") || !source.endsWith("```") || close < bodyStart
+        || close <= 0 || (chars[close - 1] != '\r' && chars[close - 1] != '\n')
+        || span.start() < 0 || span.end() - span.start() < chars.length)
+      throw new IllegalArgumentException("invalid retained code block source/span");
+    String header = slice(chars, 3, headerEnd);
+    int colon = header.indexOf(':');
+    if (colon < 1 || colon == header.length() - 1)
+      throw new IllegalArgumentException("invalid retained code block header");
+    String scheme = header.substring(0, colon);
+    String identifier = header.substring(colon + 1);
+    int nameStart = span.start() + 3 + header.codePointCount(0, colon + 1);
+    return new Block(scheme, identifier, slice(chars, bodyStart, close), span,
+        new Span(span.start() + bodyStart, span.start() + close),
+        new Span(nameStart, nameStart + identifier.codePointCount(0, identifier.length())));
   }
 
   private static String slice(int[] source, int start, int end) {
@@ -112,6 +123,19 @@ public final class CodeBlockSource {
     for (var block : parse(source)) {
       if (block.scheme().equalsIgnoreCase("rust"))
         throw new UnsupportedOperationException(new Diagnostic("CB005", block.nameSpan()).message());
+    }
+  }
+
+  /** Guard AST-only evaluation/emission before evaluating any declaration or expression.
+   * A detached Java record has no absolute position snapshot, so do not invent coordinates.
+   */
+  public static void rejectUncompiledRust(TinyExpressionP4AST ast) {
+    for (var node : nodes(ast)) {
+      String source = retainedSource(node);
+      var block = fromSource(source, new Span(0, source.codePointCount(0, source.length())));
+      if (block.scheme().equalsIgnoreCase("rust"))
+        throw new UnsupportedOperationException("CB005: Rust code blocks require an explicit AOT build (binding "
+            + block.identifier() + ")");
     }
   }
 }

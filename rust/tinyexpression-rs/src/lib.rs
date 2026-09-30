@@ -95,6 +95,7 @@ fn normalize_direct_match_root(ast: Ast, source: &str) -> Ast {
             r#declarations,
             r#expression,
             r#methods,
+            r#codeBlocks,
         } => match *r#expression {
             Ast::r#ExpressionExpr {
                 span: expression_span,
@@ -110,6 +111,7 @@ fn normalize_direct_match_root(ast: Ast, source: &str) -> Ast {
                         r#value: Box::new(direct_match.unwrap_or(*r#value)),
                     }),
                     r#methods,
+                    r#codeBlocks,
                 }
             }
             expression => Ast::r#FormulaExpr {
@@ -118,6 +120,7 @@ fn normalize_direct_match_root(ast: Ast, source: &str) -> Ast {
                 r#declarations,
                 r#expression: Box::new(expression),
                 r#methods,
+                r#codeBlocks,
             },
         },
         other => other,
@@ -324,6 +327,7 @@ fn replace_document_expression(
             r#imports,
             r#declarations,
             r#methods,
+            r#codeBlocks,
             ..
         } => Ok(Ast::r#FormulaExpr {
             span,
@@ -334,6 +338,7 @@ fn replace_document_expression(
                 r#value: Box::new(replacement),
             }),
             r#methods,
+            r#codeBlocks,
         }),
         _ => Err(FrontendError::Mapping(
             "document expression replacement requires FormulaExpr".to_owned(),
@@ -538,5 +543,6 @@ fn wrap_expression_root(value: Ast, source_len: usize) -> Ast {
             r#value: Box::new(value),
         }),
         r#methods: Vec::new(),
+        r#codeBlocks: Vec::new(),
     }
 }

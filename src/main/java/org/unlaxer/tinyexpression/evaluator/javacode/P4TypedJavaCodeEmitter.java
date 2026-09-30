@@ -62,6 +62,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalFormulaExpr(FormulaExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     for (ImportDeclarationExpr declaration : node.imports()) {
       eval(declaration);
     }
@@ -1121,6 +1122,7 @@ public class P4TypedJavaCodeEmitter extends TinyExpressionP4Evaluator<String> {
 
   @Override
   protected String evalCodeBlockExpr(CodeBlockExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     return "null";
   }
 

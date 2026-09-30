@@ -616,11 +616,7 @@ impl Program {
             });
         }
         let root = select::select_root(source, &stripped, options.result_type)?;
-        let code_blocks = if source.contains("```") {
-            crate::code_blocks::parse(source)?
-        } else {
-            Vec::new()
-        };
+        let code_blocks = crate::code_blocks::from_ast(&root)?;
         if let Some(diagnostic) =
             crate::code_blocks::uncompiled_rust(&code_blocks).filter(|_| !linked)
         {
@@ -629,11 +625,17 @@ impl Program {
                 diagnostic.to_string(),
             ));
         }
+        let mut code_block_classes = Vec::new();
+        for block in &code_blocks {
+            if !code_block_classes.contains(&block.identifier) {
+                code_block_classes.push(block.identifier.clone());
+            }
+        }
         Ok(Self {
             root: Some(root),
             source: stripped,
             options,
-            code_block_classes: code_block::code_block_classes(source),
+            code_block_classes,
             code_blocks,
         })
     }

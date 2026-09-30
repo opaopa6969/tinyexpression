@@ -306,14 +306,17 @@ fn failed_boolean_retry_keeps_the_primary_formula_diagnostic() {
 fn invalid_nested_ternary_returns_a_diagnostic_within_two_seconds() {
     const SOURCE: &str = "(true ? (false ? 1 : 2 : 3)";
     let (sender, receiver) = mpsc::sync_channel(1);
-    let parser = std::thread::spawn(move || sender.send(parse(SOURCE)));
+    let parser = std::thread::spawn(move || {
+        sender
+            .send(parse(SOURCE))
+            .expect("result receiver remains alive");
+    });
     let result = receiver
         .recv_timeout(Duration::from_secs(2))
         .expect("memoized invalid parse exceeded two seconds");
     parser
         .join()
-        .expect("invalid nested ternary parser thread panicked")
-        .expect("result receiver remains alive");
+        .expect("invalid nested ternary parser thread panicked");
     let FrontendError::Parse(diagnostic) = result.expect_err("nested ternary must be rejected")
     else {
         panic!("expected parse diagnostic");
