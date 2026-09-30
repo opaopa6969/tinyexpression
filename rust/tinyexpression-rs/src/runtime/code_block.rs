@@ -20,17 +20,17 @@ use super::{EvalError, ExternalError};
 /// duplicates. Every scheme counts (Java dispatches on it; `java` is the one in use).
 pub fn code_block_classes(source: &str) -> Vec<String> {
     let mut classes: Vec<String> = Vec::new();
-    let mut inside = false;
-    for line in source.split('\n') {
-        let line = line.strip_suffix('\r').unwrap_or(line);
-        if inside {
-            if line == "```" {
-                inside = false;
+    let mut closing_fence = None;
+    for line in source.split(['\r', '\n']) {
+        if let Some(fence) = closing_fence {
+            if line == fence {
+                closing_fence = None;
             }
             continue;
         }
         if let Some(class) = opening_fence_class(line) {
-            inside = true;
+            let width = line.bytes().take_while(|&c| c == b'`').count();
+            closing_fence = Some(&line[..width]);
             if !classes.iter().any(|c| c == class) {
                 classes.push(class.to_owned());
             }
@@ -63,7 +63,7 @@ fn identifier_end(line: &str, from: usize) -> Option<usize> {
 
 /// The class of an opening fence line ```` ```scheme:a.b.C ````, or `None`.
 fn opening_fence_class(line: &str) -> Option<&str> {
-    let rest = line.strip_prefix("```")?;
+    let rest = line.strip_prefix("```")?.trim_start_matches('`');
     let offset = line.len() - rest.len();
     let scheme_end = identifier_end(line, offset)?;
     if !line[scheme_end..].starts_with(':') {

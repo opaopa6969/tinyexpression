@@ -260,7 +260,7 @@ public final class UbnfcP4Parse {
      */
     private static ParseResult<org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST> parseEntry(
             String entry, String parserSource) {
-        ParseOptions options = new ParseOptions(true, false, false, true, P4Scanners.ALL);
+        ParseOptions options = new ParseOptions(true, false, false, true, TinyExpressionScanners.ALL);
         return TinyExpressionP4Parser.parseEntry("TinyExpressionP4", entry, parserSource, options);
     }
 

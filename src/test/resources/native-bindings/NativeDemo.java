@@ -1,6 +1,10 @@
 import org.unlaxer.tinyexpression.CalculationContext;
 
 public class NativeDemo {
+    private static final String FENCES = """
+```
+`````
+""";
     private int counter;
     public float add(float a, float b) { return a + b; }
     public String greet(CalculationContext vars, String s) { return vars.getString("prefix").orElse("") + s; }

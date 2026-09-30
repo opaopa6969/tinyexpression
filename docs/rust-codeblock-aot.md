@@ -132,8 +132,8 @@ cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs --test 
 
 full-spec 全体の完了ではない。本文は typed AST に保持され、通常の AST-only 評価も未リンク
 Rust ブロックを拒否する（[#234](https://github.com/opaopa6969/tinyexpression/issues/234)）。
-三連 backtick が Rust 文字列・コメント内でも終端になる制約は
-[#232](https://github.com/opaopa6969/tinyexpression/issues/232) で追跡する。専用 JSON entry point は eval-context で、
+本文中に三連 backtick がある場合は [4 個以上の長い fence](code-block-source-contract.md#長い-fence-による本文内-backtick-の保持)
+を使う。従来の三連構文の受理は変更しない。専用 JSON entry point は eval-context で、
 FormulaInfo 全体の AOT、AOT binary の DAP / LSP 統合、DSL 全式の機械語生成は含まない。
 通常の Java API・C ABI・wasm API へ compiler 起動を足さない。
 build tool の crates.io 公開は行わず、当面は workspace / CI / release binary として配布する。

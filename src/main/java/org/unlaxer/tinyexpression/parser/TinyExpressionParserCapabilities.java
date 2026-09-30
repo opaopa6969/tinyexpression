@@ -142,12 +142,14 @@ public final class TinyExpressionParserCapabilities {
       char next = i + 1 < source.length() ? source.charAt(i + 1) : '\0';
       char prev = i > 0 ? source.charAt(i - 1) : '\0';
       // CodeBlock bodies are opaque host-language source, not DSL comments/strings.
-      // The grammar still validates the header and the first triple-backtick terminator.
+      // The grammar validates the header and legacy-first-triple / extended-exact-line terminator.
       // This is deliberately not a second parser or a new delimiter acceptance rule.
       if (!inSingleQuote && !inDoubleQuote && (i == 0 || prev == '\r' || prev == '\n')
           && source.startsWith("```", i)) {
         int close = source.indexOf("```", i + 3);
-        int end = close < 0 ? source.length() : close + 3;
+        int end = source.startsWith("````", i)
+            ? org.unlaxer.tinyexpression.codeblock.LongCodeFence.opaqueEnd(source, i)
+            : close < 0 ? source.length() : close + 3;
         builder.append(source, i, end);
         i = end - 1;
         continue;

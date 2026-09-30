@@ -70,18 +70,22 @@ public final class CodeBlockSource {
     int headerEnd = 0;
     while (headerEnd < chars.length && chars[headerEnd] != '\r' && chars[headerEnd] != '\n') headerEnd++;
     int bodyStart = afterLine(chars, headerEnd);
-    int close = chars.length - 3;
-    if (!source.startsWith("```") || !source.endsWith("```") || close < bodyStart
+    int width = 0;
+    while (width < chars.length && chars[width] == '`') width++;
+    int close = chars.length - width;
+    var extended = width > 3 ? LongCodeFence.scan(source, 0) : null;
+    if (width < 3 || !source.endsWith("`".repeat(width)) || close < bodyStart
+        || (width > 3 && (extended == null || extended.end() != source.length()))
         || close <= 0 || (chars[close - 1] != '\r' && chars[close - 1] != '\n')
         || span.start() < 0 || span.end() - span.start() < chars.length)
       throw new IllegalArgumentException("invalid retained code block source/span");
-    String header = slice(chars, 3, headerEnd);
+    String header = slice(chars, width, headerEnd);
     int colon = header.indexOf(':');
     if (colon < 1 || colon == header.length() - 1)
       throw new IllegalArgumentException("invalid retained code block header");
     String scheme = header.substring(0, colon);
     String identifier = header.substring(colon + 1);
-    int nameStart = span.start() + 3 + header.codePointCount(0, colon + 1);
+    int nameStart = span.start() + width + header.codePointCount(0, colon + 1);
     return new Block(scheme, identifier, slice(chars, bodyStart, close), span,
         new Span(span.start() + bodyStart, span.start() + close),
         new Span(nameStart, nameStart + identifier.codePointCount(0, identifier.length())));

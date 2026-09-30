@@ -16,7 +16,7 @@ fn real_rust_bodies_match_java_shared_oracle_without_compilers_on_path() {
     ))
     .unwrap();
     let blocks = format!(
-        "```rust:NativeDemo\n{}```\n```rust:NativeSecond\n{}```\n",
+        "````rust:NativeDemo\n{}````\n```rust:NativeSecond\n{}```\n",
         include_str!("../../../src/test/resources/native-bindings/NativeDemo.rs"),
         include_str!("../../../src/test/resources/native-bindings/NativeSecond.rs")
     );

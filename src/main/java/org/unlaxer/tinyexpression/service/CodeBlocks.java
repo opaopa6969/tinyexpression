@@ -9,7 +9,9 @@ import java.util.Map;
  * The fenced code blocks ({@code ```java:ClassName}) of a formula (issue #216 / #221), read
  * with the same line rules as the Rust {@code runtime::code_block} and the Java
  * {@code CodeStartParser} / {@code CodeEndParser}: a line that is exactly
- * {@code ```scheme:a.b.C} opens a block, a line that is exactly {@code ```} closes it.
+ * {@code ```scheme:a.b.C} opens a block; the closing line has the same fence width.
+ * Four or more backticks permit shorter fence lines inside the body. This legacy
+ * text-inspection helper does not replace the committed parser's syntax validation.
  */
 final class CodeBlocks {
 
@@ -40,20 +42,23 @@ final class CodeBlocks {
       return blocks;
     }
     String[] open = null;
+    String closingFence = null;
     StringBuilder body = null;
-    for (String line : lines(source)) {
+    for (Line original : lines(source)) {
+      String line = original.text();
       if (open != null) {
-        if (line.equals("```")) {
+        if (line.equals(closingFence)) {
           blocks.putIfAbsent(open[1], new Block(open[0], open[1], body.toString()));
           open = null;
         } else {
-          body.append(line).append('\n');
+          body.append(line).append(original.ending());
         }
         continue;
       }
       String[] fence = openingFence(line);
       if (fence != null) {
         open = fence;
+        closingFence = line.substring(0, line.indexOf(fence[0]));
         body = new StringBuilder();
       }
     }
@@ -63,22 +68,22 @@ final class CodeBlocks {
     return blocks;
   }
 
-  /** {@code source} split at {@code \n}, a trailing {@code \r} removed from each line. */
-  private static List<String> lines(String source) {
-    List<String> lines = new ArrayList<>();
+  private record Line(String text, String ending) {}
+
+  /** Keep host-language text and line endings unchanged, including CR-only input. */
+  private static List<Line> lines(String source) {
+    List<Line> lines = new ArrayList<>();
     int from = 0;
-    while (true) {
-      int end = source.indexOf('\n', from);
-      String line = end < 0 ? source.substring(from) : source.substring(from, end);
-      if (line.endsWith("\r")) {
-        line = line.substring(0, line.length() - 1);
-      }
-      lines.add(line);
-      if (end < 0) {
-        return lines;
-      }
-      from = end + 1;
+    while (from < source.length()) {
+      int end = from;
+      while (end < source.length() && source.charAt(end) != '\r' && source.charAt(end) != '\n') end++;
+      int next = end;
+      if (next < source.length() && source.charAt(next) == '\r') next++;
+      if (next < source.length() && source.charAt(next) == '\n') next++;
+      lines.add(new Line(source.substring(from, end), source.substring(end, next)));
+      from = next;
     }
+    return lines;
   }
 
   private static boolean identifierStart(int codePoint) {
@@ -108,7 +113,9 @@ final class CodeBlocks {
       return null;
     }
     int[] codePoints = line.codePoints().toArray();
-    int schemeEnd = identifierEnd(codePoints, 3);
+    int width = 3;
+    while (width < codePoints.length && codePoints[width] == '`') width++;
+    int schemeEnd = identifierEnd(codePoints, width);
     if (schemeEnd < 0 || schemeEnd >= codePoints.length || codePoints[schemeEnd] != ':') {
       return null;
     }
@@ -127,7 +134,7 @@ final class CodeBlocks {
       return null;
     }
     return new String[] {
-        new String(codePoints, 3, schemeEnd - 3),
+        new String(codePoints, width, schemeEnd - width),
         new String(codePoints, classFrom, end - classFrom)};
   }
 }

@@ -102,7 +102,9 @@ fn builds_real_code_preserves_diagnostics_and_never_reuses_wrong_artifacts() {
     let broken = format!(
         "// 😀\r\n```rust:Unused\r\n// あ\r\n{}\r\n```\r\n{}",
         BODY,
-        source(&format!("// 😀日本語\r\n{broken_body}"))
+        source(&format!("// 😀日本語 ```\r\n{broken_body}"))
+            .replace("```rust", "````rust")
+            .replace("\n```\n", "\n````\n")
     );
     let failed_dir = tmp.0.join("broken");
     let error = builder.build(&broken, &failed_dir).unwrap_err();
@@ -192,7 +194,7 @@ fn cli_permission_and_real_binary_end_to_end() {
             .stdin
             .take()
             .unwrap()
-            .write_all(source(BODY).as_bytes())
+            .write_all(source(BODY).replace("```", "````").as_bytes())
             .unwrap();
         let output = child.wait_with_output().unwrap();
         let value: Value = serde_json::from_slice(&output.stdout).unwrap();

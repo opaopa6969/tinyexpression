@@ -10,6 +10,16 @@ import java.util.concurrent.CompletableFuture;
 
 public class TinyExpressionP4LanguageServerExtTest {
 
+    @Test public void extendedJavaBlockUsesItsOwnFenceWidth() {
+        String source = "````java:p.Demo\nclass Demo {\n```\n`````\n```` \n}\n````\n1";
+        assertEquals(List.of(new TinyExpressionP4LanguageServerExt.JavaCodeBlock(1, 6)),
+            TinyExpressionP4LanguageServerExt.findJavaCodeBlocks(source));
+        for (int line = 1; line < 6; line++)
+            assertTrue(TinyExpressionP4LanguageServerExt.isInsideJavaCodeBlock(source, line));
+        assertFalse(TinyExpressionP4LanguageServerExt.isInsideJavaCodeBlock(source, 6));
+        assertFalse(TinyExpressionP4LanguageServerExt.isInsideJavaCodeBlock(source, 7));
+    }
+
     private TinyExpressionP4LanguageServerExt server;
     private TinyExpressionP4LanguageServerExt.ExtTextDocumentService service;
     private final String TEST_URI = "file:///test.tinyexp";

@@ -147,11 +147,34 @@ Rust の `Program` と scalar evaluator は metadata 用の追加 parse を行�
 - 旧 AST は失われた本文を復元できない。保存済み AST を使う場合は元ソースから再 parse する。
   古い成果物へ空の list を補うだけで「ブロックがなかった」と断定しない。
 
-## 構文上の限界
+## 長い fence による本文内 backtick の保持
 
-既存 UBNF の `CODE_BODY` は `UNTIL("```")` であり、Rust lexer ではない。
-Rust の文字列やコメントの内部でも三連 backtick は本文の終端と衝突する。
-不正な終端位置なら式全体を拒否する。任意の Rust ソースを完全に埋め込めるとは主張しない。
+従来の三連 fence は変更しない。`CODE_BODY = UNTIL("```")` のため、本文内の三連 backtick
+と衝突する既存の制約もその経路では残る。本文に backtick がある場合は、4 個以上の長い fence を使う。
+
+~~~text
+````rust:Demo
+const TEXT: &str = r#"
+```
+"#;
+````
+1
+~~~
+
+- 開始は行頭の N 個（N >= 4）の backtick と `scheme:qualified.Name`、その直後に改行。
+- 終端は **同じ N 個だけ**が並ぶ行。前後の空白、別の個数、行中の backtick は終端ではない。
+- LF / CRLF / CR を保持し、終端の直後は改行または EOF。開始行・終端行に indentation は付けない。
+- 本文は Java / Rust の lexer で解釈しない。引用符やコメントの中でも、同じ長さの単独行があれば
+  終端になる。本文中のどの backtick 単独行よりも長い N を選べば、有限の本文を無加工で埋め込める。
+- AST の shape は #234 と同じ。`source` は元の fence 幅も保持し、body/name/node の code-point span は
+  元入力を指す。古い三連構文を書き換える必要はない。
+
+UBNF は `LONG_CODE_BLOCK | CODE_START CODE_BODY CODE_END` を選択する。新 token は原子的・input-only で、
+失敗時に consumed / matched cursor を変更しない。Java classic / ubnfc と Rust ubnfc は共通 corpus の
+本文・span・失敗条件を検証する。新 scanner はプロジェクト固有の registry に追加し、pin された
+ubnfc 共通 scanner のファイルは手編集しない。旧 Java evaluator の `CodeParser` / `JavaCode` 抽出と
+service 経路、Rust AOT CLI も同じ長い fence を扱う。
+
 header は既存の英数字・underscore の識別子 / dotted name 規則に従う。
 `../escape` のような label は拒否するが、それを生成先 path の安全性保証の代用にしてはいけない。
 
@@ -185,4 +208,5 @@ cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs \
 [Rust CodeBlock AOT](rust-codeblock-aot.md) とその共通 oracle に進んだ。
 build と execute は別の操作であり、parse / IDE は実行しない。
 AST の本文欠落と AST-only 評価での検査漏れは #234 で解消する。
-fence 終端衝突の制約は [#232](https://github.com/opaopa6969/tinyexpression/issues/232) に残る。
+長い fence の拡張は [#232](https://github.com/opaopa6969/tinyexpression/issues/232) で追跡する。
+同 issue の完了は、unlaxer の Java / native Rust 生成器の token 対応と検証も含む。

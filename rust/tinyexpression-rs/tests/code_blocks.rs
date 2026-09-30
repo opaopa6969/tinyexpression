@@ -25,25 +25,29 @@ fn native_parse_and_eval_need_no_compiler_on_path() {
         io::Write,
         process::{Command, Stdio},
     };
-    let source = "```rust:demo\nnot valid Rust\n```\n1";
-    for operation in ["parse", "eval"] {
-        let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
-            .args([operation, "-"])
-            .env("PATH", "")
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .unwrap();
-        child
-            .stdin
-            .take()
-            .unwrap()
-            .write_all(source.as_bytes())
-            .unwrap();
-        let output = child.wait_with_output().unwrap();
-        assert_eq!(output.status.success(), operation == "parse");
-        if operation == "eval" {
-            assert!(String::from_utf8(output.stdout).unwrap().contains("CB005"));
+    for source in [
+        "```rust:demo\nnot valid Rust\n```\n1",
+        "````rust:demo\nnot valid ``` Rust\n```\n````\n1",
+    ] {
+        for operation in ["parse", "eval"] {
+            let mut child = Command::new(env!("CARGO_BIN_EXE_tinyexpression"))
+                .args([operation, "-"])
+                .env("PATH", "")
+                .stdin(Stdio::piped())
+                .stdout(Stdio::piped())
+                .spawn()
+                .unwrap();
+            child
+                .stdin
+                .take()
+                .unwrap()
+                .write_all(source.as_bytes())
+                .unwrap();
+            let output = child.wait_with_output().unwrap();
+            assert_eq!(output.status.success(), operation == "parse");
+            if operation == "eval" {
+                assert!(String::from_utf8(output.stdout).unwrap().contains("CB005"));
+            }
         }
     }
 }
