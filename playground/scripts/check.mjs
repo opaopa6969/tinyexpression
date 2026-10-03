@@ -521,6 +521,9 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   // comment: "ツアーの最後に UBNF 定義と railroad 図へのリンクを紹介する手順").
   const ids = steps.map((s) => s.id);
   assert.ok(ids.indexOf('grammar') < ids.indexOf('code-server'), 'grammar recap should come before the code-server entry');
+  const grammar = sections.find((s) => s.id === 'grammar');
+  assert.ok(grammar?.body.ja.some((text) => text.includes('UBNF v2') && text.includes('accepts')), 'grammar help must explain UBNF v2 token contracts');
+  assert.match(indexHtml, /tinyexpression（v2・token 契約）/, 'the playground must label the TinyExpression grammar link as UBNF v2 token contracts');
 }
 
 // evaluation target switch (#221): the server runtime against a mocked Java service
