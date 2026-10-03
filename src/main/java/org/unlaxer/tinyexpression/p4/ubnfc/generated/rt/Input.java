@@ -31,6 +31,14 @@ public final class Input {
         return chars.length;
     }
 
+    /**
+     * 内部の UTF-16 列そのもの（複製しない）。生成 parser の一括走査（D-080）が境界検査の少ない
+     * ループで読むためにだけ公開する。呼出し側は書き換えてはならない。
+     */
+    public char[] chars() {
+        return chars;
+    }
+
     /** UTF-16 単位の 1 文字。サロゲートはそのまま返す（接頭辞の先頭判定用）。 */
     public char charAt(int idx) {
         return chars[idx];

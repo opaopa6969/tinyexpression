@@ -1444,7 +1444,7 @@ let mark=self.mark();
 let key=Key {expression:0,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b0_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -1474,7 +1474,7 @@ out
 fn e1_c(&mut self,state:State)->Step {
 let mut out=self.b1_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -1506,7 +1506,7 @@ out
 fn e3_c(&mut self,state:State)->Step {
 let mut out=self.b3_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -1538,7 +1538,7 @@ out
 fn e5_c(&mut self,state:State)->Step {
 let mut out=self.b5_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -1570,7 +1570,7 @@ out
 fn e7_c(&mut self,state:State)->Step {
 let mut out=self.b7_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'('", "')'", "'@'"]);}
 out
 }
@@ -1613,7 +1613,7 @@ out
 fn e10_c(&mut self,state:State)->Step {
 let mut out=self.b10_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -1646,21 +1646,18 @@ fn e12_c(&mut self,state:State)->Step {
 let mut out=self.b12_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,12,0);
-} else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["EOFParser"]);}
 out
 }
 fn b12_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_7::<false>(out.state,"EOF","EndOfSourceParser");
+out=self.token_7::<false>(out.state,"EOF","EOFParser");
 out
 }
 fn e13_c(&mut self,state:State)->Step {
-let mark=self.mark();
-let key=Key {expression:13,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
-self.display_enter(state.consumed.max(state.matched));let mut out=self.b13_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b13_c(state);
 if out.ok {
-} else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
-if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b13_c(&mut self,mut state:State)->Step {
@@ -1694,10 +1691,9 @@ out
 fn b15_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
 self.restore(mark);let mut child=self.e16_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,96))) {self.guard_e17_c(out.state.begin())} else {self.e17_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e17_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
 };
@@ -1707,12 +1703,12 @@ fn e16_c(&mut self,state:State)->Step {
 let mut out=self.b16_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,16,1);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["LONG_CODE_BLOCKParser"]);}
 out
 }
 fn b16_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_6::<false>(out.state,"LONG_CODE_BLOCK","LongCodeBlockParser");
+out=self.token_6::<false>(out.state,"LONG_CODE_BLOCK","LONG_CODE_BLOCKParser");
 out
 }
 fn e17_c(&mut self,state:State)->Step {
@@ -1739,42 +1735,42 @@ fn e18_c(&mut self,state:State)->Step {
 let mut out=self.b18_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,18,1);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["CODE_STARTParser"]);}
 out
 }
 fn b18_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_3::<false>(out.state,"CODE_START","CodeStartParser");
+out=self.token_3::<false>(out.state,"CODE_START","CODE_STARTParser");
 out
 }
 fn e19_c(&mut self,state:State)->Step {
 let mut out=self.b19_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,19,1);
-} else {self.display_failures(state.consumed.max(state.matched),&["WildCardStringTerminatorParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["CODE_BODYParser"]);}
 out
 }
 fn b19_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_4::<false>(out.state,"CODE_BODY","WildCardStringTerminatorParser");
+out=self.token_4::<false>(out.state,"CODE_BODY","CODE_BODYParser");
 out
 }
 fn e20_c(&mut self,state:State)->Step {
 let mut out=self.b20_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,20,1);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["CODE_ENDParser"]);}
 out
 }
 fn b20_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_5::<false>(out.state,"CODE_END","CodeEndParser");
+out=self.token_5::<false>(out.state,"CODE_END","CODE_ENDParser");
 out
 }
 fn e21_c(&mut self,state:State)->Step {
 let mut out=self.b21_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -1879,12 +1875,12 @@ let mut out=self.b27_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,27,2);
 out.events=self.event(Event::Capture {site:7,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b27_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e28_c(&mut self,state:State)->Step {
@@ -1905,12 +1901,12 @@ let mut out=self.b29_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,29,2);
 out.events=self.event(Event::Capture {site:8,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b29_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e30_c(&mut self,state:State)->Step {
@@ -1949,12 +1945,12 @@ let mut out=self.b32_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,32,3);
 out.events=self.event(Event::Capture {site:9,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b32_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e33_c(&mut self,state:State)->Step {
@@ -2012,12 +2008,12 @@ let mut out=self.b36_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,36,3);
 out.events=self.event(Event::Capture {site:10,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b36_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e37_c(&mut self,state:State)->Step {
@@ -2094,7 +2090,7 @@ let mark=self.mark();
 let key=Key {expression:42,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b42_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -2193,12 +2189,12 @@ let mut out=self.b48_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,48,5);
 out.events=self.event(Event::Capture {site:11,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b48_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e49_c(&mut self,state:State)->Step {
@@ -2235,7 +2231,7 @@ out
 fn e51_c(&mut self,state:State)->Step {
 let mut out=self.b51_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2256,7 +2252,7 @@ out
 fn e52_c(&mut self,state:State)->Step {
 let mut out=self.b52_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2290,7 +2286,7 @@ out
 fn e54_c(&mut self,state:State)->Step {
 let mut out=self.b54_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -2382,7 +2378,7 @@ let mark=self.mark();
 let key=Key {expression:60,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b60_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -2481,12 +2477,12 @@ let mut out=self.b66_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,66,6);
 out.events=self.event(Event::Capture {site:15,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b66_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e67_c(&mut self,state:State)->Step {
@@ -2523,7 +2519,7 @@ out
 fn e69_c(&mut self,state:State)->Step {
 let mut out=self.b69_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2544,7 +2540,7 @@ out
 fn e70_c(&mut self,state:State)->Step {
 let mut out=self.b70_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2578,7 +2574,7 @@ out
 fn e72_c(&mut self,state:State)->Step {
 let mut out=self.b72_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -2670,7 +2666,7 @@ let mark=self.mark();
 let key=Key {expression:78,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b78_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -2769,12 +2765,12 @@ let mut out=self.b84_c(state);self.display_reach(out.state.consumed.max(out.stat
 if out.ok {
 out.events=self.relabel_token(out.events,84,7);
 out.events=self.event(Event::Capture {site:19,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b84_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e85_c(&mut self,state:State)->Step {
@@ -2811,7 +2807,7 @@ out
 fn e87_c(&mut self,state:State)->Step {
 let mut out=self.b87_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2832,7 +2828,7 @@ out
 fn e88_c(&mut self,state:State)->Step {
 let mut out=self.b88_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -2866,7 +2862,7 @@ out
 fn e90_c(&mut self,state:State)->Step {
 let mut out=self.b90_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -2958,7 +2954,7 @@ let mark=self.mark();
 let key=Key {expression:96,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b96_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -3057,12 +3053,12 @@ let mut out=self.b102_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,102,8);
 out.events=self.event(Event::Capture {site:23,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b102_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e103_c(&mut self,state:State)->Step {
@@ -3099,7 +3095,7 @@ out
 fn e105_c(&mut self,state:State)->Step {
 let mut out=self.b105_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -3120,7 +3116,7 @@ out
 fn e106_c(&mut self,state:State)->Step {
 let mut out=self.b106_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'set'"]);}
 out
 }
@@ -3154,7 +3150,7 @@ out
 fn e108_c(&mut self,state:State)->Step {
 let mut out=self.b108_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -3946,12 +3942,9 @@ if !out.ok {self.display_fail(state.consumed.max(state.matched),"'exists'");}
 out
 }
 fn e161_c(&mut self,state:State)->Step {
-let mark=self.mark();
-let key=Key {expression:161,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
-self.display_enter(state.consumed.max(state.matched));let mut out=self.b161_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
+let mut out=self.b161_c(state);
 if out.ok {
-} else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
-if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
+} else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
 fn b161_c(&mut self,mut state:State)->Step {
@@ -3998,12 +3991,12 @@ fn e164_c(&mut self,state:State)->Step {
 let mut out=self.b164_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,164,15);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["STRINGParser"]);}
 out
 }
 fn b164_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"STRING","StringLiteralParser");
+out=self.token_2::<false>(out.state,"STRING","STRINGParser");
 out
 }
 fn e165_c(&mut self,state:State)->Step {
@@ -4011,7 +4004,7 @@ let mark=self.mark();
 let key=Key {expression:165,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b165_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4051,12 +4044,12 @@ fn e167_c(&mut self,state:State)->Step {
 let mut out=self.b167_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,167,16);
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser"]);}
 out
 }
 fn b167_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e168_c(&mut self,state:State)->Step {
@@ -4075,7 +4068,7 @@ out
 fn e169_c(&mut self,state:State)->Step {
 let mut out=self.b169_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -4122,7 +4115,7 @@ let mark=self.mark();
 let key=Key {expression:172,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b172_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4153,7 +4146,7 @@ out
 fn e174_c(&mut self,state:State)->Step {
 let mut out=self.b174_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -4173,7 +4166,7 @@ out
 fn e175_c(&mut self,state:State)->Step {
 let mut out=self.b175_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','", "'='"]);}
 out
 }
@@ -4218,7 +4211,7 @@ let mark=self.mark();
 let key=Key {expression:178,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b178_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4241,12 +4234,12 @@ fn e179_c(&mut self,state:State)->Step {
 let mut out=self.b179_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,179,18);
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser"]);}
 out
 }
 fn b179_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e180_c(&mut self,state:State)->Step {
@@ -4346,7 +4339,7 @@ let mark=self.mark();
 let key=Key {expression:187,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b187_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4391,12 +4384,12 @@ let mut out=self.b189_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,189,20);
 out.events=self.event(Event::Capture {site:27,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b189_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e190_c(&mut self,state:State)->Step {
@@ -4415,7 +4408,7 @@ out
 fn e191_c(&mut self,state:State)->Step {
 let mut out=self.b191_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -4501,7 +4494,7 @@ let mark=self.mark();
 let key=Key {expression:197,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b197_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4546,12 +4539,12 @@ let mut out=self.b199_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,199,21);
 out.events=self.event(Event::Capture {site:30,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b199_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e200_c(&mut self,state:State)->Step {
@@ -4570,7 +4563,7 @@ out
 fn e201_c(&mut self,state:State)->Step {
 let mut out=self.b201_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -4656,7 +4649,7 @@ let mark=self.mark();
 let key=Key {expression:207,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b207_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4701,12 +4694,12 @@ let mut out=self.b209_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,209,22);
 out.events=self.event(Event::Capture {site:33,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b209_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e210_c(&mut self,state:State)->Step {
@@ -4725,7 +4718,7 @@ out
 fn e211_c(&mut self,state:State)->Step {
 let mut out=self.b211_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -4811,7 +4804,7 @@ let mark=self.mark();
 let key=Key {expression:217,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b217_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4856,12 +4849,12 @@ let mut out=self.b219_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,219,23);
 out.events=self.event(Event::Capture {site:36,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b219_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e220_c(&mut self,state:State)->Step {
@@ -4880,7 +4873,7 @@ out
 fn e221_c(&mut self,state:State)->Step {
 let mut out=self.b221_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -4966,7 +4959,7 @@ let mark=self.mark();
 let key=Key {expression:227,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b227_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -4998,7 +4991,7 @@ out
 fn e229_c(&mut self,state:State)->Step {
 let mut out=self.b229_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -5018,7 +5011,7 @@ out
 fn e230_c(&mut self,state:State)->Step {
 let mut out=self.b230_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -5100,12 +5093,12 @@ let mut out=self.b235_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,235,25);
 out.events=self.event(Event::Capture {site:41,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b235_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e236_c(&mut self,state:State)->Step {
@@ -5376,7 +5369,7 @@ let mark=self.mark();
 let key=Key {expression:254,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b254_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -5549,7 +5542,7 @@ out
 fn e264_c(&mut self,state:State)->Step {
 let mut out=self.b264_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -5567,8 +5560,7 @@ out
 fn b265_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e266_c(out.state.begin())} else {self.e266_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e266_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e270_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -5579,7 +5571,7 @@ out
 fn e266_c(&mut self,state:State)->Step {
 let mut out=self.b266_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -5627,25 +5619,26 @@ let mut out=self.b269_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,269,31);
 out.events=self.event(Event::Capture {site:44,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b269_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e270_c(&mut self,state:State)->Step {
 let mut out=self.b270_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,270,31);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 out.events=self.event(Event::Capture {site:45,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b270_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e271_c(&mut self,state:State)->Step {
@@ -5664,7 +5657,7 @@ out
 fn e272_c(&mut self,state:State)->Step {
 let mut out=self.b272_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -5712,7 +5705,7 @@ let mark=self.mark();
 let key=Key {expression:275,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b275_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -5962,7 +5955,7 @@ out
 fn e290_c(&mut self,state:State)->Step {
 let mut out=self.b290_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -5980,8 +5973,7 @@ out
 fn b291_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e292_c(out.state.begin())} else {self.e292_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e292_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e296_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -5992,7 +5984,7 @@ out
 fn e292_c(&mut self,state:State)->Step {
 let mut out=self.b292_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6040,25 +6032,26 @@ let mut out=self.b295_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,295,32);
 out.events=self.event(Event::Capture {site:48,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b295_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e296_c(&mut self,state:State)->Step {
 let mut out=self.b296_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,296,32);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 out.events=self.event(Event::Capture {site:49,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b296_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e297_c(&mut self,state:State)->Step {
@@ -6077,7 +6070,7 @@ out
 fn e298_c(&mut self,state:State)->Step {
 let mut out=self.b298_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -6125,7 +6118,7 @@ let mark=self.mark();
 let key=Key {expression:301,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b301_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -6298,7 +6291,7 @@ out
 fn e311_c(&mut self,state:State)->Step {
 let mut out=self.b311_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6316,8 +6309,7 @@ out
 fn b312_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e313_c(out.state.begin())} else {self.e313_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e313_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e317_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -6328,7 +6320,7 @@ out
 fn e313_c(&mut self,state:State)->Step {
 let mut out=self.b313_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6376,25 +6368,26 @@ let mut out=self.b316_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,316,33);
 out.events=self.event(Event::Capture {site:52,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b316_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e317_c(&mut self,state:State)->Step {
 let mut out=self.b317_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,317,33);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 out.events=self.event(Event::Capture {site:53,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b317_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e318_c(&mut self,state:State)->Step {
@@ -6413,7 +6406,7 @@ out
 fn e319_c(&mut self,state:State)->Step {
 let mut out=self.b319_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -6461,7 +6454,7 @@ let mark=self.mark();
 let key=Key {expression:322,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b322_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -6634,7 +6627,7 @@ out
 fn e332_c(&mut self,state:State)->Step {
 let mut out=self.b332_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6652,8 +6645,7 @@ out
 fn b333_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,65..=90|95|97..=122))) {self.guard_e334_c(out.state.begin())} else {self.e334_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e334_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e338_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -6664,7 +6656,7 @@ out
 fn e334_c(&mut self,state:State)->Step {
 let mut out=self.b334_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'#'"]);}
 out
 }
@@ -6712,25 +6704,26 @@ let mut out=self.b337_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,337,34);
 out.events=self.event(Event::Capture {site:56,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b337_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e338_c(&mut self,state:State)->Step {
 let mut out=self.b338_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,338,34);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 out.events=self.event(Event::Capture {site:57,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b338_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e339_c(&mut self,state:State)->Step {
@@ -6749,7 +6742,7 @@ out
 fn e340_c(&mut self,state:State)->Step {
 let mut out=self.b340_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -6892,7 +6885,7 @@ let mark=self.mark();
 let key=Key {expression:349,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b349_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -6931,12 +6924,12 @@ let mut out=self.b351_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,351,36);
 out.events=self.event(Event::Capture {site:59,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b351_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e352_c(&mut self,state:State)->Step {
@@ -6955,7 +6948,7 @@ out
 fn e353_c(&mut self,state:State)->Step {
 let mut out=self.b353_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Optional"]);}
 out
 }
@@ -7003,7 +6996,7 @@ let mark=self.mark();
 let key=Key {expression:356,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b356_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7100,10 +7093,9 @@ out
 fn b362_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
 self.restore(mark);let mut child=self.e363_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e364_c(out.state.begin())} else {self.e364_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e364_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e365_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -7166,7 +7158,7 @@ let mark=self.mark();
 let key=Key {expression:367,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b367_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7198,7 +7190,7 @@ out
 fn e369_c(&mut self,state:State)->Step {
 let mut out=self.b369_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -7218,7 +7210,7 @@ out
 fn e370_c(&mut self,state:State)->Step {
 let mut out=self.b370_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -7264,7 +7256,7 @@ let mark=self.mark();
 let key=Key {expression:373,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b373_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7296,7 +7288,7 @@ out
 fn e375_c(&mut self,state:State)->Step {
 let mut out=self.b375_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -7316,7 +7308,7 @@ out
 fn e376_c(&mut self,state:State)->Step {
 let mut out=self.b376_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["NumberExpressionRepeat0Parser"]);}
 out
 }
@@ -7361,7 +7353,7 @@ let mark=self.mark();
 let key=Key {expression:379,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b379_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7393,7 +7385,7 @@ out
 fn e381_c(&mut self,state:State)->Step {
 let mut out=self.b381_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -7413,7 +7405,7 @@ out
 fn e382_c(&mut self,state:State)->Step {
 let mut out=self.b382_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["NumberTermRepeat0Parser"]);}
 out
 }
@@ -7767,7 +7759,7 @@ let mark=self.mark();
 let key=Key {expression:406,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b406_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7844,7 +7836,7 @@ let mark=self.mark();
 let key=Key {expression:411,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b411_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7921,7 +7913,7 @@ let mark=self.mark();
 let key=Key {expression:416,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b416_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -7998,7 +7990,7 @@ let mark=self.mark();
 let key=Key {expression:421,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b421_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8075,7 +8067,7 @@ let mark=self.mark();
 let key=Key {expression:426,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b426_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8139,7 +8131,7 @@ out
 fn e430_c(&mut self,state:State)->Step {
 let mut out=self.b430_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8159,7 +8151,7 @@ out
 fn e431_c(&mut self,state:State)->Step {
 let mut out=self.b431_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8218,7 +8210,7 @@ let mark=self.mark();
 let key=Key {expression:435,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b435_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8282,7 +8274,7 @@ out
 fn e439_c(&mut self,state:State)->Step {
 let mut out=self.b439_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8302,7 +8294,7 @@ out
 fn e440_c(&mut self,state:State)->Step {
 let mut out=self.b440_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -8420,7 +8412,7 @@ let mark=self.mark();
 let key=Key {expression:448,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b448_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8497,7 +8489,7 @@ let mark=self.mark();
 let key=Key {expression:453,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b453_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8574,7 +8566,7 @@ let mark=self.mark();
 let key=Key {expression:458,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b458_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8651,7 +8643,7 @@ let mark=self.mark();
 let key=Key {expression:463,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b463_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8728,7 +8720,7 @@ let mark=self.mark();
 let key=Key {expression:468,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b468_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8834,7 +8826,7 @@ let mark=self.mark();
 let key=Key {expression:475,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b475_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8911,7 +8903,7 @@ let mark=self.mark();
 let key=Key {expression:480,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b480_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -8988,7 +8980,7 @@ let mark=self.mark();
 let key=Key {expression:485,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b485_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9235,12 +9227,13 @@ fn e502_c(&mut self,state:State)->Step {
 let mut out=self.b502_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,502,60);
-} else {self.display_failures(state.consumed.max(state.matched),&["NumberParser"]);}
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
+} else {self.display_failures(state.consumed.max(state.matched),&["NUMBERParser"]);}
 out
 }
 fn b502_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_0::<false>(out.state,"NUMBER","NumberParser");
+out=self.token_0::<false>(out.state,"NUMBER","NUMBERParser");
 out
 }
 fn e503_c(&mut self,state:State)->Step {
@@ -9268,7 +9261,7 @@ out
 fn e505_c(&mut self,state:State)->Step {
 let mut out=self.b505_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'('", "')'"]);}
 out
 }
@@ -9328,7 +9321,7 @@ let mark=self.mark();
 let key=Key {expression:509,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b509_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9405,7 +9398,7 @@ let mark=self.mark();
 let key=Key {expression:514,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b514_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9482,7 +9475,7 @@ let mark=self.mark();
 let key=Key {expression:519,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b519_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9559,7 +9552,7 @@ let mark=self.mark();
 let key=Key {expression:524,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b524_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9636,7 +9629,7 @@ let mark=self.mark();
 let key=Key {expression:529,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b529_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9713,7 +9706,7 @@ let mark=self.mark();
 let key=Key {expression:534,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b534_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9790,7 +9783,7 @@ let mark=self.mark();
 let key=Key {expression:539,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b539_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9867,7 +9860,7 @@ let mark=self.mark();
 let key=Key {expression:544,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b544_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -9944,7 +9937,7 @@ let mark=self.mark();
 let key=Key {expression:549,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b549_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10021,7 +10014,7 @@ let mark=self.mark();
 let key=Key {expression:554,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b554_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10114,7 +10107,7 @@ out
 fn e560_c(&mut self,state:State)->Step {
 let mut out=self.b560_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10134,7 +10127,7 @@ out
 fn e561_c(&mut self,state:State)->Step {
 let mut out=self.b561_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10193,7 +10186,7 @@ let mark=self.mark();
 let key=Key {expression:565,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b565_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10286,7 +10279,7 @@ out
 fn e571_c(&mut self,state:State)->Step {
 let mut out=self.b571_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10306,7 +10299,7 @@ out
 fn e572_c(&mut self,state:State)->Step {
 let mut out=self.b572_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10365,7 +10358,7 @@ let mark=self.mark();
 let key=Key {expression:576,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b576_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10458,7 +10451,7 @@ out
 fn e582_c(&mut self,state:State)->Step {
 let mut out=self.b582_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10478,7 +10471,7 @@ out
 fn e583_c(&mut self,state:State)->Step {
 let mut out=self.b583_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10537,7 +10530,7 @@ let mark=self.mark();
 let key=Key {expression:587,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b587_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10615,7 +10608,7 @@ out
 fn e592_c(&mut self,state:State)->Step {
 let mut out=self.b592_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10635,7 +10628,7 @@ out
 fn e593_c(&mut self,state:State)->Step {
 let mut out=self.b593_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10694,7 +10687,7 @@ let mark=self.mark();
 let key=Key {expression:597,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b597_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10772,7 +10765,7 @@ out
 fn e602_c(&mut self,state:State)->Step {
 let mut out=self.b602_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10792,7 +10785,7 @@ out
 fn e603_c(&mut self,state:State)->Step {
 let mut out=self.b603_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10851,7 +10844,7 @@ let mark=self.mark();
 let key=Key {expression:607,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b607_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -10929,7 +10922,7 @@ out
 fn e612_c(&mut self,state:State)->Step {
 let mut out=self.b612_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -10949,7 +10942,7 @@ out
 fn e613_c(&mut self,state:State)->Step {
 let mut out=self.b613_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11008,7 +11001,7 @@ let mark=self.mark();
 let key=Key {expression:617,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b617_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11086,7 +11079,7 @@ out
 fn e622_c(&mut self,state:State)->Step {
 let mut out=self.b622_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11106,7 +11099,7 @@ out
 fn e623_c(&mut self,state:State)->Step {
 let mut out=self.b623_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -11234,7 +11227,7 @@ let mark=self.mark();
 let key=Key {expression:632,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b632_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11311,7 +11304,7 @@ let mark=self.mark();
 let key=Key {expression:637,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b637_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11417,7 +11410,7 @@ let mark=self.mark();
 let key=Key {expression:644,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b644_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11749,7 +11742,7 @@ out
 fn e665_c(&mut self,state:State)->Step {
 let mut out=self.b665_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'$'", "'('", "')'"]);}
 out
 }
@@ -11885,12 +11878,13 @@ fn e676_c(&mut self,state:State)->Step {
 let mut out=self.b676_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,676,82);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
+} else {self.display_failures(state.consumed.max(state.matched),&["STRINGParser"]);}
 out
 }
 fn b676_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"STRING","StringLiteralParser");
+out=self.token_2::<false>(out.state,"STRING","STRINGParser");
 out
 }
 fn e677_c(&mut self,state:State)->Step {
@@ -11920,7 +11914,7 @@ let mark=self.mark();
 let key=Key {expression:679,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b679_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11951,7 +11945,7 @@ let mark=self.mark();
 let key=Key {expression:681,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b681_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -11982,7 +11976,7 @@ let mark=self.mark();
 let key=Key {expression:683,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b683_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -12020,7 +12014,6 @@ out
 fn b685_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
 if self.options.factor && !out.state.invert {
 let entry=out.state.begin();
 let mut child='factored: {
@@ -12030,7 +12023,7 @@ st.reset=false;
 let mut cur=Step::yes(st);
 cur.state=st.begin();
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
-let p0=cur.state;let child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e687_c(cur.state)} else {self.e687_c(cur.state)};let ev0=child.events;let _=(p0,ev0);cur=self.combine(cur,child);
+let p0=cur.state;let child=self.e687_c(cur.state);let ev0=child.events;let _=(p0,ev0);cur=self.combine(cur,child);
 if !cur.ok {
 self.display_failures(entry.consumed.max(entry.matched),&["':'", "'['", "']'"]);
 self.display_failures(p0.consumed.max(p0.matched),&["__CaptureSite"]);
@@ -12080,7 +12073,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e694_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f19;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 diagnostic=self.diag_join(diagnostic,cur.diag);break 'factored cur;
 }
 self.display_failures(entry.consumed.max(entry.matched),&["':'", "'['", "']'"]);
@@ -12090,7 +12083,7 @@ self.restore(m17);cur=b18;
 let child=self.e701_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f20;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(135),None);
 self.retag(ev3,None,Some(697));
 self.retag(ev7,Some(136),None);
@@ -12110,7 +12103,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e709_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f21;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(138),None);
 self.retag(ev3,None,Some(704));
 self.retag(ev7,Some(139),None);
@@ -12124,7 +12117,7 @@ self.restore(m13);cur=b14;
 let child=self.e715_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f22;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(141),None);
 self.retag(ev3,None,Some(712));
 self.retag(ev7,Some(142),None);
@@ -12162,7 +12155,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e723_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f31;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(143),None);
 self.retag(ev3,None,Some(718));
 diagnostic=self.diag_join(diagnostic,cur.diag);break 'factored cur;
@@ -12174,7 +12167,7 @@ self.restore(m29);cur=b30;
 let child=self.e729_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f32;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(146),None);
 self.retag(ev3,None,Some(726));
 self.retag(ev23,None,Some(727));
@@ -12193,7 +12186,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e736_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f33;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(148),None);
 self.retag(ev3,None,Some(732));
 self.retag(ev23,None,Some(733));
@@ -12206,7 +12199,7 @@ self.restore(m25);cur=b26;
 let child=self.e741_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f34;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:true});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:true,text:false});
 self.retag(ev0,Some(150),None);
 self.retag(ev3,None,Some(739));
 self.retag(ev23,None,Some(740));
@@ -12223,21 +12216,21 @@ let _=entry;self.restore(mark);out.ok=false;out.diag=diagnostic;out
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);break 'choice child;
 }
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e686_c(out.state.begin())} else {self.e686_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e686_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e695_c(out.state.begin())} else {self.e695_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e695_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e702_c(out.state.begin())} else {self.e702_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e702_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e710_c(out.state.begin())} else {self.e710_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e710_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e716_c(out.state.begin())} else {self.e716_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e716_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e724_c(out.state.begin())} else {self.e724_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e724_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e730_c(out.state.begin())} else {self.e730_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e730_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,34|36|39..=40|99|101|105|116))) {self.guard_e737_c(out.state.begin())} else {self.e737_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e737_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);break 'choice if let Some((mut child,effects))=best {self.replay_effects(effects);child.diag=diagnostic;child} else {out.ok=false;out.diag=diagnostic;out};
 };
@@ -12246,7 +12239,7 @@ out
 fn e686_c(&mut self,state:State)->Step {
 let mut out=self.b686_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12377,7 +12370,7 @@ out
 fn e695_c(&mut self,state:State)->Step {
 let mut out=self.b695_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12479,7 +12472,7 @@ out
 fn e702_c(&mut self,state:State)->Step {
 let mut out=self.b702_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12596,7 +12589,7 @@ out
 fn e710_c(&mut self,state:State)->Step {
 let mut out=self.b710_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12684,7 +12677,7 @@ out
 fn e716_c(&mut self,state:State)->Step {
 let mut out=self.b716_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12801,7 +12794,7 @@ out
 fn e724_c(&mut self,state:State)->Step {
 let mut out=self.b724_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12889,7 +12882,7 @@ out
 fn e730_c(&mut self,state:State)->Step {
 let mut out=self.b730_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -12992,7 +12985,7 @@ out
 fn e737_c(&mut self,state:State)->Step {
 let mut out=self.b737_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13134,7 +13127,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e751_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f19;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 diagnostic=self.diag_join(diagnostic,cur.diag);break 'factored cur;
 }
 self.display_failures(entry.consumed.max(entry.matched),&["':'", "'['", "']'"]);
@@ -13144,7 +13137,7 @@ self.restore(m17);cur=b18;
 let child=self.e758_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f20;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(155),None);
 self.retag(ev3,None,Some(754));
 self.retag(ev7,Some(156),None);
@@ -13164,7 +13157,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e766_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f21;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(158),None);
 self.retag(ev3,None,Some(761));
 self.retag(ev7,Some(159),None);
@@ -13178,7 +13171,7 @@ self.restore(m13);cur=b14;
 let child=self.e772_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f22;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(161),None);
 self.retag(ev3,None,Some(769));
 self.retag(ev7,Some(162),None);
@@ -13216,7 +13209,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e780_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f31;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(163),None);
 self.retag(ev3,None,Some(775));
 diagnostic=self.diag_join(diagnostic,cur.diag);break 'factored cur;
@@ -13228,7 +13221,7 @@ self.restore(m29);cur=b30;
 let child=self.e786_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f32;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(166),None);
 self.retag(ev3,None,Some(783));
 self.retag(ev23,None,Some(784));
@@ -13247,7 +13240,7 @@ let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 let child=self.e793_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f33;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:false,text:false});
 self.retag(ev0,Some(168),None);
 self.retag(ev3,None,Some(789));
 self.retag(ev23,None,Some(790));
@@ -13260,7 +13253,7 @@ self.restore(m25);cur=b26;
 let child=self.e798_c(cur.state);cur=self.combine(cur,child);if !cur.ok {break 'f34;}
 let trivia=self.trivia_1::<false>(cur.state);cur=self.combine(cur,trivia);
 cur.state=st.commit(cur.state);
-cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:true});
+cur.events=self.event(Event::Values{span:[entry.consumed,cur.state.consumed],child:cur.events,wrap:true,text:false});
 self.retag(ev0,Some(170),None);
 self.retag(ev3,None,Some(796));
 self.retag(ev23,None,Some(797));
@@ -13300,7 +13293,7 @@ out
 fn e743_c(&mut self,state:State)->Step {
 let mut out=self.b743_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13431,7 +13424,7 @@ out
 fn e752_c(&mut self,state:State)->Step {
 let mut out=self.b752_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13533,7 +13526,7 @@ out
 fn e759_c(&mut self,state:State)->Step {
 let mut out=self.b759_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13650,7 +13643,7 @@ out
 fn e767_c(&mut self,state:State)->Step {
 let mut out=self.b767_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13738,7 +13731,7 @@ out
 fn e773_c(&mut self,state:State)->Step {
 let mut out=self.b773_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13855,7 +13848,7 @@ out
 fn e781_c(&mut self,state:State)->Step {
 let mut out=self.b781_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -13943,7 +13936,7 @@ out
 fn e787_c(&mut self,state:State)->Step {
 let mut out=self.b787_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -14046,7 +14039,7 @@ out
 fn e794_c(&mut self,state:State)->Step {
 let mut out=self.b794_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["':'", "'['", "']'"]);}
 out
 }
@@ -14164,7 +14157,7 @@ let mark=self.mark();
 let key=Key {expression:802,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b802_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -14196,7 +14189,7 @@ out
 fn e804_c(&mut self,state:State)->Step {
 let mut out=self.b804_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -14216,7 +14209,7 @@ out
 fn e805_c(&mut self,state:State)->Step {
 let mut out=self.b805_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'+'"]);}
 out
 }
@@ -14263,7 +14256,7 @@ let mark=self.mark();
 let key=Key {expression:808,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b808_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -14515,12 +14508,13 @@ fn e826_c(&mut self,state:State)->Step {
 let mut out=self.b826_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,826,91);
-} else {self.display_failures(state.consumed.max(state.matched),&[]);}
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
+} else {self.display_failures(state.consumed.max(state.matched),&["STRINGParser"]);}
 out
 }
 fn b826_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_2::<false>(out.state,"STRING","StringLiteralParser");
+out=self.token_2::<false>(out.state,"STRING","STRINGParser");
 out
 }
 fn e827_c(&mut self,state:State)->Step {
@@ -14667,12 +14661,12 @@ let mut out=self.b837_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,837,92);
 out.events=self.event(Event::Capture {site:174,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b837_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e838_c(&mut self,state:State)->Step {
@@ -14715,12 +14709,12 @@ let mut out=self.b840_c(state);self.display_reach(out.state.consumed.max(out.sta
 if out.ok {
 out.events=self.relabel_token(out.events,840,93);
 out.events=self.event(Event::Capture {site:175,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b840_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e841_c(&mut self,state:State)->Step {
@@ -14795,7 +14789,7 @@ let mark=self.mark();
 let key=Key {expression:846,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b846_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -14827,7 +14821,7 @@ out
 fn e848_c(&mut self,state:State)->Step {
 let mut out=self.b848_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -14847,7 +14841,7 @@ out
 fn e849_c(&mut self,state:State)->Step {
 let mut out=self.b849_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'|'"]);}
 out
 }
@@ -14894,7 +14888,7 @@ let mark=self.mark();
 let key=Key {expression:852,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b852_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -14926,7 +14920,7 @@ out
 fn e854_c(&mut self,state:State)->Step {
 let mut out=self.b854_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -14946,7 +14940,7 @@ out
 fn e855_c(&mut self,state:State)->Step {
 let mut out=self.b855_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'&'"]);}
 out
 }
@@ -14993,7 +14987,7 @@ let mark=self.mark();
 let key=Key {expression:858,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b858_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -15025,7 +15019,7 @@ out
 fn e860_c(&mut self,state:State)->Step {
 let mut out=self.b860_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -15045,7 +15039,7 @@ out
 fn e861_c(&mut self,state:State)->Step {
 let mut out=self.b861_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'^'"]);}
 out
 }
@@ -15092,7 +15086,7 @@ let mark=self.mark();
 let key=Key {expression:864,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b864_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -15377,6 +15371,7 @@ fn e884_c(&mut self,state:State)->Step {
 let mut out=self.b884_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,884,98);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 } else {self.display_failures(state.consumed.max(state.matched),&["'true'"]);}
 out
 }
@@ -15390,6 +15385,7 @@ fn e885_c(&mut self,state:State)->Step {
 let mut out=self.b885_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,885,98);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 } else {self.display_failures(state.consumed.max(state.matched),&["'false'"]);}
 out
 }
@@ -15424,7 +15420,7 @@ out
 fn e888_c(&mut self,state:State)->Step {
 let mut out=self.b888_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'('", "')'"]);}
 out
 }
@@ -15484,7 +15480,7 @@ let mark=self.mark();
 let key=Key {expression:892,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b892_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -15551,10 +15547,9 @@ out
 fn b896_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
-let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
 self.restore(mark);let mut child=self.e897_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e898_c(out.state.begin())} else {self.e898_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e898_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e899_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -15617,7 +15612,7 @@ let mark=self.mark();
 let key=Key {expression:901,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b901_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -15720,7 +15715,7 @@ let mark=self.mark();
 let key=Key {expression:908,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b908_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -15891,7 +15886,7 @@ fn b919_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
 let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e920_c(out.state.begin())} else {self.e920_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e920_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e921_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -15984,7 +15979,7 @@ let mark=self.mark();
 let key=Key {expression:926,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b926_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16172,13 +16167,13 @@ fn b938_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
 let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e939_c(out.state.begin())} else {self.e939_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e939_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e940_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e941_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e942_c(out.state.begin())} else {self.e942_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e942_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e943_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -16293,7 +16288,7 @@ let mark=self.mark();
 let key=Key {expression:947,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b947_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16413,7 +16408,7 @@ let mark=self.mark();
 let key=Key {expression:955,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b955_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16481,7 +16476,7 @@ out
 fn e959_c(&mut self,state:State)->Step {
 let mut out=self.b959_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16501,7 +16496,7 @@ out
 fn e960_c(&mut self,state:State)->Step {
 let mut out=self.b960_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16585,7 +16580,7 @@ let mark=self.mark();
 let key=Key {expression:966,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b966_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16646,7 +16641,7 @@ let mark=self.mark();
 let key=Key {expression:970,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b970_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16708,7 +16703,7 @@ let mark=self.mark();
 let key=Key {expression:974,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b974_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16740,7 +16735,7 @@ let mark=self.mark();
 let key=Key {expression:976,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b976_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16808,7 +16803,7 @@ out
 fn e980_c(&mut self,state:State)->Step {
 let mut out=self.b980_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16828,7 +16823,7 @@ out
 fn e981_c(&mut self,state:State)->Step {
 let mut out=self.b981_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -16912,7 +16907,7 @@ let mark=self.mark();
 let key=Key {expression:987,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b987_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -16973,7 +16968,7 @@ let mark=self.mark();
 let key=Key {expression:991,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b991_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17035,7 +17030,7 @@ let mark=self.mark();
 let key=Key {expression:995,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b995_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17067,7 +17062,7 @@ let mark=self.mark();
 let key=Key {expression:997,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b997_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17135,7 +17130,7 @@ out
 fn e1001_c(&mut self,state:State)->Step {
 let mut out=self.b1001_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -17155,7 +17150,7 @@ out
 fn e1002_c(&mut self,state:State)->Step {
 let mut out=self.b1002_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["','"]);}
 out
 }
@@ -17239,7 +17234,7 @@ let mark=self.mark();
 let key=Key {expression:1008,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b1008_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17300,7 +17295,7 @@ let mark=self.mark();
 let key=Key {expression:1012,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b1012_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17362,7 +17357,7 @@ let mark=self.mark();
 let key=Key {expression:1016,state,matched_mode:false,version:self.scope.state_version()};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b1016_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out
@@ -17430,12 +17425,12 @@ let mut out=self.b1020_c(state);self.display_reach(out.state.consumed.max(out.st
 if out.ok {
 out.events=self.relabel_token(out.events,1020,121);
 out.events=self.event(Event::Capture {site:240,span:[state.consumed,out.state.consumed],child:out.events,token_extent:false});
-} else {self.display_failures(state.consumed.max(state.matched),&["IdentifierParser", "__CaptureSite"]);}
+} else {self.display_failures(state.consumed.max(state.matched),&["IDENTIFIERParser", "__CaptureSite"]);}
 out
 }
 fn b1020_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
-out=self.token_1::<false>(out.state,"IDENTIFIER","IdentifierParser");
+out=self.token_1::<false>(out.state,"IDENTIFIER","IDENTIFIERParser");
 out
 }
 fn e1021_c(&mut self,state:State)->Step {
@@ -17697,7 +17692,7 @@ fn b1037_c(&mut self,mut state:State)->Step {
 let mut out=Step::yes(state);
 out='choice: {let mark=self.mark();let mut diagnostic=Diag::NONE;let mut best:Option<(Step,[usize;2])>=None;
 let ct=self.input.cp_at(self.skip_0::<false>(out.state.begin()).position::<false>()).map(|(c,_)|c);
-self.restore(mark);let mut child=if self.options.predict && !out.state.invert && !(ct.is_some_and(|c| matches!(c as u32,36|40|43|45..=46|48..=57|97|99|101..=102|105|108..=109|112|114..=116))) {self.guard_e1038_c(out.state.begin())} else {self.e1038_c(out.state.begin())};diagnostic=self.diag_join(diagnostic,child.diag);
+self.restore(mark);let mut child=self.e1038_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
 self.restore(mark);let mut child=self.e1039_c(out.state.begin());diagnostic=self.diag_join(diagnostic,child.diag);
 if child.ok {child.state=out.state.commit(child.state);child.diag=diagnostic;break 'choice child;}
@@ -17776,7 +17771,7 @@ out
 fn e1043_c(&mut self,state:State)->Step {
 let mut out=self.b1043_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["'('", "')'"]);}
 out
 }
@@ -17831,14 +17826,6 @@ let mut out=Step::yes(state);
 out=self.literal::<false>(out.state,")",true,5,false,")");
 if !out.ok {self.display_fail(state.consumed.max(state.matched),"')'");}
 out
-}
-fn guard_e17_c(&mut self,state:State)->Step {
-if !self.can_replay(0) {return self.e17_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let d2=self.e18_c(t1).diag;
-Step {ok:false,state,events:EventId(0),diag:d2}
 }
 fn guard_e38_c(&mut self,state:State)->Step {
 if !self.can_replay(1) {return self.e38_c(state);}
@@ -17951,50 +17938,6 @@ self.display_failures(t1.consumed.max(t1.matched),&["'object'", "'object'"]);
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'object'"]);}
 Step {ok:false,state,events:EventId(0),diag:d3}
 }
-fn guard_e266_c(&mut self,state:State)->Step {
-if !self.can_replay(1) {return self.e266_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let d2=self.e32_c(t1).diag;
-let d3=self.diag_rule(3,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["ClassNameParser", "__CaptureSite"]);
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'#'"]);}
-Step {ok:false,state,events:EventId(0),diag:d3}
-}
-fn guard_e292_c(&mut self,state:State)->Step {
-if !self.can_replay(1) {return self.e292_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let d2=self.e32_c(t1).diag;
-let d3=self.diag_rule(3,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["ClassNameParser", "__CaptureSite"]);
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'#'"]);}
-Step {ok:false,state,events:EventId(0),diag:d3}
-}
-fn guard_e313_c(&mut self,state:State)->Step {
-if !self.can_replay(1) {return self.e313_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let d2=self.e32_c(t1).diag;
-let d3=self.diag_rule(3,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["ClassNameParser", "__CaptureSite"]);
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'#'"]);}
-Step {ok:false,state,events:EventId(0),diag:d3}
-}
-fn guard_e334_c(&mut self,state:State)->Step {
-if !self.can_replay(1) {return self.e334_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let d2=self.e32_c(t1).diag;
-let d3=self.diag_rule(3,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["ClassNameParser", "__CaptureSite"]);
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'#'"]);}
-Step {ok:false,state,events:EventId(0),diag:d3}
-}
 fn guard_e344_c(&mut self,state:State)->Step {
 if !self.can_replay(0) {return self.e344_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
@@ -18004,107 +17947,6 @@ let d2=self.diag_fail(t1.position::<false>(),"call");
 self.display_failures(t1.consumed.max(t1.matched),&["'call'", "'call'"]);
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'call'", "'internal'"]);}
 Step {ok:false,state,events:EventId(0),diag:d2}
-}
-fn guard_e364_c(&mut self,state:State)->Step {
-if !self.can_replay(6) {return self.e364_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-let d62=self.diag_rule(103,d61);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite", "NumberExpressionParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["ComparisonExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d62}
 }
 fn guard_e392_c(&mut self,state:State)->Step {
 if !self.can_replay(1) {return self.e392_c(state);}
@@ -18614,493 +18456,6 @@ if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {sel
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'internal'", "'('", "')'"]);}
 Step {ok:false,state,events:EventId(0),diag:d6}
 }
-fn guard_e686_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e686_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e687_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e687_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let mut d1=Diag::NONE;
-let t2=self.trivia_1::<false>(state.begin().entered(true,true)).state;
-let d3=self.diag_fail(t2.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d1=self.diag_join(d1,d4);
-let d5=self.diag_fail(t2.position::<false>(),"(");
-d1=self.diag_join(d1,d5);
-let d6=self.diag_fail(t2.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d1=self.diag_join(d1,d7);
-let d8=self.diag_fail(t2.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d1=self.diag_join(d1,d9);
-let d10=self.diag_fail(t2.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d1=self.diag_join(d1,d11);
-let d12=self.diag_fail(t2.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d1=self.diag_join(d1,d13);
-let d14=self.diag_fail(t2.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d1=self.diag_join(d1,d16);
-let d17=self.diag_fail(t2.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d1=self.diag_join(d1,d19);
-let d20=self.diag_fail(t2.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d1=self.diag_join(d1,d22);
-let d23=self.e676_c(state.begin()).diag;
-d1=self.diag_join(d1,d23);
-let d24=self.diag_fail(t2.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d1=self.diag_join(d1,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t2.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t2.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d1=self.diag_join(d1,d30);
-let d31=self.diag_rule(82,d1);
-self.display_failures(t2.consumed.max(t2.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'"]);
-if state.begin().consumed.max(state.begin().matched)==t2.consumed.max(t2.matched) {self.display_failures(t2.consumed.max(t2.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'internal'", "'('", "')'"]);}
-if t2.begin().consumed.max(t2.begin().matched)==t2.consumed.max(t2.matched) {self.display_failures(t2.consumed.max(t2.matched),&["'call'", "'internal'", "'internal'", "'internal'"]);}
-if state.consumed.max(state.matched)==t2.consumed.max(t2.matched) {self.display_failures(t2.consumed.max(t2.matched),&["'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e695_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e695_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e702_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e702_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e710_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e710_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e716_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e716_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e724_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e724_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e730_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e730_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
-fn guard_e737_c(&mut self,state:State)->Step {
-if !self.can_replay(3) {return self.e737_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"external");
-let d4=self.diag_rule(33,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d5);
-let d6=self.diag_fail(t1.position::<false>(),"(");
-let d7=self.diag_rule(90,d6);
-d2=self.diag_join(d2,d7);
-let d8=self.diag_fail(t1.position::<false>(),"toUpperCase");
-let d9=self.diag_rule(61,d8);
-d2=self.diag_join(d2,d9);
-let d10=self.diag_fail(t1.position::<false>(),"toLowerCase");
-let d11=self.diag_rule(62,d10);
-d2=self.diag_join(d2,d11);
-let d12=self.diag_fail(t1.position::<false>(),"trim");
-let d13=self.diag_rule(63,d12);
-d2=self.diag_join(d2,d13);
-let d14=self.diag_fail(t1.position::<false>(),"$");
-let d15=self.diag_rule(121,d14);
-let d16=self.diag_rule(66,d15);
-d2=self.diag_join(d2,d16);
-let d17=self.diag_fail(t1.position::<false>(),"$");
-let d18=self.diag_rule(121,d17);
-let d19=self.diag_rule(67,d18);
-d2=self.diag_join(d2,d19);
-let d20=self.diag_fail(t1.position::<false>(),"$");
-let d21=self.diag_rule(121,d20);
-let d22=self.diag_rule(68,d21);
-d2=self.diag_join(d2,d22);
-let d23=self.e676_c(t1.begin()).diag;
-d2=self.diag_join(d2,d23);
-let d24=self.diag_fail(t1.position::<false>(),"$");
-let d25=self.diag_rule(121,d24);
-d2=self.diag_join(d2,d25);
-let mut d26=Diag::NONE;
-let d27=self.diag_fail(t1.position::<false>(),"call");
-d26=self.diag_join(d26,d27);
-let d28=self.diag_fail(t1.begin().position::<false>(),"internal");
-d26=self.diag_join(d26,d28);
-let d29=self.diag_rule(35,d26);
-let d30=self.diag_rule(36,d29);
-d2=self.diag_join(d2,d30);
-let d31=self.diag_rule(82,d2);
-self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'external'", "'('", "'('", "'('", "'('", "'toUpperCase'", "'toUpperCase'", "'toLowerCase'", "'toLowerCase'", "'trim'", "'trim'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'external'", "'('", "')'", "'toUpperCase'", "'toLowerCase'", "'trim'", "'.toUpperCase'", "'.toLowerCase'", "'.trim'", "'$'", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'external'", "'string'", "':'", "'('", "')'", "'$'", "'('", "')'", "'('", "')'", "'toUpperCase'", "'('", "')'", "'toLowerCase'", "'('", "')'", "'trim'", "'('", "')'", "'.toUpperCase'", "'('", "')'", "'.toLowerCase'", "'('", "')'", "'.trim'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["':'", "'['", "']'"]);}
-Step {ok:false,state,events:EventId(0),diag:d31}
-}
 fn guard_e813_c(&mut self,state:State)->Step {
 if !self.can_replay(1) {return self.e813_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
@@ -19487,207 +18842,6 @@ self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('"]);
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "')'"]);}
 Step {ok:false,state,events:EventId(0),diag:d2}
 }
-fn guard_e898_c(&mut self,state:State)->Step {
-if !self.can_replay(6) {return self.e898_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-let d62=self.diag_rule(103,d61);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite", "NumberExpressionParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["ComparisonExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d62}
-}
-fn guard_e920_c(&mut self,state:State)->Step {
-if !self.can_replay(5) {return self.e920_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["NumberExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d61}
-}
 fn guard_e923_c(&mut self,state:State)->Step {
 if !self.can_replay(1) {return self.e923_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
@@ -19727,207 +18881,6 @@ if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {sel
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'internal'", "'('", "')'", "'('", "')'"]);}
 Step {ok:false,state,events:EventId(0),diag:d6}
 }
-fn guard_e939_c(&mut self,state:State)->Step {
-if !self.can_replay(6) {return self.e939_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-let d62=self.diag_rule(103,d61);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite", "NumberExpressionParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["ComparisonExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d62}
-}
-fn guard_e942_c(&mut self,state:State)->Step {
-if !self.can_replay(5) {return self.e942_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["NumberExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d61}
-}
 fn guard_e946_c(&mut self,state:State)->Step {
 if !self.can_replay(2) {return self.e946_c(state);}
 if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
@@ -19944,106 +18897,6 @@ self.display_failures(t1.consumed.max(t1.matched),&["'call'", "'call'", "'call'"
 if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'call'", "'internal'", "'internal'", "'internal'"]);}
 if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'internal'", "'('", "')'", "'('", "')'"]);}
 Step {ok:false,state,events:EventId(0),diag:d6}
-}
-fn guard_e1038_c(&mut self,state:State)->Step {
-if !self.can_replay(5) {return self.e1038_c(state);}
-if !DIAG {return Step {ok:false,state,events:EventId(0),diag:Diag::NONE};}
-self.display_reach(state.consumed.max(state.matched));
-let t1=self.trivia_1::<false>(state.entered(true,true)).state;
-let mut d2=Diag::NONE;
-let d3=self.diag_fail(t1.position::<false>(),"(");
-let d4=self.diag_rule(108,d3);
-d2=self.diag_join(d2,d4);
-let d5=self.diag_fail(t1.position::<false>(),"match");
-let d6=self.diag_rule(109,d5);
-d2=self.diag_join(d2,d6);
-let d7=self.diag_fail(t1.position::<false>(),"if");
-let d8=self.diag_rule(106,d7);
-d2=self.diag_join(d2,d8);
-let mut d9=Diag::NONE;
-let d10=self.diag_fail(t1.position::<false>(),"sin");
-let d11=self.diag_rule(45,d10);
-d9=self.diag_join(d9,d11);
-let d12=self.diag_fail(t1.position::<false>(),"cos");
-let d13=self.diag_rule(46,d12);
-d9=self.diag_join(d9,d13);
-let d14=self.diag_fail(t1.position::<false>(),"tan");
-let d15=self.diag_rule(47,d14);
-d9=self.diag_join(d9,d15);
-let d16=self.diag_fail(t1.position::<false>(),"sqrt");
-let d17=self.diag_rule(48,d16);
-d9=self.diag_join(d9,d17);
-let d18=self.diag_fail(t1.position::<false>(),"min");
-let d19=self.diag_rule(49,d18);
-d9=self.diag_join(d9,d19);
-let d20=self.diag_fail(t1.position::<false>(),"max");
-let d21=self.diag_rule(50,d20);
-d9=self.diag_join(d9,d21);
-let d22=self.diag_fail(t1.position::<false>(),"random");
-let d23=self.diag_rule(51,d22);
-d9=self.diag_join(d9,d23);
-let d24=self.diag_fail(t1.position::<false>(),"abs");
-let d25=self.diag_rule(52,d24);
-d9=self.diag_join(d9,d25);
-let d26=self.diag_fail(t1.position::<false>(),"round");
-let d27=self.diag_rule(53,d26);
-d9=self.diag_join(d9,d27);
-let d28=self.diag_fail(t1.position::<false>(),"ceil");
-let d29=self.diag_rule(54,d28);
-d9=self.diag_join(d9,d29);
-let d30=self.diag_fail(t1.position::<false>(),"floor");
-let d31=self.diag_rule(55,d30);
-d9=self.diag_join(d9,d31);
-let d32=self.diag_fail(t1.position::<false>(),"pow");
-let d33=self.diag_rule(56,d32);
-d9=self.diag_join(d9,d33);
-let d34=self.diag_fail(t1.position::<false>(),"log");
-let d35=self.diag_rule(57,d34);
-d9=self.diag_join(d9,d35);
-let d36=self.diag_fail(t1.position::<false>(),"exp");
-let d37=self.diag_rule(58,d36);
-d9=self.diag_join(d9,d37);
-let d38=self.diag_rule(44,d9);
-d2=self.diag_join(d2,d38);
-let d39=self.diag_fail(t1.position::<false>(),"toNum");
-let d40=self.diag_rule(59,d39);
-d2=self.diag_join(d2,d40);
-let d41=self.diag_fail(t1.position::<false>(),"$");
-let d42=self.diag_rule(121,d41);
-let d43=self.diag_rule(69,d42);
-d2=self.diag_join(d2,d43);
-let d44=self.diag_fail(t1.position::<false>(),"len");
-let d45=self.diag_rule(65,d44);
-d2=self.diag_join(d2,d45);
-let d46=self.diag_fail(t1.position::<false>(),"length");
-let d47=self.diag_rule(64,d46);
-d2=self.diag_join(d2,d47);
-let d48=self.diag_fail(t1.position::<false>(),"external");
-let d49=self.diag_rule(32,d48);
-d2=self.diag_join(d2,d49);
-let d50=self.e502_c(t1.begin()).diag;
-d2=self.diag_join(d2,d50);
-let d51=self.diag_fail(t1.position::<false>(),"$");
-let d52=self.diag_rule(121,d51);
-d2=self.diag_join(d2,d52);
-let mut d53=Diag::NONE;
-let d54=self.diag_fail(t1.position::<false>(),"call");
-d53=self.diag_join(d53,d54);
-let d55=self.diag_fail(t1.begin().position::<false>(),"internal");
-d53=self.diag_join(d53,d55);
-let d56=self.diag_rule(35,d53);
-let d57=self.diag_rule(36,d56);
-d2=self.diag_join(d2,d57);
-let d58=self.diag_fail(t1.position::<false>(),"(");
-d2=self.diag_join(d2,d58);
-let d59=self.diag_rule(60,d2);
-let d60=self.diag_rule(41,d59);
-let d61=self.diag_rule(40,d60);
-self.display_failures(t1.consumed.max(t1.matched),&["'('", "'('", "'match'", "'match'", "'if'", "'if'", "'sin'", "'sin'", "'cos'", "'cos'", "'tan'", "'tan'", "'sqrt'", "'sqrt'", "'min'", "'min'", "'max'", "'max'", "'random'", "'random'", "'abs'", "'abs'", "'round'", "'round'", "'ceil'", "'ceil'", "'floor'", "'floor'", "'pow'", "'pow'", "'log'", "'log'", "'exp'", "'exp'", "'toNum'", "'toNum'", "'$'", "'$'", "'$'", "'$'", "'len'", "'len'", "'length'", "'length'", "'external'", "'external'", "'$'", "'$'", "'call'", "'call'", "'call'", "'internal'", "'('", "'('", "'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'else'", "'toNum'", "'.length'", "'len'", "'length'", "'external'", "'$'", "__CaptureSite", "NumberTermParser", "__CaptureSite"]);
-if t1.begin().consumed.max(t1.begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'('", "'?'", "':'", "')'", "'match'", "'{'", "','", "'}'", "'if'", "'('", "')'", "'{'", "'}'", "'else'", "'sin'", "'('", "')'", "'cos'", "'tan'", "'sqrt'", "'min'", "'max'", "'random'", "'abs'", "'round'", "'ceil'", "'floor'", "'pow'", "','", "'log'", "'exp'", "'toNum'", "'('", "','", "')'", "'.length'", "'('", "')'", "'len'", "'('", "')'", "'length'", "'('", "')'", "'external'", "'('", "')'", "'$'", "'call'", "'internal'", "'internal'", "'internal'", "'internal'", "'('", "')'", "'('", "')'"]);}
-if t1.begin().begin().consumed.max(t1.begin().begin().matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["'sin'", "'('", "')'", "'cos'", "'('", "')'", "'tan'", "'('", "')'", "'sqrt'", "'('", "')'", "'min'", "'('", "')'", "'max'", "'('", "')'", "'random'", "'('", "')'", "'abs'", "'('", "')'", "'round'", "'('", "')'", "'ceil'", "'('", "')'", "'floor'", "'('", "')'", "'pow'", "'('", "','", "')'", "'log'", "'('", "')'", "'exp'", "'('", "')'"]);}
-if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_failures(t1.consumed.max(t1.matched),&["NumberExpressionParser", "__CaptureSite"]);}
-Step {ok:false,state,events:EventId(0),diag:d61}
 }
 fn guard_e1042_c(&mut self,state:State)->Step {
 if !self.can_replay(2) {return self.e1042_c(state);}
@@ -20073,28 +18926,94 @@ if state.consumed.max(state.matched)==t1.consumed.max(t1.matched) {self.display_
 Step {ok:false,state,events:EventId(0),diag:d2}
 }
 fn token_0<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.number::<MATCH>(state,label)
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"+",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"-",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"e",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"E",min:0,max:0,children:&[]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"+",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"-",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
 };if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_1<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.identifier::<MATCH>(state,label)
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
 };if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_2<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.scan::<MATCH>(state,"TinyExpressionP4::STRING",label)
-};let _=display;out}
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\\",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EXCEPT,text:"\"\\",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"'",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\\",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EXCEPT,text:"'\\",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"'",min:0,max:0,children:&[]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_3<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.scan::<MATCH>(state,"TinyExpressionP4::CODE_START",label)
-};let _=display;out}
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:":",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_4<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.until::<MATCH>(state,"```","'```'")
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::NOT,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LOOK,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
 };if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_5<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.scan::<MATCH>(state,"TinyExpressionP4::CODE_END",label)
-};let _=display;out}
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_6<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.scan::<MATCH>(state,"TinyExpressionP4::LONG_CODE_BLOCK",label)
-};let _=display;out}
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CAPTURE,text:"fence",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:4,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"`",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:":",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::NOT,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::BACKREF,text:"fence",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::EOL,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::BACKREF,text:"fence",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn token_7<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
-self.eof::<MATCH>(state,label)
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_8<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"+",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"-",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"e",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"E",min:0,max:0,children:&[]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"+",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"-",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:1,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_9<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_10<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_11<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_12<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_13<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_14<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_15<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_16<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_17<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\\",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EXCEPT,text:"\"\\",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"'",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\\",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EXCEPT,text:"'\\",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"'",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_18<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:":",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_19<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::NOT,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LOOK,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_20<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"```",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_21<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CAPTURE,text:"fence",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:4,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"`",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:":",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::NOT,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::BACKREF,text:"fence",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::EOL,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::ANY,text:"",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::BOL,text:"",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::BACKREF,text:"fence",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::EOF,text:"",min:0,max:0,children:&[]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_22<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_23<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_24<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_25<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_26<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:".",min:0,max:0,children:&[]},lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::REPEAT,text:"",min:0,max:-1,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_27<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:48,max:57,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_28<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:97,max:122,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::RANGE,text:"",min:65,max:90,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"_",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
+};if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
+fn token_29<const MATCH:bool>(&mut self,state:State,label:&'static str,display:&'static str)->Step {let _=label;let out={
+let start=state.position::<MATCH>();let end=lexical_program::LexicalExpression {op:lexical_program::Op::SCOPE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::CHOICE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r\n",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\r",min:0,max:0,children:&[]}]},lexical_program::LexicalExpression {op:lexical_program::Op::SEQUENCE,text:"",min:0,max:0,children:&[lexical_program::LexicalExpression {op:lexical_program::Op::LITERAL,text:"\n",min:0,max:0,children:&[]}]}]}]}.match_at(self.text,start);let end=if state.invert {if end.is_none() {Some(start)} else {None}} else {end};match end {Some(end)=>{let mut next=state;if end>start {next.advance::<MATCH>(end-start);}let mut step=Step::yes(next);step.events=self.event(Event::Token {text_span:None,content_span:None,expr:usize::MAX,rule:usize::MAX,span:[start,end]});step},None=>self.fail(state,start,label)}
 };if !out.ok {self.display_fail(state.consumed.max(state.matched),display);}out}
 fn trivia_0<const MATCH:bool>(&mut self,state:State)->Step {
 self.display_reach(state.consumed.max(state.matched));let mut out=Step::yes(state);loop {let before=out.state.position::<MATCH>();

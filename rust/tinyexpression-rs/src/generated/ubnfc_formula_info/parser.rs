@@ -470,7 +470,7 @@ self.depth-=1;out.diag=self.diag_rule(13,out.diag);out
 fn e0_c(&mut self,state:State)->Step {
 let mut out=self.b0_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -486,7 +486,7 @@ out
 fn e1_c(&mut self,state:State)->Step {
 let mut out=self.b1_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -530,7 +530,7 @@ out
 fn e4_c(&mut self,state:State)->Step {
 let mut out=self.b4_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -546,7 +546,7 @@ out
 fn e5_c(&mut self,state:State)->Step {
 let mut out=self.b5_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["BlockGroup0Parser"]);}
 out
 }
@@ -576,7 +576,7 @@ out
 fn e7_c(&mut self,state:State)->Step {
 let mut out=self.b7_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -605,7 +605,7 @@ out
 fn e9_c(&mut self,state:State)->Step {
 let mut out=self.b9_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -637,7 +637,7 @@ out
 fn e11_c(&mut self,state:State)->Step {
 let mut out=self.b11_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -669,7 +669,7 @@ out
 fn e13_c(&mut self,state:State)->Step {
 let mut out=self.b13_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&[]);}
 out
 }
@@ -697,7 +697,7 @@ out
 fn e15_c(&mut self,state:State)->Step {
 let mut out=self.b15_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["Repeat"]);}
 out
 }
@@ -729,7 +729,7 @@ out
 fn e17_c(&mut self,state:State)->Step {
 let mut out=self.b17_c(state);
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.display_failures(state.consumed.max(state.matched),&["BlockGroup1Parser"]);}
 out
 }
@@ -772,6 +772,7 @@ fn e20_c(&mut self,state:State)->Step {
 let mut out=self.b20_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
 out.events=self.relabel_token(out.events,20,1);
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:false,text:true});
 } else {self.display_failures(state.consumed.max(state.matched),&["EndOfSourceParser"]);}
 out
 }
@@ -1248,7 +1249,7 @@ let mark=self.mark();
 let key=Key {expression:52,state,matched_mode:false,version:0};if let Some(hit)=self.lookup(key) {return hit;}
 self.display_enter(state.consumed.max(state.matched));let mut out=self.b52_c(state);self.display_reach(out.state.consumed.max(out.state.matched));
 if out.ok {
-out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true});
+out.events=self.event(Event::Values{span:[state.consumed,out.state.consumed],child:out.events,wrap:true,text:false});
 } else {self.restore(mark);self.display_failures(state.consumed.max(state.matched),&[]);}
 if (out.ok && true) || (!out.ok && true) {self.store(key,out,mark);}self.display_leave();
 out

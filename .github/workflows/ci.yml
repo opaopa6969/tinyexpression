@@ -147,7 +147,7 @@ jobs:
       - name: Parity, differential fuzz and engine mode matrix
         run: >-
           mvn -B test -Dgpg.skip=true -Dtinyexpression.skipRailroad=true -Dmaven.repo.local="$MAVEN_REPO"
-          -Dtest=UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
+          -Dtest=DeclarativeLexicalConformanceTest,UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -158,12 +158,12 @@ jobs:
           if-no-files-found: warn
 
   mapper-compatibility:
-    name: Mapper compatibility (${{ matrix.generator }})
+    name: Mapper compatibility (${{ matrix.generator }} dependency)
     runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     strategy:
       fail-fast: false
       matrix:
-        generator: [published, source]
+        generator: [declared, source]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -180,8 +180,8 @@ jobs:
         if: matrix.generator == 'source'
         with:
           repository: opaopa6969/unlaxer-parser
-          # Source-mapped alternate-entry contract; update together with its compatibility oracle.
-          ref: 6a4187c73f748282524fac579415bcd092ae9c6e
+          # Declarative lexical modules and comment-safe setting values.
+          ref: 08f2bc1c918a34b84c333a8178c990383fdffb8d
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -189,20 +189,17 @@ jobs:
         run: >-
           mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
           -Dmaven.repo.local="$MAVEN_REPO"
-      # tinyexpression #220: the `published` leg checks the generator that is on Maven Central. While
-      # pom.xml's unlaxer.version (3.1.1) is not published yet, that is the previous release
-      # (UNLAXER_PUBLISHED_FALLBACK); the main artifact's default generator output is the same.
+      # The declared dependency must support declarative modules. Do not silently
+      # substitute 3.1.0: it cannot read this grammar. Until 3.1.1 is published,
+      # explicitly build the same pinned source dependency as the main CI job.
+      - name: Install declared dependency from its pin if unpublished
+        if: matrix.generator == 'declared'
+        working-directory: tinyexpression
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
       - name: Choose the unlaxer version under test
         working-directory: tinyexpression
-        env:
-          UNLAXER_PUBLISHED_FALLBACK: 3.1.0
         run: |
           version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' pom.xml | head -1)
-          if [ "${{ matrix.generator }}" = published ] \
-            && ! curl -fsI "https://repo1.maven.org/maven2/org/unlaxer/unlaxer-dsl/$version/unlaxer-dsl-$version.pom" > /dev/null; then
-            echo "unlaxer $version is not on Maven Central; the published leg uses $UNLAXER_PUBLISHED_FALLBACK" | tee -a "$GITHUB_STEP_SUMMARY"
-            version=$UNLAXER_PUBLISHED_FALLBACK
-          fi
           # The `source` leg tests the pinned unlaxer-parser checkout it installed: use its own revision.
           if [ "${{ matrix.generator }}" = source ]; then
             version=$(sed -n 's:.*<revision>\(.*\)</revision>.*:\1:p' ../unlaxer-parser/pom.xml | head -1)
@@ -211,11 +208,8 @@ jobs:
           echo "UNLAXER_VERSION=$version" >> "$GITHUB_ENV"
       - name: Verify public and snapshot APIs without shared Maven state
         working-directory: tinyexpression
-        # As of unlaxer 3.1.0 (#209) the published unlaxer-dsl jar already carries the
-        # snapshot / node-alias / optional-qualifier generator shapes that used to be
-        # source-pin-only (they landed on master at or before the 3.1.0 cut), so both
-        # matrix legs expect true here. The `source` leg's own commit pin still matters
-        # for later, still-unreleased generator changes (see the checkout step above).
+        # Both supported dependency routes must retain snapshot / node-alias /
+        # optional-qualifier API shapes while generating the new lexical modules.
         run: >-
           mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.expected.mapper.snapshot=true

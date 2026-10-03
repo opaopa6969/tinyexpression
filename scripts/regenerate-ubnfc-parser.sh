@@ -46,6 +46,12 @@ done
 pin_value() { if [[ -f "$pin" ]]; then sed -n "s/^$1=//p" "$pin"; fi; }
 sha() { sha256sum "$1" | cut -d' ' -f1; }
 
+# Include imported modules, not only the entry grammar, in the reproducibility pin.
+grammar_manifest() {
+  (cd "$repo" && find "$(dirname "$grammar_rel")" -type f -name '*.ubnf' | LC_ALL=C sort |
+    while IFS= read -r f; do echo "$(sha "$f") $f"; done)
+}
+
 # Vendored files in a stable order, relative to $vendor.
 vendored_files() {
   (cd "$vendor" && { find generated -type f -name '*.java'; echo P4Scanners.java; } | LC_ALL=C sort)
@@ -66,6 +72,10 @@ offline_check() {
     fail=1
   else
     echo "ok: grammar sha256 matches pin ($actual)"
+  fi
+  if ! diff <(sed -n 's/^grammar_file //p' "$pin") <(grammar_manifest); then
+    echo "DRIFT: lexical grammar module manifest differs from UBNFC_PIN" >&2
+    fail=1
   fi
   local manifest_pinned manifest_actual
   manifest_pinned=$(sed -n 's/^file //p' "$pin")
@@ -170,6 +180,7 @@ case "$mode" in
       echo "ubnfc_commit=$rev"
       echo "grammar=$grammar_rel"
       echo "grammar_sha256=$(sha "$repo/$grammar_rel")"
+      grammar_manifest | while IFS= read -r entry; do echo "grammar_file $entry"; done
       echo "extern_first_chars=$first_chars"
       echo "ir_sha256=$(sha "$scratch/out/grammar.ir.json")"
       echo "java_package=$java_package"

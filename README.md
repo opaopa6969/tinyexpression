@@ -255,6 +255,10 @@ DAP/ランタイムエイリアス: `token`, `ast`, `dsl-javacode`, `p4-ast`, `p
 `scripts/regenerate-ubnfc-parser.sh`）。返す AST・`selectionMode`・span・失敗時の例外とメッセージは
 旧経路と同一で、`UbnfcParityTest`（340 件以上）が固定している。
 
+字句も [UBNF v2 の外部 grammar 部品](docs/declarative-lexical-modules.md) から生成する。
+NUMBER / IDENTIFIER / STRING / code fence は旧 Parser への mapping を使わず、
+`@import` alias による namespace で構成する。quote の正規化は AST 値変換に分離した。
+
 旧 combinator 経路は **`classic`**（unlaxer Classic）として 2.x の間だけ選べる（**3.0 で削除予定**）。
 `legacy` という id は **非推奨のエイリアス**として `classic` を指す（使うと一度だけ警告ログが出る）。
 エンジン本体と一緒に 3.0 で削除される。

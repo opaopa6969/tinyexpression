@@ -522,8 +522,10 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   const ids = steps.map((s) => s.id);
   assert.ok(ids.indexOf('grammar') < ids.indexOf('code-server'), 'grammar recap should come before the code-server entry');
   const grammar = sections.find((s) => s.id === 'grammar');
-  assert.ok(grammar?.body.ja.some((text) => text.includes('UBNF v2') && text.includes('accepts')), 'grammar help must explain UBNF v2 token contracts');
-  assert.match(indexHtml, /tinyexpression（v2・token 契約）/, 'the playground must label the TinyExpression grammar link as UBNF v2 token contracts');
+  assert.ok(grammar?.body.ja.some((text) => text.includes('UBNF v2') && text.includes('生成')), 'grammar help must explain declarative UBNF generation');
+  assert.ok(grammar?.body.ja.some((text) => text.includes('CAPTURE') && text.includes('SAME_AS')), 'grammar help must explain variable-width fences');
+  assert.match(indexHtml, /tinyexpression（v2・宣言的 token）/, 'the grammar link must describe declarative tokens');
+  assert.match(indexHtml, /grammar\/lexical/, 'the playground must link reusable lexical modules');
 }
 
 // evaluation target switch (#221): the server runtime against a mocked Java service

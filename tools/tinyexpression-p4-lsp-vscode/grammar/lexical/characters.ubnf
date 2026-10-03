@@ -1,0 +1,6 @@
+grammar Characters {
+  @ubnf: v2
+  token DIGIT ::= CHAR_RANGE('0', '9');
+  token LETTER ::= CHAR_RANGE('a', 'z') | CHAR_RANGE('A', 'Z') | '_';
+  token NEWLINE ::= '\r\n' | '\r' | '\n';
+}

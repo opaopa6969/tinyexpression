@@ -1,0 +1,7 @@
+grammar Strings {
+  @ubnf: v2
+  // Quotes and escape pairs are raw source, including newlines and non-BMP scalars.
+  // AST normalization belongs to the consumer, not this recognizer.
+  token STRING ::= '"' { '\\' ANY | NEGATION('"\\') } '"'
+                 | '\'' { '\\' ANY | NEGATION('\'\\') } '\'';
+}
