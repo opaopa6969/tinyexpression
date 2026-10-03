@@ -131,6 +131,7 @@ endpoint を持つときだけ、結果の上に「評価先: wasm（仮の値�
 - tinyexpression（既定の ubnfc パーサの生成元）:
   [tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf](../tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf)
 - FormulaInfo: [grammar/formula-info.ubnf](../grammar/formula-info.ubnf)
+- 字句部品: [grammar/lexical/](../tools/tinyexpression-p4-lsp-vscode/grammar/lexical/) — 数値・識別子・文字列・fence を機械可読な UBNF から生成する（[仕様](../docs/declarative-lexical-modules.md)）。
 - 鉄道図（railroad、tinyexpression の文法）: [docs/railroad/](../docs/railroad/)（GitHub Pages には載せていないので GitHub のページへリンク）
 
 ## 評価トレース（段階 3）

@@ -174,11 +174,11 @@ MVN_ARGS=-o bash rust/tinyexpression-rs/tests/java-diff/regenerate-java-golden.s
 | パス | 中身 |
 |---|---|
 | `src/generated/ubnfc/` | `ubnfc ir` → `ubnfc-rust --no-emit-driver` の出力。`#![forbid(unsafe_code)]`、std のみ |
-| `src/generated/ubnfc/scanners.rs`, `scanners_tests.rs` | ubnfc `scanners/rust/` の extern token scanner（STRING / CODE_START / CODE_END）とその単体テスト |
+| `src/generated/ubnfc/scanners.rs`, `scanners_tests.rs` | 旧 extern token scanner と互換単体テスト。現 P4 は宣言的 token のため認識に登録しない |
 | `src/generated/compat.rs` | ubnfc AST → 公開 `Ast` の変換。`rust/scripts/generate-compat.py` が両 `ast.rs` から生成 |
 | `src/generated/ast.rs`, `evaluator.rs` | 公開 typed AST と `Semantics` trait。旧 unlaxer 生成物を引き継ぎ、以後は手で保守（node 集合は文法由来なので、文法を変えたら `generate-compat.py` が不一致で止まる） |
 | `src/generated/ubnfc_formula_info/` | `grammar/formula-info.ubnf`（FormulaInfo 文書、issue #180）の `ubnfc ir` → `ubnfc-rust --no-emit-driver` の出力。extern token が無いので変更は (1) だけ。manifest は `rust/ubnfc-formula-info-vendored.sha256` |
-| `rust/ubnfc-pin.txt` | ubnfc commit（2 文法共通）、文法・IR・scanner の SHA-256 |
+| `rust/ubnfc-pin.txt` | ubnfc commit（2 文法共通）、全 lexical module を含む文法・IR・scanner の SHA-256 |
 
 再生成と検査:
 
@@ -190,9 +190,11 @@ bash rust/check-generated.sh                     # = regenerate-ubnfc.sh --check
 生成器の出力に対して行う機械的な変更は 3 つだけで、`--check` も同じ手順を踏む:
 (1) 生成器の `Cargo.toml` を捨てる、(2) `parse_entry_with_options` から scanner 付きの
 `parse_entry_with_scanner` を ubnfc `examples/p4-rust/build.rs` と同じ文字列置換で派生させ `parser.rs` 末尾に追記し `mod.rs` から re-export する
-（result-family の再解析で入口 rule を選ぶため。scanner 無しの入口では STRING が全部落ちる）、
+（result-family の再解析で入口 rule を選ぶ既存 API。現在は RejectExtern を渡し、STRING も宣言的 token から生成する）、
 (3) `scanners.rs` 先頭の `//!` を `//` にする（`include!` で取り込むため）。
-ubnfc checkout は共有作業ツリーなので、HEAD が pin と違っても警告だけ出し、固定の実体は byte 比較と各 SHA-256 で担保する。
+ubnfc checkout の HEAD は使わず、pin commit を `git archive` して再生成する。
+`UBNFC_REV=<commit> ... --write` で pin を更新できる。全 imported grammar も hash 検査対象。
+字句と値変換の契約は [宣言的 lexical modules](../../docs/declarative-lexical-modules.md) を参照。
 旧 `rust/unlaxer-revision.txt` と unlaxer generator による検査は役目を終えたので削除した。
 
 ## FormulaInfo loader（issue #180）

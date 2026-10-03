@@ -13,7 +13,8 @@
       <h1>tinyexpression playground</h1>
       <p class="muted small" id="version" title="version of the wasm runtime">wasm を読み込み中…</p>
       <p class="muted small grammar-links">文法（UBNF）:
-        <a href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="the P4 grammar the default ubnfc parser is generated from; UBNF v2 token contracts describe external token behaviour">tinyexpression（v2・token 契約）</a> ·
+        <a href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="UBNF v2: machine-readable tokens generate the Java/Rust parsers">tinyexpression（v2・宣言的 token）</a> ·
+        <a href="https://github.com/opaopa6969/tinyexpression/tree/master/tools/tinyexpression-p4-lsp-vscode/grammar/lexical" target="_blank" rel="noopener" data-external title="Reusable lexical grammars: numbers, identifiers, strings and fences">字句部品（grammar modules）</a> ·
         <a href="https://github.com/opaopa6969/tinyexpression/blob/master/grammar/formula-info.ubnf" target="_blank" rel="noopener" data-external title="the FormulaInfo block format">FormulaInfo</a> ·
         <a href="https://github.com/opaopa6969/tinyexpression/tree/master/docs/railroad" target="_blank" rel="noopener" data-external title="railroad diagrams of the tinyexpression grammar">鉄道図（railroad）</a></p>
     </div>
@@ -30,7 +31,7 @@
     <section class="panel editor-panel" aria-labelledby="h-editor">
       <div class="panel-head">
         <h2 id="h-editor" title="Formula">式</h2>
-        <a class="small" href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf; UBNF v2 token contracts">文法（v2・token 契約）</a>
+        <a class="small" href="https://github.com/opaopa6969/tinyexpression/blob/master/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" target="_blank" rel="noopener" data-external title="UBNF v2 declarative lexical modules">文法（v2・宣言的 token）</a>
       </div>
       <p class="muted small">Ctrl+Space で補完、変数・関数にカーソルを合わせると説明（カタログ）を表示します。</p>
       <div id="editor" class="code-editor"></div>

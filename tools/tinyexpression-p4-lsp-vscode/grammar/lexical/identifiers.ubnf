@@ -1,0 +1,6 @@
+grammar Identifiers {
+  @import chars from 'characters.ubnf'
+  @ubnf: v2
+  token IDENTIFIER ::= chars.LETTER (chars.LETTER | chars.DIGIT)*;
+  token CLASS_NAME ::= IDENTIFIER ('.' IDENTIFIER)*;
+}

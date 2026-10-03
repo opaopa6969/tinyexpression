@@ -68,6 +68,8 @@ pub(crate) enum Event {
         span: Span,
         child: EventId,
         wrap: bool,
+        /// D-078: 意味値を持つ選択の text だけの候補。一致範囲の字句（空でも）を 1 つの値にする。
+        text: bool,
     },
     Capture {
         token_extent: bool,
@@ -161,9 +163,14 @@ impl PackedEvent {
                 p.w[0] = w32(a.0);
                 p.w[1] = w32(b.0);
             }
-            Event::Values { span, child, wrap } => {
+            Event::Values {
+                span,
+                child,
+                wrap,
+                text,
+            } => {
                 p.tag = EV_VALUES;
-                p.flags = wrap as u8;
+                p.flags = wrap as u8 | (text as u8) << 1;
                 p.w[..3].copy_from_slice(&[w32(span[0]), w32(span[1]), w32(child.0)]);
             }
             Event::Capture {
@@ -236,7 +243,8 @@ impl PackedEvent {
             EV_VALUES => Event::Values {
                 span: span(0),
                 child: EventId(w[2] as usize),
-                wrap: self.flags != 0,
+                wrap: self.flags & 1 != 0,
+                text: self.flags & 2 != 0,
             },
             EV_CAPTURE => Event::Capture {
                 token_extent: self.flags != 0,
@@ -448,6 +456,9 @@ pub(crate) struct Session<'a, const DIAG: bool> {
     effect_bytes: usize,
     mapping_depth: usize,
     mapping_anchor: Option<usize>,
+    /// #86: いま値を組み立てている意味値の領域（`Values{text:false}`）の入れ子の深さ。
+    /// 写像される規則の本体に入るたびに 0 から数え直す。
+    value_region: u32,
     /// 回復ごとの公開候補（最遠位置 byte, label）。`Event::Recovery::hints` が索く。
     recovery_hints: Vec<Option<(usize, Vec<&'static str>)>>,
 }
@@ -692,6 +703,7 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
             effect_bytes: 0,
             mapping_depth: 0,
             mapping_anchor: None,
+            value_region: 0,
             recovery_hints: Vec::new(),
             recovery_events: Vec::new(),
         }
@@ -1438,11 +1450,13 @@ if name.is_empty()
         self.text_values(caps, sites, out);
     }
     /// node 変換の field 値。出現ごとに子の値を構築し、値が無く空でない出現は字句 Text にする。
+    /// `text_sites` は中身が text だけの site で、出現 1 つが一致範囲の字句 1 つになる（#89、D-032）。
     /// `fallback` は leaf 型（Text を leaf node に昇格する recipe）。
     pub fn node_values(
         &mut self,
         caps: &[Cap],
         sites: &[usize],
+        text_sites: &[usize],
         fallback: Option<usize>,
         out: &mut Vec<u32>,
     ) -> Result<(), String> {
@@ -1451,7 +1465,12 @@ if name.is_empty()
                 continue;
             }
             let start = out.len();
-            self.build_values_into(child, out)?;
+            if text_sites.contains(&site) && span[0] != span[1] && !self.has_recovery(child) {
+                let text = self.semantic_text(child, span);
+                out.push(text);
+            } else {
+                self.build_values_into(child, out)?;
+            }
             if out.len() == start
                 && span[0] != span[1]
                 && !self.has_recovery(child)
@@ -1891,41 +1910,41 @@ fn build_values_inner(&mut self,mut root:EventId,out:&mut Vec<u32>)->Result<(),S
 // その場合は pool から stack を借りずに降りる。
 loop {match self.ev(root) {
 Event::Capture{child,..}=>root=child,
-Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}return Ok(());},
+Event::Values{child,span,wrap,text}=>{let start=out.len();if !text {self.value_region+=1;}let built=self.build_values_into(child,out);if !text {self.value_region-=1;}built?;if text || wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}return Ok(());},
 Event::Rule{rule,span,child,caps}=>return self.build_rule(rule,caps,span,child,out),
 Event::Join(..)=>break,
 _=>return Ok(()),}}
-let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.ev(id) {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
+let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.ev(id) {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap,text}=>{let start=out.len();if !text {self.value_region+=1;}let built=self.build_values_into(child,out);if !text {self.value_region-=1;}built?;if text || wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
 fn leaf(&mut self,ty:usize,span:Span,text:u32)->Result<u32,String> {let span=self.span(span);self.tree.set_extent(text,span);let _=(span,text);Err(format!("unknown leaf type {ty}"))}
 fn build_rule(&mut self,rule:usize,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);match rule {
-0=>self.map_rule_0(caps,span,child,out),
-1=>self.map_rule_1(caps,span,child,out),
+0=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_0(caps,span,child,out);self.value_region=outer;built},
+1=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_1(caps,span,child,out);self.value_region=outer;built},
 2=>self.map_rule_2(caps,span,child,out),
-3=>self.map_rule_3(caps,span,child,out),
-4=>self.map_rule_4(caps,span,child,out),
+3=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_3(caps,span,child,out);self.value_region=outer;built},
+4=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_4(caps,span,child,out);self.value_region=outer;built},
 5=>self.map_rule_5(caps,span,child,out),
-6=>self.map_rule_6(caps,span,child,out),
-7=>self.map_rule_7(caps,span,child,out),
+6=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_6(caps,span,child,out);self.value_region=outer;built},
+7=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_7(caps,span,child,out);self.value_region=outer;built},
 8=>self.map_rule_8(caps,span,child,out),
 9=>self.map_rule_9(caps,span,child,out),
 10=>self.map_rule_10(caps,span,child,out),
-11=>self.map_rule_11(caps,span,child,out),
+11=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_11(caps,span,child,out);self.value_region=outer;built},
 12=>self.map_rule_12(caps,span,child,out),
 13=>self.map_rule_13(caps,span,child,out),
 _=>Err(format!("unknown rule {rule}"))}}
 fn map_rule_0(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=self.take_values();self.node_values(&caps,&[0],None,&mut f0)?;
+let mut f0=self.take_values();self.node_values(&caps,&[0],&[],None,&mut f0)?;
 if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoBlock}) {return Err("blocks: mapped value type mismatch".into());}
 let f0:Vec<u32>=f0;
 self.give_captures(caps);let span=self.span(span);let l0=self.tree.list(&f0);self.give_values(f0);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoDocument,0,span,&[l0[0],l0[1]]);out.push(node);Ok(())}}
 fn map_rule_1(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=self.take_values();self.node_values(&caps,&[1, 2],None,&mut f0)?;
+let mut f0=self.take_values();self.node_values(&caps,&[1, 2],&[],None,&mut f0)?;
 if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_BlankLine || k==tree::K_g_FormulaInfoAST_2e_CommentLine}) {return Err("leading: mapped value type mismatch".into());}
 let f0:Vec<u32>=f0;
-let mut f1=self.take_values();self.node_values(&caps,&[3, 4, 5],None,&mut f1)?;
+let mut f1=self.take_values();self.node_values(&caps,&[3, 4, 5],&[],None,&mut f1)?;
 if !f1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoEntry}) {return Err("entries: mapped value type mismatch".into());}
 let f1:Vec<u32>=f1;
-let mut v2=self.take_values();self.node_values(&caps,&[6],None,&mut v2)?;
+let mut v2=self.take_values();self.node_values(&caps,&[6],&[],None,&mut v2)?;
 if !v2.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_EndOfPart}) {return Err("end: mapped value type mismatch".into());}
 if v2.len()>1 {return Err("end requires at most one node".into());}let f2=v2.pop();self.give_values(v2);
 let f2:Option<u32>=f2;
@@ -1941,12 +1960,12 @@ let mut t0=self.take_values();self.text_values(&caps,&[8, 9],&mut t0);if t0.is_e
 if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_BlankLine,4,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 fn map_rule_6(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
 let mut t0=self.take_values();self.text_values(&caps,&[10],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[10]) {return Ok(());}
 if t0.len()!=1 {return Err("key requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
-let mut v1=self.take_values();self.node_values(&caps,&[11],None,&mut v1)?;
+let mut v1=self.take_values();self.node_values(&caps,&[11],&[],None,&mut v1)?;
 if !v1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoValue}) {return Err("value: mapped value type mismatch".into());}
 if v1.is_empty() && self.missing_field(&caps,&[11]) {return Ok(());}
 if v1.len()!=1 {return Err("value requires one node".into());}let f1=v1.pop().unwrap();self.give_values(v1);
@@ -1957,16 +1976,16 @@ let mut t0=self.take_values();self.text_values(&caps,&[12],&mut t0);if t0.is_emp
 if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoValue,7,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
-fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
-fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 fn map_rule_11(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
 let mut t0=self.take_values();self.text_values(&caps,&[13],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[13]) {return Ok(());}
 if t0.len()!=1 {return Err("mark requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_EndOfPart,11,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
-fn map_rule_13(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_13(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 /// 出現（capture / rule / token）の収集と、AST 構築が rule ごとに読む直下 capture 表を
 /// 1 回の走査で作る。以前は出現収集の後に AST 構築が rule ごとに `collect_captures` で
 /// 同じ木をもう一度下っていた。

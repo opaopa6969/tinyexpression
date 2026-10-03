@@ -12,6 +12,7 @@
 | [language-guide.md](./language-guide.md) | Complete language specification |
 | [backends.md](./backends.md) | 6 backend comparison, generated-only boundary, parity contract |
 | [architecture.md](./architecture.md) | Parser combinators, AST, 6 evaluators, type system |
+| [declarative-lexical-modules.md](./declarative-lexical-modules.md) | Declarative UBNF v2 tokens, imported grammars, Java/Rust generation and verification (Japanese) |
 
 ## Architecture Decisions
 

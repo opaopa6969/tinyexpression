@@ -17,6 +17,8 @@ set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 repo_dir=$(cd -- "$script_dir/.." && pwd)
+# The offline check must notice a changed imported grammar too.
+(cd "$repo_dir" && sed -n 's/^grammar_file //p' rust/ubnfc-pin.txt | sha256sum -c -)
 if [ -d "${UBNFC_DIR:-$repo_dir/../ubnfc}" ]; then
   bash "$script_dir/scripts/regenerate-ubnfc.sh" --check
 else

@@ -66,9 +66,12 @@ def te_type(t):
 def convert_expr(ut, tt, accessor):
     """ubnfc の component 型 ut（TE の宣言型 tt）を変換する式。"""
     ut = ut.strip()
-    if ut in ("java.lang.String", "java.util.Optional<java.lang.String>",
-              "java.util.List<java.lang.String>"):
-        return accessor
+    if ut == "java.lang.String":
+        return "lexicalText(%s)" % accessor
+    if ut == "java.util.Optional<java.lang.String>":
+        return "%s.map(UbnfcAstConverter::lexicalText)" % accessor
+    if ut == "java.util.List<java.lang.String>":
+        return "%s.stream().map(UbnfcAstConverter::lexicalText).toList()" % accessor
     if ut == "java.lang.Object":
         return "convertAny(%s)" % accessor
     if ut == "java.util.List<java.lang.Object>":
@@ -143,6 +146,12 @@ def generate(ub, te):
     a("    private final Map<String, int[]> bestRank = new HashMap<>();")
     a("    private int depth;")
     a("")
+    a("    /** Declarative tokens retain quotes; preserve the public AST's single-quote normalization here. */")
+    a("    private static String lexicalText(String text) {")
+    a("        return text.length() >= 2 && text.charAt(0) == 39 && text.charAt(text.length() - 1) == 39")
+    a("            ? text.substring(1, text.length() - 1) : text;")
+    a("    }")
+    a("")
     a("    UbnfcAstConverter(Map<Object, Span> sourceSpans, String source) {")
     a("        this.sourceSpans = sourceSpans;")
     a("        this.source = source;")
@@ -178,7 +187,7 @@ def generate(ub, te):
     a("        if (value instanceof %s node) {" % UB)
     a("            return convert(node);")
     a("        }")
-    a("        return value;")
+    a("        return value instanceof String text ? lexicalText(text) : value;")
     a("    }")
     a("")
     a("    %s convert(%s node) {" % (TE, UB))

@@ -168,12 +168,14 @@ export const GUIDE = [
     body: {
       ja: [
         'tinyexpression 本体と FormulaInfo ブロックの文法は UBNF で定義されています。鉄道図（railroad diagram）はその文法を図にしたものです。',
-        'tinyexpression の文法は UBNF v2 です。NUMBER や STRING など外部実装に結び付く token でも、FQN だけでなく accepts・failure・consumes・context の契約を文法ファイルで読めます。',
+        'tinyexpression の文法は UBNF v2 です。NUMBER・IDENTIFIER・STRING・code fence の認識器は、機械可読な token 式から Java/Rust へ生成します。旧 Parser のクラス名への mapping は使いません。',
+        '字句部品のリンクから、数値・識別子・文字列・fence の外部 grammar を読めます。@import の alias が namespace になり、可変長 fence は CAPTURE と SAME_AS で開閉幅を照合します。',
         'ヘッダーのこのリンクから両方の UBNF ファイルと鉄道図の一覧を開けます。',
       ],
       en: [
         'Both tinyexpression itself and the FormulaInfo block format are defined in UBNF grammars. The railroad diagrams are a picture of the same grammar.',
-        'The tinyexpression grammar uses UBNF v2. For externally implemented tokens such as NUMBER and STRING, the grammar records accepts, failure, consumption and context contracts in addition to the FQN binding.',
+        'UBNF v2 token expressions generate NUMBER, IDENTIFIER, STRING and code-fence recognition in Java and Rust, without mapping to legacy Parser classes.',
+        'The lexical modules link opens reusable number, identifier, string and fence grammars. An @import alias is a namespace; CAPTURE and SAME_AS match the opening and closing widths of a variable-length fence.',
         'These header links open both UBNF files and the list of railroad diagrams.',
       ],
     },

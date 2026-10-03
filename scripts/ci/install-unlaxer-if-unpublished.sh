@@ -4,8 +4,8 @@
 #
 #   MAVEN_REPO=/path/to/repo scripts/ci/install-unlaxer-if-unpublished.sh
 #
-# tinyexpression 2.0.1 needs unlaxer 3.1.1 (its -jdk17 artifacts, tinyexpression #220), which is
-# built and merged but not published. Until it is, CI builds the pinned unlaxer-parser commit
+# Declarative P4 lexical modules need unlaxer 3.2.0-SNAPSHOT, not the published 3.1.1.
+# Until a compatible version is published, CI builds the pinned unlaxer-parser commit
 # (.github/unlaxer-source-pin) whose <revision> must equal pom.xml's unlaxer.version. Once the
 # version is on Central this script does nothing, and the pin file can be deleted.
 set -euo pipefail

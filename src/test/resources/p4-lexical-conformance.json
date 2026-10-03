@@ -1,0 +1,21 @@
+[
+  {"id":"signed-fraction-exponent","entry":"NumberExpression","input":"-.5E-2","ok":true},
+  {"id":"trailing-point","entry":"NumberExpression","input":"+12.","ok":true},
+  {"id":"incomplete-exponent","entry":"NumberExpression","input":"1e+","ok":true,"prefix":1},
+  {"id":"sign-alone","entry":"NumberExpression","input":"+","ok":false},
+  {"id":"point-alone","entry":"NumberExpression","input":".","ok":false},
+  {"id":"single-quoted-non-bmp","entry":"StringExpression","input":"'😀a'","ok":true,"value":"😀a"},
+  {"id":"double-quoted-non-bmp","entry":"StringExpression","input":"\"😀a\"","ok":true,"value":"\"😀a\""},
+  {"id":"raw-escape","entry":"StringExpression","input":"'a\\n'","ok":true,"value":"a\\n"},
+  {"id":"multiline-string","entry":"StringExpression","input":"'a\nb'","ok":true,"value":"a\nb"},
+  {"id":"unclosed-string","entry":"StringExpression","input":"'a\\","ok":false},
+  {"id":"identifier","entry":"VariableRef","input":"$_a09","ok":true},
+  {"id":"invalid-identifier","entry":"VariableRef","input":"$😀","ok":false},
+  {"id":"triple-fence","entry":"CodeBlock","input":"```java:X\nx\n```","ok":true},
+  {"id":"long-fence-non-bmp","entry":"CodeBlock","input":"````java:X\n😀\n````","ok":true},
+  {"id":"long-fence-crlf","entry":"CodeBlock","input":"````java:X\r\n````\r\n","ok":true},
+  {"id":"embedded-short-fence","entry":"CodeBlock","input":"`````java:a.B\n```\n````\n`````","ok":true},
+  {"id":"wrong-fence-width","entry":"CodeBlock","input":"````java:X\na\n```","ok":false},
+  {"id":"missing-fence","entry":"CodeBlock","input":"````java:X\na","ok":false},
+  {"id":"fence-not-standalone","entry":"CodeBlock","input":"````java:X\na\n````x","ok":false}
+]

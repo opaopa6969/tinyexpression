@@ -260,7 +260,8 @@ public final class UbnfcP4Parse {
      */
     private static ParseResult<org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST> parseEntry(
             String entry, String parserSource) {
-        ParseOptions options = new ParseOptions(true, false, false, true, TinyExpressionScanners.ALL);
+        // All lexical tokens are generated from UBNF; no external scanner bindings.
+        ParseOptions options = new ParseOptions(true, false, false, true, java.util.Map.of());
         return TinyExpressionP4Parser.parseEntry("TinyExpressionP4", entry, parserSource, options);
     }
 
