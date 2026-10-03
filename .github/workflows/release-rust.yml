@@ -23,8 +23,8 @@ permissions:
 
 jobs:
   release:
-    # Match CI's GNU binary baseline; ubuntu-latest can require a newer glibc.
-    runs-on: ubuntu-22.04
+    # Match CI's registered Linux x86_64 runner and its glibc baseline.
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     env:
       DRY_RUN: ${{ inputs.dry_run }}
     steps:

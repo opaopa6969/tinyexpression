@@ -9,8 +9,8 @@ on:
 jobs:
   rust-parser:
     name: Rust P4 parser binary, C ABI and wasm32
-    # Distributable GNU binaries: cap the glibc baseline (AOT uses process APIs).
-    runs-on: ubuntu-22.04
+    # Distributable GNU binaries use the registered Linux x86_64 runner's glibc baseline.
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Rust 1.85
@@ -66,7 +66,7 @@ jobs:
   # the JS binding + the CalculationContext mapping) against the Java differential golden.
   playground:
     name: Catalog and playground (wasm parity smoke, build)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Rust 1.85 with wasm32
@@ -122,7 +122,7 @@ jobs:
 
   ubnfc-parser:
     name: ubnfc default engine (pin, converter, parity, both engines)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -160,7 +160,7 @@ jobs:
 
   mapper-compatibility:
     name: Mapper compatibility (${{ matrix.generator }})
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     strategy:
       fail-fast: false
       matrix:
