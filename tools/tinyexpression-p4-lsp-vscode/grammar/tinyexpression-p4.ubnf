@@ -1,5 +1,11 @@
 grammar TinyExpressionP4 {
 
+  // The FQN below is a host binding, not the complete meaning of a token.
+  // Format 2 keeps the observable lexical/cursor contract alongside it.
+  @ubnf: v2
+  @feature: tokenContractsV1
+  @feature: contextAccessorsV1
+  @feature: tokenProgressContractsV1
   @package: org.unlaxer.tinyexpression.generated.p4
   @whitespace: javaStyle
   @memoSafeToken: NUMBER
@@ -9,6 +15,14 @@ grammar TinyExpressionP4 {
   @memoSafeToken: CODE_END
   @memoSafeToken: LONG_CODE_BLOCK
   @memoSafeToken: EOF
+
+  @tokenContract: { token: 'NUMBER' accepts: 'an optional + or -; then digits with an optional decimal point and optional exponent' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'IDENTIFIER' accepts: 'an ASCII letter or _ followed by ASCII letters, digits, or _' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'STRING' accepts: 'a single- or double-quoted string; backslash and its following code point are raw text; an unclosed quote fails' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'CODE_START' accepts: 'a line-start ```scheme:qualified.ClassName opener with no trailing text' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'CODE_END' accepts: 'a line-start ``` closing fence with no trailing text; the line ending is consumed when present' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'LONG_CODE_BLOCK' accepts: 'a complete fenced block using four or more backticks, a scheme:qualified.ClassName opener, opaque body, and a same-width closing fence' failure: 'no-consume' consumes: 'always' context: '' }
+  @tokenContract: { token: 'EOF' accepts: 'only the end of input' failure: 'no-consume' consumes: 'never' context: '' }
 
   token NUMBER     = org.unlaxer.parser.elementary.NumberParser
   token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser

@@ -168,10 +168,12 @@ export const GUIDE = [
     body: {
       ja: [
         'tinyexpression 本体と FormulaInfo ブロックの文法は UBNF で定義されています。鉄道図（railroad diagram）はその文法を図にしたものです。',
+        'tinyexpression の文法は UBNF v2 です。NUMBER や STRING など外部実装に結び付く token でも、FQN だけでなく accepts・failure・consumes・context の契約を文法ファイルで読めます。',
         'ヘッダーのこのリンクから両方の UBNF ファイルと鉄道図の一覧を開けます。',
       ],
       en: [
         'Both tinyexpression itself and the FormulaInfo block format are defined in UBNF grammars. The railroad diagrams are a picture of the same grammar.',
+        'The tinyexpression grammar uses UBNF v2. For externally implemented tokens such as NUMBER and STRING, the grammar records accepts, failure, consumption and context contracts in addition to the FQN binding.',
         'These header links open both UBNF files and the list of railroad diagrams.',
       ],
     },

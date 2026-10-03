@@ -54,21 +54,21 @@
 <path d="M279,172 Q287,172 287,164" class="rail" fill="none"/>
 <path d="M287,66 Q287,58 295,58" class="rail" fill="none"/>
 <g id="rr-4">
-<rect x="56" y="196" width="223" height="28" class="nonterminal-box"/>
-<text x="167" y="214" text-anchor="middle" class="nonterminal-text">ParenthesizedStringExpression</text>
+<rect x="105" y="196" width="125" height="28" class="nonterminal-box"/>
+<text x="167" y="214" text-anchor="middle" class="nonterminal-text">SliceExpression</text>
 </g>
-<line x1="56" y1="210" x2="56" y2="210" class="rail"/>
-<line x1="279" y1="210" x2="279" y2="210" class="rail"/>
+<line x1="56" y1="210" x2="105" y2="210" class="rail"/>
+<line x1="230" y1="210" x2="279" y2="210" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,202 Q48,210 56,210" class="rail" fill="none"/>
 <path d="M279,210 Q287,210 287,202" class="rail" fill="none"/>
 <path d="M287,66 Q287,58 295,58" class="rail" fill="none"/>
 <g id="rr-5">
-<rect x="105" y="234" width="125" height="28" class="nonterminal-box"/>
-<text x="167" y="252" text-anchor="middle" class="nonterminal-text">SliceExpression</text>
+<rect x="56" y="234" width="223" height="28" class="nonterminal-box"/>
+<text x="167" y="252" text-anchor="middle" class="nonterminal-text">ParenthesizedStringExpression</text>
 </g>
-<line x1="56" y1="248" x2="105" y2="248" class="rail"/>
-<line x1="230" y1="248" x2="279" y2="248" class="rail"/>
+<line x1="56" y1="248" x2="56" y2="248" class="rail"/>
+<line x1="279" y1="248" x2="279" y2="248" class="rail"/>
 <path d="M40,58 Q48,58 48,66" class="rail" fill="none"/>
 <path d="M48,240 Q48,248 56,248" class="rail" fill="none"/>
 <path d="M279,248 Q287,248 287,240" class="rail" fill="none"/>
