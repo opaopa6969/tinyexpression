@@ -132,8 +132,8 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/ubnfc-parser.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
-      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
-      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      # Declarative lexical modules require the pinned 3.2.0-SNAPSHOT generator;
+      # published 3.1.1 cannot read this grammar. Build into the job-local repository.
       - name: Install unlaxer from source if it is not on Maven Central yet
         run: bash scripts/ci/install-unlaxer-if-unpublished.sh
       # Grammar sha256 + every vendored file against UBNFC_PIN. ubnfc is private, so the full
@@ -180,8 +180,8 @@ jobs:
         if: matrix.generator == 'source'
         with:
           repository: opaopa6969/unlaxer-parser
-          # Declarative lexical modules and comment-safe setting values.
-          ref: 08f2bc1c918a34b84c333a8178c990383fdffb8d
+          # Declarative lexical modules under a distinct development artifact version.
+          ref: f825740396a6181654191de5ba040e1f83533526
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -190,7 +190,7 @@ jobs:
           mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
           -Dmaven.repo.local="$MAVEN_REPO"
       # The declared dependency must support declarative modules. Do not silently
-      # substitute 3.1.0: it cannot read this grammar. Until 3.1.1 is published,
+      # substitute 3.1.1: it cannot read this grammar. Until a compatible release exists,
       # explicitly build the same pinned source dependency as the main CI job.
       - name: Install declared dependency from its pin if unpublished
         if: matrix.generator == 'declared'
@@ -330,8 +330,7 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-smoke.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
-      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
-      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      # Build the pinned declarative-module generator into the job-local repository.
       - name: Install unlaxer from source if it is not on Maven Central yet
         run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 
@@ -376,8 +375,7 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-build.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
-      # tinyexpression #220: unlaxer 3.1.1 (with its -jdk17 artifacts) is merged but not on Maven
-      # Central yet; build the pinned unlaxer-parser commit into the job-local repository until it is.
+      # Build the pinned declarative-module generator into the job-local repository.
       - name: Install unlaxer from source if it is not on Maven Central yet
         run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 

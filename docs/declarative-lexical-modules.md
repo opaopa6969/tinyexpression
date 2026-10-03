@@ -66,9 +66,12 @@ UBNFC_DIR=/path/to/ubnfc scripts/regenerate-ubnfc-parser.sh --check --require-fu
 UBNFC_DIR=/path/to/ubnfc rust/check-generated.sh
 ```
 
-Java compiler dependency は lexical module 対応の `.github/unlaxer-source-pin` が最低条件。
+Java compiler dependency は `3.2.0-SNAPSHOT` と lexical module 対応の
+`.github/unlaxer-source-pin` が最低条件。公開済み `3.1.1` は新しい文法に未対応。
 未公開の間、CI の declared-dependency leg もこの pin から build する。
-新しい文法を読めない旧公開版 3.1.0 への fallback は行わず、公開版との検証と偽らない。
+旧公開版への fallback や同じ release version の上書きは行わず、公開版との検証と偽らない。
+ローカルで新規 build する場合も、pin に記載した unlaxer-parser commit の
+`mvn -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true` を先に実行する。
 
 Java/Rust 共通の 19 ケースは `src/test/resources/p4-lexical-conformance.json`。
 受理/拒否・独立した consumed/matched・raw quote・公開 AST 値・span を比較する。
