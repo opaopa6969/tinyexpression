@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "dependencies": {
+    "std/layout": {
+      "version": "1.0.0",
+      "source": "builtin:std/layout@1.0.0"
+    }
+  }
+}

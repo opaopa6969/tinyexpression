@@ -30,3 +30,6 @@ buildNumber.properties
 /node_modules/
 /package.json
 /package-lock.json
+
+# Python test bytecode
+/scripts/__pycache__/

@@ -4,7 +4,7 @@
 #
 #   MAVEN_REPO=/path/to/repo scripts/ci/install-unlaxer-if-unpublished.sh
 #
-# Declarative P4 lexical modules need unlaxer 3.2.0-SNAPSHOT, not the published 3.1.1.
+# Declarative P4 lexical modules need unlaxer 3.3.0-SNAPSHOT, not the published 3.1.1.
 # Until a compatible version is published, CI builds the pinned unlaxer-parser commit
 # (.github/unlaxer-source-pin) whose <revision> must equal pom.xml's unlaxer.version. Once the
 # version is on Central this script does nothing, and the pin file can be deleted.

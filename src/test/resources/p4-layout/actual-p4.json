@@ -1,0 +1,156 @@
+[
+  {
+    "id": "plain",
+    "input": "1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      1,
+      1
+    ]
+  },
+  {
+    "id": "spaces",
+    "input": " 1 ",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      3,
+      3
+    ]
+  },
+  {
+    "id": "tab",
+    "input": "\t1\t",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      3,
+      3
+    ]
+  },
+  {
+    "id": "lf",
+    "input": "\n1\n",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      3,
+      3
+    ]
+  },
+  {
+    "id": "crlf",
+    "input": "\r\n1\r\n",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      5,
+      5
+    ]
+  },
+  {
+    "id": "line-lf",
+    "input": "//😀\n1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      5,
+      5
+    ]
+  },
+  {
+    "id": "line-crlf",
+    "input": "//😀\r\n1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      6,
+      6
+    ]
+  },
+  {
+    "id": "block",
+    "input": "/*😀*/1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      6,
+      6
+    ]
+  },
+  {
+    "id": "string",
+    "input": "' /* // 😀 */ '",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      14,
+      14
+    ]
+  },
+  {
+    "id": "code",
+    "input": "````java:X\n//😀\n/*x*/\n````\n1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      27,
+      27
+    ]
+  },
+  {
+    "id": "import",
+    "input": "import a.B as b;\n1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      18,
+      18
+    ]
+  },
+  {
+    "id": "declaration",
+    "input": "var $n as number;\n1",
+    "entry": "Formula",
+    "ok": true,
+    "prefix": [
+      true,
+      19,
+      19
+    ]
+  },
+  {
+    "id": "unclosed-block",
+    "input": "/*unclosed",
+    "entry": "Formula",
+    "ok": false,
+    "prefix": [
+      false,
+      0,
+      0
+    ]
+  },
+  {
+    "id": "unclosed-string",
+    "input": "'/*x",
+    "entry": "Formula",
+    "ok": false,
+    "prefix": [
+      false,
+      0,
+      0
+    ]
+  }
+]

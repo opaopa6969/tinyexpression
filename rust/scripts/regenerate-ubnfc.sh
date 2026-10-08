@@ -78,7 +78,7 @@ export CARGO_TARGET_DIR="$work/target"
 
 sha() { sha256sum "$1" | cut -d' ' -f1; }
 grammar_manifest() {
-  (cd "$repo_dir" && { find "$(dirname "$grammar_rel")" -type f -name '*.ubnf'; echo "$fi_grammar_rel"; } |
+  (cd "$repo_dir" && { find "$(dirname "$grammar_rel")" -type f \( -name '*.ubnf' -o -name '*.json' \); echo "$fi_grammar_rel"; echo scripts/prepare-ubnfc-layout.py; } |
     LC_ALL=C sort -u | while IFS= read -r f; do echo "$(sha "$f") $f"; done)
 }
 
@@ -100,8 +100,10 @@ if [[ "$mode" == --check ]]; then
   diff <(sed -n 's/^grammar_file //p' "$pin") <(grammar_manifest)
 fi
 
+python3 "$repo_dir/scripts/prepare-ubnfc-layout.py" "$repo_dir/$grammar_rel" "$work/compat/$grammar_rel" >/dev/null
+touch "$work/compat/.git" # preserve the original logical source root
 (cd "$ubnfc_dir" && cargo run -q --offline -p ubnfc-front --bin ubnfc -- \
-  ir --grammar "$repo_dir/$grammar_rel" \
+  ir --grammar "$work/compat/$grammar_rel" \
   --extern-first-chars "$ubnfc_dir/scanners/first-chars.json" \
   --out "$work/p4.ir.json" >/dev/null)
 check_sha "$work/p4.ir.json" "$(value ir_sha256)"
