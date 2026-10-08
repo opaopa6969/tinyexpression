@@ -179,6 +179,16 @@ case "$mode" in
     rm -rf "$vendored"
     cp -r "$work/generated" "$vendored"
     (cd "$vendored" && find . -type f | LC_ALL=C sort | xargs sha256sum) > "$manifest"
+    python3 - "$rust_dir/tinyexpression-rs/src/api.rs" "$(sha "$repo_dir/$grammar_rel")" <<'PY'
+from pathlib import Path
+import re, sys
+path = Path(sys.argv[1])
+text, count = re.subn(r'pub const GRAMMAR_SHA256: &str = "[0-9a-f]{64}";',
+                    'pub const GRAMMAR_SHA256: &str = "' + sys.argv[2] + '";', path.read_text())
+if count != 1:
+    raise SystemExit("expected exactly one GRAMMAR_SHA256 constant")
+path.write_text(text)
+PY
     echo "vendored ubnfc parser: updated"
     rm -rf "$vendored_fi"
     cp -r "$work/generated-formula-info" "$vendored_fi"

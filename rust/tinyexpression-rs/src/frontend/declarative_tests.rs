@@ -9,21 +9,49 @@ fn shared_imported_layout_keeps_production_p4_positions() {
     use crate::request::{parse_json, Json};
     let Json::Arr(rows) = parse_json(include_str!(
         "../../../../src/test/resources/p4-layout/actual-p4.json"
-    )).unwrap() else { panic!("array") };
+    ))
+    .unwrap() else {
+        panic!("array")
+    };
     for row in rows {
         let id = row.str_field("id").unwrap();
         let input = row.str_field("input").unwrap();
-        let Some(Json::Bool(ok)) = row.get("ok") else { panic!("{id}") };
+        let Some(Json::Bool(ok)) = row.get("ok") else {
+            panic!("{id}")
+        };
         let end = if *ok { input.chars().count() } else { 0 };
         for memo in [false, true] {
-            let result = ubnfc::parse_entry_with_options("TinyExpressionP4", Some("Formula"), input,
-                ubnfc::ParseOptions { require_eof: false, memo, ..Default::default() }).unwrap();
-            assert_eq!((result.ok, result.consumed_cp, result.matched_cp), (*ok, end, end), "{id}");
+            let result = ubnfc::parse_entry_with_options(
+                "TinyExpressionP4",
+                Some("Formula"),
+                input,
+                ubnfc::ParseOptions {
+                    require_eof: false,
+                    memo,
+                    ..Default::default()
+                },
+            )
+            .unwrap();
+            assert_eq!(
+                (result.ok, result.consumed_cp, result.matched_cp),
+                (*ok, end, end),
+                "{id}"
+            );
             if *ok {
                 let converted = compat::convert(result.ast.as_ref().unwrap()).unwrap();
-                let Ast::FormulaExpr { span, .. } = converted else { panic!("{id}") };
-                assert_eq!((span.start, span.end), (0, end), "{id} owned source position");
-                assert_eq!(input.chars().take(span.end).collect::<String>(), input, "{id} owned source");
+                let Ast::FormulaExpr { span, .. } = converted else {
+                    panic!("{id}")
+                };
+                assert_eq!(
+                    (span.start, span.end),
+                    (0, end),
+                    "{id} owned source position"
+                );
+                assert_eq!(
+                    input.chars().take(span.end).collect::<String>(),
+                    input,
+                    "{id} owned source"
+                );
             }
         }
     }
