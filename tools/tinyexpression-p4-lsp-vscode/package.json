@@ -296,6 +296,11 @@
       "type": "object",
       "title": "TinyExpression P4 LSP",
       "properties": {
+        "tinyExpressionP4Lsp.embeddedLanguageDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "description": "Analyze embedded Java in every FormulaInfo section without executing user code. Requires the explicitly built embedded-languages server profile and JDK 21.0.9. Changing this setting restarts the server."
+        },
         "tinyExpressionP4Lsp.server.javaPath": {
           "type": "string",
           "default": "java",

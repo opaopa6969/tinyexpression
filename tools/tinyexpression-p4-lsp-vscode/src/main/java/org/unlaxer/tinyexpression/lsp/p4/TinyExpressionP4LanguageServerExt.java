@@ -353,6 +353,15 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   // LanguageClientAware
   // =========================================================================
 
+  private EmbeddedLanguageDiagnostics embeddedDiagnostics;
+  private final Map<String, Integer> embeddedVersions = new java.util.concurrent.ConcurrentHashMap<>();
+
+  /** Explicit opt-in. The default released server keeps its existing parser/backend behavior. */
+  public void useEmbeddedDiagnostics(EmbeddedLanguageDiagnostics provider) {
+    this.embeddedDiagnostics = java.util.Objects.requireNonNull(provider);
+    incrementalCaches.clear();
+  }
+
   @Override
   public void connect(LanguageClient client) {
     super.connect(client);
@@ -367,7 +376,22 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
     // Call super to trigger initCatalogResolver(params) in the generated class.
     // We discard the returned capabilities and build our own below.
-    super.initialize(params);
+    var initialized = super.initialize(params);
+    if (initialized.isCompletedExceptionally()) return initialized;
+    Object raw = params.getInitializationOptions();
+    var options = new com.google.gson.Gson().toJsonTree(raw);
+    if (options.isJsonObject() && options.getAsJsonObject().has("embeddedLanguageDiagnostics")) {
+      var enabled = options.getAsJsonObject().get("embeddedLanguageDiagnostics");
+      if (!enabled.isJsonPrimitive() || !enabled.getAsJsonPrimitive().isBoolean())
+        throw new IllegalArgumentException("embeddedLanguageDiagnostics must be a boolean");
+      if (enabled.getAsBoolean()) {
+        var providers = java.util.ServiceLoader.load(EmbeddedLanguageDiagnostics.class).stream().toList();
+        if (providers.size() != 1) throw new IllegalArgumentException("embedded-language profile requires exactly one diagnostics provider");
+        useEmbeddedDiagnostics(providers.get(0).get());
+      } else {
+        embeddedDiagnostics = null;
+      }
+    }
 
     ServerCapabilities cap = new ServerCapabilities();
     cap.setTextDocumentSync(TextDocumentSyncKind.Full);
@@ -398,6 +422,8 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     cap.setWorkspaceSymbolProvider(true);
     cap.setDocumentFormattingProvider(true);
 
+    cap.setExperimental(Map.of("embeddedLanguageDiagnostics", Map.of(
+        "enabled", embeddedDiagnostics != null, "fullDocument", true, "executesUserCode", false)));
     return CompletableFuture.completedFuture(new InitializeResult(cap));
   }
 
@@ -445,12 +471,14 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   // =========================================================================
 
   @Override
-  public ParseResult parseDocument(String uri, String content) {
+  public synchronized ParseResult parseDocument(String uri, String content) {
+    // Every full snapshot must reach the provider, including changes outside the first formula.
+    if (embeddedDiagnostics != null) incrementalCaches.remove(uri);
     FormulaSection fs = documentFilter.extract(content);
 
     if (fs != null) {
       // FormulaInfo file: suppress the parent's whole-file diagnostics, then parse formula portion.
-      if (extClient != null) {
+      if (extClient != null && embeddedDiagnostics == null) {
         extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, List.of()));
       }
       return parseAndEnrich(uri, fs.content(), fs.lineOffset(), content);
@@ -812,7 +840,20 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setData(diagnosticData(code, "syntax", start, details));
       diagnostics.add(d);
     }
-    extClient.publishDiagnostics(new PublishDiagnosticsParams(uri, diagnostics));
+    if (embeddedDiagnostics != null) {
+      try {
+        diagnostics.addAll(embeddedDiagnostics.analyze(uri, embeddedVersions.getOrDefault(uri, 0),
+            extDocuments.get(uri).fullContent()));
+      } catch (RuntimeException failure) {
+        Diagnostic diagnostic = new Diagnostic(new Range(new Position(0, 0), new Position(0, 0)),
+            "Embedded language analysis unavailable: " + failure.getMessage(), DiagnosticSeverity.Warning, "tinyexpression-embedded");
+        diagnostic.setCode("EMBEDDED_UNAVAILABLE");
+        diagnostics.add(diagnostic);
+      }
+    }
+    var published = new PublishDiagnosticsParams(uri, diagnostics);
+    if (embeddedDiagnostics != null) published.setVersion(embeddedVersions.getOrDefault(uri, 0));
+    extClient.publishDiagnostics(published);
   }
 
   private List<SemanticIssue> computeStrictMatchSemanticIssues(
@@ -1538,27 +1579,56 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
 
     @Override
     public void didOpen(DidOpenTextDocumentParams params) {
-      server.parseDocument(
-          params.getTextDocument().getUri(),
-          params.getTextDocument().getText());
+      synchronized (server) {
+        if (server.embeddedDiagnostics != null) {
+          String uri = params.getTextDocument().getUri();
+          int version = params.getTextDocument().getVersion();
+          if (server.embeddedVersions.containsKey(uri) && version <= server.embeddedVersions.get(uri)) return;
+          server.embeddedVersions.put(uri, version);
+        }
+        server.parseDocument(params.getTextDocument().getUri(), params.getTextDocument().getText());
+      }
     }
 
     @Override
     public void didChange(DidChangeTextDocumentParams params) {
-      server.parseDocument(
-          params.getTextDocument().getUri(),
-          params.getContentChanges().get(0).getText());
+      synchronized (server) {
+        if (server.embeddedDiagnostics != null) {
+          String uri = params.getTextDocument().getUri();
+          Integer version = params.getTextDocument().getVersion();
+          if (!server.embeddedVersions.containsKey(uri) || version == null || version <= server.embeddedVersions.get(uri)
+              || params.getContentChanges().isEmpty() || params.getContentChanges().stream().anyMatch(change -> change.getRange() != null)) return;
+          server.embeddedVersions.put(uri, version);
+          server.parseDocument(uri, params.getContentChanges().get(params.getContentChanges().size() - 1).getText());
+          return;
+        }
+        server.parseDocument(params.getTextDocument().getUri(), params.getContentChanges().get(0).getText());
+      }
     }
 
     @Override
     public void didClose(DidCloseTextDocumentParams params) {
-      String closedUri = params.getTextDocument().getUri();
-      server.extDocuments.remove(closedUri);
-      server.incrementalCaches.remove(closedUri);
+      synchronized (server) {
+        String closedUri = params.getTextDocument().getUri();
+        server.extDocuments.remove(closedUri);
+        server.incrementalCaches.remove(closedUri);
+        if (server.embeddedDiagnostics != null) {
+          server.embeddedVersions.remove(closedUri);
+          if (server.extClient != null) server.extClient.publishDiagnostics(new PublishDiagnosticsParams(closedUri, List.of()));
+        }
+      }
     }
 
     @Override
-    public void didSave(DidSaveTextDocumentParams params) {}
+    public void didSave(DidSaveTextDocumentParams params) {
+      synchronized (server) {
+        if (server.embeddedDiagnostics != null) {
+          String uri = params.getTextDocument().getUri();
+          var state = server.extDocuments.get(uri);
+          if (state != null) server.parseDocument(uri, state.fullContent());
+        }
+      }
+    }
 
     // ── completion (enhanced with method/variable autocomplete + metadata) ──
 
