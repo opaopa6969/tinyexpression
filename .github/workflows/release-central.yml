@@ -32,7 +32,7 @@ permissions:
 jobs:
   guard:
     name: Guard (version / confirm / monthly cap)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     outputs:
       version: ${{ steps.version.outputs.value }}
     steps:
@@ -84,7 +84,7 @@ jobs:
     name: Publish to Central
     needs: guard
     if: ${{ !inputs.dry_run }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     environment: release
     permissions:
       contents: write
@@ -132,6 +132,7 @@ jobs:
           # deploy step re-runs the build only to produce and upload artifacts,
           # so tests are explicitly skipped here.
           ./mvnw -B clean deploy -Dtinyexpression.skipRailroad=true -DskipPublishing=false -DskipTests
+          # tinyExpression-jdk17 (#220) was removed; 2.0.1 is its last release.
 
       - name: Tag the release
         run: |

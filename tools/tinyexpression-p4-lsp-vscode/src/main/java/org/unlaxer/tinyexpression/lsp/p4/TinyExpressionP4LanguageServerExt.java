@@ -1052,7 +1052,7 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
   // =========================================================================
 
   /** Pattern matching the opening fence of a Java code block: ```java or ```java:ClassName */
-  private static final Pattern JAVA_FENCE_OPEN  = Pattern.compile("^\\s*```java(:\\w+)?\\s*$");
+  private static final Pattern JAVA_FENCE_OPEN  = Pattern.compile("^\\s*(`{3,})java(?::[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*)?\\s*$");
   /** Pattern matching the closing fence of a code block: ``` */
   private static final Pattern JAVA_FENCE_CLOSE = Pattern.compile("^\\s*```\\s*$");
 
@@ -1094,18 +1094,27 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     if (fullContent == null) return false;
     String[] lines = fullContent.split("\n", -1);
     boolean inside = false;
+    String closing = null;
     for (int i = 0; i < lines.length && i <= line; i++) {
       String stripped = lines[i].stripTrailing().replace("\r", "");
-      if (!inside && JAVA_FENCE_OPEN.matcher(stripped).matches()) {
+      var opening = JAVA_FENCE_OPEN.matcher(stripped);
+      if (!inside && opening.matches()) {
         inside = true;
+        closing = opening.group(1);
         continue;
       }
-      if (inside && JAVA_FENCE_CLOSE.matcher(stripped).matches()) {
+      if (inside && closesJavaFence(lines[i], stripped, closing)) {
         inside = false;
         continue;
       }
     }
     return inside;
+  }
+
+  private static boolean closesJavaFence(String original, String stripped, String fence) {
+    // Keep the old three-backtick editor tolerance; extended fences are exact lines.
+    return fence.length() == 3 ? JAVA_FENCE_CLOSE.matcher(stripped).matches()
+        : original.replace("\r", "").equals(fence);
   }
 
   /**
@@ -1125,14 +1134,17 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     List<JavaCodeBlock> blocks = new ArrayList<>();
     boolean inside = false;
     int blockStart = -1;
+    String closing = null;
     for (int i = 0; i < lines.length; i++) {
       String stripped = lines[i].stripTrailing().replace("\r", "");
-      if (!inside && JAVA_FENCE_OPEN.matcher(stripped).matches()) {
+      var opening = JAVA_FENCE_OPEN.matcher(stripped);
+      if (!inside && opening.matches()) {
         inside = true;
+        closing = opening.group(1);
         blockStart = i + 1;
         continue;
       }
-      if (inside && JAVA_FENCE_CLOSE.matcher(stripped).matches()) {
+      if (inside && closesJavaFence(lines[i], stripped, closing)) {
         blocks.add(new JavaCodeBlock(blockStart, i));
         inside = false;
         continue;

@@ -15,6 +15,7 @@ import org.unlaxer.Parsed;
 import org.unlaxer.StringSource;
 import org.unlaxer.TypedToken;
 import org.unlaxer.context.ParseContext;
+import org.unlaxer.tinyexpression.loader.EndOfPartLineParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoAdditionalFields;
 import org.unlaxer.tinyexpression.loader.FormulaInfoBlocksParser;
 import org.unlaxer.tinyexpression.loader.FormulaInfoParseException;
@@ -113,6 +114,10 @@ public class FormulaInfoList {
       FormulaInfoAdditionalFields additionalFields, ClassLoader classLoader) {
 
     try {
+      // Issue #211: name a malformed end mark line ("---END_OF_PART---xyz") precisely. The
+      // parser rejects such a document too, but only as "partially parsed".
+      EndOfPartLineParser.rejectMalformedEndMarkLines(text);
+
       FormulaInfoBlocksParser formulaInfoBlocksParser = new FormulaInfoBlocksParser();
 
       StringSource stringSource = StringSource.createRootSource(text);

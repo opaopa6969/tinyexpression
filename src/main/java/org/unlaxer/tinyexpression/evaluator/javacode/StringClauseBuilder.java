@@ -194,7 +194,7 @@ public class StringClauseBuilder {
     Token literalChoiceToken = ChoiceInterface.choiced(token);
     Source contents = stringByToken.get(literalChoiceToken);
     String raw = contents == null ? "" : contents.sourceAsString();
-    return ExpressionOrLiteral.literalOf(normalizeLiteralContents(raw));
+    return ExpressionOrLiteral.literalOf(JavaStringLiterals.decode(normalizeLiteralContents(raw)));
   }
 
   private ExpressionOrLiteral buildStringVariable(Token token, TinyExpressionTokens tinyExpressionTokens) {

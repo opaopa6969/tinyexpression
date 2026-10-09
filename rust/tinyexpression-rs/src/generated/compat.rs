@@ -13,6 +13,14 @@ use super::ast::{Ast, AstValue};
 use super::ubnfc::ast::Ast as U;
 use crate::Span;
 
+// Recognition retains raw quotes. Preserve the published AST's historical
+// single-quote normalization in the value conversion layer (no escape decode).
+fn lexical_text(text: &str) -> String {
+    text.strip_prefix(char::from(39))
+        .and_then(|inner| inner.strip_suffix(char::from(39)))
+        .unwrap_or(text).to_owned()
+}
+
 /// Converts one ubnfc AST into the published `Ast`.
 ///
 /// `clip` bounds every span, which the frontend needs when it re-parses a masked copy of the
@@ -68,7 +76,7 @@ impl Converter {
         match source {
             U::Text(text) => {
                 return Ok(AstValue::Text {
-                    text: text.clone(),
+                    text: lexical_text(text),
                     span: self.span(owner),
                 })
             }
@@ -76,7 +84,7 @@ impl Converter {
                 if inner.g_left.is_none() && inner.g_right.is_empty() && inner.g_op.len() == 1 =>
             {
                 return Ok(AstValue::Text {
-                    text: inner.g_op[0].clone(),
+                    text: lexical_text(&inner.g_op[0]),
                     span: self.span(inner.span),
                 })
             }
@@ -114,73 +122,75 @@ impl Converter {
                 r#declarations: self.list(&source.g_declarations)?,
                 r#expression: self.node(&source.g_expression)?,
                 r#methods: self.list(&source.g_methods)?,
+                r#codeBlocks: self.list(&source.g_codeBlocks)?,
             },
             U::g_TinyExpressionP4AST_2e_CodeBlockExpr(source) => Ast::r#CodeBlockExpr {
                 span: self.span(source.span),
+                r#source: lexical_text(&source.g_source),
             },
             U::g_TinyExpressionP4AST_2e_ImportDeclarationExpr(source) => Ast::r#ImportDeclarationExpr {
                 span: self.span(source.span),
                 r#className: self.node(&source.g_className)?,
-                r#method: source.g_method.clone(),
-                r#alias: source.g_alias.clone(),
+                r#method: source.g_method.as_deref().map(lexical_text),
+                r#alias: lexical_text(&source.g_alias),
             },
             U::g_TinyExpressionP4AST_2e_QualifiedNameExpr(source) => Ast::r#QualifiedNameExpr {
                 span: self.span(source.span),
-                r#head: source.g_head.clone(),
-                r#tail: source.g_tail.clone(),
+                r#head: lexical_text(&source.g_head),
+                r#tail: source.g_tail.iter().map(|text| lexical_text(text)).collect(),
             },
             U::g_TinyExpressionP4AST_2e_NumberVariableDeclarationExpr(source) => Ast::r#NumberVariableDeclarationExpr {
                 span: self.span(source.span),
-                r#varName: source.g_varName.clone(),
+                r#varName: lexical_text(&source.g_varName),
                 r#onlyIfAbsent: self.opt_node(&source.g_onlyIfAbsent)?,
                 r#value: self.opt_node(&source.g_value)?,
-                r#desc: source.g_desc.clone(),
+                r#desc: source.g_desc.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_StringVariableDeclarationExpr(source) => Ast::r#StringVariableDeclarationExpr {
                 span: self.span(source.span),
-                r#varName: source.g_varName.clone(),
+                r#varName: lexical_text(&source.g_varName),
                 r#onlyIfAbsent: self.opt_node(&source.g_onlyIfAbsent)?,
                 r#value: self.opt_node(&source.g_value)?,
-                r#desc: source.g_desc.clone(),
+                r#desc: source.g_desc.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_BooleanVariableDeclarationExpr(source) => Ast::r#BooleanVariableDeclarationExpr {
                 span: self.span(source.span),
-                r#varName: source.g_varName.clone(),
+                r#varName: lexical_text(&source.g_varName),
                 r#onlyIfAbsent: self.opt_node(&source.g_onlyIfAbsent)?,
                 r#value: self.opt_node(&source.g_value)?,
-                r#desc: source.g_desc.clone(),
+                r#desc: source.g_desc.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_ObjectVariableDeclarationExpr(source) => Ast::r#ObjectVariableDeclarationExpr {
                 span: self.span(source.span),
-                r#varName: source.g_varName.clone(),
+                r#varName: lexical_text(&source.g_varName),
                 r#onlyIfAbsent: self.opt_node(&source.g_onlyIfAbsent)?,
                 r#value: self.opt_node(&source.g_value)?,
-                r#desc: source.g_desc.clone(),
+                r#desc: source.g_desc.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_OnlyIfAbsentExpr(source) => Ast::r#OnlyIfAbsentExpr {
                 span: self.span(source.span),
             },
             U::g_TinyExpressionP4AST_2e_NumberMethodDeclarationExpr(source) => Ast::r#NumberMethodDeclarationExpr {
                 span: self.span(source.span),
-                r#methodName: source.g_methodName.clone(),
+                r#methodName: lexical_text(&source.g_methodName),
                 r#parameters: self.opt_node(&source.g_parameters)?,
                 r#expression: self.node(&source.g_expression)?,
             },
             U::g_TinyExpressionP4AST_2e_StringMethodDeclarationExpr(source) => Ast::r#StringMethodDeclarationExpr {
                 span: self.span(source.span),
-                r#methodName: source.g_methodName.clone(),
+                r#methodName: lexical_text(&source.g_methodName),
                 r#parameters: self.opt_node(&source.g_parameters)?,
                 r#expression: self.node(&source.g_expression)?,
             },
             U::g_TinyExpressionP4AST_2e_BooleanMethodDeclarationExpr(source) => Ast::r#BooleanMethodDeclarationExpr {
                 span: self.span(source.span),
-                r#methodName: source.g_methodName.clone(),
+                r#methodName: lexical_text(&source.g_methodName),
                 r#parameters: self.opt_node(&source.g_parameters)?,
                 r#expression: self.node(&source.g_expression)?,
             },
             U::g_TinyExpressionP4AST_2e_ObjectMethodDeclarationExpr(source) => Ast::r#ObjectMethodDeclarationExpr {
                 span: self.span(source.span),
-                r#methodName: source.g_methodName.clone(),
+                r#methodName: lexical_text(&source.g_methodName),
                 r#parameters: self.opt_node(&source.g_parameters)?,
                 r#expression: self.node(&source.g_expression)?,
             },
@@ -190,36 +200,36 @@ impl Converter {
             },
             U::g_TinyExpressionP4AST_2e_MethodParameterExpr(source) => Ast::r#MethodParameterExpr {
                 span: self.span(source.span),
-                r#paramName: source.g_paramName.clone(),
-                r#type: source.g_type.clone(),
+                r#paramName: lexical_text(&source.g_paramName),
+                r#type: source.g_type.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_ExternalBooleanInvocationExpr(source) => Ast::r#ExternalBooleanInvocationExpr {
                 span: self.span(source.span),
                 r#className: self.opt_node(&source.g_className)?,
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
                 r#args: self.opt_node(&source.g_args)?,
             },
             U::g_TinyExpressionP4AST_2e_ExternalNumberInvocationExpr(source) => Ast::r#ExternalNumberInvocationExpr {
                 span: self.span(source.span),
                 r#className: self.opt_node(&source.g_className)?,
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
                 r#args: self.opt_node(&source.g_args)?,
             },
             U::g_TinyExpressionP4AST_2e_ExternalStringInvocationExpr(source) => Ast::r#ExternalStringInvocationExpr {
                 span: self.span(source.span),
                 r#className: self.opt_node(&source.g_className)?,
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
                 r#args: self.opt_node(&source.g_args)?,
             },
             U::g_TinyExpressionP4AST_2e_ExternalObjectInvocationExpr(source) => Ast::r#ExternalObjectInvocationExpr {
                 span: self.span(source.span),
                 r#className: self.opt_node(&source.g_className)?,
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
                 r#args: self.opt_node(&source.g_args)?,
             },
             U::g_TinyExpressionP4AST_2e_MethodInvocationExpr(source) => Ast::r#MethodInvocationExpr {
                 span: self.span(source.span),
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
                 r#args: self.opt_node(&source.g_args)?,
             },
             U::g_TinyExpressionP4AST_2e_TernaryExpr(source) => Ast::r#TernaryExpr {
@@ -239,7 +249,7 @@ impl Converter {
             U::g_TinyExpressionP4AST_2e_BinaryExpr(source) => Ast::r#BinaryExpr {
                 span: self.span(source.span),
                 r#left: self.required_value(&source.g_left, "left", source.span)?,
-                r#op: source.g_op.clone(),
+                r#op: source.g_op.iter().map(|text| lexical_text(text)).collect(),
                 r#right: self.value_list(&source.g_right, source.span)?,
             },
             U::g_TinyExpressionP4AST_2e_SinExpr(source) => Ast::r#SinExpr {
@@ -383,9 +393,9 @@ impl Converter {
             },
             U::g_TinyExpressionP4AST_2e_InDayTimeRangeExpr(source) => Ast::r#InDayTimeRangeExpr {
                 span: self.span(source.span),
-                r#startDay: source.g_startDay.clone(),
+                r#startDay: lexical_text(&source.g_startDay),
                 r#startHour: self.node(&source.g_startHour)?,
-                r#endDay: source.g_endDay.clone(),
+                r#endDay: lexical_text(&source.g_endDay),
                 r#endHour: self.node(&source.g_endHour)?,
             },
             U::g_TinyExpressionP4AST_2e_SliceExpr(source) => Ast::r#SliceExpr {
@@ -398,33 +408,33 @@ impl Converter {
             U::g_TinyExpressionP4AST_2e_StringConcatExpr(source) => Ast::r#StringConcatExpr {
                 span: self.span(source.span),
                 r#left: self.value(&source.g_left, source.span)?,
-                r#op: source.g_op.clone(),
+                r#op: source.g_op.iter().map(|text| lexical_text(text)).collect(),
                 r#right: self.value_list(&source.g_right, source.span)?,
             },
             U::g_TinyExpressionP4AST_2e_StringCastVariableRefExpr(source) => Ast::r#StringCastVariableRefExpr {
                 span: self.span(source.span),
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
             },
             U::g_TinyExpressionP4AST_2e_StringTypedVariableRefExpr(source) => Ast::r#StringTypedVariableRefExpr {
                 span: self.span(source.span),
-                r#name: source.g_name.clone(),
+                r#name: lexical_text(&source.g_name),
             },
             U::g_TinyExpressionP4AST_2e_BooleanOrExpr(source) => Ast::r#BooleanOrExpr {
                 span: self.span(source.span),
                 r#left: self.node(&source.g_left)?,
-                r#op: source.g_op.clone(),
+                r#op: source.g_op.iter().map(|text| lexical_text(text)).collect(),
                 r#right: self.list(&source.g_right)?,
             },
             U::g_TinyExpressionP4AST_2e_BooleanAndExpr(source) => Ast::r#BooleanAndExpr {
                 span: self.span(source.span),
                 r#left: self.node(&source.g_left)?,
-                r#op: source.g_op.clone(),
+                r#op: source.g_op.iter().map(|text| lexical_text(text)).collect(),
                 r#right: self.list(&source.g_right)?,
             },
             U::g_TinyExpressionP4AST_2e_BooleanXorExpr(source) => Ast::r#BooleanXorExpr {
                 span: self.span(source.span),
                 r#left: self.node(&source.g_left)?,
-                r#op: source.g_op.clone(),
+                r#op: source.g_op.iter().map(|text| lexical_text(text)).collect(),
                 r#right: self.list(&source.g_right)?,
             },
             U::g_TinyExpressionP4AST_2e_NotExpr(source) => Ast::r#NotExpr {
@@ -434,7 +444,7 @@ impl Converter {
             U::g_TinyExpressionP4AST_2e_BooleanEqualityExpr(source) => Ast::r#BooleanEqualityExpr {
                 span: self.span(source.span),
                 r#left: self.value(&source.g_left, source.span)?,
-                r#op: source.g_op.clone(),
+                r#op: lexical_text(&source.g_op),
                 r#right: self.value(&source.g_right, source.span)?,
             },
             U::g_TinyExpressionP4AST_2e_BooleanFactorExpr(source) => Ast::r#BooleanFactorExpr {
@@ -444,13 +454,13 @@ impl Converter {
             U::g_TinyExpressionP4AST_2e_StringComparisonExpr(source) => Ast::r#StringComparisonExpr {
                 span: self.span(source.span),
                 r#left: self.node(&source.g_left)?,
-                r#op: source.g_op.clone(),
+                r#op: lexical_text(&source.g_op),
                 r#right: self.node(&source.g_right)?,
             },
             U::g_TinyExpressionP4AST_2e_ComparisonExpr(source) => Ast::r#ComparisonExpr {
                 span: self.span(source.span),
                 r#left: self.node(&source.g_left)?,
-                r#op: source.g_op.clone(),
+                r#op: lexical_text(&source.g_op),
                 r#right: self.node(&source.g_right)?,
             },
             U::g_TinyExpressionP4AST_2e_ObjectExpr(source) => Ast::r#ObjectExpr {
@@ -526,8 +536,8 @@ impl Converter {
             },
             U::g_TinyExpressionP4AST_2e_VariableRefExpr(source) => Ast::r#VariableRefExpr {
                 span: self.span(source.span),
-                r#name: source.g_name.clone(),
-                r#type: source.g_type.clone(),
+                r#name: lexical_text(&source.g_name),
+                r#type: source.g_type.as_deref().map(lexical_text),
             },
             U::g_TinyExpressionP4AST_2e_ExpressionExpr(source) => Ast::r#ExpressionExpr {
                 span: self.span(source.span),

@@ -2,7 +2,8 @@
 // → value / type, click → highlight in the editor) and a step mode that walks the steps in
 // evaluation order with the partial stack of values.
 import { prepareTrace, stepEvents, stackAt, outcomeLabel } from './trace.js';
-import { highlight } from './highlight.js';
+import { highlight, scrollWithin } from './highlight.js';
+import { isExternalTraceNode } from './externals.js';
 
 const SNIPPET = 48;
 
@@ -72,7 +73,8 @@ export function createTracePanel(parts, view, describe) {
     if (topmost) renderChildren(topmost);
     const row = rows.get(node.id);
     row?.classList.add('selected');
-    row?.scrollIntoView({ block: 'nearest' });
+    // Only the tree box scrolls; row.scrollIntoView also scrolled the page.
+    if (row) scrollWithin(parts.tree, row.getBoundingClientRect(), { horizontal: false });
     if (!fromStep) {
       index = events.findIndex((e) => e.type === 'exit' && e.node === node);
       renderStep();
@@ -102,7 +104,9 @@ export function createTracePanel(parts, view, describe) {
     el('span', { class: 'trace-kind' }, node.kind === 'Leaf' ? (node.leaf?.startsWith('$') ? 'var' : 'literal') : node.kind.replace(/Expr$/, '')),
     el('code', { class: 'trace-src' }, snippet(node)),
     el('span', { class: 'trace-arrow' }, '→'),
-    outcome(node));
+    outcome(node),
+    // #216: an external call is answered by a stub value (code blocks are not run here).
+    isExternalTraceNode(node) ? el('span', { class: 'stub-tag', title: 'answered by the external stub value of the CalculationContext (not executed)' }, '仮の値') : null);
     const item = el('li', {}, line, el('ul', { class: 'trace-children' }));
     rows.set(node.id, line);
     item.node = node;
@@ -133,6 +137,9 @@ export function createTracePanel(parts, view, describe) {
   }
 
   function renderStep() {
+    // The buttons are rebuilt on every step; keep the focus on the one that was pressed so that
+    // repeated clicks and the arrow keys keep working, without scrolling to it.
+    const focused = parts.step.contains(document.activeElement) ? document.activeElement.getAttribute('aria-label') : null;
     parts.step.replaceChildren();
     if (!events.length) return;
     const event = events[index] ?? null;
@@ -156,6 +163,7 @@ export function createTracePanel(parts, view, describe) {
       if (e.key === 'End') { go(events.length - 1); e.preventDefault(); }
     });
     parts.step.append(nav);
+    if (focused) nav.querySelector(`[aria-label="${focused}"]`)?.focus({ preventScroll: true });
     if (!event) {
       parts.step.append(el('p', { class: 'muted small' }, '▶ で最初のステップへ。評価順（子 → 親）に 1 ステップずつ進みます。'));
       return;
@@ -189,6 +197,10 @@ export function createTracePanel(parts, view, describe) {
     }
     parts.summary.append(el('p', { class: 'muted small' },
       `${trace.steps} ステップ${trace.truncated ? `（先頭 ${trace.recorded} ステップだけ記録）` : ''} · 表示 ${prepared.nodes.length} ノード`));
+    if (prepared.nodes.some(isExternalTraceNode)) {
+      parts.summary.append(el('p', { class: 'stub-note small' }, el('span', { class: 'stub-tag' }, '仮の値'),
+        ' external 呼び出し（コードブロックのクラスを含む）は実行されず、CalculationContext の仮の値で代用しています。'));
+    }
     if (prepared.failing) {
       const f = describe(prepared.failing);
       parts.failure.append(el('div', { class: 'result-error' },

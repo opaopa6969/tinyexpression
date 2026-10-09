@@ -1,8 +1,13 @@
 package org.unlaxer.tinyexpression.parser.javalang;
 
 import org.unlaxer.Token;
+import org.unlaxer.CodePointIndex;
 import org.unlaxer.TokenPredicators;
 import org.unlaxer.parser.Parser;
+import org.unlaxer.parser.Parsers;
+import org.unlaxer.parser.combinator.Chain;
+import org.unlaxer.parser.combinator.Choice;
+import org.unlaxer.tinyexpression.codeblock.LongCodeFence;
 import org.unlaxer.parser.elementary.SchemeAndIdentifier;
 import org.unlaxer.parser.elementary.StartAndEndQuotedParser;
 import org.unlaxer.util.annotation.TokenExtractor;
@@ -15,6 +20,11 @@ public class CodeParser extends StartAndEndQuotedParser{
         new QuotedContentsParser(Parser.get(CodeEndParser.class)) , //
         Parser.get(CodeEndParser.class)
     );
+  }
+
+  @Override
+  public Parsers getLazyParsers() {
+    return Parsers.of(new Choice(Parser.get(LongCodeBlockParser.class), new Chain(super.getLazyParsers())));
   }
   
   @TokenExtractor
@@ -36,6 +46,8 @@ public class CodeParser extends StartAndEndQuotedParser{
   
   @TokenExtractor
   public static Token extractSchemeAndIdentifier(Token thisParserParsed) {
+    Token extended = longToken(thisParserParsed);
+    if (extended != null) return extendedPart(extended, false);
     Token token = thisParserParsed.flatten().stream()
       .filter(TokenPredicators.parsers(CodeStartParser.class))
       .findFirst()
@@ -45,12 +57,11 @@ public class CodeParser extends StartAndEndQuotedParser{
   
   @TokenExtractor
   public static SchemeAndIdentifier extractSchemeAndIdentifierAsModel(Token thisParserParsed) {
-    Token collect = thisParserParsed.flatten().stream()
-      .filter(TokenPredicators.parsers(CodeStartParser.class))
-      .findFirst()
-      .get();
+    Token collect = extractSchemeAndIdentifier(thisParserParsed);
     String string = collect.getToken().get().strip();
-    String substring = string.substring("```".length());
+    int width = 0;
+    while (width < string.length() && string.charAt(width) == '`') width++;
+    String substring = string.substring(width);
     String[] split = substring.split(":");
     return new SchemeAndIdentifier(split[0],split[1]);
     
@@ -58,19 +69,33 @@ public class CodeParser extends StartAndEndQuotedParser{
 
   @TokenExtractor
   public static String extractContentsAsString(Token thisParserParsed) {
-      String string = thisParserParsed.flatten().stream()
-        .filter(token->token.parser.getClass() == QuotedContentsParser.class)
-        .findFirst()
-        .get().getToken().get();
-      return string;
+      return extractContents(thisParserParsed).getToken().orElse("");
   }
   
   @TokenExtractor
   public static Token extractContents(Token thisParserParsed) {
+      Token extended = longToken(thisParserParsed);
+      if (extended != null) return extendedPart(extended, true);
       return  thisParserParsed.flatten().stream()
         .filter(token->token.parser.getClass() == QuotedContentsParser.class)
         .findFirst()
         .get();
+  }
+
+  private static Token longToken(Token root) {
+    return root.flatten().stream().filter(t -> t.parser instanceof LongCodeBlockParser).findFirst().orElse(null);
+  }
+
+  private static Token extendedPart(Token token, boolean body) {
+    String source = token.source.sourceAsString();
+    var layout = LongCodeFence.scan(source, 0);
+    if (layout == null) throw new IllegalArgumentException("invalid extended CodeBlock token");
+    int start = body ? layout.bodyStart() : 0;
+    int end = body ? layout.bodyEnd() : layout.bodyStart();
+    return new Token(token.tokenKind, token.source.subSource(
+        new CodePointIndex(source.codePointCount(0, start)),
+        new CodePointIndex(source.codePointCount(0, end))),
+        body ? new QuotedContentsParser(Parser.get(CodeEndParser.class)) : Parser.get(CodeStartParser.class));
   }
   
   public static class CodeBlock{

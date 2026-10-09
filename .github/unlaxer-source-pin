@@ -1,0 +1,3 @@
+# Exact source dependency for named layout and package origins.
+# Update to a published compatible artifact when available.
+commit=fc75fe1e25e538d47908f05ea2039f585aef696e

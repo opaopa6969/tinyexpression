@@ -1,0 +1,14 @@
+grammar Fences {
+  @import chars from 'characters.ubnf'
+  @import names from 'identifiers.ubnf'
+  @ubnf: v2
+  // The legacy three-backtick form ends at its first triple-backtick sequence.
+  token CODE_START ::= BOL '```' names.IDENTIFIER ':' names.CLASS_NAME (chars.NEWLINE | EOF);
+  token CODE_BODY ::= { NEGATIVE_LOOKAHEAD('```') ANY } LOOKAHEAD('```');
+  token CODE_END ::= BOL '```' (chars.NEWLINE | EOF);
+  // Four or more backticks: closing width must equal the captured opening width.
+  // A shorter/longer fence or a non-standalone line remains opaque body text.
+  token LONG_CODE_BLOCK ::= BOL CAPTURE(fence, '`'{4,}) names.IDENTIFIER ':' names.CLASS_NAME chars.NEWLINE
+    { NEGATIVE_LOOKAHEAD(BOL SAME_AS(fence) EOL) ANY }
+    BOL SAME_AS(fence) (chars.NEWLINE | EOF);
+}

@@ -96,8 +96,10 @@ pub g_imports: Vec<Ast>,
 pub g_declarations: Vec<Ast>,
 pub g_expression: Box<Ast>,
 pub g_methods: Vec<Ast>,
+pub g_codeBlocks: Vec<Ast>,
 }
 #[derive(Clone,Debug,PartialEq)] pub struct g_TinyExpressionP4AST_2e_CodeBlockExpr { pub span:Span, pub node_id:usize,
+pub g_source: String,
 }
 #[derive(Clone,Debug,PartialEq)] pub struct g_TinyExpressionP4AST_2e_ImportDeclarationExpr { pub span:Span, pub node_id:usize,
 pub g_className: Box<Ast>,
@@ -696,12 +698,14 @@ Self::g_TinyExpressionP4AST_2e_ExpressionExpr(_)=>"TinyExpressionP4AST.Expressio
 }}
 #[cfg(feature="json")] pub fn canonical_value(&self)->serde_json::Value { match self { Self::Text(value)=>serde_json::Value::String(value.clone()),Self::Null=>serde_json::Value::Null,
 Self::g_TinyExpressionP4AST_2e_FormulaExpr(node)=>serde_json::json!({"fields":{
+"codeBlocks":node.g_codeBlocks.iter().map(Ast::canonical_value).collect::<Vec<_>>(),
 "declarations":node.g_declarations.iter().map(Ast::canonical_value).collect::<Vec<_>>(),
 "expression":node.g_expression.canonical_value(),
 "imports":node.g_imports.iter().map(Ast::canonical_value).collect::<Vec<_>>(),
 "methods":node.g_methods.iter().map(Ast::canonical_value).collect::<Vec<_>>(),
 },"span":node.span,"type":"FormulaExpr"}),
 Self::g_TinyExpressionP4AST_2e_CodeBlockExpr(node)=>serde_json::json!({"fields":{
+"source":node.g_source,
 },"span":node.span,"type":"CodeBlockExpr"}),
 Self::g_TinyExpressionP4AST_2e_ImportDeclarationExpr(node)=>serde_json::json!({"fields":{
 "alias":node.g_alias,
@@ -1675,6 +1679,7 @@ pub fn g_imports(&self) -> NodeList<'t> { NodeList { tree: self.tree, ids: self.
 pub fn g_declarations(&self) -> NodeList<'t> { NodeList { tree: self.tree, ids: self.tree.items(self.id, 2) } }
 pub fn g_expression(&self) -> NodeRef<'t> { NodeRef { tree: self.tree, id: self.tree.slot(self.id, 4) } }
 pub fn g_methods(&self) -> NodeList<'t> { NodeList { tree: self.tree, ids: self.tree.items(self.id, 5) } }
+pub fn g_codeBlocks(&self) -> NodeList<'t> { NodeList { tree: self.tree, ids: self.tree.items(self.id, 7) } }
 }
 #[derive(Clone, Copy)] pub struct g_TinyExpressionP4AST_2e_CodeBlockExpr<'t> { tree: &'t AstTree, id: u32 }
 impl std::fmt::Debug for g_TinyExpressionP4AST_2e_CodeBlockExpr<'_> { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_struct("g_TinyExpressionP4AST_2e_CodeBlockExpr").field("id", &self.id).finish() } }
@@ -1683,6 +1688,7 @@ pub fn node(&self) -> NodeRef<'t> { NodeRef { tree: self.tree, id: self.id } }
 pub fn span(&self) -> Span { span_of(&self.tree.nodes[self.id as usize]) }
 pub fn node_id(&self) -> usize { self.tree.nodes[self.id as usize].node_id as usize }
 pub fn to_ast(&self) -> super::g_TinyExpressionP4AST_2e_CodeBlockExpr { self.tree.project_g_TinyExpressionP4AST_2e_CodeBlockExpr(&self.tree.source, &self.tree.nodes[self.id as usize]) }
+pub fn g_source(&self) -> &'t str { let tree = self.tree; tree.text_in(&tree.source, tree.slot(self.id, 0)) }
 }
 #[derive(Clone, Copy)] pub struct g_TinyExpressionP4AST_2e_ImportDeclarationExpr<'t> { tree: &'t AstTree, id: u32 }
 impl std::fmt::Debug for g_TinyExpressionP4AST_2e_ImportDeclarationExpr<'_> { fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { f.debug_struct("g_TinyExpressionP4AST_2e_ImportDeclarationExpr").field("id", &self.id).finish() } }
@@ -2609,13 +2615,15 @@ K_g_TinyExpressionP4AST_2e_BooleanCaseValueExpr => super::Ast::g_TinyExpressionP
 K_g_TinyExpressionP4AST_2e_VariableRefExpr => super::Ast::g_TinyExpressionP4AST_2e_VariableRefExpr(self.project_g_TinyExpressionP4AST_2e_VariableRefExpr(source, &node)),
 K_g_TinyExpressionP4AST_2e_ExpressionExpr => super::Ast::g_TinyExpressionP4AST_2e_ExpressionExpr(self.project_g_TinyExpressionP4AST_2e_ExpressionExpr(source, &node)),
 _ => unreachable!("unknown AST node kind"), } }
-fn project_g_TinyExpressionP4AST_2e_FormulaExpr(&self, source: &str, node: &TreeNode) -> super::g_TinyExpressionP4AST_2e_FormulaExpr { let f = &self.slots[node.a as usize..node.a as usize + 7]; super::g_TinyExpressionP4AST_2e_FormulaExpr { span: span_of(node), node_id: node.node_id as usize,
+fn project_g_TinyExpressionP4AST_2e_FormulaExpr(&self, source: &str, node: &TreeNode) -> super::g_TinyExpressionP4AST_2e_FormulaExpr { let f = &self.slots[node.a as usize..node.a as usize + 9]; super::g_TinyExpressionP4AST_2e_FormulaExpr { span: span_of(node), node_id: node.node_id as usize,
 g_imports: self.list_at(f[0], f[1]).iter().map(|&v| self.project(source, v)).collect(),
 g_declarations: self.list_at(f[2], f[3]).iter().map(|&v| self.project(source, v)).collect(),
 g_expression: Box::new(self.project(source, f[4])),
 g_methods: self.list_at(f[5], f[6]).iter().map(|&v| self.project(source, v)).collect(),
+g_codeBlocks: self.list_at(f[7], f[8]).iter().map(|&v| self.project(source, v)).collect(),
 } }
-fn project_g_TinyExpressionP4AST_2e_CodeBlockExpr(&self, source: &str, node: &TreeNode) -> super::g_TinyExpressionP4AST_2e_CodeBlockExpr { let _ = source; super::g_TinyExpressionP4AST_2e_CodeBlockExpr { span: span_of(node), node_id: node.node_id as usize,
+fn project_g_TinyExpressionP4AST_2e_CodeBlockExpr(&self, source: &str, node: &TreeNode) -> super::g_TinyExpressionP4AST_2e_CodeBlockExpr { let f = &self.slots[node.a as usize..node.a as usize + 1]; super::g_TinyExpressionP4AST_2e_CodeBlockExpr { span: span_of(node), node_id: node.node_id as usize,
+g_source: self.text_in(source, f[0]).to_owned(),
 } }
 fn project_g_TinyExpressionP4AST_2e_ImportDeclarationExpr(&self, source: &str, node: &TreeNode) -> super::g_TinyExpressionP4AST_2e_ImportDeclarationExpr { let f = &self.slots[node.a as usize..node.a as usize + 3]; super::g_TinyExpressionP4AST_2e_ImportDeclarationExpr { span: span_of(node), node_id: node.node_id as usize,
 g_className: Box::new(self.project(source, f[0])),
@@ -2956,8 +2964,10 @@ K_g_TinyExpressionP4AST_2e_FormulaExpr => { out.push(ValueSpan { path: path.clon
 { let len = path.len(); path.push_str("/fields/declarations"); for (i, &v) in self.items(id, 2).iter().enumerate() { let len = path.len(); let _ = std::fmt::Write::write_fmt(path, format_args!("/{i}")); self.collect_value_spans(source, v, path, out); path.truncate(len); } path.truncate(len); }
 { let len = path.len(); path.push_str("/fields/expression"); self.collect_value_spans(source, self.slot(id, 4), path, out); path.truncate(len); }
 { let len = path.len(); path.push_str("/fields/methods"); for (i, &v) in self.items(id, 5).iter().enumerate() { let len = path.len(); let _ = std::fmt::Write::write_fmt(path, format_args!("/{i}")); self.collect_value_spans(source, v, path, out); path.truncate(len); } path.truncate(len); }
+{ let len = path.len(); path.push_str("/fields/codeBlocks"); for (i, &v) in self.items(id, 7).iter().enumerate() { let len = path.len(); let _ = std::fmt::Write::write_fmt(path, format_args!("/{i}")); self.collect_value_spans(source, v, path, out); path.truncate(len); } path.truncate(len); }
 },
 K_g_TinyExpressionP4AST_2e_CodeBlockExpr => { out.push(ValueSpan { path: path.clone(), span: span_of(&node), text: None });
+{ let len = path.len(); path.push_str("/fields/source"); self.text_value_span(self.slot(id, 0), path, out); path.truncate(len); }
 },
 K_g_TinyExpressionP4AST_2e_ImportDeclarationExpr => { out.push(ValueSpan { path: path.clone(), span: span_of(&node), text: None });
 { let len = path.len(); path.push_str("/fields/className"); self.collect_value_spans(source, self.slot(id, 0), path, out); path.truncate(len); }
@@ -3299,12 +3309,14 @@ pub fn canonical_json(&self) -> Option<String> { self.root().map(|root| serde_js
 #[cfg(feature="json")] impl<'t> NodeRef<'t> {
 pub fn canonical_value(&self) -> serde_json::Value { let (tree, id) = (self.tree, self.id); let node = tree.nodes[id as usize]; let text = |v: u32| tree.text_in(&tree.source, v); let value = |v: u32| NodeRef { tree, id: v }.canonical_value(); let _ = (&text, &value); match node.kind { KIND_TEXT => serde_json::Value::String(text(id).to_owned()), KIND_NULL => serde_json::Value::Null,
 K_g_TinyExpressionP4AST_2e_FormulaExpr => serde_json::json!({"fields":{
+"codeBlocks":(tree.items(id, 7).iter().map(|&v| value(v)).collect::<Vec<_>>()),
 "declarations":(tree.items(id, 2).iter().map(|&v| value(v)).collect::<Vec<_>>()),
 "expression":(value(tree.slot(id, 4))),
 "imports":(tree.items(id, 0).iter().map(|&v| value(v)).collect::<Vec<_>>()),
 "methods":(tree.items(id, 5).iter().map(|&v| value(v)).collect::<Vec<_>>()),
 },"span":span_of(&node),"type":"FormulaExpr"}),
 K_g_TinyExpressionP4AST_2e_CodeBlockExpr => serde_json::json!({"fields":{
+"source":(text(tree.slot(id, 0))),
 },"span":span_of(&node),"type":"CodeBlockExpr"}),
 K_g_TinyExpressionP4AST_2e_ImportDeclarationExpr => serde_json::json!({"fields":{
 "alias":(text(tree.slot(id, 2))),

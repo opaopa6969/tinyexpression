@@ -56,7 +56,7 @@ pub(crate) fn double_value(value: &Value) -> f64 {
 }
 
 /// `Number.intValue()`.
-fn int_value(value: &Value) -> i32 {
+pub(crate) fn int_value(value: &Value) -> i32 {
     match value {
         Value::Number(v) => *v as i32,
         Value::Double(v) => *v as i32,
@@ -69,7 +69,7 @@ fn int_value(value: &Value) -> i32 {
 }
 
 /// `Number.longValue()`.
-fn long_value(value: &Value) -> i64 {
+pub(crate) fn long_value(value: &Value) -> i64 {
     match value {
         Value::Number(v) => *v as i64,
         Value::Double(v) => *v as i64,

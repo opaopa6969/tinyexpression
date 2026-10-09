@@ -22,6 +22,23 @@ import org.unlaxer.tinyexpression.parser.ExpressionTypes;
  */
 public class JavaCodeBlockPolicyTest {
 
+  @Test
+  public void extendedFenceKeepsExplicitPermissionForLegacyCompiler() {
+    String formula = "````java:org.unlaxer.test.PolicyLong\r\n"
+        + "package org.unlaxer.test;\r\n"
+        + "public class PolicyLong { public String value() { return \"```\"; } }\r\n"
+        + "````\r\n1+1";
+    var types = new SpecifiedExpressionTypes(ExpressionTypes._float, ExpressionTypes._float);
+    var loader = Thread.currentThread().getContextClassLoader();
+    var creator = CalculatorCreatorRegistry.javaCodeCreator();
+    var denied = org.junit.Assert.assertThrows(org.unlaxer.compiler.CompileError.class,
+        () -> creator.create(new Source(formula), "LongFenceDenied", types, loader));
+    assertTrue(denied.getMessage(), denied.getMessage().contains("JavaCodeBlockPolicy"));
+    JavaCodeBlockPolicy.setEnabled(true);
+    Calculator compiled = creator.create(new Source(formula), "LongFenceAllowed", types, loader);
+    assertEquals(2f, ((Number) compiled.apply(CalculationContext.newConcurrentContext())).floatValue(), 0f);
+  }
+
   @Before
   public void setUp() {
     JavaCodeBlockPolicy.reset(); // ensure default state (disabled) before each test

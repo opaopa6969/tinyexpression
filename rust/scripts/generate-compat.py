@@ -37,6 +37,14 @@ use super::ast::{Ast, AstValue};
 use super::ubnfc::ast::Ast as U;
 use crate::Span;
 
+// Recognition retains raw quotes. Preserve the published AST's historical
+// single-quote normalization in the value conversion layer (no escape decode).
+fn lexical_text(text: &str) -> String {
+    text.strip_prefix(char::from(39))
+        .and_then(|inner| inner.strip_suffix(char::from(39)))
+        .unwrap_or(text).to_owned()
+}
+
 /// Converts one ubnfc AST into the published `Ast`.
 ///
 /// `clip` bounds every span, which the frontend needs when it re-parses a masked copy of the
@@ -92,7 +100,7 @@ impl Converter {
         match source {
             U::Text(text) => {
                 return Ok(AstValue::Text {
-                    text: text.clone(),
+                    text: lexical_text(text),
                     span: self.span(owner),
                 })
             }
@@ -100,7 +108,7 @@ impl Converter {
                 if inner.g_left.is_none() && inner.g_right.is_empty() && inner.g_op.len() == 1 =>
             {
                 return Ok(AstValue::Text {
-                    text: inner.g_op[0].clone(),
+                    text: lexical_text(&inner.g_op[0]),
                     span: self.span(inner.span),
                 })
             }
@@ -140,9 +148,9 @@ FOOTER = """        })
 """
 
 CONVERSIONS = {
-    ("String", "String"): "source.g_{f}.clone()",
-    ("Option<String>", "Option<String>"): "source.g_{f}.clone()",
-    ("Vec<String>", "Vec<String>"): "source.g_{f}.clone()",
+    ("String", "String"): "lexical_text(&source.g_{f})",
+    ("Option<String>", "Option<String>"): "source.g_{f}.as_deref().map(lexical_text)",
+    ("Vec<String>", "Vec<String>"): "source.g_{f}.iter().map(|text| lexical_text(text)).collect()",
     ("Box<Ast>", "Box<Ast>"): "self.node(&source.g_{f})?",
     ("Option<Box<Ast>>", "Option<Box<Ast>>"): "self.opt_node(&source.g_{f})?",
     ("Vec<Ast>", "Vec<Ast>"): "self.list(&source.g_{f})?",

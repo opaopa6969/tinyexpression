@@ -9,13 +9,15 @@ on:
 jobs:
   rust-parser:
     name: Rust P4 parser binary, C ABI and wasm32
-    runs-on: ubuntu-latest
+    # Distributable GNU binaries use the registered Linux x86_64 runner's glibc baseline.
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Rust 1.85
-        run: |
-          rustup toolchain install 1.85.0 --profile minimal --component rustfmt --component clippy --target wasm32-unknown-unknown
-          rustup default 1.85.0
+        run: bash .github/scripts/setup-rust.sh 1.85.0 --component rustfmt --component clippy
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
       - name: Verify vendored ubnfc parser and generated adapter
         run: bash rust/check-generated.sh
       - name: Test and lint Rust parser
@@ -25,7 +27,8 @@ jobs:
           cargo clippy --locked --manifest-path rust/Cargo.toml --workspace --all-targets -- -D warnings
       - name: Build and smoke-test release binary
         run: |
-          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs
+          cargo build --release --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -p tinyexpression-aot
+          rust/target/release/tinyexpression-aot --help
           rust/target/release/tinyexpression --version | grep -q "^tinyexpression $(sed -n 's/^version = "\(.*\)"/\1/p' rust/Cargo.toml) (ubnfc $(sed -n 's/^ubnfc_commit=//p' rust/ubnfc-pin.txt))$"
           rust/target/release/tinyexpression --help | grep -q '^Exit codes:'
           printf '%s' '1 + 2' | rust/target/release/tinyexpression parse - | python3 -c 'import json,sys; value=json.load(sys.stdin); assert value["ok"] and value["ast"]["type"] == "FormulaExpr"'
@@ -48,9 +51,12 @@ jobs:
         run: |
           package_dir=$(mktemp -d "$RUNNER_TEMP/tinyexpression-package.XXXXXX")
           install -m 0755 rust/target/release/tinyexpression "$package_dir/tinyexpression"
+          install -m 0755 rust/target/release/tinyexpression-aot "$package_dir/tinyexpression-aot"
+          install -m 0644 rust/tinyexpression-aot/README.md "$package_dir/AOT-README.md"
+          install -m 0644 rust/tinyexpression-aot/examples/greeting.tiny "$package_dir/greeting.tiny"
           install -m 0644 LICENSE "$package_dir/LICENSE"
           install -m 0644 rust/tinyexpression-rs/README.md "$package_dir/README.md"
-          tar -czf rust/target/tinyexpression-linux-x86_64.tar.gz -C "$package_dir" tinyexpression LICENSE README.md
+          tar -czf rust/target/tinyexpression-linux-x86_64.tar.gz -C "$package_dir" tinyexpression tinyexpression-aot LICENSE README.md AOT-README.md greeting.tiny
       - uses: actions/upload-artifact@v6
         with:
           name: tinyexpression-linux-x86_64
@@ -61,13 +67,11 @@ jobs:
   # the JS binding + the CalculationContext mapping) against the Java differential golden.
   playground:
     name: Catalog and playground (wasm parity smoke, build)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - name: Set up Rust 1.85 with wasm32
-        run: |
-          rustup toolchain install 1.85.0 --profile minimal --target wasm32-unknown-unknown
-          rustup default 1.85.0
+        run: bash .github/scripts/setup-rust.sh 1.85.0
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
@@ -117,7 +121,7 @@ jobs:
 
   ubnfc-parser:
     name: ubnfc default engine (pin, converter, parity, both engines)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -128,8 +132,14 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/ubnfc-parser.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # Declarative lexical modules require the pinned 3.3.0-SNAPSHOT generator;
+      # published 3.1.1 cannot read this grammar. Build into the job-local repository.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
       # Grammar sha256 + every vendored file against UBNFC_PIN. ubnfc is private, so the full
       # grammar -> IR -> Java regeneration runs where it is readable (UBNFC_DIR); see the script.
+      - name: Verify strict layout compatibility adapter
+        run: python3 scripts/test_ubnfc_layout.py
       - name: Verify vendored ubnfc parser against its pin
         run: bash scripts/regenerate-ubnfc-parser.sh --check
       - name: Verify the generated AST converter
@@ -139,7 +149,7 @@ jobs:
       - name: Parity, differential fuzz and engine mode matrix
         run: >-
           mvn -B test -Dgpg.skip=true -Dtinyexpression.skipRailroad=true -Dmaven.repo.local="$MAVEN_REPO"
-          -Dtest=UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
+          -Dtest=DeclarativeLexicalConformanceTest,UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest
       - uses: actions/upload-artifact@v6
         if: always()
         with:
@@ -150,12 +160,12 @@ jobs:
           if-no-files-found: warn
 
   mapper-compatibility:
-    name: Mapper compatibility (${{ matrix.generator }})
-    runs-on: ubuntu-latest
+    name: Mapper compatibility (${{ matrix.generator }} dependency)
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
     strategy:
       fail-fast: false
       matrix:
-        generator: [published, source]
+        generator: [declared, source]
     steps:
       - uses: actions/checkout@v6
         with:
@@ -164,6 +174,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Set up Rust 1.85 for the shared source fixtures
+        if: matrix.generator == 'source'
+        run: bash tinyexpression/.github/scripts/setup-rust.sh 1.85.0
       - name: Create an empty Maven repository on the assigned runner
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/mapper-compatibility.XXXXXX")
@@ -172,8 +185,8 @@ jobs:
         if: matrix.generator == 'source'
         with:
           repository: opaopa6969/unlaxer-parser
-          # Source-mapped alternate-entry contract; update together with its compatibility oracle.
-          ref: 6a4187c73f748282524fac579415bcd092ae9c6e
+          # Declarative lexical modules under a distinct development artifact version.
+          ref: fc75fe1e25e538d47908f05ea2039f585aef696e
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -181,31 +194,52 @@ jobs:
         run: >-
           mvn -B -pl .,unlaxer-common,unlaxer-dsl install -DskipTests -Dgpg.skip=true
           -Dmaven.repo.local="$MAVEN_REPO"
+      # The declared dependency must support declarative modules. Do not silently
+      # substitute 3.1.1: it cannot read this grammar. Until a compatible release exists,
+      # explicitly build the same pinned source dependency as the main CI job.
+      - name: Install declared dependency from its pin if unpublished
+        if: matrix.generator == 'declared'
+        working-directory: tinyexpression
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
+      - name: Choose the unlaxer version under test
+        working-directory: tinyexpression
+        run: |
+          version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' pom.xml | head -1)
+          # The `source` leg tests the pinned unlaxer-parser checkout it installed: use its own revision.
+          if [ "${{ matrix.generator }}" = source ]; then
+            version=$(sed -n 's:.*<revision>\(.*\)</revision>.*:\1:p' ../unlaxer-parser/pom.xml | head -1)
+            echo "source leg: unlaxer $version from the pinned unlaxer-parser checkout" | tee -a "$GITHUB_STEP_SUMMARY"
+          fi
+          echo "UNLAXER_VERSION=$version" >> "$GITHUB_ENV"
       - name: Verify public and snapshot APIs without shared Maven state
         working-directory: tinyexpression
-        # As of unlaxer 3.1.0 (#209) the published unlaxer-dsl jar already carries the
-        # snapshot / node-alias / optional-qualifier generator shapes that used to be
-        # source-pin-only (they landed on master at or before the 3.1.0 cut), so both
-        # matrix legs expect true here. The `source` leg's own commit pin still matters
-        # for later, still-unreleased generator changes (see the checkout step above).
+        # Both supported dependency routes must retain snapshot / node-alias /
+        # optional-qualifier API shapes while generating the new lexical modules.
         run: >-
-          mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B clean test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.expected.mapper.snapshot=true
           -Dtinyexpression.expected.mapper.nodeAlias=true
           -Dtinyexpression.expected.mapper.optionalQualifier=true
-          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest
+          -Dtest=P4LayoutMigrationTest,P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
         working-directory: tinyexpression
         run: >-
-          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+          mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.skipRailroad=true -Dtinyexpression.rust.shared=true
-          -Dtest=P4RustSharedFixtureAcceptanceTest
+          -Dtinyexpression.layout.conformance=true -Dtinyexpression.unlaxer.source=../unlaxer-parser
+          -Dtest=P4RustSharedFixtureAcceptanceTest,P4LayoutGeneratedConformanceTest
+      - name: Require the shared layout comparison evidence
+        if: matrix.generator == 'source'
+        working-directory: tinyexpression
+        run: test -s target/p4-layout-generated.tsv
       - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: mapper-compatibility-${{ matrix.generator }}
-          path: tinyexpression/target/surefire-reports/
+          path: |
+            tinyexpression/target/surefire-reports/
+            tinyexpression/target/p4-layout-generated.tsv
           if-no-files-found: warn
 
   # issue #173: the Java CI above resolves org.unlaxer:unlaxer-* from Maven Central, so a
@@ -308,6 +342,9 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-smoke.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # Build the pinned declarative-module generator into the job-local repository.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 
       - name: Validate Central release guard
         run: |
@@ -350,6 +387,9 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/tinyexpression-build.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+      # Build the pinned declarative-module generator into the job-local repository.
+      - name: Install unlaxer from source if it is not on Maven Central yet
+        run: bash scripts/ci/install-unlaxer-if-unpublished.sh
 
       # 既知の失敗 (test-baseline.txt) は許容し、新規失敗のみで fail する。
       # ベースラインの縮小が進捗。詳細は tools/ci/check-test-baseline.sh。
@@ -363,6 +403,19 @@ jobs:
 
       - name: Install main artifact to local repo
         run: mvn -B install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+
+      # tinyexpression #220: the main artifact stays Java 21 (class file major 65).
+      - name: Require class file major 65 (Java 21) in the main jar
+        run: python3 scripts/ci/check_class_major.py 65 target/tinyExpression-*[0-9].jar
+
+      # tinyexpression #224: no class in the jar may share its FQCN with unlaxer-common / unlaxer-dsl
+      # (a shadowing copy wins or loses depending on the consumer's classpath order).
+      - name: No class of the main jar duplicates an unlaxer-common / unlaxer-dsl class
+        run: |
+          mvn -B -q dependency:build-classpath -DincludeGroupIds=org.unlaxer \
+            -Dmdep.outputFile="$RUNNER_TEMP/unlaxer-classpath.txt" -Dmaven.repo.local="$MAVEN_REPO"
+          python3 scripts/ci/check_no_duplicate_classes.py target/tinyExpression-*[0-9].jar \
+            "$RUNNER_TEMP/unlaxer-classpath.txt"
 
       - name: Set up Node.js (for vsce packaging in tools)
         uses: actions/setup-node@v6

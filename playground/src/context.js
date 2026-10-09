@@ -8,6 +8,8 @@
 //   externals: [{ class, method, arity: '' | '2', registered, returnType, value }],
 // }
 
+import { blankCodeBlocks } from './code-block.js';
+
 export const VARIABLE_TYPES = ['float', 'double', 'int', 'long', 'short', 'byte', 'boolean', 'string'];
 export const RESULT_TYPES = ['float', 'double', 'int', 'long', 'short', 'byte', 'boolean', 'string', 'object'];
 export const NUMBER_TYPES = ['float', 'double', 'int', 'long', 'short', 'byte'];
@@ -68,10 +70,10 @@ export function toRequest(state, source) {
   };
 }
 
-/** `$name` references in a formula (for "式から変数を追加"). */
+/** `$name` references in a formula (for "式から変数を追加"); ```java blocks do not count (#216). */
 export function referencedVariables(formula) {
   const names = [];
-  for (const m of formula.matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)) {
+  for (const m of blankCodeBlocks(formula).matchAll(/\$([A-Za-z_][A-Za-z0-9_]*)/g)) {
     if (!names.includes(m[1])) names.push(m[1]);
   }
   return names;
@@ -80,7 +82,7 @@ export function referencedVariables(formula) {
 /** Variables declared in the formula itself (`var $x ...`), which need no context value. */
 export function declaredVariables(formula) {
   const names = new Set();
-  for (const m of formula.matchAll(/\b(?:var|variable)\s+\$([A-Za-z_][A-Za-z0-9_]*)/g)) names.add(m[1]);
+  for (const m of blankCodeBlocks(formula).matchAll(/\b(?:var|variable)\s+\$([A-Za-z_][A-Za-z0-9_]*)/g)) names.add(m[1]);
   return names;
 }
 

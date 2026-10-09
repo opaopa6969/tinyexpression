@@ -97,8 +97,8 @@ public class P4PreferredAstMapperDiagnosticsTest {
           assertEquals(source.startsWith("ok") ? 2 : -1, field(result, "consumed"));
           assertEquals(1, parser.contexts.size());
           assertEquals(1, parser.closed);
-          if (!memoize) assertFalse(parser.contexts.getFirst().isMemoizeEnabled());
-          if (available) assertEquals("DETAILED", option(parser.contexts.getFirst(), "diagnostics"));
+          if (!memoize) assertFalse(parser.contexts.get(0).isMemoizeEnabled());
+          if (available) assertEquals("DETAILED", option(parser.contexts.get(0), "diagnostics"));
         }
       }
       assertEquals("Parse failed: @", assertThrows(IllegalArgumentException.class,
@@ -124,9 +124,9 @@ public class P4PreferredAstMapperDiagnosticsTest {
           assertEquals(true, field(result, "succeeded"));
           assertEquals(2, field(result, "consumed"));
           assertEquals(1, parser.contexts.size());
-          assertEquals("DETAILED_ON_FAILURE", option(parser.contexts.getFirst(), "diagnostics"));
+          assertEquals("DETAILED_ON_FAILURE", option(parser.contexts.get(0), "diagnostics"));
           assertEquals(memoize ? "SAFE_FAILURES" : "OFF",
-              option(parser.contexts.getFirst(), "memoization"));
+              option(parser.contexts.get(0), "memoization"));
           assertEquals(1, parser.closed);
         }
       }
@@ -165,8 +165,8 @@ public class P4PreferredAstMapperDiagnosticsTest {
     var parser = new Probe();
     attempt(parser, "bad", 0L);
     assertEquals(1, parser.contexts.size());
-    assertEquals("DETAILED", option(parser.contexts.getFirst(), "diagnostics"));
-    assertFalse(expectedTokens(parser.contexts.getFirst()).isEmpty());
+    assertEquals("DETAILED", option(parser.contexts.get(0), "diagnostics"));
+    assertFalse(expectedTokens(parser.contexts.get(0)).isEmpty());
   }
 
   @Test public void allRootsRetainDetailedAcceptanceAndConsumedLength() throws Exception {

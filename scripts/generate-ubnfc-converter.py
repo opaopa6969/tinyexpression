@@ -66,9 +66,12 @@ def te_type(t):
 def convert_expr(ut, tt, accessor):
     """ubnfc の component 型 ut（TE の宣言型 tt）を変換する式。"""
     ut = ut.strip()
-    if ut in ("java.lang.String", "java.util.Optional<java.lang.String>",
-              "java.util.List<java.lang.String>"):
-        return accessor
+    if ut == "java.lang.String":
+        return "lexicalText(%s)" % accessor
+    if ut == "java.util.Optional<java.lang.String>":
+        return "%s.map(UbnfcAstConverter::lexicalText)" % accessor
+    if ut == "java.util.List<java.lang.String>":
+        return "%s.stream().map(UbnfcAstConverter::lexicalText).toList()" % accessor
     if ut == "java.lang.Object":
         return "convertAny(%s)" % accessor
     if ut == "java.util.List<java.lang.Object>":
@@ -143,6 +146,12 @@ def generate(ub, te):
     a("    private final Map<String, int[]> bestRank = new HashMap<>();")
     a("    private int depth;")
     a("")
+    a("    /** Declarative tokens retain quotes; preserve the public AST's single-quote normalization here. */")
+    a("    private static String lexicalText(String text) {")
+    a("        return text.length() >= 2 && text.charAt(0) == 39 && text.charAt(text.length() - 1) == 39")
+    a("            ? text.substring(1, text.length() - 1) : text;")
+    a("    }")
+    a("")
     a("    UbnfcAstConverter(Map<Object, Span> sourceSpans, String source) {")
     a("        this.sourceSpans = sourceSpans;")
     a("        this.source = source;")
@@ -178,7 +187,7 @@ def generate(ub, te):
     a("        if (value instanceof %s node) {" % UB)
     a("            return convert(node);")
     a("        }")
-    a("        return value;")
+    a("        return value instanceof String text ? lexicalText(text) : value;")
     a("    }")
     a("")
     a("    %s convert(%s node) {" % (TE, UB))
@@ -186,7 +195,10 @@ def generate(ub, te):
     a("            return null;")
     a("        }")
     a("        int nodeDepth = depth++;")
-    a("        %s converted = switch (node) {" % TE)
+    # tinyexpression #220: the Java 17 build (tinyExpression-jdk17) compiles this file with
+    # --release 17, so dispatch with an ordered instanceof chain instead of a pattern switch.
+    a("        final %s converted;" % TE)
+    first = True
     for name in ub:
         comps = ub[name]
         tcomps = {n: t for t, n in te[name]}
@@ -195,12 +207,14 @@ def generate(ub, te):
             variant_expr(VARIANT[(name, un)], "n." + un + "()") if (name, un) in VARIANT
             else convert_expr(ut, tcomps[un], "n." + un + "()")
             for ut, un in comps)
+        test = ("        if (node instanceof %s.%s n)" if first else "        else if (node instanceof %s.%s n)") % (UB, name)
+        first = False
         if variant:
-            a("            case %s.%s n -> (%s.%s) VariantShapes.construct(%s.%s.class, %s);"
-              % (UB, name, TE, name, TE, name, args))
+            a("%s converted = (%s.%s) VariantShapes.construct(%s.%s.class, %s);"
+              % (test, TE, name, TE, name, args))
         else:
-            a("            case %s.%s n -> new %s.%s(%s);" % (UB, name, TE, name, args))
-    a("        };")
+            a("%s converted = new %s.%s(%s);" % (test, TE, name, args))
+    a("        else throw new IllegalStateException(\"unhandled node: \" + node);")
     a("        depth = nodeDepth;")
     a("        Span span = sourceSpans.get(node);")
     a("        int start = span == null ? Integer.MIN_VALUE : span.start();")

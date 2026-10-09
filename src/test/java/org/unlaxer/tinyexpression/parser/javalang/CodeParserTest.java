@@ -14,6 +14,19 @@ import org.unlaxer.tinyexpression.evaluator.javacode.SimpleBuilder;
 public class CodeParserTest extends ParserTestBase{
 
   @Test
+  public void longFencesRetainOpaqueBodyInLegacyModel() {
+    String body = "// 😀 ```\r\nString s = \"```\";\r\n```\r\n`````\r\n";
+    String source = "````java:p.Demo\r\n" + body + "````\r\n";
+    CodeParser parser = new CodeParser();
+    Token token = testAllMatch(parser, source).parsed.getRootToken();
+    assertEquals(body, CodeParser.extractContentsAsString(token));
+    assertEquals("p.Demo", CodeParser.extractSchemeAndIdentifierAsModel(token).idenitifier);
+    var model = org.unlaxer.tinyexpression.evaluator.javacode.model.JavaCode.extractCodeBlocksAsModel(token.typed(parser));
+    assertEquals(body, model.code());
+    assertEquals("java", model.schemeAndIdentifier().scheme);
+  }
+
+  @Test
   public void test() {
     
     setLevel(OutputLevel.detail);

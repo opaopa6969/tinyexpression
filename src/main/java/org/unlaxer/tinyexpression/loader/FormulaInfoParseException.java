@@ -18,12 +18,25 @@ package org.unlaxer.tinyexpression.loader;
  *       {@code NullPointerException} while wiring the dependency).</li>
  * </ul>
  *
+ * <p>Issue #211 added two more:
+ * <ul>
+ *   <li>a line that starts with {@code ---END_OF_PART---} and continues with anything but
+ *       spaces and tabs (previously: an ordinary value line, so the next block was silently
+ *       merged into this one and its formula lost);</li>
+ *   <li>a block with {@code calculatorName} twice or more, the sign that two blocks were merged
+ *       because the end mark line between them is missing (previously: the later values
+ *       silently overwrote the earlier ones).</li>
+ * </ul>
+ *
+ * <p>It is an {@link IllegalArgumentException} so that {@code FormulaInfoSourceDocument.parse},
+ * whose documented failure is {@code IllegalArgumentException}, can raise the same exception.
+ *
  * <p>This matches the Rust loader ({@code tinyexpression-rs}'s {@code formula_info::LoadError}),
  * which already rejected these documents explicitly; the parity test
  * ({@code rust/tinyexpression-rs/tests/formula_info.rs}) compares this class's simple name
  * against {@code LoadError::java_exception()}.
  */
-public class FormulaInfoParseException extends RuntimeException {
+public class FormulaInfoParseException extends IllegalArgumentException {
 
   private static final long serialVersionUID = 1L;
 

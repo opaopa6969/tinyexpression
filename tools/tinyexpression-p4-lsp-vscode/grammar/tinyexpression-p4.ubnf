@@ -1,35 +1,44 @@
 grammar TinyExpressionP4 {
 
-  @package: org.unlaxer.tinyexpression.generated.p4
-  @whitespace: javaStyle
-  @memoSafeToken: NUMBER
-  @memoSafeToken: IDENTIFIER
-  @memoSafeToken: STRING
-  @memoSafeToken: CODE_START
-  @memoSafeToken: CODE_END
-  @memoSafeToken: EOF
+  @import layout from 'pkg:std/layout'
 
-  token NUMBER     = org.unlaxer.parser.elementary.NumberParser
-  token IDENTIFIER = org.unlaxer.parser.clang.IdentifierParser
-  token STRING     = org.unlaxer.tinyexpression.parser.StringLiteralParser
-  token CODE_START = org.unlaxer.tinyexpression.parser.javalang.CodeStartParser
-  token CODE_BODY  = UNTIL('```')
-  token CODE_END   = org.unlaxer.tinyexpression.parser.javalang.CodeEndParser
-  token EOF        = org.unlaxer.parser.elementary.EndOfSourceParser
+  @import numbers from 'lexical/numbers.ubnf'
+  @import names from 'lexical/identifiers.ubnf'
+  @import strings from 'lexical/strings.ubnf'
+  @import fences from 'lexical/fences.ubnf'
+
+  // Lexical modules are the source of truth; no host Parser implementation mapping.
+  @ubnf: v2
+  @feature: declarativeTokensV1
+  @package: org.unlaxer.tinyexpression.generated.p4
+  @whitespace: layout.SPACES_AND_COMMENTS
+  // Preserve P4's existing literal matching while enabling declarative token syntax.
+  @literalBoundary: none
+
+  token NUMBER ::= numbers.NUMBER;
+  token IDENTIFIER ::= names.IDENTIFIER;
+  token STRING ::= strings.STRING;
+  token CODE_START ::= fences.CODE_START;
+  token CODE_BODY ::= fences.CODE_BODY;
+  token CODE_END ::= fences.CODE_END;
+  token LONG_CODE_BLOCK ::= fences.LONG_CODE_BLOCK;
+  token EOF ::= EOF;
 
   @root
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   @scopeTree(mode=lexical)
-  @mapping(FormulaExpr, params=[imports, declarations, expression, methods])
-  Formula ::= { CodeBlock } { ImportDeclaration @imports } { VariableDeclaration @declarations }
+  @mapping(FormulaExpr, params=[imports, declarations, expression, methods, codeBlocks])
+  Formula ::= { CodeBlock @codeBlocks } { ImportDeclaration @imports } { VariableDeclaration @declarations }
     { Annotation } Expression @expression { MethodDeclaration @methods } EOF ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
   // Syntax: ```scheme:JavaClassName\n...\n```
   // Example: ```java:sample.v1.CheckAlphabets\npublic class ...\n```
 
-  @mapping(CodeBlockExpr)
-  CodeBlock ::= CODE_START CODE_BODY CODE_END ;
+  // Capture the complete fenced source: text normalization cannot strip whitespace or
+  // quotes inside the body. CodeBlock metadata is derived from this retained text.
+  @mapping(CodeBlockExpr, params=[source])
+  CodeBlock ::= ( LONG_CODE_BLOCK | CODE_START CODE_BODY CODE_END ) @source ;
 
   // ── Import declaration ─────────────────────────────────────────────────────
   // Syntax: import fully.qualified.ClassName [#methodName] as alias;
@@ -37,7 +46,7 @@ grammar TinyExpressionP4 {
   //   import sample.v1.CheckAlphabets#check as checkAlphabets;  (with method)
   //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   @mapping(ImportDeclarationExpr, params=[className, method, alias])
   ImportDeclaration ::= 'import' ClassName @className [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
@@ -46,7 +55,7 @@ grammar TinyExpressionP4 {
 
   // ── Variable declarations ──────────────────────────────────────────────────
 
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   VariableDeclaration ::=
       NumberVariableDeclaration
     | StringVariableDeclaration

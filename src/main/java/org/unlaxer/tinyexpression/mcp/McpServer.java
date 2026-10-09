@@ -51,7 +51,23 @@ public class McpServer {
         this.server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
         this.server.createContext("/mcp", new McpHandler());
         this.server.createContext("/healthz", new HealthHandler());
-        this.server.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        this.server.setExecutor(requestExecutor());
+    }
+
+    /**
+     * One virtual thread per request on Java 21+ (unchanged), a cached platform thread pool on
+     * Java 17, where virtual threads do not exist (tinyExpression-jdk17, #220). Looked up
+     * reflectively so the same source compiles with release 17.
+     */
+    static java.util.concurrent.ExecutorService requestExecutor() {
+        try {
+            return (java.util.concurrent.ExecutorService)
+                Executors.class.getMethod("newVirtualThreadPerTaskExecutor").invoke(null);
+        } catch (NoSuchMethodException e) {
+            return Executors.newCachedThreadPool();
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException("cannot create the request executor", e);
+        }
     }
 
     public void start() { server.start(); }

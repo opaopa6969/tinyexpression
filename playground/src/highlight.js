@@ -35,6 +35,28 @@ export function highlight(view, ranges, { scroll = true } = {}) {
   decorations.sort((a, b) => a.from - b.from || a.to - b.to);
   const effects = [setMarks.of(Decoration.set(decorations, true))];
   const focus = ranges.find((r) => r.kind !== 'error') ?? ranges[0];
-  if (scroll && focus) effects.push(EditorView.scrollIntoView(Math.min(focus.from, length), { y: 'nearest' }));
   view.dispatch({ effects });
+  // Not EditorView.scrollIntoView: that also scrolls the page to the editor, so every trace step
+  // made the page jump. Only the editor's own scroller moves.
+  if (scroll && focus) {
+    const pos = Math.min(focus.from, length);
+    view.requestMeasure({
+      read: () => view.coordsAtPos(pos),
+      write: (rect) => scrollWithin(view.scrollDOM, rect),
+    });
+  }
+}
+
+/**
+ * Scrolls `container` alone (never the page or other ancestors) so that `rect`, in client
+ * coordinates, is inside it — the nearest edge, like `block: 'nearest'`.
+ */
+export function scrollWithin(container, rect, { horizontal = true, margin = 4 } = {}) {
+  if (!container || !rect) return;
+  const box = container.getBoundingClientRect();
+  if (rect.top < box.top + margin) container.scrollTop -= box.top + margin - rect.top;
+  else if (rect.bottom > box.bottom - margin) container.scrollTop += rect.bottom - (box.bottom - margin);
+  if (!horizontal) return;
+  if (rect.left < box.left + margin) container.scrollLeft -= box.left + margin - rect.left;
+  else if (rect.right > box.right - margin) container.scrollLeft += rect.right - (box.right - margin);
 }
