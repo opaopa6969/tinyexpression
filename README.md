@@ -329,7 +329,7 @@ VS Code 拡張 [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode
 - 宣言・import・method・`.tecatalog` を使う補完とホバー
 - DAP デバッグ（6 バックエンドのパリティ比較）
 
-既存の **Java** LSP consumer へ埋め込み Java 診断を接続する [opt-in 設定と検証範囲](tools/tinyexpression-p4-lsp-vscode/EMBEDDED-LANGUAGES.md) も提供します。現行 Tiny grammar への接続と、固定版の Java / Rust 共通 bridge fixture は別の検証対象です。Rust Tiny LSP consumer の対応を示すものではありません。
+既存の **Java** LSP consumer へ埋め込み Java 診断・EOF 補完を接続する [opt-in 設定と検証範囲](tools/tinyexpression-p4-lsp-vscode/EMBEDDED-LANGUAGES.md) も提供します。現行 Tiny grammar への接続と、固定版の Java / Rust 共通 bridge fixture は別の検証対象です。Rust Tiny LSP consumer の対応を示すものではありません。
 
 DAP 0.2.33 は生成AST上の停止・ブレークポイント・実ランタイム評価に加え、
 人向けの期待値付き構文診断と、LLM/editor向けの構造化診断dataに対応します。

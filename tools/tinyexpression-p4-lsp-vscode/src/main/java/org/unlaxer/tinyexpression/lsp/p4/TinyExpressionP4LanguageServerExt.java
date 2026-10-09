@@ -1648,6 +1648,21 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
     public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(
         CompletionParams params) {
 
+      synchronized (server) {
+        String queryUri = params.getTextDocument().getUri();
+        var queryState = server.extDocuments.get(queryUri);
+        if (server.embeddedDiagnostics != null && queryState != null) {
+          try {
+            var embedded = server.embeddedDiagnostics.complete(queryUri,
+                server.embeddedVersions.getOrDefault(queryUri, 0), queryState.fullContent(), params.getPosition());
+            if (embedded.isPresent()) return CompletableFuture.completedFuture(Either.forLeft(embedded.get()));
+          } catch (RuntimeException failure) {
+            if (server.extClient != null) server.extClient.logMessage(new org.eclipse.lsp4j.MessageParams(org.eclipse.lsp4j.MessageType.Warning,
+                "Embedded completion unavailable: " + failure.getMessage()));
+            return CompletableFuture.completedFuture(Either.forLeft(List.of()));
+          }
+        }
+      }
       List<CompletionItem> items = new ArrayList<>();
       String uri = params.getTextDocument().getUri();
       ExtDocumentState state = server.extDocuments.get(uri);

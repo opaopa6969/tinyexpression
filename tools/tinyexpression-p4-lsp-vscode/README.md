@@ -19,7 +19,7 @@ for TinyExpression formulas using the P4 grammar (UBNF-generated, type-safe).
   - `_tinyP4AstNodePath` — breadth-first path through the AST
   - `parity.*` — 6-backend evaluation comparison (JAVA_CODE / AST_EVALUATOR / DSL_JAVA_CODE / P4_AST / P4_DSL)
 
-Opt-in embedded Java diagnostics in the existing **Java** LSP consumer are described in [EMBEDDED-LANGUAGES.md](EMBEDDED-LANGUAGES.md). That document distinguishes the current Tiny grammar adaptation from the fixed-revision Java/Rust bridge fixtures; it does not claim a Rust Tiny LSP consumer.
+Opt-in embedded Java diagnostics and EOF completion in the existing **Java** LSP consumer are described in [EMBEDDED-LANGUAGES.md](EMBEDDED-LANGUAGES.md). That document distinguishes the current Tiny grammar adaptation from the fixed-revision Java/Rust bridge fixtures; it does not claim a Rust Tiny LSP consumer.
 
 ## Requirements
 

@@ -299,7 +299,7 @@ Full specification: [docs/language-guide.md](docs/language-guide.md)
 
 ## LSP / DAP
 
-The existing **Java** LSP consumer offers [opt-in embedded Java diagnostics](tools/tinyexpression-p4-lsp-vscode/EMBEDDED-LANGUAGES.md). Its current Tiny grammar adaptation and the fixed-revision Java/Rust bridge fixtures have separate validation scopes; they do not establish a Rust Tiny LSP consumer.
+The existing **Java** LSP consumer offers [opt-in embedded Java diagnostics and EOF completion](tools/tinyexpression-p4-lsp-vscode/EMBEDDED-LANGUAGES.md). Its current Tiny grammar adaptation and the fixed-revision Java/Rust bridge fixtures have separate validation scopes; they do not establish a Rust Tiny LSP consumer.
 
 The [tinyexpression-p4-lsp-vscode](tools/tinyexpression-p4-lsp-vscode/README.md) VS Code extension provides:
 
