@@ -48,7 +48,7 @@ sha() { sha256sum "$1" | cut -d' ' -f1; }
 
 # Include imported modules, not only the entry grammar, in the reproducibility pin.
 grammar_manifest() {
-  (cd "$repo" && find "$(dirname "$grammar_rel")" -type f -name '*.ubnf' | LC_ALL=C sort |
+  (cd "$repo" && { find "$(dirname "$grammar_rel")" -type f \( -name '*.ubnf' -o -name '*.json' \); echo scripts/prepare-ubnfc-layout.py; } | LC_ALL=C sort |
     while IFS= read -r f; do echo "$(sha "$f") $f"; done)
 }
 
@@ -64,6 +64,10 @@ pinned_commit=$(pin_value ubnfc_commit)
 fail=0
 offline_check() {
   local expected actual
+  local layout_check
+  layout_check=$(mktemp -d)
+  python3 "$repo/scripts/prepare-ubnfc-layout.py" "$repo/$grammar_rel" "$layout_check/$grammar_rel" >/dev/null
+  rm -rf "$layout_check"
   expected=$(pin_value grammar_sha256)
   actual=$(sha "$repo/$grammar_rel")
   if [[ "$expected" != "$actual" ]]; then
@@ -111,8 +115,10 @@ regenerate() {
   echo "building ubnfc Java backend at $rev ..."
   # shellcheck disable=SC2086
   mvn -q ${MVN_FLAGS:-} -f "$scratch/ubnfc/ubnfc-java/pom.xml" -Dmaven.test.skip=true package
-  # Run from the repo root so the IR records the grammar by its repo-relative path.
-  (cd "$repo" && "$scratch/ubnfc/target/release/ubnfc" ir --grammar "$grammar_rel" \
+  # Use the verified compatibility grammar, retaining its repo-relative path.
+  python3 "$repo/scripts/prepare-ubnfc-layout.py" "$repo/$grammar_rel" "$scratch/compat/$grammar_rel" >/dev/null
+  touch "$scratch/compat/.git" # logical source root only; no Git commands use this marker
+  (cd "$scratch/compat" && "$scratch/ubnfc/target/release/ubnfc" ir --grammar "$grammar_rel" \
       --extern-first-chars "$scratch/ubnfc/$first_chars" --out "$scratch/out/grammar.ir.json" \
       2> "$scratch/front-warnings.txt")
   java -cp "$scratch/ubnfc/ubnfc-java/target/ubnfc-java-0.1.0-SNAPSHOT.jar" org.unlaxer.ubnfc.java.Main \

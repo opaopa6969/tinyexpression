@@ -132,12 +132,14 @@ jobs:
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/ubnfc-parser.XXXXXX")
           echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
-      # Declarative lexical modules require the pinned 3.2.0-SNAPSHOT generator;
+      # Declarative lexical modules require the pinned 3.3.0-SNAPSHOT generator;
       # published 3.1.1 cannot read this grammar. Build into the job-local repository.
       - name: Install unlaxer from source if it is not on Maven Central yet
         run: bash scripts/ci/install-unlaxer-if-unpublished.sh
       # Grammar sha256 + every vendored file against UBNFC_PIN. ubnfc is private, so the full
       # grammar -> IR -> Java regeneration runs where it is readable (UBNFC_DIR); see the script.
+      - name: Verify strict layout compatibility adapter
+        run: python3 scripts/test_ubnfc_layout.py
       - name: Verify vendored ubnfc parser against its pin
         run: bash scripts/regenerate-ubnfc-parser.sh --check
       - name: Verify the generated AST converter
@@ -172,6 +174,9 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+      - name: Set up Rust 1.85 for the shared source fixtures
+        if: matrix.generator == 'source'
+        run: bash tinyexpression/.github/scripts/setup-rust.sh 1.85.0
       - name: Create an empty Maven repository on the assigned runner
         run: |
           task_maven_repo=$(mktemp -d "$RUNNER_TEMP/mapper-compatibility.XXXXXX")
@@ -181,7 +186,7 @@ jobs:
         with:
           repository: opaopa6969/unlaxer-parser
           # Declarative lexical modules under a distinct development artifact version.
-          ref: f825740396a6181654191de5ba040e1f83533526
+          ref: fc75fe1e25e538d47908f05ea2039f585aef696e
           path: unlaxer-parser
       - name: Install pinned development generator into its isolated repository
         if: matrix.generator == 'source'
@@ -215,19 +220,26 @@ jobs:
           -Dtinyexpression.expected.mapper.snapshot=true
           -Dtinyexpression.expected.mapper.nodeAlias=true
           -Dtinyexpression.expected.mapper.optionalQualifier=true
-          -Dtest=P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
+          -Dtest=P4LayoutMigrationTest,P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
         working-directory: tinyexpression
         run: >-
           mvn -B test -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$UNLAXER_VERSION"
           -Dtinyexpression.skipRailroad=true -Dtinyexpression.rust.shared=true
-          -Dtest=P4RustSharedFixtureAcceptanceTest
+          -Dtinyexpression.layout.conformance=true -Dtinyexpression.unlaxer.source=../unlaxer-parser
+          -Dtest=P4RustSharedFixtureAcceptanceTest,P4LayoutGeneratedConformanceTest
+      - name: Require the shared layout comparison evidence
+        if: matrix.generator == 'source'
+        working-directory: tinyexpression
+        run: test -s target/p4-layout-generated.tsv
       - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: mapper-compatibility-${{ matrix.generator }}
-          path: tinyexpression/target/surefire-reports/
+          path: |
+            tinyexpression/target/surefire-reports/
+            tinyexpression/target/p4-layout-generated.tsv
           if-no-files-found: warn
 
   # issue #173: the Java CI above resolves org.unlaxer:unlaxer-* from Maven Central, so a

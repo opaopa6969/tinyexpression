@@ -56,7 +56,7 @@
 		     installed into a job-local, isolated Maven repo (issue #173: unlaxer-parser master,
 		     non-blocking) so the GAV actually resolves from that isolated repo instead of
 		     silently falling back to the published artifact. -->
-		<unlaxer.version>3.2.0-SNAPSHOT</unlaxer.version>
+		<unlaxer.version>3.3.0-SNAPSHOT</unlaxer.version>
 	</properties>
 
 	<dependencies>

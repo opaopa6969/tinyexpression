@@ -1,5 +1,7 @@
 grammar TinyExpressionP4 {
 
+  @import layout from 'pkg:std/layout'
+
   @import numbers from 'lexical/numbers.ubnf'
   @import names from 'lexical/identifiers.ubnf'
   @import strings from 'lexical/strings.ubnf'
@@ -9,7 +11,7 @@ grammar TinyExpressionP4 {
   @ubnf: v2
   @feature: declarativeTokensV1
   @package: org.unlaxer.tinyexpression.generated.p4
-  @whitespace: javaStyle
+  @whitespace: layout.SPACES_AND_COMMENTS
   // Preserve P4's existing literal matching while enabling declarative token syntax.
   @literalBoundary: none
 
@@ -23,7 +25,7 @@ grammar TinyExpressionP4 {
   token EOF ::= EOF;
 
   @root
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   @scopeTree(mode=lexical)
   @mapping(FormulaExpr, params=[imports, declarations, expression, methods, codeBlocks])
   Formula ::= { CodeBlock @codeBlocks } { ImportDeclaration @imports } { VariableDeclaration @declarations }
@@ -44,7 +46,7 @@ grammar TinyExpressionP4 {
   //   import sample.v1.CheckAlphabets#check as checkAlphabets;  (with method)
   //   import sample.v1.CheckAlphabets as checkAlphabets;        (bare)
 
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   @mapping(ImportDeclarationExpr, params=[className, method, alias])
   ImportDeclaration ::= 'import' ClassName @className [ '#' IDENTIFIER @method ] 'as' IDENTIFIER @alias ';' ;
 
@@ -53,7 +55,7 @@ grammar TinyExpressionP4 {
 
   // ── Variable declarations ──────────────────────────────────────────────────
 
-  @interleave(profile=javaStyle)
+  @whitespace(layout.SPACES_AND_COMMENTS)
   VariableDeclaration ::=
       NumberVariableDeclaration
     | StringVariableDeclaration

@@ -15,7 +15,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <lsp4j.version>0.23.1</lsp4j.version>
         <!-- Keep aligned with the root POM: this standalone module generates the same UBNF. -->
-        <unlaxer.version>3.2.0-SNAPSHOT</unlaxer.version>
+        <unlaxer.version>3.3.0-SNAPSHOT</unlaxer.version>
         <generated.sources.dir>${project.build.directory}/generated-sources/tinyexpression-p4</generated.sources.dir>
         <server.dist.dir>${project.basedir}/server-dist</server.dist.dir>
         <vsix.output>${project.build.directory}/tinyexpression-p4-lsp-${project.version}.vsix</vsix.output>
