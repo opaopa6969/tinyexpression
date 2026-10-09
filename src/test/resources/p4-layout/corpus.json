@@ -1,0 +1,615 @@
+[
+  {
+    "name": "p4-standard-layout",
+    "grammar": "grammar LayoutProbe { @import layout from 'pkg:std/layout' @import strings from 'strings.ubnf' @import fences from 'fences.ubnf' @ubnf: v2 @package: org.example.ruletrivia @whitespace: layout.SPACES_AND_COMMENTS token VALUE ::= '1' | strings.STRING | fences.LONG_CODE_BLOCK; @root @mapping(Root,params=[value]) @whitespace(layout.SPACES_AND_COMMENTS) Root ::= VALUE @value; }",
+    "modules": {
+      "identifiers.ubnf": "grammar Identifiers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  token IDENTIFIER ::= chars.LETTER (chars.LETTER | chars.DIGIT)*;\n  token CLASS_NAME ::= IDENTIFIER ('.' IDENTIFIER)*;\n}\n",
+      "numbers.ubnf": "grammar Numbers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  // Optional sign, integer/fraction, optional complete exponent. No implicit trivia.\n  token NUMBER ::= ['+' | '-']\n    (chars.DIGIT+ '.' chars.DIGIT* | '.' chars.DIGIT+ | chars.DIGIT+)\n    [('e' | 'E') ['+' | '-'] chars.DIGIT+];\n}\n",
+      "fences.ubnf": "grammar Fences {\n  @import chars from 'characters.ubnf'\n  @import names from 'identifiers.ubnf'\n  @ubnf: v2\n  // The legacy three-backtick form ends at its first triple-backtick sequence.\n  token CODE_START ::= BOL '```' names.IDENTIFIER ':' names.CLASS_NAME (chars.NEWLINE | EOF);\n  token CODE_BODY ::= { NEGATIVE_LOOKAHEAD('```') ANY } LOOKAHEAD('```');\n  token CODE_END ::= BOL '```' (chars.NEWLINE | EOF);\n  // Four or more backticks: closing width must equal the captured opening width.\n  // A shorter/longer fence or a non-standalone line remains opaque body text.\n  token LONG_CODE_BLOCK ::= BOL CAPTURE(fence, '`'{4,}) names.IDENTIFIER ':' names.CLASS_NAME chars.NEWLINE\n    { NEGATIVE_LOOKAHEAD(BOL SAME_AS(fence) EOL) ANY }\n    BOL SAME_AS(fence) (chars.NEWLINE | EOF);\n}\n",
+      "strings.ubnf": "grammar Strings {\n  @ubnf: v2\n  // Quotes and escape pairs are raw source, including newlines and non-BMP scalars.\n  // AST normalization belongs to the consumer, not this recognizer.\n  token STRING ::= '\"' { '\\\\' ANY | NEGATION('\"\\\\') } '\"'\n                 | '\\'' { '\\\\' ANY | NEGATION('\\'\\\\') } '\\'';\n}\n",
+      "characters.ubnf": "grammar Characters {\n  @ubnf: v2\n  token DIGIT ::= CHAR_RANGE('0', '9');\n  token LETTER ::= CHAR_RANGE('a', 'z') | CHAR_RANGE('A', 'Z') | '_';\n  token NEWLINE ::= '\\r\\n' | '\\r' | '\\n';\n}\n"
+    },
+    "manifest": {
+      "schemaVersion": 1,
+      "dependencies": {
+        "std/layout": {
+          "version": "1.0.0",
+          "source": "builtin:std/layout@1.0.0"
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "plain",
+        "input": "1",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            1
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "spaces",
+        "input": " 1 ",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "tab",
+        "input": "\t1\t",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "lf",
+        "input": "\n1\n",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "crlf",
+        "input": "\r\n1\r\n",
+        "prefix": [
+          true,
+          5,
+          5
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            5
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "line-lf",
+        "input": "//😀\n1",
+        "prefix": [
+          true,
+          5,
+          5
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            5
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "line-crlf",
+        "input": "//😀\r\n1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "block",
+        "input": "/*😀*/1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "first-block-end",
+        "input": "/*x*/1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "string",
+        "input": "' /* // 😀 */ '",
+        "prefix": [
+          true,
+          14,
+          14
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            14
+          ],
+          "fields": {
+            "value": " /* // 😀 */ "
+          }
+        }
+      },
+      {
+        "id": "long-code",
+        "input": "````java:X\n//😀\n/*x*/\n````",
+        "prefix": [
+          true,
+          25,
+          25
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            25
+          ],
+          "fields": {
+            "value": "````java:X\n//😀\n/*x*/\n````"
+          }
+        }
+      },
+      {
+        "id": "unclosed-block",
+        "input": "1/*x",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": false,
+        "diagnostic": [
+          "trailing_input",
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "p4-java-style-baseline",
+    "grammar": "grammar LayoutProbe { @import strings from 'strings.ubnf' @import fences from 'fences.ubnf' @ubnf: v2 @package: org.example.ruletrivia @whitespace: javaStyle token VALUE ::= '1' | strings.STRING | fences.LONG_CODE_BLOCK; @root @mapping(Root,params=[value]) @whitespace(javaStyle) Root ::= VALUE @value; }",
+    "modules": {
+      "identifiers.ubnf": "grammar Identifiers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  token IDENTIFIER ::= chars.LETTER (chars.LETTER | chars.DIGIT)*;\n  token CLASS_NAME ::= IDENTIFIER ('.' IDENTIFIER)*;\n}\n",
+      "numbers.ubnf": "grammar Numbers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  // Optional sign, integer/fraction, optional complete exponent. No implicit trivia.\n  token NUMBER ::= ['+' | '-']\n    (chars.DIGIT+ '.' chars.DIGIT* | '.' chars.DIGIT+ | chars.DIGIT+)\n    [('e' | 'E') ['+' | '-'] chars.DIGIT+];\n}\n",
+      "fences.ubnf": "grammar Fences {\n  @import chars from 'characters.ubnf'\n  @import names from 'identifiers.ubnf'\n  @ubnf: v2\n  // The legacy three-backtick form ends at its first triple-backtick sequence.\n  token CODE_START ::= BOL '```' names.IDENTIFIER ':' names.CLASS_NAME (chars.NEWLINE | EOF);\n  token CODE_BODY ::= { NEGATIVE_LOOKAHEAD('```') ANY } LOOKAHEAD('```');\n  token CODE_END ::= BOL '```' (chars.NEWLINE | EOF);\n  // Four or more backticks: closing width must equal the captured opening width.\n  // A shorter/longer fence or a non-standalone line remains opaque body text.\n  token LONG_CODE_BLOCK ::= BOL CAPTURE(fence, '`'{4,}) names.IDENTIFIER ':' names.CLASS_NAME chars.NEWLINE\n    { NEGATIVE_LOOKAHEAD(BOL SAME_AS(fence) EOL) ANY }\n    BOL SAME_AS(fence) (chars.NEWLINE | EOF);\n}\n",
+      "strings.ubnf": "grammar Strings {\n  @ubnf: v2\n  // Quotes and escape pairs are raw source, including newlines and non-BMP scalars.\n  // AST normalization belongs to the consumer, not this recognizer.\n  token STRING ::= '\"' { '\\\\' ANY | NEGATION('\"\\\\') } '\"'\n                 | '\\'' { '\\\\' ANY | NEGATION('\\'\\\\') } '\\'';\n}\n",
+      "characters.ubnf": "grammar Characters {\n  @ubnf: v2\n  token DIGIT ::= CHAR_RANGE('0', '9');\n  token LETTER ::= CHAR_RANGE('a', 'z') | CHAR_RANGE('A', 'Z') | '_';\n  token NEWLINE ::= '\\r\\n' | '\\r' | '\\n';\n}\n"
+    },
+    "cases": [
+      {
+        "id": "plain",
+        "input": "1",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            1
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "spaces",
+        "input": " 1 ",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "tab",
+        "input": "\t1\t",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "lf",
+        "input": "\n1\n",
+        "prefix": [
+          true,
+          3,
+          3
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            3
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "crlf",
+        "input": "\r\n1\r\n",
+        "prefix": [
+          true,
+          5,
+          5
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            5
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "line-lf",
+        "input": "//😀\n1",
+        "prefix": [
+          true,
+          5,
+          5
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            5
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "line-crlf",
+        "input": "//😀\r\n1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "block",
+        "input": "/*😀*/1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "first-block-end",
+        "input": "/*x*/1",
+        "prefix": [
+          true,
+          6,
+          6
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            6
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "string",
+        "input": "' /* // 😀 */ '",
+        "prefix": [
+          true,
+          14,
+          14
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            14
+          ],
+          "fields": {
+            "value": " /* // 😀 */ "
+          }
+        }
+      },
+      {
+        "id": "long-code",
+        "input": "````java:X\n//😀\n/*x*/\n````",
+        "prefix": [
+          true,
+          25,
+          25
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            25
+          ],
+          "fields": {
+            "value": "````java:X\n//😀\n/*x*/\n````"
+          }
+        }
+      },
+      {
+        "id": "unclosed-block",
+        "input": "1/*x",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": false,
+        "diagnostic": [
+          "trailing_input",
+          1
+        ]
+      }
+    ]
+  },
+  {
+    "name": "p4-explicit-none",
+    "grammar": "grammar LayoutProbe { @import layout from 'pkg:std/layout' @import strings from 'strings.ubnf' @import fences from 'fences.ubnf' @ubnf: v2 @package: org.example.ruletrivia @whitespace: layout.SPACES_AND_COMMENTS token VALUE ::= '1' | strings.STRING | fences.LONG_CODE_BLOCK; @root @mapping(Root,params=[value]) @whitespace(none) Root ::= VALUE @value; }",
+    "modules": {
+      "identifiers.ubnf": "grammar Identifiers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  token IDENTIFIER ::= chars.LETTER (chars.LETTER | chars.DIGIT)*;\n  token CLASS_NAME ::= IDENTIFIER ('.' IDENTIFIER)*;\n}\n",
+      "numbers.ubnf": "grammar Numbers {\n  @import chars from 'characters.ubnf'\n  @ubnf: v2\n  // Optional sign, integer/fraction, optional complete exponent. No implicit trivia.\n  token NUMBER ::= ['+' | '-']\n    (chars.DIGIT+ '.' chars.DIGIT* | '.' chars.DIGIT+ | chars.DIGIT+)\n    [('e' | 'E') ['+' | '-'] chars.DIGIT+];\n}\n",
+      "fences.ubnf": "grammar Fences {\n  @import chars from 'characters.ubnf'\n  @import names from 'identifiers.ubnf'\n  @ubnf: v2\n  // The legacy three-backtick form ends at its first triple-backtick sequence.\n  token CODE_START ::= BOL '```' names.IDENTIFIER ':' names.CLASS_NAME (chars.NEWLINE | EOF);\n  token CODE_BODY ::= { NEGATIVE_LOOKAHEAD('```') ANY } LOOKAHEAD('```');\n  token CODE_END ::= BOL '```' (chars.NEWLINE | EOF);\n  // Four or more backticks: closing width must equal the captured opening width.\n  // A shorter/longer fence or a non-standalone line remains opaque body text.\n  token LONG_CODE_BLOCK ::= BOL CAPTURE(fence, '`'{4,}) names.IDENTIFIER ':' names.CLASS_NAME chars.NEWLINE\n    { NEGATIVE_LOOKAHEAD(BOL SAME_AS(fence) EOL) ANY }\n    BOL SAME_AS(fence) (chars.NEWLINE | EOF);\n}\n",
+      "strings.ubnf": "grammar Strings {\n  @ubnf: v2\n  // Quotes and escape pairs are raw source, including newlines and non-BMP scalars.\n  // AST normalization belongs to the consumer, not this recognizer.\n  token STRING ::= '\"' { '\\\\' ANY | NEGATION('\"\\\\') } '\"'\n                 | '\\'' { '\\\\' ANY | NEGATION('\\'\\\\') } '\\'';\n}\n",
+      "characters.ubnf": "grammar Characters {\n  @ubnf: v2\n  token DIGIT ::= CHAR_RANGE('0', '9');\n  token LETTER ::= CHAR_RANGE('a', 'z') | CHAR_RANGE('A', 'Z') | '_';\n  token NEWLINE ::= '\\r\\n' | '\\r' | '\\n';\n}\n"
+    },
+    "manifest": {
+      "schemaVersion": 1,
+      "dependencies": {
+        "std/layout": {
+          "version": "1.0.0",
+          "source": "builtin:std/layout@1.0.0"
+        }
+      }
+    },
+    "cases": [
+      {
+        "id": "plain",
+        "input": "1",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            1
+          ],
+          "fields": {
+            "value": "1"
+          }
+        }
+      },
+      {
+        "id": "string",
+        "input": "' /* // 😀 */ '",
+        "prefix": [
+          true,
+          14,
+          14
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            14
+          ],
+          "fields": {
+            "value": " /* // 😀 */ "
+          }
+        }
+      },
+      {
+        "id": "long-code",
+        "input": "````java:X\n//😀\n/*x*/\n````",
+        "prefix": [
+          true,
+          25,
+          25
+        ],
+        "accepted": true,
+        "ast": {
+          "type": "Root",
+          "span": [
+            0,
+            25
+          ],
+          "fields": {
+            "value": "````java:X\n//😀\n/*x*/\n````"
+          }
+        }
+      },
+      {
+        "id": "none-does-not-consume-space",
+        "input": "1  ",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": false,
+        "diagnostic": [
+          "trailing_input",
+          1
+        ]
+      },
+      {
+        "id": "none-does-not-consume-comment",
+        "input": "1/*x*/",
+        "prefix": [
+          true,
+          1,
+          1
+        ],
+        "accepted": false,
+        "diagnostic": [
+          "trailing_input",
+          1
+        ]
+      }
+    ]
+  }
+]

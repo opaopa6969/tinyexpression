@@ -7,8 +7,8 @@ use crate::Span;
 #[allow(non_snake_case)]
 pub trait Semantics {
     type Output;
-    fn eval_formula_expr(&mut self, r#imports: &[Ast], r#declarations: &[Ast], r#expression: &Ast, r#methods: &[Ast], span: Span) -> Self::Output;
-    fn eval_code_block_expr(&mut self, span: Span) -> Self::Output;
+    fn eval_formula_expr(&mut self, r#imports: &[Ast], r#declarations: &[Ast], r#expression: &Ast, r#methods: &[Ast], r#codeBlocks: &[Ast], span: Span) -> Self::Output;
+    fn eval_code_block_expr(&mut self, r#source: &str, span: Span) -> Self::Output;
     fn eval_import_declaration_expr(&mut self, r#className: &Ast, r#method: Option<&str>, r#alias: &str, span: Span) -> Self::Output;
     fn eval_qualified_name_expr(&mut self, r#head: &str, r#tail: &[String], span: Span) -> Self::Output;
     fn eval_number_variable_declaration_expr(&mut self, r#varName: &str, r#onlyIfAbsent: Option<&Ast>, r#value: Option<&Ast>, r#desc: Option<&str>, span: Span) -> Self::Output;
@@ -98,8 +98,8 @@ pub trait Semantics {
 #[allow(non_snake_case)]
 pub fn evaluate<S: Semantics>(node: &Ast, semantics: &mut S) -> S::Output {
     match node {
-        Ast::r#FormulaExpr { span, r#imports, r#declarations, r#expression, r#methods } => semantics.eval_formula_expr(r#imports, r#declarations, r#expression, r#methods, *span),
-        Ast::r#CodeBlockExpr { span } => semantics.eval_code_block_expr(*span),
+        Ast::r#FormulaExpr { span, r#imports, r#declarations, r#expression, r#methods, r#codeBlocks } => semantics.eval_formula_expr(r#imports, r#declarations, r#expression, r#methods, r#codeBlocks, *span),
+        Ast::r#CodeBlockExpr { span, r#source } => semantics.eval_code_block_expr(r#source, *span),
         Ast::r#ImportDeclarationExpr { span, r#className, r#method, r#alias } => semantics.eval_import_declaration_expr(r#className, r#method.as_deref(), r#alias, *span),
         Ast::r#QualifiedNameExpr { span, r#head, r#tail } => semantics.eval_qualified_name_expr(r#head, r#tail, *span),
         Ast::r#NumberVariableDeclarationExpr { span, r#varName, r#onlyIfAbsent, r#value, r#desc } => semantics.eval_number_variable_declaration_expr(r#varName, r#onlyIfAbsent.as_deref(), r#value.as_deref(), r#desc.as_deref(), *span),

@@ -17,6 +17,14 @@ set -euo pipefail
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 repo_dir=$(cd -- "$script_dir/.." && pwd)
+# The offline check validates the restricted layout bridge even without ubnfc.
+layout_check=$(mktemp -d)
+trap 'rm -rf "$layout_check"' EXIT
+python3 "$repo_dir/scripts/prepare-ubnfc-layout.py" \
+  "$repo_dir/tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf" \
+  "$layout_check/tinyexpression-p4.ubnf" >/dev/null
+# The offline check must notice a changed imported grammar too.
+(cd "$repo_dir" && sed -n 's/^grammar_file //p' rust/ubnfc-pin.txt | sha256sum -c -)
 if [ -d "${UBNFC_DIR:-$repo_dir/../ubnfc}" ]; then
   bash "$script_dir/scripts/regenerate-ubnfc.sh" --check
 else
@@ -38,3 +46,9 @@ grep -q "^pub const UBNFC_COMMIT: &str = \"$pin_commit\";" "$script_dir/tinyexpr
   exit 1
 }
 echo "api.rs UBNFC_COMMIT: matches the pin"
+pin_grammar=$(sed -n 's/^grammar_sha256=//p' "$script_dir/ubnfc-pin.txt")
+grep -q "^pub const GRAMMAR_SHA256: &str = \"$pin_grammar\";" "$script_dir/tinyexpression-rs/src/api.rs" || {
+  echo "tinyexpression-rs/src/api.rs GRAMMAR_SHA256 differs from rust/ubnfc-pin.txt" >&2
+  exit 1
+}
+echo "api.rs GRAMMAR_SHA256: matches the pin"

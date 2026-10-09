@@ -1,0 +1,212 @@
+# CodeBlock のソース保持と AOT 準備契約
+
+tinyexpression #228 / #234。Rust full-spec のうち、信頼された `rustcodeblock` を明示許可して
+ネイティブバイナリに組み込むためのソース保持契約である。**この API 自体は Rust の本文を
+コンパイル・実行しない。** パーサが本文を失わず取り出せることと、許可・対象言語を
+副作用なしで検査できることを Java / Rust の両方で固定する。
+
+> **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when formula authors are fully trusted. Do not expose this capability to untrusted users.
+
+既存 Java 実行の信頼境界は [ADR-003](decisions/ADR-003-java-codeblock-safety.md) のまま。
+Rust ビルド・実行にも同様の信頼が必要であり、AOT 化は sandbox 化ではない。
+実行対応は別 API / CLI の [Rust CodeBlock AOT](rust-codeblock-aot.md) を参照。
+
+## ソースを失わない API
+
+Java は `org.unlaxer.tinyexpression.codeblock.CodeBlockSource`、Rust は
+`tinyexpression_rs::code_blocks` を公開する。どちらも生成 P4 parser の typed AST に保持された
+CodeBlock を使い、文字列やコメントの中にある fence をコードブロックとして拾わない。
+生のソースに正規表現を適用する方式ではない。
+
+~~~text
+```rust:sample.v1.Demo
+pub fn answer() -> f32 { 42.0 }
+```
+1
+~~~
+
+```java
+var blocks = CodeBlockSource.parse(source);
+var diagnostics = CodeBlockSource.preflight(blocks, CodeBlockSource.Target.RUST, false);
+// CB004: 明示許可がない。コンパイラは呼ばれない。
+```
+
+```rust
+let blocks = tinyexpression_rs::code_blocks::parse(source)?;
+let diagnostics = tinyexpression_rs::code_blocks::preflight(
+    &blocks, tinyexpression_rs::code_blocks::Target::Rust, false,
+);
+// 同じ CB004 と name_span。コンパイラは呼ばれない。
+```
+
+既に parse した場合は、同じ AST から metadata を取得できる。再解析も token trace も不要。
+
+```java
+var parsed = P4PreferredAstMapper.parseDetailed(source, null);
+var blocks = CodeBlockSource.fromAst(parsed);
+// または fromAst(parsed.ast(), parsed.sourceText())。classic / ubnfc の両方に対応。
+```
+
+```rust
+let ast = tinyexpression_rs::parse(source)?;
+let blocks = tinyexpression_rs::code_blocks::from_ast(&ast)?;
+// 元の source を破棄しても本文と絶対位置を取り出せる。
+```
+
+UBNF の `FormulaExpr.codeBlocks` は全ブロックを順に保持し、`CodeBlockExpr.source` は
+opening fence から closing fence までの文字列を持つ。mapper による外周の trim はあるが、
+fence に囲まれた **body は空白・引用符・コメント・改行を含めて無加工**である。
+closing fence の直後の改行は node span に含まれる。Java は既存の `P4SourceText` の
+identity-based snapshot、Rust は AST 内の `Span` が絶対位置を保持する。
+Java の snapshot を持たない detached record からは絶対位置を推測せず、metadata API は拒否する。
+ただし detached record 自体にも本文は残るので、下記の評価拒否には snapshot が要らない。
+
+返す順序はソース順。各 block は次を持つ。
+
+| Java / Rust | 内容 |
+|---|---|
+| `scheme` | 元の表記の `java` / `rust` など。未知 scheme も構文としては受理する |
+| `identifier` | 元の binding label。ファイル名でも、生成コードへそのまま挿入してよい識別子でもない |
+| `body` | opening fence の改行の直後から closing fence の直前まで。trim・改行正規化しない |
+| `span` | opening fence の先頭から closing fence とその直後の改行まで |
+| `bodySpan` / `body_span` | `body` の元ソース上の範囲 |
+| `nameSpan` / `name_span` | header の `identifier` 部分の元ソース上の範囲 |
+
+範囲はすべて Unicode code point 単位の半開区間 `[start, end)`。
+Java の UTF-16 offset でも Rust の UTF-8 byte offset でもない。LF / CRLF / CR と
+非 BMP 文字を含め、同じソースから同じ本文・範囲を返す。
+コンパイラ診断を戻す段階では、byte / UTF-16 と code point の変換が別途必要になる。
+
+`parse` は入力全文の構文を検査し、不正なら失敗する。公開 facade と同じ
+Formula → BooleanExpression → StringExpression → ObjectExpression の受理順であり、
+部分的に受理しただけのブロックを返さない。後三者には CodeBlock 規則はないが、
+文字列やコメントに fence を含む裸の比較式などを正しく扱うために必要である。
+
+## 副作用のない preflight
+
+`preflight` は block 列、target、ホストが決めた `allowCode` / `allow_code` だけを受け取る。
+環境変数、ソース内の指定、Java のグローバル実行許可から Rust の許可を推測しない。
+コンパイラ起動、class loading、ファイル作成、依存取得は行わない。
+
+| Code | 条件 | 位置 |
+|---|---|---|
+| `CB001` | `java` / `rust` 以外の scheme | name span |
+| `CB002` | 同一 identifier が先のブロックにある | 後の name span |
+| `CB003` | scheme と build target が異なる | name span |
+| `CB004` | ホストから明示的な許可がない | name span |
+| `CB005` | 未コンパイルの Rust ブロックを通常の evaluator に渡した（AST-only を含む） | 下記参照 |
+
+preflight は `CB001` → `CB002` → `CB003` → `CB004` の優先順位で、各 block 最大一件を
+ソース順に返す。scheme は大小文字を区別せず、identifier は区別する。異なる scheme 間でも
+同名は重複し、未知 scheme の identifier も後続の重複判定に含める。
+空の block 列は target / 許可にかかわらず成功する。
+
+`allow_code = true` で診断が空でも、本文の Rust 構文・型・関数の存在は未検査である。
+Rust として不正な本文もパーサはそのまま保存する。これはビルド済みの証拠でも、通常の
+evaluator へ渡す許可証でもない。
+
+## 通常評価での扱いと互換性
+
+- `parse` は実行しない。コードブロックを持つソースの AST も生成できる。
+- Rust の `Program::new` と source-aware `evaluate` は Rust ブロックを `CB005` で拒否する。
+  CLI / JSON API の通常評価もこの経路を使う。Java ブロックの既存 ExternalHost / stub 契約は
+  変えない。構築できた `Program` からは `code_blocks()` で本文・位置を参照できる。
+- Java の source を受け取る calculator バックエンドも `CB005` で拒否する。
+  AST 系は `UnsupportedOperationException`、JavaCode 系は従来のエラーラップ契約に従い
+  `CompileError` の cause に同例外を持つ。後者は code のみ、前者と Rust は name span を
+  メッセージにも含める。preflight の code / span は両言語で一致する。
+  JavaCode 系でも拒否は `CompileContext` の構築前に行い、`jdk.compiler` のない JVM で
+  `CB005` を返せることを `CodeBlockNoCompilerTest` で検査する。
+- `EvalContextService` は Java 実行が許可されていても、Rust が混在すれば Java ブロックの
+  コンパイル前に拒否する。クラス名でまとめた Map ではなく元ソースを検査するため、同名の
+  Java ブロックで Rust の存在を隠せない。既存の応答 `codeBlocks.executed` / audit のフラグは
+  ポリシーによる実行可否であり、実際のコンパイル・実行の完了証明には使わない。
+- Rust の `evaluate_ast`、Java の `P4TypedAstEvaluator` と typed/default/template code emitter も、
+  AST に残る Rust ブロックを `CB005` で拒否する。Formula の宣言・式の評価より前に検査する。
+  単独の CodeBlock ノードにも同じ拒否を適用する。Java の detached record は絶対位置を
+  持たないため、この経路の例外には binding label を出し、偽の絶対座標は出さない。
+- 既存の Java codeblock の opt-in と Rust の Java stub 挙動は変更しない。未コンパイル Rust を
+  通常評価で黙って無視していた点だけは、明示的な拒否へ変わる。
+
+Rust の `Program` と scalar evaluator は metadata 用の追加 parse を行わず、選択された AST を
+使用する。Java の source-aware calculator は既存の事前チェックも残すが、AST と metadata を
+利用するホストは `fromAst` を使って一回の parse の結果を共有できる。
+
+### AST 利用者の移行
+
+#234 は AST schema の変更であり、古い record constructor / enum variant と binary-compatible
+とは主張しない。parser と mapper と利用側を同じ文法から再生成・再コンパイルすること。
+
+- Java `FormulaExpr` の末尾に `List<CodeBlockExpr> codeBlocks` を追加した。手で構築する場合、
+  元々ブロックがない AST にだけ `List.of()` を渡す。式を組み替える処理は旧ノードの
+  `codeBlocks()` を引き継ぐ。`CodeBlockExpr` には fence を含む source を渡す。
+- Rust `FormulaExpr` に `codeBlocks: Vec<Ast>`、`CodeBlockExpr` に `source: String` を追加した。
+  `Semantics::eval_formula_expr` / `eval_code_block_expr` の引数も対応して増える。
+  実行する evaluator はブロックを意図的に検査し、単に新しい引数を捨ててはいけない。
+- canonical AST JSON に `fields.codeBlocks` と各 block の `fields.source` が追加される。
+- 旧 AST は失われた本文を復元できない。保存済み AST を使う場合は元ソースから再 parse する。
+  古い成果物へ空の list を補うだけで「ブロックがなかった」と断定しない。
+
+## 長い fence による本文内 backtick の保持
+
+従来の三連 fence は変更しない。`CODE_BODY = UNTIL("```")` のため、本文内の三連 backtick
+と衝突する既存の制約もその経路では残る。本文に backtick がある場合は、4 個以上の長い fence を使う。
+
+~~~text
+````rust:Demo
+const TEXT: &str = r#"
+```
+"#;
+````
+1
+~~~
+
+- 開始は行頭の N 個（N >= 4）の backtick と `scheme:qualified.Name`、その直後に改行。
+- 終端は **同じ N 個だけ**が並ぶ行。前後の空白、別の個数、行中の backtick は終端ではない。
+- LF / CRLF / CR を保持し、終端の直後は改行または EOF。開始行・終端行に indentation は付けない。
+- 本文は Java / Rust の lexer で解釈しない。引用符やコメントの中でも、同じ長さの単独行があれば
+  終端になる。本文中のどの backtick 単独行よりも長い N を選べば、有限の本文を無加工で埋め込める。
+- AST の shape は #234 と同じ。`source` は元の fence 幅も保持し、body/name/node の code-point span は
+  元入力を指す。古い三連構文を書き換える必要はない。
+
+UBNF は `LONG_CODE_BLOCK | CODE_START CODE_BODY CODE_END` を選択する。新 token は原子的・input-only で、
+失敗時に consumed / matched cursor を変更しない。Java classic / ubnfc と Rust ubnfc は共通 corpus の
+本文・span・失敗条件を検証する。新 scanner はプロジェクト固有の registry に追加し、pin された
+ubnfc 共通 scanner のファイルは手編集しない。旧 Java evaluator の `CodeParser` / `JavaCode` 抽出と
+service 経路、Rust AOT CLI も同じ長い fence を扱う。
+
+header は既存の英数字・underscore の識別子 / dotted name 規則に従う。
+`../escape` のような label は拒否するが、それを生成先 path の安全性保証の代用にしてはいけない。
+
+## 検証
+
+Java `CodeBlockSourceTest` と Rust `tests/code_blocks_shared.rs` は次の同一 oracle を読む。
+共有 corpus テストはリポジトリ全体を要するため公開 crate からは除外する。
+単独 crate でも動く API / CLI テストは `tests/code_blocks.rs` に分けて残す。
+
+- `src/test/resources/code-block-source.tsv`: 元本文・全 span、LF / CRLF / CR、Unicode、
+  空本文、空白のみの本文、閉じていない host quote/comment、生文字列、qualified name、
+  typed result の再選択、文字列 / コメント内の偽 fence、未閉鎖、不正 label、終端衝突。
+- `src/test/resources/code-block-preflight.tsv`: 許可、target、未知 scheme、重複、複数診断の順序。
+
+加えて Java は全 source calculator バックエンドと `EvalContextService` の混在拒否を検査する。
+Rust は不正な Rust 本文で parse / preflight の成功、通常評価の拒否を検査し、native CLI の
+`parse` / `eval` を空の `PATH` で動かしてコンパイラ探索が不要であることを確認する。
+
+```sh
+./mvnw test -Dtinyexpression.skipRailroad=true \
+  -Dtest=CodeBlockSourceTest,CodeBlockNoCompilerTest,EvalContextServiceTest,JavaCodeBlockPolicyTest
+cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs \
+  --test code_blocks --test code_blocks_shared
+```
+
+## full-spec までの後続
+
+この段階だけで Rust full-spec や rustcodeblock の実行対応を完了扱いにしない。
+後続の受け入れ条件は [tinyexpression #229](https://github.com/opaopa6969/tinyexpression/issues/229) に固定する。
+型付き Rust binding・AOT build・コンパイラ診断の写像・ネイティブ実行は
+[Rust CodeBlock AOT](rust-codeblock-aot.md) とその共通 oracle に進んだ。
+build と execute は別の操作であり、parse / IDE は実行しない。
+AST の本文欠落と AST-only 評価での検査漏れは #234 で解消する。
+長い fence の拡張は [#232](https://github.com/opaopa6969/tinyexpression/issues/232) で追跡する。
+同 issue の完了は、unlaxer の Java / native Rust 生成器の token 対応と検証も含む。

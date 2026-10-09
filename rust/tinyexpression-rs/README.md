@@ -42,10 +42,12 @@ library API は `parse(&str)` に加えて `evaluate(&str) -> Result<Value, Eval
 - `tests/fixtures/numeric-f32.tsv` は独立した期待 f32 bits を保持し、Rust library/CLIとJava `P4TypedAstEvaluator` の `p4-typed` runtimeが共有する。
 - `tests/fixtures/scalar-control.tsv` はboolean/string/比較/制御構文について、値・評価順序・Java/Rust parityを共有する。
 - `tests/fixtures/root-expression.tsv` はroot dispatchの全文消費、Java/Rustそれぞれの厳密なsemantic root、必要な子nodeを共有検証する。
-- `javacodeblock` の内容を実行しない。`rustcodeblock` は未実装で、将来も既定無効・明示許可付きとする。
+- `javacodeblock` の内容を実行しない（```` ```java:Class ```` はクラスを宣言するだけで、呼び出しは `ExternalHost` が答える。issue #216）。通常の評価は AST-only を含め未リンクの `rustcodeblock` を `CB005` で拒否する。本文は `FormulaExpr.codeBlocks` / `CodeBlockExpr.source` に保持され、`code_blocks::from_ast` で同じ AST から本文・位置を取得できる（#234）。別ツールの [tinyexpression-aot](../tinyexpression-aot/README.md) で明示許可すると、Rust 本文をコンパイル・リンクしたネイティブ実行物を作れる（#229）。信頼された作者専用で sandbox ではない。Java と共通の API、AST schema の移行方法は [CodeBlock 準備契約](../../docs/code-block-source-contract.md) を参照。
 - CI artifactはUbuntuのLinux x86_64用であり、完全static binaryや全OS対応を意味しない。
 
 ## 文脈つき runtime（issue #179）
+
+> **Warning**: Java code blocks compile and execute arbitrary code on the JVM. Only use this feature when formula authors are fully trusted. Do not expose this capability to untrusted users.
 
 `tinyexpression_rs::runtime` は Java の `P4_AST_EVALUATOR` 経路（`AstEvaluatorCalculator` → `P4TypedAstEvaluator`）と同じ意味論を持つ評価器である。通常依存ゼロのまま。`#![forbid(unsafe_code)]` は vendored parser だけでなく crate ルート（`lib.rs`）にも付け、runtime を含む全体に効かせた。
 
@@ -93,6 +95,7 @@ let closure = calculator_result(compiled.eval(&mut context, &mut host));      //
 | メソッド宣言・呼び出し | 実装 | 引数個数不一致・未定義は `UnsupportedOperationException`。引数は `coerceToType` |
 | 〃 再帰の深さ | **差異** | Java は thread stack 枯渇で `StackOverflowError`。Rust は `Options::max_call_depth`（既定 256）で同じ種別を返す。無限再帰は一致、256 段を超える有限再帰は Rust だけ失敗する |
 | `ExternalInvocation` | 実装（host 経由） | 上記 `ExternalHost` |
+| Java コードブロック（```` ```java:Class ````） | **差異（スタブ必須）** | Java はブロックをコンパイルしてクラスを読み、呼び出しで実行する。Rust は実行しない: ブロックは評価しても何も起きない（クラスの宣言だけ、`Program::code_block_classes()`）、呼び出しは `ExternalHost` が答える（JSON リクエストでは `externals[]` の定数スタブ）。host がそのクラスを読めなければ `ExternalError::ClassNotFound` と同じ `UnsupportedOperationException` で、メッセージに「コードブロックのクラスは externals で値を指定してください」（`runtime::code_block::missing_stub_hint`）。差分ゲートは `TestHost` が `CheckDigits`/`CheckAlphabets` を Java と同じ動作で持つので一致する |
 | `match` | 実装 | case が真でも値が `null` なら次の case へ進む Java の挙動も同じ |
 | slice | 実装 | UTF-16 code unit 単位（負 index・逆順 step・範囲外 `StringIndexOutOfBoundsException`・step 0 は `IllegalArgumentException`） |
 | 〃 孤立サロゲート | **差異** | Java の結果文字列は孤立サロゲートを持てるが Rust の `String` は持てないので U+FFFD に置き換える（golden も同じ置換で比較） |
@@ -171,11 +174,11 @@ MVN_ARGS=-o bash rust/tinyexpression-rs/tests/java-diff/regenerate-java-golden.s
 | パス | 中身 |
 |---|---|
 | `src/generated/ubnfc/` | `ubnfc ir` → `ubnfc-rust --no-emit-driver` の出力。`#![forbid(unsafe_code)]`、std のみ |
-| `src/generated/ubnfc/scanners.rs`, `scanners_tests.rs` | ubnfc `scanners/rust/` の extern token scanner（STRING / CODE_START / CODE_END）とその単体テスト |
+| `src/generated/ubnfc/scanners.rs`, `scanners_tests.rs` | 旧 extern token scanner と互換単体テスト。現 P4 は宣言的 token のため認識に登録しない |
 | `src/generated/compat.rs` | ubnfc AST → 公開 `Ast` の変換。`rust/scripts/generate-compat.py` が両 `ast.rs` から生成 |
 | `src/generated/ast.rs`, `evaluator.rs` | 公開 typed AST と `Semantics` trait。旧 unlaxer 生成物を引き継ぎ、以後は手で保守（node 集合は文法由来なので、文法を変えたら `generate-compat.py` が不一致で止まる） |
 | `src/generated/ubnfc_formula_info/` | `grammar/formula-info.ubnf`（FormulaInfo 文書、issue #180）の `ubnfc ir` → `ubnfc-rust --no-emit-driver` の出力。extern token が無いので変更は (1) だけ。manifest は `rust/ubnfc-formula-info-vendored.sha256` |
-| `rust/ubnfc-pin.txt` | ubnfc commit（2 文法共通）、文法・IR・scanner の SHA-256 |
+| `rust/ubnfc-pin.txt` | ubnfc commit（2 文法共通）、全 lexical module を含む文法・IR・scanner の SHA-256 |
 
 再生成と検査:
 
@@ -187,9 +190,11 @@ bash rust/check-generated.sh                     # = regenerate-ubnfc.sh --check
 生成器の出力に対して行う機械的な変更は 3 つだけで、`--check` も同じ手順を踏む:
 (1) 生成器の `Cargo.toml` を捨てる、(2) `parse_entry_with_options` から scanner 付きの
 `parse_entry_with_scanner` を ubnfc `examples/p4-rust/build.rs` と同じ文字列置換で派生させ `parser.rs` 末尾に追記し `mod.rs` から re-export する
-（result-family の再解析で入口 rule を選ぶため。scanner 無しの入口では STRING が全部落ちる）、
+（result-family の再解析で入口 rule を選ぶ既存 API。現在は RejectExtern を渡し、STRING も宣言的 token から生成する）、
 (3) `scanners.rs` 先頭の `//!` を `//` にする（`include!` で取り込むため）。
-ubnfc checkout は共有作業ツリーなので、HEAD が pin と違っても警告だけ出し、固定の実体は byte 比較と各 SHA-256 で担保する。
+ubnfc checkout の HEAD は使わず、pin commit を `git archive` して再生成する。
+`UBNFC_REV=<commit> ... --write` で pin を更新できる。全 imported grammar も hash 検査対象。
+字句と値変換の契約は [宣言的 lexical modules](../../docs/declarative-lexical-modules.md) を参照。
 旧 `rust/unlaxer-revision.txt` と unlaxer generator による検査は役目を終えたので削除した。
 
 ## FormulaInfo loader（issue #180）
@@ -205,6 +210,16 @@ cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run -
 - `load`（変換層）: Java の `FormulaInfoParser.extractFormulaInfo` の後処理を同じ順序で行う。値の正規化（`stripTrailing`、`#` 行・空行の除去）、既知キーの写像、`executionBackend`/`backend` の解決、`hash` の MD5 更新（大文字 hex）、`Formula_<name>` のクラス名、formula 必須検査、`Program::new` による式の構築（Java の calculator 構築に当たる）、最後に `dependsOn` の配線。`LoadError::java_exception` は同じ文書で Java が投げる例外名を返す。
 - `load`/`run` の CLI は Java loader テストと同じ設定（`siteId` を multi-tenancy 属性、`checkKind` があればそれ・無ければ `calculatorName` を名前）で読み、`run` は各式を空の context で 1 回評価する（external は未登録扱い）。
 - 保持しないもの: `javaCode`・`byteCode`・`byteCode_<class>`・`hashByByteCode`。Java も load のたびに式から作り直し、保存値を実行しない。`byteCode` 系は Java と同じく hex として検査だけする。
+- エラー位置（issue #212）: `load`/`run`（CLI・`te_formula_info`・`te_formula_info_context`）の失敗応答
+  `{"ok":false,"stage":"load","error":{...}}` に `"span":[start,end]`（文書の code point 位置）が付く。
+  `formula_info_span::load_error_span` が求める: 構文エラーは parser の診断 offset（1 点）、それ以外は各ブロックを単独で
+  load して最初に失敗するブロックを特定し（ブロックは `dependsOn` の配線まで互いに独立なので `load` が止まったブロックと
+  一致する）、エラーのキー・値からエントリを選ぶ（値のエラーは正規化後の値の範囲、式の parse エラーは `#` 行・空行の除去を
+  戻した文書上の 1 点、未知の `dependsOn` はその名前、formula なしは `formula:` 行かブロック先頭のキー行）。
+  playground の FormulaInfo エディタが波線を引く位置。loader の受理範囲・エラーの種類は変えない。
+  Java との対称性: Java の `FormulaInfoParseException` は全文を消費できない文書（部分 parse）でだけメッセージに offset を
+  含み、ほかの loader 例外は位置を持たない。`span` は JSON API の追加情報で、パリティ（`tests/formula_info.rs`、Java 例外名の
+  一致）には影響しない。テストは `tests/formula_info_span.rs`。
 
 ### Java loader とのパリティ（`tests/formula_info.rs`）
 
@@ -215,6 +230,8 @@ cargo run --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs -- run -
 | `resultType`/`numberType` の未知のクラス名 | Java は `Class.forName` で class path 上の任意のクラスを読む。Rust は loader の名前表と `java.lang.*`/`java.math.BigDecimal`/`java.math.BigInteger`/`java.sql.Timestamp` だけ | JVM が無い |
 | BigDecimal / BigInteger / Timestamp | Rust は `LoadError::UnsupportedType` | runtime が扱わない（依存ゼロ方針、#179） |
 | 式の構築 | Rust は常に P4 の意味論（`Program::new`）。Java はブロックの `executionBackend` の calculator で構築する | Rust の評価器は P4_AST_EVALUATOR だけ。golden は既定 backend を P4_AST_EVALUATOR にして採っている |
+
+区切り行（issue #211）は Java loader・文法・Rust loader を同時に変えた: `---END_OF_PART---` の後ろの空白・タブは許し、それ以外の文字が続く行は構文エラー（`LoadError::Syntax`、以前は値の続きの行になり次のブロックが合流していた）、1 ブロックに `calculatorName` が 2 回以上あれば `LoadError::DuplicateCalculatorName`（Java は `FormulaInfoParseException`）。
 
 かつて差だった 3 件（issue #195 で解消）: 全文を消費できない文書、`key:` が入力末尾で値が 0 文字、未知の `dependsOn`。いずれも Java は以前は黙って通す／JDK の生の例外（`NoSuchElementException`・`NullPointerException`）を投げるだけだったが、いまは明示的な `FormulaInfoParseException` を投げ、`LoadError::java_exception()` もこれに合わせて `FormulaInfoParseException` を返す。
 

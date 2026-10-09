@@ -12,6 +12,7 @@
 | [language-guide-ja.md](./language-guide-ja.md) | 完全な言語仕様 |
 | [backends-ja.md](./backends-ja.md) | 6 バックエンドの比較、generated-only 境界、パリティ契約 |
 | [architecture-ja.md](./architecture-ja.md) | パーサーコンビネータ、AST、6 エバリュエータ、型システム |
+| [declarative-lexical-modules.md](./declarative-lexical-modules.md) | UBNF v2 の宣言的 token、外部 grammar、Java/Rust 生成と検証 |
 
 ## アーキテクチャ決定記録
 

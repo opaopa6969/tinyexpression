@@ -55,9 +55,9 @@ public final class ScopeStore {
             return;
         }
         int version = freshVersion();
-        Scope leaving = scopes.getLast();
+        Scope leaving = scopes.get(scopes.size() - 1);
         journal.add(new Undo(Kind.LEAVE, stateVersion, leaving, null, null, null));
-        scopes.removeLast();
+        scopes.remove(scopes.size() - 1);
         stateVersion = version;
     }
 
@@ -148,9 +148,9 @@ public final class ScopeStore {
             throw new IllegalArgumentException("Checkpoint is outside the current undo history");
         }
         while (journal.size() > checkpoint) {
-            Undo undo = journal.removeLast();
+            Undo undo = journal.remove(journal.size() - 1);
             switch (undo.kind()) {
-                case ENTER -> scopes.removeLast();
+                case ENTER -> scopes.remove(scopes.size() - 1);
                 case LEAVE -> scopes.add(undo.scope());
                 case DECLARE -> {
                     if (undo.previous() == null) {
@@ -158,11 +158,11 @@ public final class ScopeStore {
                     } else {
                         undo.scope().lookup.put(undo.name(), undo.previous());
                     }
-                    undo.scope().declarations.removeLast();
-                    declarations.removeLast();
+                    undo.scope().declarations.remove(undo.scope().declarations.size() - 1);
+                    declarations.remove(declarations.size() - 1);
                 }
-                case REFERENCE -> references.removeLast();
-                case DIAGNOSTIC -> diagnostics.removeLast();
+                case REFERENCE -> references.remove(references.size() - 1);
+                case DIAGNOSTIC -> diagnostics.remove(diagnostics.size() - 1);
                 case CLEAR -> diagnostics.addAll(undo.cleared());
             }
             stateVersion = undo.version();
@@ -170,7 +170,7 @@ public final class ScopeStore {
     }
 
     private Scope currentScope() {
-        return scopes.isEmpty() ? global : scopes.getLast();
+        return scopes.isEmpty() ? global : scopes.get(scopes.size() - 1);
     }
 
     private int freshVersion() {

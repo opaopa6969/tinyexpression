@@ -22,6 +22,11 @@
 //! end of input, a bare `NullPointerException` for an unknown `dependsOn`): Java now raises an
 //! explicit `FormulaInfoParseException` in all three cases, which [`LoadError::java_exception`]
 //! reflects.
+//!
+//! Issue #211 changed the end mark line on both sides at once: spaces and tabs after
+//! `---END_OF_PART---` are allowed, any other trailing character is a syntax error (it used to
+//! turn the line into a value line and merge the next block into this one), and a block with
+//! `calculatorName` twice or more is rejected ([`LoadError::DuplicateCalculatorName`]).
 
 use std::fmt::{self, Display, Formatter};
 
@@ -396,6 +401,10 @@ pub enum LoadError {
     /// `key:` at the very end of the input (Java: `FormulaInfoParseException`, issue #195; was
     /// a bare `NoSuchElementException`).
     EmptyValueAtEnd { key: String },
+    /// A block with `calculatorName` twice or more (Java: `FormulaInfoParseException`, issue
+    /// #211): two blocks merged because the end mark line between them is missing. Checked
+    /// before anything else of the block.
+    DuplicateCalculatorName { calculator_names: Vec<String> },
     /// `executionBackend` / `backend` names no backend.
     UnknownExecutionBackend { value: String },
     /// `resultType` / `numberType` names no type (Java: `ClassNotFoundException` in a
@@ -428,9 +437,10 @@ impl LoadError {
     /// The simple name of the exception the Java loader throws for the same document.
     pub fn java_exception(&self) -> &'static str {
         match self {
-            Self::Syntax(_) | Self::EmptyValueAtEnd { .. } | Self::UnknownDependsOn { .. } => {
-                "FormulaInfoParseException"
-            }
+            Self::Syntax(_)
+            | Self::EmptyValueAtEnd { .. }
+            | Self::DuplicateCalculatorName { .. }
+            | Self::UnknownDependsOn { .. } => "FormulaInfoParseException",
             Self::UnknownExecutionBackend { .. } | Self::OddHexLength { .. } => {
                 "IllegalArgumentException"
             }
@@ -447,6 +457,7 @@ impl LoadError {
         match self {
             Self::Syntax(_) => "syntax",
             Self::EmptyValueAtEnd { .. } => "empty_value_at_end",
+            Self::DuplicateCalculatorName { .. } => "duplicate_calculator_name",
             Self::UnknownExecutionBackend { .. } => "unknown_execution_backend",
             Self::UnknownType { .. } => "unknown_type",
             Self::OddHexLength { .. } => "odd_hex_length",
@@ -481,6 +492,16 @@ impl Display for LoadError {
             Self::Syntax(diagnostic) => write!(f, "not a FormulaInfo document: {diagnostic}"),
             Self::EmptyValueAtEnd { key } => {
                 write!(f, "'{key}:' has an empty value at the end of input")
+            }
+            Self::DuplicateCalculatorName { calculator_names } => {
+                let quoted: Vec<String> =
+                    calculator_names.iter().map(|n| format!("'{n}'")).collect();
+                write!(
+                    f,
+                    "calculatorName appears {} times in one block ({}); is the {END_MARK} line between two FormulaInfo missing?",
+                    calculator_names.len(),
+                    quoted.join(", ")
+                )
             }
             Self::UnknownExecutionBackend { value } => {
                 write!(f, "unknown executionBackend: {value}")
@@ -558,8 +579,25 @@ fn backend(value: &str) -> Result<ExecutionBackend, LoadError> {
     })
 }
 
+/// `FormulaInfoParser.rejectDuplicateCalculatorName` (issue #211): extracts only the
+/// `calculatorName` values and rejects the block when there are two or more.
+fn reject_duplicate_calculator_name(block: &Block) -> Result<(), LoadError> {
+    let mut calculator_names = Vec::new();
+    for entry in block.entries.iter().filter(|e| e.key == "calculatorName") {
+        let value = entry.value().ok_or_else(|| LoadError::EmptyValueAtEnd {
+            key: entry.key.clone(),
+        })?;
+        calculator_names.push(value);
+    }
+    if calculator_names.len() > 1 {
+        return Err(LoadError::DuplicateCalculatorName { calculator_names });
+    }
+    Ok(())
+}
+
 /// `FormulaInfoParser.extractFormulaInfo` for one block, in the Java order.
 fn load_block(block: &Block, options: &LoaderOptions) -> Result<LoadedFormula, LoadError> {
+    reject_duplicate_calculator_name(block)?;
     // resolveExecutionBackend: extracts every entry (a zero-length value fails here) and lets
     // the last backend key win.
     let mut values = Vec::with_capacity(block.entries.len());

@@ -68,6 +68,8 @@ pub(crate) enum Event {
         span: Span,
         child: EventId,
         wrap: bool,
+        /// D-078: 意味値を持つ選択の text だけの候補。一致範囲の字句（空でも）を 1 つの値にする。
+        text: bool,
     },
     Capture {
         token_extent: bool,
@@ -161,9 +163,14 @@ impl PackedEvent {
                 p.w[0] = w32(a.0);
                 p.w[1] = w32(b.0);
             }
-            Event::Values { span, child, wrap } => {
+            Event::Values {
+                span,
+                child,
+                wrap,
+                text,
+            } => {
                 p.tag = EV_VALUES;
-                p.flags = wrap as u8;
+                p.flags = wrap as u8 | (text as u8) << 1;
                 p.w[..3].copy_from_slice(&[w32(span[0]), w32(span[1]), w32(child.0)]);
             }
             Event::Capture {
@@ -236,7 +243,8 @@ impl PackedEvent {
             EV_VALUES => Event::Values {
                 span: span(0),
                 child: EventId(w[2] as usize),
-                wrap: self.flags != 0,
+                wrap: self.flags & 1 != 0,
+                text: self.flags & 2 != 0,
             },
             EV_CAPTURE => Event::Capture {
                 token_extent: self.flags != 0,
@@ -448,6 +456,9 @@ pub(crate) struct Session<'a, const DIAG: bool> {
     effect_bytes: usize,
     mapping_depth: usize,
     mapping_anchor: Option<usize>,
+    /// #86: いま値を組み立てている意味値の領域（`Values{text:false}`）の入れ子の深さ。
+    /// 写像される規則の本体に入るたびに 0 から数え直す。
+    value_region: u32,
     /// 回復ごとの公開候補（最遠位置 byte, label）。`Event::Recovery::hints` が索く。
     recovery_hints: Vec<Option<(usize, Vec<&'static str>)>>,
 }
@@ -692,6 +703,7 @@ impl<'a, const DIAG: bool> Session<'a, DIAG> {
             effect_bytes: 0,
             mapping_depth: 0,
             mapping_anchor: None,
+            value_region: 0,
             recovery_hints: Vec::new(),
             recovery_events: Vec::new(),
         }
@@ -1438,11 +1450,13 @@ if name.is_empty()
         self.text_values(caps, sites, out);
     }
     /// node 変換の field 値。出現ごとに子の値を構築し、値が無く空でない出現は字句 Text にする。
+    /// `text_sites` は中身が text だけの site で、出現 1 つが一致範囲の字句 1 つになる（#89、D-032）。
     /// `fallback` は leaf 型（Text を leaf node に昇格する recipe）。
     pub fn node_values(
         &mut self,
         caps: &[Cap],
         sites: &[usize],
+        text_sites: &[usize],
         fallback: Option<usize>,
         out: &mut Vec<u32>,
     ) -> Result<(), String> {
@@ -1451,7 +1465,12 @@ if name.is_empty()
                 continue;
             }
             let start = out.len();
-            self.build_values_into(child, out)?;
+            if text_sites.contains(&site) && span[0] != span[1] && !self.has_recovery(child) {
+                let text = self.semantic_text(child, span);
+                out.push(text);
+            } else {
+                self.build_values_into(child, out)?;
+            }
             if out.len() == start
                 && span[0] != span[1]
                 && !self.has_recovery(child)
@@ -1877,12 +1896,12 @@ use super::ast::*;
 const HAS_RECOVERY:bool=false;
 const SCOPE_MODES:&[&str]=&[];
 const HAS_SCOPE:bool=false;
-const RULES:&[&str]=&["FormulaInfo::Document", "FormulaInfo::Block", "FormulaInfo::Filler", "FormulaInfo::CommentLine", "FormulaInfo::BlankLine", "FormulaInfo::SpaceChar", "FormulaInfo::Entry", "FormulaInfo::Value", "FormulaInfo::ContinuationLine", "FormulaInfo::PlainLine", "FormulaInfo::AtLineEnd", "FormulaInfo::EndOfPart", "FormulaInfo::LineBreak"];
-const EXPRESSIONS:&[&str]=&["expr:grammar/formula-info.ubnf:2613:2634:body/seq", "expr:grammar/formula-info.ubnf:2613:2630:body/0/repeat", "expr:grammar/formula-info.ubnf:2615:2620:body/0/0/ruleRef", "expr:grammar/formula-info.ubnf:2631:2634:body/1/tokenRef", "expr:grammar/formula-info.ubnf:3112:3255:body/seq", "expr:grammar/formula-info.ubnf:3112:3218:body/0/group", "expr:grammar/formula-info.ubnf:3114:3216:body/0/0/choice", "expr:grammar/formula-info.ubnf:3114:3168:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:3114:3120:body/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3130:3149:body/0/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3132:3138:body/0/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3150:3168:body/0/0/0/2/repeat", "expr:grammar/formula-info.ubnf:3152:3157:body/0/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:3183:3216:body/0/0/1/seq", "expr:grammar/formula-info.ubnf:3183:3188:body/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3198:3216:body/0/0/1/1/repeat", "expr:grammar/formula-info.ubnf:3200:3205:body/0/0/1/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3231:3255:body/1/group", "expr:grammar/formula-info.ubnf:3233:3253:body/1/0/choice", "expr:grammar/formula-info.ubnf:3233:3242:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3250:3253:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:3340:3363:body/choice", "expr:grammar/formula-info.ubnf:3340:3351:body/0/ruleRef", "expr:grammar/formula-info.ubnf:3354:3363:body/1/ruleRef", "expr:grammar/formula-info.ubnf:3530:3577:body/seq", "expr:grammar/formula-info.ubnf:3530:3551:body/0/group", "expr:grammar/formula-info.ubnf:3532:3549:body/0/0/seq", "expr:grammar/formula-info.ubnf:3532:3535:body/0/0/0/literal", "expr:grammar/formula-info.ubnf:3536:3549:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3538:3547:body/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:3558:3577:body/1/group", "expr:grammar/formula-info.ubnf:3560:3575:body/1/0/choice", "expr:grammar/formula-info.ubnf:3560:3569:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3572:3575:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:3775:3862:body/choice", "expr:grammar/formula-info.ubnf:3775:3808:body/0/seq", "expr:grammar/formula-info.ubnf:3775:3792:body/0/0/group", "expr:grammar/formula-info.ubnf:3777:3790:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:3777:3790:body/0/0/0/0/repeat", "expr:grammar/formula-info.ubnf:3779:3788:body/0/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3799:3808:body/0/1/ruleRef", "expr:grammar/formula-info.ubnf:3825:3862:body/1/seq", "expr:grammar/formula-info.ubnf:3825:3852:body/1/0/group", "expr:grammar/formula-info.ubnf:3827:3850:body/1/0/0/seq", "expr:grammar/formula-info.ubnf:3827:3836:body/1/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3837:3850:body/1/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3839:3848:body/1/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3859:3862:body/1/1/tokenRef", "expr:grammar/formula-info.ubnf:3882:3900:body/choice", "expr:grammar/formula-info.ubnf:3882:3885:body/0/literal", "expr:grammar/formula-info.ubnf:3888:3892:body/1/literal", "expr:grammar/formula-info.ubnf:3895:3900:body/2/tokenRef", "expr:grammar/formula-info.ubnf:4226:4264:body/seq", "expr:grammar/formula-info.ubnf:4226:4249:body/0/group", "expr:grammar/formula-info.ubnf:4228:4247:body/0/0/seq", "expr:grammar/formula-info.ubnf:4228:4233:body/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:4234:4247:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4236:4245:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:4236:4239:body/0/0/1/0/0/literal", "expr:grammar/formula-info.ubnf:4240:4245:body/0/0/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4255:4258:body/1/literal", "expr:grammar/formula-info.ubnf:4259:4264:body/2/ruleRef", "expr:grammar/formula-info.ubnf:4685:4747:body/seq", "expr:grammar/formula-info.ubnf:4685:4747:body/0/group", "expr:grammar/formula-info.ubnf:4687:4745:body/0/0/seq", "expr:grammar/formula-info.ubnf:4687:4700:body/0/0/0/repeat", "expr:grammar/formula-info.ubnf:4689:4698:body/0/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:4701:4731:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4703:4729:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:4703:4712:body/0/0/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:4713:4729:body/0/0/1/0/1/ruleRef", "expr:grammar/formula-info.ubnf:4732:4745:body/0/0/2/optional", "expr:grammar/formula-info.ubnf:4734:4743:body/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:4921:5005:body/choice", "expr:grammar/formula-info.ubnf:4921:4964:body/0/seq", "expr:grammar/formula-info.ubnf:4921:4940:body/0/0/literal", "expr:grammar/formula-info.ubnf:4941:4950:body/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4951:4964:body/0/2/repeat", "expr:grammar/formula-info.ubnf:4953:4962:body/0/2/0/tokenRef", "expr:grammar/formula-info.ubnf:4988:5005:body/1/seq", "expr:grammar/formula-info.ubnf:4988:4995:body/1/0/tokenRef", "expr:grammar/formula-info.ubnf:4996:5005:body/1/1/ruleRef", "expr:grammar/formula-info.ubnf:5025:5152:body/choice", "expr:grammar/formula-info.ubnf:5025:5050:body/0/seq", "expr:grammar/formula-info.ubnf:5025:5036:body/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5037:5050:body/0/1/repeat", "expr:grammar/formula-info.ubnf:5039:5048:body/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5067:5126:body/1/seq", "expr:grammar/formula-info.ubnf:5067:5072:body/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5073:5086:body/1/1/repeat", "expr:grammar/formula-info.ubnf:5075:5084:body/1/1/0/seq", "expr:grammar/formula-info.ubnf:5075:5078:body/1/1/0/0/literal", "expr:grammar/formula-info.ubnf:5079:5084:body/1/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5087:5126:body/1/2/group", "expr:grammar/formula-info.ubnf:5089:5124:body/1/2/0/choice", "expr:grammar/formula-info.ubnf:5089:5112:body/1/2/0/0/seq", "expr:grammar/formula-info.ubnf:5089:5098:body/1/2/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5099:5112:body/1/2/0/0/1/repeat", "expr:grammar/formula-info.ubnf:5101:5110:body/1/2/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5115:5124:body/1/2/0/1/ruleRef", "expr:grammar/formula-info.ubnf:5143:5152:body/2/ruleRef", "expr:grammar/formula-info.ubnf:5172:5191:body/choice", "expr:grammar/formula-info.ubnf:5172:5177:body/0/tokenRef", "expr:grammar/formula-info.ubnf:5180:5185:body/1/tokenRef", "expr:grammar/formula-info.ubnf:5188:5191:body/2/tokenRef", "expr:grammar/formula-info.ubnf:5375:5420:body/seq", "expr:grammar/formula-info.ubnf:5375:5394:body/0/literal", "expr:grammar/formula-info.ubnf:5401:5420:body/1/group", "expr:grammar/formula-info.ubnf:5403:5418:body/1/0/choice", "expr:grammar/formula-info.ubnf:5403:5412:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:5415:5418:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5440:5460:body/choice", "expr:grammar/formula-info.ubnf:5440:5446:body/0/literal", "expr:grammar/formula-info.ubnf:5449:5453:body/1/literal", "expr:grammar/formula-info.ubnf:5456:5460:body/2/literal"];
-const BODIES:&[&str]=&["expr:grammar/formula-info.ubnf:2613:2634:body/seq", "expr:grammar/formula-info.ubnf:3112:3255:body/seq", "expr:grammar/formula-info.ubnf:3340:3363:body/choice", "expr:grammar/formula-info.ubnf:3530:3577:body/seq", "expr:grammar/formula-info.ubnf:3775:3862:body/choice", "expr:grammar/formula-info.ubnf:3882:3900:body/choice", "expr:grammar/formula-info.ubnf:4226:4264:body/seq", "expr:grammar/formula-info.ubnf:4685:4747:body/seq", "expr:grammar/formula-info.ubnf:4921:5005:body/choice", "expr:grammar/formula-info.ubnf:5025:5152:body/choice", "expr:grammar/formula-info.ubnf:5172:5191:body/choice", "expr:grammar/formula-info.ubnf:5375:5420:body/seq", "expr:grammar/formula-info.ubnf:5440:5460:body/choice"];
-const RULE_NODE:&[bool]=&[true, true, false, true, true, false, true, true, false, false, false, true, false];
-const RULE_SLOTS:&[u32]=&[2, 5, 0, 1, 1, 0, 2, 1, 0, 0, 0, 1, 0];
-const SITES:&[(&str,&str)]=&[("expr:grammar/formula-info.ubnf:2615:2620:body/0/0/ruleRef/capture/0", "blocks"), ("expr:grammar/formula-info.ubnf:3114:3120:body/0/0/0/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3132:3138:body/0/0/0/1/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3152:3157:body/0/0/0/2/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3183:3188:body/0/0/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3200:3205:body/0/0/1/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3233:3242:body/1/0/0/ruleRef/capture/0", "end"), ("expr:grammar/formula-info.ubnf:3530:3551:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:3775:3792:body/0/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:3825:3852:body/1/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:4226:4249:body/0/group/capture/0", "key"), ("expr:grammar/formula-info.ubnf:4259:4264:body/2/ruleRef/capture/0", "value"), ("expr:grammar/formula-info.ubnf:4685:4747:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:5375:5394:body/0/literal/capture/0", "mark")];
+const RULES:&[&str]=&["FormulaInfo::Document", "FormulaInfo::Block", "FormulaInfo::Filler", "FormulaInfo::CommentLine", "FormulaInfo::BlankLine", "FormulaInfo::SpaceChar", "FormulaInfo::Entry", "FormulaInfo::Value", "FormulaInfo::ContinuationLine", "FormulaInfo::PlainLine", "FormulaInfo::AtLineEnd", "FormulaInfo::EndOfPart", "FormulaInfo::BlankChar", "FormulaInfo::LineBreak"];
+const EXPRESSIONS:&[&str]=&["expr:grammar/formula-info.ubnf:2921:2942:body/seq", "expr:grammar/formula-info.ubnf:2921:2938:body/0/repeat", "expr:grammar/formula-info.ubnf:2923:2928:body/0/0/ruleRef", "expr:grammar/formula-info.ubnf:2939:2942:body/1/tokenRef", "expr:grammar/formula-info.ubnf:3420:3563:body/seq", "expr:grammar/formula-info.ubnf:3420:3526:body/0/group", "expr:grammar/formula-info.ubnf:3422:3524:body/0/0/choice", "expr:grammar/formula-info.ubnf:3422:3476:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:3422:3428:body/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3438:3457:body/0/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3440:3446:body/0/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3458:3476:body/0/0/0/2/repeat", "expr:grammar/formula-info.ubnf:3460:3465:body/0/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:3491:3524:body/0/0/1/seq", "expr:grammar/formula-info.ubnf:3491:3496:body/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3506:3524:body/0/0/1/1/repeat", "expr:grammar/formula-info.ubnf:3508:3513:body/0/0/1/1/0/ruleRef", "expr:grammar/formula-info.ubnf:3539:3563:body/1/group", "expr:grammar/formula-info.ubnf:3541:3561:body/1/0/choice", "expr:grammar/formula-info.ubnf:3541:3550:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3558:3561:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:3648:3671:body/choice", "expr:grammar/formula-info.ubnf:3648:3659:body/0/ruleRef", "expr:grammar/formula-info.ubnf:3662:3671:body/1/ruleRef", "expr:grammar/formula-info.ubnf:3838:3885:body/seq", "expr:grammar/formula-info.ubnf:3838:3859:body/0/group", "expr:grammar/formula-info.ubnf:3840:3857:body/0/0/seq", "expr:grammar/formula-info.ubnf:3840:3843:body/0/0/0/literal", "expr:grammar/formula-info.ubnf:3844:3857:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:3846:3855:body/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:3866:3885:body/1/group", "expr:grammar/formula-info.ubnf:3868:3883:body/1/0/choice", "expr:grammar/formula-info.ubnf:3868:3877:body/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:3880:3883:body/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4083:4170:body/choice", "expr:grammar/formula-info.ubnf:4083:4116:body/0/seq", "expr:grammar/formula-info.ubnf:4083:4100:body/0/0/group", "expr:grammar/formula-info.ubnf:4085:4098:body/0/0/0/seq", "expr:grammar/formula-info.ubnf:4085:4098:body/0/0/0/0/repeat", "expr:grammar/formula-info.ubnf:4087:4096:body/0/0/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:4107:4116:body/0/1/ruleRef", "expr:grammar/formula-info.ubnf:4133:4170:body/1/seq", "expr:grammar/formula-info.ubnf:4133:4160:body/1/0/group", "expr:grammar/formula-info.ubnf:4135:4158:body/1/0/0/seq", "expr:grammar/formula-info.ubnf:4135:4144:body/1/0/0/0/ruleRef", "expr:grammar/formula-info.ubnf:4145:4158:body/1/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4147:4156:body/1/0/0/1/0/ruleRef", "expr:grammar/formula-info.ubnf:4167:4170:body/1/1/tokenRef", "expr:grammar/formula-info.ubnf:4190:4208:body/choice", "expr:grammar/formula-info.ubnf:4190:4193:body/0/literal", "expr:grammar/formula-info.ubnf:4196:4200:body/1/literal", "expr:grammar/formula-info.ubnf:4203:4208:body/2/tokenRef", "expr:grammar/formula-info.ubnf:4534:4572:body/seq", "expr:grammar/formula-info.ubnf:4534:4557:body/0/group", "expr:grammar/formula-info.ubnf:4536:4555:body/0/0/seq", "expr:grammar/formula-info.ubnf:4536:4541:body/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:4542:4555:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:4544:4553:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:4544:4547:body/0/0/1/0/0/literal", "expr:grammar/formula-info.ubnf:4548:4553:body/0/0/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:4563:4566:body/1/literal", "expr:grammar/formula-info.ubnf:4567:4572:body/2/ruleRef", "expr:grammar/formula-info.ubnf:4993:5055:body/seq", "expr:grammar/formula-info.ubnf:4993:5055:body/0/group", "expr:grammar/formula-info.ubnf:4995:5053:body/0/0/seq", "expr:grammar/formula-info.ubnf:4995:5008:body/0/0/0/repeat", "expr:grammar/formula-info.ubnf:4997:5006:body/0/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5009:5039:body/0/0/1/repeat", "expr:grammar/formula-info.ubnf:5011:5037:body/0/0/1/0/seq", "expr:grammar/formula-info.ubnf:5011:5020:body/0/0/1/0/0/ruleRef", "expr:grammar/formula-info.ubnf:5021:5037:body/0/0/1/0/1/ruleRef", "expr:grammar/formula-info.ubnf:5040:5053:body/0/0/2/optional", "expr:grammar/formula-info.ubnf:5042:5051:body/0/0/2/0/ruleRef", "expr:grammar/formula-info.ubnf:5429:5446:body/seq", "expr:grammar/formula-info.ubnf:5429:5436:body/0/tokenRef", "expr:grammar/formula-info.ubnf:5437:5446:body/1/ruleRef", "expr:grammar/formula-info.ubnf:5466:5593:body/choice", "expr:grammar/formula-info.ubnf:5466:5491:body/0/seq", "expr:grammar/formula-info.ubnf:5466:5477:body/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5478:5491:body/0/1/repeat", "expr:grammar/formula-info.ubnf:5480:5489:body/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5508:5567:body/1/seq", "expr:grammar/formula-info.ubnf:5508:5513:body/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5514:5527:body/1/1/repeat", "expr:grammar/formula-info.ubnf:5516:5525:body/1/1/0/seq", "expr:grammar/formula-info.ubnf:5516:5519:body/1/1/0/0/literal", "expr:grammar/formula-info.ubnf:5520:5525:body/1/1/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5528:5567:body/1/2/group", "expr:grammar/formula-info.ubnf:5530:5565:body/1/2/0/choice", "expr:grammar/formula-info.ubnf:5530:5553:body/1/2/0/0/seq", "expr:grammar/formula-info.ubnf:5530:5539:body/1/2/0/0/0/tokenRef", "expr:grammar/formula-info.ubnf:5540:5553:body/1/2/0/0/1/repeat", "expr:grammar/formula-info.ubnf:5542:5551:body/1/2/0/0/1/0/tokenRef", "expr:grammar/formula-info.ubnf:5556:5565:body/1/2/0/1/ruleRef", "expr:grammar/formula-info.ubnf:5584:5593:body/2/ruleRef", "expr:grammar/formula-info.ubnf:5613:5632:body/choice", "expr:grammar/formula-info.ubnf:5613:5618:body/0/tokenRef", "expr:grammar/formula-info.ubnf:5621:5626:body/1/tokenRef", "expr:grammar/formula-info.ubnf:5629:5632:body/2/tokenRef", "expr:grammar/formula-info.ubnf:5916:5975:body/seq", "expr:grammar/formula-info.ubnf:5916:5935:body/0/literal", "expr:grammar/formula-info.ubnf:5942:5955:body/1/repeat", "expr:grammar/formula-info.ubnf:5944:5953:body/1/0/ruleRef", "expr:grammar/formula-info.ubnf:5956:5975:body/2/group", "expr:grammar/formula-info.ubnf:5958:5973:body/2/0/choice", "expr:grammar/formula-info.ubnf:5958:5967:body/2/0/0/ruleRef", "expr:grammar/formula-info.ubnf:5970:5973:body/2/0/1/tokenRef", "expr:grammar/formula-info.ubnf:5995:6005:body/choice", "expr:grammar/formula-info.ubnf:5995:5998:body/0/literal", "expr:grammar/formula-info.ubnf:6001:6005:body/1/literal", "expr:grammar/formula-info.ubnf:6025:6045:body/choice", "expr:grammar/formula-info.ubnf:6025:6031:body/0/literal", "expr:grammar/formula-info.ubnf:6034:6038:body/1/literal", "expr:grammar/formula-info.ubnf:6041:6045:body/2/literal"];
+const BODIES:&[&str]=&["expr:grammar/formula-info.ubnf:2921:2942:body/seq", "expr:grammar/formula-info.ubnf:3420:3563:body/seq", "expr:grammar/formula-info.ubnf:3648:3671:body/choice", "expr:grammar/formula-info.ubnf:3838:3885:body/seq", "expr:grammar/formula-info.ubnf:4083:4170:body/choice", "expr:grammar/formula-info.ubnf:4190:4208:body/choice", "expr:grammar/formula-info.ubnf:4534:4572:body/seq", "expr:grammar/formula-info.ubnf:4993:5055:body/seq", "expr:grammar/formula-info.ubnf:5429:5446:body/seq", "expr:grammar/formula-info.ubnf:5466:5593:body/choice", "expr:grammar/formula-info.ubnf:5613:5632:body/choice", "expr:grammar/formula-info.ubnf:5916:5975:body/seq", "expr:grammar/formula-info.ubnf:5995:6005:body/choice", "expr:grammar/formula-info.ubnf:6025:6045:body/choice"];
+const RULE_NODE:&[bool]=&[true, true, false, true, true, false, true, true, false, false, false, true, false, false];
+const RULE_SLOTS:&[u32]=&[2, 5, 0, 1, 1, 0, 2, 1, 0, 0, 0, 1, 0, 0];
+const SITES:&[(&str,&str)]=&[("expr:grammar/formula-info.ubnf:2923:2928:body/0/0/ruleRef/capture/0", "blocks"), ("expr:grammar/formula-info.ubnf:3422:3428:body/0/0/0/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3440:3446:body/0/0/0/1/0/ruleRef/capture/0", "leading"), ("expr:grammar/formula-info.ubnf:3460:3465:body/0/0/0/2/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3491:3496:body/0/0/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3508:3513:body/0/0/1/1/0/ruleRef/capture/0", "entries"), ("expr:grammar/formula-info.ubnf:3541:3550:body/1/0/0/ruleRef/capture/0", "end"), ("expr:grammar/formula-info.ubnf:3838:3859:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:4083:4100:body/0/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:4133:4160:body/1/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:4534:4557:body/0/group/capture/0", "key"), ("expr:grammar/formula-info.ubnf:4567:4572:body/2/ruleRef/capture/0", "value"), ("expr:grammar/formula-info.ubnf:4993:5055:body/0/group/capture/0", "text"), ("expr:grammar/formula-info.ubnf:5916:5935:body/0/literal/capture/0", "mark")];
 impl<const DIAG: bool> Session<'_, DIAG> {
 fn build_values(&mut self,root:EventId)->Result<Vec<u32>,String> {let mut out=Vec::new();self.build_values_into(root,&mut out)?;Ok(out)}
 #[inline(never)] fn build_values_into(&mut self,root:EventId,out:&mut Vec<u32>)->Result<(),String> {let frame=0u8;let address=std::ptr::addr_of!(frame) as usize;let anchor=*self.mapping_anchor.get_or_insert(address);if self.mapping_depth>=self.options.limits.mapping_depth || anchor.abs_diff(address)>256*1024 {return Err("maximum mapping depth exceeded".into());}self.mapping_depth+=1;let result=self.build_values_inner(root,out);self.mapping_depth-=1;result}
@@ -1891,40 +1910,41 @@ fn build_values_inner(&mut self,mut root:EventId,out:&mut Vec<u32>)->Result<(),S
 // その場合は pool から stack を借りずに降りる。
 loop {match self.ev(root) {
 Event::Capture{child,..}=>root=child,
-Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}return Ok(());},
+Event::Values{child,span,wrap,text}=>{let start=out.len();if !text {self.value_region+=1;}let built=self.build_values_into(child,out);if !text {self.value_region-=1;}built?;if text || wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}return Ok(());},
 Event::Rule{rule,span,child,caps}=>return self.build_rule(rule,caps,span,child,out),
 Event::Join(..)=>break,
 _=>return Ok(()),}}
-let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.ev(id) {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap}=>{let start=out.len();self.build_values_into(child,out)?;if wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
+let mut stack=self.take_stack();stack.push((root,false));while let Some((id,_))=stack.pop() {match self.ev(id) {Event::Join(a,b)=>{stack.push((b,false));stack.push((a,false));},Event::Capture{child,..}=>stack.push((child,false)),Event::Values{child,span,wrap,text}=>{let start=out.len();if !text {self.value_region+=1;}let built=self.build_values_into(child,out);if !text {self.value_region-=1;}built?;if text || wrap && ((out.len()==start+1 && self.tree.kind(out[start])==tree::KIND_TEXT) || (out.len()==start && span[0]!=span[1] && !self.has_recovery(child) && !self.has_value_group(child))) {let text=self.semantic_text(child,span);out.truncate(start);out.push(text);}},Event::Rule{rule,span,child,caps}=>self.build_rule(rule,caps,span,child,out)?,_=>{}}}self.give_stack(stack);Ok(())}
 fn leaf(&mut self,ty:usize,span:Span,text:u32)->Result<u32,String> {let span=self.span(span);self.tree.set_extent(text,span);let _=(span,text);Err(format!("unknown leaf type {ty}"))}
 fn build_rule(&mut self,rule:usize,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);match rule {
-0=>self.map_rule_0(caps,span,child,out),
-1=>self.map_rule_1(caps,span,child,out),
+0=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_0(caps,span,child,out);self.value_region=outer;built},
+1=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_1(caps,span,child,out);self.value_region=outer;built},
 2=>self.map_rule_2(caps,span,child,out),
-3=>self.map_rule_3(caps,span,child,out),
-4=>self.map_rule_4(caps,span,child,out),
+3=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_3(caps,span,child,out);self.value_region=outer;built},
+4=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_4(caps,span,child,out);self.value_region=outer;built},
 5=>self.map_rule_5(caps,span,child,out),
-6=>self.map_rule_6(caps,span,child,out),
-7=>self.map_rule_7(caps,span,child,out),
+6=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_6(caps,span,child,out);self.value_region=outer;built},
+7=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_7(caps,span,child,out);self.value_region=outer;built},
 8=>self.map_rule_8(caps,span,child,out),
 9=>self.map_rule_9(caps,span,child,out),
 10=>self.map_rule_10(caps,span,child,out),
-11=>self.map_rule_11(caps,span,child,out),
+11=>{let outer=std::mem::take(&mut self.value_region);let built=self.map_rule_11(caps,span,child,out);self.value_region=outer;built},
 12=>self.map_rule_12(caps,span,child,out),
+13=>self.map_rule_13(caps,span,child,out),
 _=>Err(format!("unknown rule {rule}"))}}
 fn map_rule_0(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=self.take_values();self.node_values(&caps,&[0],None,&mut f0)?;
+let mut f0=self.take_values();self.node_values(&caps,&[0],&[],None,&mut f0)?;
 if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoBlock}) {return Err("blocks: mapped value type mismatch".into());}
 let f0:Vec<u32>=f0;
 self.give_captures(caps);let span=self.span(span);let l0=self.tree.list(&f0);self.give_values(f0);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoDocument,0,span,&[l0[0],l0[1]]);out.push(node);Ok(())}}
 fn map_rule_1(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
-let mut f0=self.take_values();self.node_values(&caps,&[1, 2],None,&mut f0)?;
+let mut f0=self.take_values();self.node_values(&caps,&[1, 2],&[],None,&mut f0)?;
 if !f0.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_BlankLine || k==tree::K_g_FormulaInfoAST_2e_CommentLine}) {return Err("leading: mapped value type mismatch".into());}
 let f0:Vec<u32>=f0;
-let mut f1=self.take_values();self.node_values(&caps,&[3, 4, 5],None,&mut f1)?;
+let mut f1=self.take_values();self.node_values(&caps,&[3, 4, 5],&[],None,&mut f1)?;
 if !f1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoEntry}) {return Err("entries: mapped value type mismatch".into());}
 let f1:Vec<u32>=f1;
-let mut v2=self.take_values();self.node_values(&caps,&[6],None,&mut v2)?;
+let mut v2=self.take_values();self.node_values(&caps,&[6],&[],None,&mut v2)?;
 if !v2.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_EndOfPart}) {return Err("end: mapped value type mismatch".into());}
 if v2.len()>1 {return Err("end requires at most one node".into());}let f2=v2.pop();self.give_values(v2);
 let f2:Option<u32>=f2;
@@ -1940,12 +1960,12 @@ let mut t0=self.take_values();self.text_values(&caps,&[8, 9],&mut t0);if t0.is_e
 if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_BlankLine,4,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_5(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 fn map_rule_6(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
 let mut t0=self.take_values();self.text_values(&caps,&[10],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[10]) {return Ok(());}
 if t0.len()!=1 {return Err("key requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
-let mut v1=self.take_values();self.node_values(&caps,&[11],None,&mut v1)?;
+let mut v1=self.take_values();self.node_values(&caps,&[11],&[],None,&mut v1)?;
 if !v1.iter().all(|value|{let k=self.tree.kind(*value);k==tree::K_g_FormulaInfoAST_2e_FormulaInfoValue}) {return Err("value: mapped value type mismatch".into());}
 if v1.is_empty() && self.missing_field(&caps,&[11]) {return Ok(());}
 if v1.len()!=1 {return Err("value requires one node".into());}let f1=v1.pop().unwrap();self.give_values(v1);
@@ -1956,15 +1976,16 @@ let mut t0=self.take_values();self.text_values(&caps,&[12],&mut t0);if t0.is_emp
 if t0.len()!=1 {return Err("text requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_FormulaInfoValue,7,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
-fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
-fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_8(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_9(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_10(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 fn map_rule_11(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let mut slots=self.take_captures();self.rule_captures(caps,&mut slots);let caps=slots;
 let mut t0=self.take_values();self.text_values(&caps,&[13],&mut t0);if t0.is_empty() && self.missing_field(&caps,&[13]) {return Ok(());}
 if t0.len()!=1 {return Err("mark requires one value".into());}let f0=t0.pop().unwrap();self.give_values(t0);
 let f0:u32=f0;
 self.give_captures(caps);let span=self.span(span);let node=self.tree.record(tree::K_g_FormulaInfoAST_2e_EndOfPart,11,span,&[f0]);out.push(node);Ok(())}}
-fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_12(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
+fn map_rule_13(&mut self,caps:(u32,u32),span:Span,child:EventId,out:&mut Vec<u32>)->Result<(),String> {let _=(caps,span,child,&out);{if self.value_region>0 {return Ok(());}let start=out.len();self.build_values_into(child,out)?;if out.len()==start && !self.has_recovery(child) && !self.has_value_group(child) {let text=self.semantic_text(child,span);out.push(text);}Ok(())}}
 /// 出現（capture / rule / token）の収集と、AST 構築が rule ごとに読む直下 capture 表を
 /// 1 回の走査で作る。以前は出現収集の後に AST 構築が rule ごとに `collect_captures` で
 /// 同じ木をもう一度下っていた。

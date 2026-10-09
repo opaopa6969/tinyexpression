@@ -550,8 +550,17 @@ impl Semantics for ScalarSemantics {
         declarations: &[Ast],
         expression: &Ast,
         methods: &[Ast],
+        code_blocks: &[Ast],
         span: Span,
     ) -> Self::Output {
+        for block in code_blocks {
+            let Ast::CodeBlockExpr { source, span } = block else {
+                return Err(EvaluationError::Mapping(
+                    "expected CodeBlockExpr in codeBlocks".into(),
+                ));
+            };
+            self.eval_code_block_expr(source, *span)?;
+        }
         let feature = if !imports.is_empty() {
             Some("imports")
         } else if !declarations.is_empty() {
@@ -917,8 +926,19 @@ impl Semantics for ScalarSemantics {
         Ok(Value::Boolean(Self::to_boolean(&value)))
     }
 
+    /// Java declarations remain inert; Rust blocks require the separate linked AOT path.
+    fn eval_code_block_expr(&mut self, source: &str, span: Span) -> Self::Output {
+        let blocks = [crate::code_blocks::from_source(source, span)?];
+        if let Some(diagnostic) = crate::code_blocks::uncompiled_rust(&blocks) {
+            return Err(EvaluationError::UnsupportedNode {
+                node: diagnostic.to_string(),
+                span: diagnostic.span,
+            });
+        }
+        Ok(Value::Null)
+    }
+
     unsupported_semantics! {
-        fn eval_code_block_expr();
         fn eval_import_declaration_expr(className: &Ast, method: Option<&str>, alias: &str);
         fn eval_qualified_name_expr(head: &str, tail: &[String]);
         fn eval_number_variable_declaration_expr(varName: &str, onlyIfAbsent: Option<&Ast>, value: Option<&Ast>, desc: Option<&str>);

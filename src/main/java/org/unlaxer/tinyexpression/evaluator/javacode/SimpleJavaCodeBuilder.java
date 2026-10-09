@@ -130,7 +130,7 @@ public class SimpleJavaCodeBuilder {
 	
 	public SimpleJavaCodeBuilder w(String word) {
 		word = word == null  ? "" :  word;
-		append("\"" + word.replaceAll("\"","\\\"") +  "\"");
+		append(JavaStringLiterals.quote(word));
 		return this;
 	}
 	

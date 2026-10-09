@@ -14,13 +14,22 @@ import {
   VARIABLE_TYPES, RESULT_TYPES, NUMBER_TYPES, DAYS, RETURN_TYPES,
 } from './context.js';
 import { diagnose, describeFailure } from './diagnostics.js';
-import { completionSource, hoverExtension } from './editor-support.js';
+import { completionSource, hoverExtension, openHelp } from './editor-support.js';
 import { EXAMPLES, FORMULA_INFO_SAMPLE } from './examples.js';
 import { highlightExtension } from './highlight.js';
+import { analyzeFormula, lexiconOf } from './te-lexer.js';
+import { syntaxView, refreshSyntax } from './syntax-view.js';
+import { analyzeFormulaInfo, setEndMarkTrailingSpace, parseFormulaInfo, valuesOf } from './formula-info-syntax.js';
+import { diagnoseFormulaInfo, formulaInfoKeys, isKnownKey } from './formula-info-diagnostics.js';
+import { formulaInfoCompletionSource, formulaInfoHover } from './formula-info-editor.js';
 import { createTracePanel } from './trace-panel.js';
 import { createCatalogPanel } from './catalog-panel.js';
 import { mergeOverride, overrideOf, formatOverride } from '../../catalog/scripts/catalog-edit.mjs';
-import { inVsCode, connectHost } from './host.js';
+import { inVsCode, connectHost, openExternal, hostState, saveHostState } from './host.js';
+import { externalCandidates, addExternalCandidates, stubsUsedBy, stubLabel, isMissingStubFailure } from './externals.js';
+import { createTour } from './tour.js';
+import { createHelp } from './help.js';
+import { configuredServerUrl, probeServer, createServerRuntime, withWasmDiagnostic, realClassesOf, targetLabel } from './eval-target.js';
 import './style.css';
 
 const STORAGE_KEY = 'tinyexpression-playground-v1';
@@ -30,13 +39,17 @@ const bundledCatalog = catalogJson;
 /** The catalog the editor uses: the repository catalog plus the edits (Catalog panel). */
 let catalog = mergeOverride(bundledCatalog, loadCatalogOverride());
 let te = null;
+/** The server runtime (issue #221) when the host answers as the Java service, else null. */
+let server = null;
 let state = loadState();
 
 // ── persistence (per-viewer convenience only) ──
 
 function loadState() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
+    // The VS Code webview keeps the state with the extension (vscode.setState, #216): its
+    // localStorage does not survive reopening the panel.
+    const saved = hostState() ?? JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null');
     if (saved?.context && typeof saved.formula === 'string') {
       return { ...saved, context: { ...emptyState(), ...saved.context } };
     }
@@ -64,8 +77,10 @@ function saveCatalogOverride() {
 }
 
 function saveState() {
+  const saved = { ...state, formula: view.state.doc.toString() };
+  saveHostState(saved);
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, formula: view.state.doc.toString() }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
   } catch { /* storage unavailable */ }
 }
 
@@ -102,7 +117,15 @@ function select(options, value, onChange, title) {
 // ── editor ──
 
 const contextVariables = () => state.context.variables;
+const contextExternals = () => state.context.externals;
 const currentCatalog = () => catalog;
+const toLint = (d) => ({
+  from: d.from,
+  to: d.to,
+  severity: d.severity,
+  source: d.code,
+  message: [d.message, d.fix && !d.message.includes(d.fix) ? `修正のヒント: ${d.fix}` : '', d.detail].filter(Boolean).join('\n'),
+});
 
 const view = new EditorView({
   doc: state.formula,
@@ -111,18 +134,13 @@ const view = new EditorView({
     basicSetup,
     EditorView.lineWrapping,
     autocompletion({ override: [completionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
-    hoverExtension(currentCatalog, contextVariables),
+    hoverExtension(currentCatalog, contextVariables, contextExternals),
     lintGutter(),
     highlightExtension,
+    syntaxView((text) => analyzeFormula(text, lexiconOf(catalog))),
     linter((v) => {
       if (!te) return [];
-      return diagnose(te, catalog, v.state.doc.toString(), state.context.variables.map((x) => x.name)).map((d) => ({
-        from: d.from,
-        to: d.to,
-        severity: d.severity,
-        source: d.code,
-        message: [d.message, d.detail].filter(Boolean).join('\n'),
-      }));
+      return diagnose(te, catalog, v.state.doc.toString(), state.context.variables.map((x) => x.name)).map(toLint);
     }, { delay: 250 }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) scheduleEvaluate();
@@ -142,6 +160,7 @@ function scheduleEvaluate() {
 function contextChanged() {
   renderContext();
   forceLinting(view);
+  forceLinting(infoView);
   scheduleEvaluate();
 }
 
@@ -149,50 +168,140 @@ function kindLabel(value) {
   return ({ number: 'float', double: 'double', int: 'int', long: 'long', short: 'short', byte: 'byte', boolean: 'boolean', string: 'string', object: 'object', null: 'null' })[value.kind] ?? value.kind;
 }
 
+/** The evaluation target in effect: the server only while the host answers (#221). */
+const target = () => (server && state.target === 'server' ? 'server' : 'wasm');
+
+let evaluationSequence = 0;
 async function evaluate() {
   saveState();
   if (!te) return;
   await te.ready();
+  const run = ++evaluationSequence;
   const formula = view.state.doc.toString();
   const out = $('result');
-  out.replaceChildren();
   if (formula.trim() === '') {
-    out.append(el('p', { class: 'muted' }, '式を入力してください。'));
+    out.replaceChildren(el('p', { class: 'muted' }, '式を入力してください。'));
     tracePanel.clear();
     return;
   }
   const started = performance.now();
-  const tracing = state.trace === true;
-  const response = tracing
-    ? te.evalTrace(toRequest(state.context, { formula }))
-    : te.evalContext(toRequest(state.context, { formula }));
+  const onServer = target() === 'server';
+  const tracing = state.trace === true && !onServer;
+  const request = toRequest(state.context, { formula });
+  let response;
+  if (onServer) {
+    response = await server.evalContext(request);
+    if (run !== evaluationSequence) return; // a newer evaluation has started
+    response = { ...response, result: withWasmDiagnostic(response.result, te, formula) };
+  } else {
+    response = tracing ? te.evalTrace(request) : te.evalContext(request);
+  }
   const { result } = response;
   const ms = performance.now() - started;
+  out.replaceChildren();
   if (tracing) tracePanel.show(response, formula);
   else tracePanel.clear();
+  if (onServer && state.trace === true) {
+    $('trace-summary').textContent = 'サーバ評価（Java）では trace を記録しません。評価先を wasm にすると取れます。';
+  }
   if (result.ok) {
     const value = result.value;
+    const real = realClassesOf(result);
     out.append(
       el('div', { class: 'result-ok' },
-        el('div', { class: 'result-value', title: 'String.valueOf(result)' }, result.text),
+        el('div', { class: 'result-value', title: 'String.valueOf(result)' }, result.text,
+          onServer ? [' ', el('span', { class: 'target-tag', title: 'evaluated by the real Java evaluator on the server' }, targetLabel('server'))] : null),
         el('dl', {},
           el('dt', { title: 'result kind' }, '型'), el('dd', {}, kindLabel(value)),
           value.f32Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f32Bits)] : null,
           value.f64Bits ? [el('dt', { title: 'IEEE 754 bits' }, 'ビット'), el('dd', {}, value.f64Bits)] : null,
-          el('dt', { title: 'evaluation time (wasm)' }, '時間'), el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}`))));
+          el('dt', { title: `evaluation time (${onServer ? 'server round trip' : 'wasm'})` }, '時間'),
+          el('dd', {}, `${ms.toFixed(2)} ms${tracing ? '（trace 込み）' : ''}${onServer ? '（サーバ往復）' : ''}`)),
+        stubNote(stubsUsedBy([formula], state.context.externals).filter((stub) => !real.includes(stub.class)), onServer),
+        onServer && result.codeBlocks && !result.codeBlocks.executed
+          ? el('p', { class: 'muted small' }, 'サーバはコードブロックを実行しない設定です（ホストのポリシー、ADR-003）。')
+          : null));
     return;
   }
   const failure = describeFailure(catalog, formula, result);
-  const stageLabel = { create: '生成（parse）', apply: '評価', request: 'リクエスト', internal: '内部' }[result.stage] ?? result.stage;
+  const stageLabel = { create: '生成（parse）', apply: '評価', request: 'リクエスト', internal: '内部', timeout: 'タイムアウト', server: 'サーバ接続' }[result.stage] ?? result.stage;
   out.append(el('div', { class: 'result-error' },
-    el('div', { class: 'error-head' }, el('span', { class: 'badge' }, failure.code), ` ${stageLabel}で失敗`),
+    el('div', { class: 'error-head' }, el('span', { class: 'badge' }, failure.code), ` ${stageLabel}で失敗`,
+      onServer ? [' ', el('span', { class: 'target-tag' }, targetLabel('server'))] : null),
     el('p', {}, failure.title),
     failure.fix ? el('p', { class: 'fix' }, `修正のヒント: ${failure.fix}`) : null,
     result.error?.message ? el('p', { class: 'muted small', title: 'Java exception message' }, `${result.error.kind}: ${result.error.message}`) : null,
+    isMissingStubFailure(result.error) ? missingStubHelp() : null,
+    onServer ? el('button', { class: 'link', title: 'evaluate in the browser (wasm, stub values) instead', onclick: () => setTarget('wasm') }, 'wasm（仮の値）で評価し直す') : null,
     failure.from != null ? el('button', { class: 'link', onclick: () => {
       view.dispatch({ selection: { anchor: failure.from, head: Math.max(failure.from, Math.min(failure.to, failure.from + 1)) }, scrollIntoView: true });
       view.focus();
     } }, 'エラー位置へ移動') : null));
+}
+
+// ── external stubs: "external（仮の値）" (#216) ──
+
+/** The formula texts the stubs are for: the formula editor and every FormulaInfo `formula:`. */
+function formulaTexts() {
+  const info = infoText();
+  const texts = [view.state.doc.toString()];
+  for (const { value } of valuesOf(info, parseFormulaInfo(info), 'formula')) if (value?.text) texts.push(value.text);
+  return texts;
+}
+
+/** "式から external を追加": a stub row for every external call / code-block class without one. */
+function pickExternals() {
+  const added = addExternalCandidates(state.context.externals, externalCandidates(formulaTexts()));
+  contextChanged();
+  return added;
+}
+
+/** The "仮の値" mark of a result that used stubs. */
+function stubNote(used, onServer = false) {
+  if (!used.length) return null;
+  return el('p', { class: 'stub-note', title: onServer ? 'external calls answered by the CalculationContext stubs (the server reaches no host class)' : 'external calls answered by the CalculationContext stubs (code blocks are not run in the playground)' },
+    el('span', { class: 'stub-tag' }, '仮の値'),
+    onServer
+      ? ` external はサーバでも仮の値で代用: ${used.map(stubLabel).join('、')}`
+      : ` external（コードブロック含む）は実行されず、仮の値で代用: ${used.map(stubLabel).join('、')}`);
+}
+
+// ── evaluation target: wasm（仮の値） / サーバ（本物の Java） (#221) ──
+
+function setTarget(value) {
+  state.target = value === 'server' ? 'server' : 'wasm';
+  $('eval-target-select').value = target();
+  renderTargetNote();
+  saveState();
+  evaluate();
+}
+
+function renderTargetNote() {
+  $('eval-target-note').textContent = target() === 'server'
+    ? '本物の Java（サーバ）で評価中。external は仮の値、コードブロックはサーバの設定で実行。'
+    : 'ブラウザ内の wasm で評価（external・コードブロックは仮の値）。';
+}
+
+$('eval-target-select').addEventListener('change', (e) => setTarget(e.target.value));
+
+async function connectServer() {
+  if (inVsCode) return; // the VSIX evaluates through its own host (#217)
+  const setting = configuredServerUrl(import.meta.env?.VITE_TE_SERVER_EVAL_URL);
+  if (!setting) return;
+  const url = new URL(setting, document.baseURI).href;
+  if (!(await probeServer(url))) return; // GitHub Pages / vite dev: no host answers
+  server = createServerRuntime(url);
+  $('eval-target').hidden = false;
+  $('eval-target-select').value = target();
+  renderTargetNote();
+  if (target() === 'server') evaluate();
+}
+
+/** Help for the missing-stub error of a code-block class. */
+function missingStubHelp() {
+  return el('p', { class: 'fix' },
+    'コードブロックの Java は playground では実行されません。CalculationContext の「external（仮の値）」に戻り値を入れてください。 ',
+    el('button', { class: 'link', onclick: () => pickExternals() }, '式から external を追加'));
 }
 
 // ── CalculationContext panel ──
@@ -260,6 +369,10 @@ $('add-external').addEventListener('click', () => {
   state.context.externals.push({ class: '', method: '', arity: '', registered: true, returnType: 'float', value: '0' });
   contextChanged();
 });
+$('pick-externals').addEventListener('click', () => {
+  const added = pickExternals();
+  $('externals-status').textContent = added.length ? `${added.length} 件追加しました。` : '追加する候補はありません（全部の external に仮の値があります）。';
+});
 $('pick-variables').addEventListener('click', () => {
   const formula = view.state.doc.toString();
   const declared = declaredVariables(formula);
@@ -287,9 +400,37 @@ exampleSelect.addEventListener('change', () => {
 
 // ── FormulaInfo panel ──
 
-const infoText = $('formula-info');
-infoText.value = state.formulaInfo ?? FORMULA_INFO_SAMPLE;
-infoText.addEventListener('input', () => { state.formulaInfo = infoText.value; saveState(); });
+const analyzeInfo = (text) => {
+  const keys = formulaInfoKeys(catalog);
+  return analyzeFormulaInfo(text, { lexicon: lexiconOf(catalog), isKnownKey: (key) => isKnownKey(keys, key) });
+};
+const infoView = new EditorView({
+  doc: state.formulaInfo ?? FORMULA_INFO_SAMPLE,
+  parent: $('formula-info'),
+  extensions: [
+    basicSetup,
+    EditorView.lineWrapping,
+    autocompletion({ override: [formulaInfoCompletionSource(() => te, currentCatalog, contextVariables)], activateOnTyping: true }),
+    formulaInfoHover(currentCatalog, contextVariables, contextExternals),
+    lintGutter(),
+    syntaxView(analyzeInfo),
+    linter((v) => {
+      if (!te) return [];
+      const text = v.state.doc.toString();
+      return diagnoseFormulaInfo(te, catalog, text, state.context.variables.map((x) => x.name), analyzeInfo(text)).map(toLint);
+    }, { delay: 300 }),
+    EditorView.updateListener.of((update) => {
+      if (!update.docChanged) return;
+      state.formulaInfo = update.state.doc.toString();
+      saveState();
+    }),
+    EditorView.contentAttributes.of({ 'aria-label': 'FormulaInfo' }),
+  ],
+});
+const infoText = () => infoView.state.doc.toString();
+function setInfoText(text) {
+  infoView.dispatch({ changes: { from: 0, to: infoView.state.doc.length, insert: text } });
+}
 
 function simpleType(javaName) {
   if (!javaName) return null;
@@ -314,9 +455,12 @@ function renderFormulaInfo(result, evaluated) {
       const info = f.info;
       let cell = null;
       if (evaluated) {
+        const used = f.value ? stubsUsedBy([info.formulaText], state.context.externals) : [];
         cell = f.value
-          ? el('td', { class: 'ok' }, f.value.value === undefined ? kindLabel(f.value) : String(f.value.value))
-          : el('td', { class: 'ng', title: f.error?.message ?? '' }, `${f.error?.kind ?? 'error'}`);
+          ? el('td', { class: 'ok' }, f.value.value === undefined ? kindLabel(f.value) : String(f.value.value),
+            used.length ? [' ', el('span', { class: 'stub-tag', title: `仮の値で代用: ${used.map(stubLabel).join('、')}` }, '仮の値')] : null)
+          : el('td', { class: 'ng', title: f.error?.message ?? '' }, `${f.error?.kind ?? 'error'}`,
+            isMissingStubFailure(f.error) ? [' ', el('button', { class: 'link', title: f.error.message, onclick: () => pickExternals() }, '仮の値を追加')] : null);
       }
       return el('tr', {},
         el('td', {}, info.calculatorName ?? info.name ?? ''),
@@ -338,16 +482,19 @@ function renderFormulaInfo(result, evaluated) {
 
 $('load-info').addEventListener('click', () => {
   if (!te) return;
-  renderFormulaInfo(te.load(infoText.value).result, false);
+  renderFormulaInfo(te.load(infoText()).result, false);
 });
-$('run-info').addEventListener('click', () => {
+$('run-info').addEventListener('click', async () => {
   if (!te) return;
-  renderFormulaInfo(te.runContext(toRequest(state.context, { document: infoText.value })).result, true);
+  const request = toRequest(state.context, { document: infoText() });
+  if (target() === 'server') {
+    renderFormulaInfo((await server.runContext(request)).result, true);
+    return;
+  }
+  renderFormulaInfo(te.runContext(request).result, true);
 });
 $('sample-info').addEventListener('click', () => {
-  infoText.value = FORMULA_INFO_SAMPLE;
-  state.formulaInfo = infoText.value;
-  saveState();
+  setInfoText(FORMULA_INFO_SAMPLE);
 });
 
 // ── Trace panel (stage 3) ──
@@ -398,6 +545,9 @@ const catalogPanel = createCatalogPanel($('catalog'), {
     renderCatalogCounts();
     renderContext();
     forceLinting(view);
+    forceLinting(infoView);
+    refreshSyntax(view);
+    refreshSyntax(infoView);
     scheduleEvaluate();
   },
 });
@@ -410,16 +560,24 @@ connectHost({
       view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: message.formula } });
     }
     if (typeof message.formulaInfo === 'string' && message.formulaInfo.trim() !== '') {
-      infoText.value = message.formulaInfo;
-      state.formulaInfo = message.formulaInfo;
+      setInfoText(message.formulaInfo);
     }
+    // #216: the external stubs stay (saved state); calls / code-block classes of the opened
+    // document that have none get a row to fill in.
+    addExternalCandidates(state.context.externals, externalCandidates(formulaTexts()));
+    saveState();
     $('host-status').textContent = message.documentName ? `VS Code: ${message.documentName} から読み込みました。` : '';
     hostCatalogLabel = message.catalogLabel ?? '';
     catalog = mergeOverride(bundledCatalog, message.catalogOverride ?? {});
     catalogPanel.load(catalog);
     renderCatalogCounts();
     renderContext();
-    if (te) forceLinting(view);
+    refreshSyntax(view);
+    refreshSyntax(infoView);
+    if (te) {
+      forceLinting(view);
+      forceLinting(infoView);
+    }
     scheduleEvaluate();
   },
   saved(message) {
@@ -429,6 +587,68 @@ connectHost({
   },
 });
 if (inVsCode) document.documentElement.classList.add('in-vscode');
+// Grammar links (UBNF, railroad diagrams): a new tab on the web; the webview blocks plain
+// navigation, so the extension opens them (vscode.env.openExternal).
+document.addEventListener('click', (event) => {
+  // #216: help links (#help-java-code-block) open #214's help, or the README before it exists.
+  const help = event.target.closest?.('a[data-help]');
+  if (help) {
+    event.preventDefault();
+    openHelp(help.dataset.help);
+    return;
+  }
+  const link = event.target.closest?.('a[data-external]');
+  if (!link || !inVsCode) return;
+  event.preventDefault();
+  openExternal(link.href);
+});
+
+// ── guided tour and help (issue #214) ──
+
+const tour = createTour({
+  hooks: {
+    snapshotState: () => ({
+      formula: view.state.doc.toString(),
+      formulaInfo: infoText(),
+      trace: state.trace === true,
+      context: JSON.parse(JSON.stringify(state.context)),
+    }),
+    restoreState: (snapshot) => {
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: snapshot.formula } });
+      setInfoText(snapshot.formulaInfo);
+      state.context = snapshot.context;
+      traceToggle.checked = snapshot.trace;
+      state.trace = snapshot.trace;
+      $('trace-hint').hidden = state.trace;
+      contextChanged();
+    },
+    loadSampleForTour: () => {
+      const example = EXAMPLES.find((e) => e.id === 'fraud-alert');
+      state.context = contextOf(example);
+      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: example.formula } });
+      setInfoText(FORMULA_INFO_SAMPLE);
+      contextChanged();
+    },
+    actions: {
+      'trace-once': () => $('trace-once').click(),
+      // #216: the Java code-block sample (colouring in the editor, its stub in external（仮の値）).
+      'java-code-block-sample': () => {
+        const example = EXAMPLES.find((e) => e.id === 'java-code-block');
+        state.context = contextOf(example);
+        view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: example.formula } });
+        contextChanged();
+      },
+    },
+  },
+});
+$('tour-button').addEventListener('click', () => tour.start());
+
+const help = createHelp({ onReplayTour: () => tour.start() });
+$('help-button').addEventListener('click', () => help.open());
+// #216: code-block hovers / the external section link to #help-java-code-block (editor-support.js openHelp).
+window.addEventListener('te:open-help', () => help.open());
+
+tour.maybeAutoPrompt();
 
 // ── start ──
 
@@ -438,8 +658,14 @@ createRuntime(new URL('tinyexpression.wasm', document.baseURI).href).then((runti
   te = runtime;
   const version = te.version();
   $('version').textContent = `tinyexpression ${version.version} (wasm ${(te.size / 1024 / 1024).toFixed(1)} MB, ubnfc ${version.ubnfc.slice(0, 7)})`;
+  // Issue #211: whether this loader closes a block at `---END_OF_PART---` + trailing spaces.
+  const probe = te.load('calculatorName:a\nformula:\n1\n---END_OF_PART--- \n').result;
+  setEndMarkTrailingSpace(probe.ok === true && probe.formulas?.[0]?.info?.formulaText === '1');
+  refreshSyntax(infoView);
   forceLinting(view);
+  forceLinting(infoView);
   evaluate();
+  connectServer();
 }).catch((error) => {
   $('result').replaceChildren(el('div', { class: 'result-error' }, `tinyexpression.wasm を読み込めませんでした: ${error.message}`));
 });

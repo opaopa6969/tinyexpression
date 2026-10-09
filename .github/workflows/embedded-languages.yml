@@ -20,9 +20,9 @@ jobs:
       - name: Install source-map and diagnostic APIs
         working-directory: .integration/unlaxer-parser
         run: mvn -B -pl unlaxer-common,unlaxer-dsl -am install -DskipTests -Dgpg.skip=true
-      - name: Install production Tiny with released default dependencies
+      - name: Install production Tiny with current default dependencies
         run: mvn -B install -DskipTests -Dtinyexpression.skipRailroad=true -Dgpg.skip=true
-      - name: Released default LSP and DAP compatibility
+      - name: Default LSP and DAP compatibility
         working-directory: tools/tinyexpression-p4-lsp-vscode
         run: mvn -B clean test -Dtest=TinyExpressionP4LanguageServerExtTest,TinyExpressionP4DebugAdapterExtTest
       - name: Real javac through existing opt-in LSP consumer

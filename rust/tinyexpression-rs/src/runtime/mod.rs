@@ -13,6 +13,8 @@
 //! [`RandomSource`] (`random()`). The defaults behave like a Java host with nothing registered.
 
 mod ast_meta;
+pub mod bindings;
+pub mod code_block;
 pub(crate) mod compile;
 pub mod java;
 mod ops;
@@ -586,26 +588,83 @@ pub struct Program {
     /// used for slice index text exactly as Java's `P4SourceText` reads it.
     source: Vec<char>,
     options: Options,
+    /// Classes the source's ```` ```java:Class ```` blocks declare (issue #216, [`code_block`]).
+    code_block_classes: Vec<String>,
+    code_blocks: Vec<crate::code_blocks::CodeBlock>,
 }
 
 impl Program {
     /// Parses `source` and selects the evaluation root (Java: the `AstEvaluatorCalculator`
     /// constructor). A rejection is an [`ErrorKind::Parse`] error.
     pub fn new(source: &str, options: Options) -> Result<Self, EvalError> {
+        Self::new_inner(source, options, false)
+    }
+
+    fn new_linked(source: &str, options: Options) -> Result<Self, EvalError> {
+        Self::new_inner(source, options, true)
+    }
+
+    fn new_inner(source: &str, options: Options, linked: bool) -> Result<Self, EvalError> {
         let stripped = select::strip_comments(source);
         if source.chars().all(java::is_whitespace) {
             return Ok(Self {
                 root: None,
                 source: stripped,
                 options,
+                code_block_classes: Vec::new(),
+                code_blocks: Vec::new(),
             });
         }
         let root = select::select_root(source, &stripped, options.result_type)?;
+        let code_blocks = crate::code_blocks::from_ast(&root)?;
+        if let Some(diagnostic) =
+            crate::code_blocks::uncompiled_rust(&code_blocks).filter(|_| !linked)
+        {
+            return Err(EvalError::new(
+                ErrorKind::UnsupportedOperation,
+                diagnostic.to_string(),
+            ));
+        }
+        let mut code_block_classes = Vec::new();
+        for block in &code_blocks {
+            if !code_block_classes.contains(&block.identifier) {
+                code_block_classes.push(block.identifier.clone());
+            }
+        }
         Ok(Self {
             root: Some(root),
             source: stripped,
             options,
+            code_block_classes,
+            code_blocks,
         })
+    }
+
+    /// Classes declared by the formula's ```` ```java:Class ```` code blocks (issue #216). The
+    /// blocks are never compiled or run here: calls to these classes go through the
+    /// [`ExternalHost`] like any other external class.
+    pub fn code_block_classes(&self) -> &[String] {
+        &self.code_block_classes
+    }
+
+    /// Source-preserving metadata. No code is compiled or executed while parsing.
+    pub fn code_blocks(&self) -> &[crate::code_blocks::CodeBlock] {
+        &self.code_blocks
+    }
+
+    /// The error of an external call that failed with `error`: [`ExternalError`]'s Java
+    /// exception, and for a code-block class the host cannot load, a hint to stub it.
+    pub(crate) fn external_error(
+        &self,
+        error: ExternalError,
+        class: &str,
+        method: &str,
+    ) -> EvalError {
+        code_block::external_error(error, class, method, self.declares_code_block(class))
+    }
+
+    pub(crate) fn declares_code_block(&self, class: &str) -> bool {
+        self.code_block_classes.iter().any(|c| c == class)
     }
 
     pub fn options(&self) -> &Options {

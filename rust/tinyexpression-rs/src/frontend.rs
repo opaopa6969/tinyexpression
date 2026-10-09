@@ -2,11 +2,14 @@
 
 use crate::diagnostic::{ParseDiagnostic, ParseError};
 use crate::generated::ast::Ast;
+use crate::generated::compat;
 use crate::generated::ubnfc::{
     parse_entry_with_scanner, Diagnostic, DiagnosticKind, ParseOptions, ParseResult,
 };
-use crate::generated::{compat, scanners};
 use crate::{FrontendError, Span};
+
+#[cfg(test)]
+mod declarative_tests;
 
 /// The grammar name the vendored parser answers to.
 pub(crate) const GRAMMAR: &str = "TinyExpressionP4";
@@ -17,7 +20,8 @@ pub(crate) fn options() -> ParseOptions {
 
 /// Parses `source` from `entry` (`None` is the grammar root) and returns the ubnfc result.
 pub(crate) fn run(entry: Option<&str>, source: &str, options: ParseOptions) -> ParseResult {
-    let mut scanner = scanners::registry();
+    // All lexical tokens are generated; reject any accidentally reintroduced extern.
+    let mut scanner = crate::generated::ubnfc::api::RejectExtern;
     parse_entry_with_scanner(GRAMMAR, entry, source, options, &mut scanner)
         .expect("the vendored parser knows every entry rule this crate asks for")
 }

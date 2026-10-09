@@ -1,5 +1,6 @@
 package org.unlaxer.tinyexpression.loader;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +58,7 @@ public class FormulaInfoParser extends LazyOneOrMore{
   public static FormulaInfo extractFormulaInfo(TypedToken<FormulaInfoBlockParser> thisParserParsed ,
       FormulaInfoAdditionalFields formulaInfoAdditionalFields ,  ClassLoader classLoader){
     List<Token> elements = FormulaInfoElementOrCommentParser.elements(thisParserParsed);
+    rejectDuplicateCalculatorName(elements);
     ExecutionBackend selectedBackend = resolveExecutionBackend(elements, formulaInfoAdditionalFields);
     CalculatorCreator calculatorCreator =
         CalculatorCreatorRegistry.forBackend(selectedBackend);
@@ -148,6 +150,43 @@ public class FormulaInfoParser extends LazyOneOrMore{
     formulaInfo.classNameAndByteCodeList.clear();
     formulaInfo.updateCalculatorFromFormula(classLoader);
     return formulaInfo;
+  }
+
+  /**
+   * Rejects a block with more than one {@code calculatorName} entry (issue #211).
+   *
+   * <p>One block is one FormulaInfo, so a second {@code calculatorName} is the sure sign that
+   * two blocks were merged: the {@code ---END_OF_PART---} line between them is missing (or was
+   * malformed before 2.0.1). The single-valued keys used to be overwritten by the later block,
+   * so the earlier formula silently disappeared. Other repeated keys are left as they are
+   * ({@code tags} accumulates, for instance).
+   *
+   * <p>Runs before anything else of the block is extracted, so this is the error a merged block
+   * reports first. Only the {@code calculatorName} values are extracted here.
+   *
+   * @throws FormulaInfoParseException when {@code calculatorName} appears twice or more
+   */
+  public static void rejectDuplicateCalculatorName(List<Token> elements) {
+    List<String> calculatorNames = new ArrayList<>();
+    for (Token token : elements) {
+      if (false == token.parser instanceof FormulaInfoElementParser) {
+        continue;
+      }
+      TypedToken<FormulaInfoElementParser> typed = token.typed(FormulaInfoElementParser.class);
+      TypedToken<FormulaInfoElementHeaderParser> header =
+          typed.getChildWithParserTyped(FormulaInfoElementHeaderParser.class);
+      if (false == "calculatorName".equals(header.getParser().extractKey(header))) {
+        continue;
+      }
+      calculatorNames.add(typed.getParser().extract(typed).getValue());
+    }
+    if (calculatorNames.size() > 1) {
+      throw new FormulaInfoParseException(
+          "calculatorName appears " + calculatorNames.size() + " times in one block "
+              + calculatorNames.stream().map(name -> "'" + name + "'")
+                  .collect(Collectors.joining(", ", "(", ")"))
+              + "; is the " + FormulaInfo.END_MARK + " line between two FormulaInfo missing?");
+    }
   }
 
   static ExecutionBackend resolveExecutionBackend(List<Token> elements,

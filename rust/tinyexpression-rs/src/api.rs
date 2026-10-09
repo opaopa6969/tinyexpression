@@ -8,6 +8,7 @@
 //! meaning (see `rust/README.md`, "ABI stability").
 
 use crate::formula_info::{self, LoadError, LoadedFormula, LoaderOptions};
+use crate::formula_info_span;
 use crate::request::{self, Request};
 use crate::runtime::{
     calculator_result, java_string, Context, ContextClock, ErrorKind, EvalError, ExternalHost,
@@ -36,7 +37,9 @@ pub const EXIT_INTERNAL: u8 = 70;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The ubnfc commit the vendored parsers were generated from. `rust/check-generated.sh`
 /// fails when it differs from `ubnfc_commit` in `rust/ubnfc-pin.txt`.
-pub const UBNFC_COMMIT: &str = "cefdbd7be262c9ea7c58a56b28fa0319c354e446";
+pub const UBNFC_COMMIT: &str = "f54d6b90466ffde14066d32f911ed642b1e49201";
+/// Exact P4 grammar source identity; checked against `rust/ubnfc-pin.txt` in CI.
+pub const GRAMMAR_SHA256: &str = "184cce54c70b0e3ebbdedaca5a0af0068ec56b2d7e33cda39d94f861c6433f46";
 
 /// One JSON response and the exit code that goes with it.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -151,7 +154,7 @@ pub fn eval_json(source: &str) -> Response {
 pub fn formula_info_json(source: &str, options: &LoaderOptions, run: bool, seed: u64) -> Response {
     let formulas = match formula_info::load(source, options) {
         Ok(formulas) => formulas,
-        Err(error) => return load_failure(error),
+        Err(error) => return load_failure(source, options, error),
     };
     if run {
         let mut external = NoExternals;
@@ -269,13 +272,73 @@ fn with_trace(json: String, trace: Option<&TraceRecorder>) -> String {
     }
 }
 
-fn eval_context_response(request_text: &str, mut trace: Option<&mut TraceRecorder>) -> Response {
-    let (mut request, formula) = match read_request(request_text, "formula") {
+fn eval_context_response(request_text: &str, trace: Option<&mut TraceRecorder>) -> Response {
+    let (request, formula) = match read_request(request_text, "formula") {
         Ok(read) => read,
         Err(response) => return response,
     };
+    evaluate_request(request, &formula, trace, None)
+}
+
+pub(crate) fn eval_linked_context_json(
+    text: &str,
+    linked: &mut crate::runtime::bindings::LinkedCode,
+) -> Response {
+    let json = match request::parse_json(text) {
+        Ok(json) => json,
+        Err(e) => return Response::error(EXIT_USAGE, "request", &format!("invalid JSON: {e}")),
+    };
+    if json.get("formula").is_some() && json.str_field("formula") != Some(linked.source()) {
+        return Response::error(
+            EXIT_MAPPING,
+            "link",
+            "CB007: request formula differs from compiled source",
+        );
+    }
+    let request = match request::read_request(&json) {
+        Ok(request) => request,
+        Err(e) => return Response::error(EXIT_USAGE, "request", &e),
+    };
+    let source = linked.source().to_owned();
+    evaluate_request(request, &source, None, Some(linked))
+}
+
+struct LinkedExternals<'a> {
+    linked: Option<&'a mut crate::runtime::bindings::Registry>,
+    stubs: &'a mut request::StubExternals,
+}
+impl crate::runtime::ExternalHost for LinkedExternals<'_> {
+    fn class_exists(&self, name: &str) -> bool {
+        self.linked.as_ref().is_some_and(|r| r.class_exists(name)) || self.stubs.class_exists(name)
+    }
+    fn invoke(
+        &mut self,
+        call: &crate::runtime::ExternalCall<'_>,
+        vars: &dyn crate::runtime::Variables,
+    ) -> Result<crate::Value, crate::runtime::ExternalError> {
+        if let Some(registry) = self
+            .linked
+            .as_mut()
+            .filter(|r| r.class_exists(call.class_name))
+        {
+            registry.invoke(call, vars)
+        } else {
+            self.stubs.invoke(call, vars)
+        }
+    }
+}
+
+fn evaluate_request(
+    mut request: Request,
+    formula: &str,
+    mut trace: Option<&mut TraceRecorder>,
+    linked: Option<&mut crate::runtime::bindings::LinkedCode>,
+) -> Response {
     let options = Options::new(request.result_type).with_number_type(request.number_type);
-    let program = match Program::new(&formula, options) {
+    let program = match linked
+        .as_ref()
+        .map_or_else(|| Program::new(formula, options), |l| l.program(options))
+    {
         Ok(program) => program,
         Err(error) => {
             let exit = if error.kind == ErrorKind::Parse && error.diagnostic.is_some() {
@@ -293,8 +356,12 @@ fn eval_context_response(request_text: &str, mut trace: Option<&mut TraceRecorde
         }
     };
     let mut random = XorShiftRandom::new(request.seed);
+    let mut external = LinkedExternals {
+        linked: linked.map(|l| &mut l.registry),
+        stubs: &mut request.externals,
+    };
     let mut host = Host {
-        external: &mut request.externals,
+        external: &mut external,
         clock: &ContextClock,
         random: &mut random,
     };
@@ -331,11 +398,16 @@ pub fn formula_info_context_json(request_text: &str, options: &LoaderOptions) ->
             &formulas,
             Some((&request.context, &mut request.externals, request.seed)),
         ),
-        Err(error) => load_failure(error),
+        Err(error) => load_failure(&document, options, error),
     }
 }
 
-fn load_failure(error: LoadError) -> Response {
+/// `{"ok":false,"stage":"load","error":...,"span":[start,end]}`: `span` (issue #212) is where in
+/// the document the error is, in code points (`formula_info_span`); absent when not found.
+fn load_failure(source: &str, options: &LoaderOptions, error: LoadError) -> Response {
+    let span = formula_info_span::load_error_span(source, options, &error)
+        .map(|span| format!(",\"span\":[{},{}]", span.start, span.end))
+        .unwrap_or_default();
     Response::failure(
         if matches!(error, LoadError::Syntax(_)) {
             EXIT_PARSE
@@ -343,7 +415,7 @@ fn load_failure(error: LoadError) -> Response {
             EXIT_LOAD
         },
         format!(
-            "{{\"ok\":false,\"stage\":\"load\",\"error\":{}}}",
+            "{{\"ok\":false,\"stage\":\"load\",\"error\":{}{span}}}",
             error.canonical_json()
         ),
     )

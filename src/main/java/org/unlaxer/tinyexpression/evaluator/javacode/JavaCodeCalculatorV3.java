@@ -116,42 +116,45 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
     dependsOnBy = Optional.empty();
     dependsOns = new ArrayList<>();
 
-    try (CompileContext compileContext = new CompileContext(classLoader, javaFileManagerContext)) {
+    try {
 
       this.className = className;
       formulaHash = MD5.toHex(formula);
 
       TinyExpressionTokens tinyExpressionTokens = new TinyExpressionTokens(rootToken , specifiedExpressionTypes);
 
-      instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, compileContext);
+      rejectUncompiledRustBlocks(tinyExpressionTokens.codeBlocks);
+      try (CompileContext compileContext = new CompileContext(classLoader, javaFileManagerContext)) {
+        instanceAndByteCodeList = createJavaFromCodedBlock(tinyExpressionTokens, compileContext);
 
-//      ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
-//      ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
-//      生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
+        // ここでJavaCodesをあらかじめ先にコンパイルを行う。これもhashをつけなければならない。
+        // ハッシュをつけるのでsideEffectのimport部分や直接クラス名を指定しているところをhash付きに置き換えてcreateJavaClassで
+        // 生成を行分ければならない。これは難しいのでpackage xxx.v1のようにpackage名でversion管理を行う
 
-      classNameWithHash = className + "_" + formulaHash;
-      javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , specifiedExpressionTypes);
+        classNameWithHash = className + "_" + formulaHash;
+        javaCode = createJavaClass(classNameWithHash, tinyExpressionTokens , specifiedExpressionTypes);
 
-      ClassName classNameObject = new ClassName(classNameWithHash);
+        ClassName classNameObject = new ClassName(classNameWithHash);
 
 
-      if (outputRootDirectory != null) {
-        try (BufferedWriter newBufferedWriter = Files
-            .newBufferedWriter(outputRootDirectory.resolve(classNameWithHash + ".java"))) {
-          newBufferedWriter.write(javaCode);
-        } catch (IOException e1) {
-          e1.printStackTrace();
+        if (outputRootDirectory != null) {
+          try (BufferedWriter newBufferedWriter = Files
+              .newBufferedWriter(outputRootDirectory.resolve(classNameWithHash + ".java"))) {
+            newBufferedWriter.write(javaCode);
+          } catch (IOException e1) {
+            e1.printStackTrace();
+          }
         }
+
+        Try<ClassAndByteCode> classOrError = compileContext.compile(classNameObject,javaCode);
+        classOrError.throwIfMatch();
+
+        ClassAndByteCode classAndByteCode = classOrError.get();
+        operator = (TokenBaseOperator<CalculationContext>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
+
+        byteCode = classAndByteCode.bytes;
+        byteCodeHash = MD5.toHex(byteCode);
       }
-
-      Try<ClassAndByteCode> classOrError = compileContext.compile(classNameObject,javaCode);
-      classOrError.throwIfMatch();
-
-      ClassAndByteCode classAndByteCode = classOrError.get();
-      operator = (TokenBaseOperator<CalculationContext>) classAndByteCode.clazz.getDeclaredConstructor().newInstance();
-
-      byteCode = classAndByteCode.bytes;
-      byteCodeHash = MD5.toHex(byteCode);
     } catch (CompileError e) {
       throw e;
     } catch (Throwable e) {
@@ -291,9 +294,18 @@ public class JavaCodeCalculatorV3 extends PreConstructedCalculator
   }
 
 
+  private static void rejectUncompiledRustBlocks(List<CodeBlock> codeBlocks) {
+    // Rust bindings require the explicit native AOT path; never ignore them or
+    // treat Java's global permission as permission to compile Rust.
+    if (codeBlocks.stream().anyMatch(cb -> "rust".equalsIgnoreCase(cb.schemeAndIdentifier.scheme))) {
+      throw new UnsupportedOperationException("CB005: Rust code blocks require an explicit AOT build");
+    }
+  }
+
   static List<InstanceAndByteCode> createJavaFromCodedBlock(TinyExpressionTokens tinyExpressionTokens, CompileContext compileContext) {
 
     List<CodeBlock> codeBlocks = tinyExpressionTokens.codeBlocks;
+    rejectUncompiledRustBlocks(codeBlocks);
 
     // Opt-in check: if JavaCodeBlockPolicy disables code block execution and the formula
     // contains at least one Java code block, reject with a diagnostic error so callers

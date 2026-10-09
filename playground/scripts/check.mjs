@@ -15,7 +15,22 @@ import { EXAMPLES, FORMULA_INFO_SAMPLE } from '../src/examples.js';
 import { prepareTrace, stepEvents, stackAt, failingNode } from '../src/trace.js';
 import { validate as validateGenerated } from '../src/generated/catalog-validator.js';
 import { mergeOverride, overrideOf, clone } from '../../catalog/scripts/catalog-edit.mjs';
+import { ja } from '../../catalog/scripts/catalog-lib.mjs';
 import { createCatalogPullRequest, compareUrlOf } from '../src/github-pr.js';
+import { CompletionContext } from '@codemirror/autocomplete';
+import { EditorState } from '@codemirror/state';
+import { analyzeFormula, lexiconOf, bracketAtCursor } from '../src/te-lexer.js';
+import { analyzeFormulaInfo, parseFormulaInfo, normalizedValue, setEndMarkTrailingSpace } from '../src/formula-info-syntax.js';
+import { diagnoseFormulaInfo, formulaInfoKeys, isKnownKey } from '../src/formula-info-diagnostics.js';
+import { formulaInfoCompletionSource, formulaInfoHoverAt } from '../src/formula-info-editor.js';
+import { completionSource, formulaHoverAt } from '../src/editor-support.js';
+import { referencedVariables } from '../src/context.js';
+import { codeBlocksOf, codeBlockAt, blankCodeBlocks, MISSING_STUB_HINT, HELP_JAVA_CODE_BLOCK, CODE_SERVER_URL } from '../src/code-block.js';
+import { externalCandidates, addExternalCandidates, stubsUsedBy, isMissingStubFailure, isExternalTraceNode } from '../src/externals.js';
+import { codeBlockFolding } from '../src/syntax-view.js';
+import { foldable } from '@codemirror/language';
+import { tourSteps, helpSections, selectorPresentInHtml } from '../src/guide-content.js';
+import { configuredServerUrl, DEFAULT_SERVER_EVAL_URL, probeServer, createServerRuntime, withWasmDiagnostic, realClassesOf, REQUESTED_WITH } from '../src/eval-target.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, '..', '..');
@@ -30,6 +45,7 @@ assert.ok(validate(catalog), JSON.stringify(validate.errors?.slice(0, 5), null, 
 // 2. samples
 const expected = {
   basic: '7.0', member: '100.0', grade: 'B', 'business-hours': '1.0', 'fraud-alert': '1.0', 'fraud-score': '5.0', external: '1100.0',
+  'java-code-block': '1.0',
 };
 for (const example of EXAMPLES) {
   const context = { ...emptyState(), ...example.context };
@@ -160,5 +176,433 @@ assert.deepEqual(run.formulas.map((f) => f.value.value), ['42', true]);
   }
 }
 
+
+// 9. editors (issue #212): tokens and bracket depth, the FormulaInfo scanner, completion,
+//    diagnostics at the loader's / te_check's positions, hover.
+{
+  const lexicon = lexiconOf(catalog);
+  const keys = formulaInfoKeys(catalog);
+  const analyzeInfo = (text) => analyzeFormulaInfo(text, { lexicon, isKnownKey: (k) => isKnownKey(keys, k) });
+  const typed = (text, tokens) => tokens.map((t) => `${t.type}:${text.slice(t.from, t.to)}`);
+
+  // Tokens: strings / comments hide their brackets, keywords vs calls, variables.
+  const f = "if($a > 1){ max(1, (2)) }else{ 'x(' } // (";
+  const { tokens, brackets } = analyzeFormula(f, lexicon);
+  assert.deepEqual(typed(f, tokens).slice(0, 7), ['keyword:if', 'bracket:(', 'variable:$a', 'operator:>', 'number:1', 'bracket:)', 'bracket:{']);
+  assert.ok(typed(f, tokens).includes('function:max'));
+  assert.ok(typed(f, tokens).includes("string:'x('"));
+  assert.ok(typed(f, tokens).includes('comment:// ('));
+  // Depth: `{` 0, `max(` 1, `(2)` 2; each pair shares its depth.
+  assert.deepEqual(brackets.map((b) => `${b.char}${b.depth}`).join(' '), '(0 )0 {0 (1 (2 )2 )1 }0 {0 }0');
+  assert.ok(brackets.every((b) => b.partner >= 0 && brackets[b.partner].partner === brackets.indexOf(b)));
+  // Unmatched: `)` closes `(` past the unclosed `[`; a stray `)` / `}` has no partner.
+  const bad = analyzeFormula('(1 + [2) ) }', lexicon).brackets;
+  assert.deepEqual(bad.map((b) => `${b.char}${b.partner < 0 ? '!' : ''}`).join(' '), '( [! ) )! }!');
+  // The pair at the cursor: just after it, else just before it.
+  const pair = bracketAtCursor(brackets, f.indexOf('(2)') + 2);
+  assert.equal(pair.bracket.char, ')');
+  assert.equal(pair.partner.from, f.indexOf('(2)'));
+  assert.equal(bracketAtCursor(brackets, f.indexOf('2)) }') + 1).partner.from, f.indexOf('(2)'), 'after the cursor first');
+  assert.equal(bracketAtCursor(brackets, f.indexOf(' }else') + 1).partner.from, f.indexOf('{ max'), 'the closing brace at the cursor');
+  // Non-BMP text before a bracket: JS indices, never inside a surrogate pair.
+  const emoji = analyzeFormula("'😀' + (1)", lexicon);
+  assert.deepEqual(emoji.brackets.map((b) => b.from), ["'😀' + ".length, "'😀' + (1".length]);
+
+  // The scanner: blocks, keys, the value the loader sees (# and blank lines dropped).
+  const doc = 'tags:NORMAL\nfoo:1\ncalculatorName:a\nformula:\n# note\n\n(1 +\n 2)\n---END_OF_PART---\n'
+    + 'calculatorName:b\ndependsOn:a,zz\nformula:\n$x + (\n---END_OF_PART---\n';
+  const parsed = parseFormulaInfo(doc);
+  assert.equal(parsed.blocks.length, 2);
+  assert.deepEqual(parsed.blocks[0].entries.map((e) => e.key), ['tags', 'foo', 'calculatorName', 'formula']);
+  const formula = normalizedValue(doc, parsed.blocks[0].entries[3]);
+  assert.equal(formula.text, '(1 +\n 2)');
+  // The Rust loader normalises the same way.
+  assert.equal(te.load(doc.split('---END_OF_PART---\n')[0]).result.formulas[0].info.formulaText, formula.text);
+  const info = analyzeInfo(doc);
+  const infoTokens = typed(doc, info.tokens);
+  assert.ok(infoTokens.includes('fi-key:tags') && infoTokens.includes('fi-key-unknown:foo') && infoTokens.includes('fi-colon::'));
+  assert.ok(infoTokens.includes('fi-comment:# note') && infoTokens.includes('fi-end:---END_OF_PART---'));
+  assert.ok(infoTokens.includes('variable:$x'), 'formula values carry the tinyexpression colouring');
+  // Brackets per formula: the first pair matches across its lines, the second `(` is open.
+  assert.deepEqual(info.brackets.map((b) => [doc[b.from], b.depth, b.partner >= 0]), [['(', 0, true], [')', 0, true], ['(', 0, false]]);
+
+  // Diagnostics: unknown key (warning), TE code of each formula at its document position,
+  // every unknown dependsOn name (FI001).
+  const found = diagnoseFormulaInfo(te, catalog, doc, [], info);
+  const summary = found.map((d) => `${d.severity}:${d.code}:${doc.slice(d.from, d.to)}`);
+  assert.deepEqual(summary, ['warning:unknown-key:foo', 'error:FI001:zz', 'warning:TE022:$x', 'error:TE020:(']);
+  const te020 = found.find((d) => d.code === 'TE020');
+  assert.match(te020.message, /^\[TE020\] /);
+  assert.equal(te020.fix, ja(catalog.errorCodes.find((e) => e.code === 'TE020').fix));
+
+  // The loader's error at the span Rust returns (code points → JS indices, as trace.js).
+  const emojiDoc = 'description:😀😀\ncalculatorName:a\nresultType:Nope\nformula:\n1\n';
+  const loadFailure = te.load(emojiDoc).result;
+  assert.equal(loadFailure.error.kind, 'unknown_type');
+  assert.deepEqual(loadFailure.span, [43, 47], 'code points');
+  const [typeError] = diagnoseFormulaInfo(te, catalog, emojiDoc, [], analyzeInfo(emojiDoc));
+  assert.equal(emojiDoc.slice(typeError.from, typeError.to), 'Nope');
+  assert.match(typeError.message, /未知の型です（RuntimeException）/);
+  // Syntax errors (junk between blocks) point at the rejected line.
+  const junk = 'calculatorName:a\nformula:\n1\n---END_OF_PART---\ngarbage\n';
+  const [syntax] = diagnoseFormulaInfo(te, catalog, junk, [], analyzeInfo(junk));
+  assert.equal(junk.slice(syntax.from, syntax.to), 'garbage');
+  assert.equal(syntax.kind, 'syntax');
+  assert.ok(analyzeInfo(junk).tokens.some((t) => t.type === 'fi-junk' && junk.slice(t.from, t.to) === 'garbage'));
+  // A blank formula / empty value at the end: the loader's error at the entry.
+  const empty = 'calculatorName:a\nformula:';
+  const [atEnd] = diagnoseFormulaInfo(te, catalog, empty, [], analyzeInfo(empty));
+  assert.equal(empty.slice(atEnd.from, atEnd.to), 'formula:');
+  // A formula error both the loader and te_check see is reported once, with the TE code.
+  const broken = 'calculatorName:a\nformula:\n(1 + 2\n';
+  const brokenFound = diagnoseFormulaInfo(te, catalog, broken, [], analyzeInfo(broken));
+  assert.deepEqual(brokenFound.map((d) => d.code), ['TE004']);
+  // The sample loads cleanly.
+  assert.deepEqual(diagnoseFormulaInfo(te, catalog, FORMULA_INFO_SAMPLE, ['bonus', 'member', 'age'], analyzeInfo(FORMULA_INFO_SAMPLE)), []);
+
+  // End mark with trailing characters: not a block end (issue #211 decides spaces).
+  const probe = te.load('calculatorName:a\nformula:\n1\n---END_OF_PART--- \n').result;
+  const spaceEnds = probe.ok === true && probe.formulas?.[0]?.info?.formulaText === '1';
+  setEndMarkTrailingSpace(spaceEnds);
+  const trailing = 'calculatorName:a\nformula:\n1\n---END_OF_PART---x\n';
+  assert.ok(analyzeInfo(trailing).tokens.some((t) => t.type === 'fi-end-bad'));
+  assert.ok(diagnoseFormulaInfo(te, catalog, trailing, [], analyzeInfo(trailing)).length > 0);
+  const spaced = 'calculatorName:a\nformula:\n1\n---END_OF_PART---  \n';
+  assert.equal(parseFormulaInfo(spaced).blocks[0].end != null, spaceEnds);
+  assert.ok(spaceEnds, 'this wasm has the #211 loader: trailing spaces end the block');
+  assert.deepEqual(diagnoseFormulaInfo(te, catalog, spaced, [], analyzeInfo(spaced)), []);
+  const [trailingError] = diagnoseFormulaInfo(te, catalog, trailing, [], analyzeInfo(trailing));
+  assert.equal(trailing.slice(trailingError.from, trailingError.to), '---END_OF_PART---x');
+  assert.equal(trailingError.kind, 'syntax');
+  // #211: a missing end mark merges two blocks; the duplicate calculatorName is marked.
+  const merged = 'calculatorName:a\nformula:\n1\ncalculatorName:b\nformula:\n2\n---END_OF_PART---\n';
+  const [duplicate] = diagnoseFormulaInfo(te, catalog, merged, [], analyzeInfo(merged));
+  assert.equal(duplicate.kind, 'duplicate_calculator_name');
+  assert.equal(duplicate.from, merged.indexOf('calculatorName:b'));
+  assert.match(duplicate.message, /calculatorName が重複しています/);
+
+  // Completion.
+  const vars = [{ name: 'bonus', type: 'float', value: '1' }];
+  const source = formulaInfoCompletionSource(() => te, () => catalog, () => vars);
+  const complete = async (marked) => {
+    const pos = marked.indexOf('|');
+    const text = marked.replace('|', '');
+    const result = await source(new CompletionContext(EditorState.create({ doc: text }), pos, true));
+    return result && { from: result.from, labels: result.options.map((o) => o.label) };
+  };
+  const keysAt = await complete('calculatorName:a\nres|');
+  assert.equal(keysAt.from, 17);
+  assert.ok(keysAt.labels.includes('resultType:') && keysAt.labels.includes('formula:'));
+  assert.ok((await complete('calculatorName:a\n|')).labels.includes('---END_OF_PART---'));
+  assert.deepEqual((await complete('calculatorName:a\n---|')).labels, ['---END_OF_PART---']);
+  assert.deepEqual((await complete('calculatorName:a\nexecutionBackend:|')).labels,
+    catalog.settings.find((x) => x.name === 'executionBackend').values);
+  const dependsDoc = 'calculatorName:a\nformula:\n1\n---END_OF_PART---\ncalculatorName:b\ndependsOn:x,|\nformula:\n2\n';
+  const depends = await complete(dependsDoc);
+  assert.deepEqual(depends.labels, ['a'], 'other blocks only');
+  assert.equal(depends.from, dependsDoc.indexOf('|'));
+  const inFormula = await complete('calculatorName:a\nformula:\n# c\n$bo|\n');
+  assert.equal(inFormula.labels[0], '$bonus');
+  assert.equal(inFormula.from, 'calculatorName:a\nformula:\n# c\n'.length);
+  assert.ok((await complete('calculatorName:a\nformula:\n1 + sq|\n')).labels.includes('sqrt'));
+
+  // Hover.
+  const hoverDoc = 'calculatorName:a\nformula:\n$bonus + sqrt(4)\n---END_OF_PART---\nfoo:1\ndependsOn:a\nformula:\n1\n';
+  const hover = (word, delta = 1) => formulaInfoHoverAt(catalog, vars, hoverDoc, hoverDoc.indexOf(word) + delta);
+  assert.match(hover('calculatorName').content.rows[0][1], /式を識別する名前/);
+  assert.equal(hover('sqrt').content.title, 'sqrt');
+  assert.deepEqual(hover('$bonus').content.rows[0], ['CalculationContext', 'float = 1']);
+  assert.equal(hover('foo').content.rows[0][0], '未知のキー');
+  assert.equal(hover('dependsOn:a', 10).content.rows[0][0], 'calculatorName');
+  assert.equal(hover('---END').content.title, '---END_OF_PART---');
+
+  // Key descriptions come from the catalog `settings` (scope formulaInfo): every key the Java
+  // loader reads (FormulaInfoParser.extractFormulaInfo, plus the siteId / checkKind fields of
+  // the loader configuration) is there, with ja and en texts.
+  for (const key of ['tags', 'description', 'periodStartInclusive', 'periodEndExclusive', 'calculatorName', 'dependsOn',
+    'resultType', 'numberType', 'executionBackend', 'backend', 'hash', 'hashByByteCode', 'formula', 'javaCode', 'byteCode',
+    'byteCode_Foo', 'siteId', 'checkKind']) {
+    assert.ok(isKnownKey(keys, key), key);
+  }
+  for (const setting of keys.values()) assert.ok(setting.description?.ja && setting.description?.en, setting.name);
+  assert.ok(keysAt.labels.includes('siteId:') && !keysAt.labels.some((l) => l.includes('<')), 'patterns are not completed');
+  const bytecodeDoc = 'calculatorName:a\nbyteCode_Foo:00\nformula:\n1\n';
+  assert.match(formulaInfoHoverAt(catalog, vars, bytecodeDoc, bytecodeDoc.indexOf('byteCode_Foo') + 1).content.rows[0][1], /byteCode_/);
+  // A Catalog panel edit (the `settings` section) applies at once: new text, a new key.
+  const edited = clone(catalog);
+  edited.settings.find((x) => x.scope === 'formulaInfo' && x.name === 'calculatorName').description.ja = '編集した説明';
+  edited.settings.push({ name: 'owner', scope: 'formulaInfo', type: 'enum', values: ['alice', 'bob'], description: { ja: '担当', en: 'Owner' } });
+  const editedDoc = 'calculatorName:a\nowner:\nformula:\n1\n';
+  assert.equal(formulaInfoHoverAt(edited, vars, editedDoc, 1).content.rows[0][1], '編集した説明');
+  assert.ok(!diagnoseFormulaInfo(te, edited, editedDoc, [], analyzeFormulaInfo(editedDoc, { lexicon })).some((d) => d.code === 'unknown-key'));
+  assert.ok(diagnoseFormulaInfo(te, catalog, editedDoc, [], analyzeInfo(editedDoc)).some((d) => d.code === 'unknown-key'));
+  const editedSource = formulaInfoCompletionSource(() => te, () => edited, () => vars);
+  const ownerValues = await editedSource(new CompletionContext(EditorState.create({ doc: editedDoc }), 'calculatorName:a\nowner:'.length, true));
+  assert.deepEqual(ownerValues.options.map((o) => o.label), ['alice', 'bob']);
+}
+
+// 8. Java code blocks (issue #216): where the blocks are, their Java colouring and brackets, no
+// tinyexpression completion / diagnostics inside, the hover, external stub candidates, and the
+// stub execution of formulaInfo-test/69 (the acceptance example).
+{
+  const lexicon = lexiconOf(catalog);
+  const keys = formulaInfoKeys(catalog);
+  const analyzeInfo = (text) => analyzeFormulaInfo(text, { lexicon, isKnownKey: (k) => isKnownKey(keys, k) });
+  const doc69 = await readFile(join(root, 'src', 'test', 'resources', 'formulaInfo-test', '69', 'formulaInfo.txt'), 'utf8');
+  const example = EXAMPLES.find((e) => e.id === 'java-code-block');
+  const formula = example.formula;
+
+  // Block ranges (fence rules of the Java CodeStartParser / CodeEndParser).
+  const [block] = codeBlocksOf(formula);
+  assert.equal(formula.slice(block.from, block.openTo), '```java:CheckDigits');
+  assert.equal(block.className, 'CheckDigits');
+  assert.equal(formula.slice(block.classFrom, block.classTo), 'CheckDigits');
+  assert.ok(formula.slice(block.bodyFrom, block.bodyTo).startsWith('import org.unlaxer'));
+  assert.equal(formula.slice(block.closeFrom, block.to), '```');
+  assert.ok(block.closed);
+  assert.deepEqual(codeBlocksOf('```java:a.b.C\r\nclass C{}\r\n```\r\n1').map((b) => b.className), ['a.b.C']);
+  assert.deepEqual(codeBlocksOf(' ```java:A\n```\n```java:A x\n```\n```java\n```'), [], 'not fences');
+  const unclosed = codeBlocksOf('```java:A\nclass A{');
+  assert.equal(unclosed[0].closed, false);
+  assert.equal(unclosed[0].to, '```java:A\nclass A{'.length);
+  assert.equal(blankCodeBlocks(formula).length, formula.length);
+  assert.ok(!blankCodeBlocks(formula).includes('public'));
+
+  // Colouring: Java token types inside the block, tinyexpression outside.
+  const analysis = analyzeFormula(formula, lexicon);
+  const tokenAt = (text, a, word, nth = 0) => {
+    let at = -1;
+    for (let k = 0; k <= nth; k++) at = text.indexOf(word, at + 1);
+    return a.tokens.find((t) => t.from === at);
+  };
+  assert.equal(tokenAt(formula, analysis, '```java:').type, 'code-fence');
+  assert.equal(tokenAt(formula, analysis, 'CheckDigits').type, 'type');
+  assert.equal(tokenAt(formula, analysis, 'public').type, 'keyword');
+  assert.equal(tokenAt(formula, analysis, 'boolean').type, 'type');
+  assert.equal(tokenAt(formula, analysis, 'check(').type, 'function');
+  assert.equal(tokenAt(formula, analysis, '"\\\\d+"').type, 'string');
+  assert.equal(tokenAt(formula, analysis, 'matches').type, 'function');
+  assert.equal(tokenAt(formula, analysis, '```', 1).type, 'code-fence');
+  assert.equal(tokenAt(formula, analysis, 'import CheckDigits').type, 'keyword', 'tinyexpression after the block');
+  assert.equal(tokenAt(formula, analysis, '$input').type, 'variable');
+  assert.ok(!analysis.tokens.some((t) => t.from < block.to && t.to > block.from && t.type === 'variable'));
+  assert.equal(analysis.codeBlocks.length, 1);
+  // Brackets: the Java ones pair within the block (depth from 0), the formula's separately.
+  const javaBrackets = analysis.brackets.filter((b) => b.from > block.from && b.from < block.to);
+  assert.ok(javaBrackets.length >= 8 && javaBrackets.every((b) => b.partner >= 0));
+  assert.equal(javaBrackets[0].char, '{');
+  assert.equal(javaBrackets[0].depth, 0);
+  assert.equal(analysis.brackets[javaBrackets[0].partner].from, formula.lastIndexOf('}', block.closeFrom));
+  const ifParen = analysis.brackets.find((b) => b.from === formula.indexOf('if(') + 2);
+  assert.equal(ifParen.depth, 0);
+  assert.equal(analysis.brackets[ifParen.partner].from, formula.lastIndexOf('){'));
+  // An unbalanced Java body does not unbalance the formula.
+  const broken = analyzeFormula('```java:A\nclass A{ void m( }\n```\n(1 + 2)', lexicon);
+  assert.ok(broken.brackets.filter((b) => b.from > 30).every((b) => b.partner >= 0));
+
+  // FormulaInfo: the same inside `formula:` values, in document positions.
+  const info = analyzeInfo(doc69);
+  assert.equal(info.codeBlocks.length, 2);
+  assert.equal(doc69.slice(info.codeBlocks[0].from, info.codeBlocks[0].openTo), '```java:CheckDigits');
+  assert.equal(doc69.slice(info.codeBlocks[1].from, info.codeBlocks[1].openTo), '```java:sample.v1.CheckAlphabets');
+  const pkg = doc69.indexOf('\npackage sample.v1;') + 1;
+  assert.equal(info.tokens.find((t) => t.from === pkg).type, 'keyword');
+  assert.equal(info.tokens.find((t) => t.from === doc69.indexOf('"[a-zA-Z]+"')).type, 'string');
+  assert.equal(diagnoseFormulaInfo(te, catalog, doc69, [], info).filter((d) => d.severity === 'error').length, 0);
+
+  // Folding: from the end of the opening fence line to the end of the block.
+  const foldState = EditorState.create({ doc: formula, extensions: [codeBlockFolding] });
+  const line1 = foldState.doc.line(1);
+  assert.deepEqual(foldable(foldState, line1.from, line1.to), { from: block.openTo, to: block.to });
+  assert.equal(foldable(foldState, foldState.doc.line(2).from, foldState.doc.line(2).to), null);
+
+  // No tinyexpression completion inside the block; hover explains it.
+  const plain = completionSource(() => te, () => catalog, () => []);
+  const inBody = formula.indexOf('return target') + 3;
+  assert.deepEqual(codeBlockAt(codeBlocksOf(formula), inBody), block);
+  assert.equal(await plain(new CompletionContext(EditorState.create({ doc: formula }), inBody, true)), null);
+  assert.ok(await plain(new CompletionContext(EditorState.create({ doc: formula }), formula.length - 2, true)), 'completion after the block');
+  const stubs = example.context.externals;
+  const hover = formulaHoverAt(catalog, [], formula, inBody, stubs);
+  assert.equal(hover.content.title, '```java:CheckDigits');
+  assert.equal(hover.anchor, inBody);
+  const text = JSON.stringify(hover.content.rows);
+  assert.ok(text.includes('実行されません') && text.includes('allowJavaCodeBlocks: true') && text.includes('check/1 → boolean true'), text);
+  const links = hover.content.rows.flatMap(([, v]) => v.links ?? []);
+  assert.ok(links.some((l) => l.help === HELP_JAVA_CODE_BLOCK) && links.some((l) => l.href === CODE_SERVER_URL) && links.some((l) => l.href.includes('ADR-003')));
+  assert.ok(JSON.stringify(formulaHoverAt(catalog, [], formula, inBody, []).content.rows).includes('未設定'));
+  const fiInBody = doc69.indexOf('target.matches("\\\\d+")');
+  assert.equal(formulaInfoHoverAt(catalog, [], doc69, fiInBody, []).content.title, '```java:CheckDigits');
+  const fiSource = formulaInfoCompletionSource(() => te, () => catalog, () => []);
+  assert.equal(await fiSource(new CompletionContext(EditorState.create({ doc: doc69 }), doc69.indexOf('public class CheckDigits') + 2, true)), null);
+
+  // Diagnostics and "式から変数を追加" skip the Java.
+  const dollar = '```java:A\nclass A{ String s = "$notAVariable"; }\n```\n1';
+  assert.deepEqual(diagnose(te, catalog, dollar, []), []);
+  assert.deepEqual(referencedVariables(dollar), []);
+  assert.deepEqual(diagnose(te, catalog, formula, []), []);
+
+  // External stub candidates ("式から external を追加").
+  const fiTexts = parseFormulaInfo(doc69).blocks.flatMap((b) => b.entries.filter((e) => e.key === 'formula')).map((e) => normalizedValue(doc69, e).text);
+  const candidates = externalCandidates(fiTexts);
+  assert.deepEqual(candidates.map((c) => [c.class, c.method, c.arity, c.returnType, c.codeBlock]), [
+    ['CheckDigits', 'check', 1, 'boolean', true],
+    ['sample.v1.CheckAlphabets', 'check', 1, 'boolean', true],
+  ]);
+  assert.deepEqual(externalCandidates([
+    "import a.Fee#calc as fee;\nexternal returning as number fee($a, f(1, 2), 'x') + external returning as string : x.Y.z(1)",
+    'external returning as number org.unlaxer.tinyexpression.Fee#calculate($age, 1000, 0.1)',
+    '```java:Lonely\nclass Lonely{ int f(){ return 1; } }\n```\nimport Unused#m as u;\n1',
+  ]).map((c) => `${c.class}#${c.method}/${c.arity}:${c.returnType}`), [
+    'a.Fee#calc/3:float', 'x.Y#z/1:string', 'org.unlaxer.tinyexpression.Fee#calculate/3:float', 'Unused#m/null:float', 'Lonely#/null:float',
+  ]);
+  const rows = [];
+  assert.equal(addExternalCandidates(rows, candidates).length, 2);
+  assert.equal(addExternalCandidates(rows, candidates).length, 0, 'existing rows are kept');
+  assert.deepEqual(rows[0], { class: 'CheckDigits', method: 'check', arity: '1', registered: true, returnType: 'boolean', value: 'true' });
+  assert.equal(stubsUsedBy(fiTexts, rows).length, 2);
+  assert.deepEqual(stubsUsedBy(['1 + 2'], rows), []);
+
+  // Stub execution: every block of formulaInfo-test/69 runs once the stubs have values; without
+  // them only the two code-block formulas fail, with the Rust hint.
+  const withStubs = te.runContext(toRequest({ ...emptyState(), externals: rows }, { document: doc69 })).result;
+  assert.ok(withStubs.ok, JSON.stringify(withStubs).slice(0, 400));
+  assert.equal(withStubs.formulas.length, 10);
+  assert.ok(withStubs.formulas.every((f) => f.value));
+  assert.equal(withStubs.formulas[0].value.value, '1');
+  rows[1].value = 'false';
+  assert.equal(te.runContext(toRequest({ ...emptyState(), externals: rows }, { document: doc69 })).result.formulas[1].value.value, '0');
+  const noStubs = te.runContext(toRequest(emptyState(), { document: doc69 })).result;
+  assert.equal(noStubs.ok, false);
+  const failed = noStubs.formulas.filter((f) => f.error);
+  assert.deepEqual(failed.map((f) => f.info.calculatorName), ['callJavaCodeBlock', 'callJavaCodeBlockWithPackage']);
+  assert.ok(failed.every((f) => f.error.kind === 'UnsupportedOperationException' && isMissingStubFailure(f.error)));
+  const single = te.evalContext(toRequest(emptyState(), { formula })).result;
+  assert.equal(single.stage, 'apply');
+  assert.ok(single.error.message.includes(MISSING_STUB_HINT) && single.error.message.includes('```java:CheckDigits'), single.error.message);
+  const traced = te.evalTrace(toRequest({ ...emptyState(), ...example.context }, { formula })).result;
+  assert.ok(traced.ok);
+  assert.ok(prepareTrace(traced.trace.root, formula).nodes.some(isExternalTraceNode), 'the trace marks the external call');
+}
+
+// 10. guided tour + help (issue #214): src/guide-content.js is the one content source both
+//    read. tour.js and help.js do real DOM work (dialogs, highlight boxes) that needs a
+//    browser, so this Node check instead verifies the shape they render from: every entry has
+//    non-empty ja/en text, every tour step's target either exists in the shipped index.html or
+//    is explicitly `optional` (so the tour can skip it gracefully; the Java code-block step of
+//    issue #216 is required: its target is the "external（仮の値）" section), and the two fixed contracts other issues depend on: a help
+//    section id of `java-code-block` (issue #216 links hovers to `#help-java-code-block`) and
+//    a `code-server` step pointing at the code.unlaxer.org entry point.
+{
+  const indexHtml = await readFile(join(root, 'playground', 'index.html'), 'utf8');
+  const steps = tourSteps();
+  const sections = helpSections();
+  assert.ok(steps.length >= 7, `expected at least the 7 guided-tour steps, got ${steps.length}`);
+  for (const entry of sections) {
+    assert.ok(entry.id && entry.title?.ja && entry.title?.en, `entry ${entry.id ?? '?'} needs ja/en titles`);
+    assert.ok(entry.body?.ja?.length && entry.body?.en?.length, `entry ${entry.id} needs ja/en body text`);
+    for (const link of entry.links ?? []) assert.match(link.href, /^https:\/\//, `entry ${entry.id} link`);
+  }
+  for (const step of steps) {
+    assert.ok(step.selector, `tour step ${step.id} needs a selector`);
+    const present = selectorPresentInHtml(indexHtml, step.selector);
+    assert.ok(present || step.optional === true, `tour step ${step.id}: ${step.selector} is missing from index.html and not marked optional`);
+  }
+  const javaStep = steps.find((s) => s.id === 'java-code-block');
+  assert.ok(javaStep && javaStep.optional !== true && selectorPresentInHtml(indexHtml, javaStep.selector), 'the #216 code-block tour step targets the real UI');
+  assert.equal(javaStep.autoAction, 'java-code-block-sample');
+  assert.equal(`help-${javaStep.id}`, HELP_JAVA_CODE_BLOCK, 'hover help links point at the help section');
+  assert.ok(sections.some((s) => s.id === 'java-code-block'), 'help needs the java-code-block section (id="help-java-code-block", issue #216 links to it)');
+  const codeServer = sections.find((s) => s.id === 'code-server');
+  assert.ok(codeServer, 'help/tour need the code-server entry point');
+  assert.ok(selectorPresentInHtml(indexHtml, codeServer.selector), 'code-server tour target must exist (it is not optional)');
+  assert.equal(codeServer.links[0].href, 'https://code.unlaxer.org/');
+  // The grammar (UBNF/railroad) recap is the tour's closing step before code-server (issue #214
+  // comment: "ツアーの最後に UBNF 定義と railroad 図へのリンクを紹介する手順").
+  const ids = steps.map((s) => s.id);
+  assert.ok(ids.indexOf('grammar') < ids.indexOf('code-server'), 'grammar recap should come before the code-server entry');
+  const grammar = sections.find((s) => s.id === 'grammar');
+  assert.ok(grammar?.body.ja.some((text) => text.includes('UBNF v2') && text.includes('生成')), 'grammar help must explain declarative UBNF generation');
+  assert.ok(grammar?.body.ja.some((text) => text.includes('CAPTURE') && text.includes('SAME_AS')), 'grammar help must explain variable-width fences');
+  assert.match(indexHtml, /tinyexpression（v2・宣言的 token）/, 'the grammar link must describe declarative tokens');
+  assert.match(indexHtml, /grammar\/lexical/, 'the playground must link reusable lexical modules');
+}
+
+// evaluation target switch (#221): the server runtime against a mocked Java service
+{
+  assert.equal(configuredServerUrl(undefined), DEFAULT_SERVER_EVAL_URL);
+  assert.equal(configuredServerUrl('/api/eval'), '/api/eval');
+  for (const off of ['', 'off', 'none', 'false', ' OFF ']) assert.equal(configuredServerUrl(off), null, off);
+
+  const calls = [];
+  // What EvalContextService answers (org.unlaxer.tinyexpression.service), by operation.
+  const javaService = async (url, init) => {
+    calls.push({ url, init, body: JSON.parse(init.body) });
+    const body = JSON.parse(init.body);
+    if (body.formula === '1 +') {
+      return { ok: true, json: async () => ({ ok: false, stage: 'create', error: { kind: 'ParseException', message: 'generated P4 grammar rejected formula: 1 +' }, evaluator: 'java' }) };
+    }
+    if (body.operation === 'runContext') {
+      return { ok: true, json: async () => ({ ok: true, formulas: [{ info: { calculatorName: 'a', formulaText: '1' }, value: { kind: 'number', value: '1', f32Bits: '0x3f800000' } }], evaluator: 'java' }) };
+    }
+    return { ok: true, json: async () => ({ ok: true, value: { kind: 'number', value: '3', f32Bits: '0x40400000' }, text: '3.0', evaluator: 'java', codeBlocks: { classes: ['CheckDigits'], executed: true } }) };
+  };
+  assert.equal(await probeServer('https://host/s/api/playground/eval', javaService), true);
+  assert.equal(calls[0].init.method, 'POST');
+  assert.equal(calls[0].init.credentials, 'same-origin', 'auth stays with the host (same-origin cookies)');
+  assert.equal(calls[0].init.headers['X-Requested-With'], REQUESTED_WITH);
+  assert.equal(calls[0].init.headers['Content-Type'], 'application/json');
+  assert.deepEqual(calls[0].body, { operation: 'evalContext', formula: '1' });
+
+  // GitHub Pages / vite dev: 404, 405, HTML, a JSON that is not the Java service, no network
+  const notFound = async () => ({ ok: false, status: 404, json: async () => ({}) });
+  const html = async () => ({ ok: true, json: async () => { throw new SyntaxError('Unexpected token <'); } });
+  const wasmLike = async () => ({ ok: true, json: async () => ({ ok: true, value: { kind: 'number' }, text: '1.0' }) });
+  const offline = async () => { throw new TypeError('Failed to fetch'); };
+  for (const fetchImpl of [notFound, html, wasmLike, offline]) assert.equal(await probeServer('../api/playground/eval', fetchImpl), false);
+  assert.equal(await probeServer(null, javaService), false);
+
+  const serverRuntime = createServerRuntime('https://host/s/api/playground/eval', javaService);
+  const request = toRequest({ ...emptyState(), variables: [{ name: 'x', type: 'float', value: '2' }] }, { formula: '$x + 1' });
+  const evaluated = await serverRuntime.evalContext(request);
+  assert.equal(evaluated.code, 0);
+  assert.equal(evaluated.result.text, '3.0');
+  const sent = calls.at(-1).body;
+  assert.equal(sent.operation, 'evalContext');
+  assert.equal(sent.formula, '$x + 1');
+  assert.deepEqual(sent.variables, request.variables, 'the server gets the wasm request unchanged');
+  assert.deepEqual(realClassesOf(evaluated.result), ['CheckDigits'], 'executed code blocks do not use their stubs');
+  assert.deepEqual(realClassesOf({ ok: true, codeBlocks: { classes: ['X'], executed: false } }), []);
+  assert.equal((await serverRuntime.runContext(toRequest(emptyState(), { document: 'x' }))).result.formulas.length, 1);
+  assert.equal(calls.at(-1).body.operation, 'runContext');
+  await serverRuntime.evalTrace(request);
+  assert.equal(calls.at(-1).body.operation, 'evalTrace');
+
+  // parse failures: the position / TE code comes from wasm check (Java has no diagnostic)
+  const parseFailure = (await serverRuntime.evalContext(toRequest(emptyState(), { formula: '1 +' }))).result;
+  assert.equal(parseFailure.diagnostic, undefined);
+  const merged = withWasmDiagnostic(parseFailure, te, '1 +');
+  assert.ok(merged.diagnostic, 'wasm check supplies the diagnostic');
+  assert.equal(merged.error.kind, 'ParseException');
+  assert.ok(describeFailure(catalog, '1 +', merged).code.startsWith('TE'), JSON.stringify(describeFailure(catalog, '1 +', merged)));
+  assert.equal(withWasmDiagnostic(evaluated.result, te, '$x + 1'), evaluated.result);
+
+  // the server stops answering: a 'server' failure the UI offers to re-run on wasm
+  const down = createServerRuntime('https://host/s/api/playground/eval', offline);
+  const failed = await down.evalContext(request);
+  assert.equal(failed.code, 70);
+  assert.equal(failed.result.ok, false);
+  assert.equal(failed.result.stage, 'server');
+  assert.equal(describeFailure(catalog, '$x + 1', failed.result).code, 'ServerUnavailable');
+  const http500 = createServerRuntime('u', async () => ({ ok: false, status: 500, json: async () => ({}) }));
+  assert.match((await http500.evalContext(request)).result.message, /HTTP 500/);
+
+  // the switch exists but stays hidden until the probe succeeds (GitHub Pages: never shown)
+  const indexHtml = await readFile(join(here, '..', 'index.html'), 'utf8');
+  assert.ok(/<div id="eval-target"[^>]*\bhidden\b/.test(indexHtml), 'eval-target starts hidden');
+  assert.ok(indexHtml.includes('サーバ（本物の Java）') && indexHtml.includes('wasm（仮の値）'));
+}
+
 console.log(`playground check OK: catalog valid (${catalog.variables.length} variables, ${catalog.errorCodes.length} codes), ` +
-  `${EXAMPLES.length} samples, diagnostics, FormulaInfo, trace, catalog editing, PR helper`);
+  `${EXAMPLES.length} samples, diagnostics, FormulaInfo, trace, catalog editing, PR helper, editors (tokens, brackets, FormulaInfo completion / diagnostics / hover), ` +
+  `java code blocks and external stubs (#216), evaluation target switch (#221), guided tour + help (${tourSteps().length} steps, ${helpSections().length} help sections)`);

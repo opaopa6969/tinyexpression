@@ -3,14 +3,88 @@
 All notable changes to TinyExpression are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [2.0.1] - Unreleased
+## [Unreleased]
+
+### Removed
+- **`tinyExpression-jdk17` is discontinued** (owner decision); 2.0.1 is its last release. The
+  `tinyexpression-jdk17/` module, its CI job (JDK 17 full tests, class major 61, no release-21 unlaxer)
+  and its deploy in `scripts/release-central.sh` / the Release Central workflow are removed.
+  `install-unlaxer-if-unpublished.sh` no longer checks the `-jdk17` unlaxer artifacts. Sources keep
+  their release-17-compatible forms (e.g. the reflective virtual-thread lookup in `McpServer`).
+
+## [2.1.0] - 2026-09-30
+
+Java 21 artifact (`tinyExpression`) only. `tinyExpression-jdk17` is not published for 2.1.0; its latest
+version stays 2.0.1.
+
+### Added
+- `tinyexpression-aot`: explicit trusted Rust code-block compilation/linking into a native executable, typed `runtime::bindings`, source-verified linkage, compiler diagnostics mapped back to code-point spans, content-identified build manifests, and Java/Rust real-body conformance tests (#229). Requires rustc at build time only; the embedded DSL still uses the typed-AST runtime. Not a sandbox. See `docs/rust-codeblock-aot.md`.
+- Java `CodeBlockSource` and Rust `code_blocks`: source-preserving code-block projection from committed P4 occurrences (raw body and code-point block/body/name spans), plus pure AOT preflight with shared `CB001`–`CB004` diagnostics (#228). The projection/preflight APIs never compile or execute code. See `docs/code-block-source-contract.md`.
+
+### Fixed
+- **Security: string literals could escape into the generated Java source** in the `JAVA_CODE` and
+  `JAVA_CODE_LEGACY_ASTCREATOR` backends. The contents of a literal were pasted between double quotes
+  unescaped, so a `"` inside `'...'` closed the Java literal and the rest of the formula was compiled and
+  run as Java code, even with `JavaCodeBlockPolicy` disabled. Literal values now reach generated source
+  only through `JavaStringLiterals.quote` (full escaping, printable ASCII only). Backslash sequences keep
+  the meaning javac gave them (`\n`, `\'`, `\\`, `A`, octal), so every formula that compiled before
+  evaluates to the same string; a literal with an escape javac rejects (`'\q'`) is still rejected.
+  Literals that used to fail to compile now evaluate as data (`'q"q'` → `q"q`, a raw line break, `'"'`).
+  The P4 backends already escaped their literals and are unchanged.
+- Rust-block rejection in JavaCode backends happens before Java compiler initialization, including when `jdk.compiler` is unavailable (#228 follow-up). The existing `CompileError` wrapper is unchanged.
+- Source-aware Java calculators and Rust evaluators now reject uncompiled Rust code blocks with `CB005` instead of silently ignoring them (#228). Java code-generation backends retain their existing `CompileError` wrapper. Java code-block permissions and Rust's Java stub behaviour are unchanged; AST-only evaluation cannot inspect blocks already discarded by the existing AST shape.
+- **The jars no longer ship copies of unlaxer-common classes (#224).** `tinyExpression` and
+  `tinyExpression-jdk17` (2.0.0 / 2.0.1) contained `org.unlaxer.parser.Parser`,
+  `org.unlaxer.parser.AbstractParser`, `org.unlaxer.ParserFinderToChild` and `org.unlaxer.ParserTaggable`
+  with the same FQCN as unlaxer-common(-jdk17) but different content (restored WIP from v1.5.0), so a
+  consumer got whichever copy came first on its classpath. The copies are removed and the unlaxer-common
+  classes are used. What the copies added was only reachable from dead code, also removed:
+  `Parser` extended `ASTNodeContainer` (`setOperator` / `setOperand` / `opecode()` / `targetOpecodes()`
+  with `Opecode`) and had a per-parser object map (`objectByName` / `getObject` / `putObject` /
+  `removeObject`), `ParserFinderToChild` had an accumulator `flatten(RecursiveMode, Parsers)`, and
+  `ParserTaggable` defaulted `setASTNodeKind` / `astNodeKind`; their only user was the unused
+  `org.unlaxer.parser.ParentHolderParser` (removed together with `org.unlaxer.ASTNodeContainer`).
+  Behaviour when tinyExpression's copy used to win: `AbstractParser` now takes part in the opt-in packrat
+  memoization of unlaxer-common (off by default) and `setASTNodeKind(kind)` records the kind and its tag
+  as in unlaxer-common instead of being a no-op. No unlaxer-common change is needed.
+- CI: the main jar and the `-jdk17` jar must not contain a class whose FQCN is also in the unlaxer
+  (`-jdk17`) jars they depend on (`scripts/ci/check_no_duplicate_classes.py`).
+
+## [2.0.1] - 2026-09-26
+
+### Java 17
+- **New artifact `org.unlaxer:tinyExpression-jdk17`** (#220): the same sources, packages and classes as
+  `tinyExpression`, compiled with `--release 17` (class file major 61) — **Java 17 users (e.g. Corretto 17)
+  depend on `tinyExpression-jdk17`** instead of `tinyExpression`. It depends on `unlaxer-common-jdk17` /
+  `unlaxer-dsl-jdk17` only (never on the release-21 unlaxer artifacts), generates its P4 runtime sources
+  with `CodegenMain --java-release 17`, and ships sources/javadoc jars. Built from
+  `tinyexpression-jdk17/pom.xml` (a standalone POM over `../src`, because the root POM has jar packaging);
+  `scripts/release-central.sh` / `release-central.yml` deploy it right after `tinyExpression`.
+  `tinyExpression` itself is unchanged: still Java 21 (major 65).
+- The shared sources compile with `--release 17`: pattern-matching `switch` → ordered `instanceof`
+  (`P4StrictMatchTypingValidator`, keeping the pattern switch's NPE on `null`; the generated
+  `UbnfcAstConverter`, with `scripts/generate-ubnfc-converter.py` emitting the new form), and
+  `McpServer` uses one virtual thread per request on Java 21+ as before but a cached thread pool on
+  Java 17 (virtual threads do not exist there). Test-only: `List#getFirst` / `ExecutorService#close`.
+- The vendored ubnfc parser is regenerated at ubnfc `15c4cbb` (ubnfc D-081: generated Java compiles with
+  `--release 17`; only the Java 18–21 constructs changed, IR and observations unchanged).
+- Runtime `javac` (JavaCode evaluation / Java code blocks) passes no `--release` / `-source` / `-target`,
+  so it compiles for the running JVM (17 on Java 17); the emitted Java is Java 17 compatible and the
+  whole suite, including the Java code block tests, passes on JDK 17 against `tinyExpression-jdk17`.
+- CI: a JDK 17 job builds `tinyExpression-jdk17`, runs the full test suite on Java 17, requires major 61
+  and that no release-21 unlaxer artifact is on its classpath; the main jar is required to stay major 65.
 
 ### Dependencies
+- Bumped `unlaxer-common` / `unlaxer-dsl` (`unlaxer.version`) to 3.1.1 (adds the `-jdk17` artifacts and
+  `CodegenMain --java-release`; default generator output unchanged). Until 3.1.1 is on Maven Central, CI
+  builds it from the pinned unlaxer-parser commit (`.github/unlaxer-source-pin`,
+  `scripts/ci/install-unlaxer-if-unpublished.sh`).
 - Bumped `unlaxer-common` / `unlaxer-dsl` (`unlaxer.version`) from 3.0.15 to [3.1.0](https://github.com/opaopa6969/unlaxer-parser/releases/tag/3.1.0) (#209). Only the `classic` engine (`p4Engine:classic`, alias `legacy`, or `-Dtinyexpression.p4.engine=classic`) links against it; the default `ubnfc` engine is unaffected.
 - `classic` parses now retain a smaller tree (-33% size / -40% object count on a 20 KB input, sub-sources are views over the root's code points) and the packrat memo table is windowed (default 1024 code points behind the parse frontier) instead of growing with input length, bounding memory to the grammar's backtracking distance.
 - `classic` also gains `SAFE_FAILURES` memoization replay for safe successes and `Source.sourceRange()` for reading a token's `[start, start+length)` extent without building a `CursorRange`; neither changes observable parse/evaluation results.
 
 ### Added
+- `org.unlaxer.tinyexpression.service.EvalContextService` (#221): the Rust `te_eval_context` / `te_eval_trace` / `te_formula_info_context` request/response JSON answered by the real Java evaluator (`P4_AST_EVALUATOR`), HTTP-agnostic (`evalContext` / `evalTrace` / `formulaInfoContext` / `dispatch` with an `"operation"` field). `externals[]` stubs answer `external` calls (no host class reachable, via the new `ExternalInvocationHandler` hook of `P4TypedAstEvaluator`, inactive unless a context holds one); Java code blocks run only when the caller's `CodeBlockExecutionPolicy` allows (default `DENY`; `ALLOW`, `FOLLOW_GLOBAL`), a compiled class taking precedence over a stub; per-request timeout (`"stage":"timeout"`); `EvalAuditHook` before/after each request. `EvalContextContractTest` compares 64 requests with the Rust responses recorded by `rust/tinyexpression-rs/tests/eval_context_contract.rs`; the differences are documented in the README. Playground: an evaluation target switch "wasm（仮の値） / サーバ（本物の Java）", shown only when the host answers at `../api/playground/eval` (`VITE_TE_SERVER_EVAL_URL`); GitHub Pages is unchanged.
 - Language catalog `catalog/tinyexpression-catalog.json` (+ JSON schema) as the single source of variable / function / keyword descriptions, TE / FI error texts and the TE code rules; everything from the VSIX (`config/*.tecatalog`, the Ext's `ERROR_CATALOG` / snippet tables, `error-catalog.json`) migrated with matching counts. The LSP server reads it through `CatalogProvider` (hover, completion docs, diagnostics) and merges `tinyExpressionP4Lsp.catalog.overridePath` (#201).
 - Playground (`playground/`, GitHub Pages <https://opaopa6969.github.io/tinyexpression/>): CodeMirror 6 + `tinyexpression.wasm`, CalculationContext panel, completion / hover / TE diagnostics from the catalog, FormulaInfo load and run; a node parity smoke runs the Java differential golden through it in CI (#201).
 - Rust: evaluation with a caller-supplied CalculationContext and stubbed externals — `api::eval_context_json` / `formula_info_context_json`, CLI `eval-context` / `run-context`, C ABI and wasm `te_eval_context` / `te_formula_info_context` (#201). On wasm32 the default nested `call` depth is 48 (native 256) so deep recursion is a `StackOverflowError`, not an engine trap.
@@ -18,12 +92,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Playground (#201 stages 3–4): Trace panel (collapsible tree of sub-expression → value / type, click to highlight, step mode in evaluation order with the stack of partial values, failing step with the catalog hint) and Catalog panel (browse / search / edit ja-en texts, examples, fix hints, add entries and error-code variants, in-browser schema validation, export full JSON / override JSON / unified diff / JSON Patch, PR through the GitHub API with an in-memory token). `playground/scripts/catalog-roundtrip.mjs` checks in CI that an unedited export is byte-identical and the derived files regenerate byte-identically.
 - VSIX (#201 stages 4–5): "TinyExpression: Open playground" (the same web build packaged as `playground-dist/`, in a webview preloaded with the active formula and catalog), "TinyExpression: Import catalog from playground export" (writes `.vscode/tinyexpression-catalog.override.json`, sets `catalog.overridePath`, restarts the server), a status bar item for the active catalog; relative `catalog.overridePath` values resolve against the workspace folder.
 - `grammar/formula-info.ubnf`: the FormulaInfo block format as a UBNF v2 grammar (typed AST via `@mapping`), accepting exactly what `FormulaInfoSourceDocument.parse` accepts. `tinyexpression-rs` vendors its ubnfc Rust parser and gains a FormulaInfo loader (`formula_info::load`) plus `load` / `run` CLI subcommands; `tests/formula_info.rs` gates fields, load errors and evaluation against a golden taken from the Java loader (#180). The Java loader itself was unchanged by #180; see Fixed (#195) for the three bugs the parity check it added then found.
+- Playground FormulaInfo editor (#212): the FormulaInfo panel is a CodeMirror 6 editor — key / comment / end-mark colouring with the tinyexpression colouring inside `formula:` values, completion (keys, `---END_OF_PART---`, `dependsOn` names, enum values, the formula editor's completion inside `formula:`), diagnostics (the Rust loader's error at its position, every `formula:` through `te_check` with the catalog's TE codes and hints, unknown keys, every unknown `dependsOn`) and hover. Both editors gain token colouring, depth-coloured brackets, unmatched-bracket marking and the pair at the cursor (code-point scanners, no regular expressions). Key descriptions / enum values come from the catalog `settings` (scope `formulaInfo`), which now lists every key the Java loader reads (`formula`, `hash`, `hashByByteCode`, `javaCode`, `byteCode`, `byteCode_<className>`, `siteId`, `checkKind` added); links to the UBNF grammars and the railroad diagrams.
+- Rust: a failed FormulaInfo `load` / `run` response carries `"span":[start,end]` (code points of the document) from `formula_info_span::load_error_span`: the parser's offset for syntax errors, else the failing block's entry (#212). Additive: accepted documents, error kinds and Java exception names are unchanged; Java's `FormulaInfoParseException` has an offset only for partially parsed documents.
 
 ### Fixed
 - **FormulaInfo loader: three bugs in the hand-written Java loader (`org.unlaxer.tinyexpression.loader`), found by the UBNF-generated parity check of #180, now rejected with an explicit `FormulaInfoParseException` instead of the previous silent/incidental behaviour (#195). `FormulaInfo` is used by production systems (e.g. fraud-alert); a document that used to load (possibly missing formulas) or crash with an unrelated JDK exception now fails loudly and specifically. `formula_info::LoadError` on the Rust side (`tinyexpression-rs`, already explicit) is unchanged in shape; only `LoadError::java_exception()` was updated to `FormulaInfoParseException` to match.**
   - A document `FormulaInfoBlocksParser` cannot consume in full (e.g. an unparsable line after a complete block) — before: `FormulaInfoList.parse` silently returned only the blocks parsed before the first unparsable line (possibly zero), with no error; after: throws `FormulaInfoParseException` ("FormulaInfo document was only partially parsed at offset N").
   - An entry whose value is empty at the end of input (a trailing `key:` with nothing after it) — before: `NoSuchElementException` from the empty value token, with no indication of which key; after: throws `FormulaInfoParseException` ("'key:' has an empty value at the end of input").
   - `dependsOn` naming a calculator the document does not define — before: `NullPointerException` while wiring the dependency back onto the unresolved (`null`) calculator; after: throws `FormulaInfoParseException` ("<calculatorName> dependsOn unknown calculator '<name>'").
+- **FormulaInfo: a malformed or missing `---END_OF_PART---` line no longer merges two blocks silently (#211).** A `---END_OF_PART---` line with something after the mark used to be read as a line of the previous entry's value, so the next block's `calculatorName:` / `formula:` became entries of the same block and overwrote it: a two-block file loaded as `[b]` only, with no error, and formula `a` was gone. Same change in the Java loader (`FormulaInfoList.parse`, `FormulaInfoSourceDocument.parse`), `grammar/formula-info.ubnf` (and the vendored ubnfc parser) and the Rust loader (`tinyexpression-rs` `formula_info`); fixtures `src/test/resources/formulaInfo-ubnf/{accept-26,accept-27,reject-syntax-12..15,reject-load-10,reject-load-11}-*.fi`.
+  - `---END_OF_PART---` followed only by spaces / tabs, then a line break or the end of input — before: not an end mark, the blocks merged (`[b]`); after: an end mark, both blocks load (`[a, b]`). LF and CRLF alike.
+  - `---END_OF_PART---` followed by any other character (`---END_OF_PART---xyz`, `---END_OF_PART--- x`, a VT/FF) — before: a value line, the blocks merged (`[b]`); after: `FormulaInfoParseException` ("line N: '---END_OF_PART---' must be followed only by spaces or tabs up to the end of the line, but found '…'"). This also applies inside a value: such a line can no longer be part of a `description:` or `formula:` text. Rust: `LoadError::Syntax`.
+  - A block with `calculatorName` twice or more (typically: the end mark line between two FormulaInfo is missing) — before: the later values silently overwrote the earlier ones (`[b]`); after: `FormulaInfoParseException` ("calculatorName appears 2 times in one block ('a', 'b'); is the ---END_OF_PART--- line between two FormulaInfo missing?"). Rust: `LoadError::DuplicateCalculatorName`. Other repeated keys are unchanged (`tags` still accumulates, other single-valued keys are still last-wins). A missing end mark between two blocks where the second has no `calculatorName` is still not detectable.
+  - Unchanged: the final block may still end at the end of input without an end mark; `#` / blank / tab-only lines between or after blocks, CRLF and lone CR are accepted as before; a document may not start with an end mark.
+  - `FormulaInfoParseException` (new in 2.0.1) now extends `IllegalArgumentException`, so `FormulaInfoSourceDocument.parse` raises it within its documented `IllegalArgumentException` contract.
 
 ### Performance
 - Test suite time (#200): `CalculatorImplTest` (49 tests, ~150 formulas shared by 6 backend subclasses — Ast/P4Ast/P4Dsl × default/classic engine, plus `JavaCodeCalculatorV3Test`) re-verified every formula against the classic legacy grammar (`testAllMatch(calculator.getParser(), formula)`, always `FormulaParser` regardless of backend) once per subclass. The classic grammar backtracks exponentially on the deep fraud-alert formulas, so this redundant re-parsing — not `javac`, contrary to the issue's working hypothesis — was the dominant, duplicated cost. A JVM-static, formula-keyed cache (`CalculatorImplTest.verifyClassicGrammarAccepts`) now verifies each distinct formula against the classic grammar at most once per `mvn test` run instead of up to 6 times; every formula is still asserted the first time any suite sees it, so coverage is unchanged. `P4DslJavaCodeCalculatorTest` alone: 112.8s → 18.9s on the same host. Test-only change; no compiler/evaluator/engine code touched. See `docs/reports/2026-09-25-test-time-200.md`.

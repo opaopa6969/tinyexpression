@@ -34,7 +34,7 @@ public record ParseResult<N>(boolean ok, int consumedCp, int matchedCp, Optional
     }
     public record ScopeEvent(long order, String action, String mode, String name, int offsetCp, int lengthCp) {}
     public ParseResult {
-        nodeSpans = Collections.unmodifiableMap(new IdentityHashMap<>(nodeSpans));
+        nodeSpans = Collections.unmodifiableMap(copySpans(nodeSpans));
         captures = List.copyOf(captures); lexical = List.copyOf(lexical); catalogs = Map.copyOf(catalogs);
         recoveries = List.copyOf(recoveries);
     }
@@ -47,6 +47,15 @@ public record ParseResult<N>(boolean ok, int consumedCp, int matchedCp, Optional
                        List<Capture> captures, List<Lexical> lexical, Scope scope, Diagnostic diagnostics,
                        Map<String, List<Capture>> catalogs, List<Recovery> recoveries) {
         this(ok, consumedCp, matchedCp, ast, nodeSpans, captures, lexical, scope, diagnostics, catalogs, recoveries, null);
+    }
+    /**
+     * D-079: 呼出し側の表を複製する。{@code IdentityHashMap} は配列の clone で複製でき、
+     * 複製構築子（entry を 1 件ずつ取り出して入れ直す）より確保も走査も少ない。中身は同じ。
+     */
+    @SuppressWarnings("unchecked")
+    private static Map<Object, Span> copySpans(Map<Object, Span> spans) {
+        if (spans.getClass() == IdentityHashMap.class) return (Map<Object, Span>) ((IdentityHashMap<Object, Span>) spans).clone();
+        return new IdentityHashMap<>(spans);
     }
     public int consumed() { return consumedCp; }
     public int matched() { return matchedCp; }

@@ -1,0 +1,8 @@
+grammar Numbers {
+  @import chars from 'characters.ubnf'
+  @ubnf: v2
+  // Optional sign, integer/fraction, optional complete exponent. No implicit trivia.
+  token NUMBER ::= ['+' | '-']
+    (chars.DIGIT+ '.' chars.DIGIT* | '.' chars.DIGIT+ | chars.DIGIT+)
+    [('e' | 'E') ['+' | '-'] chars.DIGIT+];
+}

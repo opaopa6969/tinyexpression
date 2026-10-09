@@ -103,6 +103,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalFormulaExpr(FormulaExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     CalculationContext scoped = new ScopedCalculationContext(
         context, Map.of());
     P4TypedAstEvaluator evaluator = new P4TypedAstEvaluator(
@@ -961,6 +962,22 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
     final String resolvedClassName = className;
     final String resolvedMethodName = methodName;
 
+    // issue #221: a handler in the context (EvalContextService's request stubs) replaces
+    // reflection for the classes it handles.
+    ExternalInvocationHandler handler = context
+        .getObject(ExternalInvocationHandler.CONTEXT_KEY, ExternalInvocationHandler.class)
+        .orElse(null);
+    if (handler != null && handler.handles(resolvedClassName)) {
+      Object result = handler.invoke(resolvedClassName, resolvedMethodName, () -> {
+        List<Object> values = new java.util.ArrayList<>();
+        for (ArgumentExpressionExpr arg : args) {
+          values.add(eval(arg));
+        }
+        return values;
+      });
+      return result == null ? null : coerceToType(result, expectedReturnType);
+    }
+
     ClassLoader effectiveClassLoader = classLoader != null
         ? classLoader : Thread.currentThread().getContextClassLoader();
     try {
@@ -1464,6 +1481,7 @@ public class P4TypedAstEvaluator extends TinyExpressionP4Evaluator<Object> {
 
   @Override
   protected Object evalCodeBlockExpr(CodeBlockExpr node) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(node);
     return null;
   }
 

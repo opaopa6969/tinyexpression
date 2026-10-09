@@ -47,7 +47,10 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
     return ExpressionTypes._float;
   }
 
-  @Override protected String evalFormulaExpr(FormulaExpr n) { return eval(n.expression()); }
+  @Override protected String evalFormulaExpr(FormulaExpr n) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(n);
+    return eval(n.expression());
+  }
   @Override protected String evalNumberVariableDeclarationExpr(NumberVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalStringVariableDeclarationExpr(StringVariableDeclarationExpr n) { return "null"; }
   @Override protected String evalBooleanVariableDeclarationExpr(BooleanVariableDeclarationExpr n) { return "null"; }
@@ -352,7 +355,10 @@ public class P4DefaultJavaCodeEmitter extends TinyExpressionP4Evaluator<String> 
   @Override protected String evalExternalNumberInvocationExpr(ExternalNumberInvocationExpr n) { return numberType.zeroNumber(); }
   @Override protected String evalExternalStringInvocationExpr(ExternalStringInvocationExpr n) { return "\"\""; }
   @Override protected String evalExternalObjectInvocationExpr(ExternalObjectInvocationExpr n) { return "null"; }
-  @Override protected String evalCodeBlockExpr(CodeBlockExpr n) { return "null"; }
+  @Override protected String evalCodeBlockExpr(CodeBlockExpr n) {
+    org.unlaxer.tinyexpression.codeblock.CodeBlockSource.rejectUncompiledRust(n);
+    return "null";
+  }
   @Override protected String evalImportDeclarationExpr(ImportDeclarationExpr n) { return "null"; }
 
   // =========================================================================

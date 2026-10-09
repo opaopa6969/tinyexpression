@@ -13,6 +13,16 @@
 // stub. Rows with unregistered externals are compared (the stubs model "class loadable, no
 // instance"). random() rows compare the result kind only, as the Rust gate does.
 //
+// Rows whose formula has a ```java:ClassName code block (issue #216) are handled explicitly as
+// "Rust requires a stub": Java compiles and runs the block, the playground (Rust) never does —
+// the block only declares the class and calls go to the external stubs. Every such row is
+// evaluated once with no stub for its code-block classes and must fail with the Rust hint
+// (UnsupportedOperationException, "コードブロックのクラスは externals で値を指定してください"); the
+// rows without registered externals are also compared with Java as usual (the unregistered stub
+// = Java's "class compiled, no instance"). The rows with registered externals are not compared:
+// Java's result comes from running the Java code, a stub's is a constant (the documented
+// difference, rust/tinyexpression-rs/README.md).
+//
 // Every compared row is also evaluated through `te_eval_trace` (the Trace panel's path, issue
 // #201 stage 3): apart from the added `trace`, its response must equal the untraced one, and
 // the trace root must carry the result.
@@ -21,6 +31,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { loadTinyExpression } from '../../rust/examples/wasm/tinyexpression.mjs';
 import { emptyState, toRequest } from '../src/context.js';
+import { codeBlocksOf, MISSING_STUB_HINT } from '../src/code-block.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const golden = join(here, '..', '..', 'rust', 'tinyexpression-rs', 'tests', 'java-diff', 'golden');
@@ -85,6 +96,9 @@ function expectedOf(java) {
 const same = (a, b) => a.kind === b.kind && a.text === b.text && a.bits === b.bits;
 const usesExternal = (formula) => /\bexternal\b/.test(formula);
 
+let codeBlockRows = 0;
+let codeBlockCompared = 0;
+const codeBlockMismatches = [];
 let compared = 0;
 let skipped = 0;
 let kindOnly = 0;
@@ -94,6 +108,18 @@ let traceSteps = 0;
 const started = performance.now();
 for (const row of rows) {
   const formula = formulas[row.f];
+  const blockClasses = codeBlocksOf(formula).map((b) => b.className);
+  if (blockClasses.length) {
+    // "Rust requires a stub": without one for the code-block classes, the explicit error.
+    codeBlockRows++;
+    const state = stateOf(row);
+    state.externals = state.externals.filter((x) => !blockClasses.includes(x.class));
+    const r = te.evalContext(toRequest(state, { formula })).result;
+    if (r.ok || r.stage !== 'apply' || r.error.kind !== 'UnsupportedOperationException' || !r.error.message.includes(MISSING_STUB_HINT)) {
+      codeBlockMismatches.push(`${row.id} formula=${JSON.stringify(formula.slice(0, 60))}\n    wasm=${JSON.stringify(r).slice(0, 300)}`);
+    }
+    if (!(row.ext && usesExternal(formula))) codeBlockCompared++;
+  }
   if (row.ext && usesExternal(formula)) {
     skipped++;
     continue;
@@ -121,6 +147,12 @@ for (const row of rows) {
 const ms = performance.now() - started;
 console.log(`parity smoke: ${compared} rows compared over ${formulas.length} formulas in ${ms.toFixed(0)} ms; ` +
   `${skipped} rows skipped (registered externals); ${kindOnly} random() rows compared by kind`);
+console.log(`code blocks (#216): ${codeBlockRows} rows need a stub in Rust (no stub → the explicit error, checked); ` +
+  `${codeBlockCompared} of them compared with Java (unregistered stubs), the rest not comparable (Java runs the code, a stub is a constant)`);
+if (codeBlockMismatches.length || codeBlockRows === 0) {
+  console.error(`${codeBlockMismatches.length} code-block rows without a stub did not give the explicit error:\n${codeBlockMismatches.slice(0, 20).join('\n')}`);
+  process.exit(1);
+}
 console.log(`trace: every compared row also evaluated with te_eval_trace (${traceSteps} steps recorded)`);
 if (traceMismatches.length) {
   console.error(`${traceMismatches.length} rows differ with tracing on:\n${traceMismatches.slice(0, 20).join('\n')}`);

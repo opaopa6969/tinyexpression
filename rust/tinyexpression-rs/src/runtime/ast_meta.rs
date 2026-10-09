@@ -105,12 +105,14 @@ pub(crate) fn children(ast: &Ast) -> Vec<&Ast> {
             r#declarations,
             r#expression,
             r#methods,
+            r#codeBlocks,
             ..
         } => {
             out.extend(r#imports.iter());
             out.extend(r#declarations.iter());
             out.push(r#expression);
             out.extend(r#methods.iter());
+            out.extend(r#codeBlocks.iter());
         }
         Ast::CodeBlockExpr { .. } => {}
         Ast::ImportDeclarationExpr { r#className, .. } => {
@@ -635,12 +637,14 @@ pub(crate) fn record_children(ast: &Ast) -> Vec<&Ast> {
             r#declarations,
             r#expression,
             r#methods,
+            r#codeBlocks,
             ..
         } => {
             out.extend(r#imports.iter());
             out.extend(r#declarations.iter());
             out.push(r#expression);
             out.extend(r#methods.iter());
+            out.extend(r#codeBlocks.iter());
         }
         Ast::CodeBlockExpr { .. } => {}
         Ast::ImportDeclarationExpr { r#className, .. } => {
