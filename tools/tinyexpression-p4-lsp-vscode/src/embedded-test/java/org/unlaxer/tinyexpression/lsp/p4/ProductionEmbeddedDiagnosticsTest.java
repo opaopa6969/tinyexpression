@@ -62,6 +62,19 @@ public class ProductionEmbeddedDiagnosticsTest {
     assertTrue(org.unlaxer.tinyexpression.lsp.p4.embedded.TinyProductionBridge.parse(snapshot).regions().stream().anyMatch(region->region.parseState()==org.unlaxer.source.LanguageRegions.State.FAILED));
     service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,7),List.of(new TextDocumentContentChangeEvent(snapshot.text()))));
     assertEquals(Integer.valueOf(7),last(notifications).getVersion());
+    String longSource="formula:\n````java:Main\nclass Main { String marker=\"```\"; int f(){return \"bad\";}}\n````\n1\n---END_OF_PART---\n";
+    service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,100),List.of(new TextDocumentContentChangeEvent(longSource))));
+    assertEquals(last(notifications).toString(),1,javaDiagnostics(last(notifications)).size());
+    assertEquals("compiler.err.prob.found.req",javaDiagnostics(last(notifications)).get(0).getCode().getLeft());
+    assertEquals(new Range(new Position(2,49),new Position(2,54)),javaDiagnostics(last(notifications)).get(0).getRange());
+    String longPartial="formula:\n````java:Main\nclass Main { int target; int f(){ return tar";
+    service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,101),List.of(new TextDocumentContentChangeEvent(longPartial))));
+    var longItems=service.completion(new CompletionParams(new TextDocumentIdentifier(uri),new Position(2,44))).join().getLeft();
+    assertEquals("target",longItems.stream().filter(item->item.getLabel().equals("target")).findFirst().orElseThrow().getTextEdit().getLeft().getNewText());
+    var forged=new org.unlaxer.source.DocumentSnapshot(uri,200,"formula:\n```java:Main\n# ```\nclass Main{}\n```\n1\n---END_OF_PART---\n");
+    var rejected=org.unlaxer.tinyexpression.lsp.p4.embedded.TinyProductionBridge.parse(forged);
+    assertTrue(rejected.javaFiles().isEmpty());
+    assertTrue(rejected.regions().stream().anyMatch(region->region.parseState()==org.unlaxer.source.LanguageRegions.State.FAILED));
     service.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri)));assertTrue(last(notifications).getDiagnostics().isEmpty());
   }
   private static PublishDiagnosticsParams last(List<PublishDiagnosticsParams> values) { return values.get(values.size()-1); }

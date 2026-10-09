@@ -13,8 +13,8 @@ import org.unlaxer.source.LanguageRegions.*;
 
 /** Explicit native integration: production TinyExpression parsers, no evaluation or compilation. */
 public final class TinyProductionBridge {
-    public static final Language FORMULA = new Language("formulainfo", "tinyexpression", "f86ce8a5ab0ab7d23fdba2cd477187df8aa7607c", "FormulaInfo", "Document");
-    public static final Language TINY = new Language("tinyexpression", "tinyexpression", "f86ce8a5ab0ab7d23fdba2cd477187df8aa7607c", "TinyExpressionP4", "Formula");
+    public static final Language FORMULA = new Language("formulainfo", "tinyexpression", "0d84f0dc5c0331c09f46350cceb21cb57ee25d79", "FormulaInfo", "Document");
+    public static final Language TINY = new Language("tinyexpression", "tinyexpression", "0d84f0dc5c0331c09f46350cceb21cb57ee25d79", "TinyExpressionP4", "Formula");
     public static final Language JAVA = new Language("java", "lang/java", "0.1.0", "Java21", "CompilationUnit");
     public record Binding(DocumentSnapshot host, List<Region> regions, Map<String,String> javaFiles, Set<String> openEnds) {
         public Binding { regions = List.copyOf(regions); javaFiles = Map.copyOf(javaFiles); openEnds = Set.copyOf(openEnds); }
@@ -84,13 +84,27 @@ public final class TinyProductionBridge {
                 continue;
             }
             var tokens = p4.lexical().stream().filter(t -> t.token() != null && t.ruleId().equals("TinyExpressionP4::CodeBlock")).toList();
-            if (tokens.size() % 3 != 0) throw new IllegalArgumentException("P4 lexical contract changed");
-            for (int n=0;n<tokens.size();n+=3) {
-                var open=tokens.get(n); var close=tokens.get(n+2);
-                String header=input.substring(input.offsetByCodePoints(0,open.span().start()),input.offsetByCodePoints(0,open.span().end())).strip();
+            for (int n=0,number=0;n<tokens.size();number++) {
+                var open=tokens.get(n);int at=input.offsetByCodePoints(0,open.span().start());
+                if (input.startsWith("````",at)) {
+                    var layout=org.unlaxer.tinyexpression.codeblock.LongCodeFence.scan(input,at);
+                    if(layout==null || input.codePointCount(0,layout.end())!=open.span().end())
+                        throw new IllegalArgumentException("P4 long CodeBlock lexical contract changed");
+                    String header=input.substring(at+layout.width(),layout.headerEnd());
+                    if(header.startsWith("java:")) {
+                        String child=id+"/java/"+(number+1);
+                        regions.add(region(host,child,id,JAVA,new Span(start+open.span().start(),start+open.span().end()),
+                            new Span(start+input.codePointCount(0,layout.bodyStart()),start+input.codePointCount(0,layout.bodyEnd())),State.COMPLETE));
+                        String className=header.substring(5);files.put(child,className.substring(className.lastIndexOf('.')+1)+".java");
+                    }
+                    n++;continue;
+                }
+                if(n+2>=tokens.size())throw new IllegalArgumentException("P4 CodeBlock lexical contract changed");
+                var close=tokens.get(n+2);n+=3;
+                String header=input.substring(at,input.offsetByCodePoints(0,open.span().end())).strip();
                 if (!header.startsWith("```java:")) continue;
                 String file=header.substring(Math.max(8,header.lastIndexOf('.')+1))+".java";
-                String child=id+"/java/"+(n/3+1);
+                String child=id+"/java/"+(number+1);
                 Span full=new Span(start+open.span().start(),start+close.span().end());
                 Span javaBody=new Span(start+open.span().end(),start+close.span().start());
                 regions.add(region(host,child,id,JAVA,full,javaBody,State.COMPLETE)); files.put(child,file);
@@ -109,11 +123,40 @@ public final class TinyProductionBridge {
             var parsed = TinyExpressionP4Parser.parseEntry("TinyExpressionP4","CodeBlock",recognized,options);
             boolean partial = !parsed.ok();
             if (partial) {
-                recognized = remaining + "\n```\n";
-                parsed = TinyExpressionP4Parser.parseEntry("TinyExpressionP4","CodeBlock",recognized,options);
+                var widths=new LinkedHashSet<Integer>();widths.add(3);
+                for(String line:remaining.split("[\\r\\n]",-1)) {
+                    int width=0;while(width<line.length() && line.charAt(width)=='`')width++;
+                    if(width>=4)widths.add(width);
+                    if(widths.size()>=256)break;
+                }
+                for(int width:widths) {
+                    recognized = remaining + "\n"+"`".repeat(width)+"\n";
+                    parsed = TinyExpressionP4Parser.parseEntry("TinyExpressionP4","CodeBlock",recognized,options);
+                    if(parsed.ok())break;
+                }
             }
             if (!parsed.ok()) break;
             var tokens = parsed.lexical().stream().filter(t -> t.token()!=null && t.ruleId().equals("TinyExpressionP4::CodeBlock")).toList();
+            if(tokens.size()==1) {
+                var token=tokens.get(0);int at=recognized.offsetByCodePoints(0,token.span().start());
+                var layout=org.unlaxer.tinyexpression.codeblock.LongCodeFence.scan(recognized,at);
+                if(layout==null)throw new IllegalArgumentException("P4 long CodeBlock lexical contract changed");
+                int size=remaining.codePointCount(0,remaining.length());
+                int bodyStart=recognized.codePointCount(0,layout.bodyStart()),bodyEnd=recognized.codePointCount(0,layout.bodyEnd());
+                if(partial && (bodyEnd<size || bodyStart>size))break;
+                int consumed=partial?size:token.span().end();
+                if(consumed<=0 || consumed>size)break;
+                String header=recognized.substring(at+layout.width(),layout.headerEnd());number++;
+                if(header.startsWith("java:")) {
+                    int offset=start+input.codePointCount(0,from);String child=parent+"/java/"+number;
+                    regions.add(region(host,child,parent,JAVA,new Span(offset+token.span().start(),offset+consumed),
+                        new Span(offset+bodyStart,offset+(partial?size:bodyEnd)),partial?State.PARTIAL:State.COMPLETE));
+                    String className=header.substring(5);files.put(child,className.substring(className.lastIndexOf('.')+1)+".java");
+                    if(partial)openEnds.add(child);
+                }
+                if(partial)break;
+                from+=remaining.offsetByCodePoints(0,consumed);continue;
+            }
             if (tokens.size()!=3) throw new IllegalArgumentException("P4 CodeBlock lexical contract changed");
             var open=tokens.get(0);var close=tokens.get(2);
             int size=remaining.codePointCount(0,remaining.length());
@@ -136,9 +179,15 @@ public final class TinyProductionBridge {
         }
     }
     private static String maskComments(String raw) {
-        var out = new StringBuilder();
+        var out = new StringBuilder();int fence=0;
         for (String line : raw.split("(?<=\n)",-1)) {
-            if (line.stripLeading().startsWith("#")) line.codePoints().forEach(c -> out.appendCodePoint(c=='\r'||c=='\n'?c:' '));
+            if(fence>0) {
+                out.append(line);
+                if(fence==3 ? line.contains("```") : line.replaceFirst("\\r?\\n$", "").equals("`".repeat(fence)))fence=0;
+            } else if(line.startsWith("```")) {
+                while(fence<line.length() && line.charAt(fence)=='`')fence++;
+                out.append(line);
+            } else if (line.stripLeading().startsWith("#")) line.codePoints().forEach(c -> out.appendCodePoint(c=='\r'||c=='\n'?c:' '));
             else out.append(line);
         }
         return out.toString();
