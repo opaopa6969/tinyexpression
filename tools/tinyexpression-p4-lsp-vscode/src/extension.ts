@@ -112,7 +112,8 @@ export async function activate(
     // Pass catalog path via initializationOptions so the server can use it
     // even if system property is not available (e.g. wrapped JVM)
     const initializationOptions: Record<string, unknown> = {
-      useBundledVariables: catalog.useBundledVariables
+      useBundledVariables: catalog.useBundledVariables,
+      embeddedLanguageDiagnostics: vscode.workspace.getConfiguration("tinyExpressionP4Lsp").get<boolean>("embeddedLanguageDiagnostics", false)
     };
     if (catalog.catalogPath.length > 0) {
       initializationOptions.catalogPath = catalog.catalogPath;
@@ -312,7 +313,7 @@ function registerCatalogFeatures(context: vscode.ExtensionContext, restartClient
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeConfiguration((event) => {
-      if (event.affectsConfiguration("tinyExpressionP4Lsp.catalog")) {
+      if (event.affectsConfiguration("tinyExpressionP4Lsp.catalog") || event.affectsConfiguration("tinyExpressionP4Lsp.embeddedLanguageDiagnostics")) {
         updateCatalogStatus();
         void restartClient();
       }
