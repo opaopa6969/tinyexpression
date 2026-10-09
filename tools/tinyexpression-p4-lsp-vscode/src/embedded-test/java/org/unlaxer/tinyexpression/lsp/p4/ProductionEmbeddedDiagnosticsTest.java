@@ -51,6 +51,15 @@ public class ProductionEmbeddedDiagnosticsTest {
     assertTrue(last(notifications).toString(),javaDiagnostics(last(notifications)).isEmpty());
     service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,5),List.of(new TextDocumentContentChangeEvent("formula:\ninvalid\n"))));
     assertTrue(last(notifications).getDiagnostics().stream().anyMatch(d->d.getCode()!=null && "EMBEDDED_UNAVAILABLE".equals(d.getCode().getLeft())));
+    String longSource="formula:\n````java:Main\nclass Main { String marker=\"```\"; int f(){return \"bad\";}}\n````\n1\n---END_OF_PART---\n";
+    service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,100),List.of(new TextDocumentContentChangeEvent(longSource))));
+    assertEquals(last(notifications).toString(),1,javaDiagnostics(last(notifications)).size());
+    assertEquals("compiler.err.prob.found.req",javaDiagnostics(last(notifications)).get(0).getCode().getLeft());
+    assertEquals(new Range(new Position(2,49),new Position(2,54)),javaDiagnostics(last(notifications)).get(0).getRange());
+    var forged=new org.unlaxer.source.DocumentSnapshot(uri,200,"formula:\n```java:Main\n# ```\nclass Main{}\n```\n1\n---END_OF_PART---\n");
+    var rejected=org.unlaxer.tinyexpression.lsp.p4.embedded.TinyProductionBridge.parse(forged);
+    assertTrue(rejected.javaFiles().isEmpty());
+    assertTrue(rejected.regions().stream().anyMatch(region->region.parseState()==org.unlaxer.source.LanguageRegions.State.FAILED));
     service.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri)));assertTrue(last(notifications).getDiagnostics().isEmpty());
   }
   private static PublishDiagnosticsParams last(List<PublishDiagnosticsParams> values) { return values.get(values.size()-1); }

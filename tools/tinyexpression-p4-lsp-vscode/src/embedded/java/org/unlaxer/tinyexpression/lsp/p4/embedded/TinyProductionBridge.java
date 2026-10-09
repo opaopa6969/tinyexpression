@@ -13,8 +13,8 @@ import org.unlaxer.source.LanguageRegions.*;
 
 /** Explicit native integration: production TinyExpression parsers, no evaluation or compilation. */
 public final class TinyProductionBridge {
-    public static final Language FORMULA = new Language("formulainfo", "tinyexpression", "f86ce8a5ab0ab7d23fdba2cd477187df8aa7607c", "FormulaInfo", "Document");
-    public static final Language TINY = new Language("tinyexpression", "tinyexpression", "f86ce8a5ab0ab7d23fdba2cd477187df8aa7607c", "TinyExpressionP4", "Formula");
+    public static final Language FORMULA = new Language("formulainfo", "tinyexpression", "0d84f0dc5c0331c09f46350cceb21cb57ee25d79", "FormulaInfo", "Document");
+    public static final Language TINY = new Language("tinyexpression", "tinyexpression", "0d84f0dc5c0331c09f46350cceb21cb57ee25d79", "TinyExpressionP4", "Formula");
     public static final Language JAVA = new Language("java", "lang/java", "0.1.0", "Java21", "CompilationUnit");
     public record Binding(DocumentSnapshot host, List<Region> regions, Map<String,String> javaFiles) {
         public Binding { regions = List.copyOf(regions); javaFiles = Map.copyOf(javaFiles); }
@@ -73,13 +73,27 @@ public final class TinyProductionBridge {
             regions.add(region(host,id,"root",TINY,body,body,p4.ok() ? State.COMPLETE : State.FAILED));
             if (!p4.ok()) continue; // Never retain children from speculative/failed parses.
             var tokens = p4.lexical().stream().filter(t -> t.token() != null && t.ruleId().equals("TinyExpressionP4::CodeBlock")).toList();
-            if (tokens.size() % 3 != 0) throw new IllegalArgumentException("P4 lexical contract changed");
-            for (int n=0;n<tokens.size();n+=3) {
-                var open=tokens.get(n); var close=tokens.get(n+2);
-                String header=input.substring(input.offsetByCodePoints(0,open.span().start()),input.offsetByCodePoints(0,open.span().end())).strip();
+            for (int n=0,number=0;n<tokens.size();number++) {
+                var open=tokens.get(n);int at=input.offsetByCodePoints(0,open.span().start());
+                if (input.startsWith("````",at)) {
+                    var layout=org.unlaxer.tinyexpression.codeblock.LongCodeFence.scan(input,at);
+                    if(layout==null || input.codePointCount(0,layout.end())!=open.span().end())
+                        throw new IllegalArgumentException("P4 long CodeBlock lexical contract changed");
+                    String header=input.substring(at+layout.width(),layout.headerEnd());
+                    if(header.startsWith("java:")) {
+                        String child=id+"/java/"+(number+1);
+                        regions.add(region(host,child,id,JAVA,new Span(start+open.span().start(),start+open.span().end()),
+                            new Span(start+input.codePointCount(0,layout.bodyStart()),start+input.codePointCount(0,layout.bodyEnd())),State.COMPLETE));
+                        String className=header.substring(5);files.put(child,className.substring(className.lastIndexOf('.')+1)+".java");
+                    }
+                    n++;continue;
+                }
+                if(n+2>=tokens.size())throw new IllegalArgumentException("P4 CodeBlock lexical contract changed");
+                var close=tokens.get(n+2);n+=3;
+                String header=input.substring(at,input.offsetByCodePoints(0,open.span().end())).strip();
                 if (!header.startsWith("```java:")) continue;
                 String file=header.substring(Math.max(8,header.lastIndexOf('.')+1))+".java";
-                String child=id+"/java/"+(n/3+1);
+                String child=id+"/java/"+(number+1);
                 Span full=new Span(start+open.span().start(),start+close.span().end());
                 Span javaBody=new Span(start+open.span().end(),start+close.span().start());
                 regions.add(region(host,child,id,JAVA,full,javaBody,State.COMPLETE)); files.put(child,file);
@@ -89,9 +103,15 @@ public final class TinyProductionBridge {
         var result = new Binding(host,regions,files); result.tree(); return result;
     }
     private static String maskComments(String raw) {
-        var out = new StringBuilder();
+        var out = new StringBuilder();int fence=0;
         for (String line : raw.split("(?<=\n)",-1)) {
-            if (line.stripLeading().startsWith("#")) line.codePoints().forEach(c -> out.appendCodePoint(c=='\r'||c=='\n'?c:' '));
+            if(fence>0) {
+                out.append(line);
+                if(fence==3 ? line.contains("```") : line.replaceFirst("\\r?\\n$", "").equals("`".repeat(fence)))fence=0;
+            } else if(line.startsWith("```")) {
+                while(fence<line.length() && line.charAt(fence)=='`')fence++;
+                out.append(line);
+            } else if (line.stripLeading().startsWith("#")) line.codePoints().forEach(c -> out.appendCodePoint(c=='\r'||c=='\n'?c:' '));
             else out.append(line);
         }
         return out.toString();
