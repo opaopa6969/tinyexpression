@@ -52,12 +52,19 @@ with (root / 'target/embedded-stdio.log').open('wb') as errors:
         diagnostics = [item for item in published['diagnostics'] if item.get('source') == 'tinyexpression-java']
         assert [(item['range']['start']['line'], item['range']['start']['character']) for item in diagnostics] == [(41, 9), (69, 9)], published
         assert all(item['code'] == 'compiler.err.prob.found.req' and item['severity'] == 1 for item in diagnostics)
+        partial = (root / 'src/embedded-test/resources/partial-eof.txt').read_bytes().decode('utf-8')
+        send('textDocument/didChange', {'textDocument': {'uri': uri, 'version': 2}, 'contentChanges': [{'text': partial}]})
+        assert receive(lambda value: value.get('method') == 'textDocument/publishDiagnostics')['params']['version'] == 2
+        send('textDocument/completion', {'textDocument': {'uri': uri}, 'position': {'line': 3, 'character': 44}}, 3)
+        completions = receive(lambda value: value.get('id') == 3)['result']
+        target = next(item for item in completions if item['label'] == 'target')
+        assert target['textEdit'] == {'range': {'start': {'line': 3, 'character': 41}, 'end': {'line': 3, 'character': 44}}, 'newText': 'target'}, target
         send('textDocument/didClose', {'textDocument': {'uri': uri}})
         assert receive(lambda value: value.get('method') == 'textDocument/publishDiagnostics')['params']['diagnostics'] == []
         send('shutdown', {}, 2)
         receive(lambda value: value.get('id') == 2)
         send('exit', {})
-        print('PASS: packaged Tiny P4 launcher -> real javac -> two original FormulaInfo diagnostic positions -> close clear')
+        print('PASS: packaged Tiny P4 launcher -> real javac -> two original FormulaInfo diagnostic positions -> partial EOF completion -> close clear')
     finally:
         process.kill()
         process.wait(timeout=5)

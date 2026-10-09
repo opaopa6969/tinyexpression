@@ -51,6 +51,17 @@ public class ProductionEmbeddedDiagnosticsTest {
     assertTrue(last(notifications).toString(),javaDiagnostics(last(notifications)).isEmpty());
     service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,5),List.of(new TextDocumentContentChangeEvent("formula:\ninvalid\n"))));
     assertTrue(last(notifications).getDiagnostics().stream().anyMatch(d->d.getCode()!=null && "EMBEDDED_UNAVAILABLE".equals(d.getCode().getLeft())));
+    String partial=Files.readString(fixtures.resolve("partial-eof.txt"));
+    service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,6),List.of(new TextDocumentContentChangeEvent(partial))));
+    assertFalse(last(notifications).toString(),javaDiagnostics(last(notifications)).isEmpty());
+    var completion=service.completion(new CompletionParams(new TextDocumentIdentifier(uri),new Position(3,44))).join().getLeft();
+    var target=completion.stream().filter(item->item.getLabel().equals("target")).findFirst().orElseThrow();
+    assertEquals(new Range(new Position(3,41),new Position(3,44)),target.getTextEdit().getLeft().getRange());
+    assertEquals("target",target.getTextEdit().getLeft().getNewText());
+    var snapshot=new org.unlaxer.source.DocumentSnapshot(uri,7,partial+"get");
+    assertTrue(org.unlaxer.tinyexpression.lsp.p4.embedded.TinyProductionBridge.parse(snapshot).regions().stream().anyMatch(region->region.parseState()==org.unlaxer.source.LanguageRegions.State.FAILED));
+    service.didChange(new DidChangeTextDocumentParams(new VersionedTextDocumentIdentifier(uri,7),List.of(new TextDocumentContentChangeEvent(snapshot.text()))));
+    assertEquals(Integer.valueOf(7),last(notifications).getVersion());
     service.didClose(new DidCloseTextDocumentParams(new TextDocumentIdentifier(uri)));assertTrue(last(notifications).getDiagnostics().isEmpty());
   }
   private static PublishDiagnosticsParams last(List<PublishDiagnosticsParams> values) { return values.get(values.size()-1); }
