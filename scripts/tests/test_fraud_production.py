@@ -2,6 +2,8 @@ import copy
 import importlib.util
 from pathlib import Path
 import unittest
+import json
+import tempfile
 
 spec = importlib.util.spec_from_file_location("fraud", Path(__file__).parents[1] / "check-fraud-production.py")
 fraud = importlib.util.module_from_spec(spec)
@@ -55,6 +57,28 @@ class ProductionEvidenceTest(unittest.TestCase):
         with self.assertRaises(ValueError): fraud.selected_conditional(valid, 5)
         row = dict(self.row, backend="rust-ubnfc", entry="tinyexpression_rs::parse", raw_ast=None)
         with self.assertRaises(ValueError): fraud.validate_row(row, self.case, "rust-ubnfc")
+
+    def test_ci_provenance_distinguishes_snapshot_pin_from_published_and_local(self):
+        commit = "a" * 40
+        self.assertEqual("reported-local-source", fraud.dependency_provenance("3.3.0", commit, None)["origin"])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "dependency.json"
+            for value in [
+                {"version": "3.3.0-SNAPSHOT", "origin": "pinned-source", "source_commit": commit},
+                {"version": "3.3.0", "origin": "maven-central", "source_commit": None},
+            ]:
+                path.write_text(json.dumps(value))
+                self.assertEqual(value, fraud.dependency_provenance("ignored", None, path))
+            for value in [
+                [],
+                {"version": "../3.3.0", "origin": "pinned-source", "source_commit": commit},
+                {"version": "3.3.0", "origin": "maven-central", "source_commit": commit},
+                {"version": "3.3.0", "origin": "pinned-source", "source_commit": "short"},
+                {"version": "3.3.0", "origin": "unknown", "source_commit": None},
+            ]:
+                path.write_text(json.dumps(value))
+                with self.subTest(value=value), self.assertRaises(ValueError):
+                    fraud.dependency_provenance("ignored", None, path)
 
     def test_missing_duplicate_and_cross_language_difference_fail(self):
         java = [dict(self.row, phase=phase) for phase in sorted(fraud.PHASES)]

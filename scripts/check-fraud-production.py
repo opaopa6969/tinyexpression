@@ -5,6 +5,7 @@ import hashlib
 import json
 from pathlib import Path
 import platform
+import re
 import subprocess
 import sys
 
@@ -150,27 +151,43 @@ def command(*args):
     return subprocess.check_output(args, cwd=ROOT, text=True, stderr=subprocess.STDOUT).strip()
 
 
+def dependency_provenance(version, commit, provenance_path):
+    if provenance_path is not None:
+        value = json.loads(provenance_path.read_text())
+        if not isinstance(value, dict) or value.get("origin") not in {"pinned-source", "maven-central"}:
+            raise ValueError("unknown parser dependency origin")
+    else:
+        value = {"version": version, "origin": "reported-local-source", "source_commit": commit}
+    if not isinstance(value.get("version"), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]*", value["version"]):
+        raise ValueError("invalid parser Maven version")
+    actual_commit = value.get("source_commit")
+    if value["origin"] == "maven-central":
+        if actual_commit is not None:
+            raise ValueError("published Maven artifact must not claim an unverified source commit")
+    elif not isinstance(actual_commit, str) or not re.fullmatch(r"[0-9a-f]{40}", actual_commit):
+        raise ValueError("parser commit must be a full lowercase hexadecimal SHA")
+    return value
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--java-report", type=Path, default=ROOT / "target/fraud-acceptance/java.jsonl")
     parser.add_argument("--rust-report", type=Path, default=ROOT / "target/fraud-acceptance/rust.jsonl")
     parser.add_argument("--output", type=Path, required=True)
-    parser.add_argument("--parser-commit", required=True, help="reported full source SHA installed into the isolated Maven repository")
+    provenance = parser.add_mutually_exclusive_group(required=True)
+    provenance.add_argument("--parser-commit", help="reported local source SHA installed into the isolated Maven repository")
+    provenance.add_argument("--parser-provenance", type=Path, help="actual CI installer provenance (source pin or Maven Central)")
+    parser.add_argument("--parser-version", default="3.3.0", help="local candidate Maven version, used with --parser-commit")
     parser.add_argument("--parser-m2", type=Path, required=True, help="isolated Maven repo used for the Java build")
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     summary = {"status": "failed", "measurement_eligible": False}
+    metadata = {}
     try:
-        if len(args.parser_commit) != 40 or any(c not in "0123456789abcdef" for c in args.parser_commit):
-            raise ValueError("parser commit must be a full lowercase hexadecimal SHA")
+        dependency = dependency_provenance(args.parser_version, args.parser_commit, args.parser_provenance)
         corpus = cases()
-        reports = []
-        for backend, path in [("java", args.java_report), ("rust", args.rust_report)]:
-            raw = path.read_text()
-            (args.output / f"{backend}.jsonl").write_text(raw)
-            reports.append([json.loads(line) for line in raw.splitlines()])
         metadata = {"commit": command("git", "rev-parse", "HEAD"),
-                    "reported_parser_commit": args.parser_commit,
+                    "parser_dependency": dependency,
                     "dirty": bool(command("git", "status", "--porcelain")),
                     "platform": platform.platform(), "hostname": platform.node(), "java": command("java", "-version"),
                     "rustc": command("rustc", "--version"), "maven": command("mvn", "-version"),
@@ -178,15 +195,21 @@ def main():
                     "cold_definition": "first observed call for this input; normal test-suite execution does not guarantee process-cold state",
                     "cases": list(corpus.values()), "artifacts": {}}
         for artifact in ("unlaxer-common", "unlaxer-dsl"):
-            path = args.parser_m2 / "org/unlaxer" / artifact / "3.3.0" / f"{artifact}-3.3.0.jar"
+            version = dependency["version"]
+            path = args.parser_m2 / "org/unlaxer" / artifact / version / f"{artifact}-{version}.jar"
             metadata["artifacts"][artifact] = hashlib.sha256(path.read_bytes()).hexdigest()
         for path in ["src/main/java/org/unlaxer/tinyexpression/p4/ubnfc/UBNFC_PIN", "rust/ubnfc-pin.txt",
                      "tools/tinyexpression-p4-lsp-vscode/grammar/tinyexpression-p4.ubnf"]:
             metadata.setdefault("source_identities", {})[path] = hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
-        (args.output / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
+        reports = []
+        for backend, path in [("java", args.java_report), ("rust", args.rust_report)]:
+            raw = path.read_text()
+            (args.output / f"{backend}.jsonl").write_text(raw)
+            reports.append([json.loads(line) for line in raw.splitlines()])
         summary = compare(*reports, corpus)
     except (ValueError, KeyError, TypeError, OSError, subprocess.CalledProcessError) as failure:
         summary["error"] = str(failure)
+    (args.output / "metadata.json").write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + "\n")
     (args.output / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     print(json.dumps(summary))
     return 0 if summary["status"] == "passed" else 1

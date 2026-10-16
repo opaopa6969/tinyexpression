@@ -111,3 +111,30 @@ For final dedicated-host measurement:
 
 The protocol is preparation only. No dedicated/exclusive-host final measurement was performed
 by this change. Concurrent parser CI/build activity existed during development verification.
+
+## Mandatory ordinary CI gate and dependency identity
+
+The existing `ubnfc-parser` job runs Java acceptance alongside its parity suite, Rust's production
+fraud integration and the collector/provenance negative tests, then explicitly requires all 30
+observations. These steps have no `continue-on-error`; an exception, missing observation,
+comparison difference or negative-gate failure makes the job fail. An `always()` collector step
+writes a failed summary even when an earlier test failed, and an `always()` artifact upload
+preserves `fraud-production-acceptance` raw reports, input/source/JAR hashes, provenance,
+metadata and verdict. The existing Java Surefire artifact remains separate. CI evidence remains
+shared-host verification with `measurement_eligible:false`.
+
+This job's dependency route is **Tiny's declared Maven version**, currently `3.3.0-SNAPSHOT`,
+not the locally tested candidate `3.3.0`. Its existing installer builds the fixed
+`.github/unlaxer-source-pin` (`fc75fe1e25e538d47908f05ea2039f585aef696e`) into an empty job-local
+Maven repository when that version is unavailable on Central. The installer's optional
+`UNLAXER_PROVENANCE_FILE` records the actual checked-out commit after successful installation.
+If the declared version becomes available on Central, it instead records `maven-central` with
+no inferred source commit. Failed installation clears stale success provenance. The collector
+uses the recorded version to hash the actual dependency JARs; it never substitutes the local
+candidate SHA or assumes the source pin produced a published artifact.
+
+Local runs can keep `--parser-commit FULL_SHA --parser-version 3.3.0` (the latter defaults to
+3.3.0); those records are explicitly labeled `reported-local-source`. CI instead passes
+`--parser-provenance target/fraud-acceptance/parser-dependency.json`. The two representations
+are mutually exclusive, so evidence cannot silently label a published GAV as a source build.
+No parser version, source pin, ubnfc generation pin or production behavior changes in this wiring.
