@@ -153,7 +153,7 @@ jobs:
       - name: Parity, differential fuzz and engine mode matrix
         run: >-
           mvn -B test -Dgpg.skip=true -Dtinyexpression.skipRailroad=true -Dmaven.repo.local="$MAVEN_REPO"
-          -Dtest=DeclarativeLexicalConformanceTest,UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest,P4PackratFraudFormulaTest,FraudAcceptanceTest
+          -Dtest=DeclarativeLexicalConformanceTest,UbnfcParityTest,UbnfcDifferentialFuzzTest,P4EngineModeMatrixTest,P4ParserEngineTest,P4DslJavaCodeCalculatorTest,P4DslJavaCodeCalculatorClassicEngineTest,P4AstEvaluatorCalculatorTest,P4AstEvaluatorCalculatorClassicEngineTest,P4PreferredAstMapperDiagnosticsTest,P4SourceMappingTest,P4SingleRecognitionProjectionTest,P4ProjectionTextReaderTest,P4PackratFraudFormulaTest,FraudAcceptanceTest
       - name: Require Rust production fraud acceptance and collector negative gates
         env:
           PYTHONDONTWRITEBYTECODE: '1'
@@ -245,7 +245,7 @@ jobs:
           -Dtinyexpression.expected.mapper.snapshot=true
           -Dtinyexpression.expected.mapper.nodeAlias=true
           -Dtinyexpression.expected.mapper.optionalQualifier=true
-          -Dtest=P4LayoutMigrationTest,P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
+          -Dtest=P4LayoutMigrationTest,P4SourceMappingTest,P4OwnedSliceSourceTest,P4TypedAstEvaluatorTest,P4JavaCodeEmitterSourceTextTest,DslGeneratedAstJavaEmitterTest,P4PreferredAstMapperPrecedenceTest,P4OptionalExternalQualifierTest,P4RustRootExpressionAcceptanceTest,P4SingleRecognitionProjectionTest,P4ProjectionTextReaderTest,P4RustNumericEvaluatorOracleTest,P4RustScalarEvaluatorOracleTest,CodeBlockSourceTest,CodeBlockNoCompilerTest
       - name: Verify shared Java/Rust parser fixtures with the pinned source generator
         if: matrix.generator == 'source'
         working-directory: tinyexpression

@@ -18,7 +18,7 @@ pub mod code_block;
 pub(crate) mod compile;
 pub mod java;
 mod ops;
-mod select;
+pub(crate) mod select;
 pub mod trace;
 mod walk;
 

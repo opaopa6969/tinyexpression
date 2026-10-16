@@ -28,8 +28,16 @@ grammar TinyExpressionP4 {
   @whitespace(layout.SPACES_AND_COMMENTS)
   @scopeTree(mode=lexical)
   @mapping(FormulaExpr, params=[imports, declarations, expression, methods, codeBlocks])
+  // Recognize the prologue once. EOF belongs to each ordered tail branch: a short
+  // prefix rolls back inside this Formula, preserving one shared declaration scope.
   Formula ::= { CodeBlock @codeBlocks } { ImportDeclaration @imports } { VariableDeclaration @declarations }
-    { Annotation } Expression @expression { MethodDeclaration @methods } EOF ;
+    { Annotation }
+    ( NumberRootExpression @expression { MethodDeclaration @methods } EOF
+    | BooleanRootExpression @expression { MethodDeclaration @methods } EOF
+    | StringRootExpression @expression { MethodDeclaration @methods } EOF
+    | ObjectRootExpression @expression { MethodDeclaration @methods } EOF
+    | MethodRootExpression @expression { MethodDeclaration @methods } EOF
+    | ParenthesizedRootExpression @expression { MethodDeclaration @methods } EOF ) ;
 
   // ── Fenced Java code block ─────────────────────────────────────────────────
   // Syntax: ```scheme:JavaClassName\n...\n```
@@ -654,8 +662,8 @@ grammar TinyExpressionP4 {
 
   // ── Top-level expression ───────────────────────────────────────────────────
 
-  // NumberExpression first: matches hand-written ExpressionsParser ordering.
-  // NumberExpression consumes "$a+$b" fully; BooleanExpression would only consume "$a".
+  // Nested expressions retain the existing PEG choice: making every argument's
+  // dispatch longest repeatedly explores the other families inside recursive calls.
   @mapping(ExpressionExpr, params=[value])
   Expression ::=
       NumberExpression @value
@@ -664,4 +672,25 @@ grammar TinyExpressionP4 {
     | ObjectExpression @value
     | MethodInvocation @value
     | '(' Expression @value ')' ;
+
+  // The family wrappers deliberately share ExpressionExpr; the public AST schema and
+  // nested Expression's PEG priority stay unchanged. Formula owns the EOF commitment.
+  @mapping(ExpressionExpr, params=[value])
+  NumberRootExpression ::= NumberExpression @value ;
+
+  @mapping(ExpressionExpr, params=[value])
+  BooleanRootExpression ::= BooleanExpression @value ;
+
+  @mapping(ExpressionExpr, params=[value])
+  StringRootExpression ::= StringExpression @value ;
+
+  @mapping(ExpressionExpr, params=[value])
+  ObjectRootExpression ::= ObjectExpression @value ;
+
+  @mapping(ExpressionExpr, params=[value])
+  MethodRootExpression ::= MethodInvocation @value ;
+
+  @mapping(ExpressionExpr, params=[value])
+  ParenthesizedRootExpression ::= '(' Expression @value ')' ;
+
 }

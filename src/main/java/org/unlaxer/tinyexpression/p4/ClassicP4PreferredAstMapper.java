@@ -148,7 +148,7 @@ final class ClassicP4PreferredAstMapper {
     boolean earlierTypedFamily = parsedIndex > 0 && candidates.subList(0, parsedIndex).stream()
         .anyMatch(ClassicP4PreferredAstMapper::isTypedFamilyRoot);
     if (!earlierTypedFamily) return parsed;
-    ParsedAst selected = selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
+    ParsedAst selected = selectExplicitResultFamily(source, parsed);
     int selectedIndex = candidates.indexOf(selected.ast().getClass().getSimpleName());
     return selectedIndex >= 0 && selectedIndex <= parsedIndex ? selected : parsed;
   }
@@ -171,7 +171,7 @@ final class ClassicP4PreferredAstMapper {
     long deadlineNanos = defaultParseDeadlineNanos();
     ParsedAst parsed = parseMappedCandidates(
         source, candidates, preferredResultType == null, deadlineNanos);
-    return selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
+    return selectExplicitResultFamily(source, parsed);
   }
 
   /**
@@ -326,6 +326,18 @@ final class ClassicP4PreferredAstMapper {
     try {
       tree = P4SourceMapping.mapOnce(
           rootToken, parsedRoot.legacyToken(), parserSource, parsedRoot.entryPoint());
+      P4SourceMapping.Selection mappedRoot = tree.select(null);
+      TinyExpressionP4AST canonical = P4RootProjection.canonicalRoot(
+          mappedRoot.ast(), mappedRoot.sourceText(), parserSource);
+      if (canonical != null) {
+        P4SourceMapping.Mapped original = tree;
+        String name = canonical.getClass().getSimpleName();
+        P4SourceMapping.Selection subtree = new P4SourceMapping.Selection(mappedRoot.token(),
+            canonical, mappedRoot.sourceText().withWholeSourceNode(canonical));
+        tree = preferred -> preferred == null || "FormulaExpr".equals(preferred)
+            || "ExpressionExpr".equals(preferred) || name.equals(preferred)
+                ? subtree : original.select(preferred);
+      }
     } catch (RuntimeException failure) {
       // Preserve candidate conversion and default propagation even when mapping itself fails.
       tree = preferred -> { throw failure; };
@@ -368,7 +380,7 @@ final class ClassicP4PreferredAstMapper {
    * influences root-family selection.
    */
   private static ParsedAst selectExplicitResultFamily(
-      String source, List<String> candidates, ParsedAst parsed, long deadlineNanos) {
+      String source, ParsedAst parsed) {
     boolean document = isDocument(source, parsed);
     ResultFamily family = explicitResultFamily(parsed.ast());
     ResultFamily currentMatchFamily = matchFamily(parsed.ast());
@@ -380,74 +392,35 @@ final class ClassicP4PreferredAstMapper {
       throw matchTypeMismatch(source);
     }
     String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
-    TinyExpressionP4AST.FormulaExpr documentRoot =
-        document && parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula ? formula : null;
-    int[] documentExpressionSpan = null;
-    int documentExpressionOffset = 0;
-    if (documentRoot != null) {
-      documentExpressionSpan = parsed.sourceText().spanOf(documentRoot.expression())
-          .orElseThrow(() -> new IllegalArgumentException(
-              "No owned source span for Formula expression"));
-      documentExpressionOffset = documentExpressionSpan[0];
-      parserSource = parserSource.substring(
-          parserSource.offsetByCodePoints(0, documentExpressionSpan[0]),
-          parserSource.offsetByCodePoints(0, documentExpressionSpan[1]));
-    }
-    Class<? extends Parser> rootClass = switch (family) {
-      case STRING -> currentMatchFamily != null
-          ? TinyExpressionP4Parsers.StringMatchExpressionParser.class
-          : TinyExpressionP4Parsers.StringExpressionParser.class;
-      case BOOLEAN -> currentMatchFamily != null
-          ? TinyExpressionP4Parsers.BooleanMatchExpressionParser.class
-          : TinyExpressionP4Parsers.BooleanExpressionParser.class;
-      case OBJECT -> TinyExpressionP4Parsers.ObjectExpressionParser.class;
-      case NUMBER -> {
-        if (currentMatchFamily != null) {
-          yield TinyExpressionP4Parsers.NumberMatchExpressionParser.class;
-        }
-        throw new IllegalStateException("number family already selected");
-      }
-    };
-    ParseResult reparsed = parseWithRoot(Parser.get(rootClass), parserSource, deadlineNanos);
-    if (!reparsed.fullyConsumed(parserSource)) {
+    TinyExpressionP4AST.FormulaExpr documentRoot = document
+        && parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula ? formula : null;
+    P4ResultFamilyProjection.Result projection;
+    try {
+      projection = P4ResultFamilyProjection.project(
+          currentMatchFamily != null ? resultRoot(parsed.ast()) : parsed.ast(),
+          family.name(), parsed.sourceText(), parserSource);
+    } catch (IllegalArgumentException incompatible) {
       if (currentMatchFamily != null) throw matchTypeMismatch(source);
-      throw new IllegalArgumentException(
-          "Explicit result type could not be parsed as " + family.name().toLowerCase() + ": " + source);
+      throw new IllegalArgumentException("Explicit result type could not be parsed as "
+          + family.name().toLowerCase(java.util.Locale.ROOT) + ": " + source, incompatible);
     }
-    ArrayList<String> familyCandidates = new ArrayList<>();
-    addIfAbsent(familyCandidates, switch (family) {
-      case STRING -> currentMatchFamily != null ? "StringMatchExpr" : "StringConcatExpr";
-      case BOOLEAN -> currentMatchFamily != null ? "BooleanMatchExpr" : "BooleanOrExpr";
-      case OBJECT -> "ObjectExpr";
-      case NUMBER -> null;
-    });
-    for (String candidate : candidates) addIfAbsent(familyCandidates, candidate);
-    ParsedAst selected = mapCandidates(
-        parserSource,
-        familyCandidates,
-        true,
-        new ParsedRoot(
-            reparsed.rootToken(), reparsed.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE));
-    if (family == ResultFamily.OBJECT) {
-      if (selected.ast() instanceof TinyExpressionP4AST.ObjectExpr) {
-        selected = new ParsedAst(selected.ast(), "explicit:object", selected.sourceText());
-      } else {
-        TinyExpressionP4AST.ObjectExpr object = new TinyExpressionP4AST.ObjectExpr(selected.ast());
-        selected = new ParsedAst(object, "explicit:object",
-            selected.sourceText().withWholeSourceNode(object));
-      }
-    }
-    if (documentRoot == null) return selected;
-
-    TinyExpressionP4AST.ExpressionExpr expression =
-        new TinyExpressionP4AST.ExpressionExpr(selected.ast());
+    TinyExpressionP4AST selected = projection.ast();
+    String mode = family == ResultFamily.OBJECT ? "explicit:object"
+        : "preferred:" + selected.getClass().getSimpleName();
+    if (documentRoot == null) return new ParsedAst(selected, mode,
+        projection.sourceText().withWholeSourceNode(selected));
+    TinyExpressionP4AST.ExpressionExpr expression = new TinyExpressionP4AST.ExpressionExpr(selected);
     TinyExpressionP4AST.FormulaExpr formula = new TinyExpressionP4AST.FormulaExpr(
-        documentRoot.imports(), documentRoot.declarations(), expression, documentRoot.methods(),
-        documentRoot.codeBlocks());
-    P4SourceText sourceText = parsed.sourceText().withOverlay(
-        selected.sourceText(), documentExpressionOffset,
-        formula, documentRoot, expression, documentRoot.expression());
-    return new ParsedAst(formula, "document:" + selected.selectionMode(), sourceText);
+        documentRoot.imports(), documentRoot.declarations(), expression,
+        documentRoot.methods(), documentRoot.codeBlocks());
+    P4SourceText base = parsed.sourceText();
+    P4SourceText snapshot = P4SourceText.fromSnapshot(parserSource, value -> {
+      if (value == formula) return base.spanOf(documentRoot);
+      if (value == expression) return base.spanOf(documentRoot.expression());
+      var projected = projection.sourceText().spanOf(value);
+      return projected.isPresent() ? projected : base.spanOf(value);
+    });
+    return new ParsedAst(formula, "document:" + mode, snapshot);
   }
 
   private static ResultFamily matchFamily(TinyExpressionP4AST ast) {
@@ -611,43 +584,12 @@ final class ClassicP4PreferredAstMapper {
     return mappedSource != null && source.strip().equals(mappedSource.strip());
   }
 
-  /**
-   * Parses {@code source} fully and returns the root token.
-   *
-   * <p>The grammar's top-level {@code Expression} rule tries {@code NumberExpression}
-   * before {@code BooleanExpression} so that arithmetic such as {@code $a+$b} is fully
-   * consumed (a BooleanExpression-first ordering would consume only {@code $a}). The
-   * generated combinator {@code Choice} is PEG first-match and never backtracks into a
-   * later alternative once an earlier one commits, so for a bare top-level boolean
-   * comparison such as {@code 1 > 0 & 2 > 1} the {@code NumberExpression} alternative
-   * matches only the leading {@code 1} and the root {@code Formula} rule then fails at
-   * EOF (issue #23).
-   *
-   * <p>Reordering the grammar alternatives cannot fix both cases under PEG, and adding a
-   * comparison-anchored top-level alternative roughly doubles parse time for
-   * {@code if(...comparison...)} formulas (the comparison's number operand re-parses the
-   * whole {@code if} block before failing). So the fix is applied here instead: when the
-   * standard {@code Formula} parse fails or under-consumes, retry the boolean, string, and
-   * object family roots in public dispatch order. Explicit type hints on an otherwise successful
-   * parse are handled separately from captured AST metadata. These retries add cost only for
-   * inputs the standard parse already rejected, leaving the hot path untouched.
-   */
+  /** Recognizes Formula once; Expression owns the longest-family choice. */
   private static ParsedRoot parseRootToken(String source, long deadlineNanos) {
     ParseResult primary = parseWithRoot(TinyExpressionP4Parsers.getRootParser(), source, deadlineNanos);
     if (primary.fullyConsumed(source)) {
       return new ParsedRoot(
           primary.rootToken(), primary.legacyToken(), P4SourceMapping.EntryPoint.ROOT);
-    }
-    // Retry families in public dispatch order after the primary Formula rejects EOF.
-    for (Class<? extends Parser> alternate : List.of(
-        TinyExpressionP4Parsers.BooleanExpressionParser.class,
-        TinyExpressionP4Parsers.StringExpressionParser.class,
-        TinyExpressionP4Parsers.ObjectExpressionParser.class)) {
-      ParseResult result = parseWithRoot(Parser.get(alternate), source, deadlineNanos);
-      if (result.fullyConsumed(source)) {
-        return new ParsedRoot(
-            result.rootToken(), result.legacyToken(), P4SourceMapping.EntryPoint.ALTERNATE);
-      }
     }
     if (!primary.succeeded()) {
       throw new IllegalArgumentException("Parse failed: " + source);

@@ -10,6 +10,8 @@ import org.unlaxer.tinyexpression.p4.ubnfc.generated.api.ParseOptions;
 import org.unlaxer.tinyexpression.p4.ubnfc.generated.api.ParseResult;
 import org.unlaxer.tinyexpression.generated.p4.TinyExpressionP4AST;
 import org.unlaxer.tinyexpression.p4.P4SourceText;
+import org.unlaxer.tinyexpression.p4.P4RootProjection;
+import org.unlaxer.tinyexpression.p4.P4ResultFamilyProjection;
 import org.unlaxer.tinyexpression.parser.ExpressionType;
 import org.unlaxer.tinyexpression.parser.TinyExpressionParserCapabilities;
 
@@ -63,7 +65,7 @@ public final class UbnfcP4Parse {
         long deadlineNanos = defaultParseDeadlineNanos();
         Result parsed = parseMappedCandidates(
             source, candidates, preferredResultType == null, deadlineNanos);
-        return selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
+        return selectExplicitResultFamily(source, parsed);
     }
 
     public static Result parseByAstSimpleNameDetailed(
@@ -89,7 +91,7 @@ public final class UbnfcP4Parse {
         if (!earlierTypedFamily) {
             return parsed;
         }
-        Result selected = selectExplicitResultFamily(source, candidates, parsed, deadlineNanos);
+        Result selected = selectExplicitResultFamily(source, parsed);
         int selectedIndex = candidates.indexOf(selected.ast().getClass().getSimpleName());
         return selectedIndex >= 0 && selectedIndex <= parsedIndex ? selected : parsed;
     }
@@ -237,15 +239,6 @@ public final class UbnfcP4Parse {
         if (fullyConsumed(primary, parserSource)) {
             return toParsedRoot(primary, parserSource);
         }
-        for (String alternate : List.of("BooleanExpression", "StringExpression", "ObjectExpression")) {
-            checkDeadline(deadlineNanos);
-            ParseResult<org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST> result =
-                parseEntry(alternate, parserSource);
-            if (fullyConsumed(result, parserSource)) {
-                return toParsedRoot(result, parserSource);
-            }
-        }
-        checkDeadline(deadlineNanos);
         if (!primary.ok()) {
             throw new IllegalArgumentException("Parse failed: " + parserSource);
         }
@@ -276,7 +269,17 @@ public final class UbnfcP4Parse {
         UbnfcAstConverter converter = new UbnfcAstConverter(result.nodeSpans(), parserSource);
         TinyExpressionP4AST root = converter.convert(result.ast().orElseThrow());
         Map<Object, int[]> spans = converter.spans();
-        return new ParsedRoot(root, snapshot(parserSource, spans), spans, converter.bestByName());
+        P4SourceText sourceText = snapshot(parserSource, spans);
+        Map<String, TinyExpressionP4AST> best = converter.bestByName();
+        TinyExpressionP4AST canonical = P4RootProjection.canonicalRoot(root, sourceText, parserSource);
+        if (canonical != null) {
+            root = canonical;
+            spans.put(root, new int[] {0, parserSource.codePointCount(0, parserSource.length())});
+            best = new java.util.HashMap<>(best);
+            best.remove("FormulaExpr");
+            best.remove("ExpressionExpr");
+        }
+        return new ParsedRoot(root, sourceText, spans, best);
     }
 
     private static P4SourceText snapshot(String parserSource, Map<Object, int[]> spans) {
@@ -351,12 +354,12 @@ public final class UbnfcP4Parse {
         return source.offsetByCodePoints(0, Math.max(0, Math.min(codePointOffset, total)));
     }
 
-    // -------------------------------------------------- 明示された結果型の再選択
+    // -------------------------------------------------- 認識済み AST の明示結果型への投影
 
     private enum ResultFamily { NUMBER, STRING, BOOLEAN, OBJECT }
 
     private static Result selectExplicitResultFamily(
-            String source, List<String> candidates, Result parsed, long deadlineNanos) {
+            String source, Result parsed) {
         boolean document = isDocument(source, parsed);
         ResultFamily family = explicitResultFamily(parsed.ast());
         ResultFamily currentMatchFamily = matchFamily(parsed.ast());
@@ -367,94 +370,36 @@ public final class UbnfcP4Parse {
         if (currentMatchFamily != null && family == ResultFamily.OBJECT) {
             throw matchTypeMismatch(source);
         }
-        String documentSource =
-            TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
-        String parserSource = documentSource;
-        TinyExpressionP4AST.FormulaExpr documentRoot =
-            document && parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula
-                ? formula : null;
-        int documentExpressionOffset = 0;
-        if (documentRoot != null) {
-            int[] span = parsed.sourceText().spanOf(documentRoot.expression())
-                .orElseThrow(() -> new IllegalArgumentException(
-                    "No owned source span for Formula expression"));
-            documentExpressionOffset = span[0];
-            parserSource = parserSource.substring(
-                parserSource.offsetByCodePoints(0, span[0]),
-                parserSource.offsetByCodePoints(0, span[1]));
+        String parserSource = TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout(source);
+        TinyExpressionP4AST.FormulaExpr documentRoot = document
+            && parsed.ast() instanceof TinyExpressionP4AST.FormulaExpr formula ? formula : null;
+        P4ResultFamilyProjection.Result projection;
+        try {
+          projection = P4ResultFamilyProjection.project(
+              currentMatchFamily != null ? resultRoot(parsed.ast()) : parsed.ast(),
+              family.name(), parsed.sourceText(), parserSource);
+        } catch (IllegalArgumentException incompatible) {
+          if (currentMatchFamily != null) throw matchTypeMismatch(source);
+          throw new IllegalArgumentException("Explicit result type could not be parsed as "
+              + family.name().toLowerCase(java.util.Locale.ROOT) + ": " + source, incompatible);
         }
-        String entry = switch (family) {
-            case STRING -> currentMatchFamily != null ? "StringMatchExpression" : "StringExpression";
-            case BOOLEAN -> currentMatchFamily != null ? "BooleanMatchExpression" : "BooleanExpression";
-            case OBJECT -> "ObjectExpression";
-            case NUMBER -> {
-                if (currentMatchFamily != null) {
-                    yield "NumberMatchExpression";
-                }
-                throw new IllegalStateException("number family already selected");
-            }
-        };
-        checkDeadline(deadlineNanos);
-        ParseResult<org.unlaxer.tinyexpression.p4.ubnfc.generated.TinyExpressionP4AST> reparsed =
-            parseEntry(entry, parserSource);
-        if (!fullyConsumed(reparsed, parserSource)) {
-            if (currentMatchFamily != null) throw matchTypeMismatch(source);
-            throw new IllegalArgumentException("Explicit result type could not be parsed as "
-                + family.name().toLowerCase(Locale.ROOT) + ": " + source);
-        }
-        ArrayList<String> familyCandidates = new ArrayList<>();
-        addIfAbsent(familyCandidates, switch (family) {
-            case STRING -> currentMatchFamily != null ? "StringMatchExpr" : "StringConcatExpr";
-            case BOOLEAN -> currentMatchFamily != null ? "BooleanMatchExpr" : "BooleanOrExpr";
-            case OBJECT -> "ObjectExpr";
-            case NUMBER -> null;
-        });
-        for (String candidate : candidates) addIfAbsent(familyCandidates, candidate);
-        ParsedRoot reparsedRoot = toParsedRoot(reparsed, parserSource);
-        Result selected = mapCandidates(parserSource, familyCandidates, true, reparsedRoot);
-        if (family == ResultFamily.OBJECT) {
-            if (selected.ast() instanceof TinyExpressionP4AST.ObjectExpr) {
-                selected = new Result(selected.ast(), "explicit:object", selected.sourceText());
-            } else {
-                TinyExpressionP4AST.ObjectExpr object =
-                    new TinyExpressionP4AST.ObjectExpr(selected.ast());
-                selected = new Result(object, "explicit:object",
-                    selected.sourceText().withWholeSourceNode(object));
-            }
-        }
-        if (documentRoot == null) return selected;
-
-        TinyExpressionP4AST.ExpressionExpr expression =
-            new TinyExpressionP4AST.ExpressionExpr(selected.ast());
+        TinyExpressionP4AST selected = projection.ast();
+        String mode = family == ResultFamily.OBJECT ? "explicit:object"
+            : "preferred:" + selected.getClass().getSimpleName();
+        if (documentRoot == null) return new Result(selected, mode,
+        projection.sourceText().withWholeSourceNode(selected));
+        TinyExpressionP4AST.ExpressionExpr expression = new TinyExpressionP4AST.ExpressionExpr(selected);
         TinyExpressionP4AST.FormulaExpr formula = new TinyExpressionP4AST.FormulaExpr(
-            documentRoot.imports(), documentRoot.declarations(), expression, documentRoot.methods(),
-            documentRoot.codeBlocks());
-        P4SourceText sourceText = withOverlay(documentSource, parsed.sourceText(),
-            selected.sourceText(), documentExpressionOffset,
-            formula, documentRoot, expression, documentRoot.expression());
-        return new Result(formula, "document:" + selected.selectionMode(), sourceText);
-    }
-
-    /**
-     * 再解析した部分木の snapshot を文書側の snapshot に重ねる。旧実装の
-     * {@code P4SourceText#withOverlay}（package private）と同じ規則を public API だけで組む。
-     * 座標系は両者とも同じ code point 空間で、{@code offset} は文書内の式の開始位置。
-     */
-    private static P4SourceText withOverlay(String parserSource, P4SourceText base,
-            P4SourceText overlay, int offset, Object newOuter, Object oldOuter,
-            Object newExpression, Object oldExpression) {
-        return P4SourceText.fromSnapshot(parserSource, value -> {
-            if (value == newOuter) return base.spanOf(oldOuter);
-            if (value == newExpression) return base.spanOf(oldExpression);
-            Optional<int[]> overlaid = overlay.spanOf(value);
-            if (overlaid.isPresent()) {
-                int[] range = overlaid.orElseThrow().clone();
-                range[0] += offset;
-                range[1] += offset;
-                return Optional.of(range);
-            }
-            return base.spanOf(value);
+            documentRoot.imports(), documentRoot.declarations(), expression,
+            documentRoot.methods(), documentRoot.codeBlocks());
+        P4SourceText base = parsed.sourceText();
+        P4SourceText snapshot = P4SourceText.fromSnapshot(parserSource, value -> {
+          if (value == formula) return base.spanOf(documentRoot);
+          if (value == expression) return base.spanOf(documentRoot.expression());
+          var projected = projection.sourceText().spanOf(value);
+          return projected.isPresent() ? projected : base.spanOf(value);
         });
+        return new Result(formula, "document:" + mode, snapshot);
     }
 
     private static ResultFamily matchFamily(TinyExpressionP4AST ast) {

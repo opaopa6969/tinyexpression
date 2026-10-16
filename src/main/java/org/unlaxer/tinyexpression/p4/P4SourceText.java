@@ -74,6 +74,33 @@ public final class P4SourceText {
     });
   }
 
+  /** A cursor owned by one projection; public random-access span APIs remain unchanged. */
+  ProjectionTextReader projectionTextReader() {
+    return new ProjectionTextReader();
+  }
+
+  final class ProjectionTextReader {
+    private final int sourceLength = parserSource == null ? -1
+        : parserSource.codePointCount(0, parserSource.length());
+    private int codePointOffset;
+    private int charOffset;
+
+    String text(Object node) {
+      int[] range = spans.apply(node).orElseThrow(() -> new IllegalArgumentException(
+          "No owned source span for " + node.getClass().getSimpleName()));
+      if (range.length != 2 || range[0] < 0 || range[1] < range[0]
+          || sourceLength < 0 || range[1] > sourceLength) {
+        throw new IllegalArgumentException("Invalid owned source span");
+      }
+      // Negative movement is intentional: visitors may revisit or reorder source nodes.
+      int start = parserSource.offsetByCodePoints(charOffset, range[0] - codePointOffset);
+      int end = parserSource.offsetByCodePoints(start, range[1] - range[0]);
+      codePointOffset = range[1];
+      charOffset = end;
+      return parserSource.substring(start, end);
+    }
+  }
+
   /** Returns lexical input, without evaluating a node or using its debug representation. */
   public String text(Object value) {
     if (value == null) return null;

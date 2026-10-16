@@ -106,7 +106,7 @@ fn library_parses_multiline_document() {
 }
 
 #[test]
-fn library_retries_bare_boolean_comparisons_without_changing_numeric_root_selection() {
+fn grammar_resolves_bare_boolean_comparisons_without_changing_numeric_root_selection() {
     for source in ["1<2", "1==1", "1+2*3>=7", "1<2&2<3", "1>2|3>2"] {
         let ast = parse(source).unwrap_or_else(|error| panic!("{source}: {error}"));
         assert_eq!(ast.span().end, source.chars().count(), "{source}");
@@ -278,7 +278,7 @@ fn fallback_preserves_formula_and_expression_span_contract() {
 }
 
 #[test]
-fn failed_boolean_retry_keeps_the_primary_formula_diagnostic() {
+fn invalid_root_keeps_the_formula_diagnostic() {
     let source = "1<";
     let unmemoized = ParseOptions {
         memo: false,

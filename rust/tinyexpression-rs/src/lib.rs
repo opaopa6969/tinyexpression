@@ -22,6 +22,7 @@ pub mod generated;
 
 mod diagnostic;
 mod evaluator;
+mod family_projection;
 pub mod formula_info;
 pub mod formula_info_span;
 mod frontend;
@@ -59,8 +60,8 @@ impl Error for FrontendError {}
 
 /// Parses the complete UTF-8 source from the grammar root only.
 ///
-/// [`parse`] additionally retries the other result-family roots the way the Java facade does;
-/// this entry point is the primary `Formula` parse on its own.
+/// This entry point retains the grammar's raw Formula shape; [`parse`] also applies typed
+/// semantic projection without recognizing the input again.
 pub fn parse_formula_root(source: &str) -> Result<Ast, FrontendError> {
     frontend::parse_entry(None, source)
 }
@@ -75,13 +76,7 @@ pub fn parse_formula_root_with_options(
 
 /// Parses the complete UTF-8 source and returns an owned, source-preserving typed AST.
 pub fn parse(source: &str) -> Result<Ast, FrontendError> {
-    match frontend::parse_entry(None, source) {
-        Ok(ast) => select_explicit_result_family(source, ast),
-        Err(primary @ FrontendError::Parse(_)) => {
-            parse_alternate_root(source).unwrap_or(Err(primary))
-        }
-        Err(other) => Err(other),
-    }
+    select_explicit_result_family(source, frontend::parse_entry(None, source)?)
 }
 
 fn normalize_direct_match_root(ast: Ast, source: &str) -> Ast {
@@ -260,30 +255,39 @@ fn select_explicit_result_family(source: &str, ast: Ast) -> Result<Ast, Frontend
     if match_result && family == ResultFamily::Object {
         return Err(type_mismatch(source));
     }
-    let rule_name = match (match_result, family) {
-        (true, ResultFamily::Number) => "NumberMatchExpression",
-        (true, ResultFamily::String) => "StringMatchExpression",
-        (true, ResultFamily::Boolean) => "BooleanMatchExpression",
-        (false, ResultFamily::String) => "StringExpression",
-        (false, ResultFamily::Boolean) => "BooleanExpression",
-        (false, ResultFamily::Object) => "ObjectExpression",
-        (false, ResultFamily::Number) | (true, ResultFamily::Object) => unreachable!(),
-    };
     let document_span = if document {
         document_expression_span(&ast)
     } else {
         None
     };
-    let family_source = document_span
-        .map(|span| mask_outside(source, span))
-        .unwrap_or_else(|| source.to_owned());
-    match parse_family_root(&family_source, rule_name, document_span) {
-        Err(FrontendError::Parse(_)) if match_result => Err(type_mismatch(source)),
-        Err(error) => Err(error),
-        Ok(reparsed) => match document_span {
-            Some(span) => replace_document_expression(ast, reparsed, span),
-            None => Ok(reparsed),
-        },
+    let target = if match_result {
+        match_root(&ast).unwrap_or(&ast)
+    } else {
+        &ast
+    };
+    let family_name = match family {
+        ResultFamily::Number => "NUMBER",
+        ResultFamily::String => "STRING",
+        ResultFamily::Boolean => "BOOLEAN",
+        ResultFamily::Object => "OBJECT",
+    };
+    let projected = family_projection::project(target, family_name, source).map_err(|_| {
+        if match_result {
+            type_mismatch(source)
+        } else {
+            FrontendError::Mapping(format!(
+                "Explicit result type could not be parsed as {family_name}: {source}"
+            ))
+        }
+    })?;
+    let root_span = document_span.unwrap_or(Span {
+        start: 0,
+        end: source.chars().count(),
+    });
+    let projected = family_projection::with_root_span(projected, root_span);
+    match document_span {
+        Some(span) => replace_document_expression(ast, projected, span),
+        None => Ok(wrap_expression_root(projected, source.chars().count())),
     }
 }
 
@@ -294,26 +298,12 @@ fn document_expression_span(ast: &Ast) -> Option<Span> {
     }
 }
 
-fn mask_outside(source: &str, span: Span) -> String {
-    source
-        .chars()
-        .enumerate()
-        .map(|(index, value)| {
-            if (index >= span.start && index < span.end) || matches!(value, '\n' | '\r' | '\t') {
-                value
-            } else {
-                ' '
-            }
-        })
-        .collect()
-}
-
 fn replace_document_expression(
     document: Ast,
-    reparsed: Ast,
+    projected: Ast,
     expression_span: Span,
 ) -> Result<Ast, FrontendError> {
-    let replacement = match reparsed {
+    let replacement = match projected {
         Ast::r#FormulaExpr { r#expression, .. } => match *r#expression {
             Ast::r#ExpressionExpr { r#value, .. } => *r#value,
             value => value,
@@ -344,15 +334,6 @@ fn replace_document_expression(
             "document expression replacement requires FormulaExpr".to_owned(),
         )),
     }
-}
-
-fn parse_family_root(
-    source: &str,
-    rule_name: &str,
-    clip_to: Option<Span>,
-) -> Result<Ast, FrontendError> {
-    frontend::parse_entry_clipped(Some(rule_name), source, clip_to)
-        .map(|value| wrap_expression_root(value, source.chars().count()))
 }
 
 fn type_mismatch(source: &str) -> FrontendError {
@@ -494,22 +475,6 @@ fn direct_value_hint(value: &AstValue) -> Option<ResultFamily> {
         AstValue::Node(ast) => direct_variable_hint(ast),
         AstValue::Text { .. } => None,
     }
-}
-
-/// Mirrors Java's `P4PreferredAstMapper` compatibility retries for PEG root dispatch.
-///
-/// `Expression` intentionally tries `NumberExpression` before `BooleanExpression` so that
-/// arithmetic such as `$a+$b` is consumed as one expression. A bare comparison such as `1<2`
-/// therefore commits the numeric prefix `1`, and the enclosing `Formula` subsequently fails at
-/// EOF. Retrying only after that failure keeps the successful numeric hot path unchanged while
-/// accepting the complete boolean expression.
-fn parse_alternate_root(source: &str) -> Option<Result<Ast, FrontendError>> {
-    for rule_name in ["BooleanExpression", "StringExpression", "ObjectExpression"] {
-        if let Ok(value) = frontend::parse_entry(Some(rule_name), source) {
-            return Some(Ok(wrap_expression_root(value, source.chars().count())));
-        }
-    }
-    None
 }
 
 fn wrap_expression_root(value: Ast, source_len: usize) -> Ast {
