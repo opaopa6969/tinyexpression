@@ -27,8 +27,8 @@ class LayoutCompatibilityTests(unittest.TestCase):
             LAYOUT.prepare(self.source, self.destination)
         self.assertFalse(self.destination.exists(), "reject before publishing the derived grammar")
 
-    def test_exact_snapshot_restores_the_pinned_old_grammar(self):
-        self.assertEqual("4a02d31de4e646a0664fd78a4b77ff2e145e7af7dde83a209e244e38298e962a",
+    def test_exact_snapshot_matches_the_pinned_compatibility_grammar(self):
+        self.assertEqual("91a0d150e53a0c901498979ca720f4c8b07040129a1427a030a3f18f3850ac65",
                          LAYOUT.prepare(self.source, self.destination))
         self.assertNotIn("pkg:", self.destination.read_text())
 
