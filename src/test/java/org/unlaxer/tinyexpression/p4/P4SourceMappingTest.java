@@ -527,4 +527,125 @@ public class P4SourceMappingTest {
       executor.awaitTermination(30, TimeUnit.SECONDS);
     }
   }
+  @Test public void realDefaultFacadeDoesNotRequireAllPreferredCandidates() throws Exception {
+    String source = Files.readString(Path.of("benchmarks/fixtures/comparison-heavy-x64.tiny"));
+    var parsed = P4ParserEngine.with(P4ParserEngine.CLASSIC,
+        () -> P4PreferredAstMapper.parseDetailed(source));
+    assertEquals(TinyExpressionP4AST.BooleanOrExpr.class, parsed.ast().getClass());
+    assertArrayEquals(new int[]{0, source.codePointCount(0, source.length())},
+        parsed.sourceText().spanOf(parsed.ast()).orElseThrow());
+    assertEquals(source, parsed.sourceText().text(parsed.ast()));
+  }
+
+  public static class DefaultLegacyMapper {
+    static int calls;
+    private static final Map<Object, int[]> SPANS = new IdentityHashMap<>();
+    public static LegacySelection mapParsedToken(Token token, String preferred) {
+      assertNull(preferred); calls++;
+      var ast=number("12"); SPANS.clear(); SPANS.put(ast,new int[]{1,3});
+      return new LegacySelection(token,ast);
+    }
+    public static Optional<int[]> sourceSpanOf(Object node) {
+      return Optional.ofNullable(SPANS.get(node)).map(int[]::clone);
+    }
+  }
+  public static class DefaultSelectorMapper extends DefaultLegacyMapper {
+    static int roots, alternates, inventories;
+    static final IllegalArgumentException LIMIT=new IllegalArgumentException("E-MAPPING-LIMIT: preferred candidates");
+    public static NewSelection selectParsedTokenWithSourceMap(Token token,String preferred) {
+      assertNull(preferred); roots++; return new NewSelection(token,new Snapshot(number("12"),1,3));
+    }
+    public static NewSelection selectSubtreeTokenWithSourceMap(Token token,String preferred) {
+      assertNull(preferred); alternates++; return new NewSelection(token,new Snapshot(number("12"),1,3));
+    }
+    public static Object mapParsedTree(Token token) { inventories++; throw LIMIT; }
+    public static Object mapSubtreeTree(Token token) { inventories++; throw LIMIT; }
+  }
+  public static final class DefaultFailingSelector extends DefaultLegacyMapper {
+    static final IllegalStateException FAILURE=new IllegalStateException("default selection failed");
+    public static NewSelection selectParsedTokenWithSourceMap(Token token,String preferred) { throw FAILURE; }
+    public static NewSelection selectSubtreeTokenWithSourceMap(Token token,String preferred) { throw FAILURE; }
+  }
+  @Test public void defaultOnceUsesOneSelectorAndRetainsOwnedSelectionWithoutInventory() {
+    for(var entry:P4SourceMapping.EntryPoint.values()) {
+      DefaultSelectorMapper.roots=DefaultSelectorMapper.alternates=DefaultSelectorMapper.inventories=DefaultLegacyMapper.calls=0;
+      Token root=emptyToken(),legacy=emptyToken();
+      var mapped=P4SourceMapping.mapDefaultOnce(DefaultSelectorMapper.class,root,legacy,"😀12",entry);
+      var first=mapped.select(null);
+      for(String preferred:Arrays.asList(null,""," ")) {
+        var selected=mapped.select(preferred); assertSame(first,selected); assertSame(root,selected.token());
+        assertEquals("12",selected.sourceText().text(selected.ast()));
+        assertArrayEquals(new int[]{1,3},selected.sourceText().spanOf(selected.ast()).orElseThrow());
+      }
+      assertEquals(entry==P4SourceMapping.EntryPoint.ROOT?1:0,DefaultSelectorMapper.roots);
+      assertEquals(entry==P4SourceMapping.EntryPoint.ALTERNATE?1:0,DefaultSelectorMapper.alternates);
+      assertEquals(0,DefaultSelectorMapper.inventories); assertEquals(0,DefaultLegacyMapper.calls);
+      assertThrows(IllegalArgumentException.class,()->mapped.select("BinaryExpr"));
+      // Explicit preferred-inventory API and its failure remain unchanged.
+      assertSame(DefaultSelectorMapper.LIMIT,assertThrows(IllegalArgumentException.class,()->
+          P4SourceMapping.mapOnce(DefaultSelectorMapper.class,root,legacy,"😀12",entry)));
+    }
+  }
+  @Test public void defaultOnceLegacyCapabilityCopiesItsSourceBeforeLaterMappings() {
+    for(var entry:P4SourceMapping.EntryPoint.values()) {
+      DefaultLegacyMapper.calls=0; Token root=emptyToken(),legacy=emptyToken();
+      var mapped=P4SourceMapping.mapDefaultOnce(DefaultLegacyMapper.class,root,legacy,"😀12",entry);
+      var first=mapped.select(null); assertSame(legacy,first.token());
+      P4SourceMapping.mapDefaultOnce(DefaultLegacyMapper.class,root,legacy,"😀12",entry);
+      assertSame(first,mapped.select(null)); assertEquals(2,DefaultLegacyMapper.calls);
+      assertEquals("12",first.sourceText().text(first.ast()));
+      assertArrayEquals(new int[]{1,3},first.sourceText().spanOf(first.ast()).orElseThrow());
+    }
+  }
+  @Test public void defaultOnceSelectionFailureNeverFallsBackOrRetries() {
+    DefaultLegacyMapper.calls=0;
+    for(var entry:P4SourceMapping.EntryPoint.values()) {
+      assertSame(DefaultFailingSelector.FAILURE,assertThrows(IllegalStateException.class,()->
+          P4SourceMapping.mapDefaultOnce(DefaultFailingSelector.class,null,null,"12",entry)));
+    }
+    assertEquals(0,DefaultLegacyMapper.calls);
+  }
+
+  @Test public void implicitOnceUsesOneOwnedSelectorAndNoInventory() {
+    for (var entry : P4SourceMapping.EntryPoint.values()) {
+      DefaultSelectorMapper.roots = DefaultSelectorMapper.alternates =
+          DefaultSelectorMapper.inventories = DefaultLegacyMapper.calls = 0;
+      Token root = emptyToken(), legacy = emptyToken();
+      var mapped = P4SourceMapping.mapImplicitOnce(DefaultSelectorMapper.class, root, legacy, "😀12", entry);
+      var first = mapped.select(null);
+      for (String candidate : Arrays.asList(null, "", "BinaryExpr", "AbsentExpr")) {
+        assertSame(first.ast(), mapped.select(candidate).ast());
+        assertEquals("12", mapped.select(candidate).sourceText().text(first.ast()));
+      }
+      assertEquals(entry == P4SourceMapping.EntryPoint.ROOT ? 1 : 0, DefaultSelectorMapper.roots);
+      assertEquals(entry == P4SourceMapping.EntryPoint.ALTERNATE ? 1 : 0, DefaultSelectorMapper.alternates);
+      assertEquals(0, DefaultSelectorMapper.inventories);
+      assertEquals(0, DefaultLegacyMapper.calls);
+    }
+  }
+
+  @Test public void implicitLegacyWithoutSourceSpansKeepsItsExistingSelectionContract() {
+    for (var entry : P4SourceMapping.EntryPoint.values()) {
+      LegacyMapper.calls = 0;
+      Token root = emptyToken(), legacy = emptyToken();
+      var mapped = P4SourceMapping.mapImplicitOnce(LegacyMapper.class, root, legacy, "12345", entry);
+      assertEquals(0, LegacyMapper.calls);
+      for (String candidate : List.of("12", "345")) {
+        var selected = mapped.select(candidate);
+        assertSame(legacy, selected.token());
+        assertEquals(number(candidate), selected.ast());
+      }
+      assertEquals(2, LegacyMapper.calls);
+    }
+  }
+
+  @Test public void implicitOwnedSelectionFailureNeverRetriesLegacyMapping() {
+    DefaultLegacyMapper.calls = 0;
+    for (var entry : P4SourceMapping.EntryPoint.values()) {
+      assertSame(DefaultFailingSelector.FAILURE, assertThrows(IllegalStateException.class,
+          () -> P4SourceMapping.mapImplicitOnce(DefaultFailingSelector.class, null, null, "12", entry)));
+    }
+    assertEquals(0, DefaultLegacyMapper.calls);
+  }
+
 }
