@@ -12,12 +12,33 @@ set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
 : "${MAVEN_REPO:?set MAVEN_REPO to the job-local Maven repository}"
+if [[ -n "${UNLAXER_PROVENANCE_FILE:-}" ]]; then
+  rm -f -- "$UNLAXER_PROVENANCE_FILE" # an unsuccessful rerun must not retain old success provenance
+fi
 
 version=$(sed -n 's:.*<unlaxer.version>\(.*\)</unlaxer.version>.*:\1:p' "$repo/pom.xml" | head -1)
 if [[ -z "$version" ]]; then
   echo "pom.xml has no unlaxer.version" >&2
   exit 1
 fi
+
+# Optional machine-readable provenance for consumers comparing the actual CI dependency.
+# Other callers keep their existing behavior when this variable is unset.
+record_provenance() {
+  if [[ -z "${UNLAXER_PROVENANCE_FILE:-}" ]]; then
+    return
+  fi
+  python3 - "$UNLAXER_PROVENANCE_FILE" "$version" "$1" "${2:-}" <<'PYPROVENANCE'
+import json
+from pathlib import Path
+import sys
+path, version, origin, commit = sys.argv[1:]
+output = Path(path)
+output.parent.mkdir(parents=True, exist_ok=True)
+output.write_text(json.dumps({"version": version, "origin": origin,
+                              "source_commit": commit or None}, indent=2) + "\n")
+PYPROVENANCE
+}
 
 central=https://repo1.maven.org/maven2/org/unlaxer
 published=true
@@ -28,6 +49,7 @@ for artifact in unlaxer-common unlaxer-dsl; do
 done
 if $published; then
   echo "unlaxer $version is on Maven Central; nothing to install."
+  record_provenance maven-central
   exit 0
 fi
 
@@ -50,6 +72,7 @@ fi
 echo "unlaxer $version is not on Maven Central; installing it from unlaxer-parser $commit"
 mvn -B -q -f "$work/pom.xml" -pl .,unlaxer-common,unlaxer-dsl \
   install -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$MAVEN_REPO"
+record_provenance pinned-source "$(git -C "$work" rev-parse HEAD)"
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   echo "unlaxer $version: not on Maven Central yet, built from unlaxer-parser \`$commit\`" >> "$GITHUB_STEP_SUMMARY"
 fi

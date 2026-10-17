@@ -1,0 +1,37 @@
+[
+  {
+    "id": "fraud#1",
+    "sha256": "3b69c9eb95cdea2ba20197530b042791b437d2c2fee05bc3b684308a5da7711c",
+    "cp": 404,
+    "if_count": 1,
+    "root": "IfExpr"
+  },
+  {
+    "id": "fraud#2",
+    "sha256": "065b7e78a0cbc470f945da584b8a36a34c2ae1a4de4da399e6ac49e444de3163",
+    "cp": 209,
+    "if_count": 1,
+    "root": "IfExpr"
+  },
+  {
+    "id": "fraud#3",
+    "sha256": "3917e9283333ef813cd17de5f9b6a26cac6cef97bda148d1b0928fce24556c47",
+    "cp": 68,
+    "if_count": 1,
+    "root": "IfExpr"
+  },
+  {
+    "id": "fraud#4",
+    "sha256": "1167d25450f1b142b86e6891394419ed29c818fc39b397e8ab67cf03bf4e137d",
+    "cp": 707,
+    "if_count": 1,
+    "root": "IfExpr"
+  },
+  {
+    "id": "fraud#5",
+    "sha256": "4bcdc00f795d398d678a7ba7f35e49ca53de7ae9702892f8b917711917a56c35",
+    "cp": 459,
+    "if_count": 5,
+    "root": "IfExpr"
+  }
+]
