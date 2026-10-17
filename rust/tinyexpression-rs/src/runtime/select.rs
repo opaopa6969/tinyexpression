@@ -1,6 +1,6 @@
 //! Evaluation-root selection: the Java `P4PreferredAstMapper.parseByAstSimpleNamesDetailed`
 //! path that `AstEvaluatorCalculator` uses (candidate order, whole-source coverage, and the
-//! explicit result-family re-selection driven by typed variable hints).
+//! explicit result-family projection driven by typed variable hints).
 
 #![allow(non_snake_case)]
 
@@ -8,7 +8,7 @@ use super::ast_meta::{children, node_name, record_children};
 use super::java;
 use super::{ErrorKind, EvalError, ResultType};
 use crate::generated::ast::{Ast, AstValue};
-use crate::{frontend, FrontendError, Span};
+use crate::{frontend, Span};
 
 /// `TinyExpressionParserCapabilities.stripJavaStyleCommentsPreservingLayout`, per code point:
 /// comments outside quotes become spaces (line breaks kept), so offsets are unchanged.
@@ -253,21 +253,103 @@ fn map_candidates(
     )))
 }
 
-/// Parses like `parseRootToken`: the grammar root, then the boolean, string and object family
-/// roots when the root parse fails. Returns the tree the Java mapper would see (no synthetic
-/// `FormulaExpr` around an alternate root).
+/// Recognizes Formula once and preserves the historical public subtree for bare comparisons.
 fn parse_root(source: &str) -> Result<Ast, EvalError> {
-    match frontend::parse_entry(None, source) {
-        Ok(ast) => Ok(ast),
-        Err(primary @ FrontendError::Parse(_)) => {
-            for rule in ["BooleanExpression", "StringExpression", "ObjectExpression"] {
-                if let Ok(ast) = frontend::parse_entry(Some(rule), source) {
-                    return Ok(ast);
+    let ast = frontend::parse_entry(None, source)?;
+    let stripped = strip_comments(source);
+    if !is_document(&ast, &stripped) {
+        if let Ast::FormulaExpr { expression, .. } = &ast {
+            if let Ast::ExpressionExpr { value, .. } = expression.as_ref() {
+                if legacy_numeric_prefix(value) {
+                    return Ok(crate::family_projection::with_root_span(
+                        *value.clone(),
+                        Span {
+                            start: 0,
+                            end: stripped.len(),
+                        },
+                    ));
                 }
             }
-            Err(primary.into())
         }
-        Err(other) => Err(other.into()),
+    }
+    Ok(ast)
+}
+
+fn legacy_numeric_prefix(ast: &Ast) -> bool {
+    match ast {
+        Ast::StringConcatExpr { left, op, .. } => !op.is_empty() && numeric_value(left),
+        Ast::BooleanOrExpr { left, .. } => {
+            let Ast::BooleanAndExpr { left, .. } = left.as_ref() else {
+                return false;
+            };
+            let Ast::BooleanXorExpr { left, .. } = left.as_ref() else {
+                return false;
+            };
+            let Ast::BooleanFactorExpr {
+                value: AstValue::Node(value),
+                ..
+            } = left.as_ref()
+            else {
+                return false;
+            };
+            match value.as_ref() {
+                Ast::ComparisonExpr { .. } => true,
+                Ast::StringComparisonExpr { left, .. } => match left.as_ref() {
+                    Ast::StringConcatExpr { left, .. } => numeric_value(left),
+                    _ => false,
+                },
+                Ast::BooleanEqualityExpr { left, .. } => numeric_value(left),
+                value => numeric_atom(value),
+            }
+        }
+        _ => false,
+    }
+}
+
+fn numeric_value(value: &AstValue) -> bool {
+    matches!(value, AstValue::Node(node) if numeric_atom(node))
+}
+
+fn numeric_atom(ast: &Ast) -> bool {
+    match ast {
+        Ast::VariableRefExpr { .. }
+        | Ast::StringTypedVariableRefExpr { .. }
+        | Ast::MethodInvocationExpr { .. }
+        | Ast::IfExpr { .. } => true,
+        Ast::StringConcatExpr { left, right, .. } => {
+            numeric_value(left) && right.iter().all(numeric_value)
+        }
+        Ast::StringMatchExpr {
+            firstCase,
+            moreCases,
+            defaultCase,
+            ..
+        }
+        | Ast::BooleanMatchExpr {
+            firstCase,
+            moreCases,
+            defaultCase,
+            ..
+        } => std::iter::once(firstCase.as_ref())
+            .chain(moreCases.iter())
+            .chain(std::iter::once(defaultCase.as_ref()))
+            .all(|case| case_value(case).is_some_and(numeric_atom)),
+        Ast::BooleanOrExpr { left, op, .. } if op.is_empty() => {
+            let Ast::BooleanAndExpr { left, op, .. } = left.as_ref() else {
+                return false;
+            };
+            if !op.is_empty() {
+                return false;
+            }
+            let Ast::BooleanXorExpr { left, op, .. } = left.as_ref() else {
+                return false;
+            };
+            if !op.is_empty() {
+                return false;
+            }
+            matches!(left.as_ref(), Ast::BooleanFactorExpr { value, .. } if numeric_value(value))
+        }
+        _ => false,
     }
 }
 
@@ -287,8 +369,7 @@ pub(crate) fn select_root(
             .iter()
             .any(|c| is_typed_family_root(c));
     let root = if earlier_typed_family {
-        let selected =
-            select_explicit_result_family(source, stripped, &candidates, parsed.clone())?;
+        let selected = select_explicit_result_family(source, stripped, parsed.clone())?;
         let selected_index = candidates.iter().position(|c| *c == node_name(&selected));
         match selected_index {
             Some(index) if index <= parsed_index => selected,
@@ -574,24 +655,9 @@ fn is_document(ast: &Ast, stripped: &[char]) -> bool {
     strip_chars(stripped) != strip_chars(&stripped[start..end])
 }
 
-fn mask_outside(source: &str, span: Span) -> String {
-    source
-        .chars()
-        .enumerate()
-        .map(|(index, value)| {
-            if (index >= span.start && index < span.end) || matches!(value, '\n' | '\r' | '\t') {
-                value
-            } else {
-                ' '
-            }
-        })
-        .collect()
-}
-
 fn select_explicit_result_family(
     source: &str,
     stripped: &[char],
-    candidates: &[&'static str],
     parsed: Ast,
 ) -> Result<Ast, EvalError> {
     let document = is_document(&parsed, stripped);
@@ -608,55 +674,39 @@ fn select_explicit_result_family(
     if current_match.is_some() && family == Family::Object {
         return Err(mismatch(source));
     }
-    let rule = match (family, current_match.is_some()) {
-        (Family::String, true) => "StringMatchExpression",
-        (Family::String, false) => "StringExpression",
-        (Family::Boolean, true) => "BooleanMatchExpression",
-        (Family::Boolean, false) => "BooleanExpression",
-        (Family::Object, _) => "ObjectExpression",
-        (Family::Number, true) => "NumberMatchExpression",
-        (Family::Number, false) => unreachable!("number family returns early"),
-    };
     let expression_span = match (&parsed, document) {
         (Ast::FormulaExpr { expression, .. }, true) => Some(expression.span()),
         _ => None,
     };
-    let family_source = expression_span
-        .map(|span| mask_outside(source, span))
-        .unwrap_or_else(|| source.to_owned());
-    let reparsed = match frontend::parse_entry_clipped(Some(rule), &family_source, expression_span)
-    {
-        Ok(ast) => ast,
-        Err(_) if current_match.is_some() => return Err(mismatch(source)),
-        Err(_) => {
-            return Err(parse_failure(format!(
-                "Explicit result type could not be parsed as {}: {source}",
-                format!("{family:?}").to_lowercase()
-            )))
-        }
+    let target = if current_match.is_some() {
+        result_root(&parsed)
+    } else {
+        &parsed
     };
-    let mut family_candidates: Vec<&'static str> = vec![match (family, current_match.is_some()) {
-        (Family::String, true) => "StringMatchExpr",
-        (Family::String, false) => "StringConcatExpr",
-        (Family::Boolean, true) => "BooleanMatchExpr",
-        (Family::Boolean, false) => "BooleanOrExpr",
-        (Family::Object, _) => "ObjectExpr",
-        (Family::Number, _) => "NumberMatchExpr",
-    }];
-    for candidate in candidates {
-        if !family_candidates.contains(candidate) {
-            family_candidates.push(candidate);
-        }
-    }
-    let family_stripped = strip_comments(&family_source);
-    let (mut selected, _) = map_candidates(&reparsed, &family_stripped, &family_candidates, true)?;
-    if family == Family::Object && !matches!(selected, Ast::ObjectExpr { .. }) {
-        let span = selected.span();
-        selected = Ast::ObjectExpr {
-            span,
-            value: Box::new(selected),
-        };
-    }
+    let family_name = match family {
+        Family::String => "STRING",
+        Family::Boolean => "BOOLEAN",
+        Family::Object => "OBJECT",
+        Family::Number => "NUMBER",
+    };
+    let selected =
+        crate::family_projection::project(target, family_name, source).map_err(|_| {
+            if current_match.is_some() {
+                mismatch(source)
+            } else {
+                parse_failure(format!(
+                    "Explicit result type could not be parsed as {}: {source}",
+                    family_name.to_lowercase()
+                ))
+            }
+        })?;
+    let selected = crate::family_projection::with_root_span(
+        selected,
+        expression_span.unwrap_or(Span {
+            start: 0,
+            end: source.chars().count(),
+        }),
+    );
     match (parsed, expression_span) {
         (
             Ast::FormulaExpr {

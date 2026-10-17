@@ -35,3 +35,14 @@ document-typed-number-match	var $n as number;match{true->$n as number,default->$
 document-typed-string-match	var $s as string;match{true->$s as string,default->$s String}	FormulaExpr	StringMatchExpr	StringCaseValueExpr
 document-typed-string-with-method	var $s as string;$s as string string part(){'x'}	FormulaExpr	StringConcatExpr	VariableRefExpr
 annotation-typed-string	@foo(x=1) $s as string	FormulaExpr	StringConcatExpr	VariableRefExpr
+boolean-variable-and	$a&true	BooleanOrExpr	BooleanOrExpr	VariableRefExpr
+boolean-variable-equality	$a==true	BooleanOrExpr	BooleanOrExpr	BooleanEqualityExpr
+string-variable-prefix	$s+'x'	StringConcatExpr	StringConcatExpr	VariableRefExpr
+parenthesized-variable-and	($b)&true	BooleanOrExpr	BooleanOrExpr	VariableRefExpr
+parenthesized-string-variable-prefix	($s)+'x'	StringConcatExpr	StringConcatExpr	VariableRefExpr
+parenthesized-comparison	(1<2)	FormulaExpr	BooleanOrExpr	ComparisonExpr
+parenthesized-string-comparison	($s=='x')&true	FormulaExpr	BooleanOrExpr	StringComparisonExpr
+string-literal-prefix	'a'+'x'	FormulaExpr	StringConcatExpr	StringConcatExpr
+unicode-comment-comparison	/*👨‍👩‍👧‍👦*/ 1<2	BooleanOrExpr	BooleanOrExpr	ComparisonExpr
+boolean-variable-match-prefix	match{true->$a,default->$b}&true	BooleanOrExpr	BooleanOrExpr	BooleanMatchExpr
+string-variable-match-prefix	match{true->$a,default->$b}+'x'	StringConcatExpr	StringConcatExpr	StringMatchExpr

@@ -1,0 +1,7 @@
+# id	source	result type	value	expression AST	start CP	end CP	declarations	methods
+number-comparison	var $n as number set 1;$n<2	boolean	true	BooleanOrExpr	23	27	1	0
+string-prefix	var $s as string set '😀';$s+'x'	string	😀x	StringConcatExpr	25	31	1	0
+family-string-prefix	var $s as string set '👨‍👩‍👧‍👦';$s+'x'	string	👨‍👩‍👧‍👦x	StringConcatExpr	31	37	1	0
+annotated-comparison	@bench(name='😀') 1<2	boolean	true	BooleanOrExpr	17	20	0	0
+method-after-comparison	var $n as number set 1;$n<2 float unused(){2}	boolean	true	BooleanOrExpr	23	28	1	1
+hinted-string	var $s as string set '😀';$s as string	string	😀	StringConcatExpr	25	37	1	0

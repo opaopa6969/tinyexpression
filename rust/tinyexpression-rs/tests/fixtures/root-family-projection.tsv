@@ -1,0 +1,20 @@
+# id	source	family entry	semantic root
+string-as	$s as string	StringExpression	StringConcatExpr
+string-no-as	$s String	StringExpression	StringConcatExpr
+string-whitespace	  $s as String  	StringExpression	StringConcatExpr
+string-comments	/*😀*/ $s /*note*/ as string	StringExpression	StringConcatExpr
+string-parens	($s as string)	StringExpression	StringConcatExpr
+string-nested-parens	(($s String))	StringExpression	StringConcatExpr
+boolean-as	$b as boolean	BooleanExpression	BooleanOrExpr
+boolean-no-as	$b Boolean	BooleanExpression	BooleanOrExpr
+boolean-parens	($b as boolean)	BooleanExpression	BooleanOrExpr
+boolean-nested-parens	(($b Boolean))	BooleanExpression	BooleanOrExpr
+object-as	$o as object	ObjectExpression	ObjectExpr
+object-parens	($o Object)	ObjectExpression	ObjectExpr
+string-match	match{true->$s as string,default->$t String}	StringMatchExpression	StringMatchExpr
+string-match-parenthesized-value	match{true->($s as string),default->(($t String))}	StringMatchExpression	StringMatchExpr
+boolean-match	match{true->$b as boolean,default->$c Boolean}	BooleanMatchExpression	BooleanMatchExpr
+boolean-match-parenthesized-value	match{true->($b as boolean),default->(($c Boolean))}	BooleanMatchExpression	BooleanMatchExpr
+string-name-spacing	$ long_Name2 as String	StringExpression	StringConcatExpr
+string-name-comments	$ /*😀*/ long_Name2 /*note*/ as /*hint*/ String	StringExpression	StringConcatExpr
+string-no-as-comments	$ /*😀*/ long_Name2 /*hint*/ String	StringExpression	StringConcatExpr

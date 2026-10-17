@@ -113,6 +113,13 @@ export function countsOf(catalog) {
   return counts;
 }
 
+/** The unsupported double operator touching a failure UTF-16 offset, without scanning elsewhere. */
+export function operatorAtFailure(text, offset) {
+  const c = text[offset];
+  if (c !== '&' && c !== '|') return null;
+  return text[offset + 1] === c || (offset > 0 && text[offset - 1] === c) ? c + c : null;
+}
+
 /**
  * Maps a parser failure to a TE code with the catalog's diagnosticRules. `expected` is the
  * list of terminals the parser could accept at the failure (without quotes), `snippet` the

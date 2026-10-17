@@ -39,7 +39,7 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// fails when it differs from `ubnfc_commit` in `rust/ubnfc-pin.txt`.
 pub const UBNFC_COMMIT: &str = "f54d6b90466ffde14066d32f911ed642b1e49201";
 /// Exact P4 grammar source identity; checked against `rust/ubnfc-pin.txt` in CI.
-pub const GRAMMAR_SHA256: &str = "184cce54c70b0e3ebbdedaca5a0af0068ec56b2d7e33cda39d94f861c6433f46";
+pub const GRAMMAR_SHA256: &str = "a40d6f5f57c3b3a67e0c627bfc99c603304593087cf428b50bb85754e23f4daf";
 
 /// One JSON response and the exit code that goes with it.
 #[derive(Clone, Debug, PartialEq, Eq)]

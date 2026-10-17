@@ -289,6 +289,15 @@ public final class CatalogProvider {
     return defaultErrorCode;
   }
 
+  /** Double operator touching a failure UTF-16 offset; never searches unrelated source text. */
+  static String operatorAtFailure(String text, int offset) {
+    if (offset < 0 || offset >= text.length()) return null;
+    char c = text.charAt(offset);
+    if (c != '&' && c != '|') return null;
+    return offset + 1 < text.length() && text.charAt(offset + 1) == c
+        || offset > 0 && text.charAt(offset - 1) == c ? "" + c + c : null;
+  }
+
   /** The catalog's variables as the generated server's {@link CatalogResolver}. */
   public CatalogResolver variableResolver() {
     List<CatalogEntry> entries = new ArrayList<>(variables.size());

@@ -824,6 +824,10 @@ public class TinyExpressionP4LanguageServerExt extends TinyExpressionP4LanguageS
       d.setSource("tinyexpression-p4");
 
       String hint = failures.expectedHints().isEmpty() ? "" : failures.expectedHints().get(0);
+      // Recognition may fail at either character of &&/||. Only catalog classification
+      // uses this local hint; the parser offset and expectedHints metadata stay untouched.
+      String operator = CatalogProvider.operatorAtFailure(content, offset);
+      if (operator != null) hint = "Unexpected " + operator;
       String leading = content.substring(0, offset);
       String code = resolveCode(hint, snippet, leading);
       d.setCode(Either.forLeft(code));
