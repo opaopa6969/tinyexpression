@@ -72,3 +72,12 @@ RUSTUP_TOOLCHAIN=1.85.0 cargo test --locked --manifest-path rust/Cargo.toml \
 These are semantic/resource-boundary checks on a shared development host. They do not attest
 to an exclusive measurement environment or close parser #197/#184's final latency conditions.
 Classic SAFE and Java/Rust UBNFC production timings remain separate evidence.
+
+The dedicated bounded-default-mapper CI job builds immutable upstream source
+bee36381b0ec1dd938766b21679cefb984e1b0b0 in its own Maven repository and explicitly selects
+its actual 3.3.0 artifact version. It requires all three bounded implicit-mapping assertions,
+the existing 350-case comparison, and the Rust shared-large-input test without skips.
+Artifacts retain both source identities, dependency hashes, Surefire reports and the Rust log.
+The ordinary fc75fe1e compatibility jobs and their dependency remain separate. This Tiny
+change is merged only after upstream parser PR #682 has merged; candidate CI success alone
+does not claim that dependency is already on master or published to Central.
