@@ -531,7 +531,7 @@ jobs:
         run: |
           mvn -B test -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$BOUNDED_PARSER_VERSION" \
             -Dgpg.skip=true -Dtinyexpression.skipRailroad=true \
-            -Dtest=P4SourceMappingTest,P4ImplicitMappingTest,P4PreferredAstMapperDiagnosticsTest,UbnfcParityTest,P4ParserEngineTest
+            -Dtest=P4SourceMappingTest,P4ImplicitMappingTest,P4BoundedMappingConformance,P4PreferredAstMapperDiagnosticsTest,UbnfcParityTest,P4ParserEngineTest
           set -o pipefail
           cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs --test default_mapping_inputs 2>&1 | tee target/bounded-mapper-evidence/rust.log
       - name: Require all bounded mapper assertions without skips
@@ -544,6 +544,7 @@ jobs:
           json.loads(evidence.joinpath("dependency.json").read_text())
           counts = {}
           for name, expected in [("P4SourceMappingTest", 26), ("P4ImplicitMappingTest", 3),
+                                 ("P4BoundedMappingConformance", 2),
                                  ("P4PreferredAstMapperDiagnosticsTest", 12), ("UbnfcParityTest", 2),
                                  ("P4ParserEngineTest", 6)]:
               reports = list(Path("target/surefire-reports").glob("TEST-*." + name + ".xml"))
