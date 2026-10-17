@@ -1,0 +1,136 @@
+[
+  {
+    "input": "$a&&$b",
+    "operator": "&&",
+    "failureCp": 3
+  },
+  {
+    "input": "$a && $b",
+    "operator": "&&",
+    "failureCp": 4
+  },
+  {
+    "input": "true&&false",
+    "operator": "&&",
+    "failureCp": 5
+  },
+  {
+    "input": "true && false",
+    "operator": "&&",
+    "failureCp": 6
+  },
+  {
+    "input": "1&&2",
+    "operator": "&&",
+    "failureCp": 1
+  },
+  {
+    "input": "1 && 2",
+    "operator": "&&",
+    "failureCp": 2
+  },
+  {
+    "input": "/*😀*/\r\ntrue && false",
+    "operator": "&&",
+    "failureCp": 13
+  },
+  {
+    "input": "/* x */ true && false",
+    "operator": "&&",
+    "failureCp": 14
+  },
+  {
+    "input": "&& true",
+    "operator": "&&",
+    "failureCp": 0
+  },
+  {
+    "input": "$a||$b",
+    "operator": "||",
+    "failureCp": 3
+  },
+  {
+    "input": "$a || $b",
+    "operator": "||",
+    "failureCp": 4
+  },
+  {
+    "input": "true||false",
+    "operator": "||",
+    "failureCp": 5
+  },
+  {
+    "input": "true || false",
+    "operator": "||",
+    "failureCp": 6
+  },
+  {
+    "input": "1||2",
+    "operator": "||",
+    "failureCp": 1
+  },
+  {
+    "input": "1 || 2",
+    "operator": "||",
+    "failureCp": 2
+  },
+  {
+    "input": "/*😀*/\r\ntrue || false",
+    "operator": "||",
+    "failureCp": 13
+  },
+  {
+    "input": "/* x */ true || false",
+    "operator": "||",
+    "failureCp": 14
+  },
+  {
+    "input": "|| true",
+    "operator": "||",
+    "failureCp": 0
+  },
+  {
+    "input": "\"&&\" +",
+    "operator": null
+  },
+  {
+    "input": "\"||\" +",
+    "operator": null
+  },
+  {
+    "input": "true &",
+    "operator": null
+  },
+  {
+    "input": "false |",
+    "operator": null
+  },
+  {
+    "input": "\"&&\" @",
+    "operator": null
+  },
+  {
+    "input": "/* && */ 1 +",
+    "operator": null
+  },
+  {
+    "input": "true & false",
+    "operator": null
+  },
+  {
+    "input": "true | false",
+    "operator": null
+  },
+  {
+    "input": "'😀 &&' +",
+    "operator": null
+  },
+  {
+    "input": "true & & false",
+    "operator": null
+  },
+  {
+    "input": "false | | true",
+    "operator": null
+  }
+]

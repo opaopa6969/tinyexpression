@@ -1,6 +1,6 @@
 // Diagnostics from `te_check` with TE codes and texts from the language catalog (issue #201).
 // Pure (no DOM): the editor's linter and scripts/check.mjs both call it.
-import { resolveErrorCode, lookupVariable, ja } from '../../catalog/scripts/catalog-lib.mjs';
+import { resolveErrorCode, lookupVariable, ja, operatorAtFailure } from '../../catalog/scripts/catalog-lib.mjs';
 import { codePointToIndex, declaredVariables } from './context.js';
 import { blankCodeBlocks } from './code-block.js';
 
@@ -25,7 +25,9 @@ export function fullMessage(entry) {
 /** A parse diagnostic (Rust JSON) as a located, coded diagnostic. */
 export function parseDiagnostic(catalog, formula, diagnostic) {
   const from = Math.min(codePointToIndex(formula, diagnostic.offset), formula.length);
-  const snippet = formula.slice(from, from + 20).trim();
+  // The parser may consume the valid first '&'/'|' before failing at the second.
+  // Normalize only the catalog lookup; keep the published parser position and expectations.
+  const snippet = operatorAtFailure(formula, from) ?? formula.slice(from, from + 20).trim();
   const leading = formula.slice(0, from);
   const code = resolveErrorCode(catalog, { expected: diagnostic.expected ?? [], snippet, leading });
   const entry = errorEntry(catalog, code);
