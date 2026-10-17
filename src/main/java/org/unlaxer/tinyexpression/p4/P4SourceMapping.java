@@ -5,6 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import org.unlaxer.Token;
@@ -41,6 +42,77 @@ final class P4SourceMapping {
     Object tree = invoke(mapping, null, token);
     Method selector = method(tree.getClass(), "select", String.class);
     return preferred -> selection(invoke(selector, tree, preferred), parserSource);
+  }
+
+  /** One default selection, without materializing the bounded full candidate inventory. */
+  static Mapped mapDefaultOnce(Token token, Token legacyToken, String parserSource, EntryPoint entryPoint) {
+    return mapDefaultOnce(TinyExpressionP4Mapper.class, token, legacyToken, parserSource, entryPoint);
+  }
+
+  static Mapped mapDefaultOnce(Class<?> mapper, Token token, Token legacyToken,
+      String parserSource, EntryPoint entryPoint) {
+    Selection selected = select(mapper, token, legacyToken, null, parserSource, entryPoint);
+    return preferred -> {
+      if (preferred != null && !preferred.isBlank()) {
+        throw new IllegalArgumentException("Default-only mapping cannot select a preferred AST type");
+      }
+      return selected;
+    };
+  }
+
+  /**
+   * Resolves the facade's implicit whole-source wrapper preferences from one owned default AST.
+   * Partial expression branches cannot win a whole-source preference and are not expanded. This
+   * is deliberately separate from mapOnce: explicit preferred inventories retain their limits.
+   */
+  static Mapped mapImplicitOnce(Token token, Token legacyToken, String parserSource, EntryPoint entryPoint) {
+    return mapImplicitOnce(TinyExpressionP4Mapper.class, token, legacyToken, parserSource, entryPoint);
+  }
+
+  static Mapped mapImplicitOnce(Class<?> mapper, Token token, Token legacyToken,
+      String parserSource, EntryPoint entryPoint) {
+    String selector = entryPoint == EntryPoint.ALTERNATE
+        ? "selectSubtreeTokenWithSourceMap" : "selectParsedTokenWithSourceMap";
+    try {
+      mapper.getMethod(selector, Token.class, String.class);
+    } catch (NoSuchMethodException absentSelector) {
+      try {
+        mapper.getMethod("sourceSpanOf", Object.class);
+      } catch (NoSuchMethodException absentSpans) {
+        // No owned positions means no sound whole-source AST index. Keep the existing
+        // legacy selection contract; this is capability absence, not a failed-map retry.
+        return mapOnce(mapper, token, legacyToken, parserSource, entryPoint);
+      }
+    }
+    Selection selected = mapDefaultOnce(mapper, token, legacyToken, parserSource, entryPoint).select(null);
+    Map<String, Selection> wholeSource = new LinkedHashMap<>();
+    var pending = new ArrayDeque<Object>();
+    var seen = new IdentityHashMap<Object, Boolean>();
+    pending.add(selected.ast());
+    int first = 0;
+    int last = parserSource.length();
+    while (first < last && Character.isWhitespace(parserSource.codePointAt(first))) {
+      first += Character.charCount(parserSource.codePointAt(first));
+    }
+    while (last > first && Character.isWhitespace(parserSource.codePointBefore(last))) {
+      last -= Character.charCount(parserSource.codePointBefore(last));
+    }
+    int start = parserSource.codePointCount(0, first);
+    int end = parserSource.codePointCount(0, last);
+    while (!pending.isEmpty()) {
+      Object value = pending.removeFirst();
+      if (seen.put(value, Boolean.TRUE) != null) continue;
+      if (value instanceof TinyExpressionP4AST ast) {
+        Optional<int[]> span = selected.sourceText().spanOf(ast);
+        if (span.isEmpty() || span.get()[0] > start || span.get()[1] < end) continue;
+        // P4 whole-input wrappers form an ancestor chain. Keep its outermost matching type,
+        // as the generated selector does, while retaining the original owned snapshot.
+        wholeSource.putIfAbsent(ast.getClass().getSimpleName(),
+            new Selection(selected.token(), ast, selected.sourceText()));
+      }
+      enqueueChildren(value, pending);
+    }
+    return preferred -> wholeSource.getOrDefault(preferred, selected);
   }
 
   static Selection select(Token token, String preferred, String parserSource) {

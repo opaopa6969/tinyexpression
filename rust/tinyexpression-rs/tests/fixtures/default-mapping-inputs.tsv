@@ -1,0 +1,3 @@
+# id	path	sha256	cp	java_root	java_mode	rust_root	rust_expression
+complex-x64	benchmarks/fixtures/complex-x64.tiny	b638e684057b95bacb8e534ffb85247cd6d7d777348900fc748693e7afab5a05	20923	FormulaExpr	preferred:FormulaExpr	FormulaExpr	BinaryExpr
+comparison-heavy-x64	benchmarks/fixtures/comparison-heavy-x64.tiny	73d425cb614a9a9d3ec70226615393d5693773adb9630173ba9b136b25340c5a	11456	BooleanOrExpr	default	FormulaExpr	BooleanOrExpr
