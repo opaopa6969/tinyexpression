@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 import Ajv2020 from 'ajv/dist/2020.js';
 import { loadTinyExpression } from '../../rust/examples/wasm/tinyexpression.mjs';
 import { toRequest, emptyState } from '../src/context.js';
-import { diagnose, describeFailure } from '../src/diagnostics.js';
+import { diagnose, describeFailure, parseDiagnostic } from '../src/diagnostics.js';
 import { EXAMPLES, FORMULA_INFO_SAMPLE } from '../src/examples.js';
 import { prepareTrace, stepEvents, stackAt, failingNode } from '../src/trace.js';
 import { validate as validateGenerated } from '../src/generated/catalog-validator.js';
@@ -75,6 +75,30 @@ const [semi] = diagnose(te, catalog, "var $x as number set 1 description='x'\n$x
 assert.equal(semi.message, '[TE006] 文末のセミコロンが必要です。 修正例: 文の末尾に ; を追加');
 // The parser reports the failure after the whitespace: at the start of the next line's `$x`.
 assert.equal(semi.from, "var $x as number set 1 description='x'\n".length);
+
+// Shared Java LSP/wasm oracle: classify only a double operator touching this failure.
+const operatorCases = JSON.parse(await readFile(join(root, 'catalog', 'fixtures', 'operator-diagnostics.json'), 'utf8'));
+for (const row of operatorCases) {
+  const actual = codeOf(row.input, ['a', 'b']);
+  assert.equal(actual.includes('TE023'), row.operator != null, JSON.stringify({ row, actual }));
+  if (row.operator != null) {
+    const failure = te.check(row.input).result;
+    assert.equal(failure.stage, 'parse', row.input);
+    assert.equal(failure.diagnostic.offset, row.failureCp, row.input);
+    const original = JSON.stringify(failure.diagnostic);
+    const located = parseDiagnostic(catalog, row.input, failure.diagnostic);
+    assert.equal(located.from, [...row.input].slice(0, failure.diagnostic.offset).join('').length, row.input);
+    assert.equal(JSON.stringify(failure.diagnostic), original, 'catalog lookup does not rewrite parser diagnostics');
+    const first = row.input.indexOf(row.operator);
+    for (const position of [first, first + 1]) {
+      const offset = [...row.input.slice(0, position)].length;
+      const synthetic = parseDiagnostic(catalog, row.input, { offset, expected: [] });
+      assert.equal(synthetic.code, 'TE023', JSON.stringify({ row, position }));
+      assert.equal(synthetic.from, position, 'display position still comes from the parser');
+    }
+  }
+}
+console.log(`operator diagnostic oracle: ${operatorCases.length} shared inputs, real wasm plus both boundary positions`);
 
 // 4. runtime error texts
 const zero = te.evalContext({ formula: '1 / 0', resultType: 'int', numberType: 'int' }).result;
