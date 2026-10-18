@@ -471,3 +471,97 @@ jobs:
           name: tinyexpression-p4-lsp-vsix
           path: tools/tinyexpression-p4-lsp-vscode/target/*.vsix
           if-no-files-found: error
+
+  bounded-default-mapper:
+    name: Bounded default mapper (fixed upstream candidate)
+    runs-on: [self-hosted, Linux, X64, tinyexpression-ci]
+    env:
+      BOUNDED_PARSER_COMMIT: bee36381b0ec1dd938766b21679cefb984e1b0b0
+      BOUNDED_PARSER_VERSION: 3.3.0
+    defaults:
+      run:
+        working-directory: tinyexpression
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          path: tinyexpression
+      # This source includes unlaxer-parser #680. The ordinary compatibility jobs
+      # retain their separate historical dependency; Central 3.3.0 is not substituted.
+      - uses: actions/checkout@v6
+        with:
+          repository: opaopa6969/unlaxer-parser
+          ref: ${{ env.BOUNDED_PARSER_COMMIT }}
+          path: bounded-unlaxer-parser
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+      - name: Set up Rust 1.85
+        run: bash .github/scripts/setup-rust.sh 1.85.0 --component rustfmt --component clippy
+      - name: Install and identify the fixed bounded mapper dependency
+        run: |
+          task_maven_repo=$(mktemp -d "$RUNNER_TEMP/bounded-mapper.XXXXXX")
+          echo "MAVEN_REPO=$task_maven_repo" >> "$GITHUB_ENV"
+          parser_source="$GITHUB_WORKSPACE/bounded-unlaxer-parser"
+          test "$(git -C "$parser_source" rev-parse HEAD)" = "$BOUNDED_PARSER_COMMIT"
+          mvn -B -q -f "$parser_source/pom.xml" -pl unlaxer-common,unlaxer-dsl -am install \
+            -DskipTests -Dgpg.skip=true -Dmaven.repo.local="$task_maven_repo"
+          python3 - "$parser_source" "$task_maven_repo" <<'PY'
+          import hashlib, json, os, subprocess, sys, xml.etree.ElementTree as ET
+          from pathlib import Path
+          source, m2 = map(Path, sys.argv[1:])
+          revision = ET.parse(source / "pom.xml").getroot().find(
+              "{http://maven.apache.org/POM/4.0.0}properties/{http://maven.apache.org/POM/4.0.0}revision").text
+          assert revision == os.environ["BOUNDED_PARSER_VERSION"], revision
+          commit = subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"], text=True).strip()
+          assert commit == os.environ["BOUNDED_PARSER_COMMIT"], commit
+          artifacts = {}
+          for name in ["unlaxer-common", "unlaxer-dsl"]:
+              jar = m2 / "org/unlaxer" / name / revision / (name + "-" + revision + ".jar")
+              artifacts[name] = hashlib.sha256(jar.read_bytes()).hexdigest()
+          target = Path("target/bounded-mapper-evidence")
+          target.mkdir(parents=True, exist_ok=True)
+          target.joinpath("dependency.json").write_text(json.dumps({
+              "tiny_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+              "parser_commit": commit, "parser_version": revision, "origin": "pinned-source",
+              "artifacts_sha256": artifacts, "measurement_eligible": False
+          }, indent=2) + "\n")
+          PY
+      - name: Verify bounded large inputs and the existing facade corpus
+        run: |
+          mvn -B test -Dmaven.repo.local="$MAVEN_REPO" -Dunlaxer.version="$BOUNDED_PARSER_VERSION" \
+            -Dgpg.skip=true -Dtinyexpression.skipRailroad=true \
+            -Dtest=P4SourceMappingTest,P4ImplicitMappingTest,P4BoundedMappingConformance,P4PreferredAstMapperDiagnosticsTest,UbnfcParityTest,P4ParserEngineTest
+          set -o pipefail
+          cargo test --locked --manifest-path rust/Cargo.toml -p tinyexpression-rs --test default_mapping_inputs 2>&1 | tee target/bounded-mapper-evidence/rust.log
+      - name: Require all bounded mapper assertions without skips
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, xml.etree.ElementTree as ET
+          from pathlib import Path
+          evidence = Path("target/bounded-mapper-evidence")
+          json.loads(evidence.joinpath("dependency.json").read_text())
+          counts = {}
+          for name, expected in [("P4SourceMappingTest", 26), ("P4ImplicitMappingTest", 3),
+                                 ("P4BoundedMappingConformance", 2),
+                                 ("P4PreferredAstMapperDiagnosticsTest", 12), ("UbnfcParityTest", 2),
+                                 ("P4ParserEngineTest", 6)]:
+              reports = list(Path("target/surefire-reports").glob("TEST-*." + name + ".xml"))
+              assert len(reports) == 1, (name, reports)
+              suite = ET.parse(reports[0]).getroot()
+              count = {key: int(suite.get(key, "0")) for key in ["tests", "failures", "errors", "skipped"]}
+              assert count == {"tests": expected, "failures": 0, "errors": 0, "skipped": 0}, (name, count)
+              counts[name] = count
+          assert "test result: ok. 1 passed; 0 failed; 0 ignored;" in evidence.joinpath("rust.log").read_text()
+          evidence.joinpath("java-results.json").write_text(json.dumps(counts, indent=2) + "\n")
+          PY
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: bounded-default-mapper-evidence
+          path: |
+            tinyexpression/target/bounded-mapper-evidence/
+            tinyexpression/target/surefire-reports/
+            tinyexpression/rust/tinyexpression-rs/tests/fixtures/default-mapping-inputs.tsv
+          if-no-files-found: error

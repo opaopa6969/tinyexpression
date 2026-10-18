@@ -324,8 +324,9 @@ final class ClassicP4PreferredAstMapper {
     String sourceForSpanComparison = parserSource;
     P4SourceMapping.Mapped tree;
     try {
-      tree = P4SourceMapping.mapOnce(
-          rootToken, parsedRoot.legacyToken(), parserSource, parsedRoot.entryPoint());
+      tree = allowDefault
+          ? P4SourceMapping.mapImplicitOnce(rootToken, parsedRoot.legacyToken(), parserSource, parsedRoot.entryPoint())
+          : P4SourceMapping.mapOnce(rootToken, parsedRoot.legacyToken(), parserSource, parsedRoot.entryPoint());
       P4SourceMapping.Selection mappedRoot = tree.select(null);
       TinyExpressionP4AST canonical = P4RootProjection.canonicalRoot(
           mappedRoot.ast(), mappedRoot.sourceText(), parserSource);
