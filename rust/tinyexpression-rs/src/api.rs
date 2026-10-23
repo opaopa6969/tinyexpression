@@ -37,7 +37,7 @@ pub const EXIT_INTERNAL: u8 = 70;
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// The ubnfc commit the vendored parsers were generated from. `rust/check-generated.sh`
 /// fails when it differs from `ubnfc_commit` in `rust/ubnfc-pin.txt`.
-pub const UBNFC_COMMIT: &str = "f54d6b90466ffde14066d32f911ed642b1e49201";
+pub const UBNFC_COMMIT: &str = "eb219625a3034c50dd4c98bc986ff42c13170737";
 /// Exact P4 grammar source identity; checked against `rust/ubnfc-pin.txt` in CI.
 pub const GRAMMAR_SHA256: &str = "a40d6f5f57c3b3a67e0c627bfc99c603304593087cf428b50bb85754e23f4daf";
 
