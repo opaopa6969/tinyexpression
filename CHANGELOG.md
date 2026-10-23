@@ -5,6 +5,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Changed
+- **ubnfc is now public** at https://github.com/opaopa6969/ubnfc (history rewritten on 2026-10-23; the
+  old private repository is kept as `ubnfc-archive`). The ubnfc pin moves from `f54d6b9` to its
+  rewritten counterpart `eb219625a3034c50dd4c98bc986ff42c13170737` in `UBNFC_PIN`,
+  `rust/ubnfc-pin.txt` and `api::UBNFC_COMMIT`. The tree is identical, so every grammar, IR and vendored
+  file hash is unchanged. Because ubnfc is public, the full grammar → IR → Java / Rust regeneration
+  check can now run anywhere with `UBNFC_DIR` pointing at a checkout.
+
 ### Removed
 - **`tinyExpression-jdk17` is discontinued** (owner decision); 2.0.1 is its last release. The
   `tinyexpression-jdk17/` module, its CI job (JDK 17 full tests, class major 61, no release-21 unlaxer)
